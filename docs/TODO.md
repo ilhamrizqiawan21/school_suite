@@ -23,11 +23,13 @@ flowchart TD
 
 ---
 
-### [ ] S01-T02: Bootstrap Laravel 11 + Inertia.js + Vue 3 + TypeScript
-- [ ] Bootstrap kerangka Laravel 11 yang kompatibel dengan PHP 8.5.
-- [ ] Konfigurasi Inertia.js v2, Vue 3, Vite, Tailwind CSS, dan TypeScript (`tsconfig.json`).
-- [ ] Konfigurasi file `.env.example` dan database default (SQLite file/memory untuk pengujian cepat, MySQL sebagai opsi target production).
-- **Bukti penerimaan:** Server artisan dapat dijalankan (`php artisan --version`), Vite build sukses (`npm run build`).
+### [x] S01-T02: Bootstrap Laravel 13 + Inertia.js + Vue 3 + TypeScript
+- [x] Bootstrap kerangka Laravel (v13.38.0) yang kompatibel penuh dengan PHP 8.5.
+- [x] Konfigurasi Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, dan TypeScript (`tsconfig.json`).
+- [x] Setup `HandleInertiaRequests` middleware dan root template `app.blade.php`.
+- [x] Konfigurasi testing Inertia dan route endpoint `/` ter-render via Inertia `Welcome.vue`.
+- [x] Konfigurasi `.env.example` dan database default SQLite dev/test.
+- **Bukti penerimaan:** `php artisan --version` sukses, `npm run build` sukses (310ms), `npm run typecheck` sukses, `php artisan test` (2 tests, 9 assertions) lulus 100%, `pint --test` passed.
 
 ---
 
@@ -77,3 +79,4 @@ flowchart TD
 - [ ] Perbarui [`docs/HANDOFF.md`](HANDOFF.md) dengan rincian file baru, arsitektur, hasil tes, dan langkah review.
 - [ ] Perbarui status fase di [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md).
 - **Bukti penerimaan:** Semua gate keluar S01 terpenuhi tanpa kegagalan tes.
+
