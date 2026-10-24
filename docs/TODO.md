@@ -33,8 +33,8 @@ flowchart TD
 
 ---
 
-### [ ] S01-T03: Struktur Direktori Modular Monolith & Shared Services
-- [ ] Buat kerangka direktori modul di `app/Modules/`:
+### [x] S01-T03: Struktur Direktori Modular Monolith & Shared Services
+- [x] Buat kerangka direktori 9 modul di `app/Modules/`:
   - `Core`
   - `Academic`
   - `Homeroom`
@@ -44,13 +44,18 @@ flowchart TD
   - `Library`
   - `Administration`
   - `Integration`
-- [ ] Buat struktur shared services di `app/Shared/`:
+  Setiap modul memiliki subdirektori berlapis: `Domain/`, `Application/`, `Infrastructure/Database/Migrations/`, `Interface/Http/Controllers/`, `Interface/Routes/`.
+- [x] Buat struktur shared services di `app/Shared/`:
   - `Audit`
   - `Files`
   - `Exports`
   - `Notifications`
-- [ ] Implementasikan module discovery/registration mechanism (Service Provider modular) agar tiap modul dapat memuat routes, migrations, dan domain logic secara independen tanpa coupling silang.
-- **Bukti penerimaan:** Tiap modul terdaftar di container Laravel dan tidak ada ketergantungan database langsung lintas modul.
+  - `Providers/ModularServiceProvider.php`
+- [x] Buat struktur frontend modul di `resources/js/modules/` dan direktori pendukung `layouts/`, `components/`.
+- [x] Implementasikan `ModularServiceProvider` untuk auto-discovery migrations, web routes, dan api routes per modul.
+- [x] Daftarkan `ModularServiceProvider` di `bootstrap/providers.php`.
+- [x] Unit test `tests/Unit/ModularServiceProviderTest.php` untuk memvalidasi keberadaan modul & shared services.
+- **Bukti penerimaan:** `php artisan test` (4 tests, 32 assertions) lulus 100%, seluruh direktori modul terdaftar dan teruji.
 
 ---
 
