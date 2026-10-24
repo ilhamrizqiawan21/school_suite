@@ -313,27 +313,43 @@ class AcademicImportService
      *
      * @return list<array<string, string>>
      */
-    public function parseCsvString(string $csvContent): array
+    public function parseCsvString(string $csvContent, array $requiredHeaders = []): array
     {
-        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", trim($csvContent)));
-        if (empty($lines)) {
+        if (trim($csvContent) === '') {
             return [];
         }
+
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", trim($csvContent)));
 
         $header = str_getcsv(array_shift($lines));
         $header = array_map(fn ($col) => strtolower(trim($col)), $header);
 
+        if (in_array('', $header, true) || count($header) !== count(array_unique($header))) {
+            throw new InvalidArgumentException('Header CSV kosong atau memiliki kolom duplikat.');
+        }
+
+        $missingHeaders = array_diff($requiredHeaders, $header);
+        if (! empty($missingHeaders)) {
+            throw new InvalidArgumentException(
+                'Header CSV tidak lengkap. Kolom wajib: '.implode(', ', $missingHeaders).'.'
+            );
+        }
+
         $records = [];
-        foreach ($lines as $line) {
+        foreach ($lines as $index => $line) {
             $trimmed = trim($line);
             if ($trimmed === '') {
                 continue;
             }
 
             $row = str_getcsv($trimmed);
-            if (count($row) === count($header)) {
-                $records[] = array_combine($header, $row);
+            if (count($row) !== count($header)) {
+                throw new InvalidArgumentException(
+                    'Format CSV tidak valid pada baris data '.($index + 1).': jumlah kolom tidak sesuai header.'
+                );
             }
+
+            $records[] = array_combine($header, $row);
         }
 
         return $records;

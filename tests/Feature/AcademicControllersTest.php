@@ -218,4 +218,100 @@ class AcademicControllersTest extends TestCase
             'homeroom_teacher_id' => $teacher->id,
         ]);
     }
+
+    public function test_student_creation_rolls_back_when_enrollment_context_is_inconsistent(): void
+    {
+        $secondYear = AcademicYear::create([
+            'school_id' => $this->school->id,
+            'name' => '2026/2027',
+            'start_date' => '2026-07-15',
+            'end_date' => '2027-06-20',
+            'is_active' => false,
+        ]);
+
+        $secondTerm = Term::create([
+            'academic_year_id' => $secondYear->id,
+            'name' => 'Semester Ganjil',
+            'semester_type' => 'odd',
+            'start_date' => '2026-07-15',
+            'end_date' => '2026-12-20',
+            'is_active' => false,
+        ]);
+
+        $class = ClassGroup::create([
+            'school_id' => $this->school->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_level' => 7,
+            'name' => '7A',
+            'capacity' => 32,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/akademik/siswa', [
+            'nis' => '9001',
+            'name' => 'Siswa Rollback',
+            'gender' => 'L',
+            'class_group_id' => $class->id,
+            'term_id' => $secondTerm->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('students', ['nis' => '9001']);
+    }
+
+    public function test_class_creation_rolls_back_when_homeroom_assignment_fails(): void
+    {
+        $teacher = Teacher::create([
+            'school_id' => $this->school->id,
+            'name' => 'Wali Kelas Existing',
+            'gender' => 'P',
+            'is_active' => true,
+        ]);
+
+        ClassGroup::create([
+            'school_id' => $this->school->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_level' => 7,
+            'name' => '7A',
+            'homeroom_teacher_id' => $teacher->id,
+            'capacity' => 32,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/akademik/kelas', [
+            'academic_year_id' => $this->academicYear->id,
+            'grade_level' => 8,
+            'name' => '8A',
+            'capacity' => 32,
+            'homeroom_teacher_id' => $teacher->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('class_groups', ['name' => '8A']);
+    }
+
+    public function test_class_creation_rejects_academic_year_from_another_school(): void
+    {
+        $otherSchool = School::create([
+            'npsn' => '87654321',
+            'name' => 'SMP Sekolah Lain',
+            'status' => 'active',
+        ]);
+
+        $otherYear = AcademicYear::create([
+            'school_id' => $otherSchool->id,
+            'name' => '2026/2027',
+            'start_date' => '2026-07-15',
+            'end_date' => '2027-06-20',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/akademik/kelas', [
+            'academic_year_id' => $otherYear->id,
+            'grade_level' => 8,
+            'name' => '8A',
+            'capacity' => 32,
+        ]);
+
+        $response->assertSessionHasErrors('academic_year_id');
+        $this->assertDatabaseMissing('class_groups', ['name' => '8A']);
+    }
 }

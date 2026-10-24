@@ -320,4 +320,52 @@ class EnrollmentServiceTest extends TestCase
             'target_id' => (string) $enrollment->id,
         ]);
     }
+
+    public function test_cannot_enroll_student_when_class_is_at_capacity(): void
+    {
+        $year = AcademicYear::create([
+            'school_id' => $this->school->id,
+            'name' => '2025/2026',
+            'start_date' => '2025-07-15',
+            'end_date' => '2026-06-20',
+            'is_active' => true,
+        ]);
+
+        $term = Term::create([
+            'academic_year_id' => $year->id,
+            'name' => 'Semester Ganjil',
+            'semester_type' => 'odd',
+            'start_date' => '2025-07-15',
+            'end_date' => '2025-12-20',
+            'is_active' => true,
+        ]);
+
+        $class = ClassGroup::create([
+            'school_id' => $this->school->id,
+            'academic_year_id' => $year->id,
+            'grade_level' => 7,
+            'name' => '7A',
+            'capacity' => 1,
+        ]);
+
+        $firstStudent = Student::create([
+            'school_id' => $this->school->id,
+            'nis' => 'NIS-CAP-001',
+            'name' => 'Siswa Pertama (Sintetis)',
+            'gender' => 'L',
+        ]);
+        $secondStudent = Student::create([
+            'school_id' => $this->school->id,
+            'nis' => 'NIS-CAP-002',
+            'name' => 'Siswa Kedua (Sintetis)',
+            'gender' => 'P',
+        ]);
+
+        $this->enrollmentService->enrollStudent($term->id, $class->id, $firstStudent->id);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('sudah mencapai kapasitas maksimal');
+
+        $this->enrollmentService->enrollStudent($term->id, $class->id, $secondStudent->id);
+    }
 }

@@ -135,13 +135,13 @@ class TeacherController extends Controller
             ? file_get_contents($request->file('csv_file')->getRealPath())
             : (string) $request->input('csv_content');
 
-        $rows = $this->importService->parseCsvString($content);
-
-        if (empty($rows)) {
-            return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
-        }
-
         try {
+            $rows = $this->importService->parseCsvString($content, ['nip', 'name', 'gender']);
+
+            if (empty($rows)) {
+                return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
+            }
+
             $result = $this->importService->importTeachersBatch(
                 schoolId: $schoolId,
                 rows: $rows,

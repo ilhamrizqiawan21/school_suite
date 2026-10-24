@@ -7,6 +7,7 @@ namespace App\Modules\Academic\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicImportService;
 use App\Modules\Academic\Application\Services\EnrollmentService;
+use App\Modules\Academic\Infrastructure\Models\AcademicYear;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Term;
@@ -14,6 +15,7 @@ use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -101,8 +103,19 @@ class StudentController extends Controller
             'address' => ['nullable', 'string'],
             'parent_phone' => ['nullable', 'string', 'max:30'],
             'parent_name' => ['nullable', 'string', 'max:150'],
-            'class_group_id' => ['nullable', 'exists:class_groups,id'],
-            'term_id' => ['nullable', 'exists:terms,id'],
+            'class_group_id' => [
+                'nullable',
+                'required_with:term_id',
+                Rule::exists('class_groups', 'id')->where(fn ($query) => $query->where('school_id', $schoolId)),
+            ],
+            'term_id' => [
+                'nullable',
+                'required_with:class_group_id',
+                Rule::exists('terms', 'id')->where(fn ($query) => $query->whereIn(
+                    'academic_year_id',
+                    AcademicYear::where('school_id', $schoolId)->select('id')
+                )),
+            ],
         ]);
 
         $validated['school_id'] = $schoolId;
@@ -110,26 +123,34 @@ class StudentController extends Controller
         $termId = $validated['term_id'] ?? null;
         unset($validated['class_group_id'], $validated['term_id']);
 
-        $student = Student::create($validated);
+        try {
+            $student = DB::transaction(function () use ($validated, $classGroupId, $termId, $request, $schoolId): Student {
+                $student = Student::create($validated);
 
-        if ($classGroupId && $termId) {
-            $this->enrollmentService->enrollStudent(
-                termId: (int) $termId,
-                classGroupId: (int) $classGroupId,
-                studentId: $student->id,
-                actorId: $request->user()->id
-            );
+                if ($classGroupId && $termId) {
+                    $this->enrollmentService->enrollStudent(
+                        termId: (int) $termId,
+                        classGroupId: (int) $classGroupId,
+                        studentId: $student->id,
+                        actorId: $request->user()->id
+                    );
+                }
+
+                $this->auditLogger->log(
+                    eventType: 'academic.student.created',
+                    targetType: 'student',
+                    targetId: (string) $student->id,
+                    newValues: $student->toArray(),
+                    oldValues: null,
+                    actor: $request->user(),
+                    schoolId: $schoolId
+                );
+
+                return $student;
+            });
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['class_group_id' => $e->getMessage()]);
         }
-
-        $this->auditLogger->log(
-            eventType: 'academic.student.created',
-            targetType: 'student',
-            targetId: (string) $student->id,
-            newValues: $student->toArray(),
-            oldValues: null,
-            actor: $request->user(),
-            schoolId: $schoolId
-        );
 
         return back()->with('message', "Siswa {$student->name} berhasil ditambahkan.");
     }
@@ -186,13 +207,13 @@ class StudentController extends Controller
             ? file_get_contents($request->file('csv_file')->getRealPath())
             : (string) $request->input('csv_content');
 
-        $rows = $this->importService->parseCsvString($content);
-
-        if (empty($rows)) {
-            return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
-        }
-
         try {
+            $rows = $this->importService->parseCsvString($content, ['nis', 'name', 'gender']);
+
+            if (empty($rows)) {
+                return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
+            }
+
             $termId = $request->filled('enroll_term_id') ? (int) $request->input('enroll_term_id') : null;
             $classId = $request->filled('enroll_class_group_id') ? (int) $request->input('enroll_class_group_id') : null;
 

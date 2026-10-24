@@ -47,6 +47,28 @@ class AcademicImportServiceTest extends TestCase
         $this->assertEquals('Bunga Mawar', $parsed[1]['name']);
     }
 
+    public function test_rejects_csv_rows_with_mismatched_column_counts(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('baris data 2');
+
+        $this->importService->parseCsvString(
+            "nis,name,gender\n1001,Andi Saputra,L\n1002,Bunga Mawar\n",
+            ['nis', 'name', 'gender']
+        );
+    }
+
+    public function test_rejects_csv_with_missing_required_headers(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Kolom wajib: gender');
+
+        $this->importService->parseCsvString(
+            "nis,name\n1001,Andi Saputra\n",
+            ['nis', 'name', 'gender']
+        );
+    }
+
     public function test_validate_student_rows_detects_duplicate_nis(): void
     {
         // Masukkan satu siswa yang sudah ada di database

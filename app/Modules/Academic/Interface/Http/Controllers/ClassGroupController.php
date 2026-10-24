@@ -14,6 +14,7 @@ use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -75,7 +76,10 @@ class ClassGroupController extends Controller
         $schoolId = (int) $request->user()->school_id;
 
         $validated = $request->validate([
-            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'academic_year_id' => [
+                'required',
+                Rule::exists('academic_years', 'id')->where(fn ($query) => $query->where('school_id', $schoolId)),
+            ],
             'grade_level' => ['required', 'integer', 'min:1', 'max:12'],
             'name' => [
                 'required',
@@ -83,7 +87,10 @@ class ClassGroupController extends Controller
                 'max:50',
                 Rule::unique('class_groups')->where('academic_year_id', $request->input('academic_year_id')),
             ],
-            'homeroom_teacher_id' => ['nullable', 'exists:teachers,id'],
+            'homeroom_teacher_id' => [
+                'nullable',
+                Rule::exists('teachers', 'id')->where(fn ($query) => $query->where('school_id', $schoolId)),
+            ],
             'capacity' => ['required', 'integer', 'min:1', 'max:60'],
         ]);
 
@@ -91,25 +98,33 @@ class ClassGroupController extends Controller
         $teacherId = $validated['homeroom_teacher_id'] ?? null;
         unset($validated['homeroom_teacher_id']);
 
-        $class = ClassGroup::create($validated);
+        try {
+            $class = DB::transaction(function () use ($validated, $teacherId, $request, $schoolId): ClassGroup {
+                $class = ClassGroup::create($validated);
 
-        if ($teacherId) {
-            try {
-                $this->teachingAssignmentService->assignHomeroomTeacher((int) $class->id, (int) $teacherId, $request->user());
-            } catch (InvalidArgumentException $e) {
-                return back()->withErrors(['homeroom_teacher_id' => $e->getMessage()]);
-            }
+                if ($teacherId) {
+                    $this->teachingAssignmentService->assignHomeroomTeacher(
+                        (int) $class->id,
+                        (int) $teacherId,
+                        $request->user()
+                    );
+                }
+
+                $this->auditLogger->log(
+                    eventType: 'academic.class_group.created',
+                    targetType: 'class_group',
+                    targetId: (string) $class->id,
+                    newValues: $class->toArray(),
+                    oldValues: null,
+                    actor: $request->user(),
+                    schoolId: $schoolId
+                );
+
+                return $class;
+            });
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['homeroom_teacher_id' => $e->getMessage()]);
         }
-
-        $this->auditLogger->log(
-            eventType: 'academic.class_group.created',
-            targetType: 'class_group',
-            targetId: (string) $class->id,
-            newValues: $class->toArray(),
-            oldValues: null,
-            actor: $request->user(),
-            schoolId: $schoolId
-        );
 
         return back()->with('message', "Rombongan belajar {$class->name} berhasil dibuat.");
     }
@@ -119,7 +134,10 @@ class ClassGroupController extends Controller
         Gate::authorize('update', $classGroup);
 
         $validated = $request->validate([
-            'teacher_id' => ['required', 'exists:teachers,id'],
+            'teacher_id' => [
+                'required',
+                Rule::exists('teachers', 'id')->where(fn ($query) => $query->where('school_id', $classGroup->school_id)),
+            ],
         ]);
 
         try {

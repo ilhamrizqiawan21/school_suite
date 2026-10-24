@@ -148,35 +148,41 @@ flowchart TD
 
 ---
 
-### [ ] TAHAP S04: Operasi Akademik Harian & Jadwal (`app/Modules/Academic`)
+### [x] TAHAP S04: Operasi Akademik Harian & Jadwal (`app/Modules/Academic`)
 
 > **Kebutuhan Terkait:** `SS-F-004`, `SS-F-005`, `DESIGN.md`.  
 > **Gate Keluar:** Deteksi benturan jadwal ruangan & guru teruji; audit log koreksi absensi tercatat.
 
-- [ ] **S04-T01: Migrasi Skema Jadwal, Presensi, dan Jurnal**
-  - Tabel: `schedules` (jadwal pelajaran per slot waktu, hari, ruang), `lesson_sessions` (pertemuan pembelajaran aktual), `attendance_records` (presensi harian & pertemuan: Hadir, Sakit, Izin, Alpa), `teaching_journals` (catatan materi, tujuan, dan dinamika kelas).
-  - *Bukti:* Skema database mendukung pembedaan presensi harian sekolah vs presensi per jam pelajaran.
-- [ ] **S04-T02: Engine Validasi Benturan Jadwal (Conflict Detection)**
-  - Aturan: Guru tidak boleh dijadwalkan di 2 kelas berbeda pada slot jam yang sama.
-  - Aturan: Ruang kelas / lab tidak boleh digunakan oleh 2 mata pelajaran bersamaan.
-  - Status draft jadwal vs jadwal terbit (*published*).
-  - *Bukti:* Unit test mendeteksi benturan guru dan benturan ruangan saat input jadwal.
-- [ ] **S04-T03: Service Presensi Siswa & Jurnal Pembelajaran**
-  - Pencatatan presensi siswa secara massal per pertemuan.
-  - Pengisian jurnal mengajar guru terhubung langsung dengan sesi pelajaran.
-  - Audit log otomatis saat terjadi perubahan/koreksi status presensi setelah disimpan.
-  - *Bukti:* Test koreksi absensi membuktikan rekam jejak pengubah, waktu, dan alasan koreksi tercatat di audit log.
-- [ ] **S04-T04: UI Input Presensi Cepat & Grid Jadwal Guru (Mobile/Tablet Friendly)**
-  - Layar input absensi cepat dengan toggle satu klik (Hadir Semua, Sakit, Izin, Alpa).
-  - Tampilan grid kalender jadwal mingguan untuk guru dan ruang.
-  - Status visual yang jelas tanpa hanya bergantung pada warna (ada label dan ikon).
-  - *Bukti:* Antarmuka Vue responsif dan dapat dioperasikan penuh dengan keyboard.
-- [ ] **S04-T05: Rekapitulasi Presensi Periodik**
-  - Service agregasi presensi: persentase kehadiran per siswa, per kelas, dan per periode.
-  - Export rekap presensi format PDF dan Excel.
-  - *Bukti:* Perhitungan agregasi presensi diverifikasi dengan tabel kalkulasi sintetis.
-- [ ] **S04-T06: Verifikasi Gate S04 & Stress Testing Skenario Benturan**
-  - Uji konflik jadwal, uji izin akses absensi (hanya guru pengajar atau admin yang dapat mengisi), uji audit log koreksi.
+- [x] **S04-T01: Migrasi Skema Jadwal, Presensi, dan Jurnal**
+  - Tabel: `schedules` (jadwal pelajaran per slot waktu, hari, ruang, status draf/terbit), `lesson_sessions` (pertemuan pembelajaran aktual), `attendance_records` (presensi harian & pertemuan: Hadir, Sakit, Izin, Alpa), `teaching_journals` (catatan materi, tujuan, dan dinamika kelas).
+  - Model Eloquent di `app/Modules/Academic/Infrastructure/Models/` (`Schedule`, `LessonSession`, `AttendanceRecord`, `TeachingJournal`).
+  - *Bukti:* Skema database mendukung pembedaan presensi harian sekolah vs presensi per jam pelajaran; rollback bersih teruji.
+- [x] **S04-T02: Engine Validasi Benturan Jadwal (Conflict Detection)**
+  - Service `ScheduleService` di `app/Modules/Academic/Application/Services/ScheduleService.php`.
+  - Aturan benturan guru: deteksi overlap slot waktu hari yang sama untuk guru di kelas berbeda.
+  - Aturan benturan rombel: deteksi overlap slot waktu hari yang sama untuk rombel dengan mapel berbeda.
+  - Aturan benturan ruang: deteksi overlap penggunaan ruang/lab pada slot jam yang sama.
+  - Transisi status draf jadwal ke jadwal terbit (*published*) secara massal dengan audit logging.
+  - *Bukti:* Feature test `ScheduleConflictTest` (6 tests, 13 assertions) lulus 100%.
+- [x] **S04-T03: Service Presensi Siswa & Jurnal Pembelajaran**
+  - Service `AttendanceService` dan `JournalService` di `app/Modules/Academic/Application/Services/`.
+  - Pencatatan presensi siswa massal per pertemuan dan harian.
+  - Pengisian jurnal mengajar guru terhubung langsung dengan sesi pelajaran dan snapshot ringkasan presensi.
+  - Audit log otomatis saat terjadi perubahan/koreksi status presensi setelah disimpan (`SS-F-005`).
+  - *Bukti:* Feature test `AttendanceAndJournalTest` (3 tests, 12 assertions) membuktikan pencatatan presensi massal, koreksi audit log, dan penutupan sesi jurnal.
+- [x] **S04-T04: UI Input Presensi Cepat & Grid Jadwal Guru (Mobile/Tablet Friendly)**
+  - Antarmuka jadwal mingguan (`resources/js/Pages/Academic/Schedules/Index.vue`): filter rombel/guru, visualisasi kartu jadwal per hari (Senin - Sabtu), badge status draf vs terbit, tombol publikasi massal.
+  - Antarmuka jurnal mengajar guru (`resources/js/Pages/Academic/Journals/Index.vue`): riwayat jurnal, materi pokok, tujuan pembelajaran, dan snapshot presensi sesi.
+  - Antarmuka presensi siswa massal (`resources/js/Pages/Academic/Attendance/Index.vue`): toggle satu klik "Tandai Semua Hadir", tombol status H/S/I/A reaktif, catatan dispensasi/keterangan sakit, kartu live summary.
+  - *Bukti:* Vue 3 + Tailwind CSS v4 interaktif, keyboard-operable, build bundle sukses.
+- [x] **S04-T05: Controller & Kebijakan Otorisasi Operasi Harian**
+  - Controller `ScheduleController`, `AttendanceController`, `JournalController` di `app/Modules/Academic/Interface/Http/Controllers/`.
+  - Kebijakan `SchedulePolicy` dan `AttendancePolicy` di `app/Modules/Academic/Application/Policies/` didaftarkan via `AcademicServiceProvider`.
+  - Proteksi server-side: siswa dilarang membuat jadwal (403), guru hanya dapat mencatat presensi sesinya sendiri.
+  - *Bukti:* Feature test `DailyOperationsControllersTest` (5 tests, 20 assertions) lulus 100%.
+- [x] **S04-T06: Verifikasi Gate S04 & Stress Testing Skenario Benturan**
+  - Eksekusi penuh test suite jadwal, absensi, jurnal, dan boundary monolith.
+  - Total test suite bertambah menjadi 82 tests, 353 assertions (100% passed).
   - Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
 
 ---

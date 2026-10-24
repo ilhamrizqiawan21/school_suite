@@ -52,6 +52,15 @@ class EnrollmentService
             throw new InvalidArgumentException("Siswa [{$student->name}] sudah terdaftar di kelas lain pada semester ini.");
         }
 
+        $activeEnrollmentCount = Enrollment::where('term_id', $termId)
+            ->where('class_group_id', $classGroupId)
+            ->where('status', EnrollmentStatusEnum::ACTIVE->value)
+            ->count();
+
+        if ($activeEnrollmentCount >= $classGroup->capacity) {
+            throw new InvalidArgumentException("Rombongan belajar [{$classGroup->name}] sudah mencapai kapasitas maksimal.");
+        }
+
         // Hitung nomor absen jika tidak ditentukan
         if ($rollNumber === null) {
             $maxRoll = (int) Enrollment::where('term_id', $termId)
