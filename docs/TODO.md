@@ -88,10 +88,11 @@ flowchart TD
   - Service aplikasi `UserService` di `app/Modules/Core/Application/Services/` dengan pengecekan Gate eksplisit dan isolasi data per sekolah.
   - Aturan keamanan teruji: penolakan tanpa izin (403), isolasi akses lintas sekolah, larangan penghapusan akun sendiri oleh admin.
   - *Bukti:* Feature test `CoreAuthorizationTest` (6 tests, 21 assertions) lulus 100%; total testsuite: 16 passed, 89 assertions.
-- [ ] **S02-T03: Engine Audit Log Terpusat (`app/Shared/Audit`)**
-  - Service penangkap kejadian material: `actor_id`, `school_id`, `event_type`, `target_type`, `target_id`, `old_values`, `new_values`, `ip_address`, `user_agent`.
-  - Sanitasi data otomatis (tidak mencatat password, secret, token, atau data sensitif pribadi).
-  - *Bukti:* Audit recorded test saat terjadi perubahan profil atau status user.
+- [x] **S02-T03: Engine Audit Log Terpusat (`app/Shared/Audit`)**
+  - Implementasi `AuditLogger` di `app/Shared/Audit/AuditLogger.php` dengan penangkapan metadata terpusat (`actor_id`, `school_id`, `event_type`, `target_type`, `target_id`, `old_values`, `new_values`, `ip_address`, `user_agent`).
+  - Mekanisme sanitasi otomatis rekursif untuk me-redact seluruh parameter sensitif (`password`, `token`, `secret`, `api_key`, dll.) menjadi `'[REDACTED]'`.
+  - Integrasi dengan `UserService` pada alur pembuatan, pembaruan, dan penghapusan pengguna.
+  - *Bukti:* Feature test `AuditLoggerTest` (2 tests, 18 assertions) lulus 100%; total testsuite: 18 passed, 107 assertions.
 - [ ] **S02-T04: Alur Autentikasi Pengguna & Sesi**
   - Login form berbasis email/username & password dengan rate limiting (brute force protection).
   - Logout, ganti password, proteksi session hijacking / CSRF token.

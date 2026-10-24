@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Application\Services;
 
 use App\Models\User;
+use App\Shared\Audit\AuditLogger;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,12 @@ use InvalidArgumentException;
 
 class UserService
 {
+    public function __construct(
+        protected ?AuditLogger $auditLogger = null
+    ) {
+        $this->auditLogger = $auditLogger ?? new AuditLogger;
+    }
+
     /**
      * Create a new user scoped to the actor's school.
      *
@@ -31,7 +38,7 @@ class UserService
             throw new InvalidArgumentException('User must be associated with a valid school.');
         }
 
-        return User::create([
+        $user = User::create([
             'school_id' => $schoolId,
             'role_id' => $data['role_id'] ?? null,
             'name' => (string) $data['name'],
@@ -41,6 +48,23 @@ class UserService
             'password' => Hash::make((string) $data['password']),
             'is_active' => (bool) ($data['is_active'] ?? true),
         ]);
+
+        $this->auditLogger->log(
+            eventType: 'core.user.created',
+            targetType: 'User',
+            targetId: (string) $user->id,
+            newValues: [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role_id' => $user->role_id,
+                'is_active' => $user->is_active,
+                'password' => '[UNMODIFIED_PLAINTEXT_ATTEMPT]',
+            ],
+            actor: $actor,
+            schoolId: (int) $schoolId
+        );
+
+        return $user;
     }
 
     /**
@@ -58,18 +82,31 @@ class UserService
 
         $fillable = ['name', 'username', 'email', 'phone', 'role_id', 'is_active'];
         $updates = [];
+        $oldValues = [];
 
         foreach ($fillable as $field) {
             if (array_key_exists($field, $data)) {
+                $oldValues[$field] = $target->{$field};
                 $updates[$field] = $data[$field];
             }
         }
 
         if (! empty($data['password'])) {
             $updates['password'] = Hash::make((string) $data['password']);
+            $oldValues['password'] = '[ENCRYPTED_PREVIOUS]';
         }
 
         $target->update($updates);
+
+        $this->auditLogger->log(
+            eventType: 'core.user.updated',
+            targetType: 'User',
+            targetId: (string) $target->id,
+            newValues: $updates,
+            oldValues: $oldValues,
+            actor: $actor,
+            schoolId: $target->school_id !== null ? (int) $target->school_id : null
+        );
 
         return $target;
     }
@@ -85,6 +122,27 @@ class UserService
             throw new AuthorizationException('Actor is not authorized to delete this user.');
         }
 
-        return (bool) $target->delete();
+        $targetSnapshot = [
+            'name' => $target->name,
+            'email' => $target->email,
+            'role_id' => $target->role_id,
+        ];
+        $targetId = (string) $target->id;
+        $schoolId = $target->school_id !== null ? (int) $target->school_id : null;
+
+        $deleted = (bool) $target->delete();
+
+        if ($deleted) {
+            $this->auditLogger->log(
+                eventType: 'core.user.deleted',
+                targetType: 'User',
+                targetId: $targetId,
+                oldValues: $targetSnapshot,
+                actor: $actor,
+                schoolId: $schoolId
+            );
+        }
+
+        return $deleted;
     }
 }
