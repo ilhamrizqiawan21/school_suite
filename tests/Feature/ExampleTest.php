@@ -15,6 +15,11 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertInertia(fn ($page) => $page->component('Welcome'));
+        $response->assertInertia(fn ($page) => $page
+            ->component('Dashboard')
+            ->has('stats.modules_ready')
+            ->where('stats.modules_ready', 9)
+            ->has('activePeriod.label')
+        );
     }
 }

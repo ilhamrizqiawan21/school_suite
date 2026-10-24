@@ -37,7 +37,20 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            //
+            'appName' => config('app.name', 'School Suite'),
+            'school' => [
+                'name' => config('app.school_name', 'Sekolah Pilot School Suite'),
+            ],
+            'activePeriod' => [
+                'academic_year' => '2026/2027',
+                'term' => 'Ganjil',
+                'label' => '2026/2027 — Semester Ganjil',
+                'is_active' => true,
+            ],
+            'flash' => [
+                'message' => fn () => $request->session()->get('message'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
         ];
     }
 }

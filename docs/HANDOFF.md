@@ -4,53 +4,54 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang sedang direview.
 
 ## Identitas
 
-- Task/issue: S01-T04 Testing Toolchain & Architecture Boundary Test
-- Requirement ID: S01 Fondasi, ARCHITECTURE.md, TESTS.md (SS-T-ACCESS, SS-T-DATA), REGRESSION.md
+- Task/issue: S01-T05 Base Application Shell & Navigation Layout (UX Base)
+- Requirement ID: S01 Fondasi, DESIGN.md (Arsitektur Informasi & Aksesibilitas), REQUIREMENTS.md
 - Branch/commit: main / commit berikutnya
 - Status: Siap direview
 
 ## Ringkasan dan scope
 
 - Perubahan:
-  - Mengonfigurasi testsuite di `phpunit.xml`: `Unit`, `Feature`, `Architecture`, `Contracts`.
-  - Mengimplementasikan `tests/Architecture/ModularBoundaryTest.php` menggunakan PhpParser AST inspection untuk membuktikan dan mengunci aturan batas modular monolith:
-    1. Modul dilarang mengimpor `Infrastructure` (Model/Repository/Migration) milik modul lain secara langsung.
-    2. Lapisan `Domain` harus murni PHP dan dilarang mengimpor artefak HTTP (`Illuminate\Http`, `Inertia`).
-    3. Controller harus berada di lapisan `Interface/Http/Controllers`.
-    4. Scanner boundary terbukti dapat mendeteksi simulasi pelanggaran impor lintas modul.
-  - Menambahkan skrip CLI di `composer.json`: `composer test`, `composer lint`, `composer format`.
-  - Format kode otomatis melalui `composer format` (`pint`).
-  - Pembaruan status di `docs/TODO.md`.
+  - Mengimplementasikan `resources/js/layouts/AppLayout.vue` sebagai layout shell utama.
+  - Mengimplementasikan `resources/js/components/ActivePeriodBadge.vue` untuk memastikan periode aktif selalu terlihat sesuai prinsip desain.
+  - Mengimplementasikan `resources/js/components/SidebarNavigation.vue` berbasis 7 area kerja (Beranda, Akademik, Pembelajaran, Wali Kelas, Administrasi, Laporan, Pengaturan).
+  - Mengimplementasikan `resources/js/components/TopNavbar.vue` dengan informasi unit sekolah dan status periode.
+  - Membangun halaman `resources/js/Pages/Dashboard.vue` dengan status kesiapan modul sekolah pilot.
+  - Berbagi data global (sekolah, activePeriod, flash message) melalui `App\Http\Middleware\HandleInertiaRequests`.
+  - Memperbarui route `/` di `routes/web.php` dan feature test `tests/Feature/ExampleTest.php` untuk memvalidasi komponen `Dashboard` dan props `activePeriod`.
+  - Aksesibilitas keyboard dengan skip-link dan ring focus visual.
 - Tidak diubah:
-  - Struktur modul dan route yang sudah dibentuk pada S01-T03.
+  - Struktur batas backend modul di `app/Modules/*`.
 
 ## Dampak teknis
 
 - Modul/file:
-  - `phpunit.xml`
-  - `composer.json`
-  - `tests/Architecture/ModularBoundaryTest.php`
-  - `app/Shared/Providers/ModularServiceProvider.php`
+  - `resources/js/layouts/AppLayout.vue`
+  - `resources/js/components/*`
+  - `resources/js/Pages/Dashboard.vue`
+  - `app/Http/Middleware/HandleInertiaRequests.php`
+  - `routes/web.php`
+  - `tests/Feature/ExampleTest.php`
   - `docs/TODO.md`
 - Migrasi/data: Tidak ada migrasi database.
-- Keamanan/izin: Mencegah bypass isolasi data antar-modul sejak level statis/AST.
+- Keamanan/izin: Global state tidak mengekspos data sensitif; hanya data publik sekolah dan periode aktif.
 - Keputusan atau asumsi:
-  - Menggunakan PhpParser bawaan framework untuk architecture testing yang ringan, cepat (<500ms), dan bebas konflik versi dependency.
+  - Periode aktif default di-inject via Inertia shared props sampai tabel periode dinamis diimplementasikan pada S03.
 
 ## Bukti
 
 - Perintah tes dan hasil:
-  - `composer test`: 8 passed, 38 assertions (641ms).
+  - `composer test`: 8 passed, 42 assertions (326ms).
   - `composer lint`: passed (Pint test passed).
-  - `npm run typecheck`: passed.
-  - `npm run build`: passed.
+  - `npm run typecheck`: passed (`vue-tsc --noEmit` exit code 0).
+  - `npm run build`: passed (Vite build 409ms).
   - `python3 ~/.gemini/config/skills/docs-governance/scripts/audit-docs.py --root . --scope full`: passed (exit code 0).
 - Langkah review manual:
-  - Jalankan `composer test` untuk melihat seluruh testsuite termasuk Architecture test.
-  - Jalankan `composer lint` untuk melihat kepatuhan format kode.
+  - Jalankan `php artisan test --filter=ExampleTest`
+  - Buka `/` di browser untuk memverifikasi tampilan shell navigasi dan badge periode aktif.
 
 ## Risiko dan pemulihan
 
-- Risiko tersisa: Halaman shell navigasi dan state periodik UI dasar belum dibangun (akan dikerjakan pada S01-T05).
+- Risiko tersisa: Gate keluar S01 perlu diverifikasi menyeluruh (akan difinalisasi pada S01-T06).
 - Rollback: `git revert HEAD`.
-- Follow-up: Lanjut ke S01-T05 (Base Application Shell & Navigation Layout UX Base).
+- Follow-up: Lanjut ke S01-T06 (Verifikasi Gate S01 & Dokumentasi Handoff).

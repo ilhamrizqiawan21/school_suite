@@ -71,13 +71,15 @@ flowchart TD
 
 ---
 
-### [ ] S01-T05: Base Application Shell & Navigation Layout (Inertia + Vue)
-- [ ] Bangun layout utama aplikasi sesuai panduan [`docs/DESIGN.md`](DESIGN.md):
-  - Area kerja peran: Beranda, Akademik, Pembelajaran, Wali Kelas, Administrasi, Laporan, Pengaturan.
-  - Komponen persisten indikator periode aktif (tahun ajaran & semester) yang selalu terlihat.
-  - Dukungan navigasi keyboard dan kontras aksesibilitas.
-- [ ] Halaman dashboard placeholder yang ter-render via Inertia.
-- **Bukti penerimaan:** Akses browser/HTTP endpoint `/` menampilkan shell aplikasi dengan Inertia, `npm run build` lulus tanpa type error.
+### [x] S01-T05: Base Application Shell & Navigation Layout (Inertia + Vue)
+- [x] Bangun layout utama aplikasi sesuai panduan [`docs/DESIGN.md`](DESIGN.md):
+  - Area kerja navigasi: Beranda, Akademik, Pembelajaran, Wali Kelas, Administrasi, Laporan, Pengaturan di `resources/js/components/SidebarNavigation.vue`.
+  - Komponen persisten indikator periode aktif (`resources/js/components/ActivePeriodBadge.vue`) dan identitas unit sekolah di `resources/js/components/TopNavbar.vue`.
+  - Aksesibilitas: Skip link navigasi keyboard (`Lewati ke konten utama`), fokus visual kontras (`focus-visible:ring-2`), semantic HTML.
+  - Shell terpadu di `resources/js/layouts/AppLayout.vue`.
+- [x] Halaman dashboard utama di `resources/js/Pages/Dashboard.vue` ter-render via Inertia dari route `/`.
+- [x] Berbagi data global (nama sekolah, periode aktif, flash message) via `HandleInertiaRequests.php`.
+- **Bukti penerimaan:** Feature test `ExampleTest` memvalidasi komponen `Dashboard`, `stats.modules_ready = 9`, dan `activePeriod.label` (8 tests, 42 assertions passed); `npm run build` & `npm run typecheck` sukses 100%.
 
 ---
 
