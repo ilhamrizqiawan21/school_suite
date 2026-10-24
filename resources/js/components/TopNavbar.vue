@@ -35,3 +35,4 @@ const schoolName = computed(() => page.props.school?.name ?? 'Sekolah Pilot Scho
         </div>
     </header>
 </template>
+

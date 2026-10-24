@@ -59,3 +59,4 @@ const appName = computed(() => page.props.appName ?? 'School Suite');
         </div>
     </div>
 </template>
+

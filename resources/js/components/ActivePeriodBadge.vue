@@ -32,3 +32,4 @@ const period = computed(() => page.props.activePeriod ?? {
         <span class="font-semibold text-slate-900">{{ period.label }}</span>
     </div>
 </template>
+

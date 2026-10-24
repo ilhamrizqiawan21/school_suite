@@ -65,3 +65,4 @@ const workAreas = [
         </div>
     </AppLayout>
 </template>
+

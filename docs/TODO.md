@@ -83,9 +83,12 @@ flowchart TD
 
 ---
 
-### [ ] S01-T06: Verifikasi Gate S01 & Dokumentasi Handoff
-- [ ] Jalankan audit tata kelola dokumentasi: `python3 ~/.gemini/config/skills/docs-governance/scripts/audit-docs.py --root . --scope full`.
-- [ ] Perbarui [`docs/HANDOFF.md`](HANDOFF.md) dengan rincian file baru, arsitektur, hasil tes, dan langkah review.
-- [ ] Perbarui status fase di [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md).
-- **Bukti penerimaan:** Semua gate keluar S01 terpenuhi tanpa kegagalan tes.
+### [x] S01-T06: Verifikasi Gate S01 & Dokumentasi Handoff
+- [x] Eksekusi seluruh suite pengujian CI (`composer test`: 8 passed, 42 assertions).
+- [x] Validasi gaya kode (`composer lint`: passed).
+- [x] Validasi typecheck frontend (`npm run typecheck`: passed) dan bundle build (`npm run build`: passed).
+- [x] Jalankan audit tata kelola dokumentasi: `python3 ~/.gemini/config/skills/docs-governance/scripts/audit-docs.py --root . --scope full` (exit code 0).
+- [x] Perbarui [`docs/HANDOFF.md`](HANDOFF.md) dengan rincian final S01, arsitektur, bukti verifikasi, dan rollback plan.
+- [x] Perbarui status fase di [`docs/PROJECT_STATUS.md`](PROJECT_STATUS.md) (Tahap S01 selesai, siap lanjut S02).
+- **Bukti penerimaan:** Seluruh kriteria gate keluar Tahap S01 terpenuhi 100%. Repositori berada dalam kondisi bersih dan hijau.
 
