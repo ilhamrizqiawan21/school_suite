@@ -4,25 +4,28 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk 
 
 ## Identitas
 
-- Task/issue: S02-T01 Migrasi Skema Basis Data Core
-- Requirement ID: SS-F-001, SS-D-001 (Satu sekolah per instalasi), ARCHITECTURE.md (Modul Core), AI_RULES.md
+- Task/issue: S02-T02 Domain & Application Service Core (Otorisasi Server-Side & Default Deny Policy)
+- Requirement ID: SS-F-001, AI_RULES.md (Aturan 6: Otorisasi Server-Side), ARCHITECTURE.md (Keamanan & Operasi: Default Deny)
 - Branch/commit: main / commit berikutnya
 - Status: Siap direview
 
 ## Ringkasan dan scope
 
 - Perubahan:
-  - Membuat migrasi basis data Core di `app/Modules/Core/Infrastructure/Database/Migrations/2026_10_24_100000_create_core_tables.php`:
-    - Tabel `schools`: profil sekolah tunggal (NPSN, nama, jenjang, alamat, kontak, logo, settings).
-    - Tabel `roles`: peran sistem & kustom (Admin, TU, Kepala Sekolah, Guru, Wali Kelas, BK, Pustakawan, Siswa, Wali Murid).
-    - Tabel `permissions`: izin per modul (`Core`, `Academic`, `Assessment`, dll.).
-    - Tabel pivot `role_permissions`.
-    - Ekstensi tabel `users`: `school_id`, `role_id`, `username`, `phone`, `is_active`.
-    - Tabel `audit_events`: rekam jejak aktivitas pengguna, target, nilai sebelum/sesudah, IP, dan user agent.
-  - Membuat model Eloquent di `app/Modules/Core/Infrastructure/Models/`: `School`, `Role`, `Permission`, `AuditEvent`.
-  - Memperbarui `app/Models/User.php` dengan relasi `school()`, `role()`, serta helper `hasRole()` dan `hasPermission()`.
-  - Menulis feature test `tests/Feature/CoreMigrationTest.php` untuk menguji eksistensi tabel, kolom, relasi, otorisasi peran, dan pencatatan audit.
-  - Memverifikasi kemampuan migrasi maju (`migrate`) dan mundur (`migrate:rollback`) secara bersih.
+  - Membuat Enum domain di `app/Modules/Core/Domain/`:
+    - `RoleEnum`: peran sistem (`admin`, `operator`, `principal`, `teacher`, `homeroom`, `counselor`, `librarian`, `student`, `parent`) dengan label deskriptif.
+    - `PermissionEnum`: izin sistem granular per modul.
+  - Mengimplementasikan Authorization Policy berprinsip *Default Deny* di `app/Modules/Core/Application/Policies/`:
+    - `UserPolicy`:
+      - Penolakan akses jika pengguna tidak aktif (`!is_active`).
+      - Isolasi sekolah: Pengguna/operator dari Sekolah A dilarang memeriksa, memodifikasi, atau menghapus pengguna di Sekolah B.
+      - Perlindungan akun: Larangan admin menghapus akunnya sendiri (pencegahan lockout).
+      - Self-viewing & self-profile update diperbolehkan untuk pengguna bersangkutan.
+    - `SchoolPolicy`:
+      - Isolasi profil sekolah berbasis `school_id`.
+  - Mendaftarkan kebijakan otorisasi pada container via `App\Modules\Core\CoreServiceProvider`.
+  - Mengimplementasikan `App\Modules\Core\Application\Services\UserService` dengan penegakan otorisasi server-side (`Gate::forUser($actor)->denies(...)` melempar `AuthorizationException`).
+  - Menulis test suite komprehensif `tests/Feature/CoreAuthorizationTest.php`.
   - Memperbarui status di `docs/TODO.md`.
 - Tidak diubah:
   - Struktur modul di luar Core.
@@ -30,33 +33,32 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk 
 ## Dampak teknis
 
 - Modul/file yang disentuh:
-  - `app/Modules/Core/Infrastructure/Database/Migrations/2026_10_24_100000_create_core_tables.php`
-  - `app/Modules/Core/Infrastructure/Models/School.php`
-  - `app/Modules/Core/Infrastructure/Models/Role.php`
-  - `app/Modules/Core/Infrastructure/Models/Permission.php`
-  - `app/Modules/Core/Infrastructure/Models/AuditEvent.php`
-  - `app/Models/User.php`
-  - `tests/Feature/CoreMigrationTest.php`
+  - `app/Modules/Core/Domain/RoleEnum.php`
+  - `app/Modules/Core/Domain/PermissionEnum.php`
+  - `app/Modules/Core/Application/Policies/UserPolicy.php`
+  - `app/Modules/Core/Application/Policies/SchoolPolicy.php`
+  - `app/Modules/Core/Application/Services/UserService.php`
+  - `app/Modules/Core/CoreServiceProvider.php`
+  - `tests/Feature/CoreAuthorizationTest.php`
   - `docs/TODO.md`
-- Migrasi/data: Migrasi baru Core berhasil dieksekusi dan diverifikasi.
-- Keamanan/izin: Mendukung model RBAC (Role-Based Access Control) multi-peran dan pencatatan audit event.
+- Migrasi/data: Tidak ada migrasi baru.
+- Keamanan/izin: Otorisasi server-side aktif secara konsisten; dilarang keras mengandalkan penyembunyian UI.
 - Keputusan atau asumsi:
-  - Role `admin` memiliki blanket permission (akses menyeluruh).
-  - Satu instalasi sekolah diikat via relasi `school_id` pada entitas user.
+  - Aturan Default Deny: Semua kemampuan mengembalikan false secara default kecuali kondisi izin eksplisit terpenuhi.
+  - Admin memiliki blanket bypass untuk fungsi operasional tetapi tetap dilarang menghapus diri sendiri dan dibatasi scope sekolah.
 
 ## Bukti
 
 - Perintah tes dan hasil:
-  - `composer test`: 10 passed, 68 assertions (1085ms) — mencakup `CoreMigrationTest`.
+  - `composer test`: 16 passed, 89 assertions (958ms) — seluruh unit, feature, migration, authorization, dan architecture tests lulus 100%.
   - `composer lint`: passed (Pint test passed).
   - `npm run typecheck`: passed.
   - `python3 ~/.gemini/config/skills/docs-governance/scripts/audit-docs.py --root . --scope full`: passed (exit code 0).
 - Langkah review manual:
-  - Jalankan `php artisan test --filter=CoreMigrationTest`
-  - Jalankan `php artisan migrate:status`
+  - Jalankan `php artisan test --filter=CoreAuthorizationTest`
 
 ## Risiko dan pemulihan
 
-- Risiko tersisa: Service policy otorisasi server-side dan alur autentikasi UI belum diimplementasikan (akan dikerjakan pada S02-T02 hingga S02-T05).
-- Rollback: `git revert HEAD` dan `php artisan migrate:rollback --step=1`.
-- Follow-up: Lanjut ke S02-T02 (Domain & Application Service Core / Otorisasi Server-Side).
+- Risiko tersisa: Audit log engine belum mengotomatiskan penangkapan mutasi user (akan dikerjakan pada S02-T03).
+- Rollback: `git revert HEAD`.
+- Follow-up: Lanjut ke S02-T03 (Engine Audit Log Terpusat di `app/Shared/Audit`).

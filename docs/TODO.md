@@ -82,10 +82,12 @@ flowchart TD
   - Model Eloquent di `app/Modules/Core/Infrastructure/Models/` (`School`, `Role`, `Permission`, `AuditEvent`) dan ekstensi relasi serta helper permission di `app/Models/User.php`.
   - Migrasi forward-safe dengan rollback drop table yang bersih.
   - *Bukti:* `php artisan migrate:fresh` dan `php artisan migrate:rollback` sukses; Feature test `CoreMigrationTest` (10 tests, 68 assertions) lulus 100%.
-- [ ] **S02-T02: Domain & Application Service Core (Otorisasi Server-Side)**
-  - Entitas domain `User`, `Role`, `Permission`, `School`.
-  - Authorization Policy (Default Deny) untuk setiap resource: baca, ubah, hapus, ekspor, lampiran.
-  - *Bukti:* Unit test policy memastikan pengguna tanpa izin ditolak (403 Forbidden).
+- [x] **S02-T02: Domain & Application Service Core (Otorisasi Server-Side)**
+  - Entitas domain `RoleEnum`, `PermissionEnum` di `app/Modules/Core/Domain/`.
+  - Kebijakan otorisasi server-side (Default Deny): `UserPolicy` dan `SchoolPolicy` di `app/Modules/Core/Application/Policies/` didaftarkan via `CoreServiceProvider`.
+  - Service aplikasi `UserService` di `app/Modules/Core/Application/Services/` dengan pengecekan Gate eksplisit dan isolasi data per sekolah.
+  - Aturan keamanan teruji: penolakan tanpa izin (403), isolasi akses lintas sekolah, larangan penghapusan akun sendiri oleh admin.
+  - *Bukti:* Feature test `CoreAuthorizationTest` (6 tests, 21 assertions) lulus 100%; total testsuite: 16 passed, 89 assertions.
 - [ ] **S02-T03: Engine Audit Log Terpusat (`app/Shared/Audit`)**
   - Service penangkap kejadian material: `actor_id`, `school_id`, `event_type`, `target_type`, `target_id`, `old_values`, `new_values`, `ip_address`, `user_agent`.
   - Sanitasi data otomatis (tidak mencatat password, secret, token, atau data sensitif pribadi).
