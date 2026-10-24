@@ -23,6 +23,11 @@ enum PermissionEnum: string
     case ACADEMIC_SCHEDULE_MANAGE = 'academic.schedule.manage';
     case ACADEMIC_ATTENDANCE_RECORD = 'academic.attendance.record';
 
+    // Homeroom Permissions
+    case HOMEROOM_NOTES_VIEW = 'homeroom.notes.view';
+    case HOMEROOM_NOTES_MANAGE = 'homeroom.notes.manage';
+    case HOMEROOM_DISCIPLINE_MANAGE = 'homeroom.discipline.manage';
+
     // Assessment Permissions
     case ASSESSMENT_SCORES_INPUT = 'assessment.scores.input';
     case ASSESSMENT_REPORTS_PUBLISH = 'assessment.reports.publish';

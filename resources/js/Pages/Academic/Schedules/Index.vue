@@ -318,3 +318,4 @@ const deleteSchedule = (id: number) => {
         </div>
     </AppLayout>
 </template>
+

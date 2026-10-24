@@ -155,3 +155,4 @@ const applyFilters = () => {
         </div>
     </AppLayout>
 </template>
+

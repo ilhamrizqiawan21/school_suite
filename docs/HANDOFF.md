@@ -4,109 +4,110 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk 
 
 ## Identitas
 
-- Task/issue: Penyelesaian Penuh Tahap S04 (Operasi Akademik Harian & Jadwal: S04-T01 s/d S04-T06)
-- Requirement ID: SS-F-004 (Jadwal manual & deteksi benturan), SS-F-005 (Presensi harian/pertemuan & audit log koreksi), DESIGN.md, ERD.md, ARCHITECTURE.md
+- Task/issue: Penyelesaian Penuh Tahap S05 (Ruang Kerja Wali Kelas & Kesiswaan: S05-T01 s/d S05-T05)
+- Requirement ID: SS-F-006 (Catatan Siswa & Isolasi Visibilitas), AI_RULES.md (Aturan 4 & 6: Privasi data siswa & isolasi batas modul), DESIGN.md, ERD.md, ARCHITECTURE.md
 - Branch/commit: main / commit berikutnya
-- Status: Selesai & Terverifikasi (Gate S04 Passed)
+- Status: Selesai & Terverifikasi (Gate S05 Passed)
 
 ## Ringkasan dan scope
 
 - Perubahan:
-  - **S04-T01: Migrasi Skema Jadwal, Presensi, dan Jurnal**
-    - Tabel `schedules` (jadwal pelajaran per slot waktu, hari, ruang, status draf/terbit).
-    - Tabel `lesson_sessions` (pertemuan pembelajaran aktual terhubung dengan penugasan mengajar/jadwal).
-    - Tabel `attendance_records` (presensi harian sekolah maupun presensi per pertemuan: Hadir, Sakit, Izin, Alpa).
-    - Tabel `teaching_journals` (catatan materi pokok, indikator/tujuan pembelajaran, catatan kelas, dan snapshot ringkasan kehadiran).
-    - 4 Model Eloquent di `app/Modules/Academic/Infrastructure/Models/` (`Schedule`, `LessonSession`, `AttendanceRecord`, `TeachingJournal`).
-  - **S04-T02: Engine Validasi Benturan Jadwal (Conflict Detection)**
-    - Enums domain: `ScheduleStatusEnum` di `app/Modules/Academic/Domain/Enums/`.
-    - Service `ScheduleService` di `app/Modules/Academic/Application/Services/ScheduleService.php`:
-      - Deteksi benturan guru: mencegah seorang guru dijadwalkan mengajar di 2 kelas berbeda pada hari dan slot waktu yang tumpang tindih (*overlapping*).
-      - Deteksi benturan rombel: mencegah rombel dijadwalkan 2 mata pelajaran berbeda pada slot waktu yang sama.
-      - Deteksi benturan ruang/lab: mencegah ruangan dipakai bersamaan oleh kelas/guru lain.
-      - Alur publikasi massal draf jadwal (`publishSchedules`) beserta pencatatan audit log `academic.schedule.published`.
-    - Teruji lewat [`tests/Feature/ScheduleConflictTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/ScheduleConflictTest.php) (6 tests, 13 assertions).
-  - **S04-T03: Service Presensi Siswa & Jurnal Pembelajaran**
-    - Enums domain: `AttendanceStatusEnum` dan `AttendanceTypeEnum` di `app/Modules/Academic/Domain/Enums/`.
-    - Service `AttendanceService` di `app/Modules/Academic/Application/Services/AttendanceService.php`: pencatatan presensi massal per pertemuan dan harian, deteksi mutasi nilai, dan pencatatan otomatis audit event `academic.attendance.corrected` dengan nilai lama dan nilai baru (`SS-F-005`).
-    - Service `JournalService` di `app/Modules/Academic/Application/Services/JournalService.php`: pengisian jurnal mengajar guru, snapshot ringkasan kehadiran, dan penutupan sesi otomatis (`status = completed`).
-    - Teruji lewat [`tests/Feature/AttendanceAndJournalTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/AttendanceAndJournalTest.php) (3 tests, 12 assertions).
-  - **S04-T04: UI Input Presensi Cepat & Grid Jadwal Guru (Mobile/Tablet Friendly)**
-    - Halaman jadwal mingguan (`resources/js/Pages/Academic/Schedules/Index.vue`): filter rombel/guru, tampilan kartu jadwal Senin - Sabtu, badge draf/terbit, modal tambah jadwal dengan validasi benturan, tombol publikasi draf massal.
-    - Halaman input presensi cepat (`resources/js/Pages/Academic/Attendance/Index.vue`): selector rombel & tanggal, tombol satu klik "Tandai Semua Hadir", toggle tombol H/S/I/A per siswa, input keterangan sakit/izin, kartu ringkasan langsung (Live Summary Cards).
-    - Halaman jurnal mengajar (`resources/js/Pages/Academic/Journals/Index.vue`): riwayat jurnal per pertemuan, materi pokok, tujuan pembelajaran, dan snapshot status presensi.
-  - **S04-T05: Controller & Kebijakan Otorisasi Operasi Harian**
-    - Otorisasi server-side: `SchedulePolicy` dan `AttendancePolicy` didaftarkan via `AcademicServiceProvider`. Siswa dilarang membuat jadwal (403), guru hanya diizinkan mencatat sesi mengajarnya sendiri.
-    - Controller `ScheduleController`, `AttendanceController`, `JournalController` di `app/Modules/Academic/Interface/Http/Controllers/`.
-    - Routes di `app/Modules/Academic/Interface/Routes/web.php` (total 22 route akademik aktif).
-    - Teruji lewat [`tests/Feature/DailyOperationsControllersTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/DailyOperationsControllersTest.php) (5 tests, 20 assertions).
-  - **S04-T06: Verifikasi Gate S04 & Stress Testing Skenario Benturan**
-    - Uji benturan guru, benturan rombel, benturan ruang, uji audit koreksi presensi.
-    - Seluruh test suite (82 tests, 353 assertions) lulus 100%.
+  - **S05-T01: Migrasi Skema Homeroom & Catatan Kesiswaan**
+    - Tabel `student_notes` (catatan perkembangan, sikap positif, pembinaan, konseling).
+    - Tabel `student_incidents` (pelanggaran tata tertib, kategori, bobot poin pelanggaran, dan tindak lanjut).
+    - Tabel `student_achievements` (prestasi akademik, olahraga, seni, keagamaan, tingkat sekolah s/d internasional).
+    - Tabel `assistance_records` (tindak lanjut khusus, kunjungan rumah / home visit, konseling, bantuan siswa).
+    - Enums domain di `app/Modules/Homeroom/Domain/Enums/`: `NoteAccessLevelEnum` (`public`, `internal`, `confidential`), `NoteCategoryEnum` (`academic`, `behavior`, `counseling`, `general`), dan `AchievementLevelEnum` (`school`, `district`, `city`, `province`, `national`, `international`).
+    - 4 Model Eloquent di `app/Modules/Homeroom/Infrastructure/Models/` (`StudentNote`, `StudentIncident`, `StudentAchievement`, `AssistanceRecord`).
+  - **S05-T02: Policy Otorisasi Catatan Siswa Sensitif (`SS-F-006`)**
+    - Service `StudentObservationService` di `app/Modules/Homeroom/Application/Services/`:
+      - Penegakan isolasi privasi: catatan berlabel `confidential` hanya dapat diakses oleh pembuat catatan, wali kelas siswa bersangkutan, guru BK, dan Kepala Sekolah.
+      - Pengecekan sanitasi ekspor: method `getNotesForReportExport` secara ketat hanya mengambil catatan berstatus `public` untuk dimasukkan ke dalam rapor atau ledger publik.
+    - Policy `StudentNotePolicy` di `app/Modules/Homeroom/Application/Policies/` didaftarkan melalui `HomeroomServiceProvider`.
+    - Teruji lewat [`tests/Feature/HomeroomIsolationTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/HomeroomIsolationTest.php) (2 tests, 10 assertions).
+  - **S05-T03: Rekap Kesiapan Siswa Perwalian & Early Warning Presensi**
+    - Service `HomeroomAttendanceService` di `app/Modules/Homeroom/Application/Services/`:
+      - Mengagregasikan status presensi (H/S/I/A) dan menghitung persentase kehadiran rombel per semester aktif.
+      - Mendeteksi flag *Early Warning* (`needs_attention = true`) secara otomatis jika siswa memiliki Alpa >= 3 hari atau tingkat kehadiran di bawah 85%.
+    - Decoupling murni: Service `AcademicQueryService` di `app/Modules/Academic/Application/Services/AcademicQueryService.php` menjembatani akses data rombel, guru, enrollment, dan presensi tanpa direct model/database coupling dari Homeroom ke Academic.
+    - Teruji lewat [`tests/Feature/HomeroomAttendanceSummaryTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/HomeroomAttendanceSummaryTest.php) (1 test, 10 assertions).
+  - **S05-T04: UI Ruang Kerja Wali Kelas (Inertia + Vue)**
+    - Dashboard Wali Kelas (`resources/js/Pages/Homeroom/Dashboard/Index.vue`): ringkasan kelas perwalian, kartu indikator Early Warning ketidakhadiran, ringkasan statistik insiden/prestasi/catatan.
+    - Catatan Observasi (`resources/js/Pages/Homeroom/Observations/Index.vue`): filter siswa & kelas, kartu timeline observasi, badge visibilitas privasi (`Publik`, `Internal`, `Rahasia`), modal form pembuatan catatan baru.
+    - Kedisiplinan & Prestasi (`resources/js/Pages/Homeroom/Discipline/Index.vue`): tab rekam pelanggaran & poin tata tertib, tab rekam prestasi, tab tindak lanjut & kunjungan rumah.
+    - Menu samping `SidebarNavigation.vue` terhubung ke `/wali-kelas`.
+  - **S05-T05: Controller, Routes, & Verifikasi Gate S05**
+    - Controller `HomeroomDashboardController`, `StudentObservationController`, `StudentDisciplineController` di `app/Modules/Homeroom/Interface/Http/Controllers/`.
+    - Routes web di `app/Modules/Homeroom/Interface/Routes/web.php` (9 endpoint terproteksi autentikasi dan policy).
+    - Enums izin kesiswaan ditambahkan ke `app/Modules/Core/Domain/PermissionEnum.php`: `HOMEROOM_NOTES_VIEW`, `HOMEROOM_NOTES_MANAGE`, `HOMEROOM_DISCIPLINE_MANAGE`.
+    - Teruji lewat [`tests/Feature/HomeroomControllersTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/HomeroomControllersTest.php) (11 tests, 59 assertions).
+    - Boundary test arsitektur `ModularBoundaryTest` lulus tanpa pelanggaran impor silang modular.
 - Tidak diubah:
-  - Modul wali kelas, penilaian, atau administrasi (tahap berikutnya).
+  - Modul penilaian (`Assessment`), administrasi, atau SPMB (tahap berikutnya).
 
 ## Dampak teknis
 
 - Modul/file yang disentuh:
   - Backend:
-    - `app/Modules/Academic/Infrastructure/Database/Migrations/2026_10_25_200000_create_schedule_and_attendance_tables.php`
-    - `app/Modules/Academic/Infrastructure/Models/Schedule.php`
-    - `app/Modules/Academic/Infrastructure/Models/LessonSession.php`
-    - `app/Modules/Academic/Infrastructure/Models/AttendanceRecord.php`
-    - `app/Modules/Academic/Infrastructure/Models/TeachingJournal.php`
-    - `app/Modules/Academic/Domain/Enums/ScheduleStatusEnum.php`
-    - `app/Modules/Academic/Domain/Enums/AttendanceStatusEnum.php`
-    - `app/Modules/Academic/Domain/Enums/AttendanceTypeEnum.php`
-    - `app/Modules/Academic/Application/Services/ScheduleService.php`
-    - `app/Modules/Academic/Application/Services/AttendanceService.php`
-    - `app/Modules/Academic/Application/Services/JournalService.php`
-    - `app/Modules/Academic/Application/Policies/SchedulePolicy.php`
-    - `app/Modules/Academic/Application/Policies/AttendancePolicy.php`
-    - `app/Modules/Academic/AcademicServiceProvider.php`
-    - `app/Modules/Academic/Interface/Http/Controllers/ScheduleController.php`
-    - `app/Modules/Academic/Interface/Http/Controllers/AttendanceController.php`
-    - `app/Modules/Academic/Interface/Http/Controllers/JournalController.php`
-    - `app/Modules/Academic/Interface/Routes/web.php`
+    - `app/Modules/Academic/Application/Services/AcademicQueryService.php`
+    - `app/Modules/Core/Domain/PermissionEnum.php`
+    - `app/Modules/Homeroom/Application/Policies/StudentNotePolicy.php`
+    - `app/Modules/Homeroom/Application/Services/HomeroomAttendanceService.php`
+    - `app/Modules/Homeroom/Application/Services/StudentDisciplineService.php`
+    - `app/Modules/Homeroom/Application/Services/StudentObservationService.php`
+    - `app/Modules/Homeroom/Domain/Enums/AchievementLevelEnum.php`
+    - `app/Modules/Homeroom/Domain/Enums/NoteAccessLevelEnum.php`
+    - `app/Modules/Homeroom/Domain/Enums/NoteCategoryEnum.php`
+    - `app/Modules/Homeroom/HomeroomServiceProvider.php`
+    - `app/Modules/Homeroom/Infrastructure/Database/Migrations/2026_10_25_300000_create_homeroom_tables.php`
+    - `app/Modules/Homeroom/Infrastructure/Models/AssistanceRecord.php`
+    - `app/Modules/Homeroom/Infrastructure/Models/StudentAchievement.php`
+    - `app/Modules/Homeroom/Infrastructure/Models/StudentIncident.php`
+    - `app/Modules/Homeroom/Infrastructure/Models/StudentNote.php`
+    - `app/Modules/Homeroom/Interface/Http/Controllers/HomeroomDashboardController.php`
+    - `app/Modules/Homeroom/Interface/Http/Controllers/StudentDisciplineController.php`
+    - `app/Modules/Homeroom/Interface/Http/Controllers/StudentObservationController.php`
+    - `app/Modules/Homeroom/Interface/Routes/web.php`
   - Frontend:
-    - `resources/js/Pages/Academic/Schedules/Index.vue`
-    - `resources/js/Pages/Academic/Attendance/Index.vue`
-    - `resources/js/Pages/Academic/Journals/Index.vue`
+    - `resources/js/Pages/Homeroom/Dashboard/Index.vue`
+    - `resources/js/Pages/Homeroom/Observations/Index.vue`
+    - `resources/js/Pages/Homeroom/Discipline/Index.vue`
     - `resources/js/components/SidebarNavigation.vue`
   - Pengujian:
-    - `tests/Feature/ScheduleConflictTest.php`
-    - `tests/Feature/AttendanceAndJournalTest.php`
-    - `tests/Feature/DailyOperationsControllersTest.php`
+    - `tests/Feature/HomeroomIsolationTest.php`
+    - `tests/Feature/HomeroomAttendanceSummaryTest.php`
+    - `tests/Feature/HomeroomControllersTest.php`
   - Dokumentasi:
     - `docs/TODO.md`
     - `docs/PROJECT_STATUS.md`
     - `docs/HANDOFF.md`
-- Migrasi/data: Tabel `schedules`, `lesson_sessions`, `attendance_records`, `teaching_journals`.
+- Migrasi/data: Tabel `student_notes`, `student_incidents`, `student_achievements`, `assistance_records`.
 - Keamanan/izin:
-  - Server-side Default Deny di seluruh endpoint jadwal dan presensi.
-  - Penolakan akses create jadwal untuk peran bukan pengelola kurikulum (siswa/wali murid 403).
-  - Pengecekan sesi kepemilikan guru saat input absensi sesi.
-  - Setiap koreksi status absensi tercatat di audit log.
+  - Default Deny server-side di seluruh endpoint kesiswaan dan catatan observasi.
+  - Catatan rahasia/BK (`confidential`) disaring ketat di Application layer dan dilarang muncul pada ekspor rapor umum.
+  - Pengguna tanpa peran guru/wali kelas/BK (seperti siswa atau orang tua) diblokir dari endpoint observasi (403 Forbidden).
+  - Penghapusan catatan dibatasi hanya untuk pembuat catatan asli (*author*) atau administrator.
 - Keputusan atau asumsi:
-  - Pembedaan presensi harian sekolah vs presensi per pertemuan didukung dalam satu skema yang dapat diagregasi bersama.
+  - Antarmuka lintas modul dari `Homeroom` ke `Academic` menggunakan `AcademicQueryService` untuk mencegah pelanggaran batasan arsitektur modular monolith.
 
 ## Bukti
 
 - Perintah tes dan hasil:
-  - `composer test`: 82 passed, 353 assertions (3.78s) — 100% lulus (Unit, Feature, Migration, Authorization, Audit, Enrollment, Assignments, Import, Conflict Detection, Attendance, Journals, Boundary Architecture).
+  - `composer test`: 96 passed, 432 assertions (3.34s) — 100% lulus (Unit, Feature, Migration, Authorization, Audit, Enrollment, Assignments, Import, Conflict Detection, Attendance, Journals, Homeroom Isolation, Early Warning, Homeroom Controllers, Boundary Architecture).
   - `composer lint`: passed (Pint test passed).
   - `npm run typecheck`: passed (`vue-tsc --noEmit` exit 0).
   - `npm run build`: passed (Vite production bundle dibangun tanpa error).
   - `python3 ~/.gemini/config/skills/docs-governance/scripts/audit-docs.py --root . --scope full`: passed (exit code 0).
 - Langkah review manual:
-  - Jalankan `php artisan test --filter=ScheduleConflictTest` untuk memverifikasi seluruh aturan benturan jadwal.
-  - Jalankan `php artisan test --filter=AttendanceAndJournalTest` untuk memverifikasi pencatatan dan audit koreksi presensi.
-  - Akses `/akademik/jadwal` untuk melihat grid jadwal mingguan dan mencoba menambahkan slot jadwal.
-  - Akses `/akademik/presensi` untuk menguji alur satu klik "Tandai Semua Hadir" dan pengubahan status individual.
-  - Akses `/akademik/jurnal` untuk melihat rekam jurnal mengajar dan snapshot presensi.
+  - Jalankan `php artisan test --filter=HomeroomIsolationTest` untuk membuktikan catatan berkategori `confidential` tidak bocor ke guru lain dan ekspor rapor.
+  - Jalankan `php artisan test --filter=HomeroomAttendanceSummaryTest` untuk memverifikasi logika deteksi Early Warning ketidakhadiran (Alpa >= 3 atau kehadiran < 85%).
+  - Jalankan `php artisan test --filter=HomeroomControllersTest` untuk memverifikasi seluruh HTTP controllers, validasi input, dan otorisasi.
+  - Akses `/wali-kelas` untuk melihat tampilan dashboard ringkasan rombel dan kartu peringatan dini presensi.
+  - Akses `/wali-kelas/catatan` untuk menguji input catatan observasi siswa dengan opsi tingkat privasi.
+  - Akses `/wali-kelas/kedisiplinan` untuk melihat tab pencatatan pelanggaran, prestasi, dan bantuan konseling.
 
 ## Risiko dan pemulihan
 
-- Risiko tersisa: Modul wali kelas (`Homeroom`: catatan siswa, observasi perilaku, kesiswaan) dan modul penilaian (`Assessment`) belum terpasang. Hal ini merupakan cakupan pada Tahap S05 dan S06.
+- Risiko tersisa: Modul penilaian dan rapor (`Assessment`: formula nilai berversi, bobot komponen, remedial, dan immutable snapshot rapor `SS-D-005`) belum diimplementasikan. Hal ini merupakan cakupan pada Tahap S06.
 - Rollback: `git revert HEAD` jika diperlukan pengembalian commit.
-- Follow-up: Siap lanjut ke **Tahap S05: Ruang Kerja Wali Kelas & Kesiswaan (`app/Modules/Homeroom`)**.
+- Follow-up: Siap lanjut ke **Tahap S06: Manajemen Penilaian & Rapor (`app/Modules/Assessment`)**.
