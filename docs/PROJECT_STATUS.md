@@ -4,18 +4,18 @@ Terakhir diperbarui: 25 Oktober 2026
 
 ## Keadaan saat ini
 
-- Fase: S02 Akses & Tata Kelola Core selesai; siap masuk ke S03 Data Inti Akademik.
+- Fase: S03 Data Inti Akademik & Import Engine selesai; siap masuk ke S04 Operasi Akademik Harian & Jadwal.
 - Kesiapan:
   - S01 Fondasi: Bootstrap Laravel 13, Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, TypeScript, struktur 9 modul monolit modular, layout shell dasar, dan boundary test arsitektur selesai.
-  - S02 Akses:
-    - Skema basis data Core (`schools`, `roles`, `permissions`, `role_permissions`, `audit_events`, ekstensi `users`) dengan migrasi dan rollback bersih (`CoreMigrationTest`).
-    - Otorisasi server-side Default Deny (`UserPolicy`, `SchoolPolicy`, `RoleEnum`, `PermissionEnum`, `UserService`) dengan isolasi akses (`CoreAuthorizationTest`).
-    - Engine audit log terpusat (`App\Shared\Audit\AuditLogger`) dengan sanitasi rekursif secret otomatis (`AuditLoggerTest`).
-    - Alur autentikasi pengguna (email/username), rate limiting 5x, penolakan akun inaktif, proteksi session CSRF/regeneration, dan login UI (`AuthenticationTest`).
-    - Antarmuka manajemen pengguna (`resources/js/Pages/Core/Users/Index.vue`) dan profil sekolah (`resources/js/Pages/Core/School/Edit.vue`) dengan paginasi, pencarian realtime, filter peran, dan proteksi hapus diri sendiri (`UserManagementTest`).
-    - Verifikasi gate akses multi-peran (`RoleMatrixAccessTest`) menguji 6 peran (`admin`, `operator`, `principal`, `teacher`, `homeroom`, `student`).
-  - Seluruh CI dan test suite (37 tests, 195 assertions, Unit, Feature, Architecture, Lint, Typecheck, Build, Docs Governance) hijau 100%.
-- Langkah berikut: Tahap S03 Data Inti Akademik & Import Engine (`app/Modules/Academic`).
+  - S02 Akses: Skema basis data Core, otorisasi server-side Default Deny, engine audit log terpusat, autentikasi rate-limited, UI kelola user & profil sekolah, dan matriks akses multi-peran selesai.
+  - S03 Data Inti Akademik:
+    - Skema basis data Akademik (`academic_years`, `terms`, `subjects`, `teachers`, `students`, `class_groups`, `enrollments`, `teaching_assignments`) forward & rollback bersih (`AcademicMigrationTest`).
+    - Service pendaftaran dan kenaikan kelas bersejarah yang menjamin histori enrollment tidak berubah (`SS-D-004`) serta audit trail (`EnrollmentServiceTest`).
+    - Manajemen penugasan mengajar dan wali kelas per rombel dengan validasi keunikan per tahun ajaran (`TeachingAssignmentServiceTest`).
+    - Engine impor massal CSV siswa dan guru dengan validasi duplikasi NIS/NISN baris per baris, auto-enrollment, dan rollback transaksional atomik (`AcademicImportServiceTest`).
+    - Antarmuka UI manajemen siswa, guru, dan rombel kelas terintegrasi dengan filter pencarian, modal form, dan download template CSV (`AcademicControllersTest`).
+  - Seluruh CI dan test suite (62 tests, 295 assertions, Unit, Feature, Architecture, Lint, Typecheck, Build, Docs Governance) hijau 100%.
+- Langkah berikut: Tahap S04 Operasi Akademik Harian & Jadwal (`app/Modules/Academic`: schedules, sessions, attendance, journals).
 
 ## Blocker sebelum data nyata
 

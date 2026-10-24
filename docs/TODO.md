@@ -111,34 +111,39 @@ flowchart TD
 
 ---
 
-### [ ] TAHAP S03: Data Inti Akademik & Import Engine (`app/Modules/Academic`)
+### [x] TAHAP S03: Data Inti Akademik & Import Engine (`app/Modules/Academic`)
 
 > **Kebutuhan Terkait:** `SS-F-002`, `SS-F-003`, `SS-D-004` (histori enrollment per periode), `ERD.md`.  
 > **Gate Keluar:** Pergantian periode akademik tidak merusak histori enrollment; validasi import massal teruji (duplikat & rollback).
 
-- [ ] **S03-T01: Migrasi Skema Basis Data Akademik**
+- [x] **S03-T01: Migrasi Skema Basis Data Akademik**
   - Tabel: `academic_years`, `terms` (semester ganjil/genap), `subjects` (mata pelajaran), `teachers`, `students` (identitas orang), `class_groups` (rombongan belajar), `enrollments` (penempatan siswa di kelas per semester), `teaching_assignments`.
-  - Kunci relasi: `students` tidak memiliki kolom `class_id` langsung; hubungan kelas ditentukan via `enrollments` terikat pada `term_id`.
-  - *Bukti:* Migrasi database lulus uji integritas referensial.
-- [ ] **S03-T02: Domain & Service Enrollment Bersejarah (`SS-D-004`)**
-  - Service pendaftaran siswa ke rombel per semester aktif.
-  - Service perpindahan semester / kenaikan kelas yang mempertahankan data semester sebelumnya (immutable history).
-  - *Bukti:* Test perpindahan tahun ajaran membuktikan siswa kelas 7 tahun 2025 tetap tercatat di kelas 7 pada semester lama saat naik ke kelas 8 di semester baru.
-- [ ] **S03-T03: Manajemen Penugasan Mengajar & Penugasan Wali Kelas**
-  - Penetapan guru mata pelajaran pada rombel tertentu di semester aktif.
-  - Penetapan guru sebagai wali kelas pada rombel tertentu di semester aktif.
-  - *Bukti:* Service assignment memvalidasi keunikan wali kelas per rombel per periode.
-- [ ] **S03-T04: Engine Impor Massal Siswa & Guru (Excel / CSV)**
-  - Pipeline impor: Upload berkas → pemetaan kolom → validasi format/NIS/NISN → preview kesalahan baris → konfirmasi batch.
-  - Transaksional atomik: Jika ada opsi batalkan batch, seluruh batch di-rollback tanpa sisa data yatim.
-  - *Bukti:* Test import file sintetis: data duplikat ditolak dengan laporan baris invalid; data valid tersimpan sempurna.
-- [ ] **S03-T05: Antarmuka UI Manajemen Data Inti (Inertia + Vue)**
-  - Tampilan daftar siswa dan guru dengan filter rombel dan status aktif.
-  - Modal/layar alur impor dengan feedback status interaktif dan unduhan template impor.
-  - Tampilan manajemen kelas & anggota rombel per periode.
-  - *Bukti:* Komponen Vue modular di `resources/js/modules/academic/`.
-- [ ] **S03-T06: Verifikasi Gate S03 & Rekonsiliasi Data**
-  - Eksekusi test suite data integrity: uji duplikasi NIS/NISN, uji histori kenaikan kelas, uji rollback import gagal.
+  - Kunci relasi: `students` tidak memiliki kolom `class_id` langsung; hubungan kelas ditentukan via `enrollments` terikat pada `term_id` (`SS-D-004`).
+  - Model Eloquent di `app/Modules/Academic/Infrastructure/Models/` dengan tipe data ketat dan relasi internal.
+  - *Bukti:* Feature test `AcademicMigrationTest` (6 tests, 27 assertions) membuktikan integritas skema dan clean rollback.
+- [x] **S03-T02: Domain & Service Enrollment Bersejarah (`SS-D-004`)**
+  - Service `EnrollmentService` di `app/Modules/Academic/Application/Services/EnrollmentService.php` untuk pendaftaran siswa, kenaikan kelas, dan transfer kelas.
+  - Enums `EnrollmentStatusEnum` dan `StudentStatusEnum` di `app/Modules/Academic/Domain/Enums/`.
+  - Service perpindahan semester / kenaikan kelas yang mempertahankan data semester sebelumnya (immutable history) serta pencatatan audit log terpusat.
+  - *Bukti:* Feature test `EnrollmentServiceTest` (4 tests, 16 assertions) membuktikan siswa kelas 7 tahun 2025 tetap tercatat di kelas 7 pada semester lama saat naik ke kelas 8 di semester baru.
+- [x] **S03-T03: Manajemen Penugasan Mengajar & Penugasan Wali Kelas**
+  - Service `TeachingAssignmentService` di `app/Modules/Academic/Application/Services/TeachingAssignmentService.php`.
+  - Penetapan guru mata pelajaran pada rombel per semester aktif dengan penolakan penugasan duplikat.
+  - Penetapan guru sebagai wali kelas dengan validasi keunikan (satu guru hanya dapat menjadi wali kelas pada satu rombel per tahun ajaran).
+  - *Bukti:* Feature test `TeachingAssignmentServiceTest` (3 tests, 8 assertions) lulus 100%.
+- [x] **S03-T04: Engine Impor Massal Siswa & Guru (Excel / CSV)**
+  - Pipeline impor `AcademicImportService` di `app/Modules/Academic/Application/Services/AcademicImportService.php`: parsing CSV, pemetaan kolom, validasi format/NIS/NISN, preview kesalahan baris per baris.
+  - Transaksional atomik: rollback otomatis saat baris tidak valid tanpa menyisakan data yatim di database.
+  - *Bukti:* Feature test `AcademicImportServiceTest` (5 tests, 23 assertions) membuktikan deteksi duplikasi NIS/NISN, auto-enrollment opsional, dan rollback atomik.
+- [x] **S03-T05: Antarmuka UI Manajemen Data Inti (Inertia + Vue)**
+  - Halaman daftar siswa (`resources/js/Pages/Academic/Students/Index.vue`): pencarian realtime, filter rombel, filter status, modal tambah siswa, modal impor CSV, dan unduh template.
+  - Halaman data guru (`resources/js/Pages/Academic/Teachers/Index.vue`): pencarian, filter status kepegawaian, modal tambah, modal impor CSV.
+  - Halaman rombel (`resources/js/Pages/Academic/Classes/Index.vue`): pemilih tahun ajaran, visualisasi kapasitas & jumlah siswa terdaftar, modal tambah rombel, modal penetapan wali kelas.
+  - Controller `StudentController`, `TeacherController`, `ClassGroupController` dengan server-side authorization policies `StudentPolicy`, `TeacherPolicy`, `ClassGroupPolicy` via `AcademicServiceProvider`.
+  - *Bukti:* Feature test `AcademicControllersTest` (7 tests, 26 assertions); build frontend `npm run build` sukses.
+- [x] **S03-T06: Verifikasi Gate S03 & Rekonsiliasi Data**
+  - Eksekusi test suite data integrity: uji duplikasi NIS/NISN, uji histori kenaikan kelas, uji rollback import gagal, uji matriks otorisasi akademik.
+  - Total test suite bertambah menjadi 62 tests, 295 assertions (100% passed).
   - Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
 
 ---
