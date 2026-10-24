@@ -1,0 +1,13 @@
+{
+  "constitution": "docs/AI_RULES.md",
+  "map": "docs/README.md",
+  "status": "docs/PROJECT_STATUS.md",
+  "history": "docs/DECISIONS.md",
+  "agents": "docs/GEMINI.md",
+  "context": "docs/PRD.md",
+  "contract": "docs/REQUIREMENTS.md",
+  "tests": "docs/TESTS.md",
+  "regression": "docs/REGRESSION.md",
+  "adr_dir": "docs/adr",
+  "adr_index": "docs/adr/README.md"
+}
