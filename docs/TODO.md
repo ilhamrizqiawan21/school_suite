@@ -59,13 +59,15 @@ flowchart TD
 
 ---
 
-### [ ] S01-T04: Testing Toolchain & Invariant Boundary Protection
-- [ ] Konfigurasi Pest PHP / PHPUnit untuk testing (`tests/Unit`, `tests/Feature`, `tests/Contracts`, `tests/Architecture`).
-- [ ] Terapkan **Architecture Test** yang secara mekanik memvalidasi aturan monolit modular:
-  - Modul dilarang mengakses tabel/model internal milik modul lain secara langsung.
-  - Akses lintas modul hanya melalui application service / domain events / shared contracts.
-- [ ] Tambahkan skrip CI lokal (`composer test`, `composer pint`, `npm run lint`).
-- **Bukti penerimaan:** `composer test` berjalan hijau 100% dengan minimal 1 feature smoke test dan 1 architecture rule test.
+### [x] S01-T04: Testing Toolchain & Invariant Boundary Protection
+- [x] Konfigurasi PHPUnit 12 runner di `phpunit.xml` dengan testsuite: `Unit`, `Feature`, `Architecture`, dan `Contracts`.
+- [x] Implementasikan AST-based **Architecture Test** di `tests/Architecture/ModularBoundaryTest.php`:
+  - `test_modules_cannot_import_other_modules_infrastructure_or_models`: Mengunci larangan coupling langsung ke tabel/model/infrastructure modul lain.
+  - `test_domain_layer_must_not_import_http_artifacts`: Menjaga kemurnian lapisan domain dari artefak HTTP/Inertia.
+  - `test_controllers_must_reside_in_interface_layer`: Menjaga controller tetap tipis dan berada di lapisan Interface.
+  - `test_boundary_checker_detects_illegal_cross_module_import`: Verifikasi akurasi pendeteksian pelanggaran batas modular.
+- [x] Tambahkan skrip composer terpadu di `composer.json`: `composer test`, `composer lint`, `composer format`.
+- **Bukti penerimaan:** `composer test` (8 tests, 38 assertions) lulus 100%, `composer lint` passed, seluruh aturan arsitektural monolit modular terlindungi secara otomatis.
 
 ---
 
