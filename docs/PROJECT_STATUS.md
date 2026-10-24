@@ -1,17 +1,21 @@
 # Project Status — School Suite
 
-Terakhir diperbarui: 24 Oktober 2026
+Terakhir diperbarui: 25 Oktober 2026
 
 ## Keadaan saat ini
 
-- Fase: S01 Fondasi selesai; siap masuk ke S02 Akses.
+- Fase: S02 Akses & Tata Kelola Core selesai; siap masuk ke S03 Data Inti Akademik.
 - Kesiapan:
-  - Bootstrap Laravel 13, Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, dan TypeScript selesai.
-  - Struktur 9 modul monolit modular (`app/Modules/*`) dan layanan bersama (`app/Shared/*`) aktif dengan auto-discovery.
-  - Architecture test otomatis aktif mengunci larangan coupling langsung database/model lintas modul.
-  - Shell aplikasi dasar dengan indikator periode aktif persisten (`resources/js/layouts/AppLayout.vue`) selesai.
-  - Seluruh CI dan test suite (Unit, Feature, Architecture, Lint, Typecheck, Build, Docs Governance) hijau 100%.
-- Langkah berikut: Tahap S02 Akses (Core: akun pengguna, role matriks, permission, dan audit log).
+  - S01 Fondasi: Bootstrap Laravel 13, Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, TypeScript, struktur 9 modul monolit modular, layout shell dasar, dan boundary test arsitektur selesai.
+  - S02 Akses:
+    - Skema basis data Core (`schools`, `roles`, `permissions`, `role_permissions`, `audit_events`, ekstensi `users`) dengan migrasi dan rollback bersih (`CoreMigrationTest`).
+    - Otorisasi server-side Default Deny (`UserPolicy`, `SchoolPolicy`, `RoleEnum`, `PermissionEnum`, `UserService`) dengan isolasi akses (`CoreAuthorizationTest`).
+    - Engine audit log terpusat (`App\Shared\Audit\AuditLogger`) dengan sanitasi rekursif secret otomatis (`AuditLoggerTest`).
+    - Alur autentikasi pengguna (email/username), rate limiting 5x, penolakan akun inaktif, proteksi session CSRF/regeneration, dan login UI (`AuthenticationTest`).
+    - Antarmuka manajemen pengguna (`resources/js/Pages/Core/Users/Index.vue`) dan profil sekolah (`resources/js/Pages/Core/School/Edit.vue`) dengan paginasi, pencarian realtime, filter peran, dan proteksi hapus diri sendiri (`UserManagementTest`).
+    - Verifikasi gate akses multi-peran (`RoleMatrixAccessTest`) menguji 6 peran (`admin`, `operator`, `principal`, `teacher`, `homeroom`, `student`).
+  - Seluruh CI dan test suite (37 tests, 195 assertions, Unit, Feature, Architecture, Lint, Typecheck, Build, Docs Governance) hijau 100%.
+- Langkah berikut: Tahap S03 Data Inti Akademik & Import Engine (`app/Modules/Academic`).
 
 ## Blocker sebelum data nyata
 

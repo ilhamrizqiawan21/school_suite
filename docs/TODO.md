@@ -72,7 +72,7 @@ flowchart TD
 
 ---
 
-### [ ] TAHAP S02: Akses & Tata Kelola Core (`app/Modules/Core`)
+### [x] TAHAP S02: Akses & Tata Kelola Core (`app/Modules/Core`)
 
 > **Kebutuhan Terkait:** `SS-F-001`, `AI_RULES.md` (aturan 6: default deny policy server-side), `ARCHITECTURE.md`.  
 > **Gate Keluar:** Matriks otorisasi server-side lulus, seluruh aksi material tercatat dalam audit log.
@@ -93,18 +93,21 @@ flowchart TD
   - Mekanisme sanitasi otomatis rekursif untuk me-redact seluruh parameter sensitif (`password`, `token`, `secret`, `api_key`, dll.) menjadi `'[REDACTED]'`.
   - Integrasi dengan `UserService` pada alur pembuatan, pembaruan, dan penghapusan pengguna.
   - *Bukti:* Feature test `AuditLoggerTest` (2 tests, 18 assertions) lulus 100%; total testsuite: 18 passed, 107 assertions.
-- [ ] **S02-T04: Alur Autentikasi Pengguna & Sesi**
-  - Login form berbasis email/username & password dengan rate limiting (brute force protection).
-  - Logout, ganti password, proteksi session hijacking / CSRF token.
-  - *Bukti:* Feature test authentication (login sukses, login gagal, rate limit 5x).
-- [ ] **S02-T05: Antarmuka UI Manajemen Pengguna & Peran (Inertia + Vue)**
-  - Halaman kelola user: pencarian, filter peran, reset password oleh admin, toggle status aktif.
-  - Halaman konfigurasi identitas sekolah (Nama, NPSN, Alamat, Logo).
-  - *Bukti:* UI render di `/pengaturan/pengguna` dan `/pengaturan/sekolah` dengan validasi form inline.
-- [ ] **S02-T06: Verifikasi Gate S02 & Matriks Akses Multi-Peran**
-  - Matriks pengujian akses untuk 6 peran: Administrator, Operator/TU, Kepala Sekolah, Guru, Wali Kelas, Siswa.
-  - Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
-  - *Bukti:* 100% skenario matriks akses lulus di test suite otomatis.
+- [x] **S02-T04: Alur Autentikasi Pengguna & Sesi**
+  - Login form berbasis email/username & password dengan rate limiting (5 percobaan / menit).
+  - Penolakan login akun tidak aktif (`is_active = false`), regenerasi session ID pencegah fixation, CSRF protection, dan pencatatan audit log `core.auth.login` serta `core.auth.logout`.
+  - Antarmuka Vue `resources/js/Pages/Auth/Login.vue` terintegrasi dengan layout dan flash messaging.
+  - *Bukti:* Feature test `AuthenticationTest` (7 tests, 23 assertions) lulus 100%.
+- [x] **S02-T05: Antarmuka UI Manajemen Pengguna & Peran (Inertia + Vue)**
+  - Halaman kelola user (`resources/js/Pages/Core/Users/Index.vue`): pencarian realtime, filter peran, pembuatan user baru, modal edit, toggle status aktif, dan proteksi larangan penghapusan akun mandiri.
+  - Halaman konfigurasi identitas sekolah (`resources/js/Pages/Core/School/Edit.vue`): pembaruan profil NPSN, nama, alamat, kontak sekolah tunggal (`SS-D-001`).
+  - Controller `UserController.php` dan `SchoolController.php` dengan server-side default deny authorization policy dan integrasi audit log.
+  - *Bukti:* Feature test `UserManagementTest` (7 tests, 41 assertions) lulus 100%; build bundle frontend `npm run build` sukses.
+- [x] **S02-T06: Verifikasi Gate S02 & Matriks Akses Multi-Peran**
+  - Matriks pengujian akses untuk seluruh peran (`admin`, `operator`, `principal`, `teacher`, `homeroom`, `student`).
+  - Pengujian isolasi lintas sekolah (*school isolation*) dan penolakan akun dinonaktifkan.
+  - Audit log completeness terverifikasi pada seluruh mutasi akun dan login/logout.
+  - *Bukti:* Feature test `RoleMatrixAccessTest` (5 tests, 24 assertions) lulus 100%; Total testsuite S02: 37 passed, 195 assertions. Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
 
 ---
 

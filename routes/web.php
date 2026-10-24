@@ -13,4 +13,4 @@ Route::get('/', function () {
             'framework_version' => app()->version(),
         ],
     ]);
-});
+})->name('dashboard');
