@@ -116,4 +116,27 @@ class AcademicQueryService
             ->groupBy('enrollment_id', 'status')
             ->get();
     }
+
+    /**
+     * Ambil penugasan mengajar / daftar mapel untuk kelas tertentu pada semester aktif.
+     *
+     * @return BaseCollection<int, object>
+     */
+    public function getTeachingAssignmentsForClass(int $classGroupId, int $termId): BaseCollection
+    {
+        return DB::table('teaching_assignments')
+            ->join('subjects', 'teaching_assignments.subject_id', '=', 'subjects.id')
+            ->join('teachers', 'teaching_assignments.teacher_id', '=', 'teachers.id')
+            ->where('teaching_assignments.class_group_id', $classGroupId)
+            ->where('teaching_assignments.term_id', $termId)
+            ->select([
+                'teaching_assignments.id as teaching_assignment_id',
+                'subjects.id as subject_id',
+                'subjects.name as subject_name',
+                'subjects.code as subject_code',
+                'teachers.name as teacher_name',
+            ])
+            ->orderBy('subjects.name')
+            ->get();
+    }
 }

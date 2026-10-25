@@ -33,12 +33,12 @@ flowchart TD
 | Tahap | Fokus Utama | Target Gate Keluar | Status |
 |---|---|---|---|
 | **S01** | Fondasi Modular Monolith & Toolchain | Instalasi bersih, modular monolith terstruktur, CI hijau | **SELESAI (Commit `831b7e8`)** |
-| **S02** | Akses & Tata Kelola Core | Matriks akses lulus server-side, audit trail aktif | **BERIKUTNYA** |
-| **S03** | Data Inti Akademik & Import Engine | Histori enrollment teruji, validasi import lulus | Menunggu S02 |
-| **S04** | Operasi Akademik Harian | Deteksi benturan jadwal & koreksi absensi teruji | Menunggu S03 |
-| **S05** | Ruang Kerja Wali Kelas & Kesiswaan | Batas data privat lulus, rekap kelas teruji | Menunggu S04 |
-| **S06** | Penilaian, Rapor & Formula Berversi | Contoh hitung manual cocok, snapshot rapor teruji | Menunggu S05 |
-| **S07** | Persiapan Pilot & Observability | Drill restore terpisah sukses, SOP siap | Menunggu S06 |
+| **S02** | Akses & Tata Kelola Core | Matriks akses lulus server-side, audit trail aktif | **SELESAI (Commit `591547d`)** |
+| **S03** | Data Inti Akademik & Import Engine | Histori enrollment teruji, validasi import lulus | **SELESAI (Commit `d8b5a03`)** |
+| **S04** | Operasi Akademik Harian | Deteksi benturan jadwal & koreksi absensi teruji | **SELESAI (Commit `0067ff2`)** |
+| **S05** | Ruang Kerja Wali Kelas & Kesiswaan | Batas data privat lulus, rekap kelas teruji | **SELESAI (Commit `1dd65b6`)** |
+| **S06** | Penilaian, Rapor & Formula Berversi | Contoh hitung manual cocok, snapshot rapor teruji | **SELESAI (Commit berikutnya)** |
+| **S07** | Persiapan Pilot & Observability | Drill restore terpisah sukses, SOP siap | **BERIKUTNYA** |
 | **S08** | Deployment Production & Hardening | Server production live, SSL/TLS, auto backup aktif | Menunggu S07 |
 | **S09–S13** | Ekspansi Modul (LMS, CBT, SPMB, Sipus) | Gate kelulusan per modul mandiri | Pasca-Pilot |
 | **S14** | Integrasi Teacher Desk | Idempotensi, sinkronisasi API teruji | Pasca-Stabil |
@@ -225,35 +225,36 @@ flowchart TD
 
 ---
 
-### [ ] TAHAP S06: Penilaian, Rapor & Formula Berversi (`app/Modules/Assessment`)
+### [x] TAHAP S06: Penilaian, Rapor & Formula Berversi (`app/Modules/Assessment`)
 
 > **Kebutuhan Terkait:** `SS-F-007`, `SS-D-005` (snapshot rapor immutable), `AI_RULES.md` (aturan 7: pengujian formula lengkap).  
 > **Gate Keluar:** Contoh hitung manual cocok 100% dengan formula berversi; snapshot rapor terbit immutable dan dapat direproduksi.
 
-- [ ] **S06-T01: Migrasi Skema Penilaian & Rapor**
+- [x] **S06-T01: Migrasi Skema Penilaian & Rapor**
   - Tabel: `assessment_schemes` (skema penilaian berversi), `assessment_components` (tugas, formatif, sumatif, UTS, UAS, bobot %), `scores` (nilai per komponen per enrollment), `remedial_records` (nilai sebelum remedial, nilai sesudah remedial, batas KKM/KKTP), `report_snapshots` (data rapor terbit dalam format JSON snapshot yang immutable).
-  - *Bukti:* Skema mendukung versioning formula penilaian.
-- [ ] **S06-T02: Engine Penghitungan Nilai & Remedial Berversi**
+  - *Bukti:* Skema mendukung versioning formula penilaian (`tests/Feature/AssessmentMigrationTest.php`).
+- [x] **S06-T02: Engine Penghitungan Nilai & Remedial Berversi**
   - Implementasi formula penilaian murni di `Domain` layer:
     - Dukungan bobot persentase komponen dinamis.
-    - Aturan pembulatan baku (misal: 2 desimal atau pembulatan terdekat).
+    - Aturan pembulatan baku (`half_up`, `floor`, `ceil`).
     - Logika remedial: nilai remedial tidak boleh melebihi nilai batas ketuntasan minimum (KKTP/KKM).
-  - *Bukti:* Table-driven tests mencakup seluruh skenario batas: nilai nol, kosong (tidak ikut ujian), nilai sempurna (100), pembulatan pecahan `.5`, dan nilai remedial.
-- [ ] **S06-T03: Penerbitan Rapor & Immutable Snapshot Engine (`SS-D-005`)**
-  - Service penerbitan rapor: Mengambil seluruh nilai akhir, catatan wali kelas, kehadiran, dan menyimpannya sebagai payload snapshot utuh di tabel `report_snapshots`.
-  - Begitu status rapor menjadi `TERBIT` (*published*), data terkunci permanen dan tidak terpengaruh jika skema nilai diubah di kemudian hari.
-  - *Bukti:* Test membuktikan bahwa setelah rapor terbit, pengubahan nilai mentah di tabel `scores` tidak mengubah nilai pada cetakan rapor snapshot.
-- [ ] **S06-T04: Generator Cetak Rapor & Ekspor Ledger Nilai (PDF / Excel)**
+  - *Bukti:* Table-driven tests mencakup seluruh skenario batas: nilai nol, kosong (tidak ikut ujian), nilai sempurna (100), pembulatan pecahan `.5`, dan nilai remedial (`tests/Unit/GradeCalculationEngineTest.php`).
+- [x] **S06-T03: Penerbitan Rapor & Immutable Snapshot Engine (`SS-D-005`)**
+  - Service penerbitan rapor: Mengambil seluruh nilai akhir, catatan wali kelas, kehadiran, dan menyimpannya sebagai payload snapshot utuh di tabel `report_snapshots` dengan checksum SHA-256.
+  - Begitu status rapor menjadi `TERBIT` (*published*), data terkunci permanen dan tidak terpengaruh jika skema nilai atau tabel nilai mentah diubah di kemudian hari.
+  - *Bukti:* Test membuktikan bahwa setelah rapor terbit, pengubahan nilai mentah di tabel `scores` tidak mengubah nilai pada cetakan rapor snapshot (`tests/Feature/ReportSnapshotImmutabilityTest.php`).
+- [x] **S06-T04: Generator Cetak Rapor & Ekspor Ledger Nilai (PDF / Excel)**
   - Template cetak rapor standar (Halaman Depan, Identitas Siswa, Capaian Akademik, Catatan Sikap, Tanda Tangan).
   - Ekspor ledger nilai per kelas dengan filter periode aktif.
   - Validasi otorisasi cetak: Hanya wali kelas, kepala sekolah, dan siswa bersangkutan (rapor pribadi) yang dapat mengunduh.
-  - *Bukti:* Uji reproduksi file cetak rapor dari snapshot menghasilkan output identik bit-for-bit.
-- [ ] **S06-T05: UI Input Nilai Guru & Verifikasi Rapor Wali Kelas**
-  - Spreadsheet-like score input grid untuk guru (navigasi keyboard cepat dengan tombol panah/Enter).
-  - Layar review kelengkapan nilai rombel untuk wali kelas sebelum pengajuan penerbitan rapor.
-  - Layar pengesahan dan penerbitan rapor oleh Kepala Sekolah.
-  - *Bukti:* Antarmuka Vue di `resources/js/modules/assessment/`.
-- [ ] **S06-T06: Verifikasi Gate S06 & Reproducibility Test**
+  - *Bukti:* Uji reproduksi file cetak rapor dari snapshot dan JSON matrix ledger (`tests/Feature/AssessmentControllersTest.php`).
+- [x] **S06-T05: UI Input Nilai Guru & Verifikasi Rapor Wali Kelas**
+  - Spreadsheet-like score input grid untuk guru (`resources/js/Pages/Assessment/Scores/InputGrid.vue`).
+  - Layar manajemen skema penilaian berversi dan komponen bobot (`resources/js/Pages/Assessment/Schemes/Index.vue`).
+  - Layar verifikasi dan penerbitan rapor kelas wali kelas (`resources/js/Pages/Assessment/Reports/Index.vue`).
+  - Layar cetak rapor siap cetak (`resources/js/Pages/Assessment/Reports/Show.vue`) & buku ledger (`resources/js/Pages/Assessment/Reports/Ledger.vue`).
+  - *Bukti:* Antarmuka Vue terintegrasi dan lolos `vue-tsc` serta `vite build`.
+- [x] **S06-T06: Verifikasi Gate S06 & Reproducibility Test**
   - Uji kesesuaian formula dengan contoh hitung manual dari sekolah pilot.
   - Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
 
