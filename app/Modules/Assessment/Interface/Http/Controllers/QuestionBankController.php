@@ -6,6 +6,7 @@ namespace App\Modules\Assessment\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Assessment\Application\Services\QuestionSpreadsheetService;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestionVersion;
 use App\Modules\Assessment\Infrastructure\Models\QuestionCategory;
@@ -15,10 +16,18 @@ use App\Shared\Audit\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class QuestionBankController extends Controller
 {
@@ -37,7 +46,14 @@ class QuestionBankController extends Controller
         $query = ExamQuestion::query()
             ->leftJoin('subjects', 'subjects.id', '=', 'exam_questions.subject_id')
             ->where('exam_questions.school_id', $schoolId)
-            ->when($user->hasRole(['teacher', 'homeroom']), fn (Builder $q) => $q->where('exam_questions.owner_id', $user->id))
+            ->when($user->hasRole(['teacher', 'homeroom']), fn (Builder $q) => $q->where(function (Builder $scope) use ($user): void {
+                $scope->where('exam_questions.owner_id', $user->id)->orWhereExists(function ($shares) use ($user): void {
+                    $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'exam_questions.id')
+                        ->where('question_shares.resource_type', 'question')->where('question_shares.school_id', $user->school_id)
+                        ->where('question_shares.recipient_id', $user->id)->where('question_shares.status', 'accepted')
+                        ->where('question_shares.permission', 'edit')->where('question_shares.active_key', 'active');
+                });
+            }))
             ->when(($filters['status'] ?? 'active') === 'active', fn (Builder $q) => $q->where('exam_questions.is_active', true))
             ->when(($filters['status'] ?? 'active') === 'archived', fn (Builder $q) => $q->where('exam_questions.is_active', false))
             ->when(! in_array(($filters['status'] ?? 'active'), ['active', 'archived'], true), fn (Builder $q) => $q)
@@ -123,7 +139,7 @@ class QuestionBankController extends Controller
 
     public function update(Request $request, ExamQuestion $question): RedirectResponse
     {
-        $this->authorizeQuestion($request, $question);
+        $this->authorizeQuestion($request, $question, 'edit');
         abort_unless($question->is_active, 422, 'Soal arsip tidak dapat diubah.');
         $data = $this->validatedData($request);
         $data = $this->assertMetadataOwnership($request, $data);
@@ -168,7 +184,7 @@ class QuestionBankController extends Controller
 
     public function duplicate(Request $request, ExamQuestion $question): RedirectResponse
     {
-        $this->authorizeQuestion($request, $question);
+        $this->authorizeQuestion($request, $question, 'copy');
         $source = $question->currentVersionRecord() ?? $question;
         $copy = DB::transaction(function () use ($request, $source, $question) {
             $data = [
@@ -200,6 +216,277 @@ class QuestionBankController extends Controller
         $this->audit->log('assessment.question.duplicated', 'exam_question', (string) $copy->id, ['source_id' => $question->id], actor: $request->user(), schoolId: (int) $copy->school_id);
 
         return back()->with('message', 'Soal berhasil diduplikasi sebagai butir baru.');
+    }
+
+    public function spreadsheetTemplate(Request $request, QuestionSpreadsheetService $spreadsheet): StreamedResponse
+    {
+        $this->authorizeManager($request);
+        $book = $spreadsheet->template();
+
+        return response()->streamDownload(function () use ($book) {
+            (new Xlsx($book))->save('php://output');
+            $book->disconnectWorksheets();
+        }, 'template-bank-soal.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    public function previewImport(Request $request, QuestionSpreadsheetService $spreadsheet): Response|RedirectResponse
+    {
+        $this->authorizeManager($request);
+        $request->validate(['file' => ['required', 'file', 'mimes:xlsx', 'max:2048']]);
+
+        try {
+            $sourceRows = $spreadsheet->read($request->file('file'));
+        } catch (Throwable $exception) {
+            throw ValidationException::withMessages(['file' => $exception instanceof RuntimeException ? $exception->getMessage() : 'Berkas XLSX tidak dapat diproses.']);
+        }
+
+        $schoolId = (int) $request->user()->school_id;
+        $previewRows = [];
+        $validRows = [];
+        foreach ($sourceRows as $source) {
+            [$data, $errors] = $this->normalizeImportRow($source['values'], $schoolId);
+            $previewRows[] = ['row' => $source['row'], 'valid' => $errors === [], 'errors' => $errors, 'prompt' => $data['prompt'] ?? '', 'type' => $data['type'] ?? '', 'correct_answer' => $data['correct_answer'] ?? ''];
+            if ($errors === []) {
+                $data['source_row'] = $source['row'];
+                $validRows[] = $data;
+            }
+        }
+        if (strlen(json_encode($validRows, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)) > 5 * 1024 * 1024) {
+            throw ValidationException::withMessages(['file' => 'Ukuran data hasil validasi melewati batas 5 MB. Kurangi jumlah atau panjang isi soal.']);
+        }
+
+        $token = (string) Str::uuid();
+        Cache::put($this->importCacheKey($token), [
+            'user_id' => (int) $request->user()->id,
+            'school_id' => $schoolId,
+            'rows' => $validRows,
+            'errors' => collect($previewRows)->contains(fn ($row) => ! $row['valid']),
+        ], now()->addMinutes(15));
+
+        return Inertia::render('Assessment/QuestionBank/ImportPreview', [
+            'token' => $token,
+            'rows' => $previewRows,
+            'valid_count' => count($validRows),
+            'invalid_count' => count($previewRows) - count($validRows),
+        ]);
+    }
+
+    public function confirmImport(Request $request, string $token): RedirectResponse
+    {
+        $this->authorizeManager($request);
+        abort_unless(Str::isUuid($token), 404);
+        $cacheKey = $this->importCacheKey($token);
+        $stage = Cache::get($cacheKey);
+        abort_unless(is_array($stage) && $stage['user_id'] === (int) $request->user()->id && $stage['school_id'] === (int) $request->user()->school_id, 404, 'Preview impor sudah kedaluwarsa atau tidak tersedia.');
+        abort_if($stage['errors'] || $stage['rows'] === [], 422, 'Perbaiki semua baris yang bermasalah lalu unggah ulang sebelum impor.');
+
+        $created = DB::transaction(function () use ($request, $stage) {
+            $ids = [];
+            foreach ($stage['rows'] as $row) {
+                unset($row['source_row']);
+                $data = $this->assertMetadataOwnership($request, $row);
+                $question = ExamQuestion::create($this->rootAttributes($data, $request, 1));
+                $this->createVersion($question, $data, $request);
+                $ids[] = $question->id;
+            }
+
+            return $ids;
+        });
+
+        Cache::forget($cacheKey);
+        $this->audit->log('assessment.questions.imported', 'question_import', $token, ['count' => count($created)], actor: $request->user(), schoolId: (int) $request->user()->school_id);
+
+        return redirect()->route('assessment.questions.index')->with('message', count($created).' soal berhasil diimpor.');
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->authorizeManager($request);
+        $user = $request->user();
+        $schoolId = (int) $user->school_id;
+        $status = (string) $request->query('status', 'active');
+        $query = ExamQuestion::query()->where('school_id', $schoolId)
+            ->when($user->hasRole(['teacher', 'homeroom']), fn (Builder $q) => $q->where('owner_id', $user->id))
+            ->when($status === 'active', fn (Builder $q) => $q->where('is_active', true))
+            ->when($status === 'archived', fn (Builder $q) => $q->where('is_active', false))
+            ->when($request->filled('type'), fn (Builder $q) => $q->where('type', $request->query('type')))
+            ->when($request->filled('subject_id'), fn (Builder $q) => $q->where('subject_id', $request->query('subject_id')))
+            ->when($request->filled('jenjang'), fn (Builder $q) => $q->where('jenjang', $request->query('jenjang')))
+            ->when($request->filled('curriculum'), fn (Builder $q) => $q->where('curriculum', $request->query('curriculum')))
+            ->when($request->filled('cognitive_level'), fn (Builder $q) => $q->where('cognitive_level', $request->query('cognitive_level')))
+            ->when($request->filled('category_id'), fn (Builder $q) => $q->whereHas('categories', fn (Builder $category) => $category->whereKey($request->query('category_id'))->where('question_categories.school_id', $schoolId)))
+            ->when($request->filled('tag_id'), fn (Builder $q) => $q->whereHas('tags', fn (Builder $tag) => $tag->whereKey($request->query('tag_id'))->where('question_tags.school_id', $schoolId)))
+            ->when($request->filled('search'), fn (Builder $q) => $q->where(fn (Builder $search) => $search->where('prompt', 'like', '%'.trim((string) $request->query('search')).'%')->orWhere('indicator_text', 'like', '%'.trim((string) $request->query('search')).'%')))
+            ->with(['categories:id,name', 'tags:id,name'])
+            ->orderBy('id')->limit(QuestionSpreadsheetService::MAX_EXPORT_ROWS + 1);
+        $questions = $query->get();
+        abort_if($questions->count() > QuestionSpreadsheetService::MAX_EXPORT_ROWS, 422, 'Hasil ekspor melebihi 2.000 soal. Persempit filter terlebih dahulu.');
+        $subjectCodes = DB::table('subjects')->where('school_id', $schoolId)->whereIn('id', $questions->pluck('subject_id')->filter()->unique())->pluck('code', 'id');
+
+        $book = app(QuestionSpreadsheetService::class)->template();
+        $book->removeSheetByIndex(1);
+        $sheet = $book->getActiveSheet();
+        $sheet->setTitle('Data');
+        foreach ($questions as $question) {
+            $sheet->fromArray([
+                $question->type, $question->jenjang, $question->curriculum,
+                $subjectCodes[$question->subject_id] ?? '',
+                $question->prompt, $question->indicator_text, $question->cognitive_level, $question->kko_text,
+                $question->options === null ? '' : json_encode($question->options, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+                $question->matching_pairs === null ? '' : json_encode($question->matching_pairs, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+                $question->essay_rubric, $question->correct_answer, $question->explanation, $question->points,
+                $question->categories->pluck('name')->implode(', '), $question->tags->pluck('name')->implode(', '),
+            ], null, 'A'.($sheet->getHighestRow() + 1));
+        }
+        // Force text type for every exported cell so spreadsheet formulas remain inert.
+        foreach ($sheet->getRowIterator(1, $sheet->getHighestRow()) as $row) {
+            foreach ($row->getCellIterator('A', 'P') as $cell) {
+                $cell->setValueExplicit((string) ($cell->getValue() ?? ''), DataType::TYPE_STRING);
+            }
+        }
+
+        return response()->streamDownload(function () use ($book) {
+            (new Xlsx($book))->save('php://output');
+            $book->disconnectWorksheets();
+        }, 'bank-soal.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    /** @param array<string, mixed> $row
+     * @return array{0:array<string,mixed>,1:list<string>}
+     */
+    private function normalizeImportRow(array $row, int $schoolId): array
+    {
+        $options = $this->decodeJsonCell($row['options_json'] ?? null);
+        $pairs = $this->decodeJsonCell($row['matching_pairs_json'] ?? null);
+        $subjectCode = trim((string) ($row['subject_code'] ?? ''));
+        $subjectId = $subjectCode === '' ? null : DB::table('subjects')->where('school_id', $schoolId)->whereRaw('LOWER(code) = ?', [mb_strtolower($subjectCode)])->value('id');
+        $data = [
+            'subject_id' => $subjectId,
+            'type' => trim((string) ($row['type'] ?? '')),
+            'jenjang' => strtoupper(trim((string) ($row['jenjang'] ?? ''))),
+            'curriculum' => strtolower(trim((string) ($row['curriculum'] ?? ''))),
+            'prompt' => (string) ($row['prompt'] ?? ''),
+            'indicator_text' => $this->nullableText($row['indicator_text'] ?? null),
+            'cognitive_level' => $this->nullableText($row['cognitive_level'] ?? null),
+            'kko_text' => $this->nullableText($row['kko_text'] ?? null),
+            'options' => $options,
+            'matching_pairs' => $pairs,
+            'essay_rubric' => $this->nullableText($row['essay_rubric'] ?? null),
+            'correct_answer' => $this->nullableText($row['correct_answer'] ?? null),
+            'explanation' => $this->nullableText($row['explanation'] ?? null),
+            'points' => $row['points'],
+            'category_names' => $this->splitNames($row['category_names'] ?? ''),
+            'tag_names' => $this->splitNames($row['tag_names'] ?? ''),
+        ];
+        if ($subjectCode !== '' && $subjectId === null) {
+            return [$data, ["Kode mata pelajaran '{$subjectCode}' tidak ditemukan pada sekolah ini."]];
+        }
+
+        if (! empty($data['kko_text'])) {
+            $term = QuestionKkoTerm::query()->where('is_active', true)
+                ->whereRaw('LOWER(term) = ?', [mb_strtolower((string) $data['kko_text'])])
+                ->where(fn ($query) => $query->whereNull('school_id')->orWhere('school_id', $schoolId))
+                ->where(fn ($query) => $query->whereNull('subject_id')->orWhere('subject_id', $subjectId))
+                ->first();
+            $data['kko_term_id'] = $term?->id;
+            if ($term && empty($data['cognitive_level'])) {
+                $data['cognitive_level'] = $term->cognitive_level;
+            } elseif ($term && $term->cognitive_level !== $data['cognitive_level']) {
+                return [$data, ['Level kognitif tidak sesuai dengan KKO yang dipilih.']];
+            }
+        } else {
+            $data['kko_term_id'] = null;
+        }
+
+        $validator = validator($data, [
+            'type' => ['required', Rule::in(['multiple_choice', 'essay', 'true_false', 'matching'])],
+            'jenjang' => ['required', Rule::in(['SD', 'SMP', 'SMA'])],
+            'curriculum' => ['required', Rule::in(['merdeka', 'kbc', 'both'])],
+            'prompt' => ['required', 'string', 'max:10000'],
+            'indicator_text' => ['nullable', 'string', 'max:5000'],
+            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3'])],
+            'kko_text' => ['nullable', 'string', 'max:180'],
+            'kko_term_id' => ['nullable', 'integer'],
+            'options' => ['nullable', 'array', 'min:2', 'max:8'],
+            'options.*' => ['required', 'string', 'max:1000', 'distinct'],
+            'matching_pairs' => ['nullable', 'array', 'min:2', 'max:10'],
+            'matching_pairs.*.left' => ['required', 'string', 'max:1000', 'distinct'],
+            'matching_pairs.*.right' => ['required', 'string', 'max:1000', 'distinct'],
+            'essay_rubric' => ['nullable', 'string', 'max:5000'],
+            'correct_answer' => ['nullable', 'string', 'max:2000'],
+            'explanation' => ['nullable', 'string', 'max:5000'],
+            'points' => ['required', 'numeric', 'min:0.1', 'max:100'],
+            'category_names' => ['nullable', 'array', 'max:10'],
+            'category_names.*' => ['required', 'string', 'max:100'],
+            'tag_names' => ['nullable', 'array', 'max:20'],
+            'tag_names.*' => ['required', 'string', 'max:60'],
+        ]);
+        $validator->after(function ($validator) use (&$data) {
+            if ($data['type'] === 'multiple_choice') {
+                if (count($data['options'] ?? []) < 2) {
+                    $validator->errors()->add('options', 'Pilihan ganda membutuhkan options_json berupa array minimal dua opsi.');
+                } elseif (! in_array($data['correct_answer'], $data['options'], true)) {
+                    $validator->errors()->add('correct_answer', 'Kunci harus sama persis dengan salah satu opsi.');
+                }
+            } elseif ($data['type'] === 'true_false' && ! in_array($data['correct_answer'], ['true', 'false'], true)) {
+                $validator->errors()->add('correct_answer', 'Kunci benar/salah harus berupa true atau false.');
+            } elseif ($data['type'] === 'matching') {
+                $pairsValid = collect($data['matching_pairs'] ?? [])->every(fn ($pair) => is_array($pair) && ! empty($pair['left']) && ! empty($pair['right']));
+                if (count($data['matching_pairs'] ?? []) < 2 || ! $pairsValid) {
+                    $validator->errors()->add('matching_pairs', 'Menjodohkan membutuhkan matching_pairs_json minimal dua pasangan.');
+                } else {
+                    $data['correct_answer'] = json_encode(collect($data['matching_pairs'])->mapWithKeys(fn ($pair) => [$pair['left'] => $pair['right']])->all(), JSON_THROW_ON_ERROR);
+                }
+            }
+        });
+        if ($validator->fails()) {
+            return [$data, array_values($validator->errors()->all())];
+        }
+
+        if ($data['type'] !== 'multiple_choice') {
+            $data['options'] = null;
+        }
+        if ($data['type'] !== 'matching') {
+            $data['matching_pairs'] = null;
+        }
+        if ($data['type'] !== 'essay') {
+            $data['essay_rubric'] = null;
+        }
+        if (! in_array($data['type'], ['multiple_choice', 'true_false', 'matching'], true)) {
+            $data['correct_answer'] = null;
+        }
+        $data['category_names'] = collect($data['category_names'])->map(fn ($name) => trim((string) $name))->filter()->unique(fn ($name) => mb_strtolower($name))->values()->all();
+        $data['tag_names'] = collect($data['tag_names'])->map(fn ($name) => trim(ltrim((string) $name, '#')))->filter()->unique(fn ($name) => mb_strtolower($name))->values()->all();
+
+        return [$data, []];
+    }
+
+    private function decodeJsonCell(mixed $value): ?array
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+        $decoded = json_decode($value, true);
+
+        return json_last_error() === JSON_ERROR_NONE && is_array($decoded) ? $decoded : null;
+    }
+
+    /** @return list<string> */
+    private function splitNames(mixed $value): array
+    {
+        return collect(explode(',', (string) $value))->map(fn ($name) => trim($name))->filter(fn ($name) => $name !== '')->values()->all();
+    }
+
+    private function nullableText(mixed $value): ?string
+    {
+        $text = trim((string) ($value ?? ''));
+
+        return $text === '' ? null : $text;
+    }
+
+    private function importCacheKey(string $token): string
+    {
+        return 'assessment:question-import:'.$token;
     }
 
     /** @return array<string, mixed> */
@@ -362,12 +649,13 @@ class QuestionBankController extends Controller
         abort_unless($request->user()->is_active && $request->user()->school_id, 403);
     }
 
-    private function authorizeQuestion(Request $request, ExamQuestion $question): void
+    private function authorizeQuestion(Request $request, ExamQuestion $question, ?string $sharePermission = null): void
     {
         $this->authorizeManager($request);
         abort_unless((int) $question->school_id === (int) $request->user()->school_id, 404);
         if ($request->user()->hasRole(['teacher', 'homeroom'])) {
-            abort_unless((int) $question->owner_id === (int) $request->user()->id, 403);
+            abort_unless((int) $question->owner_id === (int) $request->user()->id
+                || ($sharePermission !== null && QuestionShareController::permits($request->user(), 'question', (int) $question->id, $sharePermission)), 403);
         }
     }
 }

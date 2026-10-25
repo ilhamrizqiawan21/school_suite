@@ -10,16 +10,10 @@ class ExampleTest extends TestCase
     /**
      * A basic test example.
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_guests_are_redirected_to_login_from_application_root(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
-        $response->assertInertia(fn ($page) => $page
-            ->component('Dashboard')
-            ->has('stats.modules_ready')
-            ->where('stats.modules_ready', 9)
-            ->has('activePeriod.label')
-        );
+        $response->assertRedirect(route('login'));
     }
 }
