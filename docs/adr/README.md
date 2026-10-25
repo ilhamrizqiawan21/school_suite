@@ -6,5 +6,5 @@ Format nama: `NNNN-judul-singkat.md`. Status: Proposed, Accepted, Superseded, at
 
 ## Index
 
-Belum ada ADR terpisah. Keputusan awal masih dirangkum di [`DECISIONS.md`](../DECISIONS.md); ADR dibuat ketika implementasi mengunci detailnya.
+- [ADR-0010: Butir Bank Soal Berversi dan Snapshot Ujian](0010-bank-soal-immutable-versions.md)
 

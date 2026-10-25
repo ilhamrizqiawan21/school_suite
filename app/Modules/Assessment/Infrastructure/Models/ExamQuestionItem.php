@@ -11,10 +11,15 @@ class ExamQuestionItem extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['exam_id', 'exam_question_id', 'sequence', 'points'];
+    protected $fillable = ['exam_id', 'exam_question_id', 'question_version_id', 'sequence', 'points'];
 
     public function question(): BelongsTo
     {
         return $this->belongsTo(ExamQuestion::class, 'exam_question_id');
+    }
+
+    public function questionVersion(): BelongsTo
+    {
+        return $this->belongsTo(ExamQuestionVersion::class, 'question_version_id');
     }
 }

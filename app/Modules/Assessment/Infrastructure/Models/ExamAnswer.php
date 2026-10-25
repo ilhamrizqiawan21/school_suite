@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamAnswer extends Model
 {
-    protected $fillable = ['exam_attempt_id', 'exam_question_id', 'answer', 'is_correct', 'score', 'graded_by', 'graded_at'];
+    protected $fillable = ['exam_attempt_id', 'exam_question_id', 'question_version_id', 'answer', 'is_correct', 'score', 'graded_by', 'graded_at'];
 
     protected function casts(): array
     {
@@ -19,6 +19,11 @@ class ExamAnswer extends Model
     public function question(): BelongsTo
     {
         return $this->belongsTo(ExamQuestion::class, 'exam_question_id');
+    }
+
+    public function questionVersion(): BelongsTo
+    {
+        return $this->belongsTo(ExamQuestionVersion::class, 'question_version_id');
     }
 
     public function attempt(): BelongsTo

@@ -15,6 +15,7 @@ School Suite adalah aplikasi web terpadu untuk manajemen akademik, pembelajaran,
 | Keputusan apa yang sudah dikunci? | [Decisions](DECISIONS.md) dan [ADR](adr/README.md) |
 | Apa yang dikerjakan berikutnya? | [Roadmap](ROADMAP.md), [Status](PROJECT_STATUS.md), dan [TODO](TODO.md) |
 | Bagaimana progres adaptasi fitur repo referensi LMS dipantau? | [Task Adaptasi LMS Sekolah](TASK_LMS_SEKOLAH.md) |
+| Bagaimana progres adaptasi bank soal dan paket soal dipantau? | [Task Adaptasi Bank Soal Cerdas](TASK_BANK_SOAL_CERDAS.md) |
 | Bagaimana AI bekerja di repo ini? | [AI Rules](AI_RULES.md), [Gemini](GEMINI.md), [Codex Review](CODEX_REVIEW.md) |
 | Bagaimana implementasi diserahkan untuk review? | [Handoff](HANDOFF.md) |
 | Bukti pengujian apa yang wajib? | [Tests](TESTS.md) dan [Regression](REGRESSION.md) |

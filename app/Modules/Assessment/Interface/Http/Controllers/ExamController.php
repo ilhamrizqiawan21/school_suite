@@ -11,6 +11,7 @@ use App\Modules\Assessment\Infrastructure\Models\ExamAnswer;
 use App\Modules\Assessment\Infrastructure\Models\ExamAttempt;
 use App\Modules\Assessment\Infrastructure\Models\ExamEvent;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
+use App\Modules\Assessment\Infrastructure\Models\ExamQuestionVersion;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -31,27 +32,12 @@ class ExamController extends Controller
         $term = $this->academicQuery->getActiveTerm($schoolId);
         $ids = $term ? $this->visibleAssignmentIds($request, $term->id) : [];
         $assignments = $term ? $this->academicQuery->getLearningTeachingAssignments($term->id, $user->hasRole(['teacher', 'homeroom']) ? (int) $user->id : null)->whereIn('id', $ids)->values() : collect();
-        $questions = ExamQuestion::where('school_id', $schoolId)->when($user->hasRole(['teacher', 'homeroom']), fn ($q) => $q->where('owner_id', $user->id))->latest()->get();
+        $questions = ExamQuestion::where('school_id', $schoolId)->where('is_active', true)->when($user->hasRole(['teacher', 'homeroom']), fn ($q) => $q->where('owner_id', $user->id))->latest()->get();
         $exams = Exam::withCount(['items', 'attempts'])->where('school_id', $schoolId)->whereIn('teaching_assignment_id', $ids)->when($user->hasRole('student'), fn ($query) => $query->whereIn('status', ['published', 'results_published']))->latest('starts_at')->get();
         $components = DB::table('assessment_components')->join('assessment_schemes', 'assessment_schemes.id', '=', 'assessment_components.scheme_id')->where('assessment_schemes.school_id', $schoolId)->where('assessment_schemes.is_active', true)->get(['assessment_components.id', 'assessment_components.name', 'assessment_components.teaching_assignment_id']);
         $attempts = $user->hasRole('student') ? ExamAttempt::with('exam:id,title,starts_at,ends_at,status')->whereIn('exam_id', $exams->pluck('id'))->whereIn('enrollment_id', $this->studentEnrollmentIds($request, $term?->id))->get() : collect();
 
         return Inertia::render('Assessment/Exams/Index', ['assignments' => $assignments, 'questions' => $questions, 'exams' => $exams, 'attempts' => $attempts, 'components' => $components, 'can_manage' => $user->hasRole(['admin', 'operator', 'teacher', 'homeroom']), 'is_student' => $user->hasRole('student')]);
-    }
-
-    public function storeQuestion(Request $request): RedirectResponse
-    {
-        $this->authorizeManager($request);
-        $data = $request->validate(['teaching_assignment_id' => ['nullable', 'integer'], 'type' => ['required', 'in:multiple_choice,essay'], 'prompt' => ['required', 'string', 'max:10000'], 'options' => ['nullable', 'array', 'min:2', 'max:8'], 'options.*' => ['string', 'max:1000'], 'correct_answer' => ['nullable', 'string', 'max:2000'], 'explanation' => ['nullable', 'string', 'max:5000'], 'points' => ['required', 'numeric', 'min:.1', 'max:100']]);
-        if ($data['type'] === 'multiple_choice') {
-            abort_unless(! empty($data['options']) && in_array($data['correct_answer'] ?? null, $data['options'], true), 422, 'Kunci jawaban harus cocok dengan salah satu opsi.');
-        }
-        if (! empty($data['teaching_assignment_id'])) {
-            abort_unless(in_array((int) $data['teaching_assignment_id'], $this->visibleAssignmentIds($request, $this->academicQuery->getActiveTerm((int) $request->user()->school_id)?->id ?? 0), true), 403);
-        }
-        ExamQuestion::create([...$data, 'school_id' => $request->user()->school_id, 'owner_id' => $request->user()->id, 'is_active' => true]);
-
-        return back()->with('message', 'Soal berhasil disimpan.');
     }
 
     public function storeExam(Request $request): RedirectResponse
@@ -64,13 +50,24 @@ class ExamController extends Controller
             $validComponent = DB::table('assessment_components')->join('assessment_schemes', 'assessment_schemes.id', '=', 'assessment_components.scheme_id')->where('assessment_components.id', $data['assessment_component_id'])->where('assessment_schemes.school_id', $request->user()->school_id)->where(fn ($query) => $query->whereNull('assessment_components.teaching_assignment_id')->orWhere('assessment_components.teaching_assignment_id', $data['teaching_assignment_id']))->exists();
             abort_unless($validComponent, 422, 'Komponen nilai tidak sesuai sekolah atau penugasan.');
         }
-        $questions = ExamQuestion::where('school_id', $request->user()->school_id)->whereIn('id', $data['question_ids'])->get();
+        $questions = ExamQuestion::where('school_id', $request->user()->school_id)
+            ->where('is_active', true)
+            ->whereIn('id', $data['question_ids'])
+            ->when($request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where('owner_id', $request->user()->id))
+            ->get();
         abort_unless($questions->count() === count(array_unique($data['question_ids'])), 422, 'Soal ujian tidak valid.');
+        $versionMap = ExamQuestionVersion::whereIn('exam_question_id', $questions->pluck('id'))->get()
+            ->keyBy(fn (ExamQuestionVersion $version) => $version->exam_question_id.':'.$version->version_number);
+        foreach ($questions as $question) {
+            $version = $versionMap->get($question->id.':'.$question->current_version);
+            abort_unless($version, 422, 'Versi soal belum tersedia.');
+            $question->setAttribute('selected_version_id', $version->id);
+        }
         $exam = DB::transaction(function () use ($data, $questions, $request) {
             $exam = Exam::create([...collect($data)->except('question_ids')->all(), 'school_id' => $request->user()->school_id, 'created_by' => $request->user()->id, 'status' => 'draft']);
             foreach ($data['question_ids'] as $i => $id) {
                 $q = $questions->firstWhere('id', $id);
-                $exam->items()->create(['exam_question_id' => $id, 'sequence' => $i + 1, 'points' => $q->points]);
+                $exam->items()->create(['exam_question_id' => $id, 'question_version_id' => $q->getAttribute('selected_version_id'), 'sequence' => $i + 1, 'points' => $q->points]);
             }
 
             return $exam;
@@ -116,18 +113,21 @@ class ExamController extends Controller
         if ($attempt->status === 'in_progress' && now()->greaterThan($attempt->expires_at)) {
             $this->finalize($attempt);
         }
-        $attempt->load(['exam.items.question', 'answers']);
+        $attempt->load(['exam.items.question', 'exam.items.questionVersion', 'answers']);
         $map = $attempt->exam->items->keyBy('exam_question_id');
         $questions = collect($attempt->question_order)->map(function ($id) use ($map, $attempt) {
-            $q = $map->get($id)?->question;
+            $item = $map->get($id);
+            $q = $item?->questionVersion ?? $item?->question;
             $options = $q?->options;
             if ($q && $attempt->exam->randomize_options && is_array($options)) {
                 mt_srand($attempt->id * 100000 + $q->id);
                 shuffle($options);
                 mt_srand();
             }
+            $matchingPairs = $q?->matching_pairs ?? [];
+            $matchingOptions = collect($matchingPairs)->pluck('right')->shuffle()->values()->all();
 
-            return ['id' => $q?->id, 'type' => $q?->type, 'prompt' => $q?->prompt, 'options' => $options, 'points' => $map->get($id)?->points, 'answer' => $attempt->answers->firstWhere('exam_question_id', $id)?->answer];
+            return ['id' => $id, 'type' => $q?->type, 'prompt' => $q?->prompt, 'options' => $options, 'matching_pairs' => collect($matchingPairs)->map(fn ($pair) => ['left' => $pair['left']])->values(), 'matching_options' => $matchingOptions, 'points' => $item?->points, 'answer' => $attempt->answers->firstWhere('exam_question_id', $id)?->answer];
         })->filter()->values();
 
         return Inertia::render('Assessment/Exams/Attempt', ['attempt' => $attempt->only(['id', 'status', 'expires_at', 'violation_count']), 'exam' => $attempt->exam->only(['id', 'title', 'instructions', 'max_violations']), 'questions' => $questions]);
@@ -139,7 +139,8 @@ class ExamController extends Controller
         $this->assertActive($attempt);
         $data = $request->validate(['question_id' => ['required', 'integer'], 'answer' => ['nullable', 'string', 'max:20000']]);
         abort_unless(in_array((int) $data['question_id'], $attempt->question_order, true), 422);
-        ExamAnswer::updateOrCreate(['exam_attempt_id' => $attempt->id, 'exam_question_id' => $data['question_id']], ['answer' => $data['answer']]);
+        $versionId = DB::table('exam_question_items')->where('exam_id', $attempt->exam_id)->where('exam_question_id', $data['question_id'])->value('question_version_id');
+        ExamAnswer::updateOrCreate(['exam_attempt_id' => $attempt->id, 'exam_question_id' => $data['question_id']], ['question_version_id' => $versionId, 'answer' => $data['answer']]);
 
         return back();
     }
@@ -180,9 +181,9 @@ class ExamController extends Controller
 
     public function gradeEssay(Request $request, ExamAnswer $answer): RedirectResponse
     {
-        $answer->load('attempt.exam', 'question');
+        $answer->load('attempt.exam', 'question', 'questionVersion');
         $this->authorizeExamManager($request, $answer->attempt->exam);
-        abort_unless($answer->question->type === 'essay', 422);
+        abort_unless(($answer->questionVersion ?? $answer->question)->type === 'essay', 422);
         $max = (float) DB::table('exam_question_items')->where('exam_id', $answer->attempt->exam_id)->where('exam_question_id', $answer->exam_question_id)->value('points');
         $data = $request->validate(['score' => ['required', 'numeric', 'min:0', 'max:'.$max]]);
         $answer->update(['score' => $data['score'], 'graded_by' => $request->user()->id, 'graded_at' => now()]);
@@ -225,7 +226,7 @@ class ExamController extends Controller
     public function results(Request $request, Exam $exam): Response
     {
         $this->authorizeExamManager($request, $exam);
-        $attempts = $exam->attempts()->with(['answers.question'])->get();
+        $attempts = $exam->attempts()->with(['answers.question', 'answers.questionVersion'])->get();
         $students = DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')->whereIn('enrollments.id', $attempts->pluck('enrollment_id'))->get(['enrollments.id as enrollment_id', 'students.nis', 'students.name'])->keyBy('enrollment_id');
 
         return Inertia::render('Assessment/Exams/Results', ['exam' => $exam, 'attempts' => $attempts->map(fn ($a) => [...$a->toArray(), 'student' => $students->get($a->enrollment_id)])]);
@@ -233,21 +234,29 @@ class ExamController extends Controller
 
     private function finalize(ExamAttempt $attempt): void
     {
-        $attempt->load('exam.items.question', 'answers');
+        $attempt->load('exam.items.question', 'exam.items.questionVersion', 'answers');
         foreach ($attempt->exam->items as $item) {
-            $answer = $attempt->answers->firstWhere('exam_question_id', $item->exam_question_id) ?? ExamAnswer::create(['exam_attempt_id' => $attempt->id, 'exam_question_id' => $item->exam_question_id]);
-            if ($item->question->type === 'multiple_choice') {
-                $correct = hash_equals((string) $item->question->correct_answer, (string) $answer->answer);
+            $question = $item->questionVersion ?? $item->question;
+            $answer = $attempt->answers->firstWhere('exam_question_id', $item->exam_question_id) ?? ExamAnswer::create(['exam_attempt_id' => $attempt->id, 'exam_question_id' => $item->exam_question_id, 'question_version_id' => $item->question_version_id]);
+            if (in_array($question->type, ['multiple_choice', 'true_false'], true)) {
+                $correct = hash_equals((string) $question->correct_answer, (string) $answer->answer);
+                $answer->update(['is_correct' => $correct, 'score' => $correct ? $item->points : 0, 'graded_at' => now()]);
+            } elseif ($question->type === 'matching') {
+                $expected = json_decode((string) $question->correct_answer, true) ?: [];
+                $given = json_decode((string) $answer->answer, true) ?: [];
+                ksort($expected);
+                ksort($given);
+                $correct = $given === $expected;
                 $answer->update(['is_correct' => $correct, 'score' => $correct ? $item->points : 0, 'graded_at' => now()]);
             }
-        }$attempt->update(['status' => $attempt->exam->items->contains(fn ($i) => $i->question->type === 'essay') ? 'pending_review' : 'graded', 'submitted_at' => now()]);
+        }$attempt->update(['status' => $attempt->exam->items->contains(fn ($i) => ($i->questionVersion ?? $i->question)->type === 'essay') ? 'pending_review' : 'graded', 'submitted_at' => now()]);
         $this->recalculate($attempt);
     }
 
     private function recalculate(ExamAttempt $attempt): void
     {
-        $attempt->load('exam.items.question', 'answers');
-        $pending = $attempt->exam->items->filter(fn ($i) => $i->question->type === 'essay')->contains(fn ($i) => $attempt->answers->firstWhere('exam_question_id', $i->exam_question_id)?->score === null);
+        $attempt->load('exam.items.question', 'exam.items.questionVersion', 'answers');
+        $pending = $attempt->exam->items->filter(fn ($i) => ($i->questionVersion ?? $i->question)->type === 'essay')->contains(fn ($i) => $attempt->answers->firstWhere('exam_question_id', $i->exam_question_id)?->score === null);
         $total = (float) $attempt->exam->items->sum('points');
         $score = $total ? round(((float) $attempt->answers->sum('score') / $total) * 100, 2) : 0;
         $attempt->update(['score' => $score, 'status' => $pending ? 'pending_review' : 'graded']);

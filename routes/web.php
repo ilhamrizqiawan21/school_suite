@@ -15,7 +15,7 @@ Route::get('/', function () {
             'framework_version' => app()->version(),
         ],
     ]);
-})->name('dashboard');
+})->middleware('auth')->name('dashboard');
 
 // Observability & Health Check Subsystem (SS-F-009)
 Route::get('/up', HealthCheckController::class)->name('health.up');

@@ -13,6 +13,7 @@ Dokumen ini merangkum keputusan aktif. Keputusan sulit dibalik memperoleh ADR te
 | SS-D-007 | 2026-10-24 | Integrasi Teacher Desk memakai API, bukan database bersama | Isolasi, keamanan, dan konflik lebih terkendali | Diterima |
 | SS-D-008 | 2026-10-24 | Repo lama dievaluasi per fitur, bukan disalin utuh | Kematangan dan stack berbeda | Diterima |
 | SS-D-009 | 2026-10-24 | Keuangan institusi ditunda sampai ledger dirancang | Risiko akurasi transaksi tinggi | Diterima |
+| SS-D-010 | 2026-10-25 | Bank soal memakai identitas butir stabil dan versi konten immutable; item ujian mereferensikan versi yang dipakai | Perubahan bank soal tidak boleh mengubah ujian historis dan analisisnya | Diterima; [ADR-0010](adr/0010-bank-soal-immutable-versions.md) |
 
 ## Cara mengubah keputusan
 

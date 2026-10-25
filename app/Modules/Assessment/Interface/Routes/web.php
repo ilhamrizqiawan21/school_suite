@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Assessment\Interface\Http\Controllers\AssessmentSchemeController;
 use App\Modules\Assessment\Interface\Http\Controllers\ExamController;
+use App\Modules\Assessment\Interface\Http\Controllers\QuestionBankController;
 use App\Modules\Assessment\Interface\Http\Controllers\ReportCardController;
 use App\Modules\Assessment\Interface\Http\Controllers\ReportingController;
 use App\Modules\Assessment\Interface\Http\Controllers\ScoreInputController;
@@ -11,6 +12,13 @@ use App\Modules\Assessment\Interface\Http\Controllers\StudentAttitudeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('penilaian')->name('assessment.')->group(function () {
+    Route::get('bank-soal', [QuestionBankController::class, 'index'])->name('questions.index');
+    Route::post('bank-soal', [QuestionBankController::class, 'store'])->middleware('throttle:sensitive')->name('questions.store');
+    Route::put('bank-soal/{question}', [QuestionBankController::class, 'update'])->middleware('throttle:sensitive')->name('questions.update');
+    Route::post('bank-soal/{question}/arsip', [QuestionBankController::class, 'archive'])->middleware('throttle:sensitive')->name('questions.archive');
+    Route::post('bank-soal/{question}/pulihkan', [QuestionBankController::class, 'restore'])->middleware('throttle:sensitive')->name('questions.restore');
+    Route::post('bank-soal/{question}/duplikasi', [QuestionBankController::class, 'duplicate'])->middleware('throttle:sensitive')->name('questions.duplicate');
+
     // Input Nilai Guru
     Route::get('skor', [ScoreInputController::class, 'index'])->name('scores.index');
     Route::post('skor', [ScoreInputController::class, 'storeBatch'])->name('scores.store');
@@ -41,7 +49,6 @@ Route::middleware(['auth', 'throttle:sensitive'])->get('/penilaian/rapor/{report
 
 Route::middleware(['auth', 'throttle:sensitive'])->prefix('ujian')->name('exams.')->group(function () {
     Route::get('/', [ExamController::class, 'index'])->name('index');
-    Route::post('/soal', [ExamController::class, 'storeQuestion'])->name('questions.store');
     Route::post('/', [ExamController::class, 'storeExam'])->name('store');
     Route::post('/{exam}/terbitkan', [ExamController::class, 'publish'])->name('publish');
     Route::post('/{exam}/mulai', [ExamController::class, 'start'])->name('start');
