@@ -4,10 +4,78 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk 
 
 ## Identitas
 
-- Task/issue: Penyelesaian Penuh Tahap S08 (Deployment Production & Server Hardening: S08-T01 s/d S08-T07)
-- Requirement ID: SS-D-001 (Satu sekolah per instalasi), SS-D-003 (MySQL sebagai basis data server awal di production), DESIGN.md, ARCHITECTURE.md, AI_RULES.md
+- Task/issue: Restrukturisasi, Perapihan & Pelengkapan Menu Navigasi Sidebar dan Alur Kerja Dashboard Non-Admin (Guru, Wali Kelas, Siswa, Kepala Sekolah, Operator)
+- Requirement ID: UI-ROLE-NAV-02, S01-T05, LMS-C01–C11, LMS-D01–D08, LMS-E01–E09, LMS-F01–F07, DESIGN.md (Arsitektur Informasi), AI_RULES.md
 - Branch/commit: main / commit berikutnya
-- Status: Selesai & Terverifikasi (Gate S08 Passed — Seluruh Fase Inti & Pilot Selesai)
+- Status: Selesai & Terverifikasi (Victory Confirmed oleh Independent Victory Auditor & 184/184 tests passed)
+
+## Ringkasan dan scope
+
+- Perubahan:
+  - **1. Restrukturisasi Kategori Domain Navigasi Sidebar (`SidebarNavigation.vue`)**:
+    - Menu dikelompokkan ke dalam kategori domain yang terstruktur: *Akademik*, *Pembelajaran LMS*, *Asesmen & CBT*, *Penilaian & Rapor*, *Perwalian*, *Komunikasi*, *Pengaturan*, serta *Beranda*.
+    - Header kategori kosong dieliminasi secara dinamis (`.filter(s => s.items.length > 0)`).
+    - Logika `isItemActive` disempurnakan dengan segment boundary check (`===` atau diawali prefix diikuti slash/query/hash) untuk mencegah highlight ganda pada sub-rute.
+    - Menambahkan rute navigasi yang sebelumnya hilang atau belum terhubung:
+      - `/komunikasi/chat` (Chat Kelas) untuk Guru, Siswa, Wali Kelas, Kepsek, dan Operator.
+      - `/wali-kelas/catatan` (Catatan Observasi & BK) untuk Wali Kelas.
+      - `/wali-kelas/kedisiplinan` (Kedisiplinan & Prestasi) untuk Wali Kelas.
+      - `/komunikasi/whatsapp` (WhatsApp Ortu) untuk Wali Kelas, Kepsek, Operator.
+      - `/akademik/jadwal` (Jadwal Pelajaran) kini terlihat untuk Siswa (`student`).
+  - **2. Pengayaan Alur Kerja & Pintasan Dashboard Role Non-Admin (`Dashboard.vue`)**:
+    - **Isolasi Mutlak Admin**: Bagian `adminActions` dan komponen overview admin dipertahankan utuh dan tidak terganggu.
+    - Menambahkan dan memperkaya panel aksi mandiri per peran:
+      - `teacherActions` (8 alur kerja: input nilai, presensi & jurnal, ruang belajar LMS, bank soal cerdas, CBT, chat kelas, analisis butir, jadwal mengajar).
+      - `homeroomActions` (8 alur kerja: pantau perwalian, catatan observasi, kedisiplinan, WhatsApp ortu, verifikasi rapor, rekap presensi, nilai, pengumuman).
+      - `studentActions` (7 alur kerja: ruang belajar & tugas, ujian CBT, jadwal pelajaran, kelas daring, progress belajar, rapor, diskusi chat).
+      - `principalActions` (7 alur kerja: pusat laporan, kinerja operasional guru, analisis asesmen, rapor, pantauan akademik, komunikasi, profil legal & keamanan).
+      - `operatorActions` (8 alur kerja: master siswa, guru & penugasan, rombel, jadwal, pengguna, siklus siswa, bank soal, skema & rapor).
+    - Memperbaiki tautan broken `/penilaian/laporan` (404) menjadi `/laporan`.
+    - Mengoreksi tautan unauthorized siswa pada `/akademik/presensi` (403) menjadi rute siswa yang sah.
+  - **3. Penguatan Otorisasi Server-Side & Pemisahan Boundary**:
+    - Otorisasi peran diperketat pada `OnlineClassController` dan `StudentAttitudeController`.
+    - Query kelas dan enrollment siswa di `CommunicationController` dienkapasulasi bersih melalui `AcademicQueryService` demi menjaga batas modular monolith.
+    - Penambahan `RouteAndPermissionStressTest` dan `DashboardAccessTest` untuk menjamin seluruh role teruji secara mendalam.
+
+## Dampak teknis
+
+- Modul/file yang disentuh:
+  - Frontend:
+    - `resources/js/components/SidebarNavigation.vue`
+    - `resources/js/Pages/Dashboard.vue`
+    - `resources/js/types/index.d.ts`
+  - Backend & Controllers:
+    - `app/Modules/Academic/Application/Services/AcademicQueryService.php`
+    - `app/Modules/Academic/Interface/Http/Controllers/OnlineClassController.php`
+    - `app/Modules/Administration/Interface/Http/Controllers/CommunicationController.php`
+    - `app/Modules/Assessment/Interface/Http/Controllers/StudentAttitudeController.php`
+    - `routes/web.php`
+  - Pengujian:
+    - `tests/Feature/DashboardAccessTest.php`
+    - `tests/Feature/RouteAndPermissionStressTest.php`
+  - Dokumentasi:
+    - `docs/HANDOFF.md`
+
+## Bukti
+
+- Hasil tes otomatis:
+  - `php artisan test`: 184 passed, 1.377 assertions (100% HIJAU) dalam 11.9s.
+  - `npm run typecheck` (`vue-tsc --noEmit`): 0 errors, passed.
+  - `npm run build` (`vite build`): 700 modules transformed, production assets generated, passed.
+  - `./vendor/bin/pint --test`: passed (100% PSR-12 standard).
+  - Independent Victory Audit: **VICTORY CONFIRMED** (`teamwork_preview_victory_auditor`).
+
+## Risiko yang tersisa
+
+- Tidak ada risiko regresi terdeteksi. Seluruh hak akses, boundary modular monolith, dan pengujian berjalan tanpa hambatan.
+
+## Review manual
+
+1. Login sebagai Guru: periksa navigasi sidebar (kategori Akademik, LMS, Asesmen & CBT, Penilaian, Komunikasi) dan alur kerja dashboard guru.
+2. Login sebagai Wali Kelas: periksa menu khusus Perwalian (`/wali-kelas`, `/wali-kelas/catatan`, `/wali-kelas/kedisiplinan`) dan shortcut WhatsApp.
+3. Login sebagai Siswa: pastikan jadwal pelajaran, ruang belajar, kelas daring, dan chat kelas dapat dibuka tanpa error 403/404.
+4. Login sebagai Kepala Sekolah & Operator: pastikan pusat laporan terbuka di `/laporan` dan seluruh menu manajerial tertata rapi.
+5. Login sebagai Admin: pastikan menu dan alur kerja admin Anda tetap bersih dan tidak terpengaruh.
 
 ## Ringkasan dan scope
 

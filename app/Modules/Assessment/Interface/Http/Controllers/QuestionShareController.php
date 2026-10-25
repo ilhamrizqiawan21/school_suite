@@ -23,7 +23,7 @@ use Inertia\Response;
 
 class QuestionShareController extends Controller
 {
-    private const MANAGER_ROLES = ['admin', 'operator', 'teacher', 'homeroom'];
+    private const MANAGER_ROLES = ['teacher', 'homeroom'];
 
     public function __construct(private readonly AuditLogger $audit) {}
 

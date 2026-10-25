@@ -5,6 +5,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title inertia>{{ config('app.name', 'School Suite') }}</title>
 
+        <script>
+            (() => {
+                try {
+                    if (localStorage.getItem('school-suite-theme') === 'dark') {
+                        document.documentElement.dataset.theme = 'dark';
+                    }
+                } catch (_) {
+                    // Theme preference is optional; the app can still load normally.
+                }
+            })();
+        </script>
+
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
         @inertiaHead
     </head>

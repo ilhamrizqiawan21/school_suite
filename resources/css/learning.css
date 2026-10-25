@@ -1,0 +1,304 @@
+/* Learning surfaces share the same editorial hierarchy in light and dark themes. */
+.learning-page,
+.learning-progress-page {
+    --learning-card-radius: 1rem;
+}
+
+.learning-page .hero-card,
+.learning-progress-page .hero-card {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.45rem 1.55rem;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--primary-soft) 180%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.learning-page .hero-card > div:first-child,
+.learning-progress-page .hero-card > div:first-child {
+    min-width: 0;
+}
+
+.learning-page .eyebrow,
+.learning-progress-page .eyebrow {
+    margin: 0 0 .55rem;
+    color: var(--primary) !important;
+    font-size: .67rem;
+    font-weight: 850;
+    letter-spacing: .1em;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.learning-page .hero-card h1,
+.learning-progress-page .hero-card h1 {
+    margin: 0;
+    color: var(--ink) !important;
+    font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+    font-weight: 850;
+    letter-spacing: -.045em;
+    line-height: 1.08;
+}
+
+.learning-page .hero-card p:not(.eyebrow),
+.learning-progress-page .hero-card p:not(.eyebrow) {
+    max-width: 680px;
+    margin: .55rem 0 0;
+    color: var(--ink-soft) !important;
+    font-size: .82rem;
+    line-height: 1.55;
+}
+
+.learning-page .hero-actions {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    justify-content: flex-end;
+    gap: .6rem;
+}
+
+.learning-page .hero-actions > * {
+    white-space: nowrap;
+}
+
+.learning-page .grade-summary,
+.learning-progress-page .grade-summary {
+    margin-bottom: 0;
+}
+
+.learning-page .grade-summary > div,
+.learning-progress-page .grade-summary > div {
+    background: var(--surface);
+}
+
+.learning-page .grade-summary span,
+.learning-page .grade-summary small,
+.learning-progress-page .grade-summary span,
+.learning-progress-page .grade-summary small {
+    color: var(--ink-faint) !important;
+}
+
+.learning-page .grade-summary strong,
+.learning-progress-page .grade-summary strong {
+    color: var(--ink) !important;
+}
+
+.learning-page .panel,
+.learning-progress-page .panel {
+    border-color: var(--line);
+    box-shadow: var(--shadow-sm);
+}
+
+.learning-page .toolbar,
+.learning-progress-page .progress-toolbar {
+    min-height: 66px;
+    margin-bottom: 0;
+    padding: .85rem 1.25rem;
+    border-bottom-color: var(--line) !important;
+}
+
+.learning-page .segmented-control {
+    padding: .25rem;
+    background: var(--primary-soft) !important;
+    border-radius: .75rem;
+}
+
+.learning-page .segmented-control button {
+    min-height: 36px;
+    padding: .5rem .95rem;
+    color: var(--ink-soft) !important;
+    border-radius: .55rem;
+    font-size: .78rem;
+}
+
+.learning-page .segmented-control .is-active {
+    color: var(--primary-strong) !important;
+    background: var(--surface) !important;
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.learning-page .muted-copy {
+    color: var(--ink-faint) !important;
+    font-size: .74rem;
+    font-weight: 700;
+}
+
+.learning-page .resource-grid,
+.learning-page .assignment-list {
+    padding: 1.25rem;
+}
+
+.learning-page .resource-card,
+.learning-page .assignment-card {
+    color: var(--ink);
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+    border-radius: var(--learning-card-radius);
+    box-shadow: 0 7px 22px color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.learning-page .resource-card:hover,
+.learning-page .assignment-card:hover {
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--line)) !important;
+}
+
+.learning-page .resource-icon {
+    color: var(--primary-strong) !important;
+    background: var(--primary-soft) !important;
+}
+
+.learning-page .resource-body h2,
+.learning-page .assignment-main h2,
+.learning-page .modal-heading h2 {
+    color: var(--ink) !important;
+}
+
+.learning-page .resource-body p,
+.learning-page .assignment-main > p,
+.learning-page .resource-body small,
+.learning-page .assignment-meta span,
+.learning-page .submission-row small {
+    color: var(--ink-soft) !important;
+}
+
+.learning-page .assignment-meta span {
+    background: var(--surface-subtle) !important;
+}
+
+.learning-page .submission-list {
+    border-top-color: var(--line) !important;
+}
+
+.learning-page .submission-row {
+    background: var(--surface-subtle) !important;
+    color: var(--ink-soft);
+}
+
+.learning-page .submission-row strong,
+.learning-page .submission-score strong {
+    color: var(--ink) !important;
+}
+
+.learning-page .submission-files a,
+.learning-page .text-button {
+    color: var(--primary) !important;
+}
+
+.learning-page .danger-link,
+.learning-page .form-error {
+    color: var(--red) !important;
+}
+
+.learning-page .read-badge {
+    color: var(--green) !important;
+}
+
+.learning-page .empty-state {
+    min-height: 190px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    color: var(--ink-soft) !important;
+}
+
+.learning-page .empty-state strong {
+    color: var(--ink) !important;
+}
+
+.learning-progress-page .progress-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.learning-progress-page .progress-toolbar input,
+.learning-progress-page .progress-toolbar select {
+    min-height: 40px;
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+    border-color: var(--line-strong) !important;
+}
+
+.learning-progress-page .progress-toolbar input::placeholder {
+    color: var(--ink-faint) !important;
+}
+
+.learning-progress-page .personal-attendance {
+    color: var(--ink);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--green-soft) 170%);
+    border-color: color-mix(in srgb, var(--green) 26%, var(--line));
+}
+
+.learning-progress-page .personal-attendance span,
+.learning-progress-page .personal-attendance p {
+    color: var(--ink-soft) !important;
+}
+
+.learning-progress-page .personal-attendance strong {
+    color: var(--green) !important;
+}
+
+.learning-progress-page .data-table th {
+    color: var(--ink-faint) !important;
+    background: var(--surface-subtle) !important;
+    border-bottom-color: var(--line) !important;
+}
+
+.learning-progress-page .data-table td {
+    color: var(--ink-soft) !important;
+    border-bottom-color: var(--line) !important;
+}
+
+.learning-progress-page .data-table td strong {
+    color: var(--ink) !important;
+}
+
+.learning-progress-page .data-table small {
+    color: var(--ink-faint) !important;
+}
+
+.learning-progress-page .data-table tbody tr:hover {
+    background: color-mix(in srgb, var(--primary-soft) 42%, transparent);
+}
+
+.learning-progress-page .empty-state {
+    color: var(--ink-soft) !important;
+}
+
+.learning-page .modal-card {
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+}
+
+.learning-page .modal-card label {
+    color: var(--ink-soft) !important;
+}
+
+.learning-page .modal-card input,
+.learning-page .modal-card select,
+.learning-page .modal-card textarea {
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+    border-color: var(--line-strong) !important;
+}
+
+@media (max-width: 760px) {
+    .learning-page .hero-card,
+    .learning-progress-page .hero-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .learning-page .hero-actions {
+        display: flex;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .learning-progress-page .progress-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

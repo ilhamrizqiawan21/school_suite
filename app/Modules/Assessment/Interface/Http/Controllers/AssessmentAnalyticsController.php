@@ -30,7 +30,10 @@ class AssessmentAnalyticsController extends Controller
     {
         $this->authorizeAccess($request);
 
-        return Inertia::render('Assessment/Analytics/Index', $this->analytics->report($request->user(), $this->filters($request)));
+        return Inertia::render('Assessment/Analytics/Index', [
+            ...$this->analytics->report($request->user(), $this->filters($request)),
+            'can_manage_question_bank' => $request->user()->hasRole(['teacher', 'homeroom']),
+        ]);
     }
 
     public function export(Request $request): StreamedResponse

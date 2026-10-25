@@ -172,7 +172,7 @@ const removeResource = (url: string) => {
     <AppLayout title="Pembelajaran">
         <Head title="Pembelajaran" />
 
-        <main class="view space-y-6">
+        <main class="view space-y-6 learning-page">
             <section class="hero-card compact-hero">
                 <div>
                     <p class="eyebrow">Ruang pembelajaran · {{ active_term?.name ?? 'Belum ada semester aktif' }}</p>

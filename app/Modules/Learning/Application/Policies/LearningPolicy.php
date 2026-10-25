@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Learning\Application\Policies;
 
 use App\Models\User;
+use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Learning\Infrastructure\Models\AssignmentSubmission;
 use App\Modules\Learning\Infrastructure\Models\LearningAssignment;
 use App\Modules\Learning\Infrastructure\Models\LearningMaterial;
 
 class LearningPolicy
 {
+    public function __construct(
+        private readonly AcademicQueryService $academicQuery,
+    ) {}
+
     public function before(User $actor, string $ability): ?bool
     {
         return $actor->is_active ? null : false;
@@ -18,17 +23,13 @@ class LearningPolicy
 
     public function viewAny(User $actor): bool
     {
-        return $actor->school_id !== null;
+        return $actor->school_id !== null && $actor->hasRole(['teacher', 'homeroom', 'student']);
     }
 
     public function manage(User $actor, LearningMaterial|LearningAssignment $resource): bool
     {
         if ((int) $actor->school_id !== (int) $resource->school_id) {
             return false;
-        }
-
-        if ($actor->hasRole(['admin', 'operator'])) {
-            return true;
         }
 
         return $actor->hasRole(['teacher', 'homeroom'])
@@ -41,10 +42,6 @@ class LearningPolicy
             return false;
         }
 
-        if ($actor->hasRole(['admin', 'operator', 'principal'])) {
-            return true;
-        }
-
         if ($actor->hasRole(['teacher', 'homeroom'])) {
             return $resource->teachingAssignment()
                 ->whereHas('teacher', fn ($query) => $query->where('user_id', $actor->id))
@@ -52,12 +49,11 @@ class LearningPolicy
         }
 
         return $actor->hasRole('student')
-            && Enrollment::query()
-                ->whereHas('student', fn ($query) => $query->where('user_id', $actor->id))
-                ->where('term_id', $resource->teachingAssignment->term_id)
-                ->where('class_group_id', $resource->teachingAssignment->class_group_id)
-                ->where('status', 'active')
-                ->exists();
+            && $this->academicQuery->getStudentEnrollmentForClassTerm(
+                (int) $actor->id,
+                (int) $resource->teachingAssignment->term_id,
+                (int) $resource->teachingAssignment->class_group_id
+            ) !== null;
     }
 
     public function submit(User $actor, LearningAssignment $assignment): bool
@@ -66,12 +62,11 @@ class LearningPolicy
             return false;
         }
 
-        return Enrollment::query()
-            ->whereHas('student', fn ($query) => $query->where('user_id', $actor->id))
-            ->where('term_id', $assignment->teachingAssignment->term_id)
-            ->where('class_group_id', $assignment->teachingAssignment->class_group_id)
-            ->where('status', 'active')
-            ->exists();
+        return $this->academicQuery->getStudentEnrollmentForClassTerm(
+            (int) $actor->id,
+            (int) $assignment->teachingAssignment->term_id,
+            (int) $assignment->teachingAssignment->class_group_id
+        ) !== null;
     }
 
     public function grade(User $actor, AssignmentSubmission $submission): bool

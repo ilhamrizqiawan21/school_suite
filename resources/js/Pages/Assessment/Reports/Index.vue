@@ -75,13 +75,13 @@ const publishReport = (reportId: number) => {
     <AppLayout>
         <Head title="Penerbitan Rapor & Snapshot" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6">
             <!-- Header Halaman -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Rapor Siswa & Snapshot Immutability</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Rapor Siswa</h1>
                     <p class="text-sm text-slate-500 mt-1">
-                        Penerbitan rapor berversi dengan jaminan integritas snapshot permanen (SS-D-005) & checksum SHA-256.
+                        Terbitkan rapor per rombel dengan snapshot nilai yang terkunci dan dapat diaudit.
                     </p>
                 </div>
 

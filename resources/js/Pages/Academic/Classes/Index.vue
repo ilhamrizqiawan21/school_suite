@@ -72,9 +72,9 @@ const submitAssignHomeroom = () => {
     <AppLayout title="Rombongan Belajar & Penugasan Wali Kelas">
         <Head title="Rombongan Belajar — School Suite" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Rombongan Belajar (Kelas)</h1>
                     <p class="text-sm text-slate-500 mt-1">

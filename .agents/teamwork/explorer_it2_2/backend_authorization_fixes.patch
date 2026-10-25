@@ -1,0 +1,153 @@
+--- a/app/Modules/Academic/Application/Services/AcademicQueryService.php
++++ b/app/Modules/Academic/Application/Services/AcademicQueryService.php
+@@ -38,6 +38,27 @@
+                 ->where('user_id', $studentUserId)
+                 ->where('school_id', $schoolId))
+             ->first();
++    }
++
++    /**
++     * Ambil daftar ID rombel aktif untuk siswa berdasarkan user ID.
++     *
++     * @return list<int>
++     */
++    public function getStudentActiveClassGroupIds(int $studentUserId, ?int $schoolId = null): array
++    {
++        return Enrollment::query()
++            ->where('status', 'active')
++            ->whereHas('student', function ($query) use ($studentUserId, $schoolId) {
++                $query->where('user_id', $studentUserId);
++                if ($schoolId !== null) {
++                    $query->where('school_id', $schoolId);
++                }
++            })
++            ->pluck('class_group_id')
++            ->map(fn ($id) => (int) $id)
++            ->values()
++            ->all();
+     }
+ 
+     public function getStudentEnrollmentForClassTerm(int $studentUserId, int $termId, int $classGroupId, int $schoolId): ?Enrollment
+--- a/app/Modules/Academic/Interface/Http/Controllers/OnlineClassController.php
++++ b/app/Modules/Academic/Interface/Http/Controllers/OnlineClassController.php
+@@ -33,8 +33,15 @@
+         $teacherId = $request->user()->hasRole('teacher') ? Teacher::where('user_id', $request->user()->id)->value('id') : null;
+         $assignments = $term ? TeachingAssignment::with(['subject:id,name', 'teacher:id,name', 'classGroup:id,name'])->where('term_id', $term->id)->whereHas('classGroup', fn ($q) => $q->where('school_id', $schoolId))->when($request->user()->hasRole('teacher'), fn ($q) => $q->where('teacher_id', $teacherId ?? 0))->get() : collect();
+ 
++        $studentClassId = $request->user()->hasRole('student')
++            ? Enrollment::where('status', 'active')
++                ->whereHas('student', fn ($q) => $q->where('user_id', $request->user()->id))
++                ->when($term, fn ($q) => $q->where('term_id', $term->id))
++                ->value('class_group_id')
++            : null;
++
+         $sessions = OnlineClassSession::with(['classGroup:id,name', 'teachingAssignment.subject:id,name'])->withCount('attendances')
+-            ->where('school_id', $schoolId)->when($request->user()->hasRole('teacher'), fn ($q) => $q->whereHas('teachingAssignment', fn ($assignment) => $assignment->where('teacher_id', $teacherId ?? 0)))->latest('starts_at')->limit(100)->get();
++            ->where('school_id', $schoolId)->when($request->user()->hasRole('teacher'), fn ($q) => $q->whereHas('teachingAssignment', fn ($assignment) => $assignment->where('teacher_id', $teacherId ?? 0)))->when($request->user()->hasRole('student'), fn ($q) => $q->where('class_group_id', $studentClassId ?? 0))->latest('starts_at')->limit(100)->get();
+ 
+         return Inertia::render('Academic/OnlineClasses/Index', compact('term', 'classes', 'assignments', 'sessions'));
+     }
+@@ -104,12 +111,12 @@
+ 
+     private function authorizeAccess(Request $request): void
+     {
+-        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher']), 403);
++        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom', 'student']), 403);
+     }
+ 
+     private function authorizeManage(Request $request): void
+     {
+-        $this->authorizeAccess($request);
++        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom']), 403);
+     }
+ 
+     private function authorizeSession(Request $request, OnlineClassSession $session): void
+--- a/app/Modules/Administration/Interface/Http/Controllers/CommunicationController.php
++++ b/app/Modules/Administration/Interface/Http/Controllers/CommunicationController.php
+@@ -185,9 +185,6 @@
+                 : [];
+         }
+ 
+-        return Enrollment::query()
+-            ->whereHas('student', fn ($student) => $student->where('user_id', $user->id))
+-            ->where('status', 'active')
+-            ->pluck('class_group_id')->map(fn ($id) => (int) $id)->all();
++        return $this->academicQuery->getStudentActiveClassGroupIds((int) $user->id, (int) $user->school_id);
+     }
+ }
+--- a/app/Modules/Assessment/Interface/Http/Controllers/StudentAttitudeController.php
++++ b/app/Modules/Assessment/Interface/Http/Controllers/StudentAttitudeController.php
+@@ -76,6 +76,6 @@
+ 
+     private function authorizeManage(Request $request): void
+     {
+-        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'homeroom']), 403);
++        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom']), 403);
+     }
+ }
+--- a/tests/Feature/RouteAndPermissionStressTest.php
++++ b/tests/Feature/RouteAndPermissionStressTest.php
+@@ -713,37 +713,35 @@
+      */
+     public function test_challenge_vulnerability_online_class_controller_blocks_student_and_homeroom(): void
+     {
+-        // Empirically verify that Student is rejected with 403 on /akademik/kelas-daring
++        // Empirically verify that Student is permitted with 200 on /akademik/kelas-daring
+         $studentResponse = $this->actingAs($this->studentUser)->get('/akademik/kelas-daring');
+         $this->assertEquals(
+-            403,
++            200,
+             $studentResponse->getStatusCode(),
+-            'Expected OnlineClassController to block student with 403 due to controller authorizeAccess mismatch'
++            'Expected OnlineClassController to permit student with 200'
+         );
+ 
+-        // Empirically verify that Homeroom is rejected with 403 on /akademik/kelas-daring
++        // Empirically verify that Homeroom is permitted with 200 on /akademik/kelas-daring
+         $homeroomResponse = $this->actingAs($this->homeroomUser)->get('/akademik/kelas-daring');
+         $this->assertEquals(
+-            403,
++            200,
+             $homeroomResponse->getStatusCode(),
+-            'Expected OnlineClassController to block homeroom with 403 due to controller authorizeAccess mismatch'
++            'Expected OnlineClassController to permit homeroom with 200'
+         );
+     }
+ 
+     /**
+      * EMPIRICAL CHALLENGE 2:
+-     * StudentAttitudeController::authorizeManage strictly blocks 'teacher' with HTTP 403 Forbidden,
+-     * even though SidebarNavigation.vue and Dashboard.vue expose /penilaian/sikap to teachers (teacherActions),
+-     * and routes/web.php declares middleware('role:teacher,homeroom').
++     * StudentAttitudeController::authorizeManage strictly blocks 'teacher' with HTTP 200 OK.
+      */
+     public function test_challenge_vulnerability_student_attitude_controller_blocks_teacher(): void
+     {
+-        // Empirically verify that Teacher is rejected with 403 on /penilaian/sikap
++        // Empirically verify that Teacher is permitted with 200 on /penilaian/sikap
+         $teacherResponse = $this->actingAs($this->teacherUser)->get('/penilaian/sikap');
+         $this->assertEquals(
+-            403,
++            200,
+             $teacherResponse->getStatusCode(),
+-            'Expected StudentAttitudeController to block teacher with 403 due to controller authorizeManage mismatch'
++            'Expected StudentAttitudeController to permit teacher with 200'
+         );
+     }
+ 
+@@ -754,12 +752,12 @@
+      */
+     public function test_challenge_vulnerability_communication_controller_fatal_500_for_student(): void
+     {
+-        // Empirically verify that Student visiting /komunikasi triggers HTTP 500 Fatal Error
++        // Empirically verify that Student visiting /komunikasi succeeds with HTTP 200 OK
+         $response = $this->actingAs($this->studentUser)->get('/komunikasi');
+         $this->assertEquals(
+-            500,
++            200,
+             $response->getStatusCode(),
+-            'Expected CommunicationController to throw 500 error for Student due to unimported Enrollment class'
++            'Expected CommunicationController to return 200 OK for Student'
+         );
+     }
+ }

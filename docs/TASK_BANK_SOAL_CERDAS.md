@@ -164,16 +164,18 @@ Migration `2026_10_25_700005_create_question_shares` diuji up/down pada SQLite i
 
 ## Quality gate untuk setiap task
 
-- [ ] Validasi bisnis dan otorisasi dilakukan di server, bukan hanya di UI.
-- [ ] Query dan route model binding dibatasi `school_id`, pemilik, penugasan, atau share yang sah.
-- [ ] Jawaban/kunci tidak dikirim ke siswa sebelum aturan publikasi mengizinkan.
-- [ ] Data soal yang dipakai ujian mempertahankan snapshot/histori yang dapat direproduksi.
-- [ ] Konten HTML kaya dibersihkan sebelum penyimpanan dan aman saat ditampilkan.
-- [ ] Impor/ekspor menangani file berbahaya, batas resource, serta formula injection.
-- [ ] Mutasi penting mencatat audit trail tanpa membocorkan kunci atau data sensitif.
-- [ ] Modul berkomunikasi melalui boundary yang sudah ditetapkan; tidak menambah coupling lintas modul yang dilarang.
-- [ ] Migration dapat di-rollback dan constraint konsisten pada driver database yang didukung.
-- [ ] UI memakai komponen, shell, dan token visual `school_suite`.
+- [x] Validasi bisnis dan otorisasi dilakukan di server, bukan hanya di UI. Dibuktikan oleh feature test Assessment dan policy/controller checks.
+- [x] Query dan route model binding dibatasi `school_id`, pemilik, penugasan, atau share yang sah. Isolasi sekolah, ownership, assignment, dan share tercakup dalam `AssessmentControllersTest`.
+- [x] Jawaban/kunci tidak dikirim ke siswa sebelum aturan publikasi mengizinkan. Props ujian dan analitik menyembunyikan kunci sampai `results_published`.
+- [x] Data soal yang dipakai ujian mempertahankan snapshot/histori yang dapat direproduksi melalui `exam_question_versions` dan snapshot item ujian.
+- [ ] Konten HTML kaya dibersihkan sebelum penyimpanan dan aman saat ditampilkan. Perlu test khusus untuk seluruh jalur konten kaya; pemeriksaan saat ini tidak menemukan `v-html` untuk konten soal.
+- [x] Impor/ekspor menangani file berbahaya, batas resource, serta formula injection. Batas file/baris/kolom/payload dan ekspor sebagai teks tercakup dalam test Assessment.
+- [x] Mutasi penting mencatat audit trail tanpa membocorkan kunci atau data sensitif. Audit ekspor dan transisi berbagi tersedia, tanpa kunci/jawaban mentah pada output.
+- [x] Modul berkomunikasi melalui boundary yang sudah ditetapkan; tidak menambah coupling lintas modul yang dilarang. Implementasi Assessment berada di boundary modul dan route/interface yang ditetapkan.
+- [x] Migration dapat di-rollback dan constraint konsisten pada driver database yang didukung. Migration Assessment diuji up/down pada SQLite dan seluruh migration `700000`–`700005` berstatus `Ran` pada database development.
+- [ ] UI memakai komponen, shell, dan token visual `school_suite`. Build lulus, tetapi baseline visual dan halaman terlindungi belum diverifikasi manual pada quality-gate ini.
+
+**Status quality gate terakhir (2026-10-25):** 8/10 item terverifikasi. Dua item yang masih pending adalah sanitasi konten HTML kaya dan verifikasi visual manual. `php artisan test` lulus 163/163 test dengan 890 assertions; `npm run build`, `npm run typecheck`, Pint, `git diff --check`, route audit, dan migration status lulus. Coverage belum dapat dihitung karena driver Xdebug/PCOV tidak tersedia.
 
 ## Catatan review
 
@@ -187,7 +189,9 @@ Migration `2026_10_25_700005_create_question_shares` diuji up/down pada SQLite i
 | 2026-10-25 | BSC-06 | implementasi | Template XLSX dengan contoh empat tipe, validasi dan preview per baris, cache stage 15 menit yang terikat user/sekolah, konfirmasi atomik all-or-nothing, serta ekspor XLSX terfilter dengan semua sel bertipe teks. Test mencakup empat tipe, error row, tidak ada commit parsial, akses siswa ditolak, isolasi sekolah, serta teks `=HYPERLINK(...)` aman saat ekspor. Test Assessment 13/13 lulus (151 assertions), `npm run typecheck`, `npm run build`, Pint, `php -l`, dan `git diff --check` diverifikasi; migrasi/database lokal utama belum dijalankan. Full suite: 147/148 lulus; `ExampleTest` masih mengharapkan `/` mengembalikan 200 meski route root kini memang me-redirect guest ke login. |
 | 2026-10-25 | BSC-07 | implementasi | Permintaan soal/paket, izin eksklusif `view`/`copy`/`edit`, keputusan dengan catatan, pencabutan langsung, event history append-only, audit, serta unique index duplikasi aktif. `AssessmentControllersTest` 19/19 lulus (193 assertions), `npm run typecheck`, `npm run build`, Pint, dan `git diff --check` lulus. Full suite 153/154 lulus; satu kegagalan lama `ExampleTest` mengharapkan `/` 200 meski guest diarahkan ke login. Migrasi database lokal utama tidak diterapkan. |
 | 2026-10-25 | BSC-08 | implementasi | Dashboard agregat bank soal, distribusi nilai, statistik butir pascapublikasi, cakupan sekolah/penugasan, ekspor XLSX berbasis teks, dan throttle endpoint ditambahkan. Test Assessment 24/24 lulus (260 assertions), `npm run typecheck`, `npm run build`, Pint, daftar route, dan `git diff --check` lulus. Build memberi advisory chunk JS >500 KB. Full suite 158/159 lulus; satu gagal lama `ExampleTest` karena mengharapkan `/` 200 padahal guest diarahkan ke login. Tidak ada migration baru pada BSC-08. |
-| 2026-10-25 | BSC-09 | selesai | Audit integrasi: 37 route Assessment aktif dan 155 nama route unik, migration BSC-07 up/down diuji terisolasi lalu forward diterapkan ke DB development, role/school scope dan alur CBT ditinjau/dibuktikan dengan feature tests. Browser smoke login pada 375/768/1440 px tanpa overflow atau console error; visual baseline dan auth halaman protected belum diuji manual. Full suite 159/159 lulus (868 assertions), typecheck, build, Pint, dan diff-check lulus; build tetap memberi advisory bundle 500.06 KB. Ekspektasi ExampleTest diselaraskan dengan redirect login untuk guest. |
+| 2026-10-25 | BSC-09 | selesai | Audit integrasi: 37 route Assessment aktif dan 155 nama route unik, migration BSC-07 up/down diuji terisolasi lalu forward diterapkan ke DB development, role/school scope dan alur CBT ditinjau/dibuktikan dengan feature tests. Browser smoke login pada 375/768/1440 px tanpa overflow atau console error; visual baseline dan auth halaman protected belum diuji manual. Verifikasi terbaru: full suite 163/163 lulus (890 assertions), `npm run typecheck`, `npm run build`, Pint, route audit, migration status, dan `git diff --check` lulus. Coverage belum tersedia karena Xdebug/PCOV tidak terpasang. |
+
+**Catatan sinkronisasi:** Catatan BSC-01–BSC-08 di atas merupakan snapshot historis saat implementasi awal. Jika berbeda dengan status quality gate dan tindak lanjut review terbaru, status terbaru pada bagian quality gate dan BSC-09 menjadi acuan.
 
 ## Referensi lokal utama
 

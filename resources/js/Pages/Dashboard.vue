@@ -8,6 +8,8 @@ interface DashboardStats {
     active_period: string;
     framework_version: string;
     role_metrics?: Record<string, number>;
+    latest_announcements?: Array<{ id: number; title: string; author_name?: string | null; published_at?: string | null }>;
+    latest_login_logs?: Array<{ id: number; user_name: string; status: string; reason?: string | null; ip_address?: string | null; created_at?: string | null }>;
 }
 
 interface DashboardPageProps {
@@ -26,32 +28,83 @@ const role = computed(() => user.value?.role ?? 'guest');
 const roleLabel = computed(() => user.value?.role_label ?? 'Pengguna');
 const activePeriod = computed(() => page.props.activePeriod?.label ?? props.stats?.active_period ?? 'Belum ada periode aktif');
 const roleMetrics = computed(() => props.stats?.role_metrics ?? {});
-const isAdmin = computed(() => ['admin', 'operator'].includes(role.value));
+const latestAnnouncements = computed(() => props.stats?.latest_announcements ?? []);
+const latestLoginLogs = computed(() => props.stats?.latest_login_logs ?? []);
+const isAdmin = computed(() => role.value === 'admin');
+const isOperator = computed(() => role.value === 'operator');
 const isPrincipal = computed(() => role.value === 'principal');
-const isTeacher = computed(() => ['teacher', 'homeroom'].includes(role.value));
+const isHomeroom = computed(() => role.value === 'homeroom');
+const isTeacher = computed(() => role.value === 'teacher');
 const isStudent = computed(() => role.value === 'student');
+const today = computed(() => {
+    const parts = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).formatToParts(new Date());
+    return {
+        day: parts.find((part) => part.type === 'day')?.value ?? '—',
+        month: parts.find((part) => part.type === 'month')?.value ?? '',
+        year: parts.find((part) => part.type === 'year')?.value ?? '',
+    };
+});
+const formatDateTime = (value?: string | null) => value
+    ? new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+    : '—';
 
 const adminActions = [
     { title: 'Kelola pengguna', description: 'Atur akun, role, dan status akses warga sekolah.', href: '/pengaturan/pengguna', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8zm14 10v-2a3 3 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
-    { title: 'Data akademik', description: 'Kelola siswa, kelas, mata pelajaran, dan periode.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
+    { title: 'Kelola siswa', description: 'Atur data siswa dan penempatan kelas periode aktif.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
+    { title: 'Kelola guru', description: 'Perbarui data guru dan penugasan pengajar.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
+    { title: 'Kelola kelas', description: 'Atur rombel, kapasitas, dan wali kelas.', href: '/akademik/kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1' },
+    { title: 'Jadwal pelajaran', description: 'Tinjau jadwal aktif dan kesiapan pembelajaran.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Pusat laporan', description: 'Lihat rekapan akademik dan ekspor data sekolah.', href: '/laporan', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14v14z' },
     { title: 'Komunikasi sekolah', description: 'Terbitkan pengumuman dan agenda untuk warga sekolah.', href: '/komunikasi', icon: 'M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5' },
+    { title: 'Log login', description: 'Pantau percobaan login dan aktivitas keamanan akun.', href: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
     { title: 'Pengaturan sekolah', description: 'Periksa identitas dan konfigurasi sekolah.', href: '/pengaturan/sekolah', icon: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19.4 15a1.7 1.7 0 00.34 1.88l.06.06-1.9 1.9-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.03 1.56V20h-2.68v-.09a1.7 1.7 0 00-1.03-1.56 1.7 1.7 0 00-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 007.8 15a1.7 1.7 0 00-1.56-1.03H6v-2.68h.24A1.7 1.7 0 007.8 10a1.7 1.7 0 00-.34-1.88L7.4 8.06l1.9-1.9.06.06a1.7 1.7 0 001.88.34 1.7 1.7 0 001.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0019.4 15z' },
 ];
+const operatorActions = [
+    { title: 'Data siswa & rombel', description: 'Kelola data pokok siswa, import, dan penempatan kelas.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
+    { title: 'Penugasan guru', description: 'Atur data guru aktif dan penugasan mengajar semester.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
+    { title: 'Rombongan belajar', description: 'Kelola rombel, kuota kelas, dan penetapan wali kelas.', href: '/akademik/kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1' },
+    { title: 'Jadwal pelajaran', description: 'Susun jadwal mingguan, cek bentrok, dan terbitkan jadwal.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Skema penilaian', description: 'Atur komponen nilai, bobot evaluasi, dan format rapor.', href: '/penilaian/skema', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+    { title: 'Kelola pengguna', description: 'Atur akun siswa, guru, dan staf sekolah.', href: '/pengaturan/pengguna', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8zm14 10v-2a3 3 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
+    { title: 'Identitas sekolah', description: 'Periksa profil kelembagaan dan konfigurasi dasar.', href: '/pengaturan/sekolah', icon: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19.4 15a1.7 1.7 0 00.34 1.88l.06.06-1.9 1.9-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.03 1.56V20h-2.68v-.09a1.7 1.7 0 00-1.03-1.56 1.7 1.7 0 00-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 007.8 15a1.7 1.7 0 00-1.56-1.03H6v-2.68h.24A1.7 1.7 0 007.8 10a1.7 1.7 0 00-.34-1.88L7.4 8.06l1.9-1.9.06.06a1.7 1.7 0 001.88.34 1.7 1.7 0 001.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0019.4 15z' },
+];
+const homeroomActions = [
+    { title: 'Dashboard perwalian', description: 'Pantau ringkasan kelas binaan, absensi, dan profil siswa.', href: '/wali-kelas', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+    { title: 'Catatan observasi & BK', description: 'Catat pembinaan karakter dan koordinasi guru bimbingan konseling.', href: '/wali-kelas/catatan', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+    { title: 'Kedisiplinan & prestasi', description: 'Rekam poin prestasi, catatan dispensasi, dan penanganan insiden.', href: '/wali-kelas/kedisiplinan', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+    { title: 'WhatsApp orang tua', description: 'Kirim notifikasi presensi dan pengumuman ke kontak orang tua.', href: '/komunikasi/whatsapp', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
+    { title: 'Input nilai pelajaran', description: 'Lengkapi capaian belajar dan tugas pada kelas yang Anda ampu.', href: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2-2a2 2 0 00-2 2v2h6V5a2 2 0 00-2-2h-2zm-1 9h4m-4 4h4' },
+    { title: 'Penilaian sikap', description: 'Evaluasi catatan karakter dan sikap kelas binaan.', href: '/penilaian/sikap', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+    { title: 'Rapor kelas', description: 'Tinjau rekapan nilai rapor dan kesiapan cetak hasil belajar.', href: '/penilaian/rapor', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
+    { title: 'Presensi kelas', description: 'Catat dan verifikasi kehadiran harian siswa.', href: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0 2 2 0 00-4 0zm-1 9 2 2 4-4' },
+];
 const teacherActions = [
-    { title: 'Input nilai', description: 'Lengkapi capaian belajar dan remedial kelas Anda.', href: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2-2a2 2 0 00-2 2v2h6V5a2 2 0 00-2-2h-2zm-1 9h4m-4 4h4' },
-    { title: 'Presensi siswa', description: 'Catat kehadiran dan lihat rekap pertemuan.', href: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0 2 2 0 00-4 0zm-1 9 2 2 4-4' },
-    { title: 'Bank soal', description: 'Susun soal, paket ujian, dan berbagi dengan rekan guru.', href: '/penilaian/bank-soal', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
-    { title: 'Ujian', description: 'Buat ujian dan pantau hasil pengerjaan siswa.', href: '/ujian', icon: 'M6 3h12v18H6zM9 7h6M9 11h6M9 15h4' },
+    { title: 'Ruang belajar LMS', description: 'Kelola materi pembelajaran, modul, dan penugasan kelas.', href: '/pembelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+    { title: 'Presensi siswa', description: 'Catat kehadiran tatap muka dan tinjau rekap pertemuan.', href: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0 2 2 0 00-4 0zm-1 9 2 2 4-4' },
+    { title: 'Jurnal mengajar', description: 'Dokumentasikan agenda pembelajaran dan catatan kelas harian.', href: '/akademik/jurnal', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18 5.754 18 7.5 18s3.332.477 4.5 1.253' },
+    { title: 'Input nilai', description: 'Lengkapi capaian belajar, tugas harian, dan remedial siswa.', href: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2-2a2 2 0 00-2 2v2h6V5a2 2 0 00-2-2h-2zm-1 9h4m-4 4h4' },
+    { title: 'Penilaian sikap', description: 'Catat observasi sikap dan capaian profil pelajar.', href: '/penilaian/sikap', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
+    { title: 'Bank soal cerdas', description: 'Susun butir soal, paket asesmen, dan berbagi bersama rekan guru.', href: '/penilaian/bank-soal', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
+    { title: 'Ujian CBT', description: 'Jadwalkan ujian online dan pantau langsung pengerjaan siswa.', href: '/ujian', icon: 'M6 3h12v18H6zM9 7h6M9 11h6M9 15h4' },
+    { title: 'Kelas daring', description: 'Buka sesi tatap muka interaktif dan catat presensi digital.', href: '/akademik/kelas-daring', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
 ];
 const principalActions = [
-    { title: 'Lihat laporan sekolah', description: 'Pantau kehadiran, capaian, dan ringkasan akademik sekolah.', href: '/penilaian/laporan', icon: 'M4 19V5m0 14h16M8 16v-5m4 5V7m4 9v-8' },
-    { title: 'Komunikasi sekolah', description: 'Tinjau pengumuman dan agenda yang diterima warga sekolah.', href: '/komunikasi', icon: 'M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5' },
-    { title: 'Data akademik', description: 'Buka data siswa, kelas, dan periode akademik.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
+    { title: 'Pusat laporan sekolah', description: 'Pantau rekapitulasi nilai, presensi, dan ringkasan akademik.', href: '/laporan', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14v14z' },
+    { title: 'Analisis asesmen', description: 'Tinjau analisis butir soal, sebaran nilai, dan ketuntasan ujian.', href: '/penilaian/analisis', icon: 'M3 3v18h18M8 15l4-4 4 3 5-7' },
+    { title: 'Monitoring siswa', description: 'Pantau sebaran peserta didik aktif dan riwayat siklus siswa.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
+    { title: 'Tenaga pendidik', description: 'Tinjau data guru, beban mengajar, dan penugasan akademik.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
+    { title: 'Jadwal pelajaran', description: 'Periksa distribusi jadwal belajar dan keterisian rombel.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Komunikasi sekolah', description: 'Tinjau pengumuman dan agenda resmi warga sekolah.', href: '/komunikasi', icon: 'M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5' },
+    { title: 'Keamanan & log akses', description: 'Pantau aktivitas login dan stabilitas keamanan sistem.', href: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
 ];
 const studentActions = [
-    { title: 'Lihat ujian', description: 'Periksa ujian yang akan datang dan hasil pengerjaan.', href: '/ujian', icon: 'M6 3h12v18H6zM9 7h6M9 11h6M9 15h4' },
-    { title: 'Lihat nilai', description: 'Tinjau nilai yang sudah tercatat pada periode aktif.', href: '/penilaian/rapor', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
-    { title: 'Presensi saya', description: 'Periksa riwayat kehadiran dan catatan presensi.', href: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0 2 2 0 00-4 0zm-1 9 2 2 4-4' },
+    { title: 'Ruang belajar LMS', description: 'Akses materi pelajaran, modul ajar, dan kumpulkan tugas kelas.', href: '/pembelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+    { title: 'Jadwal pelajaran', description: 'Lihat agenda belajar harian, waktu sesi, dan ruang kelas.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Ujian CBT', description: 'Kerjakan asesmen online yang siap diikuti dan tinjau hasilnya.', href: '/ujian', icon: 'M6 3h12v18H6zM9 7h6M9 11h6M9 15h4' },
+    { title: 'Rapor & nilai saya', description: 'Tinjau capaian hasil belajar dan nilai semester aktif.', href: '/penilaian/rapor', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
+    { title: 'Progress belajar mandiri', description: 'Pantau ketuntasan materi, tugas terkirim, dan persentase kehadiran.', href: '/pembelajaran/progress', icon: 'M9 17v-6m4 6V7m4 10V4M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z' },
+    { title: 'Diskusi & chat kelas', description: 'Berinteraksi dengan guru dan teman dalam ruang kelas.', href: '/komunikasi/chat', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z' },
+    { title: 'Kelas daring', description: 'Masuk ke ruang pertemuan virtual interaktif.', href: '/akademik/kelas-daring', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
 ];
 const fallbackActions = [
     { title: 'Data siswa', description: 'Kelola identitas peserta didik dan penempatan kelas.', href: '/akademik/siswa', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8' },
@@ -59,26 +112,83 @@ const fallbackActions = [
     { title: 'Input nilai', description: 'Isi capaian belajar sesuai skema penilaian aktif.', href: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2-2a2 2 0 00-2 2v2h6V5a2 2 0 00-2-2h-2' },
 ];
 
-const actions = computed(() => isAdmin.value ? adminActions : isPrincipal.value ? principalActions : isTeacher.value ? teacherActions : isStudent.value ? studentActions : fallbackActions);
+const actions = computed(() => {
+    if (isAdmin.value) return adminActions;
+    if (isOperator.value) return operatorActions;
+    if (isPrincipal.value) return principalActions;
+    if (isHomeroom.value) return homeroomActions;
+    if (isTeacher.value) return teacherActions;
+    if (isStudent.value) return studentActions;
+    return fallbackActions;
+});
 const primaryAction = computed(() => actions.value[0]);
 const secondaryActions = computed(() => actions.value.slice(1));
-const focusLabel = computed(() => isAdmin.value ? 'Operasional sekolah' : isPrincipal.value ? 'Kinerja sekolah' : isTeacher.value ? 'Ruang mengajar' : isStudent.value ? 'Perjalanan belajar' : 'Ruang kerja sekolah');
-const focusTitle = computed(() => isAdmin.value ? 'Jaga sekolah tetap bergerak.' : isPrincipal.value ? 'Lihat sekolah dari gambaran utuh.' : isTeacher.value ? 'Mulai dari pekerjaan yang paling penting.' : isStudent.value ? 'Belajar dengan arah yang lebih jelas.' : 'Semua pekerjaan sekolah, dari satu tempat.');
-const focusCopy = computed(() => isAdmin.value ? 'Pantau warga sekolah, komunikasi, dan data akademik tanpa berpindah-pindah konteks.' : isPrincipal.value ? 'Pantau denyut akademik, komunikasi, dan kesiapan sekolah dari satu ruang pengambilan keputusan.' : isTeacher.value ? 'Kelola penilaian, presensi, bank soal, dan ujian dari alur kerja yang lebih singkat.' : isStudent.value ? 'Lihat ujian, nilai, dan presensi yang membentuk perjalanan belajar Anda.' : 'Akses modul yang tersedia sesuai hak akses akun Anda.');
-const focusMetric = computed(() => isAdmin.value || isPrincipal.value ? roleMetrics.value.students : isTeacher.value ? roleMetrics.value.teaching_assignments : isStudent.value ? roleMetrics.value.active_enrollments : props.stats?.modules_ready);
-const focusMetricLabel = computed(() => isAdmin.value || isPrincipal.value ? 'siswa aktif' : isTeacher.value ? 'kelas diampu' : isStudent.value ? 'kelas aktif' : 'modul tersedia');
+const focusLabel = computed(() => {
+    if (isAdmin.value) return 'Operasional sekolah';
+    if (isOperator.value) return 'Administrasi akademik';
+    if (isPrincipal.value) return 'Kinerja sekolah';
+    if (isHomeroom.value) return 'Ruang perwalian';
+    if (isTeacher.value) return 'Ruang mengajar';
+    if (isStudent.value) return 'Perjalanan belajar';
+    return 'Ruang kerja sekolah';
+});
+const focusTitle = computed(() => {
+    if (isAdmin.value) return 'Pusat kendali sekolah.';
+    if (isOperator.value) return 'Pusat pengelolaan data dan konfigurasi.';
+    if (isPrincipal.value) return 'Lihat sekolah dari gambaran utuh.';
+    if (isHomeroom.value) return 'Dampingi tumbuh kembang kelas binaan.';
+    if (isTeacher.value) return 'Mulai dari pekerjaan yang paling penting.';
+    if (isStudent.value) return 'Belajar dengan arah yang lebih jelas.';
+    return 'Semua pekerjaan sekolah, dari satu tempat.';
+});
+const focusCopy = computed(() => {
+    if (isAdmin.value) return 'Pantau warga sekolah, komunikasi, dan data akademik tanpa berpindah-pindah konteks.';
+    if (isOperator.value) return 'Kelola master data siswa, guru, rombel, jadwal, dan skema penilaian secara terpadu.';
+    if (isPrincipal.value) return 'Pantau denyut akademik, laporan capaian, dan kesiapan operasional dari satu ruang pimpinan.';
+    if (isHomeroom.value) return 'Pantau kehadiran, catatan pembinaan, kedisiplinan, serta komunikasi langsung dengan orang tua siswa.';
+    if (isTeacher.value) return 'Kelola materi pembelajaran, presensi, bank soal, dan evaluasi hasil belajar siswa.';
+    if (isStudent.value) return 'Akses materi pelajaran, jadwal kelas, ujian CBT, dan pantau capaian belajarmu.';
+    return 'Akses modul yang tersedia sesuai hak akses akun Anda.';
+});
+const focusMetric = computed(() => {
+    if (isAdmin.value || isPrincipal.value) return roleMetrics.value.students;
+    if (isOperator.value) return roleMetrics.value.active_classes;
+    if (isTeacher.value || isHomeroom.value) return roleMetrics.value.teaching_assignments;
+    if (isStudent.value) return roleMetrics.value.active_enrollments;
+    return props.stats?.modules_ready;
+});
+const focusMetricLabel = computed(() => {
+    if (isAdmin.value || isPrincipal.value) return 'siswa aktif';
+    if (isOperator.value) return 'kelas aktif';
+    if (isHomeroom.value) return 'tugas kelas';
+    if (isTeacher.value) return 'kelas diampu';
+    if (isStudent.value) return 'kelas aktif';
+    return 'modul tersedia';
+});
 const metricItems = computed(() => {
     if (isAdmin.value) return [
         { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah' },
-        { label: 'Pengguna aktif', value: roleMetrics.value.active_users, note: 'akun dengan akses' },
-        { label: 'Pengumuman', value: roleMetrics.value.recent_announcements, note: '30 hari terakhir' },
-        { label: 'Ujian aktif', value: roleMetrics.value.active_exams, note: 'sedang berjalan' },
+        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pengajar' },
+        { label: 'Kelas aktif', value: roleMetrics.value.active_classes, note: 'periode akademik aktif' },
+        { label: 'Mata pelajaran', value: roleMetrics.value.active_subjects, note: 'aktif di sekolah' },
+    ];
+    if (isOperator.value) return [
+        { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah' },
+        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pendidik' },
+        { label: 'Kelas aktif', value: roleMetrics.value.active_classes, note: 'periode berjalan' },
+        { label: 'Pengguna aktif', value: roleMetrics.value.active_users, note: 'akun warga sekolah' },
     ];
     if (isPrincipal.value) return [
         { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah' },
         { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pengajar' },
         { label: 'Ujian aktif', value: roleMetrics.value.active_exams, note: 'sedang berjalan' },
         { label: 'Pengumuman', value: roleMetrics.value.recent_announcements, note: '30 hari terakhir' },
+    ];
+    if (isHomeroom.value) return [
+        { label: 'Kelas binaan/diampu', value: roleMetrics.value.teaching_assignments, note: 'periode aktif' },
+        { label: 'Soal aktif', value: roleMetrics.value.active_questions, note: 'di bank soal' },
+        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'draft dan terbit' },
+        { label: 'Nilai tersimpan', value: roleMetrics.value.recorded_scores, note: 'rekaman Anda' },
     ];
     if (isTeacher.value) return [
         { label: 'Kelas diampu', value: roleMetrics.value.teaching_assignments, note: 'periode aktif' },
@@ -107,18 +217,18 @@ const metricItems = computed(() => {
                 <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
                     <div><h1>{{ firstName }}, ini pusat kerjamu.</h1><p>{{ focusCopy }}</p></div>
-                    <div class="date-stamp"><strong>25</strong><span>Okt<br>2026</span></div>
+                    <div class="date-stamp"><strong>{{ today.day }}</strong><span>{{ today.month }}<br>{{ today.year }}</span></div>
                 </div>
             </header>
 
             <div class="command-layout">
-                <article class="focus-panel" :class="{ 'teacher-focus': isTeacher, 'principal-focus': isPrincipal, 'student-focus': isStudent }">
+                <article class="focus-panel" :class="{ 'teacher-focus': isTeacher || isHomeroom, 'principal-focus': isPrincipal, 'student-focus': isStudent, 'operator-focus': isOperator }">
                     <div class="focus-meta"><span>{{ focusLabel }}</span><span class="focus-status"><i /> Sistem aktif</span></div>
-                    <div class="focus-content"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
+                    <div class="focus-content" :class="{ 'admin-focus-content': isAdmin }"><template v-if="!isAdmin"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span></template><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
                     <div class="focus-orbit orbit-one" /><div class="focus-orbit orbit-two" />
                 </article>
                 <aside class="insight-panel">
-                    <div class="insight-heading"><div><span class="eyebrow">Fokus hari ini</span><h2>{{ isAdmin ? 'Kesiapan operasional' : isPrincipal ? 'Kinerja sekolah' : isTeacher ? 'Ruang mengajar' : isStudent ? 'Agenda belajar' : 'Ringkasan akses' }}</h2></div><span class="signal">01</span></div>
+                    <div class="insight-heading"><div><span class="eyebrow">Fokus hari ini</span><h2>{{ isAdmin ? 'Kesiapan operasional' : isPrincipal ? 'Kinerja sekolah' : isOperator ? 'Administrasi data' : isHomeroom ? 'Ruang perwalian' : isTeacher ? 'Ruang mengajar' : isStudent ? 'Agenda belajar' : 'Ringkasan akses' }}</h2></div><span class="signal">01</span></div>
                     <div class="signal-line"><span class="signal-dot" /><div><strong>{{ primaryAction.title }}</strong><p>{{ primaryAction.description }}</p></div></div>
                     <div class="insight-rule" />
                     <div class="insight-footer"><span>Periode</span><strong>{{ activePeriod }}</strong></div>
@@ -126,12 +236,27 @@ const metricItems = computed(() => {
             </div>
 
             <section class="metrics-strip" aria-label="Ringkasan metrik">
-                <div v-for="metric in metricItems" :key="metric.label" class="metric-item"><span>{{ metric.label }}</span><strong>{{ metric.value ?? '—' }}</strong><small>{{ metric.note }}</small></div>
+                <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
+                    <div class="metric-head"><span>{{ metric.label }}</span><span class="metric-arrow" aria-hidden="true">↗</span></div>
+                    <strong>{{ metric.value ?? '—' }}</strong>
+                    <small>{{ metric.note }}</small>
+                </article>
             </section>
 
             <section class="workflow-section">
-                <div class="section-heading"><div><span class="eyebrow">Alur kerja</span><h2>{{ isAdmin ? 'Pekerjaan administrasi' : isPrincipal ? 'Pantauan pimpinan' : isTeacher ? 'Pekerjaan mengajar' : isStudent ? 'Perjalanan belajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} langkah lanjutan</span></div>
-                <div class="workflow-list">
+                <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Pantauan harian</span><h2>Pengumuman dan log login</h2></div><span class="workflow-count">2 area penting</span></div>
+                <div v-if="isAdmin" class="admin-overview-grid">
+                    <section class="admin-overview-card announcement-card">
+                        <header class="admin-card-header"><div class="admin-card-title"><span class="admin-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5" /></svg></span><span class="admin-card-copy"><strong>Pengumuman</strong><span>5 pengumuman terakhir</span></span></div><Link href="/komunikasi" class="admin-card-link">Lihat semua ↗</Link></header>
+                        <ol class="admin-list"><li v-for="item in latestAnnouncements" :key="item.id"><span><strong>{{ item.title }}</strong><small>{{ item.author_name ?? 'Sekolah' }}</small></span><time>{{ formatDateTime(item.published_at) }}</time></li><li v-if="!latestAnnouncements.length" class="admin-empty">Belum ada pengumuman.</li></ol>
+                    </section>
+                    <section class="admin-overview-card login-card">
+                        <header class="admin-card-header"><div class="admin-card-title"><span class="admin-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg></span><span class="admin-card-copy"><strong>Log login</strong><span>10 aktivitas login terakhir</span></span></div><Link href="/pengaturan/keamanan" class="admin-card-link">Lihat semua ↗</Link></header>
+                        <ol class="admin-list"><li v-for="item in latestLoginLogs" :key="item.id"><span><strong>{{ item.user_name }}</strong><small>{{ item.ip_address ?? 'IP tidak tersedia' }}</small></span><time :class="item.status === 'success' ? 'login-success' : 'login-failed'">{{ item.status === 'success' ? 'Berhasil' : 'Gagal' }} · {{ formatDateTime(item.created_at) }}</time></li><li v-if="!latestLoginLogs.length" class="admin-empty">Belum ada log login.</li></ol>
+                    </section>
+                </div>
+                <div v-else class="section-heading"><div><span class="eyebrow">Alur kerja</span><h2>{{ isPrincipal ? 'Pantauan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Alur kerja perwalian' : isTeacher ? 'Pekerjaan mengajar' : isStudent ? 'Perjalanan belajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} langkah lanjutan</span></div>
+                <div v-if="!isAdmin" class="workflow-list">
                     <Link v-for="(action, index) in secondaryActions" :key="action.href" :href="action.href" class="workflow-row">
                         <span class="workflow-index">{{ String(index + 2).padStart(2, '0') }}</span><span class="workflow-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span><span class="workflow-copy"><strong>{{ action.title }}</strong><span>{{ action.description }}</span></span><span class="workflow-arrow" aria-hidden="true">↗</span>
                     </Link>
@@ -144,20 +269,31 @@ const metricItems = computed(() => {
 </template>
 
 <style scoped>
-.dashboard-view { max-width: 1180px; color: #1a2a3e; }
+.dashboard-view { width: 100%; max-width: 1320px; margin: 0 auto; color: var(--ink); }
 .dashboard-intro { padding: 8px 2px 27px; }
-.intro-kicker { display: flex; align-items: center; gap: 8px; color: #63738a; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
-.live-pip { width: 7px; height: 7px; background: #4eaf81; border-radius: 50%; box-shadow: 0 0 0 4px #e5f6ec; }.slash { color: #b0bac7; }
-.intro-row { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-top: 18px; }.intro-row h1 { margin: 0; color: #14243a; font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -.045em; line-height: 1.03; }.intro-row p { max-width: 540px; margin: 12px 0 0; color: #718096; font-size: 13px; line-height: 1.7; }
-.date-stamp { display: flex; align-items: center; gap: 9px; padding: 9px 12px 9px 10px; color: #203b61; border: 1px solid #dce4ec; border-radius: 13px; background: #fff; }.date-stamp strong { font-size: 27px; letter-spacing: -.06em; line-height: 1; }.date-stamp span { color: #7b8998; font-size: 10px; font-weight: 700; line-height: 1.25; }
+.intro-kicker { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.live-pip { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 0 4px var(--green-soft); }.slash { color: var(--ink-faint); }
+.intro-row { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-top: 18px; }.intro-row h1 { margin: 0; color: var(--ink); font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -.045em; line-height: 1.03; }.intro-row p { max-width: 540px; margin: 12px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+.date-stamp { display: flex; align-items: center; gap: 9px; padding: 9px 12px 9px 10px; color: var(--ink); border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }.date-stamp strong { font-size: 27px; letter-spacing: -.06em; line-height: 1; }.date-stamp span { color: var(--ink-soft); font-size: 10px; font-weight: 700; line-height: 1.25; }
 .command-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, .8fr); gap: 15px; }.focus-panel { min-height: 330px; padding: 27px 30px; color: #f7fbff; background: #172d4c; border-radius: 25px 25px 25px 7px; overflow: hidden; position: relative; box-shadow: 0 20px 38px rgba(24, 48, 78, .16); }.focus-panel.teacher-focus { background: #1d4d56; }.focus-meta { display: flex; align-items: center; justify-content: space-between; gap: 15px; color: #a7bdd5; font-size: 10px; font-weight: 700; letter-spacing: .04em; position: relative; z-index: 1; }.focus-status { display: inline-flex; align-items: center; gap: 6px; color: #c8e9d7; }.focus-status i { width: 6px; height: 6px; background: #72d29c; border-radius: 50%; }.focus-content { position: relative; z-index: 1; margin-top: 38px; max-width: 510px; }.focus-number { display: block; color: #f4c86c; font: 700 58px Georgia, serif; letter-spacing: -.06em; line-height: .9; }.focus-number-label { display: block; margin-top: 9px; color: #adc0d4; font-size: 11px; }.focus-content h2 { max-width: 390px; margin: 22px 0 8px; color: #fff; font-size: clamp(22px, 3vw, 31px); letter-spacing: -.035em; line-height: 1.1; }.focus-content p { max-width: 430px; margin: 0; color: #b6c7d8; font-size: 12px; line-height: 1.7; }.focus-action { display: inline-flex; align-items: center; gap: 13px; margin-top: 22px; padding: 11px 15px; color: #1c304b; background: #f5c86d; border-radius: 9px; font-size: 11px; font-weight: 800; text-decoration: none; }.focus-action:hover { background: #ffda89; }.focus-action span { font-size: 17px; line-height: .7; }.focus-orbit { position: absolute; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; }.orbit-one { width: 390px; height: 390px; right: -145px; bottom: -190px; }.orbit-two { width: 290px; height: 290px; right: -95px; bottom: -140px; }
-.insight-panel { display: flex; flex-direction: column; justify-content: space-between; min-height: 330px; padding: 24px; background: #f7f3e9; border: 1px solid #e9e1d3; border-radius: 7px 25px 25px 25px; }.insight-heading { display: flex; justify-content: space-between; gap: 12px; }.insight-heading h2 { margin: 7px 0 0; color: #23344c; font-size: 18px; letter-spacing: -.025em; }.signal { color: #ad7c2b; font: 700 21px Georgia, serif; }.signal-line { display: flex; align-items: start; gap: 12px; margin-top: 55px; }.signal-dot { width: 12px; height: 12px; flex: 0 0 auto; margin-top: 4px; border: 3px solid #dfb45b; border-radius: 50%; box-shadow: 0 0 0 5px #f0e6d1; }.signal-line strong { color: #273b55; font-size: 13px; }.signal-line p { margin: 6px 0 0; color: #7b8490; font-size: 11px; line-height: 1.65; }.insight-rule { height: 1px; margin: 25px 0 14px; background: #e5dccb; }.insight-footer { display: flex; justify-content: space-between; gap: 12px; color: #8b8d8c; font-size: 10px; }.insight-footer strong { color: #43536a; font-size: 10px; text-align: right; }
-.metrics-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 15px; border-top: 1px solid #dfe6ed; border-bottom: 1px solid #dfe6ed; }.metric-item { min-height: 107px; padding: 19px 20px 17px 0; border-right: 1px solid #dfe6ed; }.metric-item:not(:first-child) { padding-left: 20px; }.metric-item:last-child { border-right: 0; }.metric-item span, .metric-item small { display: block; color: #7d8998; font-size: 10px; }.metric-item strong { display: block; margin: 8px 0 4px; color: #1d3554; font-size: 24px; letter-spacing: -.045em; }.metric-item small { color: #a0aab5; }
-.workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: #1a2a3e; font-size: 20px; letter-spacing: -.035em; }.workflow-count { color: #9aa6b4; font-size: 10px; }.workflow-list { border-top: 1px solid #dfe6ed; }.workflow-row { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid #dfe6ed; transition: padding .18s ease, background .18s ease; }.workflow-row:hover { padding-left: 12px; padding-right: 12px; background: #f7fafc; }.workflow-index { width: 23px; color: #a5b0bd; font: 700 11px Georgia, serif; }.workflow-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 auto; color: #3269bc; background: #eaf1fc; border-radius: 10px 10px 10px 4px; }.workflow-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.workflow-copy { display: grid; gap: 4px; flex: 1; }.workflow-copy strong { color: #2a3d55; font-size: 12px; }.workflow-copy span { color: #7d8a9a; font-size: 11px; line-height: 1.4; }.workflow-arrow { color: #98a5b3; font-size: 18px; }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: #a1aab4; font-size: 10px; }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: 800 12px Georgia, serif; }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: #d7dfe7; }
+.insight-panel { display: flex; flex-direction: column; justify-content: space-between; min-height: 330px; padding: 24px; background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 7px 25px 25px 25px; }.insight-heading { display: flex; justify-content: space-between; gap: 12px; }.insight-heading h2 { margin: 7px 0 0; color: var(--ink); font-size: 18px; letter-spacing: -.025em; }.signal { color: var(--gold); font: 700 21px Georgia, serif; }.signal-line { display: flex; align-items: start; gap: 12px; margin-top: 55px; }.signal-dot { width: 12px; height: 12px; flex: 0 0 auto; margin-top: 4px; border: 3px solid var(--gold); border-radius: 50%; box-shadow: 0 0 0 5px var(--gold-soft); }.signal-line strong { color: var(--ink); font-size: 13px; }.signal-line p { margin: 6px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.65; }.insight-rule { height: 1px; margin: 25px 0 14px; background: var(--line); }.insight-footer { display: flex; justify-content: space-between; gap: 12px; color: var(--ink-faint); font-size: 10px; }.insight-footer strong { color: var(--ink-soft); font-size: 10px; text-align: right; }
+.metrics-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.metric-item { position: relative; min-width: 0; min-height: 118px; padding: 17px 18px 16px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 5px; box-shadow: var(--shadow-sm); }
+.metric-item::before { position: absolute; top: 0; left: 0; width: 52px; height: 3px; content: ''; background: #3269bc; }
+.metric-tone-2::before { background: #3d9b78; }.metric-tone-3::before { background: #ad7c2b; }.metric-tone-4::before { background: #8264b5; }
+.metric-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.metric-item span, .metric-item small { display: block; color: var(--ink-soft); font-size: 10px; }.metric-head > span:first-child { color: var(--ink); font-size: 13px; font-weight: 800; letter-spacing: -.015em; }.metric-arrow { color: var(--ink-faint) !important; font-size: 14px !important; line-height: 1; }.metric-item strong { display: block; margin: 15px 0 5px; color: var(--ink); font-size: 27px; letter-spacing: -.05em; line-height: 1; }.metric-item small { color: var(--ink-faint); font-size: 10px; }
+.workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: 20px; letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: 10px; }.workflow-list { border-top: 1px solid var(--line); }.workflow-row { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); transition: padding .18s ease, background .18s ease; }.workflow-row:hover { padding-left: 12px; padding-right: 12px; background: var(--surface-subtle); }.workflow-index { width: 23px; color: var(--ink-faint); font: 700 11px Georgia, serif; }.workflow-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 auto; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }.workflow-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.workflow-copy { display: grid; gap: 4px; flex: 1; }.workflow-copy strong { color: var(--ink); font-size: 12px; }.workflow-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.4; }.workflow-arrow { color: var(--ink-faint); font-size: 18px; }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: 10px; }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: 800 12px Georgia, serif; }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
+.admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.admin-overview-card { min-height: 0; padding: 18px; color: inherit; border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; }
+.announcement-card { background: var(--gold-soft); border-color: var(--line); }.login-card { background: var(--blue-soft); border-color: var(--line); }
+.admin-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }.admin-card-title { display: flex; align-items: center; gap: 12px; min-width: 0; }.admin-card-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 12px 12px 12px 4px; }.announcement-card .admin-card-icon { color: var(--gold); background: color-mix(in srgb, var(--gold) 18%, var(--surface)); }.login-card .admin-card-icon { color: var(--blue); background: color-mix(in srgb, var(--blue) 18%, var(--surface)); }
+.admin-card-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.admin-card-copy { display: grid; gap: 4px; min-width: 0; }.admin-card-copy strong { color: var(--ink); font-size: 14px; }.admin-card-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }.admin-card-link { color: var(--blue); font-size: 10px; font-weight: 800; text-decoration: none; white-space: nowrap; }.admin-card-link:hover { text-decoration: underline; }
+.admin-focus-content { display: flex; min-height: 205px; margin-top: 38px; flex-direction: column; justify-content: center; }.admin-list { display: grid; gap: 0; margin: 16px 0 0; padding: 0 4px 0 0; list-style: none; border-top: 1px solid var(--line); }.admin-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }.admin-list li > span { display: grid; gap: 3px; min-width: 0; }.admin-list strong { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }.admin-list small, .admin-list time { color: var(--ink-faint); font-size: 9px; }.admin-list time { flex: 0 0 auto; text-align: right; }.login-success { color: var(--green) !important; }.login-failed { color: var(--red) !important; }.admin-empty { color: var(--ink-faint); font-size: 11px; }
 .focus-panel.principal-focus { background: #3d3158; }
 .focus-panel.student-focus { background: #375342; }
-.eyebrow { color: #8d99a8; font-size: 10px; font-weight: 800; letter-spacing: .045em; }
-@media (max-width: 800px) { .command-layout { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.metric-item:nth-child(2) { border-right: 0; }.metric-item:nth-child(n+3) { border-top: 1px solid #dfe6ed; } }
-@media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; }.metric-item, .metric-item:not(:first-child) { padding-left: 12px; padding-right: 12px; }.metric-item:nth-child(odd) { padding-left: 0; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; } }
+.focus-panel.operator-focus { background: #1c3d5a; }
+.eyebrow { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .045em; }
+@media (max-width: 800px) { .command-layout { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; } }
 @media (prefers-reduced-motion: reduce) { .workflow-row { transition: none; } }
 </style>

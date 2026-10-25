@@ -654,7 +654,7 @@ class QuestionBankController extends Controller
 
     private function authorizeManager(Request $request): void
     {
-        abort_unless($request->user()->hasRole(['admin', 'operator', 'teacher', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['teacher', 'homeroom']), 403);
         abort_unless($request->user()->is_active && $request->user()->school_id, 403);
     }
 

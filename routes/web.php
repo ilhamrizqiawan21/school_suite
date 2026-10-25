@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\HealthCheckController;
 use App\Models\User;
+use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Student;
+use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
@@ -13,6 +15,7 @@ use App\Modules\Assessment\Infrastructure\Models\Exam;
 use App\Modules\Assessment\Infrastructure\Models\ExamAttempt;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Assessment\Infrastructure\Models\Score;
+use App\Modules\Core\Infrastructure\Models\LoginAttemptLog;
 use App\Shared\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,11 +24,21 @@ Route::get('/', function () {
     $user = request()->user();
     $schoolId = (int) $user->school_id;
 
+    $activeTerm = Term::query()
+        ->where('is_active', true)
+        ->whereHas('academicYear', fn ($query) => $query->where('school_id', $schoolId))
+        ->with('academicYear')
+        ->first();
+
     $stats = [
         'modules_ready' => 9,
-        'active_period' => '2026/2027 Ganjil',
+        'active_period' => $activeTerm?->academicYear?->name
+            ? $activeTerm->academicYear->name.' '.$activeTerm->name
+            : 'Belum ada periode aktif',
         'framework_version' => app()->version(),
         'role_metrics' => [],
+        'latest_announcements' => [],
+        'latest_login_logs' => [],
     ];
 
     if ($user->hasRole(['admin', 'operator', 'principal'])) {
@@ -35,9 +48,38 @@ Route::get('/', function () {
             'recent_announcements' => Announcement::where('school_id', $schoolId)->where('published_at', '>=', now()->subDays(30))->count(),
             'active_exams' => Exam::where('school_id', $schoolId)->whereIn('status', ['published', 'results_published'])->count(),
             'teachers' => Teacher::where('school_id', $schoolId)->where('is_active', true)->count(),
+            'active_classes' => ClassGroup::where('school_id', $schoolId)
+                ->when($activeTerm, fn ($query) => $query->where('academic_year_id', $activeTerm->academic_year_id))
+                ->count(),
+            'active_subjects' => Subject::where('school_id', $schoolId)->where('is_active', true)->count(),
         ];
+        $stats['latest_announcements'] = Announcement::with('author:id,name')
+            ->where('school_id', $schoolId)
+            ->whereNotNull('published_at')
+            ->latest('published_at')
+            ->limit(5)
+            ->get(['id', 'author_id', 'title', 'published_at'])
+            ->map(fn (Announcement $announcement) => [
+                'id' => $announcement->id,
+                'title' => $announcement->title,
+                'author_name' => $announcement->author?->name,
+                'published_at' => $announcement->published_at?->toIso8601String(),
+            ])->values()->all();
+        $stats['latest_login_logs'] = LoginAttemptLog::with('user:id,name')
+            ->where(fn ($query) => $query->whereNull('school_id')->orWhere('school_id', $schoolId))
+            ->latest('created_at')
+            ->limit(10)
+            ->get(['id', 'user_id', 'status', 'reason', 'ip_address', 'created_at'])
+            ->map(fn (LoginAttemptLog $log) => [
+                'id' => $log->id,
+                'user_name' => $log->user?->name ?? 'Tidak dikenal',
+                'status' => $log->status,
+                'reason' => $log->reason,
+                'ip_address' => $log->ip_address,
+                'created_at' => $log->created_at?->toIso8601String(),
+            ])->values()->all();
     } elseif ($user->hasRole(['teacher', 'homeroom'])) {
-        $activeTermId = Term::where('is_active', true)->value('id');
+        $activeTermId = $activeTerm?->id;
         $stats['role_metrics'] = [
             'teaching_assignments' => TeachingAssignment::where('term_id', $activeTermId)->whereHas('teacher', fn ($query) => $query->where('user_id', $user->id))->count(),
             'active_questions' => ExamQuestion::where('school_id', $schoolId)->where('owner_id', $user->id)->where('is_active', true)->count(),

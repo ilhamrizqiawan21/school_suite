@@ -12,6 +12,7 @@ const props = defineProps<{
     exams: { id: number; title: string; status: string; starts_at: string }[];
     bank: { total: number; by_type: Distribution[]; by_subject: Distribution[]; by_category: Distribution[]; by_curriculum: Distribution[]; by_cognitive_level: Distribution[] };
     exam_results: { available: boolean; exam: any; total_attempts: number; graded_attempts: number; average_score: number | null; score_distribution: (Distribution & { percentage: number | null })[]; items: ExamItem[] | null };
+    can_manage_question_bank: boolean;
 }>();
 
 const filterForm = reactive({
@@ -36,11 +37,11 @@ function labelType(type: string) {
 </script>
 
 <template>
-    <Head title="Analisis Bank Soal dan Ujian" />
+    <Head :title="can_manage_question_bank ? 'Analisis Bank Soal dan Ujian' : 'Analisis Asesmen dan Ujian'" />
     <AppLayout>
-        <main class="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
-            <header class="flex flex-wrap items-end justify-between gap-4">
-                <div><p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Assessment insight</p><h1 class="mt-1 text-2xl font-semibold text-slate-900">Analisis Bank Soal & Ujian</h1><p class="mt-1 text-sm text-slate-500">Ringkasan agregat sesuai cakupan sekolah, penugasan, dan izin berbagi Anda.</p></div>
+        <main class="view space-y-6">
+            <header class="page-heading compact-heading">
+                <div><p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Assessment insight</p><h1 class="mt-1 text-2xl font-semibold text-slate-900">{{ can_manage_question_bank ? 'Analisis Bank Soal & Ujian' : 'Analisis Asesmen & Ujian' }}</h1><p class="mt-1 text-sm text-slate-500">Ringkasan agregat sesuai cakupan sekolah, penugasan, dan izin berbagi Anda.</p></div>
                 <a :href="exportUrl" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Ekspor XLSX</a>
             </header>
 

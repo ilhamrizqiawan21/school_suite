@@ -21,6 +21,7 @@ export interface School {
 export interface Student {
     id: number;
     school_id: number;
+    user_id?: number | null;
     nis: string;
     nisn?: string | null;
     name: string;

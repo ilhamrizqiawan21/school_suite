@@ -22,6 +22,7 @@ class EngagementController extends Controller
 
     public function chat(Request $request): Response
     {
+        abort_unless($request->user()->hasRole(['teacher', 'homeroom', 'student']), 403);
         $schoolId = (int) $request->user()->school_id;
         $term = $this->academicQuery->getActiveTerm($schoolId);
         $assignmentIds = $term ? $this->visibleAssignmentIds($request, $term->id) : [];
@@ -31,12 +32,12 @@ class EngagementController extends Controller
         $room = $rooms->firstWhere('id', $roomId);
         $messages = $room ? ClassChatMessage::with('user:id,name')->where('class_chat_room_id', $room->id)->latest()->limit(100)->get()->reverse()->values() : collect();
 
-        return Inertia::render('Communication/Chat', ['assignments' => $assignments, 'rooms' => $rooms, 'selected_room' => $room, 'messages' => $messages, 'can_manage' => $request->user()->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom'])]);
+        return Inertia::render('Communication/Chat', ['assignments' => $assignments, 'rooms' => $rooms, 'selected_room' => $room, 'messages' => $messages, 'can_manage' => $request->user()->hasRole(['teacher', 'homeroom'])]);
     }
 
     public function createRoom(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['teacher', 'homeroom']), 403);
         $data = $request->validate(['teaching_assignment_id' => ['required', 'integer'], 'name' => ['required', 'string', 'max:180']]);
         $term = $this->academicQuery->getActiveTerm((int) $request->user()->school_id);
         abort_unless($term && in_array((int) $data['teaching_assignment_id'], $this->visibleAssignmentIds($request, $term->id), true), 403);
@@ -59,7 +60,7 @@ class EngagementController extends Controller
     {
         $message->load('room');
         $this->authorizeRoom($request, $message->room);
-        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['teacher', 'homeroom']), 403);
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
         $message->update(['body' => '[Pesan dimoderasi]', 'moderated_by' => $request->user()->id, 'moderated_at' => now(), 'moderation_reason' => $data['reason']]);
         $this->audit->log('communication.chat.moderated', 'class_chat_message', (string) $message->id, ['reason' => $data['reason']], actor: $request->user(), schoolId: (int) $request->user()->school_id);

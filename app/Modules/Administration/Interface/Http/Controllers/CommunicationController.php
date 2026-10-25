@@ -70,6 +70,7 @@ class CommunicationController extends Controller
             'classes' => $classes,
             'active_tab' => $request->query('tab', 'announcements'),
             'can_manage' => $user->hasRole(self::MANAGER_ROLES),
+            'can_chat' => $user->hasRole(['teacher', 'homeroom', 'student']),
             'can_whatsapp' => $user->hasRole(['admin', 'operator', 'principal', 'homeroom']),
         ]);
     }
@@ -185,9 +186,13 @@ class CommunicationController extends Controller
                 : [];
         }
 
-        return Enrollment::query()
-            ->whereHas('student', fn ($student) => $student->where('user_id', $user->id))
-            ->where('status', 'active')
-            ->pluck('class_group_id')->map(fn ($id) => (int) $id)->all();
+        $schoolId = (int) $user->school_id;
+        $activeTerm = $this->academicQuery->getActiveTerm($schoolId);
+
+        return $this->academicQuery->getStudentClassGroupIds(
+            (int) $user->id,
+            $activeTerm?->id,
+            $schoolId
+        );
     }
 }

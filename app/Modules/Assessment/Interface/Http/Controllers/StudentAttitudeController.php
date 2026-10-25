@@ -76,6 +76,6 @@ class StudentAttitudeController extends Controller
 
     private function authorizeManage(Request $request): void
     {
-        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom']), 403);
     }
 }

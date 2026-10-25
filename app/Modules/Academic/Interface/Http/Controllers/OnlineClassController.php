@@ -33,8 +33,15 @@ class OnlineClassController extends Controller
         $teacherId = $request->user()->hasRole('teacher') ? Teacher::where('user_id', $request->user()->id)->value('id') : null;
         $assignments = $term ? TeachingAssignment::with(['subject:id,name', 'teacher:id,name', 'classGroup:id,name'])->where('term_id', $term->id)->whereHas('classGroup', fn ($q) => $q->where('school_id', $schoolId))->when($request->user()->hasRole('teacher'), fn ($q) => $q->where('teacher_id', $teacherId ?? 0))->get() : collect();
 
+        $studentClassId = $request->user()->hasRole('student')
+            ? Enrollment::where('status', 'active')
+                ->whereHas('student', fn ($q) => $q->where('user_id', $request->user()->id))
+                ->when($term, fn ($q) => $q->where('term_id', $term->id))
+                ->value('class_group_id')
+            : null;
+
         $sessions = OnlineClassSession::with(['classGroup:id,name', 'teachingAssignment.subject:id,name'])->withCount('attendances')
-            ->where('school_id', $schoolId)->when($request->user()->hasRole('teacher'), fn ($q) => $q->whereHas('teachingAssignment', fn ($assignment) => $assignment->where('teacher_id', $teacherId ?? 0)))->latest('starts_at')->limit(100)->get();
+            ->where('school_id', $schoolId)->when($request->user()->hasRole('teacher'), fn ($q) => $q->whereHas('teachingAssignment', fn ($assignment) => $assignment->where('teacher_id', $teacherId ?? 0)))->when($request->user()->hasRole('student'), fn ($q) => $q->where('class_group_id', $studentClassId ?? 0))->latest('starts_at')->limit(100)->get();
 
         return Inertia::render('Academic/OnlineClasses/Index', compact('term', 'classes', 'assignments', 'sessions'));
     }
@@ -104,12 +111,12 @@ class OnlineClassController extends Controller
 
     private function authorizeAccess(Request $request): void
     {
-        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher']), 403);
+        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom', 'student']), 403);
     }
 
     private function authorizeManage(Request $request): void
     {
-        $this->authorizeAccess($request);
+        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom']), 403);
     }
 
     private function authorizeSession(Request $request, OnlineClassSession $session): void

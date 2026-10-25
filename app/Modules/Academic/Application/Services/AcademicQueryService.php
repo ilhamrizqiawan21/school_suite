@@ -157,4 +157,105 @@ class AcademicQueryService
             ->orderBy('subjects.name')
             ->get();
     }
+
+    /**
+     * Ambil ID rombel aktif untuk seorang siswa berdasarkan user_id.
+     *
+     * @return list<int>
+     */
+    public function getStudentClassGroupIds(int $studentUserId, ?int $termId = null, ?int $schoolId = null): array
+    {
+        return Enrollment::query()
+            ->whereHas('student', fn ($student) => $student
+                ->where('user_id', $studentUserId)
+                ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
+            )
+            ->where('status', 'active')
+            ->when($termId, fn ($query) => $query->where('term_id', $termId))
+            ->distinct()
+            ->pluck('class_group_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil daftar ID rombel aktif untuk siswa berdasarkan user ID.
+     *
+     * @return list<int>
+     */
+    public function getStudentActiveClassGroupIds(int $studentUserId, ?int $schoolId = null): array
+    {
+        return $this->getStudentClassGroupIds($studentUserId, null, $schoolId);
+    }
+
+    /**
+     * Ambil daftar user ID siswa aktif dalam rombel tertentu.
+     *
+     * @return list<int>
+     */
+    public function getClassGroupStudentUserIds(int $classGroupId): array
+    {
+        return Enrollment::query()
+            ->where('class_group_id', $classGroupId)
+            ->where('status', 'active')
+            ->whereHas('student', fn ($student) => $student->whereNotNull('user_id'))
+            ->with('student:id,user_id')
+            ->get()
+            ->pluck('student.user_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil daftar user ID guru yang mengajar pada rombel tertentu.
+     *
+     * @return list<int>
+     */
+    public function getClassGroupTeacherUserIds(int $classGroupId): array
+    {
+        return TeachingAssignment::query()
+            ->where('class_group_id', $classGroupId)
+            ->whereHas('teacher', fn ($teacher) => $teacher->whereNotNull('user_id'))
+            ->with('teacher:id,user_id')
+            ->get()
+            ->pluck('teacher.user_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil data enrollment aktif siswa pada semester tertentu.
+     */
+    public function getStudentEnrollmentForTerm(int $studentUserId, int $termId): ?Enrollment
+    {
+        return Enrollment::query()
+            ->where('term_id', $termId)
+            ->where('status', 'active')
+            ->whereHas('student', fn ($student) => $student->where('user_id', $studentUserId))
+            ->first();
+    }
+
+    /**
+     * Ambil data enrollment siswa pada kelas dan semester tertentu.
+     */
+    public function getStudentEnrollmentForClassTerm(int $studentUserId, int $termId, int $classGroupId): ?Enrollment
+    {
+        return Enrollment::query()
+            ->where('term_id', $termId)
+            ->where('class_group_id', $classGroupId)
+            ->where('status', 'active')
+            ->whereHas('student', fn ($student) => $student->where('user_id', $studentUserId))
+            ->first();
+    }
+
+    /**
+     * Ambil penugasan mengajar berdasarkan ID.
+     */
+    public function getTeachingAssignmentById(int $id): ?TeachingAssignment
+    {
+        return TeachingAssignment::find($id);
+    }
 }

@@ -238,6 +238,9 @@ class EnrollmentService
                 if ((int) $targetTerm->academicYear->school_id !== (int) $actor->school_id || (int) $targetClass->school_id !== (int) $actor->school_id || (int) $targetClass->academic_year_id !== (int) $targetTerm->academic_year_id) {
                     throw new InvalidArgumentException('Periode atau kelas tujuan tidak sesuai sekolah dan tahun ajaran.');
                 }
+                if ($targetTerm->id === $source->term_id || $targetTerm->start_date->lessThanOrEqualTo($source->term->start_date)) {
+                    throw new InvalidArgumentException('Periode tujuan harus setelah periode sumber.');
+                }
                 if ($data['action'] === 'promoted' && $targetClass->grade_level <= $source->classGroup->grade_level) {
                     throw new InvalidArgumentException('Kenaikan kelas harus menuju tingkat yang lebih tinggi.');
                 }

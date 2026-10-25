@@ -1,0 +1,22 @@
+--- a/resources/js/components/SidebarNavigation.vue
++++ b/resources/js/components/SidebarNavigation.vue
+@@ -148,13 +148,17 @@
+ const isItemActive = (item: NavItem): boolean => {
+-    const rawPath = currentUrl.value.split('?')[0];
++    const rawPath = currentUrl.value.split('#')[0].split('?')[0];
+     const currentPath = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
+     const targetHref = item.href.length > 1 && item.href.endsWith('/') ? item.href.slice(0, -1) : item.href;
+ 
+     if (item.exact || targetHref === '/') {
+         return currentPath === targetHref;
+     }
+     if (item.activePrefix) {
+-        return currentPath.startsWith(item.activePrefix);
++        const prefix = item.activePrefix.length > 1 && item.activePrefix.endsWith('/')
++            ? item.activePrefix.slice(0, -1)
++            : item.activePrefix;
++
++        return currentPath === prefix || currentPath.startsWith(prefix + '/');
+     }
+     return currentPath === targetHref;
+ };

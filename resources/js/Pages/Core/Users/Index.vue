@@ -113,12 +113,12 @@ const deleteUser = (user: UserItem) => {
 
 <template>
     <AppLayout title="Manajemen Pengguna">
-        <div class="space-y-6">
+        <div class="view space-y-6">
             <!-- Header section -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900 tracking-tight">Manajemen Akun Pengguna</h1>
-                    <p class="text-xs text-slate-500 mt-1">
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Manajemen Akun Pengguna</h1>
+                    <p class="text-sm text-slate-500 mt-1">
                         Kelola akun, peran, dan status akses pengguna unit sekolah
                     </p>
                 </div>

@@ -15,6 +15,7 @@ const props = defineProps<{
     classes: ClassItem[];
     active_tab: string;
     can_manage: boolean;
+    can_chat: boolean;
     can_whatsapp: boolean;
 }>();
 
@@ -72,7 +73,7 @@ const markRead = (notification: NotificationItem) => {
                     <p>Pengumuman terarah, agenda akademik, dan notifikasi pribadi dalam satu ruang kerja.</p>
                 </div>
                 <div class="hero-actions">
-                    <Link class="secondary-button" href="/komunikasi/chat">Chat kelas</Link>
+                    <Link v-if="can_chat" class="secondary-button" href="/komunikasi/chat">Chat kelas</Link>
                     <Link v-if="can_whatsapp" class="secondary-button" href="/komunikasi/whatsapp">WhatsApp</Link>
                     <button v-if="can_manage" class="secondary-button" @click="showEventForm = true">Tambah agenda</button>
                     <button v-if="can_manage" class="primary-button" @click="showAnnouncementForm = true">Buat pengumuman</button>

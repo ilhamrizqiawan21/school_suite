@@ -55,13 +55,16 @@ const submit = () => {
 
 <template>
     <AppLayout title="Profil Sekolah">
-        <div class="max-w-3xl space-y-6">
+        <div class="view max-w-3xl space-y-6">
             <!-- Header section -->
-            <div>
-                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Identitas & Profil Sekolah</h1>
-                <p class="text-xs text-slate-500 mt-1">
-                    Konfigurasi identitas resmi unit sekolah untuk kop surat, rapor, dan dokumen administrasi
-                </p>
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Profil sekolah</p>
+                    <h1 class="text-2xl font-bold tracking-tight">Identitas & Profil Sekolah</h1>
+                    <p class="text-sm mt-1">
+                        Konfigurasi identitas resmi unit sekolah untuk kop surat, rapor, dan dokumen administrasi
+                    </p>
+                </div>
             </div>
 
             <!-- Flash message -->

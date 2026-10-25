@@ -84,9 +84,9 @@ const totalWeight = (components: ComponentItem[]) => {
     <AppLayout>
         <Head title="Skema Penilaian Berversi" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6">
             <!-- Header Halaman -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Skema & Bobot Penilaian</h1>
                     <p class="text-sm text-slate-500 mt-1">

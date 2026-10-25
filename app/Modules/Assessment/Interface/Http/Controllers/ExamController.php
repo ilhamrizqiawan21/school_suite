@@ -47,8 +47,9 @@ class ExamController extends Controller
         $exams = Exam::withCount(['items', 'attempts'])->where('school_id', $schoolId)->whereIn('teaching_assignment_id', $ids)->when($user->hasRole('student'), fn ($query) => $query->whereIn('status', ['published', 'results_published']))->latest('starts_at')->get();
         $components = DB::table('assessment_components')->join('assessment_schemes', 'assessment_schemes.id', '=', 'assessment_components.scheme_id')->where('assessment_schemes.school_id', $schoolId)->where('assessment_schemes.is_active', true)->get(['assessment_components.id', 'assessment_components.name', 'assessment_components.teaching_assignment_id']);
         $attempts = $user->hasRole('student') ? ExamAttempt::with('exam:id,title,starts_at,ends_at,status')->whereIn('exam_id', $exams->pluck('id'))->whereIn('enrollment_id', $this->studentEnrollmentIds($request, $term?->id))->get() : collect();
+        $canManageQuestionBank = $user->hasRole(['teacher', 'homeroom']);
 
-        return Inertia::render('Assessment/Exams/Index', ['assignments' => $assignments, 'questions' => $questions, 'packs' => $packs, 'exams' => $exams, 'attempts' => $attempts, 'components' => $components, 'can_manage' => $canManage, 'is_student' => $user->hasRole('student')]);
+        return Inertia::render('Assessment/Exams/Index', ['assignments' => $assignments, 'questions' => $questions, 'packs' => $packs, 'exams' => $exams, 'attempts' => $attempts, 'components' => $components, 'can_manage' => $canManage, 'can_manage_question_bank' => $canManageQuestionBank, 'is_student' => $user->hasRole('student')]);
     }
 
     public function storeExam(Request $request): RedirectResponse

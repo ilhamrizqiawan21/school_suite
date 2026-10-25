@@ -1,0 +1,130 @@
+/* Academic settings uses the shared semantic palette in both themes. */
+.settings-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.45rem 1.55rem;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--primary-soft) 180%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.settings-hero > div:first-child {
+    min-width: 0;
+}
+
+.settings-hero .eyebrow {
+    margin: 0 0 .55rem;
+    color: var(--primary) !important;
+    font-size: .67rem;
+    font-weight: 850;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.settings-hero h1 {
+    margin: 0;
+    color: var(--ink) !important;
+    font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+    font-weight: 850;
+    letter-spacing: -.045em;
+    line-height: 1.08;
+}
+
+.settings-hero p:not(.eyebrow) {
+    max-width: 650px;
+    margin: .55rem 0 0;
+    color: var(--ink-soft) !important;
+    font-size: .82rem;
+    line-height: 1.55;
+}
+
+.settings-hero .hero-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.settings-grid .panel-heading {
+    border-bottom-color: var(--line) !important;
+}
+
+.settings-grid .panel-heading h2,
+.settings-grid .record-card h3,
+.settings-grid .subject-list h3,
+.settings-grid .term-list > div,
+.modal-card h2 {
+    color: var(--ink) !important;
+}
+
+.settings-grid .record-card,
+.settings-grid .subject-list article {
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+}
+
+.settings-grid .record-main small,
+.settings-grid .subject-list small,
+.settings-grid .term-list small {
+    color: var(--ink-soft) !important;
+}
+
+.settings-grid .term-list {
+    border-top-color: var(--line) !important;
+}
+
+.settings-grid .term-list > div {
+    background: var(--surface-subtle) !important;
+}
+
+.settings-grid .term-list button,
+.settings-grid .term-list strong,
+.settings-grid .text-button {
+    color: var(--primary) !important;
+}
+
+.settings-grid .danger-link {
+    color: var(--red) !important;
+}
+
+.settings-grid .status-pill {
+    color: var(--green) !important;
+    background: var(--green-soft) !important;
+}
+
+.settings-grid .subject-code {
+    color: var(--primary-strong) !important;
+    background: var(--primary-soft) !important;
+}
+
+.modal-card {
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+}
+
+.modal-card label {
+    color: var(--ink-soft) !important;
+}
+
+.modal-card input,
+.modal-card select {
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+    border-color: var(--line-strong) !important;
+}
+
+.modal-card input::placeholder {
+    color: var(--ink-faint) !important;
+}
+
+@media (max-width: 850px) {
+    .settings-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .settings-hero .hero-actions {
+        justify-content: flex-start;
+    }
+}

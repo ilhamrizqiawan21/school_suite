@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import '../../docs/mockup/styles.css';
+@import './settings.css';
+@import './learning.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -14,23 +16,356 @@ html[data-theme='dark'] {
 }
 
 html[data-theme='dark'] body,
+html[data-theme='dark'] #app,
 html[data-theme='dark'] .workspace,
 html[data-theme='dark'] .main-content {
-    background: #111827;
-    color: #e5e7eb;
+    background: var(--canvas) !important;
+    color: var(--ink) !important;
 }
 
 html[data-theme='dark'] .topbar,
 html[data-theme='dark'] .panel,
 html[data-theme='dark'] .stat-card,
 html[data-theme='dark'] .table-card {
-    background: #1f2937;
-    border-color: #374151;
+    background: var(--surface);
+    border-color: var(--line);
 }
+
+/* The application uses Tailwind utilities on many pages. Keep the shared
+ * theme tokens authoritative so cards, forms, tables, and modals switch as a
+ * unit instead of leaving bright fragments behind. */
+html[data-theme='dark'] .bg-white { background-color: var(--surface) !important; }
+html[data-theme='dark'] .bg-slate-50,
+html[data-theme='dark'] .bg-gray-50 { background-color: var(--surface-subtle) !important; }
+html[data-theme='dark'] .bg-slate-50\/50 { background-color: var(--surface-strong) !important; }
+html[data-theme='dark'] .bg-slate-100,
+html[data-theme='dark'] .bg-gray-100 { background-color: var(--surface-strong) !important; }
+html[data-theme='dark'] .bg-slate-200,
+html[data-theme='dark'] .bg-gray-200 { background-color: var(--line-strong) !important; }
+html[data-theme='dark'] .bg-indigo-50,
+html[data-theme='dark'] .bg-blue-50,
+html[data-theme='dark'] .bg-cyan-50,
+html[data-theme='dark'] .bg-indigo-50\/40 { background-color: var(--primary-soft) !important; }
+html[data-theme='dark'] .bg-emerald-50,
+html[data-theme='dark'] .bg-green-50 { background-color: var(--green-soft) !important; }
+html[data-theme='dark'] .bg-amber-50,
+html[data-theme='dark'] .bg-yellow-50 { background-color: var(--gold-soft) !important; }
+html[data-theme='dark'] .bg-rose-50,
+html[data-theme='dark'] .bg-red-50 { background-color: var(--red-soft) !important; }
+html[data-theme='dark'] .bg-violet-50,
+html[data-theme='dark'] .bg-purple-50,
+html[data-theme='dark'] .bg-violet-100,
+html[data-theme='dark'] .bg-purple-100 { background-color: var(--violet-soft) !important; }
+html[data-theme='dark'] .bg-indigo-100,
+html[data-theme='dark'] .bg-blue-100,
+html[data-theme='dark'] .bg-cyan-100 { background-color: var(--primary-soft) !important; }
+html[data-theme='dark'] .bg-emerald-100,
+html[data-theme='dark'] .bg-green-100 { background-color: var(--green-soft) !important; }
+html[data-theme='dark'] .bg-amber-100,
+html[data-theme='dark'] .bg-yellow-100 { background-color: var(--gold-soft) !important; }
+html[data-theme='dark'] .bg-rose-100,
+html[data-theme='dark'] .bg-red-100 { background-color: var(--red-soft) !important; }
+html[data-theme='dark'] .bg-pink-50,
+html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !important; }
+
+html[data-theme='dark'] .text-slate-950,
+html[data-theme='dark'] .text-slate-900,
+html[data-theme='dark'] .text-gray-950,
+html[data-theme='dark'] .text-gray-900 { color: var(--ink) !important; }
+html[data-theme='dark'] .text-slate-800,
+html[data-theme='dark'] .text-slate-700,
+html[data-theme='dark'] .text-slate-600,
+html[data-theme='dark'] .text-gray-800,
+html[data-theme='dark'] .text-gray-700,
+html[data-theme='dark'] .text-gray-600 { color: var(--ink-soft) !important; }
+html[data-theme='dark'] .text-slate-500,
+html[data-theme='dark'] .text-slate-400,
+html[data-theme='dark'] .text-gray-500,
+html[data-theme='dark'] .text-gray-400 { color: var(--ink-faint) !important; }
+
+html[data-theme='dark'] .text-indigo-900,
+html[data-theme='dark'] .text-indigo-800,
+html[data-theme='dark'] .text-indigo-700,
+html[data-theme='dark'] .text-indigo-600,
+html[data-theme='dark'] .text-blue-700,
+html[data-theme='dark'] .text-blue-600 { color: var(--primary) !important; }
+html[data-theme='dark'] .text-emerald-800,
+html[data-theme='dark'] .text-emerald-700,
+html[data-theme='dark'] .text-green-800,
+html[data-theme='dark'] .text-green-700 { color: var(--green) !important; }
+html[data-theme='dark'] .text-amber-800,
+html[data-theme='dark'] .text-amber-700,
+html[data-theme='dark'] .text-yellow-800,
+html[data-theme='dark'] .text-yellow-700 { color: var(--gold) !important; }
+html[data-theme='dark'] .text-rose-800,
+html[data-theme='dark'] .text-rose-700,
+html[data-theme='dark'] .text-rose-600,
+html[data-theme='dark'] .text-red-800,
+html[data-theme='dark'] .text-red-700,
+html[data-theme='dark'] .text-red-600 { color: var(--red) !important; }
+html[data-theme='dark'] .text-violet-800,
+html[data-theme='dark'] .text-violet-700,
+html[data-theme='dark'] .text-purple-800,
+html[data-theme='dark'] .text-purple-700,
+html[data-theme='dark'] .text-purple-600 { color: var(--violet) !important; }
+html[data-theme='dark'] .text-pink-800,
+html[data-theme='dark'] .text-pink-700,
+html[data-theme='dark'] .text-pink-600 { color: var(--pink) !important; }
+html[data-theme='dark'] .text-slate-300,
+html[data-theme='dark'] .text-gray-300 { color: var(--ink-soft) !important; }
+html[data-theme='dark'] .text-indigo-950,
+html[data-theme='dark'] .text-indigo-100 { color: var(--primary) !important; }
+html[data-theme='dark'] .text-amber-600 { color: var(--gold) !important; }
+html[data-theme='dark'] .text-emerald-600 { color: var(--green) !important; }
+html[data-theme='dark'] .text-pink-500 { color: var(--pink) !important; }
+html[data-theme='dark'] .text-gray-200 { color: var(--ink) !important; }
+html[data-theme='dark'] .border-slate-300,
+html[data-theme='dark'] .border-slate-200,
+html[data-theme='dark'] .border-slate-100,
+html[data-theme='dark'] .border-gray-300,
+html[data-theme='dark'] .border-gray-200 { border-color: var(--line) !important; }
+html[data-theme='dark'] .border-indigo-100,
+html[data-theme='dark'] .border-indigo-200,
+html[data-theme='dark'] .border-blue-100,
+html[data-theme='dark'] .border-blue-200,
+html[data-theme='dark'] .border-emerald-100,
+html[data-theme='dark'] .border-emerald-200,
+html[data-theme='dark'] .border-amber-100,
+html[data-theme='dark'] .border-amber-200,
+html[data-theme='dark'] .border-rose-100,
+html[data-theme='dark'] .border-rose-200,
+html[data-theme='dark'] .border-pink-100,
+html[data-theme='dark'] .border-pink-200,
+html[data-theme='dark'] .border-indigo-300,
+html[data-theme='dark'] .border-emerald-300 { border-color: var(--line) !important; }
+
+html[data-theme='dark'] input:not([type='checkbox']):not([type='radio']):not([type='file']),
+html[data-theme='dark'] select,
+html[data-theme='dark'] textarea {
+    color: var(--ink) !important;
+    background-color: var(--surface) !important;
+    border-color: var(--line-strong) !important;
+}
+html[data-theme='dark'] input::placeholder,
+html[data-theme='dark'] textarea::placeholder { color: var(--ink-faint) !important; }
+html[data-theme='dark'] option { color: var(--ink); background: var(--surface); }
+html[data-theme='dark'] .global-search input,
+html[data-theme='dark'] .table-search input { background: transparent !important; }
+html[data-theme='dark'] .shadow-xs,
+html[data-theme='dark'] .shadow-sm,
+html[data-theme='dark'] .shadow-md,
+html[data-theme='dark'] .shadow-xl { --tw-shadow-color: rgba(0, 0, 0, .28); }
+
+/* Scoped page styles need a small set of semantic fallbacks too. */
+html[data-theme='dark'] .dashboard-view { color: var(--ink) !important; }
+html[data-theme='dark'] .dashboard-view .intro-kicker,
+html[data-theme='dark'] .dashboard-view .intro-row p,
+html[data-theme='dark'] .dashboard-view .workflow-count,
+html[data-theme='dark'] .dashboard-view .metric-item span,
+html[data-theme='dark'] .dashboard-view .metric-item small { color: var(--ink-soft) !important; }
+html[data-theme='dark'] .dashboard-view .intro-row h1,
+html[data-theme='dark'] .dashboard-view .section-heading h2,
+html[data-theme='dark'] .dashboard-view .metric-head > span:first-child,
+html[data-theme='dark'] .dashboard-view .metric-item strong,
+html[data-theme='dark'] .dashboard-view .workflow-copy strong { color: var(--ink) !important; }
+html[data-theme='dark'] .dashboard-view .date-stamp,
+html[data-theme='dark'] .dashboard-view .metric-item { color: var(--ink); background: var(--surface) !important; border-color: var(--line) !important; }
+html[data-theme='dark'] .dashboard-view .insight-panel { color: var(--ink); background: var(--surface-subtle) !important; border-color: var(--line) !important; }
+html[data-theme='dark'] .dashboard-view .insight-heading h2,
+html[data-theme='dark'] .dashboard-view .signal-line strong,
+html[data-theme='dark'] .dashboard-view .insight-footer strong { color: var(--ink) !important; }
+html[data-theme='dark'] .dashboard-view .signal-line p,
+html[data-theme='dark'] .dashboard-view .insight-footer,
+html[data-theme='dark'] .dashboard-view .admin-list small,
+html[data-theme='dark'] .dashboard-view .admin-list time { color: var(--ink-faint) !important; }
+html[data-theme='dark'] .dashboard-view .workflow-list,
+html[data-theme='dark'] .dashboard-view .workflow-row,
+html[data-theme='dark'] .dashboard-view .admin-overview-card { border-color: var(--line) !important; }
+html[data-theme='dark'] .dashboard-view .workflow-row:hover { background: var(--surface-subtle) !important; }
+
+html[data-theme='dark'] .student-actions-cell { background: var(--surface) !important; }
+html[data-theme='dark'] .student-table tbody tr:hover .student-actions-cell { background: var(--surface-subtle) !important; }
 
 /* Keep primary actions readable when component or utility styles overlap. */
 .primary-button {
     color: #ffffff !important;
+}
+
+/* Shared shell for page headers that use the hero-card pattern. */
+.hero-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 1.35rem 1.5rem;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--primary-soft) 180%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.hero-card .hero-actions,
+.hero-card .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .65rem;
+}
+
+.hero-card > div:first-child {
+    min-width: 0;
+}
+
+.schedule-page .schedule-session {
+    background: color-mix(in srgb, var(--surface) 88%, var(--surface-subtle)) !important;
+    border-color: var(--line) !important;
+}
+
+.schedule-page .schedule-meta,
+.schedule-page .schedule-teacher,
+.schedule-page .schedule-room {
+    color: var(--ink-soft) !important;
+}
+
+.security-page table {
+    color: var(--ink);
+    background: var(--surface);
+}
+
+.security-page th,
+.security-page td {
+    border-color: var(--line) !important;
+}
+
+.security-page th {
+    background: var(--surface-subtle) !important;
+    color: var(--ink-soft) !important;
+}
+
+.security-page .tabs {
+    border-color: var(--line) !important;
+}
+
+.security-page .tabs button {
+    color: var(--ink-soft) !important;
+}
+
+.security-page .tabs button.active {
+    color: var(--primary) !important;
+    background: var(--primary-soft) !important;
+}
+
+.security-page .badge.danger {
+    color: var(--red) !important;
+    background: var(--red-soft) !important;
+}
+
+.security-page .badge.success {
+    color: var(--green) !important;
+    background: var(--green-soft) !important;
+}
+
+.security-page .badge.muted {
+    color: var(--ink-soft) !important;
+    background: var(--surface-strong) !important;
+}
+
+html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card {
+    color: var(--ink);
+    background: var(--surface) !important;
+}
+
+html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card input,
+html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card textarea {
+    color: var(--ink) !important;
+    background: var(--surface-subtle) !important;
+    border-color: var(--line-strong) !important;
+}
+
+.hero-card h1 {
+    margin: .35rem 0 .4rem;
+    color: var(--ink);
+    font-size: clamp(1.65rem, 2.8vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -.045em;
+    line-height: 1.1;
+}
+
+.hero-card p:not(.eyebrow) {
+    max-width: 68ch;
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: .84rem;
+    line-height: 1.6;
+}
+
+.content-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.content-grid.two-columns {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+}
+
+/* Shared heading surface for the lower Admin menus. This keeps compact pages
+ * from looking like unstyled documents while preserving their local actions. */
+.page-heading {
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-subtle) 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.page-heading > div:first-child {
+    min-width: 0;
+}
+
+.page-heading > :last-child {
+    flex: 0 0 auto;
+}
+
+.page-heading h1,
+.compact-heading h1 {
+    color: var(--ink);
+    font-size: clamp(1.65rem, 2.6vw, 2.15rem);
+    font-weight: 800;
+}
+
+.page-heading p:not(.eyebrow) {
+    max-width: 68ch;
+    color: var(--ink-soft);
+    line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+    .hero-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hero-card .hero-actions,
+    .hero-card .actions {
+        justify-content: flex-start;
+    }
+
+    .page-heading {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 1.1rem 1.15rem;
+    }
+
+    .page-heading > :last-child {
+        width: 100%;
+    }
+
+    .content-grid.two-columns {
+        grid-template-columns: 1fr;
+    }
 }
 
 .sidebar-nav-scroll {

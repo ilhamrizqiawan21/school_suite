@@ -1,0 +1,47 @@
+--- a/app/Modules/Academic/Application/Services/AcademicQueryService.php
++++ b/app/Modules/Academic/Application/Services/AcademicQueryService.php
+@@ -157,4 +157,24 @@
+             ->orderBy('subjects.name')
+             ->get();
+     }
++    /**
++     * Ambil ID rombel aktif untuk seorang siswa berdasarkan user_id.
++     *
++     * @return list<int>
++     */
++    public function getStudentClassGroupIds(int $studentUserId, ?int $termId = null, ?int $schoolId = null): array
++    {
++        return Enrollment::query()
++            ->whereHas('student', fn ($student) => $student
++                ->where('user_id', $studentUserId)
++                ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
++            )
++            ->where('status', 'active')
++            ->when($termId, fn ($query) => $query->where('term_id', $termId))
++            ->distinct()
++            ->pluck('class_group_id')
++            ->map(fn ($id) => (int) $id)
++            ->values()
++            ->all();
++    }
+ }
+--- a/app/Modules/Administration/Interface/Http/Controllers/CommunicationController.php
++++ b/app/Modules/Administration/Interface/Http/Controllers/CommunicationController.php
+@@ -185,9 +185,13 @@
+                 : [];
+         }
+ 
+-        return Enrollment::query()
+-            ->whereHas('student', fn ($student) => $student->where('user_id', $user->id))
+-            ->where('status', 'active')
+-            ->pluck('class_group_id')->map(fn ($id) => (int) $id)->all();
++        $schoolId = (int) $user->school_id;
++        $activeTerm = $this->academicQuery->getActiveTerm($schoolId);
++
++        return $this->academicQuery->getStudentClassGroupIds(
++            (int) $user->id,
++            $activeTerm?->id,
++            $schoolId
++        );
+     }
+ }

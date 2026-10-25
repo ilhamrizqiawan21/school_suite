@@ -36,22 +36,17 @@ class LearningController extends Controller
         $enrollment = null;
 
         if ($activeTerm) {
-            $teachingAssignments = TeachingAssignment::query()
-                ->with(['classGroup:id,name,grade_level', 'subject:id,name,code', 'teacher:id,name,user_id'])
-                ->where('term_id', $activeTerm->id)
-                ->when($user->hasRole(['teacher', 'homeroom']), fn ($query) => $query->whereHas('teacher', fn ($teacher) => $teacher->where('user_id', $user->id)))
-                ->when($user->hasRole('student'), function ($query) use ($user, $activeTerm, &$enrollment) {
-                    $enrollment = Enrollment::query()
-                        ->where('term_id', $activeTerm->id)
-                        ->where('status', 'active')
-                        ->whereHas('student', fn ($student) => $student->where('user_id', $user->id))
-                        ->first();
-
-                    $query->where('class_group_id', $enrollment?->class_group_id ?? 0);
-                })
-                ->orderBy('class_group_id')
-                ->orderBy('subject_id')
-                ->get();
+            if ($user->hasRole('student')) {
+                $enrollment = $this->academicQuery->getStudentEnrollmentForTerm((int) $user->id, (int) $activeTerm->id);
+                $teachingAssignments = $enrollment
+                    ? $this->academicQuery->getLearningTeachingAssignments($activeTerm->id)
+                        ->where('class_group_id', $enrollment->class_group_id)
+                        ->values()
+                    : collect();
+            } else {
+                $teacherUserId = $user->hasRole(['teacher', 'homeroom']) ? (int) $user->id : null;
+                $teachingAssignments = $this->academicQuery->getLearningTeachingAssignments($activeTerm->id, $teacherUserId);
+            }
         }
 
         $assignmentIds = $teachingAssignments->pluck('id');
@@ -93,11 +88,12 @@ class LearningController extends Controller
     {
         Gate::authorize('view', $material);
         abort_unless($request->user()->hasRole('student'), 403);
-        $enrollment = Enrollment::where('term_id', $material->teachingAssignment->term_id)
-            ->where('class_group_id', $material->teachingAssignment->class_group_id)
-            ->where('status', 'active')
-            ->whereHas('student', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->firstOrFail();
+        $enrollment = $this->academicQuery->getStudentEnrollmentForClassTerm(
+            (int) $request->user()->id,
+            (int) $material->teachingAssignment->term_id,
+            (int) $material->teachingAssignment->class_group_id
+        );
+        abort_unless($enrollment !== null, 404);
         LearningMaterialRead::updateOrCreate(
             ['learning_material_id' => $material->id, 'enrollment_id' => $enrollment->id],
             ['read_at' => now()]
@@ -115,7 +111,8 @@ class LearningController extends Controller
             'file' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png'],
         ]);
 
-        $teachingAssignment = TeachingAssignment::findOrFail($validated['teaching_assignment_id']);
+        $teachingAssignment = $this->academicQuery->getTeachingAssignmentById((int) $validated['teaching_assignment_id']);
+        abort_unless($teachingAssignment !== null, 404);
         $material = new LearningMaterial([
             ...$validated,
             'school_id' => $request->user()->school_id,
@@ -174,7 +171,9 @@ class LearningController extends Controller
             'created_by' => $request->user()->id,
             'published_at' => now(),
         ]);
-        $assignment->teachingAssignment()->associate(TeachingAssignment::findOrFail($validated['teaching_assignment_id']));
+        $teachingAssignment = $this->academicQuery->getTeachingAssignmentById((int) $validated['teaching_assignment_id']);
+        abort_unless($teachingAssignment !== null, 404);
+        $assignment->teachingAssignment()->associate($teachingAssignment);
         Gate::authorize('manage', $assignment);
         $assignment->save();
 
@@ -204,11 +203,12 @@ class LearningController extends Controller
             'files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,zip'],
         ]);
 
-        $enrollment = Enrollment::query()
-            ->where('term_id', $assignment->teachingAssignment->term_id)
-            ->where('class_group_id', $assignment->teachingAssignment->class_group_id)
-            ->whereHas('student', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->firstOrFail();
+        $enrollment = $this->academicQuery->getStudentEnrollmentForClassTerm(
+            (int) $request->user()->id,
+            (int) $assignment->teachingAssignment->term_id,
+            (int) $assignment->teachingAssignment->class_group_id
+        );
+        abort_unless($enrollment !== null, 404);
 
         if ($assignment->due_at?->isPast() && ! $assignment->allow_late) {
             return back()->with('error', 'Batas pengumpulan tugas telah berakhir.');

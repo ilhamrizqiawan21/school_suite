@@ -118,9 +118,9 @@ const deleteSchedule = (id: number) => {
     <AppLayout title="Jadwal Pelajaran">
         <Head title="Jadwal Pelajaran — School Suite" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6 schedule-page">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Jadwal Pelajaran</h1>
                     <p class="text-sm text-slate-500 mt-1">
@@ -152,7 +152,7 @@ const deleteSchedule = (id: number) => {
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
+            <div class="schedule-filter bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
                     <select
                         v-model="selectedClass"
@@ -184,9 +184,9 @@ const deleteSchedule = (id: number) => {
                 <div
                     v-for="d in days"
                     :key="d.id"
-                    class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs flex flex-col"
+                    class="schedule-day-card bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs flex flex-col"
                 >
-                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="schedule-day-header bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                         <h3 class="font-bold text-slate-800 text-sm">{{ d.name }}</h3>
                         <span class="text-xs text-slate-400 font-medium">
                             {{ schedules.filter(s => s.day_of_week === d.id).length }} Sesi
@@ -197,7 +197,7 @@ const deleteSchedule = (id: number) => {
                         <div
                             v-for="s in schedules.filter(s => s.day_of_week === d.id)"
                             :key="s.id"
-                            class="p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition group relative"
+                            class="schedule-session p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition group relative"
                         >
                             <div class="flex items-start justify-between">
                                 <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-sm">
@@ -224,18 +224,18 @@ const deleteSchedule = (id: number) => {
                             <div class="mt-2 font-bold text-slate-900 text-sm">
                                 {{ s.subject.name }} ({{ s.subject.code }})
                             </div>
-                            <div class="text-xs text-slate-600 mt-0.5 flex items-center justify-between">
+                            <div class="schedule-meta text-xs text-slate-600 mt-0.5 flex items-center justify-between">
                                 <span>Kelas {{ s.class_group.name }}</span>
-                                <span v-if="s.room" class="text-slate-400 font-mono">{{ s.room }}</span>
+                                <span v-if="s.room" class="schedule-room text-slate-400 font-mono">{{ s.room }}</span>
                             </div>
-                            <div class="text-xs text-slate-500 mt-1 italic">
+                            <div class="schedule-teacher text-xs text-slate-500 mt-1 italic">
                                 {{ s.teacher.name }}
                             </div>
                         </div>
 
                         <div
                             v-if="schedules.filter(s => s.day_of_week === d.id).length === 0"
-                            class="py-8 text-center text-xs text-slate-400 italic"
+                            class="schedule-empty py-8 text-center text-xs text-slate-400 italic"
                         >
                             Tidak ada jadwal
                         </div>

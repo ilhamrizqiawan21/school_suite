@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Administration\Application\Services;
 
 use App\Models\User;
+use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Administration\Infrastructure\Models\Announcement;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CommunicationService
 {
+    public function __construct(
+        private readonly AcademicQueryService $academicQuery,
+    ) {}
+
     /** @param array<string, mixed> $data */
     public function publishAnnouncement(User $author, array $data): Announcement
     {
@@ -49,20 +54,8 @@ class CommunicationService
             return $userIds->map(fn ($id) => (int) $id);
         }
 
-        $studentUserIds = Enrollment::query()
-            ->where('class_group_id', $classGroupId)
-            ->where('status', 'active')
-            ->whereHas('student', fn ($student) => $student->whereNotNull('user_id'))
-            ->with('student:id,user_id')
-            ->get()
-            ->pluck('student.user_id');
-
-        $teacherUserIds = TeachingAssignment::query()
-            ->where('class_group_id', $classGroupId)
-            ->whereHas('teacher', fn ($teacher) => $teacher->whereNotNull('user_id'))
-            ->with('teacher:id,user_id')
-            ->get()
-            ->pluck('teacher.user_id');
+        $studentUserIds = collect($this->academicQuery->getClassGroupStudentUserIds($classGroupId));
+        $teacherUserIds = collect($this->academicQuery->getClassGroupTeacherUserIds($classGroupId));
 
         return $userIds->intersect($studentUserIds->merge($teacherUserIds))->map(fn ($id) => (int) $id)->values();
     }

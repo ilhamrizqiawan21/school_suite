@@ -355,17 +355,17 @@ class AssessmentControllersTest extends TestCase
     public function test_manager_can_create_question_pack_with_snapshot_items(): void
     {
         $question = ExamQuestion::create([
-            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
             'type' => 'essay', 'prompt' => 'Jelaskan pecahan', 'points' => 2,
             'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
         ]);
         $version = ExamQuestionVersion::create([
             'exam_question_id' => $question->id, 'version_number' => 1,
             'type' => 'essay', 'prompt' => 'Jelaskan pecahan', 'points' => 2,
-            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'created_by' => $this->adminUser->id,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'created_by' => $this->teacherUser->id,
         ]);
 
-        $this->actingAs($this->adminUser)->post(route('assessment.question-packs.store'), [
+        $this->actingAs($this->teacherUser)->post(route('assessment.question-packs.store'), [
             'name' => 'Paket pecahan', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
             'randomize_questions' => false, 'randomize_options' => false, 'status' => 'active',
             'items' => [['question_id' => $question->id, 'points' => 5]],
@@ -449,14 +449,14 @@ class AssessmentControllersTest extends TestCase
         $book->disconnectWorksheets();
         $upload = new UploadedFile($path, 'questions.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', UPLOAD_ERR_OK, true);
 
-        $preview = $this->actingAs($this->adminUser)->post(route('assessment.questions.import.preview'), ['file' => $upload]);
+        $preview = $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.preview'), ['file' => $upload]);
         $token = '';
         $preview->assertOk()->assertInertia(function (Assert $page) use (&$token) {
             $page->component('Assessment/QuestionBank/ImportPreview')->where('valid_count', 4)->where('invalid_count', 0);
             $token = $page->toArray()['props']['token'];
         });
 
-        $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))->assertRedirect(route('assessment.questions.index'));
+        $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.confirm', $token))->assertRedirect(route('assessment.questions.index'));
         $this->assertSame(4, ExamQuestion::query()->where('school_id', $this->school->id)->count());
         $this->assertSame(['essay', 'matching', 'multiple_choice', 'true_false'], ExamQuestion::query()->where('school_id', $this->school->id)->orderBy('type')->pluck('type')->all());
 
@@ -480,7 +480,7 @@ class AssessmentControllersTest extends TestCase
             'current_version' => 1,
         ]);
 
-        $export = $this->actingAs($this->adminUser)->get(route('assessment.questions.export'));
+        $export = $this->actingAs($this->teacherUser)->get(route('assessment.questions.export'));
         $export->assertOk()->assertDownload('bank-soal.xlsx');
         $exportPath = tempnam(sys_get_temp_dir(), 'question-export-').'.xlsx';
         file_put_contents($exportPath, $export->streamedContent());
@@ -509,13 +509,13 @@ class AssessmentControllersTest extends TestCase
         $book->disconnectWorksheets();
         $upload = new UploadedFile($path, 'invalid.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', UPLOAD_ERR_OK, true);
 
-        $preview = $this->actingAs($this->adminUser)->post(route('assessment.questions.import.preview'), ['file' => $upload]);
+        $preview = $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.preview'), ['file' => $upload]);
         $token = '';
         $preview->assertOk()->assertInertia(function (Assert $page) use (&$token) {
             $page->component('Assessment/QuestionBank/ImportPreview')->where('valid_count', 0)->where('invalid_count', 1)->has('rows.0.errors');
             $token = $page->toArray()['props']['token'];
         });
-        $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))->assertUnprocessable();
+        $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.confirm', $token))->assertUnprocessable();
         $this->assertSame(0, ExamQuestion::query()->where('school_id', $this->school->id)->count());
         @unlink($path);
     }
@@ -525,7 +525,7 @@ class AssessmentControllersTest extends TestCase
         $token = (string) Str::uuid();
         $cacheKey = 'assessment:question-import:'.$token;
         Cache::put($cacheKey, [
-            'user_id' => $this->adminUser->id,
+            'user_id' => $this->teacherUser->id,
             'school_id' => $this->school->id,
             'errors' => false,
             'rows' => [[
@@ -537,17 +537,17 @@ class AssessmentControllersTest extends TestCase
         $lock = Cache::lock($cacheKey.':confirm', 60);
         $this->assertTrue($lock->get());
         try {
-            $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))
+            $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.confirm', $token))
                 ->assertSessionHasErrors('file');
             $this->assertDatabaseCount('exam_questions', 0);
         } finally {
             $lock->release();
         }
 
-        $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))
+        $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.confirm', $token))
             ->assertRedirect(route('assessment.questions.index'));
         $this->assertDatabaseCount('exam_questions', 1);
-        $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))
+        $this->actingAs($this->teacherUser)->post(route('assessment.questions.import.confirm', $token))
             ->assertNotFound();
     }
 
