@@ -44,6 +44,17 @@ class StudentController extends Controller
             ->where('is_active', true)
             ->first();
 
+        $classes = $activeTerm
+            ? ClassGroup::where('school_id', $schoolId)
+                ->where('academic_year_id', $activeTerm->academic_year_id)
+                ->orderBy('grade_level')
+                ->orderBy('name')
+                ->get(['id', 'name', 'grade_level'])
+            : collect();
+
+        // Default ke kelas pertama agar daftar siswa tidak pernah memuat seluruh sekolah sekaligus.
+        $classGroupId = $classGroupId ?: $classes->first()?->id;
+
         $query = Student::where('school_id', $schoolId)
             ->with(['enrollments' => function ($q) use ($activeTerm) {
                 if ($activeTerm) {
@@ -66,13 +77,6 @@ class StudentController extends Controller
             ->latest('id');
 
         $students = $query->paginate(15)->withQueryString();
-
-        $classes = $activeTerm
-            ? ClassGroup::where('school_id', $schoolId)
-                ->where('academic_year_id', $activeTerm->academic_year_id)
-                ->orderBy('name')
-                ->get(['id', 'name', 'grade_level'])
-            : collect();
 
         return Inertia::render('Academic/Students/Index', [
             'students' => $students,

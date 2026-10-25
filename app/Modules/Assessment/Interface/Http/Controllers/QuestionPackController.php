@@ -94,7 +94,7 @@ class QuestionPackController extends Controller
         $pack = DB::transaction(function () use ($data, $request) {
             $questions = $this->resolveQuestions($request, $data['items']);
             $pack = QuestionPack::create($this->packAttributes($data, $request));
-            $this->replaceItems($pack, $data['items'], $questions, []);
+            $this->replaceItems($pack, $data['items'], $questions, collect());
 
             return $pack;
         });

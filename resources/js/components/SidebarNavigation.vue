@@ -45,7 +45,41 @@ const navItems: NavItem[] = [
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const currentRole = computed(() => (page.props.auth as any)?.user?.role as string | undefined);
-const visibleItems = computed(() => navItems.filter((item) => !item.roles || (currentRole.value && item.roles.includes(currentRole.value))));
+const roleVisibility: Record<string, string[]> = {
+    students: ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
+    teachers: ['admin', 'operator', 'principal'],
+    classes: ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
+    schedules: ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
+    attendance: ['teacher', 'homeroom'],
+    journals: ['teacher', 'homeroom'],
+    'online-classes': ['teacher', 'homeroom', 'student'],
+    'student-lifecycle': ['admin', 'operator', 'principal'],
+    learning: ['teacher', 'homeroom', 'student'],
+    'learning-progress': ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],
+    communication: ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],
+    'academic-settings': ['admin', 'operator', 'principal'],
+    scores: ['teacher', 'homeroom'],
+    attitudes: ['teacher', 'homeroom'],
+    exams: ['teacher', 'homeroom', 'student'],
+    'question-bank': ['admin', 'operator', 'teacher', 'homeroom'],
+    'question-packs': ['admin', 'operator', 'teacher', 'homeroom'],
+    'question-shares': ['admin', 'operator', 'teacher', 'homeroom'],
+    'assessment-analytics': ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
+    schemes: ['admin', 'operator', 'principal'],
+    reports: ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],
+    reporting: ['admin', 'operator', 'principal'],
+    homeroom: ['homeroom'],
+    users: ['admin', 'operator'],
+    school: ['admin', 'operator', 'principal'],
+    security: ['admin', 'principal'],
+};
+const settingsKeys = new Set(['profile', 'users', 'school', 'security']);
+const visibleItems = computed(() => navItems.filter((item) => {
+    const allowedRoles = roleVisibility[item.key] ?? item.roles;
+    return !allowedRoles || (currentRole.value && allowedRoles.includes(currentRole.value));
+}));
+const workspaceItems = computed(() => visibleItems.value.filter((item) => !settingsKeys.has(item.key)));
+const settingsItems = computed(() => visibleItems.value.filter((item) => settingsKeys.has(item.key)));
 
 const isItemActive = (item: NavItem): boolean => {
     if (item.activePrefix) {
@@ -59,7 +93,7 @@ const isItemActive = (item: NavItem): boolean => {
     <nav class="nav-stack" aria-label="Navigasi Utama">
         <p class="nav-label">Ruang kerja</p>
         <Link
-            v-for="item in visibleItems.slice(0, -4)"
+            v-for="item in workspaceItems"
             :key="item.key"
             :href="item.href"
             :class="[
@@ -82,7 +116,7 @@ const isItemActive = (item: NavItem): boolean => {
         </Link>
         <p class="nav-label nav-label-spaced">Pengaturan</p>
         <Link
-            v-for="item in visibleItems.slice(-4)"
+            v-for="item in settingsItems"
             :key="item.key"
             :href="item.href"
             :class="['nav-item', isItemActive(item) ? 'is-active' : '']"

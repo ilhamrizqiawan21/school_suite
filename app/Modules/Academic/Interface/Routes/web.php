@@ -51,21 +51,21 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     Route::delete('jadwal/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
 
     // Presensi Siswa (Attendance)
-    Route::get('presensi', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('presensi', [AttendanceController::class, 'index'])->middleware('role:teacher,homeroom')->name('attendance.index');
     Route::get('presensi/rekap', [AttendanceController::class, 'recap'])->name('attendance.recap');
     Route::get('presensi/rekap/export', [AttendanceController::class, 'exportRecap'])->middleware('throttle:sensitive')->name('attendance.recap.export');
-    Route::post('presensi', [AttendanceController::class, 'record'])->name('attendance.record');
-    Route::post('presensi/{attendanceRecord}/koreksi', [AttendanceController::class, 'correct'])->name('attendance.correct');
+    Route::post('presensi', [AttendanceController::class, 'record'])->middleware('role:teacher,homeroom')->name('attendance.record');
+    Route::post('presensi/{attendanceRecord}/koreksi', [AttendanceController::class, 'correct'])->middleware('role:teacher,homeroom')->name('attendance.correct');
 
     // Jurnal Mengajar Guru (Journals)
-    Route::get('jurnal', [JournalController::class, 'index'])->name('journals.index');
-    Route::post('jurnal', [JournalController::class, 'store'])->name('journals.store');
+    Route::get('jurnal', [JournalController::class, 'index'])->middleware('role:teacher,homeroom')->name('journals.index');
+    Route::post('jurnal', [JournalController::class, 'store'])->middleware('role:teacher,homeroom')->name('journals.store');
 
-    Route::get('kelas-daring', [OnlineClassController::class, 'index'])->name('online.index');
-    Route::post('kelas-daring', [OnlineClassController::class, 'store'])->middleware('throttle:sensitive')->name('online.store');
-    Route::put('kelas-daring/{onlineClassSession}/status', [OnlineClassController::class, 'updateStatus'])->middleware('throttle:sensitive')->name('online.status');
-    Route::get('kelas-daring/{onlineClassSession}/presensi', [OnlineClassController::class, 'attendance'])->name('online.attendance');
-    Route::put('kelas-daring/{onlineClassSession}/presensi', [OnlineClassController::class, 'recordAttendance'])->middleware('throttle:sensitive')->name('online.attendance.store');
+    Route::get('kelas-daring', [OnlineClassController::class, 'index'])->middleware('role:teacher,homeroom,student')->name('online.index');
+    Route::post('kelas-daring', [OnlineClassController::class, 'store'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('online.store');
+    Route::put('kelas-daring/{onlineClassSession}/status', [OnlineClassController::class, 'updateStatus'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('online.status');
+    Route::get('kelas-daring/{onlineClassSession}/presensi', [OnlineClassController::class, 'attendance'])->middleware('role:teacher,homeroom')->name('online.attendance');
+    Route::put('kelas-daring/{onlineClassSession}/presensi', [OnlineClassController::class, 'recordAttendance'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('online.attendance.store');
 
     Route::get('siklus-siswa', [StudentLifecycleController::class, 'index'])->name('lifecycle.index');
     Route::post('siklus-siswa', [StudentLifecycleController::class, 'store'])->middleware('throttle:sensitive')->name('lifecycle.store');

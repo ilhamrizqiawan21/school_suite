@@ -32,7 +32,9 @@ use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
@@ -350,6 +352,76 @@ class AssessmentControllersTest extends TestCase
         ]);
     }
 
+    public function test_manager_can_create_question_pack_with_snapshot_items(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'type' => 'essay', 'prompt' => 'Jelaskan pecahan', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
+        ]);
+        $version = ExamQuestionVersion::create([
+            'exam_question_id' => $question->id, 'version_number' => 1,
+            'type' => 'essay', 'prompt' => 'Jelaskan pecahan', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'created_by' => $this->adminUser->id,
+        ]);
+
+        $this->actingAs($this->adminUser)->post(route('assessment.question-packs.store'), [
+            'name' => 'Paket pecahan', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+            'randomize_questions' => false, 'randomize_options' => false, 'status' => 'active',
+            'items' => [['question_id' => $question->id, 'points' => 5]],
+        ])->assertRedirect();
+
+        $pack = QuestionPack::query()->where('name', 'Paket pecahan')->firstOrFail();
+        $this->assertDatabaseHas('question_pack_items', [
+            'question_pack_id' => $pack->id, 'exam_question_id' => $question->id,
+            'question_version_id' => $version->id, 'sequence' => 1, 'points' => 5,
+        ]);
+    }
+
+    public function test_teacher_can_create_exam_from_pack_containing_copy_shared_question(): void
+    {
+        Teacher::query()->firstOrFail()->update(['user_id' => $this->teacherUser->id]);
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'type' => 'multiple_choice', 'prompt' => 'Soal berbagi', 'options' => ['A', 'B'],
+            'correct_answer' => 'A', 'points' => 1, 'jenjang' => 'SMP',
+            'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
+        ]);
+        $version = ExamQuestionVersion::create([
+            'exam_question_id' => $question->id, 'version_number' => 1,
+            'type' => 'multiple_choice', 'prompt' => 'Soal berbagi', 'options' => ['A', 'B'],
+            'correct_answer' => 'A', 'points' => 1, 'jenjang' => 'SMP',
+            'curriculum' => 'merdeka', 'created_by' => $this->adminUser->id,
+        ]);
+        QuestionShare::create([
+            'school_id' => $this->school->id, 'sender_id' => $this->adminUser->id,
+            'recipient_id' => $this->teacherUser->id, 'resource_type' => 'question',
+            'resource_id' => $question->id, 'permission' => 'copy',
+            'status' => 'accepted', 'active_key' => 'active',
+        ]);
+
+        $this->actingAs($this->teacherUser)->post(route('assessment.question-packs.store'), [
+            'name' => 'Paket soal berbagi', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+            'randomize_questions' => false, 'randomize_options' => false, 'status' => 'active',
+            'items' => [['question_id' => $question->id, 'points' => 4]],
+        ])->assertRedirect();
+        $pack = QuestionPack::query()->where('name', 'Paket soal berbagi')->firstOrFail();
+
+        $this->actingAs($this->teacherUser)->post(route('exams.store'), [
+            'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'title' => 'Ujian soal berbagi', 'starts_at' => now()->addDay()->toDateTimeString(),
+            'ends_at' => now()->addDays(2)->toDateTimeString(), 'duration_minutes' => 45,
+            'randomize_questions' => false, 'randomize_options' => false,
+            'max_violations' => 3, 'question_pack_id' => $pack->id,
+        ])->assertRedirect('/ujian');
+
+        $exam = Exam::query()->where('title', 'Ujian soal berbagi')->firstOrFail();
+        $this->assertDatabaseHas('exam_question_items', [
+            'exam_id' => $exam->id, 'exam_question_id' => $question->id,
+            'question_version_id' => $version->id, 'points' => 4,
+        ]);
+    }
+
     public function test_student_exam_page_does_not_receive_bank_questions_or_packs(): void
     {
         $response = $this->actingAs($this->studentUser)->get(route('exams.index'));
@@ -446,6 +518,60 @@ class AssessmentControllersTest extends TestCase
         $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))->assertUnprocessable();
         $this->assertSame(0, ExamQuestion::query()->where('school_id', $this->school->id)->count());
         @unlink($path);
+    }
+
+    public function test_question_import_confirmation_is_exclusive_per_preview_token(): void
+    {
+        $token = (string) Str::uuid();
+        $cacheKey = 'assessment:question-import:'.$token;
+        Cache::put($cacheKey, [
+            'user_id' => $this->adminUser->id,
+            'school_id' => $this->school->id,
+            'errors' => false,
+            'rows' => [[
+                'type' => 'essay', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+                'prompt' => 'Soal sekali impor', 'points' => 2,
+            ]],
+        ], now()->addMinutes(15));
+
+        $lock = Cache::lock($cacheKey.':confirm', 60);
+        $this->assertTrue($lock->get());
+        try {
+            $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))
+                ->assertSessionHasErrors('file');
+            $this->assertDatabaseCount('exam_questions', 0);
+        } finally {
+            $lock->release();
+        }
+
+        $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))
+            ->assertRedirect(route('assessment.questions.index'));
+        $this->assertDatabaseCount('exam_questions', 1);
+        $this->actingAs($this->adminUser)->post(route('assessment.questions.import.confirm', $token))
+            ->assertNotFound();
+    }
+
+    public function test_exam_result_csv_keeps_formula_like_student_names_as_text(): void
+    {
+        $unsafeName = '=HYPERLINK("https://invalid.example","klik")';
+        $this->student->update(['name' => $unsafeName]);
+        $exam = Exam::create([
+            'school_id' => $this->school->id,
+            'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'created_by' => $this->adminUser->id, 'title' => 'Ekspor aman',
+            'starts_at' => now(), 'ends_at' => now()->addDay(), 'duration_minutes' => 60,
+            'status' => 'results_published',
+        ]);
+        ExamAttempt::create([
+            'exam_id' => $exam->id, 'enrollment_id' => $this->enrollment->id,
+            'status' => 'graded', 'started_at' => now()->subHour(),
+            'expires_at' => now(), 'score' => 80, 'question_order' => [],
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->get(route('exams.results.export', $exam));
+        $response->assertOk();
+        $row = str_getcsv(explode("\n", trim($response->streamedContent()))[1]);
+        $this->assertSame("'".$unsafeName, $row[1]);
     }
 
     public function test_students_cannot_download_or_export_question_spreadsheets(): void
@@ -814,10 +940,25 @@ class AssessmentControllersTest extends TestCase
 
     public function test_pack_share_can_be_accepted_and_copied_as_recipient_owned_draft(): void
     {
+        Teacher::query()->firstOrFail()->update(['user_id' => $this->homeroomUser->id]);
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
+            'type' => 'essay', 'prompt' => 'Soal dari paket berbagi', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
+        ]);
+        $version = ExamQuestionVersion::create([
+            'exam_question_id' => $question->id, 'version_number' => 1,
+            'type' => 'essay', 'prompt' => 'Soal dari paket berbagi', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'created_by' => $this->teacherUser->id,
+        ]);
         $pack = QuestionPack::create([
             'school_id' => $this->school->id, 'created_by' => $this->teacherUser->id,
             'name' => 'Paket kolaborasi', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
             'randomize_questions' => false, 'randomize_options' => false, 'status' => 'active',
+        ]);
+        QuestionPackItem::create([
+            'question_pack_id' => $pack->id, 'exam_question_id' => $question->id,
+            'question_version_id' => $version->id, 'sequence' => 1, 'points' => 6,
         ]);
         $this->actingAs($this->teacherUser)->post(route('assessment.question-shares.store'), [
             'resource_type' => 'pack', 'resource_id' => $pack->id, 'recipient_id' => $this->homeroomUser->id, 'permission' => 'copy',
@@ -829,6 +970,31 @@ class AssessmentControllersTest extends TestCase
         $copy = QuestionPack::query()->where('created_by', $this->homeroomUser->id)->where('name', 'Paket kolaborasi (salinan)')->firstOrFail();
         $this->assertSame('draft', $copy->status);
         $this->assertSame($this->teacherUser->id, $pack->fresh()->created_by);
+
+        $this->actingAs($this->teacherUser)->post(route('assessment.question-shares.revoke', $share))->assertRedirect();
+        $this->actingAs($this->homeroomUser)->put(route('assessment.question-packs.update', $copy), [
+            'name' => $copy->name, 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+            'randomize_questions' => false, 'randomize_options' => false, 'status' => 'active',
+            'items' => [['question_id' => $question->id, 'points' => 6]],
+        ])->assertRedirect();
+
+        $examData = [
+            'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'title' => 'Ujian dari paket salinan', 'starts_at' => now()->addDay()->toDateTimeString(),
+            'ends_at' => now()->addDays(2)->toDateTimeString(), 'duration_minutes' => 45,
+            'randomize_questions' => false, 'randomize_options' => false, 'max_violations' => 3,
+        ];
+        $this->actingAs($this->homeroomUser)->post(route('exams.store'), [
+            ...$examData, 'question_ids' => [$question->id],
+        ])->assertUnprocessable();
+        $this->actingAs($this->homeroomUser)->post(route('exams.store'), [
+            ...$examData, 'question_pack_id' => $copy->id,
+        ])->assertRedirect('/ujian');
+        $exam = Exam::query()->where('title', 'Ujian dari paket salinan')->firstOrFail();
+        $this->assertDatabaseHas('exam_question_items', [
+            'exam_id' => $exam->id, 'exam_question_id' => $question->id,
+            'question_version_id' => $version->id, 'points' => 6,
+        ]);
     }
 
     public function test_assessment_analytics_handles_empty_data_without_division_errors(): void

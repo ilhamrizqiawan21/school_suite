@@ -33,7 +33,7 @@ const props = defineProps<{
 
 const search = ref(props.filters.search || '');
 const selectedStatus = ref(props.filters.status || '');
-const selectedClass = ref(props.filters.class_group_id || '');
+const selectedClass = ref(props.filters.class_group_id || (props.classes[0] ? String(props.classes[0].id) : ''));
 
 const showAddModal = ref(false);
 const showImportModal = ref(false);
@@ -120,18 +120,23 @@ const submitImport = () => {
                         </svg>
                         Impor CSV
                     </button>
-                    <button
-                        type="button"
-                        @click="showAddModal = true"
-                        class="primary-button"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Tambah Siswa
-                    </button>
+                    <a href="/akademik/siswa/template" class="secondary-button">Unduh template</a>
                 </div>
             </div>
+
+            <section id="student-create-form" class="panel border border-indigo-100 bg-indigo-50/40 p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <div><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Siswa baru</h2></div>
+                    <span class="text-xs text-slate-500">Langsung tempatkan ke kelas aktif</span>
+                </div>
+                <form class="grid gap-3 md:grid-cols-[1fr_1.5fr_130px_180px_auto] items-end" @submit.prevent="submitAdd">
+                    <label class="text-xs font-semibold text-slate-700">NIS<input v-model="form.nis" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="form.name" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Gender<select v-model="form.gender" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label>
+                    <label class="text-xs font-semibold text-slate-700">Kelas<select v-model="form.class_group_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option v-for="cls in classes" :key="cls.id" :value="String(cls.id)">{{ cls.name }}</option></select></label>
+                    <button type="submit" :disabled="form.processing || !form.class_group_id" class="primary-button !text-white justify-center disabled:cursor-not-allowed disabled:opacity-50">Simpan</button>
+                </form>
+            </section>
 
             <!-- Filters -->
             <div class="toolbar panel">

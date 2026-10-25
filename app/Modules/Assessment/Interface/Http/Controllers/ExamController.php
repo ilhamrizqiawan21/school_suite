@@ -70,16 +70,13 @@ class ExamController extends Controller
             abort_unless($pack->items->isNotEmpty(), 422, 'Paket soal kosong.');
             foreach ($pack->items as $item) {
                 abort_unless($item->question && (int) $item->question->school_id === (int) $request->user()->school_id && $item->questionVersion && (int) $item->questionVersion->exam_question_id === (int) $item->exam_question_id, 422, 'Isi paket soal tidak lagi valid.');
-                if ($request->user()->hasRole(['teacher', 'homeroom'])) {
-                    abort_unless((int) $item->question->owner_id === (int) $request->user()->id, 403);
-                }
             }
             $data['question_ids'] = $pack->items->pluck('exam_question_id')->all();
         }
         $questions = ExamQuestion::where('school_id', $request->user()->school_id)
             ->when(! $pack, fn ($query) => $query->where('is_active', true))
             ->whereIn('id', $data['question_ids'])
-            ->when($request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where('owner_id', $request->user()->id))
+            ->when(! $pack && $request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where('owner_id', $request->user()->id))
             ->get();
         abort_unless($questions->count() === count(array_unique($data['question_ids'])), 422, 'Soal ujian tidak valid.');
         $versionMap = ExamQuestionVersion::whereIn('exam_question_id', $questions->pluck('id'))->get()
@@ -251,9 +248,17 @@ class ExamController extends Controller
             $o = fopen('php://output', 'w');
             fputcsv($o, ['NIS', 'Nama', 'Status', 'Nilai', 'Pelanggaran', 'Dikirim']);
             foreach ($rows as $r) {
-                fputcsv($o, (array) $r);
-            }fclose($o);
+                fputcsv($o, array_map(self::csvSafeCell(...), (array) $r));
+            }
+            fclose($o);
         }, 'hasil-ujian-'.$exam->id.'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    private static function csvSafeCell(mixed $value): string
+    {
+        $text = (string) ($value ?? '');
+
+        return preg_match('/^[\x00-\x20]*[=+\-@]/', $text) ? "'".$text : $text;
     }
 
     public function results(Request $request, Exam $exam): Response

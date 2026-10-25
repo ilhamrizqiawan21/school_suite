@@ -160,6 +160,8 @@ Task dapat dikerjakan berurutan. BSC-03 dapat berjalan bersama BSC-02 setelah be
 
 Migration `2026_10_25_700005_create_question_shares` diuji up/down pada SQLite in-memory (tabel hadir setelah up dan hilang setelah down), lalu diterapkan pada database development lokal; seluruh migration bank soal `700000`–`700005` kini berstatus `Ran`. Tidak ada migration rollback pada database lokal. Browser QA read-only halaman login pada 375/768/1440 px tidak menemukan horizontal overflow atau console error; route bank soal mengarahkan guest ke login. Tidak ada baseline visual regression dan tidak digunakan kredensial untuk menguji halaman terlindungi; alur CBT divalidasi melalui feature tests. Full suite 159/159 lulus (868 assertions), `npm run typecheck`, `npm run build`, Pint, route audit, serta `git diff --check` lulus. Build masih memberi advisory bahwa bundle utama berukuran 500.06 KB. Test root diperbarui agar menguji redirect guest yang memang menjadi perilaku autentikasi aplikasi.
 
+**Tindak lanjut review (2026-10-25):** Pembuatan paket baru kini memakai Collection untuk snapshot item; ujian dari paket milik guru dapat memakai soal yang sah disalin/dibagikan tanpa melonggarkan pemilihan soal manual; konfirmasi impor dikunci per token agar tidak terduplikasi; dan ekspor CSV hasil ujian mengubah nilai yang menyerupai formula menjadi teks. Regresi untuk keempat kasus serta paket salinan setelah share dicabut ditambahkan di `AssessmentControllersTest`. Full suite terbaru 163/163 lulus (890 assertions), Pint dan `git diff --check` lulus.
+
 ## Quality gate untuk setiap task
 
 - [ ] Validasi bisnis dan otorisasi dilakukan di server, bukan hanya di UI.

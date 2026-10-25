@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckBlockedIp;
+use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequirePasswordChange;
 use App\Http\Middleware\SecurityHeadersMiddleware;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias(['role' => EnsureRole::class]);
         $middleware->web(append: [
             CheckBlockedIp::class,
             RequirePasswordChange::class,

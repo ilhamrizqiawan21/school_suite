@@ -97,18 +97,22 @@ const submitImport = () => {
                         </svg>
                         Impor CSV
                     </button>
-                    <button
-                        type="button"
-                        @click="showAddModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-xs"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Tambah Guru
-                    </button>
+                    <a href="/akademik/guru/template" class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs">
+                        Unduh template
+                    </a>
                 </div>
             </div>
+
+            <section class="panel border border-indigo-100 bg-indigo-50/40 p-5">
+                <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Guru atau tenaga kependidikan</h2></div>
+                <form class="grid gap-3 md:grid-cols-[1fr_1.5fr_130px_1.3fr_auto] items-end" @submit.prevent="submitAdd">
+                    <label class="text-xs font-semibold text-slate-700">NIP<input v-model="form.nip" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="form.name" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Gender<select v-model="form.gender" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label>
+                    <label class="text-xs font-semibold text-slate-700">Email<input v-model="form.email" type="email" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <button type="submit" :disabled="form.processing" class="primary-button !text-white justify-center disabled:opacity-50">Simpan</button>
+                </form>
+            </section>
 
             <!-- Filters -->
             <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-3">

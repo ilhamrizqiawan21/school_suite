@@ -67,7 +67,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', closeOnEscape));
                 <div class="brand-mark" aria-hidden="true"><img v-if="page.props.school?.logo_url" :src="page.props.school.logo_url" alt=""><span v-else>S</span></div>
                 <div><strong>{{ appName }}</strong><small>{{ page.props.school?.name ?? 'Ruang kerja sekolah' }}</small></div>
             </div>
-            <div class="flex-1 overflow-y-auto py-2">
+            <div class="sidebar-nav-scroll flex-1 overflow-y-auto py-2">
                 <SidebarNavigation />
             </div>
             <div class="sidebar-foot">

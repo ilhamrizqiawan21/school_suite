@@ -122,16 +122,6 @@ const deleteUser = (user: UserItem) => {
                         Kelola akun, peran, dan status akses pengguna unit sekolah
                     </p>
                 </div>
-                <button
-                    type="button"
-                    @click="isCreateModalOpen = true"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition-colors focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Tambah Pengguna</span>
-                </button>
             </div>
 
             <!-- Flash message -->
@@ -159,6 +149,18 @@ const deleteUser = (user: UserItem) => {
                     </select>
                 </div>
             </div>
+
+            <section class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
+                <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Pengguna baru</h2></div>
+                <form class="grid gap-3 md:grid-cols-[1.3fr_1.3fr_1.2fr_1fr_1.1fr_auto] items-end" @submit.prevent="submitCreate">
+                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="createForm.name" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Email<input v-model="createForm.email" type="email" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Username<input v-model="createForm.username" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Peran<select v-model="createForm.role_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select></label>
+                    <label class="text-xs font-semibold text-slate-700">Kata sandi<input v-model="createForm.password" type="password" minlength="8" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <button type="submit" :disabled="createForm.processing" class="inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Simpan</button>
+                </form>
+            </section>
 
             <!-- Users Table -->
             <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">

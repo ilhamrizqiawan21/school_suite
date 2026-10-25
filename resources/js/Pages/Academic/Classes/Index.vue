@@ -96,18 +96,19 @@ const submitAssignHomeroom = () => {
                         </select>
                     </div>
 
-                    <button
-                        type="button"
-                        @click="showAddClassModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-xs"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Tambah Rombel
-                    </button>
                 </div>
             </div>
+
+            <section class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
+                <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Rombongan belajar baru</h2></div>
+                <form class="grid gap-3 md:grid-cols-[130px_1fr_140px_1.3fr_auto] items-end" @submit.prevent="submitAddClass">
+                    <label class="text-xs font-semibold text-slate-700">Tingkat<select v-model="classForm.grade_level" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option :value="7">Kelas 7</option><option :value="8">Kelas 8</option><option :value="9">Kelas 9</option><option :value="10">Kelas 10</option><option :value="11">Kelas 11</option><option :value="12">Kelas 12</option></select></label>
+                    <label class="text-xs font-semibold text-slate-700">Nama kelas<input v-model="classForm.name" required placeholder="VII-A" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Kapasitas<input v-model="classForm.capacity" type="number" min="1" max="60" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <label class="text-xs font-semibold text-slate-700">Wali kelas<select v-model="classForm.homeroom_teacher_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option value="">Belum ditentukan</option><option v-for="teacher in teachers" :key="teacher.id" :value="String(teacher.id)">{{ teacher.name }}</option></select></label>
+                    <button type="submit" :disabled="classForm.processing || !selectedYear" class="inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Simpan</button>
+                </form>
+            </section>
 
             <!-- Grid Rombel -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -163,7 +164,7 @@ const submitAssignHomeroom = () => {
                 </div>
 
                 <div v-if="classes.length === 0" class="col-span-full bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
-                    Belum ada rombongan belajar pada tahun ajaran ini. Klik "Tambah Rombel" untuk memulai.
+                    Belum ada rombongan belajar pada tahun ajaran ini. Gunakan form di atas untuk menambahkan rombel.
                 </div>
             </div>
         </div>

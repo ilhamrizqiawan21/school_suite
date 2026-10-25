@@ -276,27 +276,36 @@ class QuestionBankController extends Controller
         $this->authorizeManager($request);
         abort_unless(Str::isUuid($token), 404);
         $cacheKey = $this->importCacheKey($token);
-        $stage = Cache::get($cacheKey);
-        abort_unless(is_array($stage) && $stage['user_id'] === (int) $request->user()->id && $stage['school_id'] === (int) $request->user()->school_id, 404, 'Preview impor sudah kedaluwarsa atau tidak tersedia.');
-        abort_if($stage['errors'] || $stage['rows'] === [], 422, 'Perbaiki semua baris yang bermasalah lalu unggah ulang sebelum impor.');
+        $lock = Cache::lock($cacheKey.':confirm', 900);
+        if (! $lock->get()) {
+            return back()->withErrors(['file' => 'Impor ini sedang diproses. Coba lagi beberapa saat.']);
+        }
 
-        $created = DB::transaction(function () use ($request, $stage) {
-            $ids = [];
-            foreach ($stage['rows'] as $row) {
-                unset($row['source_row']);
-                $data = $this->assertMetadataOwnership($request, $row);
-                $question = ExamQuestion::create($this->rootAttributes($data, $request, 1));
-                $this->createVersion($question, $data, $request);
-                $ids[] = $question->id;
-            }
+        try {
+            $stage = Cache::get($cacheKey);
+            abort_unless(is_array($stage) && $stage['user_id'] === (int) $request->user()->id && $stage['school_id'] === (int) $request->user()->school_id, 404, 'Preview impor sudah kedaluwarsa atau tidak tersedia.');
+            abort_if($stage['errors'] || $stage['rows'] === [], 422, 'Perbaiki semua baris yang bermasalah lalu unggah ulang sebelum impor.');
 
-            return $ids;
-        });
+            $created = DB::transaction(function () use ($request, $stage) {
+                $ids = [];
+                foreach ($stage['rows'] as $row) {
+                    unset($row['source_row']);
+                    $data = $this->assertMetadataOwnership($request, $row);
+                    $question = ExamQuestion::create($this->rootAttributes($data, $request, 1));
+                    $this->createVersion($question, $data, $request);
+                    $ids[] = $question->id;
+                }
 
-        Cache::forget($cacheKey);
-        $this->audit->log('assessment.questions.imported', 'question_import', $token, ['count' => count($created)], actor: $request->user(), schoolId: (int) $request->user()->school_id);
+                return $ids;
+            });
 
-        return redirect()->route('assessment.questions.index')->with('message', count($created).' soal berhasil diimpor.');
+            Cache::forget($cacheKey);
+            $this->audit->log('assessment.questions.imported', 'question_import', $token, ['count' => count($created)], actor: $request->user(), schoolId: (int) $request->user()->school_id);
+
+            return redirect()->route('assessment.questions.index')->with('message', count($created).' soal berhasil diimpor.');
+        } finally {
+            $lock->release();
+        }
     }
 
     public function export(Request $request): StreamedResponse

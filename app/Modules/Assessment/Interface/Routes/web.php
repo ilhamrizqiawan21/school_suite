@@ -42,10 +42,10 @@ Route::middleware(['auth'])->prefix('penilaian')->name('assessment.')->group(fun
     Route::post('bank-soal/{question}/duplikasi', [QuestionBankController::class, 'duplicate'])->middleware('throttle:sensitive')->name('questions.duplicate');
 
     // Input Nilai Guru
-    Route::get('skor', [ScoreInputController::class, 'index'])->name('scores.index');
-    Route::post('skor', [ScoreInputController::class, 'storeBatch'])->name('scores.store');
-    Route::get('sikap', [StudentAttitudeController::class, 'index'])->name('attitudes.index');
-    Route::post('sikap', [StudentAttitudeController::class, 'store'])->middleware('throttle:sensitive')->name('attitudes.store');
+    Route::get('skor', [ScoreInputController::class, 'index'])->middleware('role:teacher,homeroom')->name('scores.index');
+    Route::post('skor', [ScoreInputController::class, 'storeBatch'])->middleware('role:teacher,homeroom')->name('scores.store');
+    Route::get('sikap', [StudentAttitudeController::class, 'index'])->middleware('role:teacher,homeroom')->name('attitudes.index');
+    Route::post('sikap', [StudentAttitudeController::class, 'store'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('attitudes.store');
 
     // Skema & Komponen Penilaian Berversi
     Route::get('skema', [AssessmentSchemeController::class, 'index'])->name('schemes.index');
