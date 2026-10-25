@@ -24,3 +24,4 @@ StandardError=append:/var/log/school_suite_worker_error.log
 
 [Install]
 WantedBy=multi-user.target
+

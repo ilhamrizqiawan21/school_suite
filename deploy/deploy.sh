@@ -106,3 +106,4 @@ cd "${RELEASES_DIR}"
 ls -1dt "${RELEASES_DIR}"/* 2>/dev/null | tail -n +6 | xargs rm -rf 2>/dev/null || true
 
 echo "=== Deployment Berhasil Selesai! Versi aktif: ${RELEASE_DIR} ==="
+

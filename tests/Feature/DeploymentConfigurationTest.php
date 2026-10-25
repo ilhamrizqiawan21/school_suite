@@ -77,3 +77,4 @@ class DeploymentConfigurationTest extends TestCase
         $this->assertSame('0 4 * * *', $restartEvent->expression);
     }
 }
+

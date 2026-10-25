@@ -45,3 +45,4 @@ if command -v systemctl &> /dev/null; then
 fi
 
 echo "✓ Rollback darurat berhasil selesai! Rilis aktif sekarang: ${PREVIOUS_RELEASE}"
+
