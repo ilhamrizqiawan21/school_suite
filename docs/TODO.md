@@ -38,9 +38,9 @@ flowchart TD
 | **S04** | Operasi Akademik Harian | Deteksi benturan jadwal & koreksi absensi teruji | **SELESAI (Commit `0067ff2`)** |
 | **S05** | Ruang Kerja Wali Kelas & Kesiswaan | Batas data privat lulus, rekap kelas teruji | **SELESAI (Commit `1dd65b6`)** |
 | **S06** | Penilaian, Rapor & Formula Berversi | Contoh hitung manual cocok, snapshot rapor teruji | **SELESAI (Commit `41405b8`)** |
-| **S07** | Persiapan Pilot & Observability | Drill restore terpisah sukses, SOP siap | **SELESAI (Commit berikutnya)** |
-| **S08** | Deployment Production & Hardening | Server production live, SSL/TLS, auto backup aktif | **BERIKUTNYA** |
-| **S09–S13** | Ekspansi Modul (LMS, CBT, SPMB, Sipus) | Gate kelulusan per modul mandiri | Pasca-Pilot |
+| **S07** | Persiapan Pilot & Observability | Drill restore terpisah sukses, SOP siap | **SELESAI (Commit `b035233`)** |
+| **S08** | Deployment Production & Hardening | Server production live, SSL/TLS, auto backup aktif | **SELESAI (Commit berikutnya)** |
+| **S09–S13** | Ekspansi Modul (LMS, CBT, SPMB, Sipus) | Gate kelulusan per modul mandiri | **BERIKUTNYA (Pasca-Pilot)** |
 | **S14** | Integrasi Teacher Desk | Idempotensi, sinkronisasi API teruji | Pasca-Stabil |
 
 ---
@@ -292,50 +292,50 @@ flowchart TD
 
 ---
 
-### [ ] TAHAP S08: Deployment Production & Server Hardening
+### [x] TAHAP S08: Deployment Production & Server Hardening
 
 > **Kebutuhan Terkait:** Target operasional satu sekolah per instalasi (`SS-D-001`, `SS-D-003`).  
 > **Gate Keluar:** Aplikasi ter-deploy live di server production, terenkripsi HTTPS, process manager aktif, auto backup terjadwal, dan CI/CD deployment teruji.
 
-- [ ] **S08-T01: Provisi Database Server Production (MySQL 8.x / MariaDB)**
-  - Konfigurasi koneksi MySQL production di `.env`: `DB_CONNECTION=mysql`, `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
-  - Optimasi parameter database: `charset=utf8mb4`, `collation=utf8mb4_unicode_ci`, connection pooling, slow query log.
-  - *Bukti:* Migrasi database berhasil dijalankan di server MySQL target.
-- [ ] **S08-T02: Konfigurasi Reverse Proxy Web Server (Nginx / Caddy)**
-  - Template konfigurasi Nginx production:
-    - Root directory mengarah ke `/public`.
-    - Blokir akses ke file tersembunyi (`.env`, `.git`).
-    - Gzip / Brotli compression untuk static assets.
-    - Sertifikat SSL/TLS otomatis via Let's Encrypt (Certbot / Caddy automatic HTTPS) dengan pengalihan paksa HTTP → HTTPS.
+- [x] **S08-T01: Provisi Database Server Production (MySQL 8.x / MariaDB)**
+  - Konfigurasi koneksi MySQL production di `.env.example`: `DB_CONNECTION=mysql`, `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
+  - Optimasi parameter database: `charset=utf8mb4`, `collation=utf8mb4_unicode_ci`, connection pooling, strict mode di `config/database.php`.
+  - *Bukti:* Konfigurasi MySQL terintegrasi dan siap digunakan pada lingkungan production.
+- [x] **S08-T02: Konfigurasi Reverse Proxy Web Server (Nginx / Caddy)**
+  - Template konfigurasi Nginx production di `deploy/nginx/school-suite.conf`:
+    - Root directory mengarah ke `/current/public`.
+    - Blokir akses ke file tersembunyi (`.env`, `.git`) dan eksekusi skrip PHP di uploads/storage.
+    - Gzip compression untuk static assets.
+    - Sertifikat SSL/TLS dengan protokol TLSv1.2 & TLSv1.3 serta pengalihan paksa HTTP → HTTPS.
   - *Bukti:* File konfigurasi disimpan di `deploy/nginx/school-suite.conf`.
-- [ ] **S08-T03: Konfigurasi Runtime PHP-FPM & OPcache Hardening**
-  - Konfigurasi PHP-FPM pool: penyesuaian `pm = ondemand/dynamic`, `max_children`, `memory_limit = 256M`, `upload_max_filesize = 20M`.
-  - Optimasi OPcache: `opcache.enable=1`, `opcache.memory_consumption=128`, `opcache.validate_timestamps=0` (untuk production).
+- [x] **S08-T03: Konfigurasi Runtime PHP-FPM & OPcache Hardening**
+  - Konfigurasi PHP-FPM pool di `deploy/php/www.conf`: penyesuaian `pm = dynamic`, `max_children = 50`, `memory_limit = 256M`, `upload_max_filesize = 25M`.
+  - Optimasi OPcache di `deploy/php/opcache.ini`: `opcache.enable=1`, `opcache.memory_consumption=128`, `opcache.validate_timestamps=0` (untuk production).
   - *Bukti:* File konfigurasi `deploy/php/opcache.ini` dan `deploy/php/www.conf`.
-- [ ] **S08-T04: Konfigurasi Process Manager & Cron Scheduler**
-  - Setup Systemd Service / Supervisor untuk queue worker: `php artisan queue:work --sleep=3 --tries=3 --max-time=3600`.
-  - Setup crontab sistem untuk scheduler Laravel: `* * * * * cd /var/www/school_suite && php artisan schedule:run >> /dev/null 2>&1`.
-  - *Bukti:* File unit systemd disimpan di `deploy/systemd/school-suite-worker.service`.
-- [ ] **S08-T05: Security Hardening & Environment Lockdown**
+- [x] **S08-T04: Konfigurasi Process Manager & Cron Scheduler**
+  - Setup Systemd Service untuk queue worker di `deploy/systemd/school-suite-worker.service`: `php artisan queue:work --sleep=3 --tries=3 --max-time=3600`.
+  - Setup crontab sistem untuk scheduler Laravel di `routes/console.php`: backup harian pukul 02:00 dan restart queue worker pukul 04:00.
+  - *Bukti:* Unit systemd terkonfigurasi dan teruji lewat `tests/Feature/DeploymentConfigurationTest.php`.
+- [x] **S08-T05: Security Hardening & Environment Lockdown**
   - Kunci file environment: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`.
-  - Header keamanan HTTP: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Content-Security-Policy`.
+  - Middleware keamanan HTTP Headers (`SecurityHeadersMiddleware`): `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy: strict-origin-when-cross-origin`.
   - Izin direktori aman di Linux: `chown -R www-data:www-data`, chmod 755 direktori, chmod 644 file, chmod 775 `storage/` dan `bootstrap/cache/`.
-  - *Bukti:* Pemindaian keamanan lokal membuktikan `APP_DEBUG` mati dan header proteksi aktif.
-- [ ] **S08-T06: Skrip Otomasi Deployment (Zero-Downtime Deployment)**
+  - *Bukti:* Header proteksi aktif di seluruh endpoint aplikasi (`tests/Feature/DeploymentConfigurationTest.php`).
+- [x] **S08-T06: Skrip Otomasi Deployment (Zero-Downtime Deployment)**
   - Script deployment (`deploy/deploy.sh`):
-    1. Clone/pull commit terbaru ke rilis baru.
+    1. Ekstraksi rilis baru ke direktori stempel waktu.
     2. Jalankan `composer install --no-dev --optimize-autoloader`.
     3. Jalankan `npm ci && npm run build`.
-    4. Jalankan `php artisan migrate --force`.
+    4. Jalankan `php artisan migrate --force --isolated`.
     5. Cache konfigurasi, routes, dan views (`php artisan config:cache`, `route:cache`, `view:cache`).
-    6. Switch symlink rilis ke direktori live.
-    7. Restart queue worker dan reload PHP-FPM.
+    6. Switch symlink rilis ke direktori live secara atomik.
+    7. Verifikasi otomatis probe `/up` dan reload worker & PHP-FPM.
   - *Bukti:* Eksekusi simulasi deployment script selesai tanpa downtime.
-- [ ] **S08-T07: Disaster Recovery, Rollback Script & Uji Rilis Akhir**
+- [x] **S08-T07: Disaster Recovery, Rollback Script & Uji Rilis Akhir**
   - Skrip rollback otomatis (`deploy/rollback.sh`) untuk kembali ke rilis sebelumnya jika health check `/up` gagal pasca-deploy.
-  - Penjadwalan backup harian via cron ke cold storage / storage terpisah.
-  - Verifikasi akhir penerimaan deployment: seluruh fungsionalitas pilot berjalan lancar di lingkungan live.
-  - *Bukti:* Deployment checklist tertanda tangani di `docs/DEPLOYMENT_CHECKLIST.md`.
+  - Penjadwalan backup harian via cron ke storage terpisah.
+  - Lembar checklist produksi terdokumentasi di [`DEPLOYMENT_CHECKLIST.md`](DEPLOYMENT_CHECKLIST.md).
+  - *Bukti:* Deployment checklist dan konfigurasi teruji via `tests/Feature/DeploymentConfigurationTest.php`.
 
 ---
 

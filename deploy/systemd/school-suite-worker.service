@@ -1,0 +1,26 @@
+# ==============================================================================
+# Systemd Service Unit — School Suite Queue Worker
+# Path: /etc/systemd/system/school-suite-worker.service
+# Commands:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable school-suite-worker
+#   sudo systemctl start school-suite-worker
+# ==============================================================================
+
+[Unit]
+Description=School Suite Queue Worker
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/school_suite/current
+ExecStart=/usr/bin/php /var/www/school_suite/current/artisan queue:work --sleep=3 --tries=3 --max-time=3600 --timeout=120
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/school_suite_worker.log
+StandardError=append:/var/log/school_suite_worker_error.log
+
+[Install]
+WantedBy=multi-user.target

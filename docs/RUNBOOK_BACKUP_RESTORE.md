@@ -96,3 +96,4 @@ Jika proses pemulihan gagal di tengah jalan:
 1. Hentikan web server (`systemctl stop nginx php-fpm`).
 2. Kembalikan dump database pra-restore yang tersimpan di temporary fallback.
 3. Hubungi penanggung jawab teknis sekolah dan buka tiket penanganan insiden darurat.
+
