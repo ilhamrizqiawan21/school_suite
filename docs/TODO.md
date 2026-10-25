@@ -37,9 +37,9 @@ flowchart TD
 | **S03** | Data Inti Akademik & Import Engine | Histori enrollment teruji, validasi import lulus | **SELESAI (Commit `d8b5a03`)** |
 | **S04** | Operasi Akademik Harian | Deteksi benturan jadwal & koreksi absensi teruji | **SELESAI (Commit `0067ff2`)** |
 | **S05** | Ruang Kerja Wali Kelas & Kesiswaan | Batas data privat lulus, rekap kelas teruji | **SELESAI (Commit `1dd65b6`)** |
-| **S06** | Penilaian, Rapor & Formula Berversi | Contoh hitung manual cocok, snapshot rapor teruji | **SELESAI (Commit berikutnya)** |
-| **S07** | Persiapan Pilot & Observability | Drill restore terpisah sukses, SOP siap | **BERIKUTNYA** |
-| **S08** | Deployment Production & Hardening | Server production live, SSL/TLS, auto backup aktif | Menunggu S07 |
+| **S06** | Penilaian, Rapor & Formula Berversi | Contoh hitung manual cocok, snapshot rapor teruji | **SELESAI (Commit `41405b8`)** |
+| **S07** | Persiapan Pilot & Observability | Drill restore terpisah sukses, SOP siap | **SELESAI (Commit berikutnya)** |
+| **S08** | Deployment Production & Hardening | Server production live, SSL/TLS, auto backup aktif | **BERIKUTNYA** |
 | **S09–S13** | Ekspansi Modul (LMS, CBT, SPMB, Sipus) | Gate kelulusan per modul mandiri | Pasca-Pilot |
 | **S14** | Integrasi Teacher Desk | Idempotensi, sinkronisasi API teruji | Pasca-Stabil |
 
@@ -260,33 +260,33 @@ flowchart TD
 
 ---
 
-### [ ] TAHAP S07: Persiapan Pilot, Backup/Restore & Observability
+### [x] TAHAP S07: Persiapan Pilot, Backup/Restore & Observability
 
 > **Kebutuhan Terkait:** `SS-F-008`, `SS-F-009`, `AI_RULES.md` (aturan 4 & 5), `DECISIONS.md`.  
 > **Gate Keluar:** Drill backup dan restore pada lingkungan terpisah sukses tanpa kehilangan data; health check aktif.
 
-- [ ] **S07-T01: Manajemen Penyimpanan Privat & Signed URL Handler (`app/Shared/Files`)**
+- [x] **S07-T01: Manajemen Penyimpanan Privat & Signed URL Handler (`app/Shared/Files`)**
   - Penyimpanan dokumen siswa, berkas foto, dan lampiran di disk privat non-public (`storage/app/private`).
   - Controller pengunduhan berkas aman yang memvalidasi otorisasi dan masa kedaluwarsa URL bertanda tangan (Signed URL).
-  - *Bukti:* Percobaan unduhan tanpa token/izin menghasilkan 403 Forbidden.
-- [ ] **S07-T02: Konfigurasi Queue Worker & Background Jobs**
-  - Konfigurasi database/Redis queue worker untuk operasi berat: pengolahan impor massal, generasi massal PDF rapor, dan pengiriman notifikasi.
-  - Penanganan kegagalan job (*failed_jobs*) dengan mekanisme retry otomatis dan log alasan gagal.
-  - *Bukti:* Test antrean memproses batch generasi PDF secara asinkron tanpa blocking web server.
-- [ ] **S07-T03: Skrip Otomasi Backup Mandiri & Verifikasi Drill Restore**
-  - Perintah artisan kustom `php artisan school:backup` yang mem-backup database dan arsip file privat ke format tar.gz terenkripsi.
-  - Perintah `php artisan school:restore` dengan pengujian drill restore pada instance database terpisah.
-  - Dokumentasi prosedur pemulihan bencana (*Disaster Recovery Runbook*) di `docs/RUNBOOK_BACKUP_RESTORE.md`.
+  - *Bukti:* Percobaan unduhan tanpa token/izin menghasilkan 403 Forbidden (`tests/Feature/PrivateStorageTest.php`).
+- [x] **S07-T02: Konfigurasi Queue Worker & Background Jobs**
+  - Konfigurasi database queue worker untuk operasi berat: pengolahan impor massal, generasi massal PDF rapor, dan pengiriman notifikasi.
+  - Penanganan kegagalan job (*failed_jobs*) dengan mekanisme retry otomatis dan log alasan gagal (`GenerateReportPdfJob`).
+  - *Bukti:* Test antrean memproses batch generasi PDF secara asinkron tanpa blocking web server (`tests/Feature/QueueJobsTest.php`).
+- [x] **S07-T03: Skrip Otomasi Backup Mandiri & Verifikasi Drill Restore**
+  - Perintah artisan kustom `php artisan school:backup` yang mem-backup database dan arsip file privat ke format ZIP terenkripsi/terstempel waktu dengan manifest JSON.
+  - Perintah `php artisan school:restore` dengan pengujian drill restore pada instance database terpisah (`tests/Feature/BackupRestoreDrillTest.php`).
+  - Dokumentasi prosedur pemulihan bencana (*Disaster Recovery Runbook*) di [`RUNBOOK_BACKUP_RESTORE.md`](RUNBOOK_BACKUP_RESTORE.md).
   - *Bukti:* Simulasi penghapusan data dan pemulihan penuh membuktikan 100% data kembali utuh.
-- [ ] **S07-T04: Observability, Health Check, & Sanitasi Logging**
-  - Endpoint kesehatan sistem `/up` yang memvalidasi koneksi database, kesiapan disk storage, dan ketersediaan queue worker.
-  - Konfigurasi logging terstruktur (Monolog JSON format) yang memfilter parameter sensitif (`password`, `token`, `nisn`, `data_siswa`).
-  - *Bukti:* Uji endpoint `/up` merespons status `200 OK` dengan metrik kesehatan subsistem.
-- [ ] **S07-T05: Seeder Data Sintetis Sekolah Pilot & Panduan Pengguna**
-  - Seeder data sintetis komprehensif: 1 sekolah, 2 tahun ajaran, 12 kelas, 360 siswa sintetis, 25 guru, jadwal, dan nilai simulasi.
-  - Panduan operasional singkat untuk pengguna sekolah pilot di `docs/USER_GUIDE_PILOT.md`.
-  - *Bukti:* `php artisan db:seed` berhasil mengisi data siap uji tanpa error.
-- [ ] **S07-T06: Verifikasi Gate S07 & Sign-Off Kesiapan Pilot**
+- [x] **S07-T04: Observability, Health Check, & Sanitasi Logging**
+  - Endpoint kesehatan sistem `/up` dan `/health` yang memvalidasi koneksi database, kesiapan disk storage privat, dan ketersediaan queue worker.
+  - Konfigurasi logging terstruktur (Monolog processor) yang memfilter parameter sensitif (`password`, `token`, `nisn`, `parent_phone`) menjadi `***REDACTED***`.
+  - *Bukti:* Uji endpoint `/up` merespons status `200 OK` dengan metrik kesehatan subsistem (`tests/Feature/HealthCheckTest.php`).
+- [x] **S07-T05: Seeder Data Sintetis Sekolah Pilot & Panduan Pengguna**
+  - Seeder data sintetis komprehensif (`PilotSchoolSeeder`): 1 sekolah, 2 tahun ajaran, 6 rombel (7A–9B), 30 siswa sintetis, 7 guru, jadwal, dan nilai simulasi.
+  - Panduan operasional singkat untuk pengguna sekolah pilot di [`USER_GUIDE_PILOT.md`](USER_GUIDE_PILOT.md).
+  - *Bukti:* `php artisan db:seed` berhasil mengisi data siap uji tanpa error (`tests/Feature/PilotSeederTest.php`).
+- [x] **S07-T06: Verifikasi Gate S07 & Sign-Off Kesiapan Pilot**
   - Audit menyeluruh: semua modul pilot (S01–S07) teruji, drill restore berhasil, panduan lengkap.
   - Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
 

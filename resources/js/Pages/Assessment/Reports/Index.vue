@@ -225,3 +225,4 @@ const publishReport = (reportId: number) => {
         </div>
     </AppLayout>
 </template>
+

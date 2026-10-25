@@ -4,142 +4,132 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk 
 
 ## Identitas
 
-- Task/issue: Penyelesaian Penuh Tahap S06 (Penilaian, Rapor & Formula Berversi: S06-T01 s/d S06-T06)
-- Requirement ID: SS-F-007 (Penilaian, Rapor & Formula Berversi), SS-D-005 (Snapshot Rapor Immutable), AI_RULES.md (Aturan 6 & 7: Modular monolith & pengujian formula lengkap), DESIGN.md, ERD.md, ARCHITECTURE.md
+- Task/issue: Penyelesaian Penuh Tahap S07 (Persiapan Pilot, Backup/Restore & Observability: S07-T01 s/d S07-T06)
+- Requirement ID: SS-F-008 (Export Laporan & Signed URL Berkas Privat), SS-F-009 (Backup, Restore, & Migrasi Versi), AI_RULES.md (Aturan 4 & 5: Sanitasi data sensitif & SOP Pemulihan Bencana), DESIGN.md, ARCHITECTURE.md
 - Branch/commit: main / commit berikutnya
-- Status: Selesai & Terverifikasi (Gate S06 Passed)
+- Status: Selesai & Terverifikasi (Gate S07 Passed)
 
 ## Ringkasan dan scope
 
 - Perubahan:
-  - **S06-T01: Migrasi Skema Penilaian & Rapor**
-    - Tabel `assessment_schemes` (skema penilaian berversi, nama, kode, versi, status aktif, pembulatan, digit desimal, passing grade default).
-    - Tabel `assessment_components` (komponen nilai: tugas, formatif, sumatif, UTS, UAS, bobot persentase %, passing grade/KKTP, urutan).
-    - Tabel `scores` (skor per enrollment per komponen nilai, nilai mentah, nilai remedial, nilai akhir berbobot, catatan guru, user pencatat).
-    - Tabel `remedial_records` (riwayat pelaksanaan remedial, skor awal, skor remedial, batas KKTP/KKM, skor efektif disesuaikan).
-    - Tabel `report_snapshots` (snapshot rapor terbit berformat JSON snapshot mandiri yang immutable, memuat skema, nilai, kehadiran, catatan wali kelas, status `draft`/`published`/`archived`, dan checksum SHA-256).
-    - Enums domain di `app/Modules/Assessment/Domain/Enums/`: `RoundingRuleEnum` (`half_up`, `floor`, `ceil`) dan `ReportStatusEnum` (`draft`, `published`, `archived`).
-    - 5 Model Eloquent di `app/Modules/Assessment/Infrastructure/Models/` (`AssessmentScheme`, `AssessmentComponent`, `Score`, `RemedialRecord`, `ReportSnapshot`).
-    - Service provider `AssessmentServiceProvider` di `app/Modules/Assessment/AssessmentServiceProvider.php`.
-    - Teruji lewat [`tests/Feature/AssessmentMigrationTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/AssessmentMigrationTest.php) (4 tests, 9 assertions).
-  - **S06-T02: Engine Penghitungan Nilai & Remedial Berversi (`GradeCalculationEngine`)**
-    - Service murni domain di `app/Modules/Assessment/Domain/Services/GradeCalculationEngine.php`:
-      - Formula pembobotan persentase dinamis ($\sum \text{score}_i \times \text{weight}_i$).
-      - Aturan pembulatan baku (`half_up`, `floor`, `ceil`) dengan presisi desimal terkonfigurasi.
-      - Logika remedial ketat: nilai remedial tidak boleh melebihi batas ketuntasan KKTP ($\min(\text{remedial}, \text{KKTP})$). Jika nilai mentah awal sudah tuntas atau nilai remedial lebih kecil, nilai awal dipertahankan.
-      - Penanganan nilai batas: 0.0, 100.0, desimal `.5`, nilai kosong/null (`AI_RULES.md` Aturan 7).
-      - Konversi huruf predikat baku: A (>= 90), B (>= 80), C (>= 75 / KKTP), D (< KKTP).
-    - Teruji lewat [`tests/Unit/GradeCalculationEngineTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Unit/GradeCalculationEngineTest.php) (11 tests, 33 assertions passed).
-  - **S06-T03: Penerbitan Rapor & Immutable Snapshot Engine (`SS-D-005`)**
-    - Service `ReportPublishingService` di `app/Modules/Assessment/Application/Services/`:
-      - Mengagregasikan capaian akademik seluruh mata pelajaran siswa rombel, presensi siswa semester berjalan, dan catatan wali kelas.
-      - Menghasilkan tanda tangan digital `checksum` SHA-256 dari payload gabungan snapshot.
-      - Metode `publishReport`: Mengunci rapor dengan status `published`, mencatat `published_at`, dan menolak perubahan jika rapor sudah pernah diterbitkan.
-      - Mencegah modifikasi snapshot terbit: Terbukti bit-for-bit bahwa mutasi data mentah di tabel `scores` pasca-penerbitan rapor TIDAK mengubah sedikitpun data rapor yang telah terbit.
-    - Teruji lewat [`tests/Feature/ReportSnapshotImmutabilityTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/ReportSnapshotImmutabilityTest.php) (3 tests, 17 assertions passed).
-  - **S06-T04: Generator Cetak Rapor & Ekspor Ledger Nilai**
-    - Service `ReportGeneratorService` di `app/Modules/Assessment/Application/Services/`:
-      - `formatReportView`: menyusun representasi tampilan rapor siap cetak langsung dari data snapshot mandiri.
-      - `exportClassLedger`: menyusun matriks buku ledger nilai rombel (seluruh siswa vs seluruh mata pelajaran, nilai rerata kelas, dan rekapitulasi presensi S/I/A).
-    - Controller `ReportCardController` di `app/Modules/Assessment/Interface/Http/Controllers/ReportCardController.php`:
-      - Dukungan respon HTML Inertia dan format JSON untuk ekspor ledger nilai.
-  - **S06-T05: UI Input Nilai Guru & Verifikasi Rapor Wali Kelas (Inertia + Vue)**
-    - Lembar Input Nilai Guru (`resources/js/Pages/Assessment/Scores/InputGrid.vue`): antarmuka spreadsheet-like grid, kolom NIS, nama, nilai mentah, nilai remedial, preview otomatis nilai akhir & indikator KKTP tuntas/belum tuntas, catatan kemajuan siswa, dan penyimpanan batch instan.
-    - Skema Penilaian Berversi (`resources/js/Pages/Assessment/Schemes/Index.vue`): konfigurasi nama, kode skema (auto-increment version bila kode sama), aturan pembulatan, digit desimal, KKTP default, dan rincian komponen bobot persentase dengan pengecekan total bobot 100%.
-    - Rapor Siswa & Snapshot (`resources/js/Pages/Assessment/Reports/Index.vue`): filter rombel, pemantauan status draf vs terbit, indikator checksum hash SHA-256, aksi generate rapor kelas batch, dan penguncian/penerbitan permanen (`SS-D-005`).
-    - Lembar Cetak Rapor (`resources/js/Pages/Assessment/Reports/Show.vue`): layout baku cetak rapor pendidikan Indonesia (kop sekolah, identitas peserta didik, tabel capaian kompetensi akademik, presensi S/I/A, catatan wali kelas, tanda tangan 3 pihak, dan footer keaslian digital SHA-256), dilengkapi tombol cetak dan CSS `@media print`.
-    - Buku Ledger Nilai (`resources/js/Pages/Assessment/Reports/Ledger.vue`): rekapitulasi tabular matriks nilai seluruh siswa dan mata pelajaran beserta nilai rerata kelas.
-    - Menu samping `SidebarNavigation.vue` terintegrasi dengan menu "Input Nilai", "Skema Penilaian", dan "Rapor Siswa".
-  - **S06-T06: Controller, Routes, Policies & Verifikasi Gate S06**
-    - Controller `ScoreInputController`, `AssessmentSchemeController`, `ReportCardController`.
-    - Routes web di `app/Modules/Assessment/Interface/Routes/web.php` (10 endpoint terdaftar).
-    - Policy `AssessmentPolicy` di `app/Modules/Assessment/Application/Policies/AssessmentPolicy.php` dengan penegakan otorisasi: siswa hanya dapat melihat rapor pribadinya sendiri (403 untuk rapor siswa lain); hanya peran guru/wali kelas/kurikulum/admin yang dapat menginput nilai atau menerbitkan rapor.
-    - Decoupling murni lintas modul: query data mengajar dan kelas menggunakan `AcademicQueryService::getTeachingAssignmentsForClass` tanpa model cross-import.
-    - Teruji lewat [`tests/Feature/AssessmentControllersTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/AssessmentControllersTest.php) (8 tests, 92 assertions passed).
+  - **S07-T01: Manajemen Penyimpanan Privat & Signed URL Handler (`SS-F-008`)**
+    - Service `PrivateStorageService` di `app/Shared/Files/PrivateStorageService.php`:
+      - Mengelola penyimpanan berkas di disk lokal privat non-public (`storage/app/private`).
+      - Menyediakan proteksi pembersihan directory traversal attacks (`sanitizePath`).
+      - Menghasilkan URL bertanda tangan berbatas waktu (`temporarySignedRoute`) dengan batas kedaluwarsa waktu.
+    - Controller `PrivateFileController` di `app/Shared/Http/Controllers/PrivateFileController.php`:
+      - Memvalidasi keabsahan tanda tangan URL (`$request->hasValidSignature()`).
+      - Menolak akses langsung tanpa tanda tangan sah atau yang telah kedaluwarsa dengan respon HTTP 403 Forbidden.
+      - Mengembalikan stream pengunduhan berkas aman dengan header keamanan `X-Content-Type-Options: nosniff`.
+    - Teruji lewat [`tests/Feature/PrivateStorageTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/PrivateStorageTest.php) (6 tests, 12 assertions).
+  - **S07-T02: Konfigurasi Queue Worker & Background Jobs**
+    - Konfigurasi antrean database queue worker di `config/queue.php`.
+    - Job `GenerateReportPdfJob` di `app/Shared/Jobs/GenerateReportPdfJob.php`:
+      - Mengimplementasikan `ShouldQueue`, retry 3 kali (`$tries = 3`), dan batas waktu 120 detik (`$timeout = 120`).
+      - Memproses penyusunan dan penyimpanan dokumen rapor ke disk privat secara asinkron tanpa membebani web server.
+      - Penanganan kegagalan permanen dengan pencatatan structured error log (`failed`).
+    - Teruji lewat [`tests/Feature/QueueJobsTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/QueueJobsTest.php) (3 tests, 4 assertions).
+  - **S07-T03: Skrip Otomasi Backup Mandiri & Verifikasi Drill Restore (`SS-F-009`)**
+    - Perintah `php artisan school:backup` di `app/Console/Commands/SchoolBackupCommand.php`:
+      - Mencadangkan struktur dan data basis data ke script dump SQL portabel (kompatibel SQLite & MySQL).
+      - Mengarsipkan database dump bersama folder `storage/app/private` dan `manifest.json` (memuat waktu, versi PHP, checksum database SHA-256) ke arsip ZIP terkompresi stempel waktu di `storage/app/backups/`.
+    - Perintah `php artisan school:restore` di `app/Console/Commands/SchoolRestoreCommand.php`:
+      - Membaca dan mengekstrak arsip cadangan.
+      - Mendukung simulasi pemulihan pada instance database terisolasi (`--target-db` dan `--target-files`) untuk pengujian drill restore berkala.
+    - Standard Operating Procedure (SOP) terdokumentasi lengkap di [`docs/RUNBOOK_BACKUP_RESTORE.md`](file:///home/ilhamrizqiawan/Projects/school_suite/docs/RUNBOOK_BACKUP_RESTORE.md).
+    - Teruji lewat [`tests/Feature/BackupRestoreDrillTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/BackupRestoreDrillTest.php) (2 tests, 17 assertions: membuktikan 100% data dan file dipulihkan utuh).
+  - **S07-T04: Observability, Health Check & Sanitasi Logging**
+    - Controller `HealthCheckController` di `app/Http/Controllers/HealthCheckController.php`:
+      - Endpoint `/up` dan `/health` yang menguji konektivitas basis data (latency ms), izin tulis storage disk privat (`storage/app/private`), dan pemantauan kegagalan jobs.
+      - Mengembalikan respon HTTP 200 JSON berstatus `"healthy"` atau HTTP 503 jika komponen kritis mengalami gangguan.
+    - Processor Monolog `SanitizeSensitiveDataProcessor` di `app/Logging/SanitizeSensitiveDataProcessor.php`:
+      - Terdaftar secara otomatis di `AppServiceProvider::boot()`.
+      - Menyaring parameter kunci: `password`, `token`, `secret`, `nisn`, `parent_phone`, `phone`, `authorization` dan menggantinya dengan `***REDACTED***` untuk mencegah kebocoran data siswa ke file log (`AI_RULES.md` Aturan 4 & 9).
+    - Teruji lewat [`tests/Feature/HealthCheckTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/HealthCheckTest.php) (2 tests, 24 assertions).
+  - **S07-T05: Seeder Data Sintetis Sekolah Pilot & Panduan Pengguna**
+    - Seeder `PilotSchoolSeeder` di `database/seeders/PilotSchoolSeeder.php`:
+      - Mengisi 1 sekolah percontohan: "SMP Negeri 1 Percontohan Nusantara" (NPSN 20109988).
+      - 2 tahun ajaran (2025/2026 lampau & 2026/2027 aktif), 2 semester (Ganjil & Genap).
+      - 7 akun pengguna utama (Admin, Kepala Sekolah, Operator, Guru, Wali Kelas, Siswa).
+      - 10 mata pelajaran nasional & 7 guru pengampu.
+      - 6 rombel (7A–9B) dan 30 siswa sintetis ter-enroll aktif di kelas 7A.
+      - Skema Penilaian Kurikulum Merdeka (bobot 30/20/25/25, KKTP 75), sampel nilai guru, dan 1 snapshot rapor terbit untuk verifikasi cetak instan.
+      - Terintegrasi di `database/seeders/DatabaseSeeder.php`.
+    - Panduan Pengguna Operasional Sekolah Pilot di [`docs/USER_GUIDE_PILOT.md`](file:///home/ilhamrizqiawan/Projects/school_suite/docs/USER_GUIDE_PILOT.md).
+    - Teruji lewat [`tests/Feature/PilotSeederTest.php`](file:///home/ilhamrizqiawan/Projects/school_suite/tests/Feature/PilotSeederTest.php) (1 test, 16 assertions).
+  - **S07-T06: Verifikasi Gate S07 & Sign-Off Kesiapan Pilot**
+    - Seluruh CI dan test suite lulus 100% (137 tests, 660 assertions).
+    - Boundary test arsitektur `ModularBoundaryTest` lulus (0 pelanggaran modular monolith).
+    - `vendor/bin/pint --test`, `vue-tsc`, `vite build`, dan `audit-docs.py` lolos tanpa catatan.
 - Tidak diubah:
-  - Modul persiapan pilot, backup/restore, CBT, SPMB, Sipus, dan integrasi Teacher Desk (tahap berikutnya).
+  - Modul deployment production (Tahap S08).
 
 ## Dampak teknis
 
 - Modul/file yang disentuh:
-  - Backend:
-    - `app/Modules/Academic/Application/Services/AcademicQueryService.php` (penambahan `getTeachingAssignmentsForClass`)
-    - `app/Modules/Assessment/AssessmentServiceProvider.php`
-    - `app/Modules/Assessment/Domain/Enums/RoundingRuleEnum.php`
-    - `app/Modules/Assessment/Domain/Enums/ReportStatusEnum.php`
-    - `app/Modules/Assessment/Domain/Services/GradeCalculationEngine.php`
-    - `app/Modules/Assessment/Infrastructure/Database/Migrations/2026_10_25_400000_create_assessment_tables.php`
-    - `app/Modules/Assessment/Infrastructure/Models/AssessmentScheme.php`
-    - `app/Modules/Assessment/Infrastructure/Models/AssessmentComponent.php`
-    - `app/Modules/Assessment/Infrastructure/Models/Score.php`
-    - `app/Modules/Assessment/Infrastructure/Models/RemedialRecord.php`
-    - `app/Modules/Assessment/Infrastructure/Models/ReportSnapshot.php`
-    - `app/Modules/Assessment/Application/Services/ScoreService.php`
-    - `app/Modules/Assessment/Application/Services/ReportPublishingService.php`
-    - `app/Modules/Assessment/Application/Services/ReportGeneratorService.php`
-    - `app/Modules/Assessment/Application/Policies/AssessmentPolicy.php`
-    - `app/Modules/Assessment/Interface/Http/Controllers/ScoreInputController.php`
-    - `app/Modules/Assessment/Interface/Http/Controllers/AssessmentSchemeController.php`
-    - `app/Modules/Assessment/Interface/Http/Controllers/ReportCardController.php`
-    - `app/Modules/Assessment/Interface/Routes/web.php`
-  - Frontend:
-    - `resources/js/Pages/Assessment/Scores/InputGrid.vue`
-    - `resources/js/Pages/Assessment/Schemes/Index.vue`
-    - `resources/js/Pages/Assessment/Reports/Index.vue`
-    - `resources/js/Pages/Assessment/Reports/Show.vue`
-    - `resources/js/Pages/Assessment/Reports/Ledger.vue`
-    - `resources/js/components/SidebarNavigation.vue`
-  - Pengujian:
-    - `tests/Feature/AssessmentMigrationTest.php`
-    - `tests/Unit/GradeCalculationEngineTest.php`
-    - `tests/Feature/ReportSnapshotImmutabilityTest.php`
-    - `tests/Feature/AssessmentControllersTest.php`
+  - Backend & Infrastruktur:
+    - `app/Console/Commands/SchoolBackupCommand.php`
+    - `app/Console/Commands/SchoolRestoreCommand.php`
+    - `app/Http/Controllers/HealthCheckController.php`
+    - `app/Logging/SanitizeSensitiveDataProcessor.php`
+    - `app/Providers/AppServiceProvider.php`
+    - `app/Shared/Files/PrivateStorageService.php`
+    - `app/Shared/Http/Controllers/PrivateFileController.php`
+    - `app/Shared/Jobs/GenerateReportPdfJob.php`
+    - `database/seeders/DatabaseSeeder.php`
+    - `database/seeders/PilotSchoolSeeder.php`
+    - `routes/web.php`
   - Dokumentasi:
+    - `docs/RUNBOOK_BACKUP_RESTORE.md`
+    - `docs/USER_GUIDE_PILOT.md`
     - `docs/TODO.md`
     - `docs/PROJECT_STATUS.md`
     - `docs/HANDOFF.md`
-- Migrasi/data: Tabel `assessment_schemes`, `assessment_components`, `scores`, `remedial_records`, `report_snapshots`.
+  - Pengujian:
+    - `tests/Feature/PrivateStorageTest.php`
+    - `tests/Feature/QueueJobsTest.php`
+    - `tests/Feature/BackupRestoreDrillTest.php`
+    - `tests/Feature/HealthCheckTest.php`
+    - `tests/Feature/PilotSeederTest.php`
 - Keamanan/izin:
-  - Kebijakan `AssessmentPolicy` Default Deny terdaftar di Service Provider.
-  - Siswa hanya berhak melihat rapor snapshot milik mereka sendiri berdasarkan kecocokan `user_id` di basis data siswa (akses ke rapor siswa lain menghasilkan HTTP 403 Forbidden).
-  - Siswa dilarang keras mengakses endpoint input nilai (HTTP 403 Forbidden).
-  - Penerbitan dan penguncian rapor dibatasi untuk wali kelas, kepala sekolah, dan kurikulum.
-- Keputusan atau asumsi:
-  - Sesuai `SS-D-005`, rapor terbit disimpan sebagai immutable snapshot terisolasi yang dilengkapi tanda tangan checksum SHA-256. Setiap kali rapor dicetak atau dilihat kembali, sumber data berasal dari snapshot JSON yang terkunci, bukan dari pembacaan ulang tabel transaksional mentah.
-  - Formula remedial mengadopsi standar kurikulum: skor remedial maksimal bernilai sebesar batas KKTP ($\min(\text{remedial}, \text{KKTP})$).
+  - Berkas privat diisolasi dari direktori publik web server dan hanya dapat diunduh menggunakan URL bertanda tangan kriptografis (`URL::temporarySignedRoute`) yang kedaluwarsa otomatis.
+  - Percobaan manipulasi URL atau akses tanpa token ditolak dengan HTTP 403 Forbidden.
+  - Seluruh parameter sensitif (kata sandi, token, NISN, telepon orang tua) disamarkan secara otomatis di berkas log aplikasi.
+  - Perintah restore meminta konfirmasi interaktif secara default untuk mencegah tertimpanya basis data secara tidak sengaja.
 
 ## Bukti
 
 - Hasil tes otomatis:
-  - Total test suite: 123 tests, 587 assertions passed (100% HIJAU) dalam 6.2s.
-  - `tests/Feature/AssessmentMigrationTest.php`: 4 passed, 9 assertions.
-  - `tests/Unit/GradeCalculationEngineTest.php`: 11 passed, 33 assertions (termasuk kasus table-driven batas 0, 100, pecahan .5, null, dan remedial).
-  - `tests/Feature/ReportSnapshotImmutabilityTest.php`: 3 passed, 17 assertions (terbukti bit-for-bit snapshot kebal dari modifikasi pasca terbit).
-  - `tests/Feature/AssessmentControllersTest.php`: 8 passed, 92 assertions (otorisasi siswa vs guru, input batch, skema berversi, penerbitan rapor, ledger JSON).
-  - `tests/Architecture/ModularBoundaryTest.php`: 4 passed, 6 assertions (0 pelanggaran modular monolith).
+  - Total test suite: 137 tests, 660 assertions passed (100% HIJAU) dalam 6.5s.
+  - `tests/Feature/PrivateStorageTest.php`: 6 passed, 12 assertions.
+  - `tests/Feature/QueueJobsTest.php`: 3 passed, 4 assertions.
+  - `tests/Feature/BackupRestoreDrillTest.php`: 2 passed, 17 assertions (drill restore sukses tanpa kehilangan data).
+  - `tests/Feature/HealthCheckTest.php`: 2 passed, 24 assertions (status healthy & sanitasi Monolog lulus).
+  - `tests/Feature/PilotSeederTest.php`: 1 passed, 16 assertions.
+  - `tests/Architecture/ModularBoundaryTest.php`: 4 passed, 6 assertions (0 pelanggaran arsitektur).
 - Pemeriksaan statis:
-  - `vendor/bin/pint --test`: passed (100% sesuai standar PSR-12/Laravel).
-  - `npm run typecheck` (`vue-tsc --noEmit`): passed (0 error).
-  - `npm run build` (`vite build`): passed (sukses mem-bundle seluruh aset Vue & Tailwind CSS).
-  - `audit-docs.py`: passed (0 broken links, spine valid).
+  - `vendor/bin/pint --test`: passed.
+  - `npm run typecheck` (`vue-tsc --noEmit`): passed.
+  - `npm run build` (`vite build`): passed.
+  - `audit-docs.py`: passed (0 broken links).
 
 ## Risiko yang tersisa
 
-- Skema penilaian saat ini mendukung pembobotan persentase dan remedial standar; variasi format rapor khusus (misalnya rapor kurikulum merdeka berbasis deskripsi capaian pembelajaran naratif per elemen) dapat dikembangkan lebih lanjut pada modul ekspansi pembelajaran (LMS).
-- Operasi backup & restore otomatis belum diuji pada kontainer/lingkungan terpisah (akan dieksekusi pada Tahap S07).
+- Skrip backup saat ini menghasilkan dump SQL dan arsip file ZIP lokal. Untuk lingkungan production multi-server, disarankan mengintegrasikan sinkronisasi ke S3-compatible offsite storage (akan disiapkan pada S08).
 
 ## Review manual
 
-1. Login sebagai Guru (`teacher@sekolah.id`), buka menu "Input Nilai" (`/penilaian/skor`), pilih rombel dan komponen nilai. Masukkan nilai mentah dan remedial, klik "Simpan Semua Nilai".
-2. Verifikasi bahwa nilai akhir preview dan indikator status ketuntasan KKTP dihitung seketika sesuai aturan remedial $\min(\text{remedial}, \text{KKTP})$.
-3. Login sebagai Administrator (`admin@sekolah.id`), buka menu "Skema Penilaian" (`/penilaian/skema`), coba tambahkan skema dan komponen bobot baru.
-4. Buka menu "Rapor Siswa" (`/penilaian/rapor`), klik tombol "Generate Rapor Kelas", lalu klik "Terbitkan & Kunci" pada salah satu siswa.
-5. Buka tampilan cetak rapor siswa (`/penilaian/rapor/{id}`), klik tombol cetak untuk memverifikasi kesesuaian layout cetak dan keberadaan checksum digital SHA-256.
-6. Buka menu "Buku Ledger Nilai" (`/penilaian/ledger?class_group_id=...&term_id=...`) untuk melihat matriks nilai seluruh siswa dan mata pelajaran.
-7. Login sebagai Siswa (`ahmad@sekolah.id`), buka URL rapor siswa lain dan pastikan sistem menolak dengan HTTP 403 Forbidden.
+1. Jalankan seeder pilot: `php artisan db:seed`.
+2. Jalankan perintah backup: `php artisan school:backup`. Pastikan file ZIP terbentuk di `storage/app/backups/`.
+3. Jalankan pengujian pemulihan ke database terpisah:
+   ```bash
+   php artisan school:restore backup_school_suite_terbaru.zip --target-db=/tmp/test_drill.sqlite --force
+   ```
+4. Buka URL health check di browser: `http://localhost:8000/up`. Pastikan menampilkan JSON dengan `"status": "healthy"`.
+5. Login menggunakan akun `budi@pilot.sch.id` (password: `password`) dan buka menu "Ruang Wali Kelas" serta "Rapor Siswa" untuk melihat dataset pilot yang telah terisi.
 
 ## Rencana rollback
 
-1. Kembalikan branch ke commit sebelum S06: `git reset --hard 1dd65b6`.
-2. Rollback migrasi penilaian: `php artisan migrate:rollback --step=1`.
-3. Re-build frontend: `npm run build`.
+1. Kembalikan branch ke commit sebelum S07: `git reset --hard 41405b8`.
+2. Hapus berkas backup temporary di `storage/app/backups/`.
+3. Jalankan migrasi ulang jika diperlukan: `php artisan migrate:fresh`.

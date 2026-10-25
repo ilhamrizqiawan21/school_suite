@@ -403,3 +403,4 @@ const totalWeight = (components: ComponentItem[]) => {
         </div>
     </AppLayout>
 </template>
+

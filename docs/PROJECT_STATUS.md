@@ -4,31 +4,24 @@ Terakhir diperbarui: 25 Oktober 2026
 
 ## Keadaan saat ini
 
-- Fase: S06 Penilaian, Rapor & Formula Berversi selesai; siap masuk ke S07 Persiapan Pilot, Backup/Restore & Observability.
+- Fase: S07 Persiapan Pilot, Backup/Restore & Observability selesai; siap masuk ke S08 Deployment Production & Server Hardening.
 - Kesiapan:
   - S01 Fondasi: Bootstrap Laravel 13, Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, TypeScript, struktur 9 modul monolit modular, layout shell dasar, dan boundary test arsitektur selesai.
   - S02 Akses: Skema basis data Core, otorisasi server-side Default Deny, engine audit log terpusat, autentikasi rate-limited, UI kelola user & profil sekolah, dan matriks akses multi-peran selesai.
   - S03 Data Inti Akademik: Skema basis data Akademik, histori enrollment tidak berubah (`SS-D-004`), penugasan guru & wali kelas, engine impor massal CSV dengan validasi duplikasi NIS/NISN, serta antarmuka UI data inti selesai.
-  - S04 Operasi Akademik Harian:
-    - Skema basis data `schedules`, `lesson_sessions`, `attendance_records`, dan `teaching_journals`.
-    - Engine validasi benturan jadwal (`ScheduleService`) mendeteksi benturan guru, benturan rombel, dan benturan ruang pada slot waktu overlap, serta alur publikasi draf (`ScheduleConflictTest`).
-    - Service presensi massal (`AttendanceService`) dan jurnal pembelajaran (`JournalService`) dengan pencatatan audit log otomatis pada setiap koreksi absensi (`SS-F-005`) (`AttendanceAndJournalTest`).
-    - Antarmuka UI jadwal mingguan (`Schedules/Index.vue`), presensi cepat dengan toggle satu klik (`Attendance/Index.vue`), dan riwayat jurnal harian (`Journals/Index.vue`) terintegrasi (`DailyOperationsControllersTest`).
-  - S05 Ruang Kerja Wali Kelas & Kesiswaan:
-    - Skema basis data `student_notes`, `student_incidents`, `student_achievements`, `assistance_records`, dan `attendance_dispensations`.
-    - Isolasi akses data sensitif (`confidential`, `internal`, `public`) sesuai `SS-F-006` dengan perlindungan server-side policy (`StudentNotePolicy`) dan filter ekspor rapor (`StudentObservationService`, `HomeroomIsolationTest`).
-    - Service rekapitulasi kehadiran rombel dan pendeteksian Early Warning ketidakhadiran (Alpa >= 3 hari atau kehadiran < 85%) (`HomeroomAttendanceService`, `HomeroomAttendanceSummaryTest`).
-    - Monitoring surat dokter, dispensasi lomba, dan izin keluarga siswa (`DispensationService`).
-    - Decoupling murni lintas modul via `AcademicQueryService` tanpa model/table coupling terlarang ke modul internal lain (`ModularBoundaryTest`).
-    - Antarmuka UI Ruang Kerja Wali Kelas: Dashboard perwalian (`Homeroom/Dashboard/Index.vue`), Catatan Observasi (`Homeroom/Observations/Index.vue`), dan Kedisiplinan/Prestasi/Bantuan/Dispensasi (`Homeroom/Discipline/Index.vue`) terintegrasi (`HomeroomControllersTest`).
-  - S06 Penilaian, Rapor & Formula Berversi:
-    - Skema basis data `assessment_schemes`, `assessment_components`, `scores`, `remedial_records`, dan `report_snapshots`.
-    - Engine formula penilaian Domain layer (`GradeCalculationEngine`): pembobotan dinamis, pembulatan baku (`half_up`, `floor`, `ceil`), penanganan nilai batas (0, 100), nilai kosong/null, dan logika remedial ($\min(\text{remedial}, \text{KKTP})$) teruji table-driven 100% (`GradeCalculationEngineTest`).
-    - Immutable Report Snapshot Engine (`ReportPublishingService`, `SS-D-005`): penguncian status `published` dengan checksum SHA-256 membuktikan bit-for-bit kebal terhadap mutasi tabel nilai mentah pasca-terbit (`ReportSnapshotImmutabilityTest`).
-    - Antarmuka UI (Vue 3 + Inertia): Grid Input Nilai Guru spreadsheet-like (`Assessment/Scores/InputGrid.vue`), Manajemen Skema Penilaian Berversi (`Assessment/Schemes/Index.vue`), Penerbitan Rapor & Snapshot (`Assessment/Reports/Index.vue`), Lembar Cetak Rapor (`Assessment/Reports/Show.vue`), dan Buku Ledger Nilai Rombel (`Assessment/Reports/Ledger.vue`).
-    - Kebijakan Otorisasi (`AssessmentPolicy`): siswa dibatasi hanya melihat rapor pribadi; guru, wali kelas, dan kurikulum memiliki kontrol bertahap (`AssessmentControllersTest`).
-  - Seluruh CI dan test suite (123 tests, 587 assertions, Unit, Feature, Architecture, Lint `pint`, Typecheck `vue-tsc`, Build `vite`, Docs Governance) hijau 100%.
-- Langkah berikut: Tahap S07 Persiapan Pilot, Backup/Restore & Observability (`SS-F-008`, `SS-F-009`: drill restore basis data terpisah tanpa kehilangan data, backup otomasi terenkripsi, health check, logging rotasi, dan panduan runbook).
+  - S04 Operasi Akademik Harian: Skema jadwal & presensi, validasi benturan jadwal mingguan (`ScheduleService`), koreksi presensi massal dengan audit trail otomatis (`AttendanceService`), serta UI jadwal & presensi harian selesai.
+  - S05 Ruang Kerja Wali Kelas & Kesiswaan: Skema catatan kesiswaan, isolasi privasi catatan rahasia/BK (`StudentObservationService`, `SS-F-006`), monitoring Early Warning absensi (`HomeroomAttendanceService`), dispensasi surat izin, dan dashboard perwalian selesai.
+  - S06 Penilaian, Rapor & Formula Berversi: Skema nilai berversi, engine formula ketuntasan & remedial ($\min(\text{remedial}, \text{KKTP})$) di Domain layer (`GradeCalculationEngine`), immutable report snapshot dengan hash SHA-256 (`SS-D-005`), UI input nilai guru, dan cetak rapor siap cetak selesai.
+  - S07 Persiapan Pilot, Backup/Restore & Observability:
+    - Manajemen penyimpanan privat terisolasi (`PrivateStorageService`) dan pengunduhan aman via Signed URL berbatas waktu (`SS-F-008`).
+    - Queue worker background job (`GenerateReportPdfJob`) untuk operasi berat PDF/ekspor massal asinkron (`QueueJobsTest`).
+    - Skrip otomasi backup mandiri (`php artisan school:backup`) dan drill restore terpisah (`php artisan school:restore`) terverifikasi 100% memulihkan data dan berkas tanpa kehilangan (`BackupRestoreDrillTest`).
+    - Standard Operating Procedure (SOP) Disaster Recovery terdokumentasi di `docs/RUNBOOK_BACKUP_RESTORE.md`.
+    - Endpoint observability & health check (`/up` & `/health`) yang memvalidasi database, storage writeability, dan queue worker (`HealthCheckTest`).
+    - Sanitasi otomatis logging Monolog (`SanitizeSensitiveDataProcessor`) menyamarkan password, token, NISN, dan nomor telepon siswa (`***REDACTED***`).
+    - Dataset sintetis sekolah pilot lengkap (`PilotSchoolSeeder`) dan panduan operasional pengguna di `docs/USER_GUIDE_PILOT.md`.
+  - Seluruh CI dan test suite (137 tests, 660 assertions, Unit, Feature, Architecture, Lint `pint`, Typecheck `vue-tsc`, Build `vite`, Docs Governance) hijau 100%.
+- Langkah berikut: Tahap S08 Deployment Production & Server Hardening (`SS-D-001`, `SS-D-003`: provisi database MySQL production, template konfigurasi reverse proxy Nginx/Caddy dengan SSL/TLS, script process manager, dan hardening file permissions).
 
 ## Blocker sebelum data nyata
 
