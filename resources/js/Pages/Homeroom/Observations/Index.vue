@@ -255,3 +255,4 @@ const deleteNote = (id: number) => {
         </div>
     </AppLayout>
 </template>
+

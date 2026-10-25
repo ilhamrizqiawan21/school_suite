@@ -6,8 +6,10 @@ namespace App\Modules\Homeroom\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Homeroom\Application\Services\DispensationService;
 use App\Modules\Homeroom\Application\Services\StudentDisciplineService;
 use App\Modules\Homeroom\Infrastructure\Models\AssistanceRecord;
+use App\Modules\Homeroom\Infrastructure\Models\AttendanceDispensation;
 use App\Modules\Homeroom\Infrastructure\Models\StudentAchievement;
 use App\Modules\Homeroom\Infrastructure\Models\StudentIncident;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,7 @@ class StudentDisciplineController extends Controller
 {
     public function __construct(
         protected StudentDisciplineService $disciplineService,
+        protected DispensationService $dispensationService,
         protected AcademicQueryService $academicQueryService
     ) {}
 
@@ -57,12 +60,19 @@ class StudentDisciplineController extends Controller
             ->latest('date')
             ->paginate(15, ['*'], 'assistance_page');
 
+        $dispensations = AttendanceDispensation::where('school_id', $schoolId)
+            ->when($activeTerm, fn ($q) => $q->where('term_id', $activeTerm->id))
+            ->with('submittedByUser')
+            ->latest('start_date')
+            ->paginate(15, ['*'], 'dispensations_page');
+
         return Inertia::render('Homeroom/Discipline/Index', [
             'classes' => $classes,
             'students' => $students,
             'incidents' => $incidents,
             'achievements' => $achievements,
             'assistances' => $assistances,
+            'dispensations' => $dispensations,
             'active_term' => $activeTerm,
             'filters' => [
                 'class_group_id' => $classGroupId,
@@ -123,5 +133,23 @@ class StudentDisciplineController extends Controller
         $this->disciplineService->recordAssistance($validated, $request->user());
 
         return back()->with('message', 'Catatan tindak lanjut berhasil disimpan.');
+    }
+
+    public function storeDispensation(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'student_id' => ['required', 'exists:students,id'],
+            'term_id' => ['required', 'exists:terms,id'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'type' => ['required', 'in:sick,event,personal,other'],
+            'title' => ['required', 'string', 'max:200'],
+            'reason' => ['required', 'string'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $this->dispensationService->recordDispensation($validated, $request->user());
+
+        return back()->with('message', 'Dispensasi atau surat izin berhasil dicatat.');
     }
 }

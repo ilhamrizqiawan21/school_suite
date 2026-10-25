@@ -280,6 +280,7 @@ class HomeroomControllersTest extends TestCase
                 ->has('incidents')
                 ->has('achievements')
                 ->has('assistances')
+                ->has('dispensations')
             );
     }
 
@@ -349,6 +350,30 @@ class HomeroomControllersTest extends TestCase
             'student_id' => $this->student->id,
             'type' => 'counseling',
             'access_level' => 'internal',
+        ]);
+    }
+
+    public function test_authorized_user_can_record_dispensation(): void
+    {
+        $response = $this->actingAs($this->homeroomTeacherUser)->post('/wali-kelas/kedisiplinan/dispensasi', [
+            'student_id' => $this->student->id,
+            'term_id' => $this->term->id,
+            'start_date' => '2026-10-25',
+            'end_date' => '2026-10-27',
+            'type' => 'event',
+            'title' => 'Dispensasi O2SN Atletik Tingkat Kota',
+            'reason' => 'Mengikuti pemusatan latihan dan lomba atletik',
+            'notes' => 'Surat tugas terlampir',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('message');
+
+        $this->assertDatabaseHas('attendance_dispensations', [
+            'student_id' => $this->student->id,
+            'type' => 'event',
+            'title' => 'Dispensasi O2SN Atletik Tingkat Kota',
+            'status' => 'approved',
         ]);
     }
 }

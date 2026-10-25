@@ -50,6 +50,7 @@ const props = defineProps<{
         incidents_count: number;
         achievements_count: number;
         notes_count: number;
+        dispensations_count?: number;
     };
 }>();
 
@@ -234,3 +235,4 @@ const changeClass = () => {
         </div>
     </AppLayout>
 </template>
+

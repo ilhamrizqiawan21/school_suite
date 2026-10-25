@@ -4,6 +4,7 @@ Terakhir diperbarui: 25 Oktober 2026
 
 ## Keadaan saat ini
 
+- Fase: S04 Operasi Akademik Harian & Jadwal selesai; siap masuk ke S05 Ruang Kerja Wali Kelas & Kesiswaan.
 - Fase: S05 Ruang Kerja Wali Kelas & Kesiswaan selesai; siap masuk ke S06 Penilaian, Rapor & Formula Berversi.
 - Kesiapan:
   - S01 Fondasi: Bootstrap Laravel 13, Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, TypeScript, struktur 9 modul monolit modular, layout shell dasar, dan boundary test arsitektur selesai.
@@ -15,12 +16,13 @@ Terakhir diperbarui: 25 Oktober 2026
     - Service presensi massal (`AttendanceService`) dan jurnal pembelajaran (`JournalService`) dengan pencatatan audit log otomatis pada setiap koreksi absensi (`SS-F-005`) (`AttendanceAndJournalTest`).
     - Antarmuka UI jadwal mingguan (`Schedules/Index.vue`), presensi cepat dengan toggle satu klik (`Attendance/Index.vue`), dan riwayat jurnal harian (`Journals/Index.vue`) terintegrasi (`DailyOperationsControllersTest`).
   - S05 Ruang Kerja Wali Kelas & Kesiswaan:
-    - Skema basis data `student_notes`, `student_incidents`, `student_achievements`, dan `assistance_records`.
+    - Skema basis data `student_notes`, `student_incidents`, `student_achievements`, `assistance_records`, dan `attendance_dispensations`.
     - Isolasi akses data sensitif (`confidential`, `internal`, `public`) sesuai `SS-F-006` dengan perlindungan server-side policy (`StudentNotePolicy`) dan filter ekspor rapor (`StudentObservationService`, `HomeroomIsolationTest`).
     - Service rekapitulasi kehadiran rombel dan pendeteksian Early Warning ketidakhadiran (Alpa >= 3 hari atau kehadiran < 85%) (`HomeroomAttendanceService`, `HomeroomAttendanceSummaryTest`).
+    - Monitoring surat dokter, dispensasi lomba, dan izin keluarga siswa (`DispensationService`).
     - Decoupling murni lintas modul via `AcademicQueryService` tanpa model/table coupling terlarang ke modul internal lain (`ModularBoundaryTest`).
-    - Antarmuka UI Ruang Kerja Wali Kelas: Dashboard perwalian (`Homeroom/Dashboard/Index.vue`), Catatan Observasi (`Homeroom/Observations/Index.vue`), dan Kedisiplinan/Prestasi/Bantuan (`Homeroom/Discipline/Index.vue`) terintegrasi (`HomeroomControllersTest`).
-  - Seluruh CI dan test suite (96 tests, 432 assertions, Unit, Feature, Architecture, Lint, Typecheck, Build, Docs Governance) hijau 100%.
+    - Antarmuka UI Ruang Kerja Wali Kelas: Dashboard perwalian (`Homeroom/Dashboard/Index.vue`), Catatan Observasi (`Homeroom/Observations/Index.vue`), dan Kedisiplinan/Prestasi/Bantuan/Dispensasi (`Homeroom/Discipline/Index.vue`) terintegrasi (`HomeroomControllersTest`).
+  - Seluruh CI dan test suite (97 tests, 436 assertions, Unit, Feature, Architecture, Lint, Typecheck, Build, Docs Governance) hijau 100%.
 - Langkah berikut: Tahap S06 Manajemen Penilaian, Rapor & Formula Berversi (`app/Modules/Assessment`: skema nilai berversi, komponen penilaian, pembulatan desimal, logika remedial, cetak rapor, dan immutable report snapshot `SS-D-005`).
 
 ## Blocker sebelum data nyata

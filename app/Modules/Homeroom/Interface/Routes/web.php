@@ -20,4 +20,5 @@ Route::middleware(['auth'])->prefix('wali-kelas')->name('homeroom.')->group(func
     Route::post('kedisiplinan/insiden', [StudentDisciplineController::class, 'storeIncident'])->name('discipline.incident');
     Route::post('kedisiplinan/prestasi', [StudentDisciplineController::class, 'storeAchievement'])->name('discipline.achievement');
     Route::post('kedisiplinan/bantuan', [StudentDisciplineController::class, 'storeAssistance'])->name('discipline.assistance');
+    Route::post('kedisiplinan/dispensasi', [StudentDisciplineController::class, 'storeDispensation'])->name('discipline.dispensation');
 });

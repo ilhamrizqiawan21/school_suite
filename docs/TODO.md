@@ -193,9 +193,9 @@ flowchart TD
 > **Gate Keluar:** Batas privasi data catatan kesiswaan lulus; catatan terbatas terisolasi dari ekspor umum.
 
 - [x] **S05-T01: Migrasi Skema Homeroom & Catatan Kesiswaan**
-  - Tabel: `student_notes` (catatan perkembangan, sikap positif, pembinaan, konseling), `student_incidents` (pelanggaran/kejadian tata tertib & poin pelanggaran), `student_achievements` (prestasi akademik, olahraga, seni, keagamaan, tingkat kota/provinsi/nasional), `assistance_records` (tindak lanjut, kunjungan rumah / home visit, konferensi kasus, bantuan).
+  - Tabel: `student_notes` (catatan perkembangan, sikap positif, pembinaan, konseling), `student_incidents` (pelanggaran/kejadian tata tertib & poin pelanggaran), `student_achievements` (prestasi akademik, olahraga, seni, keagamaan, tingkat kota/provinsi/nasional), `assistance_records` (tindak lanjut, kunjungan rumah / home visit, konferensi kasus, bantuan), `attendance_dispensations` (surat keterangan dokter, izin keluarga, dispensasi lomba).
   - Klasifikasi visibilitas: `public` (masuk rapor/wali murid), `internal` (wali kelas & dewan guru), dan `confidential` (hanya wali kelas bersangkutan, guru BK, dan Kepala Sekolah).
-  - Model Eloquent di `app/Modules/Homeroom/Infrastructure/Models/` (`StudentNote`, `StudentIncident`, `StudentAchievement`, `AssistanceRecord`) dengan Enums (`NoteAccessLevelEnum`, `NoteCategoryEnum`, `AchievementLevelEnum`).
+  - Model Eloquent di `app/Modules/Homeroom/Infrastructure/Models/` (`StudentNote`, `StudentIncident`, `StudentAchievement`, `AssistanceRecord`, `AttendanceDispensation`) dengan Enums (`NoteAccessLevelEnum`, `NoteCategoryEnum`, `AchievementLevelEnum`, `DispensationTypeEnum`, `DispensationStatusEnum`).
   - *Bukti:* Database migrations berhasil dieksekusi dengan rollback bersih dan integritas relasi terjaga.
 - [x] **S05-T02: Policy Otorisasi Catatan Siswa Sensitif (`SS-F-006`)**
   - Policy server-side ketat: `StudentNotePolicy` di `app/Modules/Homeroom/Application/Policies/` didaftarkan via `HomeroomServiceProvider`.
@@ -203,23 +203,24 @@ flowchart TD
   - Filter otomatis ekspor: `getNotesForReportExport` pada `StudentObservationService` secara ketat hanya mengambil catatan berstatus `public` dan terbukti tidak membocorkan catatan rahasia/internal ke publik.
   - *Bukti:* Feature test `HomeroomIsolationTest` (2 tests, 10 assertions) membuktikan isolasi data catatan sensitif 100%.
 - [x] **S05-T03: Rekap Kesiapan Siswa Perwalian & Early Warning Presensi**
-  - Service `HomeroomAttendanceService` di `app/Modules/Homeroom/Application/Services/`:
+  - Service `HomeroomAttendanceService` dan `DispensationService` di `app/Modules/Homeroom/Application/Services/`:
     - Menghitung agregat presensi per siswa (H/S/I/A, persentase kehadiran rombel).
     - Deteksi otomatis flag peringatan dini (*Early Warning* `needs_attention = true`) saat siswa memiliki Alpa >= 3 hari atau persentase kehadiran < 85%.
+    - Monitoring status dispensasi aktif siswa pada periode semester berjalan.
   - Komunikasi lintas modul terisolasi via `AcademicQueryService` tanpa direct join atau model coupling ilegal ke modul Academic.
   - *Bukti:* Feature test `HomeroomAttendanceSummaryTest` (1 test, 10 assertions) membuktikan akurasi agregat dan deteksi batas early warning.
 - [x] **S05-T04: UI Ruang Kerja Wali Kelas (Inertia + Vue)**
-  - Tampilan dashboard wali kelas (`resources/js/Pages/Homeroom/Dashboard/Index.vue`): ringkasan rombel, kartu peringatan dini ketidakhadiran, status statistik insiden & prestasi.
+  - Tampilan dashboard wali kelas (`resources/js/Pages/Homeroom/Dashboard/Index.vue`): ringkasan rombel, kartu peringatan dini ketidakhadiran, status statistik insiden, prestasi, dan dispensasi aktif.
   - Tampilan catatan observasi kesiswaan (`resources/js/Pages/Homeroom/Observations/Index.vue`): filter siswa & rombel, kartu observasi per siswa dengan badge klasifikasi visibilitas, form modal tambah catatan dengan selector visibilitas (`Publik`, `Internal`, `Rahasia`).
-  - Tampilan kedisiplinan & prestasi (`resources/js/Pages/Homeroom/Discipline/Index.vue`): tab insiden pelanggaran dan poin, tab prestasi siswa, tab tindak lanjut / bantuan home visit.
+  - Tampilan kedisiplinan & prestasi (`resources/js/Pages/Homeroom/Discipline/Index.vue`): tab insiden pelanggaran dan poin, tab prestasi siswa, tab tindak lanjut / bantuan home visit, dan tab pencatatan surat dispensasi/izin.
   - Integrasi menu samping `SidebarNavigation.vue` menuju `/wali-kelas`.
   - *Bukti:* Build frontend `npm run build` dan typecheck `npm run typecheck` sukses tanpa peringatan.
 - [x] **S05-T05: Verifikasi Gate S05, Controller, & Arsitektur Monolith**
   - Controller `HomeroomDashboardController`, `StudentObservationController`, `StudentDisciplineController` di `app/Modules/Homeroom/Interface/Http/Controllers/`.
   - Routes web di `app/Modules/Homeroom/Interface/Routes/web.php` terlindungi middleware `auth` dan server-side gate policies.
-  - Feature test `HomeroomControllersTest` (11 tests, 59 assertions) menguji seluruh alur otorisasi, penolakan akses tidak berhak, pembuatan insiden/prestasi/bantuan, serta penghapusan catatan.
+  - Feature test `HomeroomControllersTest` (12 tests, 63 assertions) menguji seluruh alur otorisasi, penolakan akses tidak berhak, pembuatan insiden/prestasi/bantuan/dispensasi, serta penghapusan catatan.
   - Verifikasi batas modular monolith (`ModularBoundaryTest`) membuktikan tidak ada impor terlarang modul internal lain.
-  - Total test suite bertambah menjadi 96 tests, 432 assertions (100% passed).
+  - Total test suite bertambah menjadi 97 tests, 436 assertions (100% passed).
   - Perbarui `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`.
 
 ---
@@ -377,4 +378,3 @@ flowchart TD
   - Penanganan kasus konflik (misal: data diubah di web dan di desktop bersamaan).
   - Penolakan sinkronisasi jika token guru dicabut atau periode akademik telah dikunci.
   - *Bukti:* Test suite integrasi `tests/Feature/IntegrationTest.php` lulus 100%.
-

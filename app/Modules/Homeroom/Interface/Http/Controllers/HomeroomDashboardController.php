@@ -7,6 +7,7 @@ namespace App\Modules\Homeroom\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Homeroom\Application\Services\HomeroomAttendanceService;
+use App\Modules\Homeroom\Infrastructure\Models\AttendanceDispensation;
 use App\Modules\Homeroom\Infrastructure\Models\StudentAchievement;
 use App\Modules\Homeroom\Infrastructure\Models\StudentIncident;
 use App\Modules\Homeroom\Infrastructure\Models\StudentNote;
@@ -55,6 +56,7 @@ class HomeroomDashboardController extends Controller
         $incidentsCount = 0;
         $achievementsCount = 0;
         $notesCount = 0;
+        $dispensationsCount = 0;
 
         if ($selectedClass && $activeTerm) {
             $summary = $this->attendanceService->getClassAttendanceSummary($activeTerm->id, $selectedClass->id);
@@ -72,6 +74,13 @@ class HomeroomDashboardController extends Controller
             $notesCount = StudentNote::where('class_group_id', $selectedClass->id)
                 ->where('term_id', $activeTerm->id)
                 ->count();
+
+            $dispensationsCount = AttendanceDispensation::whereIn('student_id', $studentIds)
+                ->where('term_id', $activeTerm->id)
+                ->where('status', 'approved')
+                ->where('start_date', '<=', now()->toDateString())
+                ->where('end_date', '>=', now()->toDateString())
+                ->count();
         }
 
         return Inertia::render('Homeroom/Dashboard/Index', [
@@ -83,6 +92,7 @@ class HomeroomDashboardController extends Controller
                 'incidents_count' => $incidentsCount,
                 'achievements_count' => $achievementsCount,
                 'notes_count' => $notesCount,
+                'dispensations_count' => $dispensationsCount,
             ],
         ]);
     }
