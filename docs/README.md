@@ -9,10 +9,12 @@ School Suite adalah aplikasi web terpadu untuk manajemen akademik, pembelajaran,
 | Mengapa produk dibuat dan untuk siapa? | [PRD](PRD.md) |
 | Apa kebutuhan yang harus dipenuhi? | [Requirements](REQUIREMENTS.md) |
 | Bagaimana pengalaman pengguna dirancang? | [Design](DESIGN.md) |
+| Seperti apa arah visual dan interaksi yang diusulkan? | [Mockup interaktif](mockup/README.md) |
 | Bagaimana sistem dibangun? | [Architecture](ARCHITECTURE.md) |
 | Bagaimana data saling berhubungan? | [ERD](ERD.md) |
 | Keputusan apa yang sudah dikunci? | [Decisions](DECISIONS.md) dan [ADR](adr/README.md) |
 | Apa yang dikerjakan berikutnya? | [Roadmap](ROADMAP.md), [Status](PROJECT_STATUS.md), dan [TODO](TODO.md) |
+| Bagaimana progres adaptasi fitur repo referensi LMS dipantau? | [Task Adaptasi LMS Sekolah](TASK_LMS_SEKOLAH.md) |
 | Bagaimana AI bekerja di repo ini? | [AI Rules](AI_RULES.md), [Gemini](GEMINI.md), [Codex Review](CODEX_REVIEW.md) |
 | Bagaimana implementasi diserahkan untuk review? | [Handoff](HANDOFF.md) |
 | Bukti pengujian apa yang wajib? | [Tests](TESTS.md) dan [Regression](REGRESSION.md) |

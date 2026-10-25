@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Academic\Application\Services;
 
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
+use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
@@ -14,6 +16,22 @@ use Illuminate\Support\Facades\DB;
 
 class AcademicQueryService
 {
+    public function getLearningTeachingAssignments(int $termId, ?int $teacherUserId = null): Collection
+    {
+        return TeachingAssignment::with(['subject:id,name,code', 'classGroup:id,name', 'teacher:id,name,user_id'])
+            ->where('term_id', $termId)
+            ->when($teacherUserId, fn ($query) => $query->whereHas('teacher', fn ($teacher) => $teacher->where('user_id', $teacherUserId)))
+            ->get();
+    }
+
+    /** @param list<int> $classIds */
+    public function getLearningEnrollments(int $termId, array $classIds, ?int $studentUserId = null): Collection
+    {
+        return Enrollment::with('student:id,user_id,nis,name')->where('term_id', $termId)->where('status', 'active')->whereIn('class_group_id', $classIds)
+            ->when($studentUserId, fn ($query) => $query->whereHas('student', fn ($student) => $student->where('user_id', $studentUserId)))
+            ->get();
+    }
+
     /**
      * Ambil semester aktif untuk sekolah tertentu.
      */

@@ -1,0 +1,8 @@
+<script setup lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+const props = defineProps<{ session: any; students: any[] }>();
+const form = useForm({ records: props.students.map(s => ({ enrollment_id: s.enrollment_id, status: s.status, notes: s.notes ?? '' })) });
+const submit = () => form.put(`/akademik/kelas-daring/${props.session.id}/presensi`);
+</script>
+<template><Head title="Presensi Daring"/><AppLayout><div class="page-heading"><div><p class="eyebrow">Presensi daring</p><h1>{{ session.title }}</h1><p>{{ session.class_group?.name }} · {{ new Date(session.starts_at).toLocaleString('id-ID') }}</p></div><Link class="btn btn-secondary" href="/akademik/kelas-daring">Kembali</Link></div><form @submit.prevent="submit"><div class="card overflow-hidden"><table class="data-table"><thead><tr><th>Siswa</th><th>Status</th><th>Catatan</th></tr></thead><tbody><tr v-for="(student, i) in students" :key="student.enrollment_id"><td><strong>{{ student.name }}</strong><br>{{ student.nis }}</td><td><select v-model="form.records[i].status"><option value="present">Hadir</option><option value="late">Terlambat</option><option value="excused">Izin</option><option value="absent">Tidak hadir</option></select></td><td><input v-model="form.records[i].notes" placeholder="Opsional"></td></tr><tr v-if="!students.length"><td colspan="3" class="empty-state">Tidak ada siswa aktif.</td></tr></tbody></table></div><div class="form-actions"><button class="btn btn-primary" :disabled="form.processing || !students.length">Simpan presensi</button></div></form></AppLayout></template>

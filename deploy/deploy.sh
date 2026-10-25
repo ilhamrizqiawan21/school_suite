@@ -23,15 +23,14 @@ mkdir -p "${SHARED_DIR}/storage" "${SHARED_DIR}/backups" "${RELEASES_DIR}"
 
 # 2. Clone/Salin release baru
 echo "1/7 Menyiapkan rilis baru di ${RELEASE_DIR}..."
+mkdir -p "${RELEASE_DIR}"
 if [ -d ".git" ]; then
-    git archive "${BRANCH}" | tar -x -C "${RELEASE_DIR}" || {
-        # Fallback jika dijalankan dari repo checkout langsung
-        mkdir -p "${RELEASE_DIR}"
-        cp -a . "${RELEASE_DIR}"
-        rm -rf "${RELEASE_DIR}/.git"
-    }
+    if ! git archive "${BRANCH}" | tar -x -C "${RELEASE_DIR}"; then
+        echo "Kesalahan: gagal membuat rilis dari branch/commit '${BRANCH}'." >&2
+        rm -rf "${RELEASE_DIR}"
+        exit 1
+    fi
 else
-    mkdir -p "${RELEASE_DIR}"
     cp -a . "${RELEASE_DIR}"
 fi
 

@@ -5,12 +5,17 @@ export interface User {
     username?: string;
     role?: string;
     role_label?: string;
+    phone?: string;
+    avatar_url?: string | null;
 }
 
 export interface School {
     id: number;
     name: string;
     npsn: string;
+    logo_url?: string | null;
+    favicon_url?: string | null;
+    theme_primary?: string;
 }
 
 export interface Student {
@@ -73,6 +78,9 @@ export interface SharedProps {
     };
     school?: {
         name: string;
+        logo_url?: string | null;
+        favicon_url?: string | null;
+        theme_primary?: string;
     };
     activePeriod?: {
         academic_year: string;

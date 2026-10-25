@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
-defineProps<{
-    status?: string;
-}>();
+const props=defineProps<{status?:string;branding?:{school_name:string;logo_url?:string|null;favicon_url?:string|null;theme_primary?:string}|null}>();
 
 const form = useForm({
     identity: '',
@@ -13,6 +11,7 @@ const form = useForm({
 });
 
 const showPassword = ref(false);
+onMounted(()=>{if(props.branding?.theme_primary)document.documentElement.style.setProperty('--primary',props.branding.theme_primary);if(props.branding?.favicon_url){let link=document.querySelector<HTMLLinkElement>('link[rel="icon"]');if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link)}link.href=props.branding.favicon_url}});
 
 const submit = () => {
     form.post('/login', {
@@ -29,10 +28,10 @@ const submit = () => {
 
         <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
             <div class="text-center space-y-2">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-sm">
-                    SS
-                </div>
+                <img v-if="branding?.logo_url" :src="branding.logo_url" :alt="`Logo ${branding.school_name}`" class="mx-auto w-14 h-14 rounded-xl object-contain" />
+                <div v-else class="inline-flex items-center justify-center w-12 h-12 rounded-xl text-white font-bold text-lg shadow-sm" style="background:var(--primary)">SS</div>
                 <h1 class="text-2xl font-bold tracking-tight text-slate-900">School Suite</h1>
+                <strong v-if="branding?.school_name" class="block text-sm text-slate-700">{{ branding.school_name }}</strong>
                 <p class="text-xs text-slate-500">
                     Masuk dengan email atau nama pengguna Anda
                 </p>
@@ -107,6 +106,7 @@ const submit = () => {
                     type="submit"
                     :disabled="form.processing"
                     class="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style="background:var(--primary)"
                 >
                     <svg v-if="form.processing" class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

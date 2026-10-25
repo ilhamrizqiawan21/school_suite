@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../../docs/mockup/styles.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -6,4 +7,23 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+html[data-theme='dark'] {
+    color-scheme: dark;
+}
+
+html[data-theme='dark'] body,
+html[data-theme='dark'] .workspace,
+html[data-theme='dark'] .main-content {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+html[data-theme='dark'] .topbar,
+html[data-theme='dark'] .panel,
+html[data-theme='dark'] .stat-card,
+html[data-theme='dark'] .table-card {
+    background: #1f2937;
+    border-color: #374151;
 }

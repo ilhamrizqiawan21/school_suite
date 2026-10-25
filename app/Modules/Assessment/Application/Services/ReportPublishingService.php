@@ -178,9 +178,18 @@ class ReportPublishingService
             ->map(fn ($a) => (array) $a)
             ->all();
 
+        $attitudes = DB::table('student_attitudes')
+            ->where('enrollment_id', $enrollmentId)
+            ->where('term_id', $termId)
+            ->get(['type', 'predicate', 'description'])
+            ->keyBy('type')
+            ->map(fn ($item) => ['predicate' => $item->predicate, 'description' => $item->description])
+            ->all();
+
         $notesSnapshot = [
             'homeroom_notes' => $publicNotes,
             'achievements' => $achievements,
+            'attitudes' => $attitudes,
         ];
 
         // 5. Cryptographic Checksum untuk membuktikan Immutability

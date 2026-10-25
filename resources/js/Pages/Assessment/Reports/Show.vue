@@ -46,6 +46,7 @@ interface ReportDetail {
     attendance: AttendanceSnapshot;
     notes: {
         homeroom_notes?: string;
+        attitudes?: Record<string, { predicate: string; description: string }>;
     };
     published_at?: string | null;
 }
@@ -67,6 +68,7 @@ const printReport = () => {
             <!-- Navigasi & Aksi (Disembunyikan saat cetak) -->
             <div class="print:hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div class="flex items-center gap-3">
+                    <a :href="`/penilaian/rapor/${props.report.id}/pdf`" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold">Unduh PDF</a>
                     <Link
                         href="/penilaian/rapor"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs"
@@ -190,6 +192,11 @@ const printReport = () => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold uppercase tracking-wider mb-2">B. Sikap Spiritual dan Sosial</h4>
+                    <table class="w-full text-xs border border-slate-300 border-collapse"><thead class="bg-slate-100"><tr><th class="border border-slate-300 p-2 text-left">Aspek</th><th class="border border-slate-300 p-2">Predikat</th><th class="border border-slate-300 p-2 text-left">Deskripsi</th></tr></thead><tbody><tr v-for="type in ['spiritual','social']" :key="type"><td class="border border-slate-300 p-2 font-semibold capitalize">{{ type }}</td><td class="border border-slate-300 p-2 text-center">{{ props.report.notes?.attitudes?.[type]?.predicate ?? '—' }}</td><td class="border border-slate-300 p-2">{{ props.report.notes?.attitudes?.[type]?.description ?? 'Belum dinilai.' }}</td></tr></tbody></table>
                 </div>
 
                 <!-- Rekapitulasi Presensi & Catatan -->

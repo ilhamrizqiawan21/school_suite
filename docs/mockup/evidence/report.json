@@ -1,0 +1,26 @@
+{
+  "contract": "Mockup Calm Academic OS yang diselaraskan dengan repo School Suite: Academic Blue sebagai identitas universal, hijau hanya sebagai status sukses atau preset institusi, dashboard guru/wali kelas, data siswa VII-A, dan input nilai Formatif Harian 1; light-first, responsif, padat namun tenang, serta tetap mempertahankan model nilai mentah/remedial/final yang telah diimplementasikan.",
+  "targetViewports": ["390x844", "1440x900"],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Pohon aksesibilitas hasil render memperlihatkan landmark navigasi, heading terstruktur, caption dan header tabel, nama untuk seluruh tombol dan input nilai, skip link, toast status, serta status menu mobile. Pemeriksaan ini adalah bukti struktural, bukan pengganti uji pengguna pembaca layar."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Render Chromium pada 1440x900 dan 390x844 memperlihatkan shell desktop dan susunan kartu mobile tanpa overflow dokumen. Tabel data sengaja memakai area scroll internal pada layar sempit."
+  },
+  "contentStates": {
+    "loading": {"status": "pass", "evidence": "Pemilih state menampilkan skeleton yang stabil dengan label aksesibel."},
+    "empty": {"status": "pass", "evidence": "Keadaan kosong menjelaskan data yang belum tersedia dan menyediakan aksi impor."},
+    "error": {"status": "pass", "evidence": "Keadaan gagal menjelaskan bahwa data tersimpan tetap aman dan menyediakan aksi coba lagi."},
+    "partial": {"status": "pass", "evidence": "Keadaan parsial mempertahankan konten yang masih dapat dipakai dan menunjukkan waktu sinkronisasi terakhir."},
+    "success": {"status": "pass", "evidence": "Uji browser mengubah nilai mentah/remedial Aisyah Putri menjadi 72/80; preview menjadi 75 dan status Tuntas remedial. Simpan draf memperbarui status dan memunculkan toast aria-live."},
+    "permission": {"status": "pass", "evidence": "Keadaan akses terbatas menjelaskan peran yang diperlukan dan menyediakan jalan kembali yang aman."}
+  },
+  "renderedEvidence": [
+    {"viewport": "1440x900", "artifact": "dashboard-desktop.png", "observation": "Dashboard memakai Academic Blue yang universal; hijau terbatas pada status sukses. Konteks periode, agenda, prioritas, progres nilai F1, dan detak kelas VII-A memiliki hierarki yang jelas."},
+    {"viewport": "1440x900", "artifact": "roster-desktop.png", "observation": "Data siswa menggunakan nama/NIS pilot, tabel semantik, status eksplisit, pencarian, pilihan massal, dan ringkasan kualitas data."},
+    {"viewport": "1440x900", "artifact": "grades-desktop.png", "observation": "Input nilai mengikuti struktur repo: nilai mentah, remedial, catatan, nilai akhir, KKTP, dan status ketuntasan terlihat dalam satu konteks."},
+    {"viewport": "390x844", "artifact": "dashboard-mobile.png", "observation": "Tampilan mobile mempertahankan pencarian, notifikasi, aksi utama, peringatan, dan kartu ringkasan; navigasi tersedia lewat tombol drawer berlabel."}
+  ]
+}

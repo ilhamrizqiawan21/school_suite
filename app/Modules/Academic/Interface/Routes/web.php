@@ -2,15 +2,29 @@
 
 declare(strict_types=1);
 
+use App\Modules\Academic\Interface\Http\Controllers\AcademicSettingsController;
 use App\Modules\Academic\Interface\Http\Controllers\AttendanceController;
 use App\Modules\Academic\Interface\Http\Controllers\ClassGroupController;
 use App\Modules\Academic\Interface\Http\Controllers\JournalController;
+use App\Modules\Academic\Interface\Http\Controllers\OnlineClassController;
 use App\Modules\Academic\Interface\Http\Controllers\ScheduleController;
 use App\Modules\Academic\Interface\Http\Controllers\StudentController;
+use App\Modules\Academic\Interface\Http\Controllers\StudentLifecycleController;
 use App\Modules\Academic\Interface\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(function () {
+    Route::middleware('throttle:sensitive')->prefix('pengaturan')->name('settings.')->group(function () {
+        Route::get('/', [AcademicSettingsController::class, 'index'])->name('index');
+        Route::post('/tahun-ajaran', [AcademicSettingsController::class, 'storeYear'])->name('years.store');
+        Route::put('/tahun-ajaran/{academicYear}', [AcademicSettingsController::class, 'updateYear'])->name('years.update');
+        Route::post('/tahun-ajaran/{academicYear}/aktifkan', [AcademicSettingsController::class, 'activateYear'])->name('years.activate');
+        Route::post('/tahun-ajaran/{academicYear}/semester', [AcademicSettingsController::class, 'storeTerm'])->name('terms.store');
+        Route::post('/semester/{term}/aktifkan', [AcademicSettingsController::class, 'activateTerm'])->name('terms.activate');
+        Route::post('/mata-pelajaran', [AcademicSettingsController::class, 'storeSubject'])->name('subjects.store');
+        Route::put('/mata-pelajaran/{subject}', [AcademicSettingsController::class, 'updateSubject'])->name('subjects.update');
+        Route::delete('/mata-pelajaran/{subject}', [AcademicSettingsController::class, 'destroySubject'])->name('subjects.destroy');
+    });
     // Siswa
     Route::get('siswa', [StudentController::class, 'index'])->name('students.index');
     Route::post('siswa', [StudentController::class, 'store'])->name('students.store');
@@ -38,10 +52,21 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
 
     // Presensi Siswa (Attendance)
     Route::get('presensi', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('presensi/rekap', [AttendanceController::class, 'recap'])->name('attendance.recap');
+    Route::get('presensi/rekap/export', [AttendanceController::class, 'exportRecap'])->middleware('throttle:sensitive')->name('attendance.recap.export');
     Route::post('presensi', [AttendanceController::class, 'record'])->name('attendance.record');
     Route::post('presensi/{attendanceRecord}/koreksi', [AttendanceController::class, 'correct'])->name('attendance.correct');
 
     // Jurnal Mengajar Guru (Journals)
     Route::get('jurnal', [JournalController::class, 'index'])->name('journals.index');
     Route::post('jurnal', [JournalController::class, 'store'])->name('journals.store');
+
+    Route::get('kelas-daring', [OnlineClassController::class, 'index'])->name('online.index');
+    Route::post('kelas-daring', [OnlineClassController::class, 'store'])->middleware('throttle:sensitive')->name('online.store');
+    Route::put('kelas-daring/{onlineClassSession}/status', [OnlineClassController::class, 'updateStatus'])->middleware('throttle:sensitive')->name('online.status');
+    Route::get('kelas-daring/{onlineClassSession}/presensi', [OnlineClassController::class, 'attendance'])->name('online.attendance');
+    Route::put('kelas-daring/{onlineClassSession}/presensi', [OnlineClassController::class, 'recordAttendance'])->middleware('throttle:sensitive')->name('online.attendance.store');
+
+    Route::get('siklus-siswa', [StudentLifecycleController::class, 'index'])->name('lifecycle.index');
+    Route::post('siklus-siswa', [StudentLifecycleController::class, 'store'])->middleware('throttle:sensitive')->name('lifecycle.store');
 });

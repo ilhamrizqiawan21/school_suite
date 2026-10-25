@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Academic\Application\Services;
 
+use App\Models\User;
 use App\Modules\Academic\Domain\Enums\EnrollmentStatusEnum;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\Student;
+use App\Modules\Academic\Infrastructure\Models\StudentLifecycleEvent;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Support\Collection;
@@ -215,6 +217,47 @@ class EnrollmentService
             );
 
             return $enrollment;
+        });
+    }
+
+    /**
+     * @param  array{enrollment_id:int,action:string,target_term_id?:?int,target_class_group_id?:?int,effective_date:string,notes?:?string}  $data
+     */
+    public function processLifecycle(array $data, User $actor): StudentLifecycleEvent
+    {
+        return DB::transaction(function () use ($data, $actor): StudentLifecycleEvent {
+            $source = Enrollment::with(['student', 'term.academicYear', 'classGroup'])->lockForUpdate()->findOrFail($data['enrollment_id']);
+            if ((int) $source->student->school_id !== (int) $actor->school_id || $source->status !== EnrollmentStatusEnum::ACTIVE->value) {
+                throw new InvalidArgumentException('Enrollment aktif siswa tidak valid untuk sekolah ini.');
+            }
+
+            $target = null;
+            if (in_array($data['action'], ['promoted', 'retained'], true)) {
+                $targetTerm = Term::with('academicYear')->findOrFail($data['target_term_id']);
+                $targetClass = ClassGroup::findOrFail($data['target_class_group_id']);
+                if ((int) $targetTerm->academicYear->school_id !== (int) $actor->school_id || (int) $targetClass->school_id !== (int) $actor->school_id || (int) $targetClass->academic_year_id !== (int) $targetTerm->academic_year_id) {
+                    throw new InvalidArgumentException('Periode atau kelas tujuan tidak sesuai sekolah dan tahun ajaran.');
+                }
+                if ($data['action'] === 'promoted' && $targetClass->grade_level <= $source->classGroup->grade_level) {
+                    throw new InvalidArgumentException('Kenaikan kelas harus menuju tingkat yang lebih tinggi.');
+                }
+                if ($data['action'] === 'retained' && $targetClass->grade_level !== $source->classGroup->grade_level) {
+                    throw new InvalidArgumentException('Tinggal kelas harus tetap pada tingkat yang sama.');
+                }
+                $target = $this->enrollStudent((int) $targetTerm->id, (int) $targetClass->id, (int) $source->student_id, actorId: (int) $actor->id);
+                $source->update(['status' => $data['action']]);
+            } elseif ($data['action'] === 'graduated') {
+                $source->update(['status' => EnrollmentStatusEnum::GRADUATED->value]);
+                $source->student->update(['status' => 'graduated']);
+            } else {
+                $source->update(['status' => EnrollmentStatusEnum::WITHDRAWN->value]);
+                $source->student->update(['status' => 'dropped_out']);
+            }
+
+            $event = StudentLifecycleEvent::create(['school_id' => $actor->school_id, 'student_id' => $source->student_id, 'source_enrollment_id' => $source->id, 'target_enrollment_id' => $target?->id, 'action' => $data['action'], 'effective_date' => $data['effective_date'], 'notes' => $data['notes'] ?? null, 'recorded_by' => $actor->id]);
+            $this->auditLogger->log('academic.student_lifecycle.processed', 'student_lifecycle_event', (string) $event->id, $event->only(['student_id', 'source_enrollment_id', 'target_enrollment_id', 'action', 'effective_date']), actor: $actor, schoolId: (int) $actor->school_id);
+
+            return $event;
         });
     }
 }

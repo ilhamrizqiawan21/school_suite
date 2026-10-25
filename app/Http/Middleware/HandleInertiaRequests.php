@@ -48,15 +48,23 @@ class HandleInertiaRequests extends Middleware
                     'username' => $user->username,
                     'role' => $user->role?->name,
                     'role_label' => $user->role?->label ?? 'Pengguna',
+                    'phone' => $user->phone,
+                    'avatar_url' => $user->avatar_path ? route('core.profile.avatar') : null,
                 ],
                 'school' => $user->school ? [
                     'id' => $user->school->id,
                     'name' => $user->school->name,
                     'npsn' => $user->school->npsn,
+                    'logo_url' => $user->school->logo_path ? route('branding.school', [$user->school, 'logo']) : null,
+                    'favicon_url' => $user->school->favicon_path ? route('branding.school', [$user->school, 'favicon']) : null,
+                    'theme_primary' => data_get($user->school->settings, 'theme_primary', '#3157a4'),
                 ] : null,
             ] : null,
             'school' => [
                 'name' => $user?->school?->name ?? config('app.school_name', 'Sekolah Pilot School Suite'),
+                'logo_url' => $user?->school?->logo_path ? route('branding.school', [$user->school, 'logo']) : null,
+                'favicon_url' => $user?->school?->favicon_path ? route('branding.school', [$user->school, 'favicon']) : null,
+                'theme_primary' => data_get($user?->school?->settings, 'theme_primary', '#3157a4'),
             ],
             'activePeriod' => [
                 'academic_year' => '2026/2027',

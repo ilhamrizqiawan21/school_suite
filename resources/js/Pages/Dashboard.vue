@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '../layouts/AppLayout.vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineProps<{
     stats?: {
@@ -9,60 +11,71 @@ defineProps<{
     };
 }>();
 
-const workAreas = [
-    { title: 'Akademik', desc: 'Master data siswa, guru, kelas, enrollment, dan kalender pendidikan.', status: 'Fondasi Siap', tagColor: 'bg-blue-50 text-blue-700' },
-    { title: 'Pembelajaran', desc: 'Jadwal mengajar, materi, tugas kelas, dan presensi pertemuan.', status: 'Tahap S04', tagColor: 'bg-amber-50 text-amber-700' },
-    { title: 'Wali Kelas', desc: 'Rekap kehadiran kelas perwalian, catatan perkembangan, dan tindak lanjut.', status: 'Tahap S05', tagColor: 'bg-indigo-50 text-indigo-700' },
-    { title: 'Penilaian & Rapor', desc: 'Skema bobot nilai, input capaian, remedial, dan snapshot rapor.', status: 'Tahap S06', tagColor: 'bg-purple-50 text-purple-700' },
-    { title: 'Administrasi', desc: 'SPMB, tata usaha, persuratan, dan inventaris sarana prasarana.', status: 'Tahap S08', tagColor: 'bg-slate-100 text-slate-700' },
-    { title: 'Laporan & Audit', desc: 'Ekspor laporan periode, log audit aktivitas, dan pencatatan perubahan.', status: 'Terintegrasi', tagColor: 'bg-emerald-50 text-emerald-700' },
+const page = usePage<{ auth?: { user?: { name: string; role_label?: string } }; activePeriod?: { label?: string }; [key: string]: unknown }>();
+const userName = computed(() => page.props.auth?.user?.name ?? 'Rekan Sekolah');
+const greeting = computed(() => {
+    const firstName = userName.value.split(' ')[0];
+    return `Selamat datang, ${firstName}`;
+});
+
+const workflows = [
+    { title: 'Data siswa', description: 'Kelola identitas peserta didik, penempatan kelas, dan impor data.', href: '/akademik/siswa', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8zm14 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
+    { title: 'Presensi siswa', description: 'Catat kehadiran pertemuan dan tinjau rekap kelas.', href: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0 2 2 0 00-4 0zm-1 9 2 2 4-4' },
+    { title: 'Input nilai', description: 'Isi capaian belajar dan remedial sesuai skema penilaian aktif.', href: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2-2a2 2 0 00-2 2v2h6V5a2 2 0 00-2-2h-2zm-1 9h4m-4 4h4' },
+    { title: 'Ruang wali kelas', description: 'Pantau kehadiran, observasi, prestasi, dan tindak lanjut siswa.', href: '/wali-kelas', icon: 'M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86m0 0a5 5 0 00-9.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
 ];
 </script>
 
 <template>
     <AppLayout title="Beranda">
-        <div class="space-y-6">
-            <!-- Header Section -->
-            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Ruang Kerja Terpadu Sekolah</h1>
-                        <p class="text-sm text-slate-500 mt-1">
-                            Satu sumber data siswa untuk administrasi, pembelajaran, dan penilaian tanpa pengulangan input.
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ● Fondasi S01 Aktif
-                        </span>
-                    </div>
+        <section class="view">
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Ruang kerja sekolah <span v-if="page.props.activePeriod?.label">· {{ page.props.activePeriod.label }}</span></p>
+                    <h1>{{ greeting }}</h1>
+                    <p>Semua pekerjaan akademik dan administrasi sekolah dimulai dari sini.</p>
                 </div>
             </div>
 
-            <!-- Work Areas Grid -->
-            <div>
-                <h2 class="text-base font-semibold text-slate-900 mb-3">Area Kerja Utama</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div
-                        v-for="area in workAreas"
-                        :key="area.title"
-                        class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-colors flex flex-col justify-between"
-                    >
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-sm font-semibold text-slate-900">{{ area.title }}</h3>
-                                <span :class="['text-xs px-2 py-0.5 rounded-md font-medium', area.tagColor]">
-                                    {{ area.status }}
-                                </span>
-                            </div>
-                            <p class="text-xs text-slate-500 leading-relaxed">
-                                {{ area.desc }}
-                            </p>
-                        </div>
+            <div class="attention-strip">
+                <span class="pulse-dot" />
+                <strong>Periode aktif: {{ page.props.activePeriod?.label ?? 'Belum ada periode akademik aktif' }}</strong>
+                <Link href="/akademik/kelas" class="text-button">Lihat kelas <span aria-hidden="true">›</span></Link>
+            </div>
+
+            <div class="dashboard-grid workflow-grid">
+                <Link v-for="(workflow, index) in workflows" :key="workflow.href" :href="workflow.href" class="panel workflow-card">
+                    <span class="metric-icon" :class="['', 'amber', 'green', 'violet'][index]">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="workflow.icon" /></svg>
+                    </span>
+                    <div class="workflow-copy">
+                        <h2>{{ workflow.title }}</h2>
+                        <p>{{ workflow.description }}</p>
                     </div>
+                    <svg class="workflow-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                </Link>
+            </div>
+
+            <div class="panel dashboard-note">
+                <div class="note-mark" aria-hidden="true">S</div>
+                <div>
+                    <h2>Ruang kerja terpadu sekolah</h2>
+                    <p>Data siswa, pembelajaran, presensi, penilaian, dan rapor terhubung dalam satu alur kerja. Informasi pada halaman ini mengikuti hak akses akun yang sedang masuk.</p>
                 </div>
             </div>
-        </div>
+        </section>
     </AppLayout>
 </template>
 
+<style scoped>
+.workflow-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.workflow-card { min-height: 142px; display: flex; align-items: flex-start; gap: 15px; padding: 22px; color: inherit; text-decoration: none; transition: transform .18s var(--ease), border-color .18s, box-shadow .18s; }
+.workflow-card:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: var(--shadow-md); }
+.workflow-copy { flex: 1; }
+.workflow-copy h2, .dashboard-note h2 { margin: 1px 0 5px; font-size: 15px; }
+.workflow-copy p, .dashboard-note p { margin: 0; color: var(--ink-soft); font-size: 11px; line-height: 1.7; }
+.workflow-arrow { width: 18px; height: 18px; color: var(--ink-faint); }
+.dashboard-note { display: flex; align-items: center; gap: 15px; margin-top: 16px; padding: 20px; }
+.note-mark { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; color: #1d2b43; background: #f2bc55; border-radius: 14px 14px 14px 5px; font: 800 23px Georgia, serif; }
+@media (max-width: 720px) { .workflow-grid { grid-template-columns: 1fr; } }
+</style>

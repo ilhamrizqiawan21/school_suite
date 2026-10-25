@@ -7,6 +7,7 @@ namespace App\Modules\Assessment\Application\Services;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ReportGeneratorService
 {
@@ -37,6 +38,7 @@ class ReportGeneratorService
                 'name' => $school?->name ?? 'Sekolah',
                 'npsn' => $school?->npsn ?? '-',
                 'address' => $school?->address ?? '-',
+                'logo_data_uri' => $this->logoDataUri($school?->logo_path),
             ],
             'student' => [
                 'id' => $student?->id ?? $snapshot->student_id,
@@ -133,5 +135,14 @@ class ReportGeneratorService
             'subjects' => $subjectCols,
             'students' => $studentRows,
         ];
+    }
+
+    private function logoDataUri(?string $path): ?string
+    {
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            return null;
+        }
+
+        return 'data:'.Storage::disk('local')->mimeType($path).';base64,'.base64_encode(Storage::disk('local')->get($path));
     }
 }

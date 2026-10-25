@@ -17,12 +17,20 @@ class School extends Model
 
     protected $fillable = [
         'name',
+        'legal_name',
         'npsn',
         'level',
+        'school_status',
+        'accreditation',
         'address',
         'phone',
         'email',
+        'principal_name',
+        'website',
+        'vision',
+        'mission',
         'logo_path',
+        'favicon_path',
         'settings',
     ];
 

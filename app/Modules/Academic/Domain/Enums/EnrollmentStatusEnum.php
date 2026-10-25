@@ -9,4 +9,7 @@ enum EnrollmentStatusEnum: string
     case ACTIVE = 'active';
     case TRANSFERRED = 'transferred';
     case WITHDRAWN = 'withdrawn';
+    case PROMOTED = 'promoted';
+    case RETAINED = 'retained';
+    case GRADUATED = 'graduated';
 }

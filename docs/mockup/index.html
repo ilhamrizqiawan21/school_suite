@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Mockup interaktif School Suite — Calm Academic OS">
+  <title>School Suite — Calm Academic OS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
+
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 16 4-5 4 3 5-7"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-2.83 2.83-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21h-4v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06-2.83-2.83.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3v-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06 2.83-2.83.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3h4v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06 2.83 2.83-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21v4h-.09A1.65 1.65 0 0 0 19.4 15Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16M7 12h10M10 19h4"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span>S</span></div>
+        <div><strong>School Suite</strong><small>SMPN 1 Percontohan</small></div>
+      </div>
+
+      <nav class="nav-stack">
+        <p class="nav-label">Ruang kerja</p>
+        <button class="nav-item is-active" data-view-target="dashboard"><svg><use href="#i-grid"/></svg><span>Beranda</span></button>
+        <button class="nav-item" data-view-target="roster"><svg><use href="#i-users"/></svg><span>Data siswa</span><em>30</em></button>
+        <button class="nav-item" data-view-target="grades"><svg><use href="#i-chart"/></svg><span>Input nilai</span><em class="accent">27</em></button>
+        <button class="nav-item"><svg><use href="#i-calendar"/></svg><span>Jadwal pelajaran</span></button>
+        <button class="nav-item"><svg><use href="#i-book"/></svg><span>Presensi & jurnal</span></button>
+        <button class="nav-item"><svg><use href="#i-file"/></svg><span>Rapor siswa</span></button>
+        <p class="nav-label nav-label-spaced">Sistem</p>
+        <button class="nav-item"><svg><use href="#i-settings"/></svg><span>Pengaturan</span></button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="completion-ring" aria-label="Kelengkapan data 84 persen"><span>84</span></div>
+        <div><strong>Data semester</strong><small>Hampir lengkap</small></div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menuButton" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar"><svg><use href="#i-menu"/></svg></button>
+        <label class="global-search">
+          <svg><use href="#i-search"/></svg>
+          <span class="sr-only">Cari di School Suite</span>
+          <input type="search" placeholder="Cari siswa, kelas, atau menu…">
+          <kbd>⌘ K</kbd>
+        </label>
+        <div class="context-switcher" aria-label="Konteks aktif">
+          <span class="context-dot"></span>
+          <div><small>Tahun ajaran aktif</small><strong>2026/2027 · Ganjil</strong></div>
+        </div>
+        <label class="state-selector" title="Simulasikan state layar">
+          <span class="sr-only">State layar</span>
+          <select id="stateSelect">
+            <option value="normal">State: normal</option>
+            <option value="loading">State: loading</option>
+            <option value="empty">State: empty</option>
+            <option value="error">State: error</option>
+            <option value="partial">State: partial</option>
+            <option value="permission">State: permission</option>
+          </select>
+        </label>
+        <button class="icon-button" id="themeButton" aria-label="Ganti tema"><svg><use href="#i-sun"/></svg></button>
+        <button class="icon-button notification" aria-label="3 notifikasi"><svg><use href="#i-bell"/></svg><span>3</span></button>
+        <button class="profile-button" aria-label="Menu akun Budi Hartono">
+          <span class="avatar">BH</span>
+          <span class="profile-copy"><strong>Budi Hartono, S.Pd.</strong><small>Guru · Wali kelas VII-A</small></span>
+          <svg><use href="#i-chevron"/></svg>
+        </button>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <div id="stateBanner" class="state-banner" hidden></div>
+
+        <section class="view is-active" data-view="dashboard" aria-labelledby="dashboardTitle">
+          <div class="page-heading">
+            <div><p class="eyebrow">Ganjil 2026/2027 · Minggu ke-12 · Minggu, 25 Oktober</p><h1 id="dashboardTitle">Selamat pagi, Pak Budi</h1><p>Berikut hal penting yang perlu Bapak selesaikan hari ini.</p></div>
+            <button class="primary-button"><svg><use href="#i-plus"/></svg>Catat jurnal</button>
+          </div>
+
+          <div class="attention-strip"><span class="pulse-dot"></span><strong>27 siswa VII-A belum memiliki nilai Formatif Harian 1.</strong><button data-view-target="grades">Input nilai <svg><use href="#i-chevron"/></svg></button></div>
+
+          <div class="metric-grid">
+            <article class="metric-card metric-primary"><div class="metric-icon"><svg><use href="#i-calendar"/></svg></div><div><span>Jadwal hari ini</span><strong>4 <small>kelas</small></strong><p>Berikutnya 09.20 · VII-A</p></div><div class="metric-spark"><i style="height:45%"></i><i style="height:65%"></i><i style="height:50%"></i><i style="height:80%"></i><i style="height:62%"></i></div></article>
+            <article class="metric-card"><div class="metric-icon amber"><svg><use href="#i-file"/></svg></div><div><span>Perlu dilengkapi</span><strong>7 <small>item</small></strong><p><b>−3</b> dari pekan lalu</p></div></article>
+            <article class="metric-card"><div class="metric-icon green"><svg><use href="#i-check"/></svg></div><div><span>Kehadiran kelas</span><strong>94,6<small>%</small></strong><p><b>+1,8%</b> bulan ini</p></div></article>
+            <article class="metric-card"><div class="metric-icon violet"><svg><use href="#i-chart"/></svg></div><div><span>Nilai F1 masuk</span><strong>3<small>/30</small></strong><p>27 siswa belum dinilai</p></div></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel schedule-panel">
+              <div class="panel-head"><div><h2>Agenda hari ini</h2><p>Empat sesi mengajar dan satu agenda kelas.</p></div><button class="text-button">Lihat jadwal</button></div>
+              <div class="timeline">
+                <div class="timeline-item is-done"><time>07.10</time><span class="timeline-node"><svg><use href="#i-check"/></svg></span><div><strong>Matematika · VII-A</strong><p>Persamaan linear · Ruang VII-A</p></div><span class="status success">Selesai</span></div>
+                <div class="timeline-item is-now"><time>09.20</time><span class="timeline-node"></span><div><strong>Matematika · VII-B</strong><p>Relasi dan fungsi · Ruang VII-B</p></div><span class="status info">35 menit lagi</span></div>
+                <div class="timeline-item"><time>11.15</time><span class="timeline-node"></span><div><strong>Matematika · VIII-A</strong><p>Latihan formatif · Ruang VIII-A</p></div><span class="status neutral">Terjadwal</span></div>
+                <div class="timeline-item"><time>13.00</time><span class="timeline-node"></span><div><strong>Wali kelas · VII-A</strong><p>Tinjau observasi dan kedisiplinan siswa</p></div><span class="status warning">Perlu aksi</span></div>
+              </div>
+            </article>
+
+            <article class="panel task-panel">
+              <div class="panel-head"><div><h2>Prioritas saya</h2><p>Diurutkan menurut tenggat.</p></div><button class="icon-button small" aria-label="Filter prioritas"><svg><use href="#i-filter"/></svg></button></div>
+              <ul class="task-list">
+                <li><button class="task-check" aria-label="Tandai selesai"></button><div><strong>Lengkapi nilai Formatif Harian 1</strong><p>27 dari 30 siswa VII-A belum dinilai</p></div><time>Hari ini</time></li>
+                <li><button class="task-check" aria-label="Tandai selesai"></button><div><strong>Konfirmasi 3 catatan absensi</strong><p>Menunggu verifikasi wali kelas</p></div><time>Hari ini</time></li>
+                <li><button class="task-check" aria-label="Tandai selesai"></button><div><strong>Tinjau observasi wali kelas</strong><p>Kelas VII-A · 2 catatan baru</p></div><time>Besok</time></li>
+                <li class="is-complete"><button class="task-check" aria-label="Sudah selesai"><svg><use href="#i-check"/></svg></button><div><strong>Jurnal pertemuan VII-A</strong><p>Tersimpan pukul 08.36</p></div><time>Selesai</time></li>
+              </ul>
+              <button class="secondary-button full">Buka semua tugas</button>
+            </article>
+
+            <article class="panel pulse-panel">
+              <div class="panel-head"><div><h2>Detak kelas VII-A</h2><p>30 hari terakhir · 30 siswa</p></div><button class="text-button">Buka kelas</button></div>
+              <div class="pulse-content">
+                <div class="donut" style="--value: 94.6"><div><strong>94,6%</strong><span>hadir</span></div></div>
+                <div class="bar-list">
+                  <div><span>Jurnal lengkap</span><strong>92%</strong><i><b style="width:92%"></b></i></div>
+                  <div><span>Nilai masuk</span><strong>82%</strong><i><b style="width:82%"></b></i></div>
+                  <div><span>Tugas terkumpul</span><strong>76%</strong><i><b style="width:76%"></b></i></div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-view="roster" aria-labelledby="rosterTitle" hidden>
+          <div class="page-heading compact-heading"><div><p class="eyebrow">Akademik · Data siswa</p><h1 id="rosterTitle">Siswa kelas VII-A</h1><p>30 siswa aktif pada semester ganjil 2026/2027.</p></div><div class="button-row"><button class="secondary-button">Impor data</button><button class="primary-button"><svg><use href="#i-plus"/></svg>Tambah siswa</button></div></div>
+          <div class="toolbar panel"><label class="table-search"><svg><use href="#i-search"/></svg><span class="sr-only">Cari siswa</span><input id="studentSearch" type="search" placeholder="Cari nama atau NIS…"></label><button class="secondary-button"><svg><use href="#i-filter"/></svg>Filter <span class="filter-count">2</span></button><button class="secondary-button">Kolom</button><span class="toolbar-spacer"></span><label class="density-control">Kerapatan <select id="densitySelect"><option value="comfortable">Nyaman</option><option value="compact">Ringkas</option></select></label></div>
+          <div class="table-layout">
+            <div class="table-card panel">
+              <div class="selection-bar" id="selectionBar" hidden><strong><span id="selectionCount">0</span> siswa dipilih</strong><button>Ubah status</button><button>Export</button><button class="danger-text">Arsipkan</button></div>
+              <div class="table-scroll"><table><caption class="sr-only">Daftar siswa kelas VII-A</caption><thead><tr><th><input id="selectAll" type="checkbox" aria-label="Pilih semua siswa"></th><th scope="col">Siswa</th><th scope="col">NIS</th><th scope="col">Jenis kelamin</th><th scope="col">Kehadiran</th><th scope="col">Kelengkapan</th><th scope="col">Status</th><th><span class="sr-only">Aksi</span></th></tr></thead><tbody id="studentRows">
+                <tr><td><input class="row-check" type="checkbox" aria-label="Pilih Ahmad Fauzi"></td><td><div class="person"><span class="avatar soft-coral">AF</span><div><strong>Ahmad Fauzi</strong><small>siswa26001@pilot.sch.id</small></div></div></td><td>26001</td><td>Laki-laki</td><td><strong>98%</strong></td><td><span class="completion"><i style="width:100%"></i></span>100%</td><td><span class="status success">Aktif</span></td><td><button class="row-action" aria-label="Aksi untuk Ahmad Fauzi">•••</button></td></tr>
+                <tr><td><input class="row-check" type="checkbox" aria-label="Pilih Aisyah Putri"></td><td><div class="person"><span class="avatar soft-blue">AP</span><div><strong>Aisyah Putri</strong><small>siswa26002@pilot.sch.id</small></div></div></td><td>26002</td><td>Perempuan</td><td><strong>92%</strong></td><td><span class="completion"><i style="width:82%"></i></span>82%</td><td><span class="status success">Aktif</span></td><td><button class="row-action" aria-label="Aksi untuk Aisyah Putri">•••</button></td></tr>
+                <tr><td><input class="row-check" type="checkbox" aria-label="Pilih Bagus Ramadhan"></td><td><div class="person"><span class="avatar soft-gold">BR</span><div><strong>Bagus Ramadhan</strong><small>siswa26003@pilot.sch.id</small></div></div></td><td>26003</td><td>Laki-laki</td><td><strong>96%</strong></td><td><span class="completion"><i style="width:94%"></i></span>94%</td><td><span class="status success">Aktif</span></td><td><button class="row-action" aria-label="Aksi untuk Bagus Ramadhan">•••</button></td></tr>
+                <tr><td><input class="row-check" type="checkbox" aria-label="Pilih Citra Dewi"></td><td><div class="person"><span class="avatar soft-green">CD</span><div><strong>Citra Dewi</strong><small>siswa26004@pilot.sch.id</small></div></div></td><td>26004</td><td>Perempuan</td><td><strong class="danger-text">78%</strong></td><td><span class="completion"><i style="width:64%"></i></span>64%</td><td><span class="status warning">Perlu ditinjau</span></td><td><button class="row-action" aria-label="Aksi untuk Citra Dewi">•••</button></td></tr>
+                <tr><td><input class="row-check" type="checkbox" aria-label="Pilih Dimas Prasetyo"></td><td><div class="person"><span class="avatar soft-violet">DP</span><div><strong>Dimas Prasetyo</strong><small>siswa26005@pilot.sch.id</small></div></div></td><td>26005</td><td>Laki-laki</td><td><strong>95%</strong></td><td><span class="completion"><i style="width:88%"></i></span>88%</td><td><span class="status success">Aktif</span></td><td><button class="row-action" aria-label="Aksi untuk Dimas Prasetyo">•••</button></td></tr>
+              </tbody></table></div>
+              <div class="table-footer"><span>Menampilkan 1–5 dari 30 siswa</span><div><button disabled>←</button><button class="is-current">1</button><button>2</button><button>3</button><button>→</button></div></div>
+            </div>
+            <aside class="insight-panel panel"><span class="insight-kicker">Kualitas data</span><strong>26 dari 30</strong><p>profil siswa telah lengkap.</p><div class="radial-small"><span>87%</span></div><hr><h3>Perlu perhatian</h3><ul><li><span>3</span> kontak wali belum lengkap</li><li><span>1</span> NISN perlu diverifikasi</li><li><span>2</span> foto belum tersedia</li></ul><button class="secondary-button full">Tinjau kelengkapan</button></aside>
+          </div>
+        </section>
+
+        <section class="view" data-view="grades" aria-labelledby="gradesTitle" hidden>
+          <div class="page-heading compact-heading"><div><p class="eyebrow">Penilaian · VII-A · Kurikulum Merdeka SMP 2026</p><h1 id="gradesTitle">Formatif Harian 1</h1><p>Kode F1 · Bobot 25% · KKTP 75 · Skala 0–100.</p></div><div class="save-cluster"><span id="saveStatus"><svg><use href="#i-check"/></svg>Tersimpan 1 menit lalu</span><button class="secondary-button" id="saveButton"><svg><use href="#i-save"/></svg>Simpan draf</button><button class="primary-button" id="submitButton">Simpan semua nilai</button></div></div>
+          <div class="grade-summary">
+            <div><span>Rata-rata kelas</span><strong id="classAverage">77,7</strong><small>3 nilai pada contoh kerja</small></div>
+            <div><span>Sudah dinilai</span><strong id="gradedCount">3/30</strong><small>27 siswa belum lengkap</small></div>
+            <div><span>Di bawah KKTP</span><strong>1</strong><small>KKTP ditetapkan 75</small></div>
+            <div class="distribution"><span>Distribusi nilai</span><div><i style="height:22%"></i><i style="height:46%"></i><i style="height:78%"></i><i style="height:100%"></i><i style="height:68%"></i><i style="height:35%"></i></div><small>Rentang 58–98</small></div>
+          </div>
+          <div class="toolbar panel grade-toolbar"><label class="table-search"><svg><use href="#i-search"/></svg><span class="sr-only">Cari siswa untuk dinilai</span><input type="search" placeholder="Cari siswa…"></label><div class="legend"><span><i class="legend-dot filled"></i>Lengkap</span><span><i class="legend-dot empty"></i>Belum dinilai</span><span><i class="legend-dot remedial"></i>Perlu tindak lanjut</span></div><span class="toolbar-spacer"></span><button class="secondary-button">Impor XLSX</button></div>
+          <div class="table-card panel grade-card"><div class="table-scroll"><table class="grade-table"><caption class="sr-only">Input nilai Formatif Harian 1 kelas VII-A</caption><thead><tr><th scope="col">No.</th><th scope="col">Siswa</th><th scope="col">Nilai mentah</th><th scope="col">Nilai remedial</th><th scope="col">Catatan guru</th><th scope="col">Nilai akhir</th><th scope="col">Status</th></tr></thead><tbody>
+            <tr><td>01</td><td><div class="person"><span class="avatar soft-coral">AF</span><strong>Ahmad Fauzi</strong></div></td><td><input class="score-input" type="number" value="88" min="0" max="100" aria-label="Nilai mentah Ahmad Fauzi"></td><td><input class="score-input remedial-input" type="number" min="0" max="100" placeholder="Opsional" aria-label="Nilai remedial Ahmad Fauzi"></td><td><input class="note-input" type="text" value="Aktif dalam tanya jawab di kelas" aria-label="Catatan guru Ahmad Fauzi"></td><td><strong class="final-score">88</strong></td><td><span class="status success">Tuntas</span></td></tr>
+            <tr><td>02</td><td><div class="person"><span class="avatar soft-blue">AP</span><strong>Aisyah Putri</strong></div></td><td><input class="score-input is-empty" type="number" min="0" max="100" placeholder="0–100" aria-label="Nilai mentah Aisyah Putri"></td><td><input class="score-input remedial-input" type="number" min="0" max="100" placeholder="Opsional" aria-label="Nilai remedial Aisyah Putri"></td><td><input class="note-input" type="text" placeholder="Catatan opsional" aria-label="Catatan guru Aisyah Putri"></td><td><strong class="final-score muted">—</strong></td><td><span class="status neutral">Belum dinilai</span></td></tr>
+            <tr><td>03</td><td><div class="person"><span class="avatar soft-gold">BR</span><strong>Bagus Ramadhan</strong></div></td><td><input class="score-input" type="number" value="68" min="0" max="100" aria-label="Nilai mentah Bagus Ramadhan"></td><td><input class="score-input remedial-input" type="number" value="82" min="0" max="100" aria-label="Nilai remedial Bagus Ramadhan"></td><td><input class="note-input" type="text" value="Sudah mengikuti remedial" aria-label="Catatan guru Bagus Ramadhan"></td><td><strong class="final-score">75</strong></td><td><span class="status success">Tuntas remedial</span></td></tr>
+            <tr class="needs-review"><td>04</td><td><div class="person"><span class="avatar soft-green">CD</span><strong>Citra Dewi</strong></div></td><td><input class="score-input" type="number" value="70" min="0" max="100" aria-label="Nilai mentah Citra Dewi"></td><td><input class="score-input remedial-input" type="number" min="0" max="100" placeholder="Opsional" aria-label="Nilai remedial Citra Dewi"></td><td><input class="note-input" type="text" placeholder="Catatan opsional" aria-label="Catatan guru Citra Dewi"></td><td><strong class="final-score low">70</strong></td><td><span class="status warning">Belum tuntas</span></td></tr>
+            <tr><td>05</td><td><div class="person"><span class="avatar soft-violet">DP</span><strong>Dimas Prasetyo</strong></div></td><td><input class="score-input is-empty" type="number" min="0" max="100" placeholder="0–100" aria-label="Nilai mentah Dimas Prasetyo"></td><td><input class="score-input remedial-input" type="number" min="0" max="100" placeholder="Opsional" aria-label="Nilai remedial Dimas Prasetyo"></td><td><input class="note-input" type="text" placeholder="Catatan opsional" aria-label="Catatan guru Dimas Prasetyo"></td><td><strong class="final-score muted">—</strong></td><td><span class="status neutral">Belum dinilai</span></td></tr>
+          </tbody></table></div><div class="grade-note"><svg><use href="#i-clock"/></svg><div><strong>Nilai akhir dihitung otomatis.</strong><span>Untuk siswa yang belum tuntas, nilai remedial dibatasi maksimal pada KKTP 75 sesuai aturan aplikasi saat ini.</span></div></div></div>
+        </section>
+
+        <section id="fallbackState" class="fallback-state" hidden aria-live="polite"></section>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><svg><use href="#i-check"/></svg><span>Perubahan berhasil disimpan.</span><button aria-label="Tutup notifikasi">×</button></div>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <script src="app.js"></script>
+</body>
+</html>

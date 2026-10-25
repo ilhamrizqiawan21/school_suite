@@ -100,9 +100,9 @@ const submitImport = () => {
     <AppLayout title="Data Siswa">
         <Head title="Data Siswa — School Suite" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Peserta Didik (Siswa)</h1>
                     <p class="text-sm text-slate-500 mt-1">
@@ -113,7 +113,7 @@ const submitImport = () => {
                     <button
                         type="button"
                         @click="showImportModal = true"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs"
+                        class="secondary-button"
                     >
                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -123,7 +123,7 @@ const submitImport = () => {
                     <button
                         type="button"
                         @click="showAddModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-xs"
+                        class="primary-button"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -134,19 +134,19 @@ const submitImport = () => {
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-3">
-                <div class="flex-1 relative">
+            <div class="toolbar panel">
+                <label class="table-search">
                     <input
                         v-model="search"
                         @keyup.enter="applyFilters"
-                        type="text"
+                        type="search"
                         placeholder="Cari nama, NIS, atau NISN... (tekan enter)"
-                        class="w-full px-3.5 py-2 pl-10 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                        class="w-full"
                     />
-                    <svg class="w-5 h-5 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                </div>
+                </label>
 
                 <div class="flex gap-2">
                     <select
@@ -175,7 +175,7 @@ const submitImport = () => {
                     <button
                         type="button"
                         @click="applyFilters"
-                        class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                        class="secondary-button"
                     >
                         Filter
                     </button>
@@ -183,8 +183,8 @@ const submitImport = () => {
             </div>
 
             <!-- Table -->
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-                <div class="overflow-x-auto">
+            <div class="table-card panel">
+                <div class="table-scroll">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
                             <tr>
@@ -238,7 +238,7 @@ const submitImport = () => {
                 </div>
 
                 <!-- Pagination footer -->
-                <div class="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <div class="table-footer">
                     <div>Total {{ students.total }} siswa</div>
                     <div class="flex gap-1">
                         <template v-for="(link, i) in students.links" :key="i">

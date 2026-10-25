@@ -10,7 +10,9 @@ use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,9 +54,34 @@ class SchoolController extends Controller
             'address' => ['nullable', 'string'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
+            'legal_name' => ['nullable', 'string', 'max:255'],
+            'school_status' => ['nullable', 'string', 'in:Negeri,Swasta'],
+            'accreditation' => ['nullable', 'string', 'max:10'],
+            'principal_name' => ['nullable', 'string', 'max:255'],
+            'website' => ['nullable', 'url:http,https', 'max:255'],
+            'vision' => ['nullable', 'string', 'max:5000'],
+            'mission' => ['nullable', 'string', 'max:10000'],
+            'theme_primary' => ['sometimes', Rule::in(['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'])],
+            'logo' => ['nullable', File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(2048)],
+            'favicon' => ['nullable', File::image()->types(['png'])->max(512)->dimensions(Rule::dimensions()->maxWidth(512)->maxHeight(512))],
         ]);
 
-        $oldValues = $school->only(array_keys($validated));
+        $oldValues = $school->only(['name', 'npsn', 'level', 'address', 'phone', 'email', 'legal_name', 'school_status', 'accreditation', 'principal_name', 'website', 'vision', 'mission', 'logo_path', 'favicon_path', 'settings']);
+        $settings = $school->settings ?? [];
+        $settings['theme_primary'] = $validated['theme_primary'] ?? data_get($settings, 'theme_primary', '#3157a4');
+        $validated['settings'] = $settings;
+        unset($validated['theme_primary']);
+        foreach (['logo', 'favicon'] as $kind) {
+            if (! $request->hasFile($kind)) {
+                continue;
+            }
+            $pathColumn = $kind.'_path';
+            if ($school->{$pathColumn}) {
+                Storage::disk('local')->delete($school->{$pathColumn});
+            }
+            $validated[$pathColumn] = $request->file($kind)->store('branding/'.$school->id, 'local');
+            unset($validated[$kind]);
+        }
         $school->update($validated);
 
         $this->auditLogger->log(

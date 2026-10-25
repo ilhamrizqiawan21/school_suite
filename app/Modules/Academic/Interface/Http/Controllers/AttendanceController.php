@@ -13,10 +13,12 @@ use App\Modules\Academic\Infrastructure\Models\LessonSession;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttendanceController extends Controller
 {
@@ -186,5 +188,66 @@ class AttendanceController extends Controller
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['status' => $e->getMessage()]);
         }
+    }
+
+    public function recap(Request $request): InertiaResponse
+    {
+        Gate::authorize('viewAny', AttendanceRecord::class);
+        $schoolId = (int) $request->user()->school_id;
+        $activeTerm = Term::whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))->where('is_active', true)->first();
+        $classes = $activeTerm ? ClassGroup::where('school_id', $schoolId)->where('academic_year_id', $activeTerm->academic_year_id)->orderBy('name')->get(['id', 'name', 'grade_level']) : collect();
+        $classId = (int) ($request->query('class_group_id') ?: $classes->first()?->id);
+        $from = $request->query('from', now()->startOfMonth()->toDateString());
+        $to = $request->query('to', now()->toDateString());
+
+        return Inertia::render('Academic/Attendance/Recap', [
+            'classes' => $classes,
+            'selected_class_id' => (string) $classId,
+            'from' => $from,
+            'to' => $to,
+            'rows' => $this->recapRows($schoolId, $activeTerm?->id, $classId, $from, $to),
+        ]);
+    }
+
+    public function exportRecap(Request $request): StreamedResponse
+    {
+        Gate::authorize('viewAny', AttendanceRecord::class);
+        $validated = $request->validate(['class_group_id' => ['required', 'integer'], 'from' => ['required', 'date'], 'to' => ['required', 'date', 'after_or_equal:from']]);
+        $schoolId = (int) $request->user()->school_id;
+        $term = Term::whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))->where('is_active', true)->firstOrFail();
+        $class = ClassGroup::where('school_id', $schoolId)->findOrFail($validated['class_group_id']);
+        $rows = $this->recapRows($schoolId, $term->id, (int) $class->id, $validated['from'], $validated['to']);
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['NIS', 'Nama', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Total', 'Persentase Hadir']);
+            foreach ($rows as $row) {
+                fputcsv($out, [$row->nis, $row->name, $row->present, $row->sick, $row->permitted, $row->absent, $row->total, $row->attendance_rate.'%']);
+            }
+            fclose($out);
+        }, 'rekap-presensi-'.str($class->name)->slug().'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function recapRows(int $schoolId, ?int $termId, int $classId, string $from, string $to): array
+    {
+        if (! $termId || ! $classId) {
+            return [];
+        }
+
+        return DB::table('enrollments')
+            ->join('students', 'students.id', '=', 'enrollments.student_id')
+            ->leftJoin('attendance_records', function ($join) use ($schoolId, $from, $to) {
+                $join->on('attendance_records.enrollment_id', '=', 'enrollments.id')->where('attendance_records.school_id', $schoolId)->whereBetween('attendance_records.date', [$from, $to]);
+            })
+            ->where('enrollments.term_id', $termId)->where('enrollments.class_group_id', $classId)
+            ->groupBy('enrollments.id', 'students.nis', 'students.name', 'enrollments.roll_number')
+            ->orderBy('enrollments.roll_number')
+            ->selectRaw("students.nis, students.name, SUM(CASE WHEN attendance_records.status='present' THEN 1 ELSE 0 END) present, SUM(CASE WHEN attendance_records.status='sick' THEN 1 ELSE 0 END) sick, SUM(CASE WHEN attendance_records.status='permitted' THEN 1 ELSE 0 END) permitted, SUM(CASE WHEN attendance_records.status='absent' THEN 1 ELSE 0 END) absent, COUNT(attendance_records.id) total")
+            ->get()->map(function ($row) {
+                $row->attendance_rate = $row->total ? round(($row->present / $row->total) * 100, 1) : 0;
+
+                return $row;
+            })->all();
     }
 }

@@ -26,8 +26,15 @@ class DeploymentConfigurationTest extends TestCase
     {
         $nginxConf = base_path('deploy/nginx/school-suite.conf');
         $this->assertTrue(File::exists($nginxConf));
-        $this->assertStringContainsString('fastcgi_pass', File::get($nginxConf));
-        $this->assertStringContainsString('ssl_protocols', File::get($nginxConf));
+        $nginxContents = File::get($nginxConf);
+        $this->assertStringContainsString('fastcgi_pass', $nginxContents);
+        $this->assertStringContainsString('ssl_protocols', $nginxContents);
+        $this->assertStringContainsString('server_name school.sch.id www.school.sch.id;', $nginxContents);
+        $this->assertLessThan(
+            strpos($nginxContents, 'location ~ \\.php$ {'),
+            strpos($nginxContents, 'location ~* /(?:storage|uploads)/.*\\.php$ {'),
+            'Upload PHP deny rule must precede the generic PHP handler.'
+        );
 
         $opcacheIni = base_path('deploy/php/opcache.ini');
         $this->assertTrue(File::exists($opcacheIni));
@@ -44,8 +51,11 @@ class DeploymentConfigurationTest extends TestCase
         $deployScript = base_path('deploy/deploy.sh');
         $this->assertTrue(File::exists($deployScript));
         $this->assertTrue(is_executable($deployScript));
-        $this->assertStringContainsString('composer install', File::get($deployScript));
-        $this->assertStringContainsString('artisan migrate', File::get($deployScript));
+        $deployContents = File::get($deployScript);
+        $this->assertStringContainsString('mkdir -p "${RELEASE_DIR}"', $deployContents);
+        $this->assertStringContainsString('git archive "${BRANCH}"', $deployContents);
+        $this->assertStringContainsString('composer install', $deployContents);
+        $this->assertStringContainsString('artisan migrate', $deployContents);
 
         $rollbackScript = base_path('deploy/rollback.sh');
         $this->assertTrue(File::exists($rollbackScript));
@@ -77,4 +87,3 @@ class DeploymentConfigurationTest extends TestCase
         $this->assertSame('0 4 * * *', $restartEvent->expression);
     }
 }
-

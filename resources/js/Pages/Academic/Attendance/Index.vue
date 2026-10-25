@@ -112,6 +112,7 @@ const summary = computed(() => {
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <a href="/akademik/presensi/rekap" class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg">Lihat Rekap</a>
                     <button
                         type="button"
                         @click="markAllPresent"

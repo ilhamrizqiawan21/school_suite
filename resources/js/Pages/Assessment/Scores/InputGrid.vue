@@ -68,6 +68,12 @@ const passingGrade = computed(() => {
 // Salin state lokal untuk baris penilaian
 const localRows = ref<StudentScoreRow[]>(JSON.parse(JSON.stringify(props.students)));
 
+const gradedCount = computed(() => localRows.value.filter((row) => row.raw_score !== null && row.raw_score !== '').length);
+const belowPassingCount = computed(() => localRows.value.filter((row) => {
+    const finalScore = calculateRowFinal(row);
+    return finalScore !== null && finalScore < passingGrade.value;
+}).length);
+
 watch(
     () => props.students,
     (newVal) => {
@@ -144,25 +150,25 @@ const submitScores = () => {
     <AppLayout>
         <Head title="Input Nilai Guru" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6">
             <!-- Header Halaman -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Input Nilai Guru</h1>
-                    <p class="text-sm text-slate-500 mt-1">
-                        Input nilai formatif, sumatif, dan remedial secara cepat dengan validasi otomatis & formula ketuntasan.
-                    </p>
-                </div>
-
-                <div v-if="props.scheme" class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                        Skema: {{ props.scheme.name }} (KKTP: {{ passingGrade }})
-                    </span>
+                    <p class="eyebrow">Penilaian <span v-if="active_term">· {{ active_term.name }}</span></p>
+                    <h1>{{ currentComponent?.name ?? 'Input Nilai' }}</h1>
+                    <p>{{ scheme?.name ?? 'Pilih skema penilaian' }}<span v-if="currentComponent"> · {{ currentComponent.code }} · Bobot {{ currentComponent.weight_percentage }}% · KKTP {{ passingGrade }}</span></p>
                 </div>
             </div>
 
+            <div class="grade-summary">
+                <div><span>Jumlah siswa</span><strong>{{ localRows.length }}</strong><small>pada rombel terpilih</small></div>
+                <div><span>Sudah dinilai</span><strong>{{ gradedCount }}/{{ localRows.length }}</strong><small>{{ localRows.length - gradedCount }} siswa belum dinilai</small></div>
+                <div><span>Di bawah KKTP</span><strong>{{ belowPassingCount }}</strong><small>berdasarkan nilai akhir saat ini</small></div>
+                <div><span>Aturan remedial</span><strong class="rule-value">Maks. {{ passingGrade }}</strong><small>nilai remedial dibatasi sampai KKTP</small></div>
+            </div>
+
             <!-- Filter Rombel & Komponen -->
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center gap-4">
+            <div class="toolbar panel grade-toolbar">
                 <div class="w-full sm:w-64">
                     <label for="class-select" class="block text-xs font-semibold text-slate-600 mb-1">Pilih Kelas / Rombel</label>
                     <select
@@ -197,7 +203,7 @@ const submitScores = () => {
                     <button
                         type="button"
                         :disabled="isSaving || localRows.length === 0"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors"
+                        class="primary-button"
                         @click="submitScores"
                     >
                         <svg
@@ -215,7 +221,7 @@ const submitScores = () => {
             </div>
 
             <!-- Tabel Spreadsheet-like Input Nilai -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="grade-card panel">
                 <div class="p-4 border-b border-slate-200 flex items-center justify-between">
                     <div>
                         <h2 class="font-semibold text-slate-800 text-base">Lembar Penilaian Siswa</h2>
@@ -226,8 +232,8 @@ const submitScores = () => {
                     <span class="text-xs text-slate-500 font-medium">Total: {{ localRows.length }} Siswa</span>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600 border-collapse">
+                <div class="table-scroll">
+                    <table class="grade-table">
                         <thead class="bg-slate-50 text-slate-700 font-semibold text-xs border-b border-slate-200">
                             <tr>
                                 <th class="py-3 px-3 w-12 text-center">No</th>
@@ -264,7 +270,7 @@ const submitScores = () => {
                                         min="0"
                                         max="100"
                                         placeholder="0-100"
-                                        class="w-full text-center rounded-md border-slate-300 py-1.5 px-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        class="score-input"
                                     />
                                 </td>
                                 <!-- Kolom Input Nilai Remedial -->
@@ -276,7 +282,7 @@ const submitScores = () => {
                                         min="0"
                                         max="100"
                                         placeholder="Remedial"
-                                        class="w-full text-center rounded-md border-slate-300 py-1.5 px-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 bg-amber-50/40"
+                                        class="score-input remedial-input"
                                     />
                                 </td>
                                 <!-- Preview Nilai Akhir Otomatis -->
@@ -315,7 +321,7 @@ const submitScores = () => {
                                         type="text"
                                         maxlength="255"
                                         placeholder="Catatan kemajuan siswa..."
-                                        class="w-full rounded-md border-slate-300 py-1.5 px-2 text-xs focus:border-indigo-500 focus:ring-indigo-500"
+                                        class="note-input"
                                     />
                                 </td>
                             </tr>
@@ -331,4 +337,9 @@ const submitScores = () => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.primary-button:disabled { cursor: not-allowed; opacity: .55; box-shadow: none; }
+.rule-value { font-size: 19px !important; }
+</style>
 
