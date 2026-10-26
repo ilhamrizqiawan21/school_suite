@@ -17,6 +17,10 @@ use Inertia\Response;
 
 class StudentAttitudeController extends Controller
 {
+    private const SPIRITUAL_INDICATORS = ['taqwa', 'kejujuran', 'disiplin', 'sabar', 'syukur', 'tawadhu'];
+
+    private const SOCIAL_INDICATORS = ['empati', 'kerjasama', 'toleransi', 'percaya_diri', 'komunikasi'];
+
     public function __construct(private readonly AcademicQueryService $academicQuery, private readonly AuditLogger $audit) {}
 
     public function index(Request $request): Response
@@ -37,10 +41,14 @@ class StudentAttitudeController extends Controller
         $records = $term ? StudentAttitude::where('school_id', $schoolId)->where('term_id', $term->id)->whereIn('enrollment_id', $enrollments->pluck('enrollment_id'))->get()->groupBy('enrollment_id') : collect();
         $students = $enrollments->map(function ($enrollment) use ($records): array {
             $items = $records->get($enrollment->enrollment_id, collect())->keyBy('type');
+            $spiritual = $items->get('spiritual');
+            $social = $items->get('social');
 
             return ['enrollment_id' => $enrollment->enrollment_id, 'nis' => $enrollment->nis, 'name' => $enrollment->name,
-                'spiritual_predicate' => $items->get('spiritual')?->predicate ?? 'good', 'spiritual_description' => $items->get('spiritual')?->description ?? '',
-                'social_predicate' => $items->get('social')?->predicate ?? 'good', 'social_description' => $items->get('social')?->description ?? ''];
+                'spiritual_predicate' => $spiritual?->predicate, 'spiritual_description' => $spiritual?->description ?? '',
+                'social_predicate' => $social?->predicate, 'social_description' => $social?->description ?? '',
+                'spiritual_scores' => $spiritual?->spiritual_scores ?? array_fill_keys(self::SPIRITUAL_INDICATORS, null),
+                'social_scores' => $social?->social_scores ?? array_fill_keys(self::SOCIAL_INDICATORS, null)];
         });
 
         return Inertia::render('Assessment/Attitudes/Index', ['active_term' => $term, 'classes' => $classes, 'selected_class_id' => (string) $classId, 'students' => $students]);
@@ -59,13 +67,41 @@ class StudentAttitudeController extends Controller
             $allowedClassIds = collect($homeroom ? [$homeroom->id] : []);
         }
         $allowedEnrollmentIds = DB::table('enrollments')->where('term_id', $term->id)->whereIn('class_group_id', $allowedClassIds)->pluck('id')->all();
-        $data = $request->validate(['records' => ['required', 'array', 'min:1'], 'records.*.enrollment_id' => ['required', Rule::in($allowedEnrollmentIds)],
-            'records.*.spiritual_predicate' => ['required', 'in:excellent,good,fair,needs_guidance'], 'records.*.spiritual_description' => ['required', 'string', 'max:1000'],
-            'records.*.social_predicate' => ['required', 'in:excellent,good,fair,needs_guidance'], 'records.*.social_description' => ['required', 'string', 'max:1000']]);
+        $data = $request->validate([
+            'records' => ['required', 'array', 'min:1'],
+            'records.*.enrollment_id' => ['required', Rule::in($allowedEnrollmentIds)],
+            'records.*.spiritual_scores' => ['required', 'array:'.implode(',', self::SPIRITUAL_INDICATORS)],
+            'records.*.social_scores' => ['required', 'array:'.implode(',', self::SOCIAL_INDICATORS)],
+            ...$this->indicatorRules('spiritual_scores', self::SPIRITUAL_INDICATORS),
+            ...$this->indicatorRules('social_scores', self::SOCIAL_INDICATORS),
+        ]);
         DB::transaction(function () use ($data, $schoolId, $term, $request): void {
             foreach ($data['records'] as $record) {
                 foreach (['spiritual', 'social'] as $type) {
-                    StudentAttitude::updateOrCreate(['term_id' => $term->id, 'enrollment_id' => $record['enrollment_id'], 'type' => $type], ['school_id' => $schoolId, 'predicate' => $record[$type.'_predicate'], 'description' => $record[$type.'_description'], 'recorded_by' => $request->user()->id]);
+                    $scoreField = $type.'_scores';
+                    $existing = StudentAttitude::query()
+                        ->where('term_id', $term->id)
+                        ->where('enrollment_id', $record['enrollment_id'])
+                        ->where('type', $type)
+                        ->first();
+                    $scores = array_map(static fn ($value) => $value === '' ? null : ($value === null ? null : (int) $value), $record[$scoreField]);
+                    $average = $this->averageScore($scores);
+                    if ($average === null && $existing === null) {
+                        continue;
+                    }
+
+                    $attributes = [
+                        'school_id' => $schoolId,
+                        'predicate' => $average === null ? ($existing?->predicate ?? 'good') : $this->predicateForAverage($average),
+                        'description' => $existing?->description ?? '',
+                        'recorded_by' => $request->user()->id,
+                        $scoreField => $scores,
+                    ];
+
+                    StudentAttitude::query()->updateOrCreate(
+                        ['term_id' => $term->id, 'enrollment_id' => $record['enrollment_id'], 'type' => $type],
+                        $attributes,
+                    );
                 }
             }
         });
@@ -77,5 +113,34 @@ class StudentAttitudeController extends Controller
     private function authorizeManage(Request $request): void
     {
         abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom']), 403);
+    }
+
+    /** @param list<string> $indicators */
+    private function indicatorRules(string $group, array $indicators): array
+    {
+        $rules = [];
+        foreach ($indicators as $indicator) {
+            $rules['records.*.'.$group.'.'.$indicator] = ['nullable', 'integer', 'between:1,5'];
+        }
+
+        return $rules;
+    }
+
+    /** @param array<string, int|null> $scores */
+    private function averageScore(array $scores): ?float
+    {
+        $values = array_values(array_filter($scores, static fn ($score) => $score !== null));
+
+        return $values === [] ? null : array_sum($values) / count($values);
+    }
+
+    private function predicateForAverage(float $average): string
+    {
+        return match (true) {
+            $average >= 4.5 => 'excellent',
+            $average >= 3.5 => 'good',
+            $average >= 2.5 => 'fair',
+            default => 'needs_guidance',
+        };
     }
 }

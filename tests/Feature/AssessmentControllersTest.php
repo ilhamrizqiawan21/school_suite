@@ -28,6 +28,7 @@ use App\Modules\Assessment\Infrastructure\Models\QuestionPackItem;
 use App\Modules\Assessment\Infrastructure\Models\QuestionShare;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use App\Modules\Assessment\Infrastructure\Models\Score;
+use App\Modules\Assessment\Infrastructure\Models\StudentAttitude;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -652,6 +653,70 @@ class AssessmentControllersTest extends TestCase
             'passing_grade' => 75.0,
             'adjusted_score' => 75.0,
         ]);
+    }
+
+    public function test_teacher_can_save_indicator_based_attitudes_while_preserving_legacy_report_fields(): void
+    {
+        StudentAttitude::create([
+            'school_id' => $this->school->id,
+            'term_id' => $this->term->id,
+            'enrollment_id' => $this->enrollment->id,
+            'type' => 'spiritual',
+            'predicate' => 'good',
+            'description' => 'Catatan lama spiritual',
+            'recorded_by' => $this->teacherUser->id,
+        ]);
+        StudentAttitude::create([
+            'school_id' => $this->school->id,
+            'term_id' => $this->term->id,
+            'enrollment_id' => $this->enrollment->id,
+            'type' => 'social',
+            'predicate' => 'fair',
+            'description' => 'Catatan lama sosial',
+            'recorded_by' => $this->teacherUser->id,
+        ]);
+
+        $this->actingAs($this->teacherUser)
+            ->get(route('assessment.attitudes.index', ['class_group_id' => $this->classGroup->id]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Assessment/Attitudes/Index')
+                ->where('students.0.spiritual_scores.taqwa', null)
+                ->where('students.0.spiritual_description', 'Catatan lama spiritual')
+            );
+
+        $response = $this->actingAs($this->teacherUser)->post(route('assessment.attitudes.store'), [
+            'records' => [[
+                'enrollment_id' => $this->enrollment->id,
+                'spiritual_scores' => ['taqwa' => 5, 'kejujuran' => 5, 'disiplin' => 4, 'sabar' => 4, 'syukur' => 4, 'tawadhu' => 5],
+                'social_scores' => ['empati' => 3, 'kerjasama' => 4, 'toleransi' => 3, 'percaya_diri' => 4, 'komunikasi' => 3],
+            ]],
+        ]);
+
+        $response->assertRedirect();
+        $spiritual = StudentAttitude::query()->where('enrollment_id', $this->enrollment->id)->where('type', 'spiritual')->firstOrFail();
+        $social = StudentAttitude::query()->where('enrollment_id', $this->enrollment->id)->where('type', 'social')->firstOrFail();
+
+        $this->assertSame([5, 5, 4, 4, 4, 5], array_values($spiritual->spiritual_scores));
+        $this->assertSame('excellent', $spiritual->predicate);
+        $this->assertSame('Catatan lama spiritual', $spiritual->description);
+        $this->assertSame([3, 4, 3, 4, 3], array_values($social->social_scores));
+        $this->assertSame('fair', $social->predicate);
+        $this->assertSame('Catatan lama sosial', $social->description);
+    }
+
+    public function test_attitude_indicator_scores_are_limited_to_one_through_five(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->from(route('assessment.attitudes.index'))->post(route('assessment.attitudes.store'), [
+            'records' => [[
+                'enrollment_id' => $this->enrollment->id,
+                'spiritual_scores' => ['taqwa' => 6, 'kejujuran' => null, 'disiplin' => null, 'sabar' => null, 'syukur' => null, 'tawadhu' => null],
+                'social_scores' => ['empati' => 1, 'kerjasama' => null, 'toleransi' => null, 'percaya_diri' => null, 'komunikasi' => null],
+            ]],
+        ]);
+
+        $response->assertSessionHasErrors('records.0.spiritual_scores.taqwa');
+        $this->assertDatabaseCount('student_attitudes', 0);
     }
 
     public function test_score_validation_rejects_out_of_bounds_scores(): void

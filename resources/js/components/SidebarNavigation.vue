@@ -56,7 +56,7 @@ const sections: NavSection[] = [
     {
         title: 'Pembelajaran LMS',
         items: [
-            { name: 'Ruang Belajar', href: '/pembelajaran', key: 'learning', exact: true, activePrefix: '/pembelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+            { name: 'Materi & Tugas', href: '/pembelajaran', key: 'learning', exact: true, activePrefix: '/pembelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
             { name: 'Progress Belajar', href: '/pembelajaran/progress', key: 'learning-progress', activePrefix: '/pembelajaran/progress', icon: 'M9 17v-6m4 6V7m4 10V4M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z' },
         ],
     },
@@ -111,6 +111,9 @@ const sections: NavSection[] = [
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const currentRole = computed(() => (page.props.auth as any)?.user?.role as string | undefined);
+const displayName = (item: NavItem) => item.key === 'learning' && currentRole.value === 'student'
+    ? 'Ruang Belajar'
+    : item.name;
 const roleVisibility: Record<string, string[]> = {
     students: ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
     teachers: ['admin', 'operator', 'principal'],
@@ -222,7 +225,7 @@ watch(learningResourcesActive, (active) => {
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="item.icon" />
                         </svg>
-                        <span>{{ item.name }}</span>
+                        <span>{{ displayName(item) }}</span>
                         <svg class="nav-group-chevron" :class="{ 'is-expanded': learningResourcesExpanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m6 9 6 6 6-6" />
                         </svg>
@@ -232,7 +235,7 @@ watch(learningResourcesActive, (active) => {
                         id="learning-resources-submenu"
                         class="nav-submenu"
                         role="group"
-                        :aria-label="item.name"
+                        :aria-label="displayName(item)"
                     >
                         <Link
                             v-for="child in item.children"
@@ -257,7 +260,7 @@ watch(learningResourcesActive, (active) => {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="item.icon" />
                     </svg>
-                    <span>{{ item.name }}</span>
+                    <span>{{ displayName(item) }}</span>
                 </Link>
             </template>
         </template>

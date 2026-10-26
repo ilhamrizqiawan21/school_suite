@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 type PackageKey = 'merdeka' | 'kbc' | 'k13' | 'blank';
-interface ReferenceRow { key: string; name: string; content: string }
+interface ReferenceRow { key: string; name: string; content: string; phase?: string; element?: string }
 interface ChapterRow { id: string | number; title: string; semester: string }
 interface UnitRow { id: string | number; chapter_id: string | number; code: string; objective: string; material: string; jp: number; kkm?: number | null }
 interface PlanData { references: ReferenceRow[]; chapters: ChapterRow[]; units: UnitRow[]; waktu: { jp_per_minggu: number; minggu_efektif: { '1': number; '2': number } } }
@@ -38,6 +38,8 @@ const hasFoundation = computed(() => Boolean(props.active_term && props.subjects
 const currentPlan = computed(() => props.plans.find((plan) => plan.id === selectedId.value) ?? null);
 const isEditing = computed(() => selectedId.value !== null && props.selected_plan?.id === selectedId.value);
 const curriculumName = (value: string) => packageOptions.find((item) => item.value === value)?.label ?? value;
+const cpRows = computed(() => form.content.references.filter((reference) => Boolean(reference.phase) || /^CP(?:-|$)/i.test(reference.key) || reference.name.toLowerCase().includes('capaian pembelajaran')));
+const generalReferences = computed(() => form.content.references.filter((reference) => !cpRows.value.includes(reference)));
 
 function newKey(prefix: string) {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -93,6 +95,9 @@ function choosePackage(value: PackageKey) {
 function addReference() {
     form.content.references.push({ key: newKey('ref'), name: '', content: '' });
 }
+function addCp() {
+    form.content.references.push({ key: newKey('CP'), name: 'Capaian Pembelajaran', phase: 'D', element: '', content: '' });
+}
 function addK13Presets() {
     const presets = [
         { key: 'KI-1', name: 'Sikap Spiritual (KI-1)', content: 'Menghargai dan menghayati ajaran agama yang dianutnya.' },
@@ -121,6 +126,9 @@ function removeChapter(id: string | number) {
 
 function savePlan() {
     if (!form.subject_id || !form.grade_level) return;
+    form.content.references = form.content.references.map((reference) => reference.phase
+        ? { ...reference, key: reference.key.startsWith('CP-') ? reference.key : `CP-${reference.key}`, name: `CP Fase ${reference.phase}${reference.element?.trim() ? ` · ${reference.element.trim()}` : ''}` }
+        : reference);
     const options = {
         preserveScroll: true,
         onSuccess: () => { notice.value = 'ATP/Silabus berhasil disimpan.'; },
@@ -204,15 +212,22 @@ function deletePlan() {
                         </section>
 
                         <section class="editor-section references-section">
-                            <div class="section-heading"><div><span class="section-kicker">Landasan</span><h3>Referensi &amp; capaian</h3><p>Catat dokumen acuan dan isi capaian yang menjadi dasar perencanaan.</p></div><div class="reference-actions"><button v-if="form.curriculum === 'k13'" type="button" class="action-secondary" @click="addK13Presets">Isi contoh KI-1 sampai KI-4</button><button type="button" class="action-secondary" @click="addReference">＋ {{ form.curriculum === 'k13' ? 'Tambah referensi' : 'Tambah CP / referensi' }}</button></div></div>
-                            <div v-if="form.content.references.length" class="reference-list">
-                                <article v-for="(reference, index) in form.content.references" :key="reference.key" class="reference-row">
+                            <div class="section-heading"><div><span class="section-kicker">Landasan kurikulum</span><h3>{{ ['merdeka', 'kbc'].includes(form.curriculum) ? 'Capaian Pembelajaran (CP)' : form.curriculum === 'k13' ? 'Kompetensi Inti (KI)' : 'Referensi &amp; capaian' }}</h3><p>{{ ['merdeka', 'kbc'].includes(form.curriculum) ? 'Catat CP per fase dan elemen. Capaian ini akan dibawa ke Modul Ajar dan paket administrasi.' : form.curriculum === 'k13' ? 'Isi KI-1 sampai KI-4 atau tambahkan referensi capaian lainnya.' : 'Tambahkan acuan kurikulum yang menjadi dasar perencanaan.' }}</p></div><div class="reference-actions"><button v-if="form.curriculum === 'k13'" type="button" class="action-secondary" @click="addK13Presets">Isi contoh KI-1 sampai KI-4</button><button v-if="['merdeka', 'kbc'].includes(form.curriculum)" type="button" class="action-secondary" @click="addCp">＋ Tambah CP</button><button type="button" class="action-secondary" @click="addReference">＋ Tambah referensi</button></div></div>
+                            <div v-if="['merdeka', 'kbc'].includes(form.curriculum)" class="cp-list">
+                                <article v-for="(reference, index) in cpRows" :key="reference.key" class="cp-card">
+                                    <div class="cp-card-heading"><span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span><strong>Capaian Pembelajaran</strong><button type="button" class="remove-button" :aria-label="`Hapus CP ${index + 1}`" @click="form.content.references.splice(form.content.references.indexOf(reference), 1)">Hapus</button></div>
+                                    <div class="cp-fields"><label class="field"><span>Fase</span><select v-model="reference.phase" required><option v-for="phase in ['A', 'B', 'C', 'D', 'E', 'F']" :key="phase" :value="phase">Fase {{ phase }}</option></select></label><label class="field"><span>Elemen (opsional)</span><input v-model="reference.element" maxlength="100" placeholder="Contoh: Bilangan" /></label><label class="field cp-content"><span>Deskripsi CP</span><textarea v-model="reference.content" rows="5" maxlength="10000" required placeholder="Tuliskan capaian pembelajaran untuk fase dan elemen ini…" /></label></div>
+                                </article>
+                                <div v-if="!cpRows.length" class="section-empty"><strong>CP belum ditambahkan</strong><br />Gunakan “Tambah CP”, lalu isi fase, elemen, dan deskripsi capaian.</div>
+                            </div>
+                            <div v-if="generalReferences.length" class="reference-list">
+                                <article v-for="(reference, index) in generalReferences" :key="reference.key" class="reference-row">
                                     <span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span>
                                     <div class="reference-fields"><label class="field"><span>Nama referensi</span><input v-model="reference.name" placeholder="Contoh: Capaian Pembelajaran Fase D" /></label><label class="field"><span>Isi / catatan</span><textarea v-model="reference.content" rows="2" placeholder="Tuliskan capaian atau ringkasan acuan…" /></label></div>
-                                    <button type="button" class="remove-button" :aria-label="`Hapus referensi ${reference.name || index + 1}`" @click="form.content.references.splice(index, 1)">Hapus</button>
+                                    <button type="button" class="remove-button" :aria-label="`Hapus referensi ${reference.name || index + 1}`" @click="form.content.references.splice(form.content.references.indexOf(reference), 1)">Hapus</button>
                                 </article>
                             </div>
-                            <div v-else class="section-empty">Belum ada referensi. Tambahkan capaian atau dokumen acuan.</div>
+                            <div v-if="!form.content.references.length" class="section-empty">Belum ada referensi kurikulum. Tambahkan CP atau acuan yang relevan.</div>
                         </section>
 
                         <section class="editor-section">
@@ -278,4 +293,6 @@ function deletePlan() {
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .reference-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.45rem}
 @media(max-width:740px){.reference-actions{width:100%;justify-content:flex-start}}
+.cp-list{display:grid;gap:.65rem}.cp-card{padding:.85rem;border:1px solid var(--plan-line);border-radius:.75rem;background:var(--plan-canvas)}.cp-card-heading{display:flex;align-items:center;gap:.55rem;margin-bottom:.65rem}.cp-card-heading strong{flex:1;color:var(--plan-ink);font-size:.84rem}.cp-card-heading .row-index{padding:0}.cp-fields{display:grid;grid-template-columns:120px minmax(170px,.7fr) minmax(0,1.6fr);gap:.65rem}.cp-content textarea{min-height:112px;resize:vertical}
+@media(max-width:740px){.cp-fields{grid-template-columns:minmax(0,1fr)}.cp-content{grid-column:1}}
 </style>

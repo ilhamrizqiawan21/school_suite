@@ -18,6 +18,17 @@ const roomForm = useForm({
 const messageForm = useForm({ body: '' });
 const showRoom = ref(false);
 
+const roomName = (room: any) => {
+    const name = String(room?.name ?? '').trim();
+    if (name.length > 1) return name;
+
+    const assignment = props.assignments.find((item) => item.id === room?.teaching_assignment_id);
+    const className = assignment?.class_group?.name;
+    const subjectName = assignment?.subject?.name;
+
+    return className && subjectName ? `${className} · ${subjectName}` : 'Ruang kelas';
+};
+
 const send = () => {
     if (!props.selected_room) return;
 
@@ -76,8 +87,8 @@ const moderate = (id: number) => {
                             :aria-pressed="selected_room?.id === room.id"
                             @click="router.get('/komunikasi/chat', { room_id: room.id })"
                         >
-                            <span>{{ room.name }}</span>
-                            <small>Masuk ke ruang</small>
+                            <span>{{ roomName(room) }}</span>
+                            <small>{{ selected_room?.id === room.id ? 'Sedang dibuka' : 'Buka percakapan' }}</small>
                         </button>
                     </div>
 
@@ -89,7 +100,7 @@ const moderate = (id: number) => {
                         <header class="chat-panel-head">
                             <div>
                                 <p class="eyebrow">Ruang terpilih</p>
-                                <h2>{{ selected_room.name }}</h2>
+                                <h2>{{ roomName(selected_room) }}</h2>
                                 <p>Gunakan ruang ini untuk koordinasi pembelajaran bersama kelas.</p>
                             </div>
                             <span class="chat-status">Aktif</span>
@@ -102,14 +113,11 @@ const moderate = (id: number) => {
                                     <small>{{ new Date(message.created_at).toLocaleString('id-ID') }}</small>
                                 </div>
                                 <p>{{ message.body }}</p>
-                                <button
-                                    v-if="can_manage && !message.moderated_at"
-                                    class="message-moderate"
-                                    type="button"
-                                    @click="moderate(message.id)"
-                                >
-                                    Moderasi
-                                </button>
+                                <div v-if="can_manage && !message.moderated_at" class="message-actions">
+                                    <button class="message-moderate" type="button" @click="moderate(message.id)">
+                                        Moderasi pesan
+                                    </button>
+                                </div>
                             </article>
                         </div>
                         <div v-else class="empty-state messages-empty">
@@ -199,7 +207,8 @@ const moderate = (id: number) => {
 
 .chat-layout {
     display: grid;
-    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    grid-template-columns: minmax(230px, 290px) minmax(0, 1fr);
+    align-items: start;
     gap: 1rem;
 }
 
@@ -208,6 +217,8 @@ const moderate = (id: number) => {
     align-content: start;
     gap: 1rem;
     padding: 1.15rem;
+    max-height: min(72vh, 760px);
+    overflow: hidden;
 }
 
 .room-list-head,
@@ -229,6 +240,9 @@ const moderate = (id: number) => {
 .room-options {
     display: grid;
     gap: .55rem;
+    min-height: 0;
+    overflow-y: auto;
+    padding: .1rem .2rem .1rem 0;
 }
 
 .room-option {
@@ -255,6 +269,8 @@ const moderate = (id: number) => {
 .room-option span {
     font-size: .82rem;
     font-weight: 800;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
 .room-option small,
@@ -266,8 +282,9 @@ const moderate = (id: number) => {
 
 .chat-panel {
     display: grid;
-    grid-template-rows: auto minmax(260px, 1fr) auto;
-    min-height: 60vh;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: min(72vh, 760px);
+    min-height: 520px;
     padding: 1.25rem;
 }
 
@@ -291,10 +308,10 @@ const moderate = (id: number) => {
     display: grid;
     align-content: start;
     gap: .75rem;
-    max-height: 55vh;
+    min-height: 0;
     margin: 1rem 0;
     overflow: auto;
-    padding: .1rem .15rem .25rem 0;
+    padding: .1rem .35rem .25rem 0;
 }
 
 .message-card {
@@ -318,12 +335,20 @@ const moderate = (id: number) => {
     font-size: .8rem;
 }
 
+.message-meta small {
+    flex: 0 0 auto;
+    text-align: right;
+}
+
+.message-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: .45rem;
+}
+
 .message-moderate {
-    position: absolute;
-    top: .55rem;
-    right: .6rem;
     color: var(--red);
-    font-size: .7rem;
+    font-size: .72rem;
     font-weight: 800;
 }
 
@@ -361,11 +386,12 @@ const moderate = (id: number) => {
     }
 
     .chat-panel {
-        min-height: 55vh;
+        height: min(68vh, 680px);
+        min-height: 440px;
     }
 
-    .messages {
-        max-height: 45vh;
+    .room-list {
+        max-height: 34vh;
     }
 }
 
@@ -377,6 +403,15 @@ const moderate = (id: number) => {
 
     .send-box .btn {
         width: 100%;
+    }
+
+    .message-meta {
+        flex-direction: column;
+        gap: .2rem;
+    }
+
+    .message-meta small {
+        text-align: left;
     }
 }
 </style>

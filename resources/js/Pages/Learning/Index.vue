@@ -186,6 +186,15 @@ const removeResource = (url: string) => {
                 </div>
             </section>
 
+            <nav v-if="capabilities.manage" class="class-workspace-nav" aria-label="Alur kerja kelas dan mata pelajaran">
+                <Link class="workspace-tab" href="/pembelajaran/progress">Ringkasan</Link>
+                <button class="workspace-tab" :class="{ 'is-current': activeTab === 'materials' }" type="button" :aria-pressed="activeTab === 'materials'" @click="activeTab = 'materials'">Materi</button>
+                <button class="workspace-tab" :class="{ 'is-current': activeTab === 'assignments' }" type="button" :aria-pressed="activeTab === 'assignments'" @click="activeTab = 'assignments'">Tugas</button>
+                <Link class="workspace-tab" href="/penilaian/skor">Nilai</Link>
+                <Link class="workspace-tab" href="/akademik/presensi">Presensi</Link>
+                <Link class="workspace-tab" href="/komunikasi/chat">Chat</Link>
+            </nav>
+
             <section class="grade-summary">
                 <div><span>Kelas mapel</span><strong>{{ teaching_assignments.length }}</strong><small>semester aktif</small></div>
                 <div><span>Materi terbit</span><strong>{{ materials.length }}</strong><small>bahan ajar tersedia</small></div>
@@ -318,6 +327,11 @@ const removeResource = (url: string) => {
 <style scoped>
 .compact-hero { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
 .hero-actions, .resource-actions, .modal-actions { display: flex; align-items: center; gap: .75rem; }
+.class-workspace-nav { display: flex; gap: .35rem; overflow-x: auto; padding: .4rem; border: 1px solid var(--line, #e2e8f0); border-radius: .9rem; background: var(--surface, #fff); scrollbar-width: thin; }
+.workspace-tab { flex: 0 0 auto; padding: .65rem .9rem; border: 0; border-radius: .65rem; background: transparent; color: var(--ink-soft, #536174); font: inherit; font-size: .84rem; font-weight: 700; text-decoration: none; cursor: pointer; }
+.workspace-tab:hover { background: var(--surface-subtle, #f8faff); color: var(--ink, #172033); }
+.workspace-tab.is-current { background: var(--primary-soft, #e8eefb); color: var(--primary, #3157a4); }
+.workspace-tab:focus-visible { outline: 2px solid var(--primary, #3157a4); outline-offset: 2px; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line, #e5e7eb); }
 .segmented-control { display: inline-flex; padding: .25rem; border-radius: .75rem; background: #eef2ff; }
 .segmented-control button { padding: .55rem 1rem; border-radius: .55rem; color: #64748b; font-weight: 700; }

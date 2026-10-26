@@ -14,6 +14,7 @@ use App\Modules\Academic\Infrastructure\Models\LessonSession;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
@@ -184,6 +185,97 @@ class AttendanceAndJournalTest extends TestCase
             'enrollment_id' => $this->enrollment2->id,
             'status' => 'sick',
             'notes' => 'Demam flu',
+        ]);
+    }
+
+    public function test_teacher_attendance_page_is_scoped_to_assigned_class_subject_and_own_sessions(): void
+    {
+        TeachingAssignment::create([
+            'term_id' => $this->term->id,
+            'class_group_id' => $this->class7A->id,
+            'subject_id' => $this->subject->id,
+            'teacher_id' => $this->teacher->id,
+            'hours_per_week' => 3,
+        ]);
+
+        $otherTeacher = Teacher::create([
+            'school_id' => $this->school->id,
+            'nip' => '198505052010011004',
+            'name' => 'Guru Lain',
+            'gender' => 'P',
+        ]);
+        $otherSession = LessonSession::create([
+            'school_id' => $this->school->id,
+            'term_id' => $this->term->id,
+            'class_group_id' => $this->class7A->id,
+            'subject_id' => $this->subject->id,
+            'teacher_id' => $otherTeacher->id,
+            'date' => '2025-08-17',
+            'start_time' => '07:30',
+            'end_time' => '09:00',
+            'meeting_number' => 2,
+            'status' => 'scheduled',
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->get('/akademik/presensi?month=2025-08');
+
+        $response->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Academic/Attendance/Index')
+            ->where('selected_class.id', $this->class7A->id)
+            ->where('selected_subject.id', $this->subject->id)
+            ->has('sessions', 1)
+            ->where('sessions.0.id', $this->session->id)
+            ->missing('sessions.1')
+            ->where('students.0.enrollment_id', $this->enrollment1->id)
+        );
+        $this->assertNotSame($this->session->id, $otherSession->id);
+    }
+
+    public function test_teacher_cannot_submit_attendance_for_enrollment_outside_session_class(): void
+    {
+        $otherClass = ClassGroup::create([
+            'school_id' => $this->school->id,
+            'academic_year_id' => $this->term->academic_year_id,
+            'grade_level' => 7,
+            'name' => '7B',
+            'capacity' => 32,
+        ]);
+        $otherStudent = Student::create([
+            'school_id' => $this->school->id,
+            'nis' => '1003',
+            'name' => 'Citra Lestari',
+            'gender' => 'P',
+        ]);
+        $foreignEnrollment = Enrollment::create([
+            'term_id' => $this->term->id,
+            'class_group_id' => $otherClass->id,
+            'student_id' => $otherStudent->id,
+            'roll_number' => 1,
+        ]);
+
+        $this->actingAs($this->teacherUser)->post('/akademik/presensi', [
+            'session_id' => $this->session->id,
+            'date' => '2025-08-10',
+            'records' => [['enrollment_id' => $foreignEnrollment->id, 'status' => 'present']],
+        ])->assertSessionHasErrors('records.0.enrollment_id');
+
+        $this->assertDatabaseMissing('attendance_records', [
+            'lesson_session_id' => $this->session->id,
+            'enrollment_id' => $foreignEnrollment->id,
+        ]);
+    }
+
+    public function test_teacher_must_submit_the_full_roster_for_a_meeting(): void
+    {
+        $this->actingAs($this->teacherUser)->post('/akademik/presensi', [
+            'session_id' => $this->session->id,
+            'date' => '2025-08-10',
+            'records' => [['enrollment_id' => $this->enrollment1->id, 'status' => 'present']],
+        ])->assertSessionHasErrors('records');
+
+        $this->assertDatabaseMissing('attendance_records', [
+            'lesson_session_id' => $this->session->id,
+            'enrollment_id' => $this->enrollment1->id,
         ]);
     }
 

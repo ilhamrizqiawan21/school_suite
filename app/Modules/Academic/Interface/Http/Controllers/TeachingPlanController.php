@@ -546,6 +546,8 @@ class TeachingPlanController extends Controller
             'content.references.*.key' => ['nullable', 'string', 'max:30'],
             'content.references.*.name' => ['nullable', 'string', 'max:150'],
             'content.references.*.content' => ['nullable', 'string', 'max:10000'],
+            'content.references.*.phase' => ['nullable', Rule::in(['A', 'B', 'C', 'D', 'E', 'F'])],
+            'content.references.*.element' => ['nullable', 'string', 'max:100'],
             'content.chapters' => ['nullable', 'array', 'max:100'],
             'content.chapters.*.id' => ['nullable', 'string', 'max:64'],
             'content.chapters.*.title' => ['nullable', 'string', 'max:255'],

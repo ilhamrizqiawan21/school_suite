@@ -11,10 +11,13 @@ use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Academic\Infrastructure\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use InvalidArgumentException;
@@ -31,70 +34,102 @@ class AttendanceController extends Controller
         Gate::authorize('viewAny', AttendanceRecord::class);
 
         $schoolId = (int) $request->user()->school_id;
-        $classGroupId = $request->query('class_group_id');
-        $date = $request->query('date', date('Y-m-d'));
+        $classGroupId = (int) $request->query('class_group_id', 0);
+        $subjectId = (int) $request->query('subject_id', 0);
+        $month = $request->query('month', now()->format('Y-m'));
+        abort_unless(preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', (string) $month) === 1, 422);
 
         $activeTerm = Term::whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))
             ->where('is_active', true)
             ->first();
 
+        $teacher = Teacher::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+        $assignments = $activeTerm && $teacher
+            ? $teacher->teachingAssignments()->where('term_id', $activeTerm->id)->with('subject:id,name,code')->get()
+            : collect();
         $classes = $activeTerm
             ? ClassGroup::where('school_id', $schoolId)
                 ->where('academic_year_id', $activeTerm->academic_year_id)
-                ->orderBy('name')
+                ->whereIn('id', $assignments->pluck('class_group_id')->unique())
+                ->orderBy('grade_level')->orderBy('name')
                 ->get(['id', 'name', 'grade_level'])
             : collect();
 
         $selectedClass = $classGroupId
-            ? ClassGroup::where('school_id', $schoolId)->find($classGroupId)
+            ? $classes->firstWhere('id', $classGroupId)
             : ($classes->first() ?? null);
 
+        $subjects = $selectedClass
+            ? $assignments->where('class_group_id', $selectedClass->id)->pluck('subject')->filter()->unique('id')->values()
+            : collect();
+        $selectedSubject = $subjectId ? $subjects->firstWhere('id', $subjectId) : ($subjects->first() ?? null);
+        $monthStart = now()->parse($month.'-01')->startOfMonth()->toDateString();
+        $monthEnd = now()->parse($month.'-01')->endOfMonth()->toDateString();
+
         $studentsWithAttendance = [];
-        $sessions = [];
+        $sessions = collect();
+        $selectedSession = null;
 
         if ($selectedClass && $activeTerm) {
-            $enrollments = Enrollment::where('term_id', $activeTerm->id)
+            $sessions = $selectedSubject
+                ? LessonSession::where('school_id', $schoolId)
+                ->where('term_id', $activeTerm->id)
+                ->where('teacher_id', $teacher?->id)
                 ->where('class_group_id', $selectedClass->id)
-                ->with(['student'])
-                ->orderBy('roll_number')
-                ->get();
+                ->where('subject_id', $selectedSubject->id)
+                ->whereBetween('date', [$monthStart, $monthEnd])
+                ->withCount('attendanceRecords')
+                ->orderByDesc('date')->orderByDesc('start_time')->get()
+                : collect();
 
-            // Sesi pelajaran pada tanggal ini
-            $sessions = LessonSession::where('school_id', $schoolId)
-                ->where('class_group_id', $selectedClass->id)
-                ->where('date', $date)
-                ->with(['subject', 'teacher'])
-                ->get();
+            $selectedSessionId = (int) $request->query('session_id', 0);
+            $selectedSession = $sessions->firstWhere('id', $selectedSessionId)
+                ?? $sessions->firstWhere('date', now()->toDateString())
+                ?? $sessions->first();
 
-            // Presensi yang sudah tercatat pada tanggal ini
-            $attendances = AttendanceRecord::where('school_id', $schoolId)
-                ->whereIn('enrollment_id', $enrollments->pluck('id'))
-                ->where('date', $date)
-                ->get()
-                ->keyBy('enrollment_id');
+            if ($selectedSession) {
+                $enrollments = Enrollment::where('term_id', $activeTerm->id)
+                    ->where('class_group_id', $selectedClass->id)
+                    ->with('student')->orderBy('roll_number')->get();
 
-            foreach ($enrollments as $enr) {
-                $att = $attendances->get($enr->id);
-                $studentsWithAttendance[] = [
-                    'enrollment_id' => $enr->id,
-                    'student_id' => $enr->student_id,
-                    'nis' => $enr->student->nis,
-                    'name' => $enr->student->name,
-                    'gender' => $enr->student->gender,
-                    'roll_number' => $enr->roll_number,
-                    'status' => $att?->status ?? 'present',
-                    'notes' => $att?->notes ?? '',
-                    'attendance_id' => $att?->id,
-                ];
+                $attendances = AttendanceRecord::where('school_id', $schoolId)
+                    ->where('lesson_session_id', $selectedSession->id)
+                    ->whereIn('enrollment_id', $enrollments->pluck('id'))
+                    ->get()->keyBy('enrollment_id');
+
+                foreach ($enrollments as $enr) {
+                    $att = $attendances->get($enr->id);
+                    $studentsWithAttendance[] = [
+                        'enrollment_id' => $enr->id, 'student_id' => $enr->student_id,
+                        'nis' => $enr->student->nis, 'name' => $enr->student->name,
+                        'gender' => $enr->student->gender, 'roll_number' => $enr->roll_number,
+                        'status' => $att?->status ?? 'present', 'notes' => $att?->notes ?? '',
+                        'attendance_id' => $att?->id,
+                    ];
+                }
             }
         }
+
+        $studentCount = $selectedClass && $activeTerm
+            ? Enrollment::where('term_id', $activeTerm->id)->where('class_group_id', $selectedClass->id)->count()
+            : 0;
 
         return Inertia::render('Academic/Attendance/Index', [
             'classes' => $classes,
             'selected_class' => $selectedClass,
-            'date' => $date,
+            'date' => $selectedSession?->date?->toDateString() ?? now()->toDateString(),
+            'month' => $month,
+            'subjects' => $subjects,
+            'selected_subject' => $selectedSubject,
             'students' => $studentsWithAttendance,
-            'sessions' => $sessions,
+            'sessions' => $sessions->map(fn (LessonSession $session) => [
+                'id' => $session->id, 'date' => $session->date->toDateString(),
+                'meeting_number' => $session->meeting_number, 'start_time' => substr((string) $session->start_time, 0, 5),
+                'end_time' => substr((string) $session->end_time, 0, 5), 'status' => $session->status,
+                'attendance_count' => $session->attendance_records_count,
+                'student_count' => $studentCount,
+            ])->values(),
+            'selected_session_id' => $selectedSession?->id,
             'active_term' => $activeTerm,
         ]);
     }
@@ -116,6 +151,19 @@ class AttendanceController extends Controller
         if (! empty($validated['session_id'])) {
             $session = LessonSession::with('teacher')->findOrFail($validated['session_id']);
             Gate::authorize('record', $session);
+            abort_unless((int) $session->school_id === $schoolId, 404);
+            $validEnrollmentIds = Enrollment::where('term_id', $session->term_id)
+                ->where('class_group_id', $session->class_group_id)->pluck('id')->all();
+            validator($validated, [
+                'records.*.enrollment_id' => ['required', 'distinct', Rule::in($validEnrollmentIds)],
+            ])->validate();
+            $submittedEnrollmentIds = collect($validated['records'])->pluck('enrollment_id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+            $expectedEnrollmentIds = collect($validEnrollmentIds)->map(fn ($id) => (int) $id)->sort()->values()->all();
+            if ($submittedEnrollmentIds !== $expectedEnrollmentIds) {
+                throw ValidationException::withMessages([
+                    'records' => 'Presensi harus memuat seluruh siswa pada kelas dan pertemuan ini.',
+                ]);
+            }
 
             $result = $this->attendanceService->recordSessionAttendance(
                 lessonSessionId: (int) $session->id,

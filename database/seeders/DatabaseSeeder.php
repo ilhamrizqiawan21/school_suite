@@ -17,6 +17,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PilotSchoolSeeder::class,
             DemoAcademicContentSeeder::class,
+            DemoRosterSeeder::class,
+            DemoTeacherSessionsSeeder::class,
+            DemoTeachingPlanningSeeder::class,
+            DemoAssessmentContentSeeder::class,
+            DemoLearningCommunicationSeeder::class,
         ]);
     }
 }
