@@ -66,6 +66,7 @@ class ClassGroupController extends Controller
             'active_term' => $activeTerm,
             'classes' => $classes,
             'teachers' => $teachers,
+            'can_manage' => Gate::allows('create', ClassGroup::class),
         ]);
     }
 

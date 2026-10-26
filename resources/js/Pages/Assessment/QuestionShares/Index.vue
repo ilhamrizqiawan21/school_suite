@@ -21,8 +21,10 @@ function labelStatus(value: string) { return ({ pending: 'Menunggu', accepted: '
 <template>
     <Head title="Berbagi Bank Soal" />
     <AppLayout>
-        <div class="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
-            <header><p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Kolaborasi bank soal</p><h1 class="mt-1 text-2xl font-semibold text-slate-900">Berbagi soal dan paket</h1><p class="mt-1 text-sm text-slate-500">Penerima mendapat akses sesuai izin setelah menyetujui. Kepemilikan sumber tetap pada pembuatnya.</p></header>
+        <div class="view teacher-sharing-page space-y-6">
+            <section class="hero-card compact-hero">
+                <div><p class="eyebrow">Kolaborasi bank soal</p><h1>Berbagi soal dan paket</h1><p>Penerima mendapat akses sesuai izin setelah menyetujui. Kepemilikan sumber tetap pada pembuatnya.</p></div>
+            </section>
             <div v-if="page.props.flash?.message" class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{{ page.props.flash.message }}</div>
             <form @submit.prevent="submit" class="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 md:grid-cols-2">
                 <h2 class="text-base font-semibold md:col-span-2">Kirim permintaan berbagi</h2>

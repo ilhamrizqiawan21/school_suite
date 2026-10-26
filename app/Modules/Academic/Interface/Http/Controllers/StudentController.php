@@ -80,6 +80,7 @@ class StudentController extends Controller
 
         return Inertia::render('Academic/Students/Index', [
             'students' => $students,
+            'can_manage' => Gate::allows('create', Student::class),
             'filters' => [
                 'search' => $search,
                 'status' => $status,

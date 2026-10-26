@@ -2,6 +2,7 @@
 @import '../../docs/mockup/styles.css';
 @import './settings.css';
 @import './learning.css';
+@import './teacher.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -18,7 +19,8 @@ html[data-theme='dark'] {
 html[data-theme='dark'] body,
 html[data-theme='dark'] #app,
 html[data-theme='dark'] .workspace,
-html[data-theme='dark'] .main-content {
+html[data-theme='dark'] .main-content,
+html[data-theme='dark'] #main-content {
     background: var(--canvas) !important;
     color: var(--ink) !important;
 }

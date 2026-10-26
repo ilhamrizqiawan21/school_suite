@@ -101,9 +101,9 @@ const summary = computed(() => {
     <AppLayout title="Presensi Siswa">
         <Head title="Presensi Siswa — School Suite" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6 attendance-page">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="page-heading compact-heading">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Presensi Siswa</h1>
                     <p class="text-sm text-slate-500 mt-1">

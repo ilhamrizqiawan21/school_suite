@@ -268,4 +268,85 @@ class DailyOperationsControllersTest extends TestCase
         ]);
         $this->assertEquals('completed', $this->session->fresh()->status);
     }
+
+    public function test_teacher_journal_index_is_scoped_to_the_logged_in_teacher(): void
+    {
+        $otherUser = User::create([
+            'school_id' => $this->school->id,
+            'role_id' => $this->teacherUser->role_id,
+            'name' => 'Guru Lain',
+            'username' => 'guru-lain',
+            'email' => 'guru-lain@school.test',
+            'password' => bcrypt('GuruPass123!'),
+            'is_active' => true,
+        ]);
+        $otherTeacher = Teacher::create([
+            'school_id' => $this->school->id,
+            'user_id' => $otherUser->id,
+            'nip' => '198501012010011002',
+            'name' => 'Guru Lain, M.Pd',
+            'gender' => 'P',
+        ]);
+        $otherSession = LessonSession::create([
+            'school_id' => $this->school->id,
+            'term_id' => $this->term->id,
+            'class_group_id' => $this->class7A->id,
+            'subject_id' => $this->subject->id,
+            'teacher_id' => $otherTeacher->id,
+            'date' => '2025-08-10',
+            'start_time' => '09:30',
+            'end_time' => '11:00',
+            'meeting_number' => 2,
+            'status' => 'scheduled',
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->get('/akademik/jurnal?date=2025-08-10');
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('Academic/Journals/Index')
+            ->where('agenda_sessions.0.id', $this->session->id)
+            ->where('agenda_sessions', fn ($sessions) => collect($sessions)->pluck('id')->doesntContain($otherSession->id))
+            ->where('journal_sessions.data', fn ($sessions) => collect($sessions)->pluck('id')->doesntContain($otherSession->id))
+        );
+    }
+
+    public function test_teacher_cannot_save_journal_for_another_teachers_session(): void
+    {
+        $otherUser = User::create([
+            'school_id' => $this->school->id,
+            'role_id' => $this->teacherUser->role_id,
+            'name' => 'Guru Lain',
+            'username' => 'guru-lain',
+            'email' => 'guru-lain@school.test',
+            'password' => bcrypt('GuruPass123!'),
+            'is_active' => true,
+        ]);
+        $otherTeacher = Teacher::create([
+            'school_id' => $this->school->id,
+            'user_id' => $otherUser->id,
+            'nip' => '198501012010011002',
+            'name' => 'Guru Lain, M.Pd',
+            'gender' => 'P',
+        ]);
+        $otherSession = LessonSession::create([
+            'school_id' => $this->school->id,
+            'term_id' => $this->term->id,
+            'class_group_id' => $this->class7A->id,
+            'subject_id' => $this->subject->id,
+            'teacher_id' => $otherTeacher->id,
+            'date' => '2025-08-10',
+            'start_time' => '09:30',
+            'end_time' => '11:00',
+            'meeting_number' => 2,
+            'status' => 'scheduled',
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->post('/akademik/jurnal', [
+            'lesson_session_id' => $otherSession->id,
+            'topic' => 'Tidak boleh tersimpan',
+        ]);
+
+        $response->assertNotFound();
+        $this->assertDatabaseMissing('teaching_journals', ['lesson_session_id' => $otherSession->id]);
+    }
 }

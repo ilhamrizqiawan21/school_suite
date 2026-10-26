@@ -17,6 +17,7 @@ const props = defineProps<{
     active_year?: AcademicYearItem | null;
     classes: ClassGroup[];
     teachers: Teacher[];
+    can_manage: boolean;
 }>();
 
 const selectedYear = ref(props.active_year?.id ? String(props.active_year.id) : '');
@@ -99,7 +100,7 @@ const submitAssignHomeroom = () => {
                 </div>
             </div>
 
-            <section class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
+            <section v-if="can_manage" class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
                 <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Rombongan belajar baru</h2></div>
                 <form class="grid gap-3 md:grid-cols-[130px_1fr_140px_1.3fr_auto] items-end" @submit.prevent="submitAddClass">
                     <label class="text-xs font-semibold text-slate-700">Tingkat<select v-model="classForm.grade_level" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option :value="7">Kelas 7</option><option :value="8">Kelas 8</option><option :value="9">Kelas 9</option><option :value="10">Kelas 10</option><option :value="11">Kelas 11</option><option :value="12">Kelas 12</option></select></label>
@@ -154,6 +155,7 @@ const submitAssignHomeroom = () => {
 
                     <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
                         <button
+                            v-if="can_manage"
                             type="button"
                             @click="openHomeroomModal(cls)"
                             class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"

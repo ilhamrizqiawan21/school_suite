@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface NavItem {
     name: string;
@@ -10,6 +10,7 @@ interface NavItem {
     activePrefix?: string;
     exact?: boolean;
     roles?: string[];
+    children?: NavItem[];
 }
 
 interface NavSection {
@@ -34,7 +35,19 @@ const sections: NavSection[] = [
             { name: 'Rombel / Kelas', href: '/akademik/kelas', key: 'classes', activePrefix: '/akademik/kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
             { name: 'Jadwal Pelajaran', href: '/akademik/jadwal', key: 'schedules', activePrefix: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
             { name: 'Presensi Siswa', href: '/akademik/presensi', key: 'attendance', activePrefix: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-            { name: 'Jurnal Mengajar', href: '/akademik/jurnal', key: 'journals', activePrefix: '/akademik/jurnal', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+            {
+                name: 'Perangkat Pembelajaran',
+                href: '/akademik/jurnal',
+                key: 'learning-resources',
+                roles: ['teacher', 'homeroom'],
+                icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6',
+                children: [
+                    { name: 'Jurnal Guru', href: '/akademik/jurnal', key: 'journals', activePrefix: '/akademik/jurnal', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+                    { name: 'ATP / Silabus', href: '/akademik/perangkat/atp', key: 'learning-atp', activePrefix: '/akademik/perangkat/atp', icon: 'M8 4h8m-8 4h8m-8 4h5m-8 8h14a2 2 0 002-2V6a2 2 0 00-2-2h-3l-2-2H8L6 4H3a2 2 0 00-2 2v12a2 2 0 002 2z' },
+                    { name: 'Prota, Promes & KKTP', href: '/akademik/perangkat/dokumen', key: 'learning-documents', activePrefix: '/akademik/perangkat/dokumen', icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01' },
+                    { name: 'Modul Ajar', href: '/akademik/perangkat/modul-ajar', key: 'learning-module-ajar', activePrefix: '/akademik/perangkat/modul-ajar', icon: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5' },
+                ],
+            },
             { name: 'Kelas Daring', href: '/akademik/kelas-daring', key: 'online-classes', activePrefix: '/akademik/kelas-daring', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
             { name: 'Siklus Siswa', href: '/akademik/siklus-siswa', key: 'student-lifecycle', activePrefix: '/akademik/siklus-siswa', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
             { name: 'Pengaturan Akademik', href: '/akademik/pengaturan', key: 'academic-settings', activePrefix: '/akademik/pengaturan', icon: 'M4 6h16M4 12h16M4 18h16' },
@@ -113,7 +126,7 @@ const roleVisibility: Record<string, string[]> = {
     'question-bank': ['teacher', 'homeroom'],
     'question-packs': ['teacher', 'homeroom'],
     'question-shares': ['teacher', 'homeroom'],
-    exams: ['admin', 'operator', 'teacher', 'homeroom', 'student'],
+    exams: ['teacher', 'homeroom', 'student'],
     scores: ['teacher', 'homeroom'],
     attitudes: ['teacher', 'homeroom'],
     schemes: ['admin', 'operator', 'principal'],
@@ -162,6 +175,18 @@ const isItemActive = (item: NavItem): boolean => {
     }
     return currentPath === targetHref;
 };
+
+const learningResourcesItem = sections
+    .flatMap((section) => section.items)
+    .find((item) => item.key === 'learning-resources');
+const learningResourcesActive = computed(() =>
+    learningResourcesItem?.children?.some((child) => isItemActive(child)) ?? false,
+);
+const learningResourcesExpanded = ref(learningResourcesActive.value);
+
+watch(learningResourcesActive, (active) => {
+    if (active) learningResourcesExpanded.value = true;
+});
 </script>
 
 <template>
@@ -184,24 +209,106 @@ const isItemActive = (item: NavItem): boolean => {
 
         <template v-for="section in visibleSections" :key="section.title">
             <p class="nav-label nav-label-spaced">{{ section.title }}</p>
-            <Link
-                v-for="item in section.items"
-                :key="item.key"
-                :href="item.href"
-                :class="['nav-item', isItemActive(item) ? 'is-active' : '']"
-                :aria-current="isItemActive(item) ? 'page' : undefined"
-            >
-                <svg
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
+            <template v-for="item in section.items" :key="item.key">
+                <template v-if="item.children?.length">
+                    <button
+                        type="button"
+                        class="nav-item nav-group-trigger"
+                        :class="learningResourcesActive ? 'is-active' : ''"
+                        :aria-expanded="learningResourcesExpanded"
+                        aria-controls="learning-resources-submenu"
+                        @click="learningResourcesExpanded = !learningResourcesExpanded"
+                    >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="item.icon" />
+                        </svg>
+                        <span>{{ item.name }}</span>
+                        <svg class="nav-group-chevron" :class="{ 'is-expanded': learningResourcesExpanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m6 9 6 6 6-6" />
+                        </svg>
+                    </button>
+                    <div
+                        v-show="learningResourcesExpanded"
+                        id="learning-resources-submenu"
+                        class="nav-submenu"
+                        role="group"
+                        :aria-label="item.name"
+                    >
+                        <Link
+                            v-for="child in item.children"
+                            :key="child.key"
+                            :href="child.href"
+                            :class="['nav-item', 'nav-subitem', isItemActive(child) ? 'is-active' : '']"
+                            :aria-current="isItemActive(child) ? 'page' : undefined"
+                        >
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="child.icon" />
+                            </svg>
+                            <span>{{ child.name }}</span>
+                        </Link>
+                    </div>
+                </template>
+                <Link
+                    v-else
+                    :href="item.href"
+                    :class="['nav-item', isItemActive(item) ? 'is-active' : '']"
+                    :aria-current="isItemActive(item) ? 'page' : undefined"
                 >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="item.icon" />
-                </svg>
-                <span>{{ item.name }}</span>
-            </Link>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="item.icon" />
+                    </svg>
+                    <span>{{ item.name }}</span>
+                </Link>
+            </template>
         </template>
     </nav>
 </template>
+
+<style scoped>
+.nav-group-trigger {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nav-group-trigger:focus-visible,
+.nav-subitem:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.nav-group-chevron {
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-left: auto;
+    transition: transform 160ms ease;
+}
+
+.nav-group-chevron.is-expanded {
+    transform: rotate(180deg);
+}
+
+.nav-submenu {
+    display: grid;
+    gap: 0.2rem;
+    margin: 0.2rem 0 0.4rem 0.85rem;
+    padding-left: 0.55rem;
+    border-left: 1px solid currentColor;
+}
+
+.nav-subitem {
+    min-height: 2.5rem;
+    padding-left: 0.65rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-group-chevron {
+        transition: none;
+    }
+}
+</style>
 

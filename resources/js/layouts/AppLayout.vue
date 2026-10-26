@@ -12,11 +12,14 @@ interface PageProps {
     appName?: string;
     school?: { name?: string; logo_url?: string | null; favicon_url?: string | null; theme_primary?: string };
     activePeriod?: { label?: string };
+    auth?: { user?: { role?: string } };
     [key: string]: unknown;
 }
 
 const page = usePage<PageProps>();
 const appName = computed(() => !page.props.appName || page.props.appName === 'Laravel' ? 'School Suite' : page.props.appName);
+const currentRole = computed(() => page.props.auth?.user?.role);
+const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
 const sidebarOpen = ref(false);
 const darkTheme = ref(false);
 const searchInput = ref<HTMLInputElement | null>(null);
@@ -51,7 +54,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', closeOnEscape));
 </script>
 
 <template>
-    <div class="app-shell">
+    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace }">
         <Head :title="title" />
 
         <!-- Accessibility: Skip Link -->
@@ -96,7 +99,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', closeOnEscape));
                 </button>
                 <TopNavbar />
             </header>
-            <main id="main-content" tabindex="-1">
+            <main id="main-content" tabindex="-1" :class="{ 'role-guru-main': isTeacherWorkspace }">
                 <slot />
             </main>
         </div>

@@ -17,6 +17,7 @@ use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Modules\Core\Infrastructure\Models\LoginAttemptLog;
 use App\Shared\Http\Controllers\PrivateFileController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -39,6 +40,7 @@ Route::get('/', function () {
         'role_metrics' => [],
         'latest_announcements' => [],
         'latest_login_logs' => [],
+        'attendance_trend' => [],
     ];
 
     if ($user->hasRole(['admin', 'operator', 'principal'])) {
@@ -86,6 +88,50 @@ Route::get('/', function () {
             'upcoming_exams' => Exam::where('school_id', $schoolId)->where('created_by', $user->id)->where('starts_at', '>=', now())->whereIn('status', ['draft', 'published'])->count(),
             'recorded_scores' => Score::where('school_id', $schoolId)->where('recorded_by_user_id', $user->id)->count(),
         ];
+
+        $teacherId = Teacher::where('school_id', $schoolId)
+            ->where('user_id', $user->id)
+            ->value('id');
+
+        if ($teacherId && $activeTerm) {
+            $monthlyAttendance = DB::table('attendance_records')
+                ->join('lesson_sessions', 'lesson_sessions.id', '=', 'attendance_records.lesson_session_id')
+                ->where('attendance_records.school_id', $schoolId)
+                ->where('lesson_sessions.teacher_id', $teacherId)
+                ->where('lesson_sessions.term_id', $activeTerm->id)
+                ->whereBetween('attendance_records.date', [
+                    $activeTerm->start_date->toDateString(),
+                    $activeTerm->end_date->toDateString(),
+                ])
+                ->select(['attendance_records.date', 'attendance_records.status'])
+                ->get()
+                ->groupBy(fn ($record) => substr((string) $record->date, 0, 7))
+                ->map(fn ($records) => [
+                    'total' => $records->count(),
+                    'present' => $records->where('status', 'present')->count(),
+                ]);
+
+            $month = $activeTerm->start_date->copy()->startOfMonth();
+            $lastMonth = $activeTerm->end_date->copy()->startOfMonth();
+            $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+            while ($month->lte($lastMonth)) {
+                $monthKey = $month->format('Y-m');
+                $aggregate = $monthlyAttendance->get($monthKey);
+                $total = (int) ($aggregate['total'] ?? 0);
+                $present = (int) ($aggregate['present'] ?? 0);
+
+                $stats['attendance_trend'][] = [
+                    'month_key' => $monthKey,
+                    'label' => $monthLabels[(int) $month->format('n') - 1],
+                    'rate' => $total > 0 ? round(($present / $total) * 100, 1) : 0,
+                    'present' => $present,
+                    'total' => $total,
+                ];
+
+                $month->addMonth();
+            }
+        }
     } elseif ($user->hasRole('student')) {
         $student = Student::where('school_id', $schoolId)->where('user_id', $user->id)->first();
         $enrollmentIds = $student?->enrollments()->whereHas('term', fn ($query) => $query->where('is_active', true))->pluck('id') ?? collect();

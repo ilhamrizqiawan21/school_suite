@@ -17,13 +17,23 @@ class TeachingJournal extends Model
     protected $fillable = [
         'lesson_session_id',
         'topic',
+        'theme',
+        'period_count',
         'learning_objectives',
+        'opening_activity',
+        'main_activity',
+        'closing_activity',
         'notes',
+        'follow_up',
+        'attendance_notes',
+        'observations',
+        'reflection',
         'attendance_summary',
     ];
 
     protected $casts = [
         'lesson_session_id' => 'integer',
+        'period_count' => 'integer',
         'attendance_summary' => 'array',
     ];
 

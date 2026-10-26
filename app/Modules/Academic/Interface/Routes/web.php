@@ -11,6 +11,7 @@ use App\Modules\Academic\Interface\Http\Controllers\ScheduleController;
 use App\Modules\Academic\Interface\Http\Controllers\StudentController;
 use App\Modules\Academic\Interface\Http\Controllers\StudentLifecycleController;
 use App\Modules\Academic\Interface\Http\Controllers\TeacherController;
+use App\Modules\Academic\Interface\Http\Controllers\TeachingPlanController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(function () {
@@ -57,9 +58,28 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     Route::post('presensi', [AttendanceController::class, 'record'])->middleware('role:teacher,homeroom')->name('attendance.record');
     Route::post('presensi/{attendanceRecord}/koreksi', [AttendanceController::class, 'correct'])->middleware('role:teacher,homeroom')->name('attendance.correct');
 
-    // Jurnal Mengajar Guru (Journals)
+    // Jurnal Harian Guru (Journals)
     Route::get('jurnal', [JournalController::class, 'index'])->middleware('role:teacher,homeroom')->name('journals.index');
+    Route::post('jurnal/sesi', [JournalController::class, 'createSession'])->middleware('role:teacher,homeroom')->name('journals.sessions.store');
     Route::post('jurnal', [JournalController::class, 'store'])->middleware('role:teacher,homeroom')->name('journals.store');
+    Route::delete('jurnal/{lessonSession}', [JournalController::class, 'destroy'])->middleware('role:teacher,homeroom')->name('journals.destroy');
+    Route::get('jurnal/{lessonSession}/word', [JournalController::class, 'exportWord'])->middleware('role:teacher,homeroom')->name('journals.export.word');
+    Route::get('jurnal/{lessonSession}/pdf', [JournalController::class, 'exportPdf'])->middleware('role:teacher,homeroom')->name('journals.export.pdf');
+
+    // Perangkat Pembelajaran (ATP / Silabus)
+    Route::get('perangkat/atp', [TeachingPlanController::class, 'index'])->middleware('role:teacher,homeroom')->name('plans.index');
+    Route::post('perangkat/atp', [TeachingPlanController::class, 'store'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('plans.store');
+    Route::put('perangkat/atp/{plan}', [TeachingPlanController::class, 'update'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('plans.update');
+    Route::delete('perangkat/atp/{plan}', [TeachingPlanController::class, 'destroy'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('plans.destroy');
+    Route::get('perangkat/dokumen', [TeachingPlanController::class, 'documents'])->middleware('role:teacher,homeroom')->name('documents.index');
+    Route::post('perangkat/dokumen', [TeachingPlanController::class, 'saveDocument'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('documents.store');
+    Route::put('perangkat/dokumen/{document}', [TeachingPlanController::class, 'updateDocument'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('documents.update');
+    Route::delete('perangkat/dokumen/{document}', [TeachingPlanController::class, 'destroyDocument'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('documents.destroy');
+    Route::get('perangkat/paket-administrasi', [TeachingPlanController::class, 'packagePage'])->middleware('role:teacher,homeroom')->name('documents.package');
+    Route::get('perangkat/paket-administrasi/unduh', [TeachingPlanController::class, 'exportPackage'])->middleware('role:teacher,homeroom')->name('documents.package.download');
+    Route::get('perangkat/modul-ajar', [TeachingPlanController::class, 'moduleAjar'])->middleware('role:teacher,homeroom')->name('module-ajar.index');
+    Route::post('perangkat/modul-ajar', [TeachingPlanController::class, 'saveModuleAjar'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('module-ajar.store');
+    Route::put('perangkat/modul-ajar/{plan}', [TeachingPlanController::class, 'updateModuleAjar'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('module-ajar.update');
 
     Route::get('kelas-daring', [OnlineClassController::class, 'index'])->middleware('role:teacher,homeroom,student')->name('online.index');
     Route::post('kelas-daring', [OnlineClassController::class, 'store'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('online.store');

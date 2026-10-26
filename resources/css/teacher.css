@@ -1,0 +1,410 @@
+/* Shared presentation layer for teacher and homeroom workspaces. */
+.role-guru-shell .sidebar-nav-scroll {
+    scrollbar-gutter: stable;
+    padding-bottom: 1rem;
+}
+
+.role-guru-shell .sidebar-foot {
+    flex-shrink: 0;
+}
+
+.role-guru-shell .schedule-session > div:first-child button {
+    opacity: 1;
+    color: var(--red) !important;
+}
+
+.role-guru-shell .btn {
+    min-height: 39px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    padding: .6rem .9rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    font-size: .78rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background .16s var(--ease), border-color .16s var(--ease), color .16s var(--ease), transform .16s var(--ease);
+}
+
+.role-guru-shell .btn:hover {
+    transform: translateY(-1px);
+}
+
+.role-guru-shell .btn-primary,
+.role-guru-shell .bg-indigo-600,
+.role-guru-shell .bg-blue-600,
+.role-guru-shell .bg-emerald-600 {
+    color: #fff !important;
+    border-color: var(--primary);
+    background: var(--primary) !important;
+}
+
+.role-guru-shell .btn-primary:hover,
+.role-guru-shell .bg-indigo-600:hover,
+.role-guru-shell .bg-blue-600:hover {
+    background: var(--primary-strong) !important;
+}
+
+.role-guru-shell .btn-secondary {
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+    border-color: var(--line-strong);
+}
+
+.role-guru-shell .btn-secondary:hover {
+    color: var(--primary) !important;
+    background: var(--primary-soft) !important;
+    border-color: var(--primary);
+}
+
+.role-guru-shell .card,
+.role-guru-shell .panel,
+.role-guru-shell .table-card,
+.role-guru-shell .grade-card,
+.role-guru-shell .filters-panel,
+.role-guru-shell .question-list,
+.role-guru-shell .pack-card,
+.role-guru-shell .exam-list,
+.role-guru-shell .chat-panel,
+.role-guru-shell .room-list,
+.role-guru-shell .teacher-sharing-page > form,
+.role-guru-shell .teacher-sharing-page section > div.rounded-xl {
+    color: var(--ink);
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+    box-shadow: var(--shadow-sm);
+}
+
+.role-guru-shell .data-table,
+.role-guru-shell .data-table th,
+.role-guru-shell .data-table td {
+    border-color: var(--line) !important;
+}
+
+.role-guru-shell .data-table {
+    width: 100%;
+    color: var(--ink);
+    background: var(--surface);
+    border-collapse: collapse;
+}
+
+.role-guru-shell .data-table th {
+    padding: .8rem 1rem;
+    color: var(--ink-soft) !important;
+    background: var(--surface-subtle) !important;
+    font-size: .68rem;
+    font-weight: 850;
+    letter-spacing: .06em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.role-guru-shell .data-table td {
+    padding: .9rem 1rem;
+    color: var(--ink-soft) !important;
+    background: var(--surface) !important;
+    font-size: .82rem;
+}
+
+.role-guru-shell .data-table td strong,
+.role-guru-shell .data-table td b {
+    color: var(--ink) !important;
+}
+
+.role-guru-shell .data-table tbody tr:hover td {
+    background: color-mix(in srgb, var(--primary-soft) 42%, var(--surface)) !important;
+}
+
+.role-guru-shell .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+}
+
+.role-guru-shell .form-grid .span-2 {
+    grid-column: 1 / -1;
+}
+
+.role-guru-shell .form-grid label,
+.role-guru-shell .modal-card label,
+.role-guru-shell .filters-grid label {
+    color: var(--ink-soft) !important;
+    font-size: .78rem;
+    font-weight: 750;
+}
+
+.role-guru-shell .form-grid input,
+.role-guru-shell .form-grid select,
+.role-guru-shell .form-grid textarea,
+.role-guru-shell .modal-card input,
+.role-guru-shell .modal-card select,
+.role-guru-shell .modal-card textarea,
+.role-guru-shell .filters-grid input,
+.role-guru-shell .filters-grid select,
+.role-guru-shell .filters-grid textarea,
+.role-guru-shell .send-box textarea {
+    min-height: 40px;
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: 9px;
+}
+
+.role-guru-shell .form-grid textarea,
+.role-guru-shell .modal-card textarea,
+.role-guru-shell .filters-grid textarea,
+.role-guru-shell .send-box textarea {
+    padding: .65rem .75rem;
+}
+
+.role-guru-shell .form-grid input,
+.role-guru-shell .form-grid select,
+.role-guru-shell .modal-card input,
+.role-guru-shell .modal-card select,
+.role-guru-shell .filters-grid input,
+.role-guru-shell .filters-grid select {
+    padding: 0 .75rem;
+}
+
+.role-guru-shell .form-grid input:focus,
+.role-guru-shell .form-grid select:focus,
+.role-guru-shell .form-grid textarea:focus,
+.role-guru-shell .modal-card input:focus,
+.role-guru-shell .modal-card select:focus,
+.role-guru-shell .modal-card textarea:focus,
+.role-guru-shell .filters-grid input:focus,
+.role-guru-shell .filters-grid select:focus,
+.role-guru-shell .send-box textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+    outline: 0;
+}
+
+.role-guru-shell .form-actions,
+.role-guru-shell .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .65rem;
+    margin-top: 1rem;
+}
+
+.role-guru-shell .modal-backdrop {
+    background: color-mix(in srgb, var(--canvas) 64%, #07111f 36%) !important;
+    backdrop-filter: blur(5px);
+}
+
+.role-guru-shell .modal-card {
+    color: var(--ink) !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
+}
+
+.role-guru-shell .modal-card h2,
+.role-guru-shell .modal-card h3,
+.role-guru-shell .modal-header h2,
+.role-guru-shell .modal-heading h2,
+.role-guru-shell .question-main h3,
+.role-guru-shell .pack-card h2,
+.role-guru-shell .exam-list h2,
+.role-guru-shell .comm-body h2,
+.role-guru-shell .chat-panel h2 {
+    color: var(--ink) !important;
+}
+
+.role-guru-shell .modal-header,
+.role-guru-shell .modal-heading,
+.role-guru-shell .form-heading {
+    border-color: var(--line) !important;
+}
+
+.role-guru-shell .modal-header button,
+.role-guru-shell .modal-heading > button,
+.role-guru-shell .close-button {
+    color: var(--ink-soft) !important;
+}
+
+.role-guru-shell .filters-grid,
+.role-guru-shell .filters-panel,
+.role-guru-shell .question-row,
+.role-guru-shell .pack-items,
+.role-guru-shell .item-builder,
+.role-guru-shell .question-option,
+.role-guru-shell .exam-list article,
+.role-guru-shell .announcement-card,
+.role-guru-shell .timeline-event,
+.role-guru-shell .notification-item,
+.role-guru-shell .messages article {
+    border-color: var(--line) !important;
+}
+
+.role-guru-shell .question-row,
+.role-guru-shell .exam-list article,
+.role-guru-shell .announcement-card,
+.role-guru-shell .timeline-event,
+.role-guru-shell .notification-item,
+.role-guru-shell .messages article,
+.role-guru-shell .question-option {
+    background: var(--surface-subtle) !important;
+}
+
+.role-guru-shell .question-meta,
+.role-guru-shell .indicator,
+.role-guru-shell .pack-metrics,
+.role-guru-shell .pack-description,
+.role-guru-shell .assignment-meta,
+.role-guru-shell .comm-body > p,
+.role-guru-shell .comm-body small,
+.role-guru-shell .messages small,
+.role-guru-shell .notification-item small,
+.role-guru-shell .text-slate-500,
+.role-guru-shell .text-slate-400 {
+    color: var(--ink-soft) !important;
+}
+
+.role-guru-shell .question-details,
+.role-guru-shell .pack-items li small,
+.role-guru-shell .selected-copy > span,
+.role-guru-shell .empty-state,
+.role-guru-shell .room-list p {
+    color: var(--ink-faint) !important;
+}
+
+.role-guru-shell .comm-tabs {
+    border-color: var(--line) !important;
+}
+
+.role-guru-shell .comm-tabs button {
+    color: var(--ink-soft) !important;
+}
+
+.role-guru-shell .comm-tabs button.active,
+.role-guru-shell .room-list .active {
+    color: var(--primary-strong) !important;
+    background: var(--primary-soft) !important;
+}
+
+.role-guru-shell .comm-body strong,
+.role-guru-shell .notification-item strong,
+.role-guru-shell .room-list > button:not(.btn-primary) {
+    color: var(--ink) !important;
+}
+
+.role-guru-shell .notification-item.unread {
+    border-color: color-mix(in srgb, var(--primary) 40%, var(--line)) !important;
+    background: var(--primary-soft) !important;
+}
+
+.role-guru-shell .pack-grid,
+.role-guru-shell .bank-stats,
+.role-guru-shell .filters-grid {
+    gap: 1rem;
+}
+
+.role-guru-shell .pack-actions,
+.role-guru-shell .row-actions,
+.role-guru-shell .hero-actions,
+.role-guru-shell .actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .55rem;
+}
+
+.role-guru-shell .pack-actions .text-button,
+.role-guru-shell .row-actions .text-button,
+.role-guru-shell .comm-actions .text-button {
+    min-height: 32px;
+    padding: .4rem .6rem;
+    border-radius: 7px;
+}
+
+.role-guru-shell .pack-actions .text-button:hover,
+.role-guru-shell .row-actions .text-button:hover,
+.role-guru-shell .comm-actions .text-button:hover {
+    background: var(--primary-soft);
+}
+
+.role-guru-shell .pagination a {
+    color: var(--ink-soft);
+    border-color: var(--line);
+    background: var(--surface);
+}
+
+.role-guru-shell .pagination a.active {
+    color: #fff !important;
+    border-color: var(--primary);
+    background: var(--primary);
+}
+
+.role-guru-shell .empty-state {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+.role-guru-shell .error,
+.role-guru-shell .form-error {
+    color: var(--red) !important;
+}
+
+@media (max-width: 760px) {
+    .role-guru-shell .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .role-guru-shell .form-grid .span-2 {
+        grid-column: auto;
+    }
+
+    .role-guru-shell .hero-card .hero-actions,
+    .role-guru-shell .hero-card .actions,
+    .role-guru-shell .page-heading > :last-child {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .role-guru-shell .hero-card .hero-actions > *,
+    .role-guru-shell .page-heading > :last-child > * {
+        flex: 0 1 auto;
+    }
+
+    .role-guru-shell .exam-list article,
+    .role-guru-shell .announcement-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 520px) {
+    .role-guru-shell .hero-card .hero-actions > *,
+    .role-guru-shell .page-heading > :last-child > * {
+        flex: 1 1 100%;
+    }
+
+    .role-guru-shell .form-actions,
+    .role-guru-shell .modal-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .role-guru-shell .form-actions > *,
+    .role-guru-shell .modal-actions > * {
+        width: 100%;
+    }
+}
+
+@media (max-width: 720px) {
+    .role-guru-shell .topbar > .icon-button[aria-label*='tema'] {
+        display: grid;
+    }
+}

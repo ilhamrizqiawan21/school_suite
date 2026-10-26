@@ -67,6 +67,7 @@ class ScheduleController extends Controller
             'teachers' => $teachers,
             'subjects' => $subjects,
             'schedules' => $schedules,
+            'can_manage' => Gate::allows('create', Schedule::class),
             'filters' => [
                 'class_group_id' => $classGroupId,
                 'teacher_id' => $teacherId,

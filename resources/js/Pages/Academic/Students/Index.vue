@@ -29,6 +29,7 @@ const props = defineProps<{
     };
     classes: ClassItem[];
     active_term?: TermItem | null;
+    can_manage: boolean;
 }>();
 
 const search = ref(props.filters.search || '');
@@ -174,7 +175,7 @@ const deleteStudent = (student: Student) => {
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Manajemen Data Siswa</h1>
                     <p class="text-sm text-slate-500 mt-1">
-                        Kelola data induk siswa, penempatan rombel semester aktif, dan impor massal.
+                        {{ can_manage ? 'Kelola data induk siswa, penempatan rombel semester aktif, dan impor massal.' : 'Lihat data induk siswa dan penempatan rombel semester aktif.' }}
                     </p>
                 </div>
                 <div class="student-header-actions">
@@ -185,6 +186,7 @@ const deleteStudent = (student: Student) => {
                         Export PDF
                     </a>
                     <button
+                        v-if="can_manage"
                         type="button"
                         @click="showImportModal = true"
                         class="student-action-button student-action-import"
@@ -194,7 +196,7 @@ const deleteStudent = (student: Student) => {
                         </svg>
                         Impor CSV
                     </button>
-                    <a href="/akademik/siswa/template" class="student-action-button student-action-template">
+                    <a v-if="can_manage" href="/akademik/siswa/template" class="student-action-button student-action-template">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14a2 2 0 002-2v-3M3 16v3a2 2 0 002 2" />
                         </svg>
@@ -203,7 +205,7 @@ const deleteStudent = (student: Student) => {
                 </div>
             </div>
 
-            <section id="student-create-form" class="panel border border-indigo-100 bg-indigo-50/40 p-5">
+            <section v-if="can_manage" id="student-create-form" class="panel border border-indigo-100 bg-indigo-50/40 p-5">
                 <div class="flex items-center justify-between gap-3 mb-4">
                     <div><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Siswa baru</h2></div>
                     <span class="text-xs text-slate-500">Langsung tempatkan ke kelas aktif</span>
@@ -278,7 +280,7 @@ const deleteStudent = (student: Student) => {
                                 <th class="px-5 py-3.5">Rombel Aktif</th>
                                 <th class="px-5 py-3.5">Kontak Ortu</th>
                                 <th class="px-5 py-3.5">Status</th>
-                                <th class="student-actions-heading px-5 py-3.5 text-center">Aksi</th>
+                                <th v-if="can_manage" class="student-actions-heading px-5 py-3.5 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -312,22 +314,22 @@ const deleteStudent = (student: Student) => {
                                         {{ s.status }}
                                     </span>
                                 </td>
-                                <td class="student-actions-cell px-5 py-3.5">
+                                <td v-if="can_manage" class="student-actions-cell px-5 py-3.5">
                                     <div class="student-row-actions">
-                                        <button type="button" class="student-row-action student-row-action-edit" aria-label="Edit data siswa" title="Edit data siswa" @click="openEdit(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-edit" aria-label="Edit data siswa" title="Edit data siswa" @click="openEdit(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
                                             </svg>
                                             <span class="sr-only">Edit</span>
                                         </button>
-                                        <button type="button" class="student-row-action student-row-action-reset" :disabled="!s.user_id" :aria-label="s.user_id ? 'Reset password ke 123456' : 'Siswa belum memiliki akun'" :title="s.user_id ? 'Reset password ke 123456' : 'Siswa belum memiliki akun'" @click="resetPassword(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-reset" :disabled="!s.user_id" :aria-label="s.user_id ? 'Reset password ke 123456' : 'Siswa belum memiliki akun'" :title="s.user_id ? 'Reset password ke 123456' : 'Siswa belum memiliki akun'" @click="resetPassword(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10V7a4 4 0 118 0v3" />
                                             </svg>
                                             <span class="sr-only">Reset password</span>
                                         </button>
-                                        <button type="button" class="student-row-action student-row-action-delete" aria-label="Hapus data siswa" title="Hapus data siswa" @click="deleteStudent(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-delete" aria-label="Hapus data siswa" title="Hapus data siswa" @click="deleteStudent(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
                                             </svg>
@@ -337,7 +339,7 @@ const deleteStudent = (student: Student) => {
                                 </td>
                             </tr>
                             <tr v-if="students.data.length === 0">
-                                <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+                                <td :colspan="can_manage ? 7 : 6" class="px-5 py-12 text-center text-slate-400">
                                     Tidak ada data siswa yang cocok dengan filter.
                                 </td>
                             </tr>

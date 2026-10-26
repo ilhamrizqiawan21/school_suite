@@ -52,6 +52,7 @@ const props = defineProps<{
         teacher_id?: string;
     };
     draft_count: number;
+    can_manage: boolean;
 }>();
 
 const selectedClass = ref(props.filters.class_group_id || '');
@@ -130,7 +131,7 @@ const deleteSchedule = (id: number) => {
 
                 <div class="flex items-center gap-3">
                     <button
-                        v-if="draft_count > 0"
+                        v-if="can_manage && draft_count > 0"
                         type="button"
                         @click="publishAll"
                         class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition shadow-xs"
@@ -139,6 +140,7 @@ const deleteSchedule = (id: number) => {
                         Terbitkan {{ draft_count }} Draf
                     </button>
                     <button
+                        v-if="can_manage"
                         type="button"
                         @click="showAddModal = true"
                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-xs"
@@ -211,6 +213,7 @@ const deleteSchedule = (id: number) => {
                                         {{ s.status === 'published' ? 'Terbit' : 'Draf' }}
                                     </span>
                                     <button
+                                        v-if="can_manage"
                                         type="button"
                                         @click="deleteSchedule(s.id)"
                                         class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 transition"
