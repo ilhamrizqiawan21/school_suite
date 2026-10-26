@@ -47,13 +47,17 @@ class TeacherPolicy
 
     public function create(User $actor): bool
     {
+        if ($actor->hasRole('principal')) {
+            return false;
+        }
+
         return $actor->hasPermission(PermissionEnum::ACADEMIC_STUDENTS_MANAGE->value)
             || $actor->hasRole('operator');
     }
 
     public function update(User $actor, Teacher $teacher): bool
     {
-        if ($actor->school_id !== $teacher->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $teacher->school_id) {
             return false;
         }
 
@@ -63,7 +67,7 @@ class TeacherPolicy
 
     public function delete(User $actor, Teacher $teacher): bool
     {
-        if ($actor->school_id !== $teacher->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $teacher->school_id) {
             return false;
         }
 

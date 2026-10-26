@@ -21,9 +21,24 @@ const appName = computed(() => !page.props.appName || page.props.appName === 'La
 const currentRole = computed(() => page.props.auth?.user?.role);
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
 const sidebarOpen = ref(false);
+const desktopSidebarClosed = ref(false);
+const isMobileViewport = ref(false);
+const sidebarExpanded = computed(() => isMobileViewport.value ? sidebarOpen.value : !desktopSidebarClosed.value);
+const sidebarToggleLabel = computed(() => sidebarExpanded.value ? 'Tutup sidebar' : 'Buka sidebar');
 const darkTheme = ref(false);
 const searchInput = ref<HTMLInputElement | null>(null);
 let removeNavigateListener: VoidFunction | null = null;
+let sidebarViewportQuery: MediaQueryList | null = null;
+let syncSidebarViewport: (() => void) | null = null;
+
+const toggleSidebar = () => {
+    if (isMobileViewport.value) {
+        sidebarOpen.value = !sidebarOpen.value;
+        return;
+    }
+
+    desktopSidebarClosed.value = !desktopSidebarClosed.value;
+};
 
 const toggleTheme = () => {
     darkTheme.value = !darkTheme.value;
@@ -32,7 +47,10 @@ const toggleTheme = () => {
 };
 
 const closeOnEscape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') sidebarOpen.value = false;
+    if (event.key === 'Escape') {
+        sidebarOpen.value = false;
+        if (!isMobileViewport.value) desktopSidebarClosed.value = true;
+    }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         searchInput.value?.focus();
@@ -40,6 +58,14 @@ const closeOnEscape = (event: KeyboardEvent) => {
 };
 
 onMounted(() => {
+    sidebarViewportQuery = window.matchMedia('(max-width: 960px)');
+    syncSidebarViewport = () => {
+        isMobileViewport.value = sidebarViewportQuery?.matches ?? false;
+        if (isMobileViewport.value) sidebarOpen.value = false;
+    };
+    syncSidebarViewport();
+    sidebarViewportQuery.addEventListener('change', syncSidebarViewport);
+
     if (page.props.school?.theme_primary) document.documentElement.style.setProperty('--primary', page.props.school.theme_primary);
     if (page.props.school?.favicon_url) {
         let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
@@ -53,13 +79,16 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    if (sidebarViewportQuery && syncSidebarViewport) {
+        sidebarViewportQuery.removeEventListener('change', syncSidebarViewport);
+    }
     document.removeEventListener('keydown', closeOnEscape);
     removeNavigateListener?.();
 });
 </script>
 
 <template>
-    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace }">
+    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace, 'is-sidebar-closed': desktopSidebarClosed && !isMobileViewport }">
         <Head :title="title" />
 
         <!-- Accessibility: Skip Link -->
@@ -72,21 +101,22 @@ onBeforeUnmount(() => {
 
         <aside id="sidebar" class="sidebar" :class="{ 'is-open': sidebarOpen }" aria-label="Navigasi utama">
             <div class="brand">
-                <div class="brand-mark" aria-hidden="true"><img v-if="page.props.school?.logo_url" :src="page.props.school.logo_url" alt=""><span v-else>S</span></div>
-                <div><strong>{{ appName }}</strong><small>{{ page.props.school?.name ?? 'Ruang kerja sekolah' }}</small></div>
+                <div class="brand-mark" aria-hidden="true">
+                    <img :src="page.props.school?.logo_url || '/icon-192.png'" alt="">
+                </div>
+                <div class="brand-copy">
+                    <strong>{{ appName }}</strong>
+                    <small>{{ page.props.school?.name ?? 'Ruang kerja sekolah' }}</small>
+                </div>
             </div>
-            <div class="sidebar-nav-scroll flex-1 overflow-y-auto py-2">
+            <div class="sidebar-nav-scroll flex-1 overflow-y-auto">
                 <SidebarNavigation />
-            </div>
-            <div class="sidebar-foot">
-                <div class="completion-ring" aria-hidden="true"><span>✓</span></div>
-                <div><strong>Periode aktif</strong><small>{{ page.props.activePeriod?.label ?? 'Data akademik' }}</small></div>
             </div>
         </aside>
         <button v-if="sidebarOpen" class="sidebar-backdrop is-visible" aria-label="Tutup navigasi" @click="sidebarOpen = false" />
         <div class="workspace">
             <header class="topbar">
-                <button class="icon-button mobile-menu" :aria-expanded="sidebarOpen" aria-controls="sidebar" aria-label="Buka navigasi" @click="sidebarOpen = !sidebarOpen">
+                <button class="icon-button sidebar-toggle" :aria-expanded="sidebarExpanded" aria-controls="sidebar" :aria-label="sidebarToggleLabel" :title="sidebarToggleLabel" @click="toggleSidebar">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <label class="global-search">
@@ -113,7 +143,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .brand-mark { overflow: hidden; }
-.brand-mark img { width: 100%; height: 100%; object-fit: contain; background: white; }
+.brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.brand-copy { min-width: 0; }
 .topbar-spacer { flex: 1; }
 .topbar-user { display: flex; flex: 0 0 auto; align-items: center; }
 @media (max-width: 960px) { .topbar-user :deep(.profile-copy) { display: none; } }

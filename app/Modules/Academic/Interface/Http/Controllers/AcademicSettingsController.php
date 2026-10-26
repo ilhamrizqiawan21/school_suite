@@ -22,12 +22,13 @@ class AcademicSettingsController extends Controller
 
     public function index(Request $request): Response
     {
-        $this->authorizeManager($request);
+        $this->authorizeViewer($request);
         $schoolId = (int) $request->user()->school_id;
 
         return Inertia::render('Academic/Settings/Index', [
             'academic_years' => AcademicYear::where('school_id', $schoolId)->with('terms')->latest('start_date')->get(),
             'subjects' => Subject::where('school_id', $schoolId)->orderBy('order')->orderBy('name')->get(),
+            'can_manage' => $request->user()->hasRole(['admin', 'operator']),
         ]);
     }
 
@@ -141,6 +142,11 @@ class AcademicSettingsController extends Controller
     }
 
     private function authorizeManager(Request $request): void
+    {
+        abort_unless($request->user()->hasRole(['admin', 'operator']), 403);
+    }
+
+    private function authorizeViewer(Request $request): void
     {
         abort_unless($request->user()->hasRole(['admin', 'operator', 'principal']), 403);
     }

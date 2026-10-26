@@ -48,6 +48,7 @@ class TeacherController extends Controller
 
         return Inertia::render('Academic/Teachers/Index', [
             'teachers' => $teachers,
+            'can_manage' => Gate::allows('create', Teacher::class),
             'filters' => [
                 'search' => $search,
                 'employment_status' => $status,

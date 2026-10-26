@@ -8,7 +8,7 @@ interface ClassItem { id: number; name: string; grade_level: number; academic_ye
 interface EnrollmentItem { id: number; student?: { id: number; nis: string; name: string; status: string }; class_group?: { id: number; name: string } }
 interface LifecycleEvent { id: number; action: string; effective_date: string; notes?: string | null; student?: { nis: string; name: string }; source_enrollment?: { class_group?: { name: string } }; target_enrollment?: { class_group?: { name: string } } }
 
-const props = defineProps<{ terms: TermItem[]; activeTerm?: TermItem | null; classes: ClassItem[]; enrollments: EnrollmentItem[]; events: LifecycleEvent[] }>();
+const props = defineProps<{ terms: TermItem[]; activeTerm?: TermItem | null; classes: ClassItem[]; enrollments: EnrollmentItem[]; events: LifecycleEvent[]; can_manage: boolean }>();
 const localDate = () => { const date = new Date(); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 10); };
 const form = useForm({ enrollment_id: '', action: 'promoted', target_term_id: '', target_class_group_id: '', effective_date: localDate(), notes: '' });
 const historySearch = ref('');
@@ -60,7 +60,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
                 <article class="lifecycle-stat panel"><span>Periode tujuan</span><strong>{{ terms.length }}</strong><small>Tahun ajaran tersedia</small></article>
             </section>
 
-            <section class="lifecycle-workspace">
+            <section v-if="can_manage" class="lifecycle-workspace">
                 <form class="lifecycle-form panel" @submit.prevent="submit">
                     <div class="lifecycle-section-heading"><div><p class="lifecycle-kicker">Langkah 01</p><h2>Proses keputusan siswa</h2><p>Pilih siswa aktif lalu tentukan keputusan akademiknya.</p></div><span class="lifecycle-form-status">{{ form.processing ? 'Menyimpan…' : 'Siap diproses' }}</span></div>
                     <div class="lifecycle-fields">

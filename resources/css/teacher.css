@@ -1,11 +1,7 @@
 /* Shared presentation layer for teacher and homeroom workspaces. */
 .role-guru-shell .sidebar-nav-scroll {
     scrollbar-gutter: stable;
-    padding-bottom: 1rem;
-}
-
-.role-guru-shell .sidebar-foot {
-    flex-shrink: 0;
+    padding-bottom: 1.5rem;
 }
 
 .role-guru-shell .schedule-session > div:first-child button {

@@ -29,6 +29,7 @@ class AssessmentSchemeController extends Controller
 
         return Inertia::render('Assessment/Schemes/Index', [
             'schemes' => $schemes,
+            'can_manage' => Gate::allows('manageSchemes', AssessmentScheme::class),
         ]);
     }
 

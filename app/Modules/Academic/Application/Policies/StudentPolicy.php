@@ -48,13 +48,17 @@ class StudentPolicy
 
     public function create(User $actor): bool
     {
+        if ($actor->hasRole('principal')) {
+            return false;
+        }
+
         return $actor->hasPermission(PermissionEnum::ACADEMIC_STUDENTS_MANAGE->value)
             || $actor->hasRole('operator');
     }
 
     public function update(User $actor, Student $student): bool
     {
-        if ($actor->school_id !== $student->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $student->school_id) {
             return false;
         }
 
@@ -64,7 +68,7 @@ class StudentPolicy
 
     public function delete(User $actor, Student $student): bool
     {
-        if ($actor->school_id !== $student->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $student->school_id) {
             return false;
         }
 

@@ -34,6 +34,10 @@ class AttendancePolicy
 
     public function record(User $actor, mixed $target = null): bool
     {
+        if ($actor->hasRole('principal')) {
+            return false;
+        }
+
         if ($actor->hasRole('admin') || $actor->hasRole('operator') || $actor->hasPermission(PermissionEnum::ACADEMIC_ATTENDANCE_RECORD->value)) {
             return true;
         }

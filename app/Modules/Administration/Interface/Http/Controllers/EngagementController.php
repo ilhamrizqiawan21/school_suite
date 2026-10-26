@@ -70,7 +70,7 @@ class EngagementController extends Controller
 
     public function whatsapp(Request $request): Response
     {
-        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'homeroom']), 403);
         $logs = WhatsappMessageLog::where('school_id', $request->user()->school_id)->latest('prepared_at')->limit(100)->get();
 
         return Inertia::render('Communication/Whatsapp', ['logs' => $logs, 'templates' => ['attendance' => 'Yth. Orang Tua/Wali {name}, kami menginformasikan kehadiran {student}: {detail}.', 'announcement' => 'Yth. {name}, {detail}', 'reminder' => 'Yth. {name}, pengingat untuk {detail}.']]);
@@ -78,7 +78,7 @@ class EngagementController extends Controller
 
     public function prepareWhatsapp(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'homeroom']), 403);
         $data = $request->validate(['recipient_name' => ['required', 'string', 'max:180'], 'phone' => ['required', 'string', 'max:30'], 'template_key' => ['required', 'in:attendance,announcement,reminder'], 'student' => ['nullable', 'string', 'max:180'], 'detail' => ['required', 'string', 'max:1000']]);
         $phone = preg_replace('/\D+/', '', $data['phone']);
         if (str_starts_with($phone, '0')) {
@@ -95,7 +95,7 @@ class EngagementController extends Controller
 
     public function markWhatsappSent(Request $request, WhatsappMessageLog $log): RedirectResponse
     {
-        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'homeroom']) && (int) $log->school_id === (int) $request->user()->school_id, 403);
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'homeroom']) && (int) $log->school_id === (int) $request->user()->school_id, 403);
         $log->update(['status' => 'sent_manually', 'sent_at' => now()]);
         $this->audit->log('communication.whatsapp.marked_sent', 'whatsapp_message_log', (string) $log->id, ['status' => 'sent_manually'], actor: $request->user(), schoolId: (int) $log->school_id);
 

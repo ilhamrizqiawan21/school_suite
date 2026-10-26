@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Assessment\Application\Policies;
 
 use App\Models\User;
+use App\Modules\Assessment\Domain\Enums\ReportStatusEnum;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use Illuminate\Support\Facades\DB;
 
@@ -35,12 +36,12 @@ class AssessmentPolicy
 
     public function manageSchemes(User $actor): bool
     {
-        return $actor->hasRole('principal') || $actor->hasRole('operator');
+        return $actor->hasRole('operator');
     }
 
     public function publishReports(User $actor): bool
     {
-        return $actor->hasRole('homeroom') || $actor->hasRole('principal');
+        return $actor->hasRole('homeroom');
     }
 
     public function viewReport(User $actor, ReportSnapshot $report): bool
@@ -61,7 +62,7 @@ class AssessmentPolicy
 
             return $student !== null
                 && (int) $report->student_id === (int) $student->id
-                && $report->status === 'published';
+                && $report->status === ReportStatusEnum::PUBLISHED;
         }
 
         return false;

@@ -35,13 +35,17 @@ class SchedulePolicy
 
     public function create(User $actor): bool
     {
+        if ($actor->hasRole('principal')) {
+            return false;
+        }
+
         return $actor->hasPermission(PermissionEnum::ACADEMIC_SCHEDULE_MANAGE->value)
             || $actor->hasRole('operator');
     }
 
     public function update(User $actor, Schedule $schedule): bool
     {
-        if ($actor->school_id !== $schedule->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $schedule->school_id) {
             return false;
         }
 
@@ -51,7 +55,7 @@ class SchedulePolicy
 
     public function delete(User $actor, Schedule $schedule): bool
     {
-        if ($actor->school_id !== $schedule->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $schedule->school_id) {
             return false;
         }
 

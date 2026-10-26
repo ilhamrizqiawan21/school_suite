@@ -11,6 +11,7 @@ use App\Modules\Core\Infrastructure\Models\Permission;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class RoleMatrixAccessTest extends TestCase
@@ -170,5 +171,63 @@ class RoleMatrixAccessTest extends TestCase
 
         $this->get('/pengaturan/pengguna')->assertStatus(403);
         $this->get('/pengaturan/sekolah')->assertStatus(403);
+    }
+
+    public function test_principal_data_pages_are_read_only_even_if_manage_permissions_are_assigned(): void
+    {
+        $principal = $this->usersByRole[RoleEnum::PRINCIPAL->value];
+        $permissions = collect([
+            PermissionEnum::ACADEMIC_STUDENTS_MANAGE->value,
+            PermissionEnum::ACADEMIC_CLASSES_MANAGE->value,
+            PermissionEnum::ACADEMIC_SCHEDULE_MANAGE->value,
+            PermissionEnum::ACADEMIC_ATTENDANCE_RECORD->value,
+        ])->map(fn (string $name) => Permission::firstOrCreate(
+            ['name' => $name],
+            ['label' => $name, 'module' => 'Academic']
+        ));
+        $principal->role->permissions()->attach($permissions->pluck('id'));
+        $this->actingAs($principal);
+
+        $this->get('/akademik/siswa')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Academic/Students/Index')
+            ->where('can_manage', false));
+        $this->get('/akademik/guru')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Academic/Teachers/Index')
+            ->where('can_manage', false));
+        $this->get('/akademik/kelas')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Academic/Classes/Index')
+            ->where('can_manage', false));
+        $this->get('/akademik/jadwal')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Academic/Schedules/Index')
+            ->where('can_manage', false));
+        $this->get('/akademik/siklus-siswa')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Academic/Lifecycle/Index')
+            ->where('can_manage', false));
+        $this->get('/akademik/pengaturan')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Academic/Settings/Index')
+            ->where('can_manage', false));
+        $this->get('/laporan')->assertOk();
+        $this->get('/akademik/presensi/rekap')->assertOk();
+        $this->get('/penilaian/skema')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Assessment/Schemes/Index')
+            ->where('can_manage', false));
+        $this->get('/penilaian/rapor')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Assessment/Reports/Index')
+            ->where('can_publish', false));
+
+        $this->post('/akademik/siswa', [])->assertForbidden();
+        $this->post('/akademik/guru', [])->assertForbidden();
+        $this->post('/akademik/kelas', [])->assertForbidden();
+        $this->post('/akademik/jadwal', [])->assertForbidden();
+        $this->post('/akademik/presensi', [])->assertForbidden();
+        $this->post('/akademik/siklus-siswa', [])->assertForbidden();
+        $this->post('/akademik/pengaturan/tahun-ajaran', [])->assertForbidden();
+        $this->post('/penilaian/skema', [])->assertForbidden();
+        $this->post('/penilaian/rapor/generate-batch', [])->assertForbidden();
+        $this->post('/komunikasi/pengumuman', [])->assertForbidden();
+        $this->post('/komunikasi/kalender', [])->assertForbidden();
+        $this->post('/komunikasi/whatsapp', [])->assertForbidden();
+        $this->post('/penilaian/sikap', [])->assertForbidden();
+        $this->post('/akademik/kelas-daring', [])->assertForbidden();
     }
 }

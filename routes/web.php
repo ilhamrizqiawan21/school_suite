@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\HealthCheckController;
 use App\Models\User;
-use App\Modules\Academic\Infrastructure\Models\ClassGroup;
+use App\Modules\Academic\Application\Services\PrincipalDashboardService;
 use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
+use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('/', function (PrincipalDashboardService $principalDashboard) {
     $user = request()->user();
     $schoolId = (int) $user->school_id;
 
@@ -47,11 +48,14 @@ Route::get('/', function () {
     ];
 
     if ($user->hasRole(['admin', 'operator', 'principal'])) {
+        $principalOverview = $user->hasRole('principal')
+            ? $principalDashboard->overview($schoolId, $activeTerm, request()->query('period') === '30d' ? '30d' : 'term')
+            : null;
         $stats['role_metrics'] = [
             'students' => Student::where('school_id', $schoolId)->where('status', 'active')->count(),
             'active_users' => User::where('school_id', $schoolId)->where('is_active', true)->count(),
             'recent_announcements' => Announcement::where('school_id', $schoolId)->where('published_at', '>=', now()->subDays(30))->count(),
-            'active_exams' => Exam::where('school_id', $schoolId)->whereIn('status', ['published', 'results_published'])->count(),
+            'active_exams' => $principalOverview['summary']['exams_live'] ?? Exam::where('school_id', $schoolId)->whereIn('status', ['published', 'results_published'])->count(),
             'teachers' => Teacher::where('school_id', $schoolId)->where('is_active', true)->count(),
             'active_classes' => ClassGroup::where('school_id', $schoolId)
                 ->when($activeTerm, fn ($query) => $query->where('academic_year_id', $activeTerm->academic_year_id))
@@ -61,6 +65,9 @@ Route::get('/', function () {
         $stats['latest_announcements'] = Announcement::with('author:id,name')
             ->where('school_id', $schoolId)
             ->whereNotNull('published_at')
+            ->when($user->hasRole('principal'), fn ($query) => $query
+                ->where('published_at', '<=', now())
+                ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now())))
             ->latest('published_at')
             ->limit(5)
             ->get(['id', 'author_id', 'title', 'published_at'])
@@ -70,19 +77,24 @@ Route::get('/', function () {
                 'author_name' => $announcement->author?->name,
                 'published_at' => $announcement->published_at?->toIso8601String(),
             ])->values()->all();
-        $stats['latest_login_logs'] = LoginAttemptLog::with('user:id,name')
-            ->where(fn ($query) => $query->whereNull('school_id')->orWhere('school_id', $schoolId))
-            ->latest('created_at')
-            ->limit(10)
-            ->get(['id', 'user_id', 'status', 'reason', 'ip_address', 'created_at'])
-            ->map(fn (LoginAttemptLog $log) => [
-                'id' => $log->id,
-                'user_name' => $log->user?->name ?? 'Tidak dikenal',
-                'status' => $log->status,
-                'reason' => $log->reason,
-                'ip_address' => $log->ip_address,
-                'created_at' => $log->created_at?->toIso8601String(),
-            ])->values()->all();
+        if ($user->hasRole('admin')) {
+            $stats['latest_login_logs'] = LoginAttemptLog::with('user:id,name')
+                ->where(fn ($query) => $query->whereNull('school_id')->orWhere('school_id', $schoolId))
+                ->latest('created_at')
+                ->limit(10)
+                ->get(['id', 'user_id', 'status', 'reason', 'ip_address', 'created_at'])
+                ->map(fn (LoginAttemptLog $log) => [
+                    'id' => $log->id,
+                    'user_name' => $log->user?->name ?? 'Tidak dikenal',
+                    'status' => $log->status,
+                    'reason' => $log->reason,
+                    'ip_address' => $log->ip_address,
+                    'created_at' => $log->created_at?->toIso8601String(),
+                ])->values()->all();
+        }
+        if ($principalOverview !== null) {
+            $stats['principal_overview'] = $principalOverview;
+        }
     } elseif ($user->hasRole(['teacher', 'homeroom'])) {
         $activeTermId = $activeTerm?->id;
         $stats['role_metrics'] = [

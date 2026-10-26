@@ -530,10 +530,8 @@ class RouteAndPermissionStressTest extends TestCase
             '/akademik/siklus-siswa',
             '/akademik/pengaturan',
             '/pembelajaran/progress',
-            '/penilaian/skema',
             '/penilaian/rapor',
             '/komunikasi',
-            '/komunikasi/whatsapp',
             '/pengaturan/sekolah',
             '/pengaturan/keamanan',
             '/profil',
@@ -557,6 +555,8 @@ class RouteAndPermissionStressTest extends TestCase
                 "Principal route '{$url}' failed with status: ".$response->getStatusCode()
             );
         }
+
+        $this->get('/komunikasi/whatsapp')->assertForbidden();
 
         // Principal is forbidden from classroom teaching execution routes
         $forbiddenForPrincipal = [

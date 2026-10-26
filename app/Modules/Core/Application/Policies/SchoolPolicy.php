@@ -44,6 +44,10 @@ class SchoolPolicy
      */
     public function update(User $actor, School $school): bool
     {
+        if ($actor->hasRole('principal')) {
+            return false;
+        }
+
         // Must belong to this school
         if ($actor->school_id !== $school->id) {
             return false;

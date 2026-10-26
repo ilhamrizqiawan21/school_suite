@@ -10,6 +10,7 @@ const props = defineProps<{
         links: Array<{ url: string | null; label: string; active: boolean }>;
         total: number;
     };
+    can_manage: boolean;
     filters: {
         search?: string;
         employment_status?: string;
@@ -86,7 +87,7 @@ const submitImport = () => {
                         Kelola data guru, status kepegawaian, dan penugasan wali kelas.
                     </p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div v-if="can_manage" class="flex items-center gap-3">
                     <button
                         type="button"
                         @click="showImportModal = true"
@@ -103,7 +104,7 @@ const submitImport = () => {
                 </div>
             </div>
 
-            <section class="panel border border-indigo-100 bg-indigo-50/40 p-5">
+            <section v-if="can_manage" class="panel border border-indigo-100 bg-indigo-50/40 p-5">
                 <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Guru atau tenaga kependidikan</h2></div>
                 <form class="grid gap-3 md:grid-cols-[1fr_1.5fr_130px_1.3fr_auto] items-end" @submit.prevent="submitAdd">
                     <label class="text-xs font-semibold text-slate-700">NIP<input v-model="form.nip" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
@@ -231,7 +232,7 @@ const submitImport = () => {
         </div>
 
         <!-- Modal Tambah Guru -->
-        <div v-if="showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div v-if="can_manage && showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Tambah Guru Baru</h3>
@@ -293,7 +294,7 @@ const submitImport = () => {
         </div>
 
         <!-- Modal Impor CSV Guru -->
-        <div v-if="showImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div v-if="can_manage && showImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Impor Massal Pendidik (CSV)</h3>

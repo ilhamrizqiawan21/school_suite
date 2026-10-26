@@ -135,7 +135,7 @@ class OnlineClassController extends Controller
 
     private function authorizeManage(Request $request): void
     {
-        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator', 'teacher', 'homeroom']), 403);
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'teacher', 'homeroom']), 403);
     }
 
     private function authorizeSession(Request $request, OnlineClassSession $session): void

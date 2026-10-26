@@ -26,6 +26,7 @@ interface SchemeItem {
 
 const props = defineProps<{
     schemes: SchemeItem[];
+    can_manage: boolean;
 }>();
 
 const isCreateSchemeOpen = ref(false);
@@ -87,7 +88,7 @@ const totalWeight = (components: ComponentItem[]) => {
         <div class="view space-y-6">
             <!-- Header Halaman -->
             <div class="page-heading compact-heading">
-                <div>
+                <div v-if="props.can_manage">
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Skema & Bobot Penilaian</h1>
                     <p class="text-sm text-slate-500 mt-1">
                         Konfigurasi formula pembobotan dinamis, aturan pembulatan, dan batas kelulusan KKTP berversi.
@@ -132,7 +133,7 @@ const totalWeight = (components: ComponentItem[]) => {
                             <p class="text-xs text-slate-500 font-mono">Kode: {{ scheme.code }} | Pembulatan: {{ scheme.rounding_rule }} ({{ scheme.decimal_places }} desimal) | KKTP Default: {{ scheme.passing_grade_default }}</p>
                         </div>
 
-                        <div>
+                        <div v-if="props.can_manage">
                             <button
                                 type="button"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-white text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors"
@@ -203,7 +204,7 @@ const totalWeight = (components: ComponentItem[]) => {
 
             <!-- Modal Buat Skema Baru -->
             <div
-                v-if="isCreateSchemeOpen"
+                v-if="props.can_manage && isCreateSchemeOpen"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
                 <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
@@ -303,7 +304,7 @@ const totalWeight = (components: ComponentItem[]) => {
 
             <!-- Modal Tambah Komponen -->
             <div
-                v-if="isCreateComponentOpen"
+                v-if="props.can_manage && isCreateComponentOpen"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
                 <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">

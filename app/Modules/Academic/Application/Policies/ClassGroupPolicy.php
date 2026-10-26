@@ -44,13 +44,17 @@ class ClassGroupPolicy
 
     public function create(User $actor): bool
     {
+        if ($actor->hasRole('principal')) {
+            return false;
+        }
+
         return $actor->hasPermission(PermissionEnum::ACADEMIC_CLASSES_MANAGE->value)
             || $actor->hasRole('operator');
     }
 
     public function update(User $actor, ClassGroup $classGroup): bool
     {
-        if ($actor->school_id !== $classGroup->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $classGroup->school_id) {
             return false;
         }
 
@@ -60,7 +64,7 @@ class ClassGroupPolicy
 
     public function delete(User $actor, ClassGroup $classGroup): bool
     {
-        if ($actor->school_id !== $classGroup->school_id) {
+        if ($actor->hasRole('principal') || $actor->school_id !== $classGroup->school_id) {
             return false;
         }
 

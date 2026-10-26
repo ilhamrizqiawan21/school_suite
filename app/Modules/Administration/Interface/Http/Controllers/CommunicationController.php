@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommunicationController extends Controller
 {
-    private const MANAGER_ROLES = ['admin', 'operator', 'principal', 'teacher', 'homeroom'];
+    private const MANAGER_ROLES = ['admin', 'operator', 'teacher', 'homeroom'];
 
     public function __construct(
         private readonly CommunicationService $communication,
@@ -75,7 +75,7 @@ class CommunicationController extends Controller
             'active_tab' => $request->query('tab', 'announcements'),
             'can_manage' => $user->hasRole(self::MANAGER_ROLES),
             'can_chat' => $user->hasRole(['teacher', 'homeroom', 'student']),
-            'can_whatsapp' => $user->hasRole(['admin', 'operator', 'principal', 'homeroom']),
+            'can_whatsapp' => $user->hasRole(['admin', 'operator', 'homeroom']),
         ]);
     }
 

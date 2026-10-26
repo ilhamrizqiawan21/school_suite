@@ -11,6 +11,33 @@ interface DashboardStats {
     latest_announcements?: Array<{ id: number; title: string; author_name?: string | null; published_at?: string | null }>;
     latest_login_logs?: Array<{ id: number; user_name: string; status: string; reason?: string | null; ip_address?: string | null; created_at?: string | null }>;
     attendance_trend?: Array<{ month_key: string; label: string; rate: number; present: number; total: number }>;
+    principal_overview?: PrincipalOverview;
+}
+
+interface PrincipalOverview {
+    period: 'term' | '30d';
+    summary: {
+        attendance_rate: number | null;
+        attendance_present: number;
+        attendance_total: number;
+        tasks_submitted: number;
+        tasks_total: number;
+        tasks_rate: number | null;
+        reports_published: number;
+        reports_total: number;
+        exams_live: number;
+        students: number;
+        teachers: number;
+    };
+    attendance_trend: Array<{ month_key: string; label: string; rate: number | null; present: number; total: number }>;
+    learning_by_grade: Array<{ grade: string; label: string; submitted: number; total: number; rate: number | null }>;
+    activity: {
+        admin: { active_classes: number; missing_homeroom: number };
+        teacher: { sessions_total: number; journals_completed: number };
+        homeroom: { reports_total: number; reports_published: number };
+        student: { tasks_total: number; tasks_submitted: number };
+    };
+    attention: Array<{ key: string; title: string; detail: string; href: string; level: 'high' | 'medium' | 'info' }>;
 }
 
 interface DashboardPageProps {
@@ -32,6 +59,25 @@ const roleMetrics = computed(() => props.stats?.role_metrics ?? {});
 const latestAnnouncements = computed(() => props.stats?.latest_announcements ?? []);
 const latestLoginLogs = computed(() => props.stats?.latest_login_logs ?? []);
 const attendanceTrend = computed(() => props.stats?.attendance_trend ?? []);
+const principalOverview = computed(() => props.stats?.principal_overview);
+const principalSummary = computed(() => principalOverview.value?.summary);
+const principalPeriod = computed(() => principalOverview.value?.period ?? 'term');
+const principalAttention = computed(() => principalOverview.value?.attention ?? []);
+const principalTrend = computed(() => principalOverview.value?.attendance_trend ?? []);
+const principalGrades = computed(() => principalOverview.value?.learning_by_grade ?? []);
+const percentLabel = (rate: number | null | undefined) => rate === null || rate === undefined ? '—' : `${Math.round(rate * 10) / 10}%`;
+const completionRate = (done: number, total: number) => total > 0 ? Math.min(100, Math.round((done / total) * 100)) : null;
+const principalActivity = computed(() => {
+    const activity = principalOverview.value?.activity;
+    if (!activity) return [];
+
+    return [
+        { role: 'Admin', title: 'Kesiapan rombel', done: Math.max(0, activity.admin.active_classes - activity.admin.missing_homeroom), total: activity.admin.active_classes, detail: `${activity.admin.missing_homeroom} rombel belum memiliki wali kelas`, href: '/akademik/kelas' },
+        { role: 'Guru', title: 'Jurnal selesai', done: activity.teacher.journals_completed, total: activity.teacher.sessions_total, detail: `${activity.teacher.journals_completed} dari ${activity.teacher.sessions_total} sesi mengajar`, href: '/laporan' },
+        { role: 'Wali Kelas', title: 'Rapor terbit', done: activity.homeroom.reports_published, total: activity.homeroom.reports_total, detail: `${activity.homeroom.reports_published} dari ${activity.homeroom.reports_total} rapor tersedia`, href: '/penilaian/rapor' },
+        { role: 'Siswa', title: 'Tugas dikumpulkan', done: activity.student.tasks_submitted, total: activity.student.tasks_total, detail: `${activity.student.tasks_submitted} dari ${activity.student.tasks_total} tugas kelas`, href: '/pembelajaran/progress' },
+    ].map((item) => ({ ...item, rate: completionRate(item.done, item.total) }));
+});
 const studentAttendancePercent = computed(() => {
     const total = roleMetrics.value.attendance_total ?? 0;
     return total ? Math.round(((roleMetrics.value.attendance_present ?? 0) / total) * 100) : 0;
@@ -100,8 +146,7 @@ const principalActions = [
     { title: 'Monitoring siswa', description: 'Pantau sebaran peserta didik aktif dan riwayat siklus siswa.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
     { title: 'Tenaga pendidik', description: 'Tinjau data guru, beban mengajar, dan penugasan akademik.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
     { title: 'Jadwal pelajaran', description: 'Periksa distribusi jadwal belajar dan keterisian rombel.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { title: 'Komunikasi sekolah', description: 'Tinjau pengumuman dan agenda resmi warga sekolah.', href: '/komunikasi', icon: 'M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5' },
-    { title: 'Keamanan & log akses', description: 'Pantau aktivitas login dan stabilitas keamanan sistem.', href: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
+    { title: 'Rekap presensi', description: 'Tinjau kehadiran siswa per rombongan belajar.', href: '/akademik/presensi/rekap', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14v14z' },
 ];
 const studentActions = [
     { title: 'Ruang belajar LMS', description: 'Akses materi pelajaran, modul ajar, dan kumpulkan tugas kelas.', href: '/pembelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
@@ -185,10 +230,10 @@ const metricItems = computed(() => {
         { label: 'Pengguna aktif', value: roleMetrics.value.active_users, note: 'akun warga sekolah' },
     ];
     if (isPrincipal.value) return [
-        { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah' },
-        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pengajar' },
-        { label: 'Ujian aktif', value: roleMetrics.value.active_exams, note: 'sedang berjalan' },
-        { label: 'Pengumuman', value: roleMetrics.value.recent_announcements, note: '30 hari terakhir' },
+        { label: 'Tugas terkumpul', value: percentLabel(principalSummary.value?.tasks_rate), note: `${principalSummary.value?.tasks_submitted ?? 0} dari ${principalSummary.value?.tasks_total ?? 0} tugas` },
+        { label: 'Ujian berlangsung', value: principalSummary.value?.exams_live, note: 'sesuai jadwal saat ini' },
+        { label: 'Rapor terbit', value: principalSummary.value?.reports_published, note: `dari ${principalSummary.value?.reports_total ?? 0} rapor periode aktif` },
+        { label: 'Siswa / guru aktif', value: principalSummary.value ? `${principalSummary.value.students} / ${principalSummary.value.teachers}` : '—', note: 'jumlah warga sekolah' },
     ];
     if (isHomeroom.value) return [
         { label: 'Kelas binaan/diampu', value: roleMetrics.value.teaching_assignments, note: 'periode aktif' },
@@ -249,6 +294,38 @@ const attendanceAverage = computed(() => {
     if (!monthsWithData.length) return 0;
     return Math.round((monthsWithData.reduce((sum, item) => sum + item.rate, 0) / monthsWithData.length) * 10) / 10;
 });
+const principalAttendanceChart = computed(() => {
+    const width = 760;
+    const height = 264;
+    const padding = { top: 18, right: 24, bottom: 42, left: 42 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+    const points = principalTrend.value.map((item, index) => ({
+        ...item,
+        x: principalTrend.value.length === 1 ? padding.left + plotWidth / 2 : padding.left + (plotWidth / (principalTrend.value.length - 1)) * index,
+        y: padding.top + plotHeight - (Math.max(0, Math.min(100, item.rate ?? 0)) / 100) * plotHeight,
+    }));
+    const segments: string[] = [];
+    let currentSegment: string[] = [];
+    points.forEach((point) => {
+        if (point.total > 0) {
+            currentSegment.push(`${point.x},${point.y}`);
+        } else {
+            if (currentSegment.length > 1) segments.push(currentSegment.join(' '));
+            currentSegment = [];
+        }
+    });
+    if (currentSegment.length > 1) segments.push(currentSegment.join(' '));
+
+    return {
+        width,
+        height,
+        points,
+        segments,
+        grid: [0, 25, 50, 75, 100].map((value) => ({ value, y: padding.top + plotHeight - (value / 100) * plotHeight })),
+        hasData: points.some((point) => point.total > 0),
+    };
+});
 </script>
 
 <template>
@@ -257,12 +334,43 @@ const attendanceAverage = computed(() => {
             <header class="dashboard-intro">
                 <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
-                    <div><h1>{{ firstName }}, ini pusat kerjamu.</h1><p>{{ focusCopy }}</p></div>
+                    <div><h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : `${firstName}, ini pusat kerjamu.` }}</h1><p>{{ focusCopy }}</p></div>
                     <div class="date-stamp"><strong>{{ today.day }}</strong><span>{{ today.month }}<br>{{ today.year }}</span></div>
                 </div>
             </header>
 
-            <div class="command-layout">
+            <div v-if="isPrincipal" class="principal-toolbar">
+                <span>Periode aktif <strong>{{ activePeriod }}</strong></span>
+                <nav class="principal-periods" aria-label="Rentang waktu ikhtisar">
+                    <Link href="/?period=30d" :class="{ active: principalPeriod === '30d' }" :aria-current="principalPeriod === '30d' ? 'page' : undefined" preserve-scroll>30 hari</Link>
+                    <Link href="/?period=term" :class="{ active: principalPeriod === 'term' }" :aria-current="principalPeriod === 'term' ? 'page' : undefined" preserve-scroll>Semester</Link>
+                </nav>
+            </div>
+
+            <div v-if="isPrincipal" class="principal-command">
+                <article class="principal-lead">
+                    <div class="principal-lead-top"><span>Kehadiran sekolah</span><span>Seluruh rombel</span></div>
+                    <div class="principal-lead-number">{{ percentLabel(principalSummary?.attendance_rate) }}</div>
+                    <h2>Seberapa konsisten siswa hadir?</h2>
+                    <p v-if="principalSummary?.attendance_total">{{ principalSummary.attendance_present }} hadir dari {{ principalSummary.attendance_total }} catatan presensi pada rentang terpilih.</p>
+                    <p v-else>Belum ada catatan presensi pada rentang terpilih.</p>
+                    <Link href="/akademik/presensi/rekap" class="principal-lead-link">Buka rekap presensi <span aria-hidden="true">↗</span></Link>
+                </article>
+                <aside class="principal-attention">
+                    <div class="principal-attention-title"><div><span>Perlu perhatian</span><h2>Prioritas pimpinan</h2></div><strong>{{ principalAttention.length }}</strong></div>
+                    <ul v-if="principalAttention.length" class="principal-alert-list">
+                        <li v-for="item in principalAttention.slice(0, 3)" :key="item.key" :class="`alert-${item.level}`">
+                            <span class="principal-alert-dot" aria-hidden="true" />
+                            <div><strong>{{ item.title }}</strong><p>{{ item.detail }}</p></div>
+                            <Link :href="item.href" :aria-label="`Lihat ${item.title}`">↗</Link>
+                        </li>
+                    </ul>
+                    <p v-else class="principal-attention-empty">Belum ada hal yang perlu ditindaklanjuti dari data periode ini.</p>
+                    <span v-if="principalAttention.length > 3" class="principal-alert-more">{{ principalAttention.length - 3 }} perhatian lain tercatat</span>
+                </aside>
+            </div>
+
+            <div v-else class="command-layout">
                 <article class="focus-panel" :class="{ 'teacher-focus': isTeacher || isHomeroom, 'principal-focus': isPrincipal, 'student-focus': isStudent, 'operator-focus': isOperator }">
                     <div class="focus-meta"><span>{{ focusLabel }}</span><span class="focus-status"><i /> Sistem aktif</span></div>
                     <div class="focus-content" :class="{ 'admin-focus-content': isAdmin }"><template v-if="!isAdmin"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span></template><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
@@ -284,7 +392,56 @@ const attendanceAverage = computed(() => {
                 </article>
             </section>
 
-            <section v-if="!isTeacher && !isHomeroom" class="workflow-section">
+            <section v-if="isPrincipal" class="principal-overview" aria-label="Ikhtisar sekolah">
+                <div class="principal-charts">
+                    <section class="principal-chart-panel" aria-labelledby="principal-attendance-title">
+                        <div class="principal-panel-heading"><div><span>Tren sekolah</span><h2 id="principal-attendance-title">Kehadiran siswa</h2><p>Persentase siswa hadir dari catatan presensi tiap rentang waktu.</p></div><Link href="/akademik/presensi/rekap">Lihat rekap ↗</Link></div>
+                        <div v-if="principalAttendanceChart.hasData" class="principal-chart-wrap">
+                            <svg class="principal-chart" :viewBox="`0 0 ${principalAttendanceChart.width} ${principalAttendanceChart.height}`" role="img" aria-labelledby="principal-chart-label">
+                                <title id="principal-chart-label">Tren kehadiran sekolah: {{ principalTrend.filter((point) => point.total > 0).map((point) => `${point.label} ${percentLabel(point.rate)}`).join(', ') }}</title>
+                                <g class="chart-grid"><line v-for="grid in principalAttendanceChart.grid" :key="grid.value" x1="42" x2="736" :y1="grid.y" :y2="grid.y" /><text v-for="grid in principalAttendanceChart.grid" :key="`principal-${grid.value}`" x="0" :y="grid.y + 4">{{ grid.value }}%</text></g>
+                                <polyline v-for="(segment, index) in principalAttendanceChart.segments" :key="index" class="chart-line" :points="segment" />
+                                <g v-for="point in principalAttendanceChart.points" :key="point.month_key" class="chart-point">
+                                    <circle v-if="point.total > 0" :cx="point.x" :cy="point.y" r="5"><title>{{ point.label }}: {{ percentLabel(point.rate) }} ({{ point.present }}/{{ point.total }})</title></circle>
+                                    <text :x="point.x" y="252" text-anchor="middle">{{ point.label }}</text>
+                                </g>
+                            </svg>
+                        </div>
+                        <div v-else class="principal-empty">Belum ada data kehadiran untuk dibuat grafik.</div>
+                    </section>
+                    <section class="principal-grade-panel" aria-labelledby="principal-learning-title">
+                        <div class="principal-panel-heading"><div><span>Progres belajar</span><h2 id="principal-learning-title">Tugas per jenjang</h2><p>Bagian tugas yang sudah dikumpulkan siswa.</p></div><Link href="/pembelajaran/progress">Lihat progres ↗</Link></div>
+                        <div v-if="principalGrades.length" class="principal-grade-list">
+                            <div v-for="grade in principalGrades" :key="grade.grade" class="principal-grade-row">
+                                <div class="principal-grade-meta"><strong>{{ grade.label }}</strong><span>{{ grade.submitted }}/{{ grade.total }} tugas</span><b>{{ percentLabel(grade.rate) }}</b></div>
+                                <div v-if="grade.total" class="principal-grade-track" role="progressbar" :aria-label="`Tugas ${grade.label} terkumpul`" :aria-valuenow="grade.rate ?? 0" aria-valuemin="0" aria-valuemax="100"><span :style="{ width: `${grade.rate ?? 0}%` }" /></div>
+                                <p v-else>Belum ada tugas terbit pada jenjang ini.</p>
+                            </div>
+                        </div>
+                        <div v-else class="principal-empty">Belum ada tugas terbit pada periode aktif.</div>
+                    </section>
+                </div>
+
+                <section class="principal-activity" aria-labelledby="principal-activity-title">
+                    <div class="principal-section-heading"><div><span>Aktivitas lintas peran</span><h2 id="principal-activity-title">Dari data sekolah sampai hasil belajar</h2></div><span>Ringkasan periode aktif</span></div>
+                    <div class="principal-activity-grid">
+                        <Link v-for="item in principalActivity" :key="item.role" :href="item.href" class="principal-activity-item">
+                            <span>{{ item.role }}</span><strong>{{ percentLabel(item.rate) }}</strong><h3>{{ item.title }}</h3><p>{{ item.detail }}</p>
+                            <div v-if="item.total" class="principal-activity-track" aria-hidden="true"><i :style="{ width: `${item.rate ?? 0}%` }" /></div>
+                            <small>Lihat rincian ↗</small>
+                        </Link>
+                        <p v-if="!principalActivity.length" class="principal-empty">Belum ada aktivitas untuk ditampilkan.</p>
+                    </div>
+                </section>
+
+                <section class="principal-news" aria-labelledby="principal-news-title">
+                    <div class="principal-section-heading"><div><span>Komunikasi sekolah</span><h2 id="principal-news-title">Pengumuman terbaru</h2></div><Link href="/komunikasi">Lihat semua ↗</Link></div>
+                    <ol v-if="latestAnnouncements.length"><li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }}</span><time>{{ formatDateTime(item.published_at) }}</time></li></ol>
+                    <p v-else class="principal-empty">Belum ada pengumuman terbit.</p>
+                </section>
+            </section>
+
+            <section v-if="!isTeacher && !isHomeroom && !isPrincipal" class="workflow-section">
                 <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Pantauan harian</span><h2>Pengumuman dan log login</h2></div><span class="workflow-count">2 area penting</span></div>
                 <div v-if="isAdmin" class="admin-overview-grid">
                     <section class="admin-overview-card announcement-card">
@@ -411,8 +568,77 @@ const attendanceAverage = computed(() => {
 .focus-panel.student-focus { background: #375342; }
 .focus-panel.operator-focus { background: #1c3d5a; }
 .eyebrow { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .045em; }
+.principal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 15px; color: var(--ink-soft); font-size: 12px; }
+.principal-toolbar strong { margin-left: 7px; color: var(--ink); font-weight: 750; }
+.principal-periods { display: inline-flex; gap: 3px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; }
+.principal-periods a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; color: var(--ink-soft); border-radius: 7px; font-size: 12px; font-weight: 700; text-decoration: none; }
+.principal-periods a.active { color: var(--primary-strong); background: var(--primary-soft); }
+.principal-command { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .9fr); gap: 16px; }
+.principal-lead { position: relative; min-height: 316px; padding: 28px 30px; overflow: hidden; color: #fff; background: #3d3158; border-radius: var(--radius-lg); }
+.principal-lead::after { position: absolute; right: -120px; bottom: -210px; width: 360px; height: 360px; content: ''; border: 1px solid rgba(255,255,255,.19); border-radius: 50%; box-shadow: 0 0 0 45px rgba(255,255,255,.045), 0 0 0 100px rgba(255,255,255,.035); pointer-events: none; }
+.principal-lead-top { display: flex; justify-content: space-between; gap: 15px; color: #e9e0f4; font-size: 12px; font-weight: 700; }
+.principal-lead-number { position: relative; z-index: 1; margin-top: 26px; color: #f4ca74; font: 700 clamp(56px, 6vw, 76px)/.95 Georgia, serif; letter-spacing: -.055em; }
+.principal-lead h2 { position: relative; z-index: 1; margin: 18px 0 6px; font-size: clamp(21px, 2.4vw, 28px); line-height: 1.15; letter-spacing: -.035em; }
+.principal-lead p { position: relative; z-index: 1; max-width: 460px; margin: 0; color: #e3dceb; font-size: 13px; line-height: 1.6; }
+.principal-lead-link { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 42px; margin-top: 21px; padding: 0 15px; color: #302347; background: #f4ca74; border-radius: 9px; font-size: 12px; font-weight: 800; text-decoration: none; }
+.principal-lead-link:hover { background: #ffda91; }
+.principal-attention { display: flex; min-width: 0; min-height: 316px; flex-direction: column; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.principal-attention-title { display: flex; align-items: start; justify-content: space-between; gap: 14px; }
+.principal-attention-title span, .principal-panel-heading > div > span, .principal-section-heading > div > span { color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+.principal-attention-title h2 { margin: 5px 0 0; color: var(--ink); font-size: 20px; letter-spacing: -.035em; }
+.principal-attention-title > strong { display: grid; place-items: center; min-width: 32px; height: 32px; padding: 0 5px; color: var(--gold); background: var(--gold-soft); border-radius: 10px; font-size: 15px; }
+.principal-alert-list { display: grid; gap: 0; margin: 16px 0 0; padding: 0; list-style: none; }
+.principal-alert-list li { display: grid; grid-template-columns: 9px minmax(0, 1fr) 32px; align-items: start; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); }
+.principal-alert-dot { width: 8px; height: 8px; margin-top: 5px; background: var(--gold); border-radius: 50%; }
+.principal-alert-list .alert-high .principal-alert-dot { background: var(--red); }
+.principal-alert-list .alert-info .principal-alert-dot { background: var(--blue); }
+.principal-alert-list strong { color: var(--ink); font-size: 12px; line-height: 1.4; }
+.principal-alert-list p { margin: 4px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.principal-alert-list a { display: grid; place-items: center; min-height: 32px; color: var(--blue); font-size: 17px; text-decoration: none; }
+.principal-attention-empty { margin: auto 0; color: var(--ink-soft); font-size: 13px; line-height: 1.5; }
+.principal-alert-more { margin-top: auto; padding-top: 8px; color: var(--ink-soft); font-size: 11px; }
+.principal-overview { margin-top: 34px; }
+.principal-charts { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .85fr); gap: 16px; }
+.principal-chart-panel, .principal-grade-panel, .principal-news { min-width: 0; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.principal-panel-heading, .principal-section-heading { display: flex; align-items: start; justify-content: space-between; gap: 18px; }
+.principal-panel-heading h2, .principal-section-heading h2 { margin: 5px 0 0; color: var(--ink); font-size: 21px; letter-spacing: -.035em; }
+.principal-panel-heading p { margin: 6px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.principal-panel-heading > a, .principal-section-heading > a { flex: 0 0 auto; min-height: 32px; padding: 7px 0; color: var(--blue); font-size: 11px; font-weight: 750; text-decoration: none; white-space: nowrap; }
+.principal-panel-heading > a:hover, .principal-section-heading > a:hover { text-decoration: underline; }
+.principal-chart-wrap { width: 100%; margin-top: 18px; overflow-x: auto; }
+.principal-chart { display: block; width: 100%; min-width: 500px; height: auto; }
+.principal-grade-list { display: grid; gap: 21px; margin-top: 28px; }
+.principal-grade-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 9px; }
+.principal-grade-meta strong { color: var(--ink); font-size: 13px; }
+.principal-grade-meta span { color: var(--ink-soft); font-size: 11px; }
+.principal-grade-meta b { min-width: 45px; color: var(--ink); font-size: 13px; text-align: right; }
+.principal-grade-track, .principal-activity-track { height: 8px; margin-top: 10px; overflow: hidden; background: var(--surface-strong); border-radius: 999px; }
+.principal-grade-track > span, .principal-activity-track > i { display: block; height: 100%; background: var(--blue); border-radius: inherit; }
+.principal-grade-row p { margin: 7px 0 0; color: var(--ink-faint); font-size: 11px; }
+.principal-empty { margin: 22px 0; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.principal-activity { margin-top: 30px; }
+.principal-section-heading { align-items: end; margin-bottom: 14px; }
+.principal-section-heading > span { color: var(--ink-faint); font-size: 11px; }
+.principal-activity-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.principal-activity-item { display: flex; min-width: 0; min-height: 206px; flex-direction: column; padding: 19px; color: var(--ink); border-right: 1px solid var(--line); text-decoration: none; }
+.principal-activity-item:last-child { border-right: 0; }
+.principal-activity-item:hover { background: var(--surface-subtle); }
+.principal-activity-item > span { color: var(--ink-soft); font-size: 11px; font-weight: 750; }
+.principal-activity-item > strong { margin-top: 12px; color: var(--ink); font: 700 34px/.95 Georgia, serif; }
+.principal-activity-item h3 { margin: 13px 0 3px; color: var(--ink); font-size: 13px; }
+.principal-activity-item p { min-height: 33px; margin: 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.principal-activity-item .principal-activity-track { width: 100%; height: 6px; margin-top: auto; }
+.principal-activity-item small { margin-top: 12px; color: var(--blue); font-size: 11px; font-weight: 750; }
+.principal-news { margin-top: 30px; }
+.principal-news .principal-section-heading { margin-bottom: 5px; }
+.principal-news ol { margin: 0; padding: 0; list-style: none; }
+.principal-news li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, .32fr) auto; align-items: center; gap: 16px; min-height: 49px; border-top: 1px solid var(--line); }
+.principal-news li strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.principal-news li span, .principal-news li time { color: var(--ink-soft); font-size: 11px; }
+.dashboard-view a:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+@media (max-width: 1080px) { .principal-charts { grid-template-columns: 1fr; }.principal-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.principal-activity-item:nth-child(2) { border-right: 0; }.principal-activity-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
 @media (max-width: 1000px) { .student-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.student-announcements-card { grid-column: 1 / -1; } }
-@media (max-width: 800px) { .command-layout { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
-@media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; } }
+@media (max-width: 800px) { .command-layout, .principal-command { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
+@media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; }.principal-toolbar { align-items: start; flex-direction: column; }.principal-lead, .principal-attention, .principal-chart-panel, .principal-grade-panel, .principal-news { padding: 19px; }.principal-lead { min-height: 300px; }.principal-panel-heading { align-items: start; flex-direction: column; gap: 6px; }.principal-grade-meta { grid-template-columns: minmax(0, 1fr) auto; }.principal-grade-meta span { grid-column: 1; grid-row: 2; }.principal-grade-meta b { grid-column: 2; grid-row: 1 / 3; }.principal-activity-grid { grid-template-columns: 1fr; }.principal-activity-item { min-height: 182px; border-right: 0; border-bottom: 1px solid var(--line); }.principal-activity-item:last-child { border-bottom: 0; }.principal-news li { grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; }.principal-news li strong { grid-column: 1 / -1; white-space: normal; }.principal-news li time { text-align: right; } }
 @media (prefers-reduced-motion: reduce) { .workflow-row { transition: none; } }
 </style>

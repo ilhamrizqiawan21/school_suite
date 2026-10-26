@@ -21,7 +21,7 @@ class StudentLifecycleController extends Controller
 
     public function index(Request $request): Response
     {
-        $this->authorizeManage($request);
+        $this->authorizeView($request);
         $schoolId = (int) $request->user()->school_id;
         $terms = Term::with('academicYear:id,name,school_id')->whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))->latest('start_date')->get();
         $activeTerm = $terms->firstWhere('is_active', true);
@@ -29,7 +29,14 @@ class StudentLifecycleController extends Controller
         $enrollments = $activeTerm ? Enrollment::with(['student:id,nis,name,status', 'classGroup:id,name'])->where('term_id', $activeTerm->id)->where('status', 'active')->orderBy('class_group_id')->orderBy('roll_number')->get() : collect();
         $events = StudentLifecycleEvent::with(['student:id,nis,name', 'sourceEnrollment.classGroup:id,name', 'targetEnrollment.classGroup:id,name'])->where('school_id', $schoolId)->latest('effective_date')->limit(100)->get();
 
-        return Inertia::render('Academic/Lifecycle/Index', compact('terms', 'activeTerm', 'classes', 'enrollments', 'events'));
+        return Inertia::render('Academic/Lifecycle/Index', [
+            'terms' => $terms,
+            'activeTerm' => $activeTerm,
+            'classes' => $classes,
+            'enrollments' => $enrollments,
+            'events' => $events,
+            'can_manage' => $request->user()->hasRole(['admin', 'operator']),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,6 +54,11 @@ class StudentLifecycleController extends Controller
 
     private function authorizeManage(Request $request): void
     {
-        abort_unless($request->user()->hasRole(['admin', 'principal', 'operator']), 403);
+        abort_unless($request->user()->hasRole(['admin', 'operator']), 403);
+    }
+
+    private function authorizeView(Request $request): void
+    {
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal']), 403);
     }
 }
