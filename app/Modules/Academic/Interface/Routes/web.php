@@ -30,14 +30,18 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     Route::get('siswa', [StudentController::class, 'index'])->name('students.index');
     Route::post('siswa', [StudentController::class, 'store'])->name('students.store');
     Route::put('siswa/{student}', [StudentController::class, 'update'])->name('students.update');
-    Route::post('siswa/import', [StudentController::class, 'import'])->name('students.import');
+    Route::post('siswa/import/preview', [StudentController::class, 'previewImport'])->middleware('throttle:sensitive')->name('students.import.preview');
+    Route::post('siswa/import/{token}/confirm', [StudentController::class, 'confirmImport'])->middleware('throttle:sensitive')->name('students.import.confirm');
+    Route::post('siswa/import', [StudentController::class, 'import'])->middleware('throttle:sensitive')->name('students.import');
     Route::get('siswa/template', [StudentController::class, 'template'])->name('students.template');
 
     // Guru / Pendidik
     Route::get('guru', [TeacherController::class, 'index'])->name('teachers.index');
     Route::post('guru', [TeacherController::class, 'store'])->name('teachers.store');
     Route::put('guru/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
-    Route::post('guru/import', [TeacherController::class, 'import'])->name('teachers.import');
+    Route::post('guru/import/preview', [TeacherController::class, 'previewImport'])->middleware('throttle:sensitive')->name('teachers.import.preview');
+    Route::post('guru/import/{token}/confirm', [TeacherController::class, 'confirmImport'])->middleware('throttle:sensitive')->name('teachers.import.confirm');
+    Route::post('guru/import', [TeacherController::class, 'import'])->middleware('throttle:sensitive')->name('teachers.import');
     Route::get('guru/template', [TeacherController::class, 'template'])->name('teachers.template');
 
     // Rombongan Belajar / Kelas

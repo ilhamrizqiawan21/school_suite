@@ -27,6 +27,7 @@ interface JournalData {
     attendance_notes?: string | null;
     observations?: string | null;
     reflection?: string | null;
+    updated_at?: string | null;
 }
 
 interface SessionItem {
@@ -89,8 +90,70 @@ interface JournalForm {
     reflection: string;
 }
 
+interface StoredJournalDraft {
+    saved_at: number;
+    base_updated_at: string | null;
+    values: JournalForm;
+}
+
+const draftRetentionMs = 7 * 24 * 60 * 60 * 1000;
+const storedDrafts = ref<Record<number, StoredJournalDraft>>({});
+const draftStorageStates = reactive<Record<number, 'saving' | 'saved' | 'unavailable'>>({});
+const draftSaveTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+const readStoredDrafts = (): Record<number, StoredJournalDraft> => {
+    try {
+        const raw = localStorage.getItem(draftStorageKey);
+        if (!raw) return {};
+
+        const parsed = JSON.parse(raw) as Record<string, StoredJournalDraft>;
+        const now = Date.now();
+        const validDrafts: Record<number, StoredJournalDraft> = {};
+        Object.entries(parsed).forEach(([rawId, draft]) => {
+            const id = Number(rawId);
+            if (Number.isInteger(id) && id > 0
+                && draft && typeof draft.saved_at === 'number'
+                && draft.saved_at <= now
+                && now - draft.saved_at < draftRetentionMs
+                && (draft.base_updated_at === null || typeof draft.base_updated_at === 'string')
+                && draft.values && typeof draft.values === 'object'
+                && typeof draft.values.topic === 'string'
+                && typeof draft.values.theme === 'string'
+                && typeof draft.values.period_count === 'number'
+                && typeof draft.values.learning_objectives === 'string'
+                && typeof draft.values.notes === 'string'
+                && typeof draft.values.opening_activity === 'string'
+                && typeof draft.values.main_activity === 'string'
+                && typeof draft.values.closing_activity === 'string'
+                && typeof draft.values.follow_up === 'string'
+                && typeof draft.values.attendance_notes === 'string'
+                && typeof draft.values.observations === 'string'
+                && typeof draft.values.reflection === 'string') {
+                validDrafts[id] = draft;
+            }
+        });
+        return validDrafts;
+    } catch {
+        return {};
+    }
+};
+
+const persistStoredDrafts = () => {
+    try {
+        if (Object.keys(storedDrafts.value).length === 0) {
+            localStorage.removeItem(draftStorageKey);
+        } else {
+            localStorage.setItem(draftStorageKey, JSON.stringify(storedDrafts.value));
+        }
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 const props = defineProps<{
     active_term: { id: number; name: string; start_date: string; end_date: string } | null;
+    draft_storage_scope: string;
     agenda_date: string;
     focus_session_id?: number | null;
     agenda_sessions: SessionItem[];
@@ -109,6 +172,9 @@ const props = defineProps<{
     };
     recap: { summary: RecapSummary; months: RecapMonth[] };
 }>();
+
+const draftStorageKey = `school-suite:journal-drafts:${props.draft_storage_scope}`;
+storedDrafts.value = readStoredDrafts();
 
 const activeTab = ref<Tab>('agenda');
 const agendaDate = ref(props.agenda_date);
@@ -129,6 +195,24 @@ const newSessionForm = useForm({
     start_time: '07:00',
     end_time: '08:30',
 });
+
+const journalFormFrom = (journal: JournalData | null): JournalForm => ({
+    topic: journal?.topic ?? '',
+    theme: journal?.theme ?? '',
+    period_count: journal?.period_count ?? 2,
+    learning_objectives: journal?.learning_objectives ?? '',
+    notes: journal?.notes ?? '',
+    opening_activity: journal?.opening_activity ?? '',
+    main_activity: journal?.main_activity ?? '',
+    closing_activity: journal?.closing_activity ?? '',
+    follow_up: journal?.follow_up ?? '',
+    attendance_notes: journal?.attendance_notes ?? '',
+    observations: journal?.observations ?? '',
+    reflection: journal?.reflection ?? '',
+});
+
+const journalFormsMatch = (left: JournalForm, right: JournalForm) =>
+    Object.keys(left).every((key) => left[key as keyof JournalForm] === right[key as keyof JournalForm]);
 
 const parseLocalDate = (value: string | null | undefined) => {
     if (!value) return null;
@@ -163,20 +247,17 @@ const formatShortDate = (value: string | null | undefined) => {
 
 const ensureDraft = (session: SessionItem): JournalForm => {
     if (!drafts[session.id]) {
-        drafts[session.id] = {
-            topic: session.journal?.topic ?? '',
-            theme: session.journal?.theme ?? '',
-            period_count: session.journal?.period_count ?? 2,
-            learning_objectives: session.journal?.learning_objectives ?? '',
-            notes: session.journal?.notes ?? '',
-            opening_activity: session.journal?.opening_activity ?? '',
-            main_activity: session.journal?.main_activity ?? '',
-            closing_activity: session.journal?.closing_activity ?? '',
-            follow_up: session.journal?.follow_up ?? '',
-            attendance_notes: session.journal?.attendance_notes ?? '',
-            observations: session.journal?.observations ?? '',
-            reflection: session.journal?.reflection ?? '',
-        };
+        const serverValues = journalFormFrom(session.journal);
+        const savedDraft = storedDrafts.value[session.id];
+        const serverVersion = session.journal?.updated_at ?? null;
+        drafts[session.id] = savedDraft && savedDraft.base_updated_at === serverVersion
+            ? { ...savedDraft.values }
+            : serverValues;
+
+        if (savedDraft && savedDraft.base_updated_at !== serverVersion) {
+            delete storedDrafts.value[session.id];
+            persistStoredDrafts();
+        }
     }
     return drafts[session.id];
 };
@@ -199,6 +280,45 @@ const statusClass = (session: SessionItem) => {
     if (session.status === 'cancelled') return 'status-cancelled';
     if (statusLabel(session) === 'Draft') return 'status-draft';
     return session.journal_status === 'completed' ? 'status-completed' : 'status-pending';
+};
+
+const saveDraftToBrowser = (session: SessionItem) => {
+    const values = ensureDraft(session);
+    const serverValues = journalFormFrom(session.journal);
+    if (journalFormsMatch(values, serverValues)) {
+        delete storedDrafts.value[session.id];
+        delete draftStorageStates[session.id];
+    } else {
+        storedDrafts.value[session.id] = {
+            saved_at: Date.now(),
+            base_updated_at: session.journal?.updated_at ?? null,
+            values: { ...values },
+        };
+        draftStorageStates[session.id] = 'saved';
+    }
+
+    if (!persistStoredDrafts()) draftStorageStates[session.id] = 'unavailable';
+};
+
+const queueDraftSave = (session: SessionItem) => {
+    draftStorageStates[session.id] = 'saving';
+    const previousTimer = draftSaveTimers.get(session.id);
+    if (previousTimer) clearTimeout(previousTimer);
+
+    const timer = setTimeout(() => {
+        saveDraftToBrowser(session);
+        draftSaveTimers.delete(session.id);
+    }, 400);
+    draftSaveTimers.set(session.id, timer);
+};
+
+const clearStoredDraft = (sessionId: number) => {
+    const timer = draftSaveTimers.get(sessionId);
+    if (timer) clearTimeout(timer);
+    draftSaveTimers.delete(sessionId);
+    delete storedDrafts.value[sessionId];
+    delete draftStorageStates[sessionId];
+    persistStoredDrafts();
 };
 
 const navigate = (data: Record<string, string | number | null | undefined>) => {
@@ -249,6 +369,7 @@ const toggleJournal = (session: SessionItem) => {
 
 const saveJournal = (session: SessionItem) => {
     const form = ensureDraft(session);
+    saveDraftToBrowser(session);
     processingSessionId.value = session.id;
     router.post('/akademik/jurnal', {
         lesson_session_id: session.id,
@@ -266,7 +387,10 @@ const saveJournal = (session: SessionItem) => {
         reflection: form.reflection || null,
     }, {
         preserveScroll: true,
-        onSuccess: () => { expandedSessionId.value = null; },
+        onSuccess: () => {
+            clearStoredDraft(session.id);
+            expandedSessionId.value = null;
+        },
         onFinish: () => { processingSessionId.value = null; },
     });
 };
@@ -317,6 +441,7 @@ const createSession = () => {
                     observations: '',
                     reflection: '',
                 };
+                saveDraftToBrowser(createdSession);
                 expandedSessionId.value = createdSession.id;
             }
             showSessionModal.value = false;
@@ -415,8 +540,8 @@ const chart = computed(() => {
                                 {{ session.journal_status === 'completed' ? 'Edit jurnal' : 'Isi jurnal' }}
                             </button>
                         </div>
-                        <form v-if="expandedSessionId === session.id" class="journal-form" @submit.prevent="saveJournal(session)">
-                            <fieldset class="form-section">
+                        <form v-if="expandedSessionId === session.id" class="journal-form" @input="queueDraftSave(session)" @submit.prevent="saveJournal(session)">
+                            <fieldset class="form-section" :disabled="processingSessionId === session.id">
                                 <legend>Materi dan tujuan</legend>
                                 <label>Materi pokok
                                     <textarea v-model="ensureDraft(session).topic" required rows="2" placeholder="Materi yang dibahas pada pertemuan ini" />
@@ -433,7 +558,7 @@ const chart = computed(() => {
                                     <textarea v-model="ensureDraft(session).learning_objectives" rows="3" placeholder="Kompetensi yang diharapkan dicapai siswa" />
                                 </label>
                             </fieldset>
-                            <fieldset class="form-section">
+                            <fieldset class="form-section" :disabled="processingSessionId === session.id">
                                 <legend>Kegiatan pembelajaran</legend>
                                 <label>Kegiatan pendahuluan
                                     <textarea v-model="ensureDraft(session).opening_activity" rows="2" placeholder="Pembukaan, apersepsi, dan persiapan belajar" />
@@ -445,7 +570,7 @@ const chart = computed(() => {
                                     <textarea v-model="ensureDraft(session).closing_activity" rows="2" placeholder="Rangkuman, refleksi bersama, dan penutup" />
                                 </label>
                             </fieldset>
-                            <fieldset class="form-section">
+                            <fieldset class="form-section" :disabled="processingSessionId === session.id">
                                 <legend>Kehadiran dan refleksi</legend>
                                 <div class="attendance-strip">
                                     <span><b>{{ session.attendance_summary.present }}</b> hadir</span>
@@ -471,7 +596,9 @@ const chart = computed(() => {
                                 </label>
                             </fieldset>
                             <div class="form-footer">
-                                <span class="draft-note">Simpan sebagai jurnal sesi ini</span>
+                                <span class="draft-note" role="status">
+                                    {{ draftStorageStates[session.id] === 'saving' ? 'Menyimpan draft…' : draftStorageStates[session.id] === 'unavailable' ? 'Draft lokal tidak dapat disimpan di browser ini.' : storedDrafts[session.id] ? 'Draft tersimpan di browser selama 7 hari.' : 'Perubahan akan tersimpan otomatis di browser.' }}
+                                </span>
                                 <button class="primary-button" type="submit" :disabled="processingSessionId === session.id">
                                     {{ processingSessionId === session.id ? 'Menyimpan…' : 'Simpan jurnal' }}
                                 </button>

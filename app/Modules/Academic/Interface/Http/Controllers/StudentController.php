@@ -15,8 +15,10 @@ use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -196,13 +198,18 @@ class StudentController extends Controller
         return back()->with('message', "Data siswa {$student->name} berhasil diperbarui.");
     }
 
-    public function import(Request $request): RedirectResponse
+    public function import(Request $request): InertiaResponse|RedirectResponse
+    {
+        return $this->previewImport($request);
+    }
+
+    public function previewImport(Request $request): InertiaResponse|RedirectResponse
     {
         Gate::authorize('create', Student::class);
 
         $request->validate([
-            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt'],
-            'csv_content' => ['required_without:csv_file', 'nullable', 'string'],
+            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt', 'max:2048'],
+            'csv_content' => ['required_without:csv_file', 'nullable', 'string', 'max:2097152'],
             'enroll_term_id' => ['nullable', 'exists:terms,id'],
             'enroll_class_group_id' => ['nullable', 'exists:class_groups,id'],
         ]);
@@ -219,21 +226,74 @@ class StudentController extends Controller
                 return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
             }
 
-            $termId = $request->filled('enroll_term_id') ? (int) $request->input('enroll_term_id') : null;
-            $classId = $request->filled('enroll_class_group_id') ? (int) $request->input('enroll_class_group_id') : null;
+            $validation = $this->importService->validateStudentRows($schoolId, $rows);
+            $token = (string) Str::uuid();
+            Cache::put($this->importCacheKey($token), [
+                'user_id' => (int) $request->user()->id,
+                'school_id' => $schoolId,
+                'valid_rows' => $validation['valid_rows'],
+                'invalid_rows' => $validation['invalid_rows'],
+                'enroll_term_id' => $request->filled('enroll_term_id') ? (int) $request->input('enroll_term_id') : null,
+                'enroll_class_group_id' => $request->filled('enroll_class_group_id') ? (int) $request->input('enroll_class_group_id') : null,
+            ], now()->addMinutes(15));
 
-            $result = $this->importService->importStudentsBatch(
-                schoolId: $schoolId,
-                rows: $rows,
-                enrollTermId: $termId,
-                enrollClassGroupId: $classId,
-                actor: $request->user()
-            );
+            $previewRows = collect($validation['valid_rows'])->map(fn (array $row) => [
+                'row' => $row['row_index'], 'identifier' => $row['nis'], 'name' => $row['name'],
+                'gender' => $row['gender'], 'valid' => true, 'errors' => [],
+            ])->concat(collect($validation['invalid_rows'])->map(fn (array $row) => [
+                'row' => $row['row_index'], 'identifier' => $row['data']['nis'] ?? '',
+                'name' => $row['data']['name'] ?? '', 'gender' => $row['data']['gender'] ?? '',
+                'valid' => false, 'errors' => $row['errors'],
+            ]))->sortBy('row')->values();
 
-            return back()->with('message', "Berhasil mengimpor {$result['imported_count']} siswa.");
+            return Inertia::render('Academic/Imports/Preview', [
+                'token' => $token,
+                'entity' => 'siswa',
+                'index_url' => '/akademik/siswa',
+                'confirm_url' => "/akademik/siswa/import/{$token}/confirm",
+                'rows' => $previewRows,
+                'valid_count' => count($validation['valid_rows']),
+                'invalid_count' => count($validation['invalid_rows']),
+            ]);
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['csv_file' => $e->getMessage()]);
         }
+    }
+
+    public function confirmImport(Request $request, string $token): RedirectResponse
+    {
+        Gate::authorize('create', Student::class);
+        abort_unless(Str::isUuid($token), 404);
+
+        $cacheKey = $this->importCacheKey($token);
+        $lock = Cache::lock($cacheKey.':confirm', 900);
+        abort_unless($lock->get(), 409, 'Impor ini sedang diproses. Coba lagi beberapa saat.');
+
+        try {
+            $stage = Cache::get($cacheKey);
+            abort_unless(is_array($stage)
+                && $stage['user_id'] === (int) $request->user()->id
+                && $stage['school_id'] === (int) $request->user()->school_id, 404, 'Preview impor sudah kedaluwarsa atau tidak tersedia.');
+            abort_if($stage['invalid_rows'] !== [] || $stage['valid_rows'] === [], 422, 'Perbaiki semua baris yang bermasalah lalu unggah ulang sebelum impor.');
+
+            $result = $this->importService->importStudentsBatch(
+                schoolId: (int) $request->user()->school_id,
+                rows: $stage['valid_rows'],
+                enrollTermId: $stage['enroll_term_id'],
+                enrollClassGroupId: $stage['enroll_class_group_id'],
+                actor: $request->user()
+            );
+            Cache::forget($cacheKey);
+
+            return redirect()->route('academic.students.index')->with('message', "Berhasil mengimpor {$result['imported_count']} siswa.");
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function importCacheKey(string $token): string
+    {
+        return 'academic.student-import.'.hash('sha256', $token);
     }
 
     public function template(): Response

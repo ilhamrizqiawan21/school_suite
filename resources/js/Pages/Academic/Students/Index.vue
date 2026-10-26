@@ -135,7 +135,7 @@ const handleFileUpload = (e: Event) => {
 };
 
 const submitImport = () => {
-    importForm.post('/akademik/siswa/import', {
+    importForm.post('/akademik/siswa/import/preview', {
         onSuccess: () => {
             showImportModal.value = false;
             importForm.reset();
@@ -529,7 +529,7 @@ const deleteStudent = (student: Student) => {
                             Batal
                         </button>
                         <button type="submit" :disabled="importForm.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                            Mulai Impor
+                            Lanjut ke preview
                         </button>
                     </div>
                 </form>

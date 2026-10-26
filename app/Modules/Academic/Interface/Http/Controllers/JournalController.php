@@ -124,6 +124,7 @@ class JournalController extends Controller
         [$recapSummary, $monthlyRecap] = $this->buildRecap($allSessions, $activeTerm);
 
         return Inertia::render('Academic/Journals/Index', [
+            'draft_storage_scope' => hash('sha256', $schoolId.':'.$user->id),
             'active_term' => $activeTerm,
             'agenda_date' => $agendaDate->toDateString(),
             'focus_session_id' => isset($filters['focus_session_id']) ? (int) $filters['focus_session_id'] : null,
@@ -575,6 +576,7 @@ class JournalController extends Controller
                 'observations' => $session->journal->observations,
                 'reflection' => $session->journal->reflection,
                 'created_at' => $session->journal->created_at?->toIso8601String(),
+                'updated_at' => $session->journal->updated_at?->toIso8601String(),
             ] : null,
             'attendance_summary' => $attendance,
             'class_group' => [
