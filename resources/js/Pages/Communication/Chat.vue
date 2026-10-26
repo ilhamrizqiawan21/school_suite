@@ -20,7 +20,7 @@ const showRoom = ref(false);
 
 const roomName = (room: any) => {
     const name = String(room?.name ?? '').trim();
-    if (name.length > 1) return name;
+    if (name.length > 2) return name;
 
     const assignment = props.assignments.find((item) => item.id === room?.teaching_assignment_id);
     const className = assignment?.class_group?.name;
@@ -55,8 +55,8 @@ const moderate = (id: number) => {
             <section class="hero-card chat-hero">
                 <div>
                     <p class="eyebrow">Komunikasi kelas</p>
-                    <h1>Chat kelas-mapel</h1>
-                    <p>Ruang diskusi terisolasi sesuai penugasan mengajar dan enrollment siswa.</p>
+                    <h1>{{ can_manage ? 'Chat kelas-mapel' : 'Diskusi Kelas' }}</h1>
+                    <p>{{ can_manage ? 'Ruang diskusi terisolasi sesuai penugasan mengajar dan enrollment siswa.' : 'Diskusi pembelajaran bersama guru dan teman sekelas.' }}</p>
                 </div>
 
                 <div class="hero-actions">
@@ -140,7 +140,7 @@ const moderate = (id: number) => {
 
                     <div v-else class="empty-state chat-empty">
                         <strong>Pilih ruang untuk mulai</strong>
-                        <span>Pilih salah satu ruang chat di sebelah kiri atau buat ruang baru.</span>
+                        <span>{{ can_manage ? 'Pilih salah satu ruang di sebelah kiri atau buat ruang baru.' : 'Pilih ruang kelas di sebelah kiri. Jika belum tersedia, minta guru membuat ruang diskusi.' }}</span>
                     </div>
                 </section>
             </div>

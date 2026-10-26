@@ -24,7 +24,7 @@ class LearningProgressController extends Controller
         abort_unless($user->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student']), 403);
         $term = $this->academicQuery->getActiveTerm((int) $user->school_id);
         if (! $term) {
-            return Inertia::render('Learning/Progress', ['active_term' => null, 'rows' => [], 'personal_attendance' => null]);
+            return Inertia::render('Learning/Progress', ['active_term' => null, 'rows' => [], 'personal_attendance' => null, 'is_student' => $user->hasRole('student')]);
         }
 
         $assignments = $this->academicQuery->getLearningTeachingAssignments($term->id, $user->hasRole(['teacher', 'homeroom']) ? (int) $user->id : null);
@@ -72,6 +72,6 @@ class LearningProgressController extends Controller
             $personalAttendance = [...$counts, 'total' => $total, 'percentage' => $total ? round(($counts['present'] / $total) * 100, 1) : 0];
         }
 
-        return Inertia::render('Learning/Progress', ['active_term' => $term, 'rows' => $rows, 'personal_attendance' => $personalAttendance]);
+        return Inertia::render('Learning/Progress', ['active_term' => $term, 'rows' => $rows, 'personal_attendance' => $personalAttendance, 'is_student' => $user->hasRole('student')]);
     }
 }

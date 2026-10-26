@@ -59,7 +59,9 @@ class AssessmentPolicy
                 ->where('user_id', $actor->id)
                 ->first();
 
-            return $student !== null && (int) $report->student_id === (int) $student->id;
+            return $student !== null
+                && (int) $report->student_id === (int) $student->id
+                && $report->status === 'published';
         }
 
         return false;

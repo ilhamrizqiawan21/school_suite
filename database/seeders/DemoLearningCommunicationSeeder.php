@@ -241,6 +241,21 @@ class DemoLearningCommunicationSeeder extends Seeder
                         'expires_at' => now()->addDays(30),
                     ]
                 );
+
+                Announcement::query()->firstOrCreate(
+                    [
+                        'school_id' => $teacherUser->school_id,
+                        'author_id' => $teacherUser->id,
+                        'class_group_id' => $assignment->class_group_id,
+                        'audience_role' => 'student',
+                        'title' => "Info belajar {$className} - demo siswa",
+                    ],
+                    [
+                        'body' => "Informasi untuk {$className}: bahan belajar dan tugas praktik sudah tersedia di Ruang Belajar. Periksa jadwal ujian dan sampaikan pertanyaan melalui Diskusi Chat.",
+                        'published_at' => now()->subMinutes(30),
+                        'expires_at' => now()->addDays(30),
+                    ]
+                );
             }
         }
 
@@ -260,6 +275,22 @@ class DemoLearningCommunicationSeeder extends Seeder
                         'event_type' => 'academic',
                         'starts_at' => now()->addDays(3)->setTime(9, 0),
                         'ends_at' => now()->addDays(3)->setTime(10, 0),
+                    ]
+                );
+
+                AcademicCalendarEvent::query()->firstOrCreate(
+                    [
+                        'school_id' => $teacherUser->school_id,
+                        'created_by' => $teacherUser->id,
+                        'class_group_id' => $assignment->class_group_id,
+                        'audience_role' => 'student',
+                        'title' => "Agenda kelas {$className} - demo siswa",
+                    ],
+                    [
+                        'description' => 'Agenda contoh untuk melihat kalender siswa: pembahasan materi, persiapan ujian, dan tanya jawab bersama guru.',
+                        'event_type' => 'academic',
+                        'starts_at' => now()->addDays(2)->setTime(9, 0),
+                        'ends_at' => now()->addDays(2)->setTime(10, 0),
                     ]
                 );
             }

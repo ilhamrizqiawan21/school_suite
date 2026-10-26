@@ -21,11 +21,16 @@ const props = defineProps<{
     students: StudentItem[]; sessions: SessionItem[]; selected_session_id?: number | null;
 }>();
 
+const cloneStudents = (students: StudentItem[]): StudentItem[] => students.map((student) => ({
+    ...student,
+    notes: student.notes || '',
+}));
+
 const classId = ref(props.selected_class?.id ? String(props.selected_class.id) : '');
 const subjectId = ref(props.selected_subject?.id ? String(props.selected_subject.id) : '');
 const month = ref(props.month);
 const selectedSessionId = ref(props.selected_session_id ? String(props.selected_session_id) : '');
-const studentList = ref<StudentItem[]>(structuredClone(props.students));
+const studentList = ref<StudentItem[]>(cloneStudents(props.students));
 
 const form = useForm({
     session_id: selectedSessionId.value,
@@ -36,7 +41,7 @@ const form = useForm({
 });
 
 watch(() => [props.students, props.selected_session_id], () => {
-    studentList.value = structuredClone(props.students);
+    studentList.value = cloneStudents(props.students);
     selectedSessionId.value = props.selected_session_id ? String(props.selected_session_id) : '';
     form.session_id = selectedSessionId.value;
     form.date = props.date;
@@ -95,7 +100,7 @@ function markAllPresent() {
 }
 
 function resetChanges() {
-    studentList.value = structuredClone(props.students);
+    studentList.value = cloneStudents(props.students);
 }
 
 function submitAttendance() {

@@ -32,6 +32,10 @@ const roleMetrics = computed(() => props.stats?.role_metrics ?? {});
 const latestAnnouncements = computed(() => props.stats?.latest_announcements ?? []);
 const latestLoginLogs = computed(() => props.stats?.latest_login_logs ?? []);
 const attendanceTrend = computed(() => props.stats?.attendance_trend ?? []);
+const studentAttendancePercent = computed(() => {
+    const total = roleMetrics.value.attendance_total ?? 0;
+    return total ? Math.round(((roleMetrics.value.attendance_present ?? 0) / total) * 100) : 0;
+});
 const isAdmin = computed(() => role.value === 'admin');
 const isOperator = computed(() => role.value === 'operator');
 const isPrincipal = computed(() => role.value === 'principal');
@@ -292,8 +296,33 @@ const attendanceAverage = computed(() => {
                         <ol class="admin-list"><li v-for="item in latestLoginLogs" :key="item.id"><span><strong>{{ item.user_name }}</strong><small>{{ item.ip_address ?? 'IP tidak tersedia' }}</small></span><time :class="item.status === 'success' ? 'login-success' : 'login-failed'">{{ item.status === 'success' ? 'Berhasil' : 'Gagal' }} · {{ formatDateTime(item.created_at) }}</time></li><li v-if="!latestLoginLogs.length" class="admin-empty">Belum ada log login.</li></ol>
                     </section>
                 </div>
-                <div v-else class="section-heading"><div><span class="eyebrow">Alur kerja</span><h2>{{ isPrincipal ? 'Pantauan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Alur kerja perwalian' : isTeacher ? 'Pekerjaan mengajar' : isStudent ? 'Perjalanan belajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} langkah lanjutan</span></div>
-                <div v-if="!isAdmin" class="workflow-list">
+                <div v-else-if="isStudent" class="student-overview-grid">
+                    <article class="student-overview-card attendance-card">
+                        <header><span class="student-card-kicker">Kehadiran</span><Link href="/pembelajaran/progress">Lihat progres ↗</Link></header>
+                        <div class="attendance-rate"><strong>{{ studentAttendancePercent }}%</strong><span>hadir</span></div>
+                        <div class="attendance-meter" role="progressbar" :aria-valuenow="studentAttendancePercent" aria-valuemin="0" aria-valuemax="100" :aria-label="`Kehadiran ${studentAttendancePercent}%`"><span :style="{ width: `${studentAttendancePercent}%` }" /></div>
+                        <p>{{ roleMetrics.attendance_present ?? 0 }} dari {{ roleMetrics.attendance_total ?? 0 }} catatan presensi berstatus hadir.</p>
+                    </article>
+
+                    <article class="student-overview-card assignment-card">
+                        <header><span class="student-card-kicker">Tugas</span><Link href="/pembelajaran">Buka ruang belajar ↗</Link></header>
+                        <div class="assignment-counts">
+                            <div><strong>{{ roleMetrics.assignments_submitted ?? 0 }}</strong><span>Sudah dikumpulkan</span></div>
+                            <div><strong>{{ roleMetrics.assignments_pending ?? 0 }}</strong><span>Belum dikumpulkan</span></div>
+                        </div>
+                        <p>{{ roleMetrics.assignments_total ?? 0 }} tugas diterbitkan untuk kelas aktif.</p>
+                    </article>
+
+                    <article class="student-overview-card student-announcements-card">
+                        <header><span class="student-card-kicker">Pengumuman</span><Link href="/komunikasi">Lihat semua ↗</Link></header>
+                        <ol v-if="latestAnnouncements.length" class="student-announcement-list">
+                            <li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }} · {{ formatDateTime(item.published_at) }}</span></li>
+                        </ol>
+                        <p v-else class="student-announcement-empty">Belum ada pengumuman terbaru untuk kelasmu.</p>
+                    </article>
+                </div>
+                <div v-else class="section-heading"><div><span class="eyebrow">Alur kerja</span><h2>{{ isPrincipal ? 'Pantauan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Alur kerja perwalian' : isTeacher ? 'Pekerjaan mengajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} langkah lanjutan</span></div>
+                <div v-if="!isAdmin && !isStudent" class="workflow-list">
                     <Link v-for="(action, index) in secondaryActions" :key="action.href" :href="action.href" class="workflow-row">
                         <span class="workflow-index">{{ String(index + 2).padStart(2, '0') }}</span><span class="workflow-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span><span class="workflow-copy"><strong>{{ action.title }}</strong><span>{{ action.description }}</span></span><span class="workflow-arrow" aria-hidden="true">↗</span>
                     </Link>
@@ -352,6 +381,27 @@ const attendanceAverage = computed(() => {
 .workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: 20px; letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: 10px; }.workflow-list { border-top: 1px solid var(--line); }.workflow-row { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); transition: padding .18s ease, background .18s ease; }.workflow-row:hover { padding-left: 12px; padding-right: 12px; background: var(--surface-subtle); }.workflow-index { width: 23px; color: var(--ink-faint); font: 700 11px Georgia, serif; }.workflow-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 auto; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }.workflow-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.workflow-copy { display: grid; gap: 4px; flex: 1; }.workflow-copy strong { color: var(--ink); font-size: 12px; }.workflow-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.4; }.workflow-arrow { color: var(--ink-faint); font-size: 18px; }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: 10px; }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: 800 12px Georgia, serif; }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
 .attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: 14px; }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 10px; white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: 10px; }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: 10px; }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: 11px; text-align: center; }
 .admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.student-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.student-overview-card { min-width: 0; min-height: 230px; padding: 19px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }
+.student-overview-card > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.student-card-kicker { color: var(--ink); font-size: 14px; font-weight: 800; }
+.student-overview-card > header a { color: var(--blue); font-size: 10px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.student-overview-card > header a:hover { text-decoration: underline; }
+.attendance-rate { display: flex; align-items: baseline; gap: 8px; margin-top: 26px; }
+.attendance-rate strong { color: var(--ink); font-size: 38px; letter-spacing: -.06em; line-height: 1; }
+.attendance-rate span, .student-overview-card > p { color: var(--ink-soft); font-size: 11px; }
+.attendance-meter { height: 8px; margin-top: 14px; overflow: hidden; background: var(--surface-subtle); border-radius: 999px; }
+.attendance-meter span { display: block; height: 100%; background: var(--green); border-radius: inherit; transition: width .2s ease; }
+.student-overview-card > p { margin: 13px 0 0; line-height: 1.5; }
+.assignment-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 25px; }
+.assignment-counts > div { display: grid; gap: 7px; padding: 13px; background: var(--surface-subtle); border-radius: 12px 12px 12px 4px; }
+.assignment-counts strong { color: var(--ink); font-size: 27px; line-height: 1; }
+.assignment-counts span { color: var(--ink-soft); font-size: 10px; line-height: 1.35; }
+.student-announcement-list { display: grid; gap: 0; margin: 15px 0 0; padding: 0; list-style: none; }
+.student-announcement-list li { display: grid; gap: 5px; min-width: 0; padding: 10px 0; border-top: 1px solid var(--line); }
+.student-announcement-list strong { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.student-announcement-list span, .student-announcement-empty { color: var(--ink-faint); font-size: 10px; }
+.student-announcement-empty { margin-top: 25px !important; }
 .admin-overview-card { min-height: 0; padding: 18px; color: inherit; border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; }
 .announcement-card { background: var(--gold-soft); border-color: var(--line); }.login-card { background: var(--blue-soft); border-color: var(--line); }
 .admin-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }.admin-card-title { display: flex; align-items: center; gap: 12px; min-width: 0; }.admin-card-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 12px 12px 12px 4px; }.announcement-card .admin-card-icon { color: var(--gold); background: color-mix(in srgb, var(--gold) 18%, var(--surface)); }.login-card .admin-card-icon { color: var(--blue); background: color-mix(in srgb, var(--blue) 18%, var(--surface)); }
@@ -361,7 +411,8 @@ const attendanceAverage = computed(() => {
 .focus-panel.student-focus { background: #375342; }
 .focus-panel.operator-focus { background: #1c3d5a; }
 .eyebrow { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .045em; }
-@media (max-width: 800px) { .command-layout { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid { grid-template-columns: 1fr; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
+@media (max-width: 1000px) { .student-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.student-announcements-card { grid-column: 1 / -1; } }
+@media (max-width: 800px) { .command-layout { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
 @media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; } }
 @media (prefers-reduced-motion: reduce) { .workflow-row { transition: none; } }
 </style>

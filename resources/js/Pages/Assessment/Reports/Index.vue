@@ -32,6 +32,8 @@ const props = defineProps<{
     classes: ClassGroup[];
     selected_class_id?: string;
     reports: ReportItem[];
+    is_student: boolean;
+    can_publish: boolean;
 }>();
 
 const selectedClassId = ref(props.selected_class_id || (props.classes[0]?.id ? String(props.classes[0].id) : ''));
@@ -79,15 +81,15 @@ const publishReport = (reportId: number) => {
             <!-- Header Halaman -->
             <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Rapor Siswa</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">{{ props.is_student ? 'Rapor Saya' : 'Rapor Siswa' }}</h1>
                     <p class="text-sm text-slate-500 mt-1">
-                        Terbitkan rapor per rombel dengan snapshot nilai yang terkunci dan dapat diaudit.
+                        {{ props.is_student ? 'Lihat rapor yang telah diterbitkan untuk periode akademik aktif.' : 'Terbitkan rapor per rombel dengan snapshot nilai yang terkunci dan dapat diaudit.' }}
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
                     <Link
-                        v-if="selectedClassId && props.active_term"
+                        v-if="!props.is_student && selectedClassId && props.active_term"
                         :href="`/penilaian/ledger?class_group_id=${selectedClassId}&term_id=${props.active_term.id}`"
                         class="inline-flex items-center gap-2 px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-semibold shadow-xs transition-colors"
                     >
@@ -98,6 +100,7 @@ const publishReport = (reportId: number) => {
                     </Link>
 
                     <button
+                        v-if="props.can_publish"
                         type="button"
                         :disabled="generateForm.processing || !selectedClassId"
                         class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors"
@@ -119,7 +122,7 @@ const publishReport = (reportId: number) => {
 
             <!-- Filter Kelas -->
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-4">
-                <div class="w-full sm:w-72">
+                <div v-if="!props.is_student" class="w-full sm:w-72">
                     <label for="class-select" class="block text-xs font-semibold text-slate-600 mb-1">Pilih Kelas / Rombel</label>
                     <select
                         id="class-select"
@@ -132,6 +135,9 @@ const publishReport = (reportId: number) => {
                             {{ cls.name }} (Tingkat {{ cls.grade_level }})
                         </option>
                     </select>
+                </div>
+                <div v-else class="text-sm font-semibold text-slate-700">
+                    {{ props.classes[0]?.name ?? 'Rombel belum terdaftar' }}
                 </div>
 
                 <div v-if="props.active_term" class="text-right">
@@ -156,12 +162,12 @@ const publishReport = (reportId: number) => {
                     <table class="w-full text-left text-sm text-slate-600 border-collapse">
                         <thead class="bg-slate-50 text-slate-700 font-semibold text-xs border-b border-slate-200">
                             <tr>
-                                <th class="py-3 px-4 w-16 text-center">ID Rapor</th>
+                                <th v-if="!props.is_student" class="py-3 px-4 w-16 text-center">ID Rapor</th>
                                 <th class="py-3 px-4 w-32">Status</th>
-                                <th class="py-3 px-4 w-28">Versi Skema</th>
-                                <th class="py-3 px-4">Checksum SHA-256</th>
+                                <th v-if="!props.is_student" class="py-3 px-4 w-28">Versi Skema</th>
+                                <th v-if="!props.is_student" class="py-3 px-4">Checksum SHA-256</th>
                                 <th class="py-3 px-4 w-44">Waktu Terbit</th>
-                                <th class="py-3 px-4 w-48 text-right">Aksi</th>
+                                <th class="py-3 px-4 w-48 text-right">{{ props.is_student ? 'Rapor' : 'Aksi' }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-normal">
@@ -170,7 +176,7 @@ const publishReport = (reportId: number) => {
                                 :key="rep.id"
                                 class="hover:bg-slate-50 transition-colors"
                             >
-                                <td class="py-3 px-4 text-center font-mono text-xs text-slate-500">
+                                <td v-if="!props.is_student" class="py-3 px-4 text-center font-mono text-xs text-slate-500">
                                     #{{ rep.id }}
                                 </td>
                                 <td class="py-3 px-4">
@@ -185,10 +191,10 @@ const publishReport = (reportId: number) => {
                                         {{ rep.status }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 font-mono text-xs text-slate-700">
+                                <td v-if="!props.is_student" class="py-3 px-4 font-mono text-xs text-slate-700">
                                     v{{ rep.scheme_version }}
                                 </td>
-                                <td class="py-3 px-4 font-mono text-xs text-slate-500">
+                                <td v-if="!props.is_student" class="py-3 px-4 font-mono text-xs text-slate-500">
                                     <span :title="rep.checksum" class="bg-slate-100 px-2 py-1 rounded">
                                         {{ rep.checksum ? rep.checksum.substring(0, 16) + '...' : '-' }}
                                     </span>
@@ -204,7 +210,7 @@ const publishReport = (reportId: number) => {
                                         Cetak / Lihat
                                     </Link>
                                     <button
-                                        v-if="rep.status !== 'published'"
+                                        v-if="props.can_publish && rep.status !== 'published'"
                                         type="button"
                                         class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600 hover:bg-emerald-700 text-white"
                                         @click="publishReport(rep.id)"
@@ -214,8 +220,8 @@ const publishReport = (reportId: number) => {
                                 </td>
                             </tr>
                             <tr v-if="props.reports.length === 0">
-                                <td colspan="6" class="text-center py-10 text-slate-400 text-sm">
-                                    Belum ada snapshot rapor untuk kelas ini. Klik "Generate Rapor Kelas" di atas untuk menyusun draf.
+                                <td :colspan="props.is_student ? 3 : 6" class="text-center py-10 text-slate-400 text-sm">
+                                    {{ props.is_student ? 'Rapor untuk periode ini belum diterbitkan.' : 'Belum ada snapshot rapor untuk kelas ini. Generate rapor kelas untuk menyusun draf.' }}
                                 </td>
                             </tr>
                         </tbody>

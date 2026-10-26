@@ -7,6 +7,7 @@ namespace App\Modules\Academic\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\ScheduleService;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
+use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\Schedule;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
@@ -36,21 +37,34 @@ class ScheduleController extends Controller
             ->where('is_active', true)
             ->first();
 
+        $isStudent = $request->user()->hasRole('student');
+        $studentClassId = $isStudent && $activeTerm
+            ? Enrollment::query()
+                ->where('term_id', $activeTerm->id)
+                ->where('status', 'active')
+                ->whereHas('student', fn ($query) => $query->where('user_id', $request->user()->id)->where('school_id', $schoolId))
+                ->value('class_group_id')
+            : null;
+
         $classes = $activeTerm
             ? ClassGroup::where('school_id', $schoolId)
                 ->where('academic_year_id', $activeTerm->academic_year_id)
+                ->when($isStudent, fn ($query) => $query->whereKey($studentClassId ?? 0))
                 ->orderBy('name')
                 ->get(['id', 'name', 'grade_level'])
             : collect();
 
-        $teachers = Teacher::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $subjects = Subject::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']);
+        $teachers = $isStudent ? collect() : Teacher::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $subjects = $isStudent
+            ? collect()
+            : Subject::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']);
 
         $schedules = $activeTerm
             ? Schedule::where('school_id', $schoolId)
                 ->where('term_id', $activeTerm->id)
-                ->when($classGroupId, fn ($q) => $q->where('class_group_id', $classGroupId))
-                ->when($teacherId, fn ($q) => $q->where('teacher_id', $teacherId))
+                ->when($isStudent, fn ($q) => $q->where('class_group_id', $studentClassId ?? 0)->where('status', 'published'))
+                ->when(! $isStudent && $classGroupId, fn ($q) => $q->where('class_group_id', $classGroupId))
+                ->when(! $isStudent && $teacherId, fn ($q) => $q->where('teacher_id', $teacherId))
                 ->with(['classGroup', 'subject', 'teacher'])
                 ->orderBy('day_of_week')
                 ->orderBy('start_time')
@@ -58,7 +72,7 @@ class ScheduleController extends Controller
             : collect();
 
         $draftCount = $activeTerm
-            ? Schedule::where('term_id', $activeTerm->id)->where('status', 'draft')->count()
+            ? Schedule::where('school_id', $schoolId)->where('term_id', $activeTerm->id)->where('status', 'draft')->count()
             : 0;
 
         return Inertia::render('Academic/Schedules/Index', [
@@ -72,7 +86,8 @@ class ScheduleController extends Controller
                 'class_group_id' => $classGroupId,
                 'teacher_id' => $teacherId,
             ],
-            'draft_count' => $draftCount,
+            'draft_count' => $isStudent ? 0 : $draftCount,
+            'is_student' => $isStudent,
         ]);
     }
 

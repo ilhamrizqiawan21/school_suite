@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import TopNavbar from '../components/TopNavbar.vue';
 import SidebarNavigation from '../components/SidebarNavigation.vue';
@@ -23,6 +23,7 @@ const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(curre
 const sidebarOpen = ref(false);
 const darkTheme = ref(false);
 const searchInput = ref<HTMLInputElement | null>(null);
+let removeNavigateListener: VoidFunction | null = null;
 
 const toggleTheme = () => {
     darkTheme.value = !darkTheme.value;
@@ -48,9 +49,13 @@ onMounted(() => {
     darkTheme.value = localStorage.getItem('school-suite-theme') === 'dark';
     document.documentElement.dataset.theme = darkTheme.value ? 'dark' : 'light';
     document.addEventListener('keydown', closeOnEscape);
+    removeNavigateListener = router.on('navigate', () => { sidebarOpen.value = false; });
 });
 
-onBeforeUnmount(() => document.removeEventListener('keydown', closeOnEscape));
+onBeforeUnmount(() => {
+    document.removeEventListener('keydown', closeOnEscape);
+    removeNavigateListener?.();
+});
 </script>
 
 <template>

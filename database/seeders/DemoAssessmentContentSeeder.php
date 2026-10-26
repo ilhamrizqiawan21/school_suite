@@ -129,15 +129,21 @@ class DemoAssessmentContentSeeder extends Seeder
                 'school_id' => $user->school_id,
                 'question_pack_id' => $pack->id,
                 'instructions' => 'Baca setiap soal dengan teliti. Pilih jawaban terbaik dan periksa kembali sebelum dikumpulkan.',
-                'starts_at' => now()->addDays(2)->startOfHour(),
-                'ends_at' => now()->addDays(2)->startOfHour()->addMinutes(45),
+                'starts_at' => now()->subMinutes(5),
+                'ends_at' => now()->addDays(7),
                 'duration_minutes' => 30,
                 'randomize_questions' => false,
                 'randomize_options' => false,
                 'max_violations' => 3,
-                'status' => 'draft',
+                'status' => 'published',
             ]
         );
+        // Keep this named demo exam available to students whenever seeders are rerun.
+        $exam->forceFill([
+            'starts_at' => now()->subMinutes(5),
+            'ends_at' => now()->addDays(7),
+            'status' => 'published',
+        ])->save();
 
         foreach ($questions as $index => $question) {
             $version = ExamQuestionVersion::query()

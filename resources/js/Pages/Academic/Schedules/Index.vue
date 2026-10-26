@@ -53,6 +53,7 @@ const props = defineProps<{
     };
     draft_count: number;
     can_manage: boolean;
+    is_student: boolean;
 }>();
 
 const selectedClass = ref(props.filters.class_group_id || '');
@@ -125,7 +126,7 @@ const deleteSchedule = (id: number) => {
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Jadwal Pelajaran</h1>
                     <p class="text-sm text-slate-500 mt-1">
-                        Penyusunan jadwal mingguan dengan deteksi benturan guru, rombel, dan ruang kelas.
+                        {{ is_student ? 'Jadwal pelajaran kelasmu pada periode aktif.' : 'Penyusunan jadwal mingguan dengan deteksi benturan guru, rombel, dan ruang kelas.' }}
                     </p>
                 </div>
 
@@ -154,7 +155,7 @@ const deleteSchedule = (id: number) => {
             </div>
 
             <!-- Filters -->
-            <div class="schedule-filter bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
+            <div v-if="can_manage" class="schedule-filter bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
                     <select
                         v-model="selectedClass"
@@ -180,9 +181,14 @@ const deleteSchedule = (id: number) => {
                     </select>
                 </div>
             </div>
+            <div v-else class="schedule-filter schedule-student-context">
+                <span>Jadwal kelas</span>
+                <strong>{{ classes[0]?.name ?? 'Belum ada kelas aktif' }}</strong>
+                <span>{{ active_term?.name ?? 'Periode belum tersedia' }}</span>
+            </div>
 
             <!-- Weekly Timetable Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-if="schedules.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
                     v-for="d in days"
                     :key="d.id"
@@ -237,13 +243,17 @@ const deleteSchedule = (id: number) => {
                         </div>
 
                         <div
-                            v-if="schedules.filter(s => s.day_of_week === d.id).length === 0"
+                            v-if="can_manage && schedules.filter(s => s.day_of_week === d.id).length === 0"
                             class="schedule-empty py-8 text-center text-xs text-slate-400 italic"
                         >
                             Tidak ada jadwal
                         </div>
                     </div>
                 </div>
+            </div>
+            <div v-else class="schedule-no-results">
+                <strong>{{ is_student ? 'Belum ada jadwal terbit untuk kelasmu' : 'Belum ada jadwal pelajaran' }}</strong>
+                <span>{{ is_student ? 'Jadwal yang sudah diterbitkan sekolah akan muncul di sini.' : 'Tambahkan slot jadwal atau ubah filter untuk melihat jadwal.' }}</span>
             </div>
         </div>
 
@@ -321,4 +331,9 @@ const deleteSchedule = (id: number) => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 650; }
+.schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+</style>
 

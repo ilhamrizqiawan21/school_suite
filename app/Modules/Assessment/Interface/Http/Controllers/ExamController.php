@@ -44,7 +44,7 @@ class ExamController extends Controller
             'items_count' => $pack->items_count,
             'items' => $pack->items->map(fn ($item) => ['id' => $item->exam_question_id, 'prompt' => $item->questionVersion?->prompt, 'type' => $item->questionVersion?->type, 'points' => $item->points])->values(),
         ]) : collect();
-        $exams = Exam::withCount(['items', 'attempts'])->where('school_id', $schoolId)->whereIn('teaching_assignment_id', $ids)->when($user->hasRole('student'), fn ($query) => $query->whereIn('status', ['published', 'results_published']))->latest('starts_at')->get();
+        $exams = Exam::withCount('items')->when(! $user->hasRole('student'), fn ($query) => $query->withCount('attempts'))->where('school_id', $schoolId)->whereIn('teaching_assignment_id', $ids)->when($user->hasRole('student'), fn ($query) => $query->whereIn('status', ['published', 'results_published']))->latest('starts_at')->get();
         $components = DB::table('assessment_components')->join('assessment_schemes', 'assessment_schemes.id', '=', 'assessment_components.scheme_id')->where('assessment_schemes.school_id', $schoolId)->where('assessment_schemes.is_active', true)->get(['assessment_components.id', 'assessment_components.name', 'assessment_components.teaching_assignment_id']);
         $attempts = $user->hasRole('student') ? ExamAttempt::with('exam:id,title,starts_at,ends_at,status')->whereIn('exam_id', $exams->pluck('id'))->whereIn('enrollment_id', $this->studentEnrollmentIds($request, $term?->id))->get() : collect();
         $canManageQuestionBank = $user->hasRole(['teacher', 'homeroom']);
@@ -337,7 +337,7 @@ class ExamController extends Controller
         if ($u->hasRole(['teacher', 'homeroom'])) {
             $q->join('teachers', 'teachers.id', '=', 'teaching_assignments.teacher_id')->where('teachers.user_id', $u->id);
         } elseif ($u->hasRole('student')) {
-            $q->join('enrollments', fn ($j) => $j->on('enrollments.class_group_id', '=', 'teaching_assignments.class_group_id')->where('enrollments.term_id', $termId))->join('students', 'students.id', '=', 'enrollments.student_id')->where('students.user_id', $u->id);
+            $q->join('enrollments', fn ($j) => $j->on('enrollments.class_group_id', '=', 'teaching_assignments.class_group_id')->where('enrollments.term_id', $termId)->where('enrollments.status', 'active'))->join('students', 'students.id', '=', 'enrollments.student_id')->where('students.user_id', $u->id);
         } elseif (! $u->hasRole(['admin', 'operator', 'principal'])) {
             return [];
         }

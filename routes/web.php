@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\HealthCheckController;
 use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
+use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
@@ -16,6 +17,8 @@ use App\Modules\Assessment\Infrastructure\Models\ExamAttempt;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Modules\Core\Infrastructure\Models\LoginAttemptLog;
+use App\Modules\Learning\Infrastructure\Models\AssignmentSubmission;
+use App\Modules\Learning\Infrastructure\Models\LearningAssignment;
 use App\Shared\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -134,13 +137,59 @@ Route::get('/', function () {
         }
     } elseif ($user->hasRole('student')) {
         $student = Student::where('school_id', $schoolId)->where('user_id', $user->id)->first();
-        $enrollmentIds = $student?->enrollments()->whereHas('term', fn ($query) => $query->where('is_active', true))->pluck('id') ?? collect();
+        $enrollments = $student?->enrollments()->whereHas('term', fn ($query) => $query->where('is_active', true))->get(['id', 'class_group_id']) ?? collect();
+        $enrollmentIds = $enrollments->pluck('id');
+        $classGroupIds = $enrollments->pluck('class_group_id')->unique()->values();
+        $attendance = AttendanceRecord::query()
+            ->where('school_id', $schoolId)
+            ->whereIn('enrollment_id', $enrollmentIds)
+            ->selectRaw("COUNT(*) as total, SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present")
+            ->first();
+
+        $learningAssignments = LearningAssignment::query()
+            ->where('school_id', $schoolId)
+            ->whereNotNull('published_at')
+            ->whereHas('teachingAssignment', fn ($query) => $query
+                ->where('term_id', $activeTerm?->id)
+                ->whereIn('class_group_id', $classGroupIds))
+            ->get(['id']);
+        $submittedAssignments = $learningAssignments->isNotEmpty()
+            ? AssignmentSubmission::query()
+                ->whereIn('learning_assignment_id', $learningAssignments->pluck('id'))
+                ->whereIn('enrollment_id', $enrollmentIds)
+                ->whereIn('status', ['submitted', 'late', 'graded'])
+                ->whereNotNull('submitted_at')
+                ->distinct('learning_assignment_id')
+                ->count('learning_assignment_id')
+            : 0;
+
         $stats['role_metrics'] = [
             'active_enrollments' => $enrollmentIds->count(),
             'upcoming_exams' => ExamAttempt::whereIn('enrollment_id', $enrollmentIds)->whereHas('exam', fn ($query) => $query->where('starts_at', '>=', now())->whereIn('status', ['published', 'results_published']))->count(),
             'completed_exams' => ExamAttempt::whereIn('enrollment_id', $enrollmentIds)->whereIn('status', ['submitted', 'graded'])->count(),
             'recorded_scores' => Score::whereIn('enrollment_id', $enrollmentIds)->whereNotNull('final_score')->count(),
+            'attendance_total' => (int) ($attendance?->total ?? 0),
+            'attendance_present' => (int) ($attendance?->present ?? 0),
+            'assignments_total' => $learningAssignments->count(),
+            'assignments_submitted' => $submittedAssignments,
+            'assignments_pending' => max(0, $learningAssignments->count() - $submittedAssignments),
         ];
+
+        $stats['latest_announcements'] = Announcement::with('author:id,name')
+            ->where('school_id', $schoolId)
+            ->whereNotNull('published_at')
+            ->where(fn ($query) => $query->whereNull('audience_role')->orWhere('audience_role', 'student'))
+            ->where(fn ($query) => $query->whereNull('class_group_id')->orWhereIn('class_group_id', $classGroupIds))
+            ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
+            ->latest('published_at')
+            ->limit(5)
+            ->get(['id', 'author_id', 'title', 'published_at'])
+            ->map(fn (Announcement $announcement) => [
+                'id' => $announcement->id,
+                'title' => $announcement->title,
+                'author_name' => $announcement->author?->name,
+                'published_at' => $announcement->published_at?->toIso8601String(),
+            ])->values()->all();
     }
 
     return Inertia::render('Dashboard', [

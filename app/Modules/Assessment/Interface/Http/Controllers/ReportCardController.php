@@ -12,6 +12,7 @@ use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -29,19 +30,34 @@ class ReportCardController extends Controller
         Gate::authorize('viewAny', ReportSnapshot::class);
 
         $schoolId = (int) $request->user()->school_id;
+        $isStudent = $request->user()->hasRole('student');
         $activeTerm = $this->academicQuery->getActiveTerm($schoolId);
+
+        $studentId = $isStudent
+            ? DB::table('students')->where('user_id', $request->user()->id)->where('school_id', $schoolId)->value('id')
+            : null;
+        $studentEnrollment = $isStudent && $activeTerm && $studentId
+            ? DB::table('enrollments')->where('student_id', $studentId)->where('term_id', $activeTerm->id)->where('status', 'active')->first(['class_group_id'])
+            : null;
 
         $classes = $activeTerm
             ? $this->academicQuery->getClassGroups($schoolId, $activeTerm->academic_year_id)
             : collect();
+        if ($isStudent) {
+            $classes = $classes->where('id', $studentEnrollment?->class_group_id)->values();
+        }
 
-        $classGroupId = $request->query('class_group_id', $classes->first()?->id ? (string) $classes->first()->id : null);
+        $classGroupId = $isStudent
+            ? $studentEnrollment?->class_group_id
+            : $request->query('class_group_id', $classes->first()?->id ? (string) $classes->first()->id : null);
 
         $reports = collect();
         if ($activeTerm && $classGroupId) {
             $reports = ReportSnapshot::where('school_id', $schoolId)
                 ->where('term_id', $activeTerm->id)
                 ->where('class_group_id', (int) $classGroupId)
+                ->when($isStudent, fn ($query) => $query->where('student_id', $studentId))
+                ->when($isStudent, fn ($query) => $query->where('status', 'published'))
                 ->get();
         }
 
@@ -50,6 +66,8 @@ class ReportCardController extends Controller
             'classes' => $classes,
             'selected_class_id' => $classGroupId ? (string) $classGroupId : '',
             'reports' => $reports,
+            'is_student' => $isStudent,
+            'can_publish' => ! $isStudent && Gate::allows('publishReports', ReportSnapshot::class),
         ]);
     }
 
@@ -106,6 +124,7 @@ class ReportCardController extends Controller
 
     public function ledger(Request $request): JsonResponse|InertiaResponse
     {
+        abort_unless(! $request->user()->hasRole('student'), 403);
         $schoolId = (int) $request->user()->school_id;
         $classGroupId = (int) $request->query('class_group_id');
         $termId = (int) $request->query('term_id');

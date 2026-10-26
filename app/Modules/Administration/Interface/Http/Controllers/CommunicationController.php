@@ -38,6 +38,7 @@ class CommunicationController extends Controller
         $announcements = Announcement::query()
             ->with(['author:id,name', 'classGroup:id,name'])
             ->where('school_id', $schoolId)
+            ->where(fn ($query) => $query->whereNull('published_at')->orWhere('published_at', '<=', now()))
             ->where(fn ($query) => $query->whereNull('audience_role')->orWhere('audience_role', $user->role?->name))
             ->where(fn ($query) => $query->whereNull('class_group_id')->orWhereIn('class_group_id', $classIds))
             ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
@@ -62,6 +63,9 @@ class CommunicationController extends Controller
         $classes = $activeTerm
             ? $this->academicQuery->getClassGroups($schoolId, $activeTerm->academic_year_id)
             : collect();
+        if ($user->hasRole('student')) {
+            $classes = $classes->whereIn('id', $classIds)->values();
+        }
 
         return Inertia::render('Communication/Index', [
             'announcements' => $announcements,
@@ -112,7 +116,16 @@ class CommunicationController extends Controller
 
     public function downloadAttachment(Request $request, Announcement $announcement): StreamedResponse
     {
-        abort_unless((int) $announcement->school_id === (int) $request->user()->school_id && $announcement->attachment_path, 404);
+        $user = $request->user();
+        $classIds = $this->visibleClassIds($request);
+        abort_unless(
+            (int) $announcement->school_id === (int) $user->school_id
+            && $announcement->attachment_path
+            && (! $announcement->audience_role || $announcement->audience_role === $user->role?->name)
+            && (! $announcement->class_group_id || in_array((int) $announcement->class_group_id, $classIds, true))
+            && (! $announcement->expires_at || $announcement->expires_at->isFuture()),
+            404
+        );
 
         return Storage::disk('local')->download($announcement->attachment_path, $announcement->attachment_name);
     }

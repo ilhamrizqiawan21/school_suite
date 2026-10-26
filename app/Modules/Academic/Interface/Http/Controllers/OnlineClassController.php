@@ -29,21 +29,37 @@ class OnlineClassController extends Controller
         $this->authorizeAccess($request);
         $schoolId = (int) $request->user()->school_id;
         $term = Term::whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))->where('is_active', true)->first();
-        $classes = $term ? ClassGroup::where('school_id', $schoolId)->where('academic_year_id', $term->academic_year_id)->orderBy('name')->get(['id', 'name']) : collect();
+        $isStudent = $request->user()->hasRole('student');
         $teacherId = $request->user()->hasRole('teacher') ? Teacher::where('user_id', $request->user()->id)->value('id') : null;
-        $assignments = $term ? TeachingAssignment::with(['subject:id,name', 'teacher:id,name', 'classGroup:id,name'])->where('term_id', $term->id)->whereHas('classGroup', fn ($q) => $q->where('school_id', $schoolId))->when($request->user()->hasRole('teacher'), fn ($q) => $q->where('teacher_id', $teacherId ?? 0))->get() : collect();
 
-        $studentClassId = $request->user()->hasRole('student')
+        $studentEnrollment = $isStudent
             ? Enrollment::where('status', 'active')
-                ->whereHas('student', fn ($q) => $q->where('user_id', $request->user()->id))
+                ->whereHas('student', fn ($q) => $q->where('user_id', $request->user()->id)->where('school_id', $schoolId))
                 ->when($term, fn ($q) => $q->where('term_id', $term->id))
-                ->value('class_group_id')
+                ->first(['id', 'class_group_id'])
             : null;
+        $studentClassId = $studentEnrollment?->class_group_id;
+        $classes = $term ? ClassGroup::where('school_id', $schoolId)->where('academic_year_id', $term->academic_year_id)->when($isStudent, fn ($q) => $q->whereKey($studentClassId ?? 0))->orderBy('name')->get(['id', 'name']) : collect();
+        $assignments = $term && ! $isStudent
+            ? TeachingAssignment::with(['subject:id,name', 'teacher:id,name', 'classGroup:id,name'])->where('term_id', $term->id)->whereHas('classGroup', fn ($q) => $q->where('school_id', $schoolId))->when($request->user()->hasRole('teacher'), fn ($q) => $q->where('teacher_id', $teacherId ?? 0))->get()
+            : collect();
 
         $sessions = OnlineClassSession::with(['classGroup:id,name', 'teachingAssignment.subject:id,name'])->withCount('attendances')
-            ->where('school_id', $schoolId)->when($request->user()->hasRole('teacher'), fn ($q) => $q->whereHas('teachingAssignment', fn ($assignment) => $assignment->where('teacher_id', $teacherId ?? 0)))->when($request->user()->hasRole('student'), fn ($q) => $q->where('class_group_id', $studentClassId ?? 0))->latest('starts_at')->limit(100)->get();
+            ->where('school_id', $schoolId)
+            ->when($term, fn ($q) => $q->where('term_id', $term->id), fn ($q) => $q->whereRaw('1 = 0'))
+            ->when($request->user()->hasRole('teacher'), fn ($q) => $q->whereHas('teachingAssignment', fn ($assignment) => $assignment->where('teacher_id', $teacherId ?? 0)))
+            ->when($isStudent, fn ($q) => $q->where('class_group_id', $studentClassId ?? 0))
+            ->latest('starts_at')->limit(100)->get();
 
-        return Inertia::render('Academic/OnlineClasses/Index', compact('term', 'classes', 'assignments', 'sessions'));
+        return Inertia::render('Academic/OnlineClasses/Index', [
+            'term' => $term,
+            'classes' => $classes,
+            'assignments' => $assignments,
+            'sessions' => $sessions,
+            'can_manage' => ! $isStudent,
+            'is_student' => $isStudent,
+            'student_class' => $studentClassId ? $classes->firstWhere('id', $studentClassId) : null,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -74,6 +90,7 @@ class OnlineClassController extends Controller
 
     public function updateStatus(Request $request, OnlineClassSession $onlineClassSession): RedirectResponse
     {
+        $this->authorizeManage($request);
         $this->authorizeSession($request, $onlineClassSession);
         $data = $request->validate(['status' => ['required', 'in:scheduled,live,completed,cancelled']]);
         $old = $onlineClassSession->status;
@@ -85,6 +102,7 @@ class OnlineClassController extends Controller
 
     public function attendance(Request $request, OnlineClassSession $onlineClassSession): Response
     {
+        $this->authorizeManage($request);
         $this->authorizeSession($request, $onlineClassSession);
         $enrollments = Enrollment::with('student:id,nis,name')->where('term_id', $onlineClassSession->term_id)->where('class_group_id', $onlineClassSession->class_group_id)->where('status', 'active')->orderBy('roll_number')->get();
         $records = OnlineAttendanceRecord::where('online_class_session_id', $onlineClassSession->id)->get()->keyBy('enrollment_id');
@@ -95,6 +113,7 @@ class OnlineClassController extends Controller
 
     public function recordAttendance(Request $request, OnlineClassSession $onlineClassSession): RedirectResponse
     {
+        $this->authorizeManage($request);
         $this->authorizeSession($request, $onlineClassSession);
         $data = $request->validate(['records' => ['required', 'array', 'min:1'], 'records.*.enrollment_id' => ['required', 'integer'], 'records.*.status' => ['required', 'in:present,late,excused,absent'], 'records.*.notes' => ['nullable', 'string', 'max:500']]);
         $validIds = Enrollment::where('term_id', $onlineClassSession->term_id)->where('class_group_id', $onlineClassSession->class_group_id)->pluck('id')->all();

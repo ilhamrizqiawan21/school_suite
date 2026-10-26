@@ -176,8 +176,8 @@ const removeResource = (url: string) => {
             <section class="hero-card compact-hero">
                 <div>
                     <p class="eyebrow">Ruang pembelajaran · {{ active_term?.name ?? 'Belum ada semester aktif' }}</p>
-                    <h1>Materi & tugas kelas</h1>
-                    <p>Kelola bahan ajar, tenggat tugas, pengumpulan siswa, dan umpan balik dalam satu ruang.</p>
+                    <h1>{{ capabilities.submit ? 'Materi & tugas saya' : 'Materi & tugas kelas' }}</h1>
+                    <p>{{ capabilities.submit ? 'Pelajari materi kelas dan kumpulkan tugas sebelum tenggat.' : 'Kelola bahan ajar, tenggat tugas, pengumpulan siswa, dan umpan balik dalam satu ruang.' }}</p>
                 </div>
                 <div v-if="capabilities.manage && teaching_assignments.length" class="hero-actions">
                     <Link class="secondary-button" href="/pembelajaran/progress">Lihat progress</Link>
@@ -195,11 +195,18 @@ const removeResource = (url: string) => {
                 <Link class="workspace-tab" href="/komunikasi/chat">Chat</Link>
             </nav>
 
-            <section class="grade-summary">
+            <section v-if="capabilities.manage" class="grade-summary">
                 <div><span>Kelas mapel</span><strong>{{ teaching_assignments.length }}</strong><small>semester aktif</small></div>
                 <div><span>Materi terbit</span><strong>{{ materials.length }}</strong><small>bahan ajar tersedia</small></div>
                 <div><span>Tugas aktif</span><strong>{{ assignments.length }}</strong><small>{{ pendingCount }} belum dikumpulkan</small></div>
                 <div><span>Pengumpulan</span><strong>{{ submissionCount }}</strong><small>respons siswa tercatat</small></div>
+            </section>
+
+            <section v-if="capabilities.submit" class="grade-summary student-learning-summary">
+                <div><span>Materi tersedia</span><strong>{{ materials.length }}</strong><small>untuk dipelajari</small></div>
+                <div><span>Tugas tersedia</span><strong>{{ assignments.length }}</strong><small>di kelasmu</small></div>
+                <div><span>Sudah dikumpulkan</span><strong>{{ submissionCount }}</strong><small>tugas terkirim</small></div>
+                <div><span>Belum dikumpulkan</span><strong>{{ pendingCount }}</strong><small>periksa tenggat</small></div>
             </section>
 
             <section class="panel overflow-hidden">
