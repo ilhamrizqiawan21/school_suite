@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 interface TermItem {
@@ -218,15 +219,7 @@ const deleteSchedule = (id: number) => {
                                     >
                                         {{ s.status === 'published' ? 'Terbit' : 'Draf' }}
                                     </span>
-                                    <button
-                                        v-if="can_manage"
-                                        type="button"
-                                        @click="deleteSchedule(s.id)"
-                                        class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 transition"
-                                        title="Hapus jadwal"
-                                    >
-                                        ✕
-                                    </button>
+                                    <RowActionButton v-if="can_manage" action="delete" label="Hapus" :aria-label="`Hapus jadwal ${s.subject.name} ${s.start_time}`" @click="deleteSchedule(s.id)" />
                                 </div>
                             </div>
 

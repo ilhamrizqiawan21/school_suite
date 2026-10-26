@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Application\Services;
 
 use App\Models\User;
+use App\Modules\Core\Infrastructure\Models\Role;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +38,8 @@ class UserService
         if ($schoolId === null) {
             throw new InvalidArgumentException('User must be associated with a valid school.');
         }
+
+        $this->assertCanAssignRole(isset($data['role_id']) ? (int) $data['role_id'] : null, $actor);
 
         $user = User::create([
             'school_id' => $schoolId,
@@ -79,6 +82,10 @@ class UserService
     {
         if (Gate::forUser($actor)->denies('update', $target)) {
             throw new AuthorizationException('Actor is not authorized to update this user.');
+        }
+
+        if (array_key_exists('role_id', $data)) {
+            $this->assertCanAssignRole($data['role_id'] !== null ? (int) $data['role_id'] : null, $actor, $target);
         }
 
         $fillable = ['name', 'username', 'email', 'phone', 'role_id', 'is_active'];
@@ -147,5 +154,26 @@ class UserService
         }
 
         return $deleted;
+    }
+
+    private function assertCanAssignRole(?int $roleId, User $actor, ?User $target = null): void
+    {
+        if ($roleId === null) {
+            return;
+        }
+
+        $roleName = Role::query()->whereKey($roleId)->value('name');
+
+        if ($actor->hasRole('admin')) {
+            return;
+        }
+
+        if (in_array($roleName, ['admin', 'operator', 'principal'], true)) {
+            throw new AuthorizationException('Only a school administrator can assign a privileged role.');
+        }
+
+        if ($target !== null && (int) $target->role_id !== $roleId) {
+            throw new AuthorizationException('Only a school administrator can change a user role.');
+        }
     }
 }

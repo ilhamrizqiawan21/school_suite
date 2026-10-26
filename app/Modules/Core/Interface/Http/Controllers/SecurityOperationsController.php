@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Infrastructure\Models\AuditEvent;
 use App\Modules\Core\Infrastructure\Models\BlockedIp;
 use App\Modules\Core\Infrastructure\Models\LoginAttemptLog;
 use App\Modules\Core\Infrastructure\Models\SystemErrorEvent;
@@ -22,12 +23,32 @@ class SecurityOperationsController extends Controller
     {
         $this->authorizeViewer($request);
         $schoolId = (int) $request->user()->school_id;
+        $isAdmin = $request->user()->hasRole('admin');
+
+        $auditEvents = $isAdmin
+            ? AuditEvent::query()
+                ->with('actor:id,name')
+                ->where('school_id', $schoolId)
+                ->latest('created_at')
+                ->limit(100)
+                ->get(['id', 'actor_id', 'event_type', 'target_type', 'target_id', 'created_at'])
+                ->map(fn (AuditEvent $event): array => [
+                    'id' => $event->id,
+                    'event_type' => $event->event_type,
+                    'target_type' => $event->target_type,
+                    'target_id' => $event->target_id,
+                    'actor_name' => $event->actor?->name,
+                    'created_at' => $event->created_at,
+                ])
+                ->values()
+            : collect();
 
         return Inertia::render('Core/Security/Index', [
             'blocked_ips' => BlockedIp::with('blocker:id,name')->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', $schoolId))->latest()->get(),
             'login_logs' => LoginAttemptLog::with('user:id,name')->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', $schoolId))->latest()->limit(100)->get(),
             'errors' => SystemErrorEvent::with('resolver:id,name')->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', $schoolId))->latest('last_seen_at')->limit(100)->get(),
-            'can_manage' => $request->user()->hasRole('admin'),
+            'audit_events' => $auditEvents,
+            'can_manage' => $isAdmin,
         ]);
     }
 

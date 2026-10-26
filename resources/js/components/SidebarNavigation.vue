@@ -28,6 +28,12 @@ const homeItem: NavItem = {
 
 const sections: NavSection[] = [
     {
+        title: 'Penerimaan Siswa',
+        items: [
+            { name: 'SPMB', href: '/spmb', key: 'admissions', activePrefix: '/spmb', icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2zm3-6h3m-3 4h5' },
+        ],
+    },
+    {
         title: 'Akademik',
         items: [
             { name: 'Data Siswa', href: '/akademik/siswa', key: 'students', activePrefix: '/akademik/siswa', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
@@ -112,6 +118,7 @@ const sections: NavSection[] = [
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const currentRole = computed(() => (page.props.auth as any)?.user?.role as string | undefined);
+const canAccessAdmissions = computed(() => (page.props.auth as any)?.user?.can_access_admissions === true);
 const displayName = (item: NavItem) => item.key === 'learning' && currentRole.value === 'student'
     ? 'Ruang Belajar'
     : item.name;
@@ -149,6 +156,7 @@ const roleVisibility: Record<string, string[]> = {
     users: ['admin', 'operator'],
     school: ['admin', 'operator'],
     security: ['admin'],
+    admissions: ['admin', 'teacher'],
 };
 
 const visibleSections = computed(() => {
@@ -157,6 +165,7 @@ const visibleSections = computed(() => {
             title: section.title,
             items: section.items.filter((item) => {
                 const allowedRoles = roleVisibility[item.key] ?? item.roles;
+                if (item.key === 'admissions') return canAccessAdmissions.value;
                 return !allowedRoles || (currentRole.value && allowedRoles.includes(currentRole.value));
             }),
         }))

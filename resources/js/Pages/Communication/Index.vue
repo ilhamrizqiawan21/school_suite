@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 interface ClassItem { id: number; name: string; grade_level: number }
@@ -105,7 +106,7 @@ const markRead = (notification: NotificationItem) => {
                         </div>
                         <div class="comm-actions">
                             <a v-if="item.attachment_name" class="secondary-button" :href="`/komunikasi/pengumuman/${item.id}/lampiran`">Lampiran</a>
-                            <button v-if="can_manage" class="danger-link" @click="remove(`/komunikasi/pengumuman/${item.id}`)">Hapus</button>
+                            <RowActionButton v-if="can_manage" action="delete" label="Hapus" :aria-label="`Hapus pengumuman ${item.title}`" @click="remove(`/komunikasi/pengumuman/${item.id}`)" />
                         </div>
                     </article>
                     <div v-if="!announcements.length" class="empty-state"><strong>Belum ada pengumuman</strong><p>Informasi terbaru sekolah akan tampil di sini.</p></div>
@@ -120,7 +121,7 @@ const markRead = (notification: NotificationItem) => {
                             <p>{{ event.description || 'Tidak ada keterangan tambahan.' }}</p>
                             <small>{{ formatDate(event.starts_at) }}<template v-if="event.ends_at"> — {{ formatDate(event.ends_at) }}</template></small>
                         </div>
-                        <button v-if="can_manage" class="danger-link" @click="remove(`/komunikasi/kalender/${event.id}`)">Hapus</button>
+                        <RowActionButton v-if="can_manage" action="delete" label="Hapus" :aria-label="`Hapus agenda ${event.title}`" @click="remove(`/komunikasi/kalender/${event.id}`)" />
                     </article>
                     <div v-if="!events.length" class="empty-state"><strong>Belum ada agenda</strong><p>Agenda akademik akan tampil secara kronologis.</p></div>
                 </div>

@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Academic\Application\Services\TeacherDirectoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -48,6 +50,10 @@ class HandleInertiaRequests extends Middleware
                     'username' => $user->username,
                     'role' => $user->role?->name,
                     'role_label' => $user->role?->label ?? 'Pengguna',
+                    'can_access_admissions' => $user->hasRole('admin') || ($user->hasRole('teacher') && DB::table('admission_committee_members')
+                        ->where('school_id', $user->school_id)
+                        ->where('user_id', $user->id)
+                        ->exists() && app(TeacherDirectoryService::class)->isActiveTeacherUser((int) $user->school_id, (int) $user->id)),
                     'phone' => $user->phone,
                     'avatar_url' => $user->avatar_path ? route('core.profile.avatar') : null,
                 ],

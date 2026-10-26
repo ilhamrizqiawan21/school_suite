@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 
 type QuestionOption = {
     id: number;
@@ -193,10 +194,10 @@ function typeLabel(type: string) {
                             <h2>{{ pack.name }}</h2>
                         </div>
                         <div class="pack-actions">
-                            <button v-if="pack.status !== 'archived'" class="text-button" @click="openEdit(pack)">Ubah</button>
+                            <RowActionButton v-if="pack.status !== 'archived'" action="edit" label="Ubah" @click="openEdit(pack)" />
                             <button class="text-button" @click="action(`/penilaian/paket-soal/${pack.id}/duplikasi`, 'Duplikasi paket ini sebagai draf baru?')">Duplikasi</button>
                             <Link class="text-button" :href="`/penilaian/berbagi-soal?type=pack&id=${pack.id}`">Bagikan</Link>
-                            <button v-if="pack.status !== 'archived'" class="text-button danger-text" @click="action(`/penilaian/paket-soal/${pack.id}/arsip`, 'Arsipkan paket soal ini?')">Arsipkan</button>
+                            <RowActionButton v-if="pack.status !== 'archived'" action="archive" label="Arsipkan" :aria-label="`Arsipkan paket ${pack.name}`" @click="action(`/penilaian/paket-soal/${pack.id}/arsip`, 'Arsipkan paket soal ini?')" />
                             <button v-else class="text-button" @click="action(`/penilaian/paket-soal/${pack.id}/pulihkan`, 'Pulihkan paket ini sebagai draf?')">Pulihkan</button>
                         </div>
                     </div>

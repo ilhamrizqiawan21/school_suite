@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 interface ClassItem {
@@ -174,14 +175,7 @@ const deleteNote = (id: number) => {
 
                         <div class="flex items-center gap-3 text-xs text-slate-400">
                             <span>Oleh: <strong class="text-slate-600">{{ note.author.name }}</strong></span>
-                            <button
-                                type="button"
-                                @click="deleteNote(note.id)"
-                                class="text-slate-400 hover:text-rose-600 transition"
-                                title="Hapus catatan"
-                            >
-                                ✕
-                            </button>
+                            <RowActionButton action="delete" label="Hapus" :aria-label="`Hapus catatan ${note.title}`" @click="deleteNote(note.id)" />
                         </div>
                     </div>
 

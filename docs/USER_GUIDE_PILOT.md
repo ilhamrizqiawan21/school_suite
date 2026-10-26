@@ -17,6 +17,8 @@ Gunakan kredensial bawaan berikut untuk mencoba peran yang berbeda pada lingkung
 | **Guru Bahasa Ind.**| `siti@pilot.sch.id` | `password` | Input nilai mata pelajaran, presensi harian, jurnal kelas |
 | **Siswa (Ahmad F.)**| `siswa26001@pilot.sch.id` | `password` | Akses rapor pribadi dan jadwal pelajaran |
 
+Semua akun pilot dengan kata sandi awal di atas diwajibkan menggantinya saat pertama kali masuk.
+
 ---
 
 ## 2. Alur Kerja Operasional Utama

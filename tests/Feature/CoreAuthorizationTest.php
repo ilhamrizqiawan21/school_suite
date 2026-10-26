@@ -14,6 +14,7 @@ use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CoreAuthorizationTest extends TestCase
@@ -198,6 +199,127 @@ class CoreAuthorizationTest extends TestCase
 
         // Admin cannot delete themselves
         $this->assertFalse(Gate::forUser($admin)->allows('delete', $admin));
+    }
+
+    public function test_admin_cannot_update_a_user_from_another_school(): void
+    {
+        $admin = User::create([
+            'school_id' => $this->schoolA->id,
+            'role_id' => $this->adminRole->id,
+            'name' => 'Admin A',
+            'email' => 'admin.boundary@schoola.sch.id',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+        $foreignUser = User::create([
+            'school_id' => $this->schoolB->id,
+            'role_id' => $this->teacherRole->id,
+            'name' => 'Guru B',
+            'email' => 'guru.boundary@schoolb.sch.id',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->put("/pengaturan/pengguna/{$foreignUser->id}", [
+                'name' => 'Nama yang tidak boleh berubah',
+                'email' => $foreignUser->email,
+                'role_id' => $this->teacherRole->id,
+                'is_active' => true,
+            ])
+            ->assertForbidden();
+
+        $this->assertSame('Guru B', $foreignUser->fresh()->name);
+    }
+
+    public function test_non_admin_with_user_create_permission_cannot_assign_admin_role(): void
+    {
+        $operator = User::create([
+            'school_id' => $this->schoolA->id,
+            'role_id' => $this->operatorRole->id,
+            'name' => 'Operator A',
+            'email' => 'operator.role@schoola.sch.id',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+        $permission = Permission::create([
+            'name' => PermissionEnum::USERS_CREATE->value,
+            'label' => 'Buat Pengguna',
+            'module' => 'Core',
+        ]);
+        $this->operatorRole->permissions()->attach($permission->id);
+
+        try {
+            (new UserService)->createUser([
+                'name' => 'Admin Ilegal',
+                'email' => 'admin.illegal@schoola.sch.id',
+                'password' => 'secret123',
+                'role_id' => $this->adminRole->id,
+            ], $operator);
+            $this->fail('A non-admin actor must not assign the admin role.');
+        } catch (AuthorizationException) {
+            $this->assertDatabaseMissing('users', ['email' => 'admin.illegal@schoola.sch.id']);
+        }
+
+        try {
+            (new UserService)->updateUser($operator, ['role_id' => $this->adminRole->id], $operator);
+            $this->fail('A non-admin actor must not promote their own account.');
+        } catch (AuthorizationException) {
+            $this->assertSame($this->operatorRole->id, $operator->fresh()->role_id);
+        }
+    }
+
+    public function test_non_admin_user_management_page_hides_privileged_roles_and_actions(): void
+    {
+        $operator = User::create([
+            'school_id' => $this->schoolA->id,
+            'role_id' => $this->operatorRole->id,
+            'name' => 'Operator A',
+            'email' => 'operator.page@schoola.sch.id',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+        $view = Permission::create([
+            'name' => PermissionEnum::USERS_VIEW->value,
+            'label' => 'Lihat Pengguna',
+            'module' => 'Core',
+        ]);
+        $create = Permission::create([
+            'name' => PermissionEnum::USERS_CREATE->value,
+            'label' => 'Buat Pengguna',
+            'module' => 'Core',
+        ]);
+        $this->operatorRole->permissions()->attach([$view->id, $create->id]);
+
+        $this->actingAs($operator)->get('/pengaturan/pengguna')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Core/Users/Index')
+                ->where('can_create', true)
+                ->where('can_update', false)
+                ->where('can_delete', false)
+                ->where('can_manage_roles', false)
+                ->has('roles', 1)
+                ->where('roles.0.name', 'teacher')
+            );
+    }
+
+    public function test_deactivated_admin_session_is_logged_out_on_next_request(): void
+    {
+        $admin = User::create([
+            'school_id' => $this->schoolA->id,
+            'role_id' => $this->adminRole->id,
+            'name' => 'Admin Nonaktif',
+            'email' => 'admin.inactive@schoola.sch.id',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->get('/')->assertOk();
+        $admin->update(['is_active' => false]);
+
+        $this->get('/pengaturan/pengguna')->assertRedirect(route('login'));
+        $this->assertGuest();
     }
 
     /**

@@ -173,6 +173,7 @@ const actions = computed(() => {
     return fallbackActions;
 });
 const primaryAction = computed(() => actions.value[0]);
+const nextAction = computed(() => actions.value[1] ?? actions.value[0]);
 const secondaryActions = computed(() => actions.value.slice(1));
 const focusLabel = computed(() => {
     if (isAdmin.value) return 'Operasional sekolah';
@@ -334,7 +335,7 @@ const principalAttendanceChart = computed(() => {
             <header class="dashboard-intro">
                 <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
-                    <div><h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : `${firstName}, ini pusat kerjamu.` }}</h1><p>{{ focusCopy }}</p></div>
+                    <div><h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : `${firstName}, ini pusat kerjamu.` }}</h1></div>
                     <div class="date-stamp"><strong>{{ today.day }}</strong><span>{{ today.month }}<br>{{ today.year }}</span></div>
                 </div>
             </header>
@@ -370,21 +371,29 @@ const principalAttendanceChart = computed(() => {
                 </aside>
             </div>
 
-            <div v-else class="command-layout">
+            <section v-if="isAdmin" class="metrics-strip metrics-first" aria-label="Ringkasan metrik">
+                <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
+                    <div class="metric-head"><span>{{ metric.label }}</span><span class="metric-arrow" aria-hidden="true">↗</span></div>
+                    <strong>{{ metric.value ?? '—' }}</strong>
+                    <small>{{ metric.note }}</small>
+                </article>
+            </section>
+
+            <div v-if="!isPrincipal" class="command-layout" :class="{ 'admin-command': isAdmin }">
                 <article class="focus-panel" :class="{ 'teacher-focus': isTeacher || isHomeroom, 'principal-focus': isPrincipal, 'student-focus': isStudent, 'operator-focus': isOperator }">
                     <div class="focus-meta"><span>{{ focusLabel }}</span><span class="focus-status"><i /> Sistem aktif</span></div>
                     <div class="focus-content" :class="{ 'admin-focus-content': isAdmin }"><template v-if="!isAdmin"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span></template><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
                     <div class="focus-orbit orbit-one" /><div class="focus-orbit orbit-two" />
                 </article>
                 <aside class="insight-panel">
-                    <div class="insight-heading"><div><span class="eyebrow">Fokus hari ini</span><h2>{{ isAdmin ? 'Kesiapan operasional' : isPrincipal ? 'Kinerja sekolah' : isOperator ? 'Administrasi data' : isHomeroom ? 'Ruang perwalian' : isTeacher ? 'Ruang mengajar' : isStudent ? 'Agenda belajar' : 'Ringkasan akses' }}</h2></div><span class="signal">01</span></div>
-                    <div class="signal-line"><span class="signal-dot" /><div><strong>{{ primaryAction.title }}</strong><p>{{ primaryAction.description }}</p></div></div>
+                    <div class="insight-heading"><div><span class="eyebrow">Jalan pintas</span><h2>Pekerjaan berikutnya</h2></div></div>
+                    <Link :href="nextAction.href" class="signal-line"><span class="signal-dot" /><span><strong>{{ nextAction.title }}</strong><span class="signal-description">{{ nextAction.description }}</span></span><span class="signal-arrow" aria-hidden="true">↗</span></Link>
                     <div class="insight-rule" />
                     <div class="insight-footer"><span>Periode</span><strong>{{ activePeriod }}</strong></div>
                 </aside>
             </div>
 
-            <section class="metrics-strip" aria-label="Ringkasan metrik">
+            <section v-if="!isAdmin" class="metrics-strip" aria-label="Ringkasan metrik">
                 <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
                     <div class="metric-head"><span>{{ metric.label }}</span><span class="metric-arrow" aria-hidden="true">↗</span></div>
                     <strong>{{ metric.value ?? '—' }}</strong>
@@ -636,6 +645,24 @@ const principalAttendanceChart = computed(() => {
 .principal-news li strong { overflow: hidden; color: var(--ink); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .principal-news li span, .principal-news li time { color: var(--ink-soft); font-size: 11px; }
 .dashboard-view a:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.metrics-first { margin: 0 0 18px; }
+.admin-command .focus-panel, .admin-command .insight-panel { min-height: 220px; }
+.admin-command .admin-focus-content { min-height: 0; margin-top: 20px; justify-content: flex-start; }
+.admin-command .focus-content h2 { margin-top: 0; }
+.insight-panel .signal-line { align-items: center; margin-top: 20px; padding: 12px; color: inherit; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.insight-panel .signal-line:hover { border-color: var(--primary); }
+.signal-line > span:nth-child(2) { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.signal-line .signal-description { color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+.signal-arrow { color: var(--blue); font-size: 18px; }
+@media (max-width: 560px) {
+    .dashboard-intro { padding-bottom: 17px; }
+    .admin-command .focus-panel { min-height: 245px; }
+    .admin-command .insight-panel { min-height: 175px; }
+    .admin-command .focus-content { margin-top: 20px; }
+    .admin-command .focus-content h2 { font-size: 24px; }
+    .admin-command .focus-action { min-height: 44px; }
+    .insight-panel .signal-line { margin-top: 14px; }
+}
 @media (max-width: 1080px) { .principal-charts { grid-template-columns: 1fr; }.principal-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.principal-activity-item:nth-child(2) { border-right: 0; }.principal-activity-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
 @media (max-width: 1000px) { .student-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.student-announcements-card { grid-column: 1 / -1; } }
 @media (max-width: 800px) { .command-layout, .principal-command { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }

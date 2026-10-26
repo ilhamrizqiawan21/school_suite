@@ -40,6 +40,12 @@ const showAddModal = ref(false);
 const showImportModal = ref(false);
 const showEditModal = ref(false);
 const editingStudent = ref<Student | null>(null);
+const statusLabels: Record<string, string> = {
+    active: 'Aktif',
+    graduated: 'Lulus',
+    transferred: 'Pindah',
+    dropped_out: 'Keluar',
+};
 
 const applyFilters = () => {
     router.get(
@@ -169,7 +175,7 @@ const deleteStudent = (student: Student) => {
     <AppLayout title="Data Siswa">
         <Head title="Data Siswa — School Suite" />
 
-        <div class="view space-y-6">
+        <div class="view student-page space-y-5">
             <!-- Header bar -->
             <div class="page-heading compact-heading">
                 <div>
@@ -179,12 +185,10 @@ const deleteStudent = (student: Student) => {
                     </p>
                 </div>
                 <div class="student-header-actions">
-                    <a :href="exportPdfUrl()" class="student-action-button student-action-export">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414A2 2 0 0018.414 8L14 3.586A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM13 3v6h6M8 13h8m-8 4h5" />
-                        </svg>
-                        Export PDF
-                    </a>
+                    <button v-if="can_manage" type="button" class="student-action-button student-action-add" @click="showAddModal = true">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" /></svg>
+                        Tambah siswa
+                    </button>
                     <button
                         v-if="can_manage"
                         type="button"
@@ -196,28 +200,14 @@ const deleteStudent = (student: Student) => {
                         </svg>
                         Impor CSV
                     </button>
-                    <a v-if="can_manage" href="/akademik/siswa/template" class="student-action-button student-action-template">
+                    <a :href="exportPdfUrl()" class="student-action-button student-action-export">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14a2 2 0 002-2v-3M3 16v3a2 2 0 002 2" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414A2 2 0 0018.414 8L14 3.586A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM13 3v6h6M8 13h8m-8 4h5" />
                         </svg>
-                        Unduh template
+                        Ekspor PDF
                     </a>
                 </div>
             </div>
-
-            <section v-if="can_manage" id="student-create-form" class="panel border border-indigo-100 bg-indigo-50/40 p-5">
-                <div class="flex items-center justify-between gap-3 mb-4">
-                    <div><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Siswa baru</h2></div>
-                    <span class="text-xs text-slate-500">Langsung tempatkan ke kelas aktif</span>
-                </div>
-                <form class="grid gap-3 md:grid-cols-[1fr_1.5fr_130px_180px_auto] items-end" @submit.prevent="submitAdd">
-                    <label class="text-xs font-semibold text-slate-700">NIS<input v-model="form.nis" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="form.name" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Gender<select v-model="form.gender" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label>
-                    <label class="text-xs font-semibold text-slate-700">Kelas<select v-model="form.class_group_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option v-for="cls in classes" :key="cls.id" :value="String(cls.id)">{{ cls.name }}</option></select></label>
-                    <button type="submit" :disabled="form.processing || !form.class_group_id" class="primary-button !text-white justify-center disabled:cursor-not-allowed disabled:opacity-50">Simpan</button>
-                </form>
-            </section>
 
             <!-- Filters -->
             <div class="toolbar panel">
@@ -311,7 +301,7 @@ const deleteStudent = (student: Student) => {
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span :class="s.status === 'active' ? 'text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-medium' : 'text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full text-xs'">
-                                        {{ s.status }}
+                                        {{ statusLabels[s.status] ?? s.status }}
                                     </span>
                                 </td>
                                 <td v-if="can_manage" class="student-actions-cell px-5 py-3.5">
@@ -347,6 +337,29 @@ const deleteStudent = (student: Student) => {
                     </table>
                 </div>
 
+                <div class="student-mobile-list" aria-label="Daftar siswa">
+                    <article v-for="s in students.data" :key="s.id" class="student-mobile-card">
+                        <div class="student-mobile-top">
+                            <div>
+                                <h2>{{ s.name }}</h2>
+                                <p>NIS {{ s.nis }}<span v-if="s.nisn"> · NISN {{ s.nisn }}</span></p>
+                            </div>
+                            <span class="student-mobile-status" :class="s.status === 'active' ? 'is-active' : ''">{{ statusLabels[s.status] ?? s.status }}</span>
+                        </div>
+                        <div class="student-mobile-details">
+                            <span>{{ s.enrollments?.[0]?.class_group?.name ?? 'Belum ada rombel' }}</span>
+                            <span>{{ s.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
+                            <span v-if="s.parent_name || s.parent_phone">Wali: {{ s.parent_name || '—' }}<span v-if="s.parent_phone"> · {{ s.parent_phone }}</span></span>
+                        </div>
+                        <div v-if="can_manage" class="student-mobile-actions">
+                            <button type="button" :aria-label="`Edit data ${s.name}`" @click="openEdit(s)">Edit</button>
+                            <button type="button" :disabled="!s.user_id" :aria-label="s.user_id ? `Reset password ${s.name}` : `${s.name} belum memiliki akun`" @click="resetPassword(s)">Reset sandi</button>
+                            <button type="button" class="student-mobile-delete" :aria-label="`Hapus data ${s.name}`" @click="deleteStudent(s)">Hapus</button>
+                        </div>
+                    </article>
+                    <p v-if="students.data.length === 0" class="student-mobile-empty">Tidak ada data siswa yang cocok dengan filter.</p>
+                </div>
+
                 <!-- Pagination footer -->
                 <div class="table-footer">
                     <div>Total {{ students.total }} siswa</div>
@@ -371,15 +384,15 @@ const deleteStudent = (student: Student) => {
         </div>
 
         <!-- Modal Tambah Siswa -->
-        <div v-if="showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div v-if="showAddModal" role="dialog" aria-modal="true" aria-labelledby="student-add-title" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Tambah Peserta Didik Baru</h3>
-                    <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                    <h3 id="student-add-title" class="text-lg font-bold text-slate-900">Tambah siswa</h3>
+                    <button type="button" @click="showAddModal = false" class="modal-close-button text-slate-400 hover:text-slate-600" aria-label="Tutup formulir tambah siswa">✕</button>
                 </div>
 
                 <form @submit.prevent="submitAdd" class="space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">NIS *</label>
                             <input v-model="form.nis" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
@@ -397,7 +410,7 @@ const deleteStudent = (student: Student) => {
                         <div v-if="form.errors.name" class="text-xs text-red-600 mt-1">{{ form.errors.name }}</div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin *</label>
                             <select v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
@@ -414,7 +427,7 @@ const deleteStudent = (student: Student) => {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Wali / Orang Tua</label>
                             <input v-model="form.parent_name" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
@@ -430,7 +443,7 @@ const deleteStudent = (student: Student) => {
                             Batal
                         </button>
                         <button type="submit" :disabled="form.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                            Simpan Data
+                            Simpan siswa
                         </button>
                     </div>
                 </form>
@@ -539,23 +552,26 @@ const deleteStudent = (student: Student) => {
 </template>
 
 <style scoped>
-.student-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .65rem; flex-wrap: wrap; }
-.student-action-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 40px; padding: .65rem .9rem; border: 1px solid transparent; border-radius: .65rem; font-size: .78rem; font-weight: 800; text-decoration: none; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
-.student-action-button:hover { transform: translateY(-1px); box-shadow: 0 7px 14px rgba(24, 48, 78, .11); }
-.student-action-export { color: #fff; background: #b54747; border-color: #a23f3f; }.student-action-export:hover { background: #963b3b; }
-.student-action-import { color: #fff; background: #2f8f68; border-color: #287b59; }.student-action-import:hover { background: #267653; }
-.student-action-template { color: #fff; background: #3269bc; border-color: #2b5da8; }.student-action-template:hover { background: #29589f; }
+.student-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
+.student-action-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: .65rem .9rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: .65rem; font-size: .8rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, border-color .16s ease; }
+.student-action-button:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }
+.student-action-add { color: #fff; background: var(--primary); border-color: var(--primary); }
+.student-action-add:hover { color: #fff; background: var(--primary-strong); }
+.student-action-import { color: var(--primary); border-color: var(--primary); }
+.student-page :deep(.page-heading) { margin-bottom: 0; }
+.student-page :deep(.toolbar) { gap: .75rem; }
+.modal-close-button { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; border-radius: .65rem; }
 .student-table { min-width: 920px; }
 .student-table thead { background: #172d4c; color: #fff; }
-.student-table thead th { border-bottom: 0; font-size: .7rem; font-weight: 850; letter-spacing: .045em; line-height: 1.3; white-space: nowrap; text-transform: uppercase; }
+.student-table thead th { border-bottom: 0; font-size: .75rem; font-weight: 750; letter-spacing: .025em; line-height: 1.3; white-space: nowrap; }
 .student-table tbody tr { background: var(--surface); border-bottom: 1px solid var(--line); transition: background-color .18s ease, box-shadow .18s ease; }.student-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface)); box-shadow: inset 3px 0 0 var(--primary); }.student-table td { vertical-align: middle; }
 .student-data-row:hover .student-gender-badge, .student-data-row:hover .student-enrollment-badge { box-shadow: 0 0 0 2px color-mix(in srgb, var(--surface) 72%, transparent); }
 .student-actions-heading, .student-actions-cell { position: sticky; right: 0; width: 150px; min-width: 150px; }
-.student-actions-heading { z-index: 3; background: #172d4c; box-shadow: -8px 0 14px rgba(17, 38, 64, .12); }
+.student-actions-heading { z-index: 3; color: var(--ink-faint); text-align: center; background: var(--surface-subtle); box-shadow: -8px 0 14px rgba(17, 38, 64, .12); }
 .student-actions-cell { z-index: 2; background: var(--surface); box-shadow: -8px 0 14px rgba(24, 48, 78, .08); }
 .student-table tbody tr:hover .student-actions-cell { background: var(--surface-subtle) !important; }
 .student-row-actions { display: flex; align-items: center; justify-content: center; gap: .45rem; white-space: nowrap; }
-.student-row-action { display: inline-grid; width: 32px; height: 32px; place-items: center; border: 1px solid transparent; border-radius: .55rem; transition: transform .16s ease, background .16s ease, box-shadow .16s ease; }
+.student-row-action { display: inline-grid; width: 40px; height: 40px; place-items: center; border: 1px solid transparent; border-radius: .55rem; transition: background .16s ease, box-shadow .16s ease; }
 .student-row-action svg { width: 16px; height: 16px; stroke-width: 2; }
 .student-row-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 10px rgba(24, 48, 78, .12); }
 .student-row-action:focus-visible, .student-action-button:focus-visible { outline: 3px solid rgba(50, 105, 188, .28); outline-offset: 2px; }
@@ -563,5 +579,26 @@ const deleteStudent = (student: Student) => {
 .student-row-action-reset { color: #9a6508; background: #fff7dc; border-color: #ecd594; }.student-row-action-reset:hover:not(:disabled) { background: #f8e9b9; }
 .student-row-action-delete { color: #b33d3d; background: #fff0f0; border-color: #f2caca; }.student-row-action-delete:hover { background: #ffe1e1; }
 .student-row-action:disabled { cursor: not-allowed; opacity: .42; }
-@media (max-width: 720px) { .student-header-actions { justify-content: flex-start; width: 100%; }.student-action-button { flex: 1 1 auto; }.student-table { min-width: 920px; } }
+.student-mobile-list { display: none; }
+@media (max-width: 720px) {
+    .student-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+    .student-action-add { grid-column: 1 / -1; }
+    .table-scroll { display: none; }
+    .student-mobile-list { display: grid; gap: 0; }
+    .student-mobile-card { padding: 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .student-mobile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .student-mobile-top h2 { margin: 0; color: var(--ink); font-size: 15px; font-weight: 750; line-height: 1.35; }
+    .student-mobile-top p { margin: 4px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+    .student-mobile-status { flex: 0 0 auto; padding: 4px 8px; color: var(--ink-soft); background: var(--surface-strong); border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .student-mobile-status.is-active { color: var(--green); background: var(--green-soft); }
+    .student-mobile-details { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 12px; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+    .student-mobile-details > span:nth-child(3) { flex-basis: 100%; }
+    .student-mobile-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .student-mobile-actions button { min-height: 44px; padding: 0 10px; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-weight: 750; }
+    .student-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
+    .student-mobile-actions button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .student-mobile-actions .student-mobile-delete { margin-left: auto; color: var(--red); background: var(--red-soft); }
+    .student-mobile-empty { padding: 24px 16px; color: var(--ink-soft); font-size: 13px; text-align: center; }
+    .student-page :deep(.table-footer) { align-items: flex-start; flex-direction: column; gap: 10px; }
+}
 </style>

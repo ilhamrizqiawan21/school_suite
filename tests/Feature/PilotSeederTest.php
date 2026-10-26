@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Modules\Assessment\Domain\Enums\ReportStatusEnum;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
+use App\Modules\Core\Domain\PermissionEnum;
 use App\Modules\Core\Infrastructure\Models\School;
 use Database\Seeders\PilotSchoolSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,6 +31,16 @@ class PilotSeederTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'kepsek@pilot.sch.id']);
         $this->assertDatabaseHas('users', ['email' => 'operator@pilot.sch.id']);
         $this->assertDatabaseHas('users', ['email' => 'budi@pilot.sch.id']);
+        $admin = User::where('email', 'admin@pilot.sch.id')->firstOrFail();
+        $this->assertTrue($admin->must_change_password);
+
+        $operator = User::where('email', 'operator@pilot.sch.id')->firstOrFail();
+        $this->assertTrue($operator->hasPermission(PermissionEnum::USERS_CREATE->value));
+        $this->assertTrue($operator->hasPermission(PermissionEnum::SCHOOL_UPDATE->value));
+
+        $principal = User::where('email', 'kepsek@pilot.sch.id')->firstOrFail();
+        $this->assertTrue($principal->hasPermission(PermissionEnum::USERS_VIEW->value));
+        $this->assertFalse($principal->hasPermission(PermissionEnum::USERS_CREATE->value));
 
         // 2. Verifikasi Data Akademik
         $this->assertDatabaseCount('subjects', 10);

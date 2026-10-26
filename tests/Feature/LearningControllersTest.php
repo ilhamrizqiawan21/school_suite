@@ -33,6 +33,8 @@ class LearningControllersTest extends TestCase
         $this->seed(PilotSchoolSeeder::class);
         $this->teacher = User::where('email', 'budi@pilot.sch.id')->firstOrFail();
         $this->student = User::where('email', 'siswa26001@pilot.sch.id')->firstOrFail();
+        $this->teacher->forceFill(['must_change_password' => false])->save();
+        $this->student->forceFill(['must_change_password' => false])->save();
         $this->teachingAssignment = TeachingAssignment::whereHas('teacher', fn ($query) => $query->where('user_id', $this->teacher->id))->firstOrFail();
     }
 
@@ -141,6 +143,7 @@ class LearningControllersTest extends TestCase
     public function test_school_admin_cannot_access_lms_authoring_flow_but_can_view_progress(): void
     {
         $admin = User::where('email', 'admin@pilot.sch.id')->firstOrFail();
+        $admin->forceFill(['must_change_password' => false])->save();
         $this->actingAs($admin);
 
         $this->get(route('learning.index'))->assertForbidden();

@@ -7,6 +7,7 @@ namespace App\Modules\Core\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Core\Application\Services\UserService;
+use App\Modules\Core\Domain\PermissionEnum;
 use App\Modules\Core\Infrastructure\Models\Role;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,11 +53,19 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $roles = Role::orderBy('id')->get(['id', 'name', 'label']);
+        $roleQuery = Role::query()->orderBy('id');
+        if (! $currentUser?->hasRole('admin')) {
+            $roleQuery->whereNotIn('name', ['admin', 'operator', 'principal']);
+        }
+        $roles = $roleQuery->get(['id', 'name', 'label']);
 
         return Inertia::render('Core/Users/Index', [
             'users' => $users,
             'roles' => $roles,
+            'can_create' => Gate::allows('create', User::class),
+            'can_update' => $currentUser?->hasRole('admin') || $currentUser?->hasPermission(PermissionEnum::USERS_UPDATE->value),
+            'can_delete' => $currentUser?->hasRole('admin') || $currentUser?->hasPermission(PermissionEnum::USERS_DELETE->value),
+            'can_manage_roles' => $currentUser?->hasRole('admin') ?? false,
             'filters' => $request->only(['search', 'role']),
         ]);
     }

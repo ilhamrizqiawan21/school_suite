@@ -138,7 +138,7 @@ class AcademicControllersTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_import_students_csv(): void
+    public function test_admin_can_preview_student_csv_import(): void
     {
         $csvContent = "nis,nisn,name,gender\n2001,0011,Siswa Import 1,L\n2002,0012,Siswa Import 2,P\n";
         $file = UploadedFile::fake()->createWithContent('students.csv', $csvContent);
@@ -147,9 +147,14 @@ class AcademicControllersTest extends TestCase
             'csv_file' => $file,
         ]);
 
-        $response->assertRedirect();
-        $this->assertDatabaseHas('students', ['nis' => '2001', 'name' => 'Siswa Import 1']);
-        $this->assertDatabaseHas('students', ['nis' => '2002', 'name' => 'Siswa Import 2']);
+        $response->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Academic/Imports/Preview')
+            ->where('entity', 'siswa')
+            ->where('valid_count', 2)
+            ->where('invalid_count', 0)
+            ->has('token')
+        );
+        $this->assertDatabaseMissing('students', ['nis' => '2001']);
     }
 
     public function test_can_download_student_import_template(): void

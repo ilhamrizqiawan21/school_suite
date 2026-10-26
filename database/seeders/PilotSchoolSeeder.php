@@ -52,6 +52,25 @@ class PilotSchoolSeeder extends Seeder
             );
         }
 
+        $corePermissions = Permission::query()
+            ->whereIn('name', [
+                PermissionEnum::USERS_VIEW->value,
+                PermissionEnum::USERS_CREATE->value,
+                PermissionEnum::SCHOOL_VIEW->value,
+                PermissionEnum::SCHOOL_UPDATE->value,
+            ])
+            ->pluck('id', 'name');
+        $roles['operator']->permissions()->syncWithoutDetaching([
+            $corePermissions[PermissionEnum::USERS_VIEW->value],
+            $corePermissions[PermissionEnum::USERS_CREATE->value],
+            $corePermissions[PermissionEnum::SCHOOL_VIEW->value],
+            $corePermissions[PermissionEnum::SCHOOL_UPDATE->value],
+        ]);
+        $roles['principal']->permissions()->syncWithoutDetaching([
+            $corePermissions[PermissionEnum::USERS_VIEW->value],
+            $corePermissions[PermissionEnum::SCHOOL_VIEW->value],
+        ]);
+
         // 2. Profil Sekolah Pilot
         $school = School::firstOrCreate(
             ['npsn' => '20109988'],
@@ -75,9 +94,11 @@ class PilotSchoolSeeder extends Seeder
                 'username' => 'admin_pilot',
                 'name' => 'Administrator Pilot',
                 'password' => $defaultPassword,
+                'must_change_password' => true,
                 'is_active' => true,
             ]
         );
+        $this->requirePilotPasswordRotation($admin);
 
         $principal = User::firstOrCreate(
             ['email' => 'kepsek@pilot.sch.id'],
@@ -87,9 +108,11 @@ class PilotSchoolSeeder extends Seeder
                 'username' => 'kepsek_pilot',
                 'name' => 'Drs. H. Mulyadi, M.Pd.',
                 'password' => $defaultPassword,
+                'must_change_password' => true,
                 'is_active' => true,
             ]
         );
+        $this->requirePilotPasswordRotation($principal);
 
         $operator = User::firstOrCreate(
             ['email' => 'operator@pilot.sch.id'],
@@ -99,9 +122,11 @@ class PilotSchoolSeeder extends Seeder
                 'username' => 'operator_pilot',
                 'name' => 'Rian Hidayat, S.Kom.',
                 'password' => $defaultPassword,
+                'must_change_password' => true,
                 'is_active' => true,
             ]
         );
+        $this->requirePilotPasswordRotation($operator);
 
         // 4. Tahun Ajaran & Semester
         $ayPast = AcademicYear::firstOrCreate(
@@ -167,9 +192,11 @@ class PilotSchoolSeeder extends Seeder
                     'username' => explode('@', $tData['email'])[0],
                     'name' => $tData['name'],
                     'password' => $defaultPassword,
+                    'must_change_password' => true,
                     'is_active' => true,
                 ]
             );
+            $this->requirePilotPasswordRotation($tUser);
 
             $teachers[$tData['nip']] = Teacher::firstOrCreate(
                 ['school_id' => $school->id, 'nip' => $tData['nip']],
@@ -275,9 +302,11 @@ class PilotSchoolSeeder extends Seeder
                     'username' => "siswa_{$nis}",
                     'name' => $name,
                     'password' => $defaultPassword,
+                    'must_change_password' => true,
                     'is_active' => true,
                 ]
             );
+            $this->requirePilotPasswordRotation($studentUser);
 
             $student = Student::firstOrCreate(
                 ['school_id' => $school->id, 'nis' => $nis],
@@ -367,6 +396,13 @@ class PilotSchoolSeeder extends Seeder
                     ]
                 );
             }
+        }
+    }
+
+    private function requirePilotPasswordRotation(User $user): void
+    {
+        if (! $user->must_change_password && Hash::check('password', $user->password)) {
+            $user->forceFill(['must_change_password' => true])->save();
         }
     }
 }

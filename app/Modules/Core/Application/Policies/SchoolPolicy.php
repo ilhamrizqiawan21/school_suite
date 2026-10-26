@@ -13,14 +13,18 @@ class SchoolPolicy
     /**
      * Intercept checks for system administrator.
      */
-    public function before(User $actor): ?bool
+    public function before(User $actor, string $ability): ?bool
     {
-        if ($actor->hasRole('admin')) {
-            return true;
-        }
-
         if (! $actor->is_active) {
             return false;
+        }
+
+        if ($actor->hasRole('admin')) {
+            if (in_array($ability, ['view', 'update'], true)) {
+                return null; // object-level abilities must still enforce school boundaries
+            }
+
+            return true;
         }
 
         return null;

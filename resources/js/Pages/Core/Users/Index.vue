@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { SharedProps } from '../../../types';
 
@@ -32,6 +33,10 @@ const props = defineProps<{
     users: PaginatedData<UserItem>;
     roles: RoleItem[];
     filters: { search?: string; role?: string };
+    can_create: boolean;
+    can_update: boolean;
+    can_delete: boolean;
+    can_manage_roles: boolean;
 }>();
 
 const page = usePage<SharedProps>();
@@ -47,8 +52,6 @@ watch([search, selectedRole], ([newSearch, newRole]) => {
     );
 });
 
-// Create Modal
-const isCreateModalOpen = ref(false);
 const createForm = useForm({
     name: '',
     username: '',
@@ -58,11 +61,11 @@ const createForm = useForm({
     role_id: props.roles[0]?.id ?? 1,
     is_active: true,
 });
+const createErrors = computed(() => Object.entries(createForm.errors));
 
 const submitCreate = () => {
     createForm.post('/pengaturan/pengguna', {
         onSuccess: () => {
-            isCreateModalOpen.value = false;
             createForm.reset();
         },
     });
@@ -80,8 +83,10 @@ const editForm = useForm({
     role_id: 1,
     is_active: true,
 });
+const editErrors = computed(() => Object.entries(editForm.errors));
 
 const openEditModal = (user: UserItem) => {
+    editForm.clearErrors();
     editingUser.value = user;
     editForm.name = user.name;
     editForm.username = user.username ?? '';
@@ -150,14 +155,20 @@ const deleteUser = (user: UserItem) => {
                 </div>
             </div>
 
-            <section class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
+            <section v-if="can_create" class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
                 <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Pengguna baru</h2></div>
                 <form class="grid gap-3 md:grid-cols-[1.3fr_1.3fr_1.2fr_1fr_1.1fr_auto] items-end" @submit.prevent="submitCreate">
-                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="createForm.name" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Email<input v-model="createForm.email" type="email" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Username<input v-model="createForm.username" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Peran<select v-model="createForm.role_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select></label>
-                    <label class="text-xs font-semibold text-slate-700">Kata sandi<input v-model="createForm.password" type="password" minlength="8" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
+                    <div v-if="createErrors.length" class="md:col-span-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" role="alert" aria-live="polite">
+                        <p class="font-semibold">Pengguna belum tersimpan. Periksa kembali:</p>
+                        <ul class="mt-1 list-inside list-disc">
+                            <li v-for="([field, message]) in createErrors" :key="field">{{ message }}</li>
+                        </ul>
+                    </div>
+                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="createForm.name" required :aria-invalid="!!createForm.errors.name" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /><span v-if="createForm.errors.name" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.name }}</span></label>
+                    <label class="text-xs font-semibold text-slate-700">Email<input v-model="createForm.email" type="email" required :aria-invalid="!!createForm.errors.email" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /><span v-if="createForm.errors.email" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.email }}</span></label>
+                    <label class="text-xs font-semibold text-slate-700">Username<input v-model="createForm.username" :aria-invalid="!!createForm.errors.username" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /><span v-if="createForm.errors.username" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.username }}</span></label>
+                    <label class="text-xs font-semibold text-slate-700">Peran<select v-model="createForm.role_id" :aria-invalid="!!createForm.errors.role_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select><span v-if="createForm.errors.role_id" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.role_id }}</span></label>
+                    <label class="text-xs font-semibold text-slate-700">Kata sandi<input v-model="createForm.password" type="password" minlength="8" required :aria-invalid="!!createForm.errors.password" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /><span v-if="createForm.errors.password" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.password }}</span></label>
                     <button type="submit" :disabled="createForm.processing" class="inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Simpan</button>
                 </form>
             </section>
@@ -172,7 +183,7 @@ const deleteUser = (user: UserItem) => {
                                 <th class="py-3 px-4">Akun</th>
                                 <th class="py-3 px-4">Peran</th>
                                 <th class="py-3 px-4">Status</th>
-                                <th class="py-3 px-4 text-right">Aksi</th>
+                                <th v-if="can_update || can_delete" class="py-3 px-4 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -201,75 +212,18 @@ const deleteUser = (user: UserItem) => {
                                         {{ u.is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-right space-x-2">
-                                    <button
-                                        type="button"
-                                        @click="openEditModal(u)"
-                                        class="text-indigo-600 hover:text-indigo-900 font-medium text-xs focus:outline-hidden"
-                                    >
-                                        Ubah
-                                    </button>
-                                    <button
-                                        type="button"
-                                        @click="deleteUser(u)"
-                                        class="text-rose-600 hover:text-rose-900 font-medium text-xs focus:outline-hidden"
-                                    >
-                                        Hapus
-                                    </button>
+                                <td v-if="can_update || can_delete" class="py-3 px-4 text-right space-x-2">
+                                    <RowActionButton v-if="can_update" action="edit" label="Ubah" @click="openEditModal(u)" />
+                                    <RowActionButton v-if="can_delete" action="delete" label="Hapus" @click="deleteUser(u)" />
                                 </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
-                                <td colspan="5" class="py-8 text-center text-slate-400">
+                                <td :colspan="can_update || can_delete ? 5 : 4" class="py-8 text-center text-slate-400">
                                     Tidak ada data pengguna yang cocok.
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- Create Modal -->
-            <div v-if="isCreateModalOpen" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-                <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4 border border-slate-200">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 class="text-sm font-bold text-slate-900">Tambah Pengguna Baru</h2>
-                        <button type="button" @click="isCreateModalOpen = false" class="text-slate-400 hover:text-slate-600 text-xs">Batal</button>
-                    </div>
-
-                    <form @submit.prevent="submitCreate" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
-                            <input v-model="createForm.name" type="text" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-                            <p v-if="createForm.errors.name" class="text-[11px] text-rose-600 mt-0.5">{{ createForm.errors.name }}</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-                                <input v-model="createForm.email" type="email" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-                                <p v-if="createForm.errors.email" class="text-[11px] text-rose-600 mt-0.5">{{ createForm.errors.email }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Username (Opsional)</label>
-                                <input v-model="createForm.username" type="text" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Peran Akses</label>
-                                <select v-model="createForm.role_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
-                                    <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi Awal</label>
-                                <input v-model="createForm.password" type="password" required minlength="8" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-                            </div>
-                        </div>
-                        <div class="pt-2 flex justify-end gap-2">
-                            <button type="button" @click="isCreateModalOpen = false" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-600">Batal</button>
-                            <button type="submit" :disabled="createForm.processing" class="px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow-xs">Simpan</button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
@@ -282,26 +236,37 @@ const deleteUser = (user: UserItem) => {
                     </div>
 
                     <form @submit.prevent="submitEdit" class="space-y-3">
+                        <div v-if="editErrors.length" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" role="alert" aria-live="polite">
+                            <p class="font-semibold">Perubahan belum tersimpan. Periksa kembali:</p>
+                            <ul class="mt-1 list-inside list-disc">
+                                <li v-for="([field, message]) in editErrors" :key="field">{{ message }}</li>
+                            </ul>
+                        </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
-                            <input v-model="editForm.name" type="text" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                            <input v-model="editForm.name" type="text" required :aria-invalid="!!editForm.errors.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                            <p v-if="editForm.errors.name" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.name }}</p>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-                                <input v-model="editForm.email" type="email" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                                <input v-model="editForm.email" type="email" required :aria-invalid="!!editForm.errors.email" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                                <p v-if="editForm.errors.email" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.email }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Peran Akses</label>
-                                <select v-model="editForm.role_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
+                                <select v-if="can_manage_roles" v-model="editForm.role_id" :aria-invalid="!!editForm.errors.role_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
                                     <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option>
                                 </select>
+                                <p v-else class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">{{ editingUser?.role?.label ?? 'Tanpa Peran' }}</p>
+                                <p v-if="editForm.errors.role_id" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.role_id }}</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi Baru (Kosongkan bila tidak diganti)</label>
-                                <input v-model="editForm.password" type="password" minlength="8" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                                <input v-model="editForm.password" type="password" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                                <p v-if="editForm.errors.password" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.password }}</p>
                             </div>
                             <div class="flex items-center pt-5">
                                 <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">

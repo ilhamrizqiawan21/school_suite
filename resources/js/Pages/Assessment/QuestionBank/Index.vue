@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 
 type Pair = { left: string; right: string };
 type QuestionForm = {
@@ -201,10 +202,10 @@ function typeLabel(type: string) {
                         <details class="question-details"><summary>Lihat rincian dan kunci</summary><div v-if="question.options?.length" class="detail-values"><span v-for="(option, index) in question.options" :key="index">{{ String.fromCharCode(65 + Number(index)) }}. {{ option }}<b v-if="option === question.correct_answer"> · Kunci</b></span></div><p v-if="question.type === 'true_false'">Kunci: {{ question.correct_answer === 'true' ? 'Benar' : 'Salah' }}</p><div v-if="question.matching_pairs?.length" class="detail-values"><span v-for="pair in question.matching_pairs" :key="pair.left">{{ pair.left }} ↔ {{ pair.right }}</span></div><p v-if="question.essay_rubric"><b>Rubrik:</b> {{ question.essay_rubric }}</p><p v-if="question.explanation"><b>Penjelasan:</b> {{ question.explanation }}</p></details>
                     </div>
                     <div class="row-actions">
-                        <button v-if="question.is_active" class="text-button" @click="openEdit(question)">Ubah</button>
+                        <RowActionButton v-if="question.is_active" action="edit" label="Ubah" @click="openEdit(question)" />
                         <button class="text-button" @click="action(`/penilaian/bank-soal/${question.id}/duplikasi`, 'Duplikasi soal ini sebagai butir baru?')">Duplikasi</button>
                         <Link class="text-button" :href="`/penilaian/berbagi-soal?type=question&id=${question.id}`">Bagikan</Link>
-                        <button v-if="question.is_active" class="text-button danger-text" @click="action(`/penilaian/bank-soal/${question.id}/arsip`, 'Arsipkan soal ini? Soal pada ujian yang sudah dibuat tetap tersedia.')">Arsipkan</button>
+                        <RowActionButton v-if="question.is_active" action="archive" label="Arsipkan" :aria-label="`Arsipkan soal ${question.id}`" @click="action(`/penilaian/bank-soal/${question.id}/arsip`, 'Arsipkan soal ini? Soal pada ujian yang sudah dibuat tetap tersedia.')" />
                         <button v-else class="text-button" @click="action(`/penilaian/bank-soal/${question.id}/pulihkan`, 'Pulihkan soal ini ke katalog aktif?')">Pulihkan</button>
                     </div>
                 </article>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckBlockedIp;
+use App\Http\Middleware\EnsureActiveUser;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequirePasswordChange;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['role' => EnsureRole::class]);
         $middleware->web(append: [
             CheckBlockedIp::class,
+            EnsureActiveUser::class,
             RequirePasswordChange::class,
             HandleInertiaRequests::class,
             SecurityHeadersMiddleware::class,

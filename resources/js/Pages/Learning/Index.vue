@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 interface TeachingAssignment {
@@ -231,7 +232,7 @@ const removeResource = (url: string) => {
                             <a v-if="material.original_filename" class="secondary-button" :href="`/pembelajaran/materi/${material.id}/unduh`">Unduh</a>
                             <button v-if="capabilities.submit && !read_material_ids.includes(material.id)" class="primary-button" type="button" @click="router.post(`/pembelajaran/materi/${material.id}/dibaca`, {}, { preserveScroll: true })">Tandai dibaca</button>
                             <span v-if="capabilities.submit && read_material_ids.includes(material.id)" class="read-badge">✓ Sudah dibaca</span>
-                            <button v-if="capabilities.manage" class="danger-link" type="button" @click="removeResource(`/pembelajaran/materi/${material.id}`)">Hapus</button>
+                            <RowActionButton v-if="capabilities.manage" action="delete" label="Hapus" :aria-label="`Hapus materi ${material.title}`" @click="removeResource(`/pembelajaran/materi/${material.id}`)" />
                         </div>
                     </article>
                     <div v-if="materials.length === 0" class="empty-state">
@@ -256,7 +257,7 @@ const removeResource = (url: string) => {
                             <button v-if="capabilities.submit" class="primary-button" type="button" @click="openSubmission(assignment)">
                                 {{ assignment.submissions.length ? 'Perbarui jawaban' : 'Kumpulkan' }}
                             </button>
-                            <button v-if="capabilities.manage" class="danger-link" type="button" @click="removeResource(`/pembelajaran/tugas/${assignment.id}`)">Hapus</button>
+                            <RowActionButton v-if="capabilities.manage" action="delete" label="Hapus" :aria-label="`Hapus tugas ${assignment.title}`" @click="removeResource(`/pembelajaran/tugas/${assignment.id}`)" />
                         </div>
 
                         <div v-if="assignment.submissions.length" class="submission-list">

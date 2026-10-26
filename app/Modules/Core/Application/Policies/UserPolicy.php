@@ -14,18 +14,18 @@ class UserPolicy
      */
     public function before(User $actor, string $ability): ?bool
     {
+        // Disabled accounts must not retain policy access, including administrator access.
+        if (! $actor->is_active) {
+            return false;
+        }
+
         // Admins have blanket access, but cannot delete themselves
         if ($actor->hasRole('admin')) {
-            if ($ability === 'delete') {
-                return null; // fall through to delete() method
+            if (in_array($ability, ['view', 'update', 'delete'], true)) {
+                return null; // object-level abilities must still enforce school boundaries
             }
 
             return true;
-        }
-
-        // Inactive users are strictly denied from any action
-        if (! $actor->is_active) {
-            return false;
         }
 
         return null;
