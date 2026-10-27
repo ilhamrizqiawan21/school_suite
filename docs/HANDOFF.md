@@ -143,6 +143,58 @@ Perintah selesai dengan exit code 0.
 
 - `fix(quality): resolve architecture and test-suite failures` (akan diisi setelah commit dibuat).
 
+## Tugas 3 — Drill backup/restore MySQL dan SQLite file (27 Oktober 2026)
+
+### File yang diubah
+
+- `tests/Feature/MysqlBackupRestoreTest.php`: mengganti fixture dua tabel buatan dengan migrasi aplikasi dan `PilotSchoolSeeder` pada database sumber MySQL terisolasi; target dibuat kosong. Tes membandingkan `COUNT(*)` seluruh tabel serta SHA-256 serialisasi data pada `schools`, `roles`, `users`, `students`, `enrollments`, `teaching_assignments`, `scores`, dan `report_snapshots`. Database sementara dibuang pada `finally`. Tes dilewati dengan alasan jelas bila socket MySQL khusus tidak dikonfigurasi/tersedia.
+- `app/Shared/Backup/DatabaseBackupService.php` sudah diformat di commit Tugas 2; tidak ada perubahan perilaku restore MySQL pada Tugas 3.
+
+### Perintah verifikasi dan output asli
+
+`php artisan test --compact tests/Feature/MysqlBackupRestoreTest.php tests/Feature/BackupRecoverySafetyTest.php`
+
+```json
+{"tool":"phpunit","result":"passed","tests":8,"passed":7,"assertions":19,"duration_ms":642,"skipped":1}
+```
+
+SQLite file backup → restore default berada di `BackupRecoverySafetyTest::test_file_sqlite_backup_includes_wal_and_restores_to_default_connection`; test file keseluruhan lulus 7 tes, termasuk alur tersebut.
+
+Pemeriksaan ketersediaan server:
+
+```text
+/usr/bin/mysqld
+/usr/bin/mysqldump
+/usr/bin/mysql
+/usr/bin/mysqladmin
+```
+
+`mysqladmin --protocol=socket -uroot ping`:
+
+```text
+\a mysqladmin: connect to server at 'localhost' failed
+error: 'Can't connect to local MySQL server through socket '/var/run/mysqld/mysqld.sock' (1)'
+Check that mysqld is running and that the socket: '/var/run/mysqld/mysqld.sock' exists!
+```
+
+`docker info --format '{{.ServerVersion}}'`:
+
+```text
+permission denied while trying to connect to the Docker API at unix:///var/run/docker.sock
+```
+
+Saya mencoba inisialisasi MySQL sementara di `/tmp/school-suite-mysql-drill-20261027b`. Inisialisasi menghasilkan system tables, tetapi daemon tidak menerima koneksi; startup berikutnya melaporkan `InnoDB Unable to lock ./ibdata1 error: 11`. Tidak ada koneksi operasional yang digunakan. Tabel sumber/target drill belum dibuat karena server uji tidak dapat menerima koneksi.
+
+### Risiko dan verifikasi yang belum dilakukan
+
+- Dump/restore MySQL belum benar-benar berjalan pada server. Tes terotomasi siap menjalankan skenario penuh saat `BACKUP_MYSQL_TEST_SOCKET` menunjuk socket MySQL/MariaDB terisolasi yang dapat diakses root.
+- Karena drill MySQL belum tersedia, keberhasilan restore schema/data produksi hanya didukung oleh implementasi dump native dan tes SQLite; belum ada bukti runtime MySQL di sesi ini.
+- Tes otomatis MySQL skip, bukan pass. Keluaran terarah di atas menyebut satu skip; alasan skip dalam tes: `MySQL drill skipped: set BACKUP_MYSQL_TEST_SOCKET to an isolated local MySQL socket.`
+
+### Commit
+
+- `test(backup): cover isolated MySQL restore with pilot dataset` (akan diisi setelah commit dibuat).
+
 ## Identitas
 
 - Task/issue: Restrukturisasi, Perapihan & Pelengkapan Menu Navigasi Sidebar dan Alur Kerja Dashboard Non-Admin (Guru, Wali Kelas, Siswa, Kepala Sekolah, Operator)

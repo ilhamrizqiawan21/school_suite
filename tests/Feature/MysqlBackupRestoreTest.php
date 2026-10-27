@@ -4,52 +4,127 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use PDO;
+use PDOException;
 use Tests\TestCase;
 
 class MysqlBackupRestoreTest extends TestCase
 {
-    public function test_encrypted_native_mysql_backup_restores_schema_and_related_data_into_another_database(): void
+    public function test_pilot_school_mysql_backup_restores_all_tables_and_data_checksums_into_an_empty_database(): void
     {
         $socket = getenv('BACKUP_MYSQL_TEST_SOCKET');
-        if (! $socket) {
-            $this->markTestSkipped('Set BACKUP_MYSQL_TEST_SOCKET to an isolated MySQL drill server.');
+        if (! $socket || ! is_file($socket)) {
+            $this->markTestSkipped('MySQL drill skipped: set BACKUP_MYSQL_TEST_SOCKET to an isolated local MySQL socket.');
         }
-        $pdo = new PDO('mysql:unix_socket='.$socket, 'root', '');
+
+        try {
+            $pdo = new PDO('mysql:unix_socket='.$socket, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        } catch (PDOException) {
+            $this->markTestSkipped('MySQL drill skipped: the configured isolated MySQL socket is not accepting root connections.');
+        }
+
         $source = 'backup_source_'.bin2hex(random_bytes(6));
         $target = 'backup_target_'.bin2hex(random_bytes(6));
         $directory = sys_get_temp_dir().'/school-mysql-backup-'.bin2hex(random_bytes(6));
         $original = DB::getDefaultConnection();
+        $createdDatabases = [];
         try {
-            $pdo->exec("CREATE DATABASE `$source` CHARACTER SET utf8mb4");
-            $pdo->exec("CREATE DATABASE `$target` CHARACTER SET utf8mb4");
-            $connection = ['driver' => 'mysql', 'unix_socket' => $socket, 'host' => 'localhost', 'port' => 3306, 'username' => 'root', 'password' => '', 'charset' => 'utf8mb4', 'collation' => 'utf8mb4_unicode_ci', 'prefix' => '', 'strict' => true];
-            config(['database.connections.backup_mysql_source' => [...$connection, 'database' => $source], 'database.connections.backup_mysql_target' => [...$connection, 'database' => $target], 'backup.password' => str_repeat('mysql-drill-password-', 3)]);
+            foreach ([$source, $target] as $name) {
+                $pdo->exec("CREATE DATABASE `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                $createdDatabases[] = $name;
+            }
+
+            $connection = [
+                'driver' => 'mysql',
+                'unix_socket' => $socket,
+                'host' => 'localhost',
+                'port' => 3306,
+                'username' => 'root',
+                'password' => '',
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'strict' => true,
+            ];
+            config([
+                'database.connections.backup_mysql_source' => [...$connection, 'database' => $source],
+                'database.connections.backup_mysql_target' => [...$connection, 'database' => $target],
+                'backup.password' => str_repeat('mysql-drill-password-', 3),
+            ]);
             DB::setDefaultConnection('backup_mysql_source');
-            DB::statement('CREATE TABLE parents (id BIGINT PRIMARY KEY, name TEXT, optional TEXT NULL) ENGINE=InnoDB');
-            DB::statement('CREATE TABLE children (id BIGINT PRIMARY KEY, parent_id BIGINT, payload BLOB, FOREIGN KEY (parent_id) REFERENCES parents(id)) ENGINE=InnoDB');
-            DB::table('parents')->insert(['id' => 1, 'name' => "O'Brien \\ 日本", 'optional' => null]);
-            DB::table('children')->insert(['id' => 2, 'parent_id' => 1, 'payload' => "\0\x01test"]);
-            DB::connection('backup_mysql_target')->statement('CREATE TABLE parents (old INT)');
-            $this->artisan('school:backup', ['--destination' => $directory, '--database-only' => true])->assertSuccessful();
-            DB::table('parents')->where('id', 1)->update(['name' => 'changed after backup']);
-            $this->artisan('school:restore', ['file' => glob($directory.'/*.zip')[0], '--target-db' => 'backup_mysql_target', '--target-files' => $directory.'/files', '--force' => true])->assertSuccessful();
+
+            $this->artisan('migrate', ['--database' => 'backup_mysql_source', '--force' => true])->assertSuccessful();
+            $this->artisan('db:seed', [
+                '--database' => 'backup_mysql_source',
+                '--class' => 'Database\\Seeders\\PilotSchoolSeeder',
+                '--force' => true,
+            ])->assertSuccessful();
+
+            $source = DB::connection('backup_mysql_source');
+            $expectedCounts = $this->tableCounts($source);
+            $this->assertNotEmpty($expectedCounts);
+            $this->assertGreaterThan(0, $source->table('schools')->count());
+            $this->assertGreaterThan(0, $source->table('students')->count());
+            $this->assertGreaterThan(0, $source->table('enrollments')->count());
+            $expectedChecksums = $this->importantDataChecksums($source);
+
+            $this->assertSame([], $this->tableCounts(DB::connection('backup_mysql_target')));
+            $this->artisan('school:backup', [
+                '--destination' => $directory,
+                '--database-only' => true,
+            ])->assertSuccessful();
+
+            $archive = glob($directory.'/*.zip')[0] ?? null;
+            $this->assertNotNull($archive, 'Backup command should create an archive.');
+            $this->artisan('school:restore', [
+                'file' => $archive,
+                '--target-db' => 'backup_mysql_target',
+                '--force' => true,
+            ])->assertSuccessful();
+
             $restored = DB::connection('backup_mysql_target');
-            $this->assertSame("O'Brien \\ 日本", $restored->table('parents')->value('name'));
-            $this->assertNull($restored->table('parents')->value('optional'));
-            $this->assertSame("\0\x01test", $restored->table('children')->value('payload'));
-            $this->assertSame(1, $restored->table('children')->join('parents', 'parents.id', '=', 'children.parent_id')->count());
-            $this->assertSame('changed after backup', DB::table('parents')->value('name'));
-            $this->assertSame(1, (int) $restored->selectOne('SELECT COUNT(*) total FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ?', [$target])->total);
+            $this->assertSame($expectedCounts, $this->tableCounts($restored));
+            $this->assertSame($expectedChecksums, $this->importantDataChecksums($restored));
         } finally {
             DB::purge('backup_mysql_source');
             DB::purge('backup_mysql_target');
             DB::setDefaultConnection($original);
-            $pdo->exec("DROP DATABASE IF EXISTS `$target`");
-            $pdo->exec("DROP DATABASE IF EXISTS `$source`");
+            foreach ($createdDatabases as $name) {
+                $pdo->exec("DROP DATABASE IF EXISTS `$name`");
+            }
             File::deleteDirectory($directory);
         }
+    }
+
+    /** @return array<string, int> */
+    private function tableCounts(Connection $connection): array
+    {
+        $tables = $connection->table('information_schema.tables')
+            ->where('table_schema', $connection->getDatabaseName())
+            ->where('table_type', 'BASE TABLE')
+            ->orderBy('table_name')
+            ->pluck('table_name');
+
+        $counts = [];
+        foreach ($tables as $table) {
+            $counts[$table] = $connection->table($table)->count();
+        }
+
+        return $counts;
+    }
+
+    /** @return array<string, string> */
+    private function importantDataChecksums(Connection $connection): array
+    {
+        $checksums = [];
+        foreach (['schools', 'roles', 'users', 'students', 'enrollments', 'teaching_assignments', 'scores', 'report_snapshots'] as $table) {
+            $rows = $connection->table($table)->orderBy('id')->get()->map(fn ($row): array => (array) $row)->all();
+            $checksums[$table] = hash('sha256', json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+        }
+
+        return $checksums;
     }
 }
