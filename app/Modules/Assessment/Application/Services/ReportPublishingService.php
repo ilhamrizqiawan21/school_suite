@@ -15,6 +15,7 @@ use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class ReportPublishingService
@@ -22,7 +23,8 @@ class ReportPublishingService
     public function __construct(
         protected GradeCalculationEngine $calculationEngine,
         protected AcademicQueryService $academicQuery,
-        protected AuditLogger $auditLogger
+        protected AuditLogger $auditLogger,
+        protected AssessmentAccessService $access
     ) {}
 
     /**
@@ -36,6 +38,13 @@ class ReportPublishingService
         int $studentId,
         ?User $actor = null
     ): ReportSnapshot {
+        abort_unless($this->access->classBelongsToSchool($schoolId, $termId, $classGroupId), 404);
+        abort_if($actor && ((int) $actor->school_id !== $schoolId || ! $this->access->canPublishClass($actor, $termId, $classGroupId)), 403);
+        abort_unless(DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')
+            ->where('enrollments.id', $enrollmentId)->where('enrollments.term_id', $termId)
+            ->where('enrollments.class_group_id', $classGroupId)->where('students.id', $studentId)
+            ->where('students.school_id', $schoolId)->exists(), 404);
+
         // Cek apakah rapor untuk enrollment dan semester ini sudah terbit
         $existing = ReportSnapshot::where('enrollment_id', $enrollmentId)
             ->where('term_id', $termId)
@@ -106,12 +115,16 @@ class ReportPublishingService
         // 2. Snapshot Capaian Akademik (Grades)
         $subjects = $this->academicQuery->getTeachingAssignmentsForClass($classGroupId, $termId);
         $gradesSnapshot = [];
+        if ($subjects->count() > 1 && $scheme->components->contains(fn ($component) => $component->teaching_assignment_id === null)) {
+            throw ValidationException::withMessages(['class_group_id' => 'Komponen penilaian umum harus dipetakan ke penugasan mata pelajaran sebelum rapor kelas dengan beberapa mata pelajaran dapat disusun.']);
+        }
 
         foreach ($subjects as $subj) {
             // Cari skor siswa untuk komponen-komponen yang relevan
             $componentInputs = [];
-            foreach ($scheme->components as $component) {
-                $scoreRecord = Score::where('enrollment_id', $enrollmentId)
+            foreach ($scheme->components->filter(fn ($component) => $component->teaching_assignment_id === null || (int) $component->teaching_assignment_id === (int) $subj->teaching_assignment_id) as $component) {
+                $scoreRecord = Score::where('school_id', $schoolId)
+                    ->where('enrollment_id', $enrollmentId)
                     ->where('assessment_component_id', $component->id)
                     ->first();
 
@@ -226,6 +239,9 @@ class ReportPublishingService
      */
     public function publishReport(ReportSnapshot $report, User $actor): ReportSnapshot
     {
+        abort_unless((int) $actor->school_id === (int) $report->school_id
+            && $this->access->canPublishClass($actor, (int) $report->term_id, (int) $report->class_group_id), 403);
+
         if ($report->status === ReportStatusEnum::PUBLISHED) {
             return $report;
         }

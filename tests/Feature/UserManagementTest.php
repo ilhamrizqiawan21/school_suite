@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Modules\Core\Application\Services\UserService;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserManagementTest extends TestCase
@@ -130,6 +133,46 @@ class UserManagementTest extends TestCase
         $targetUser->refresh();
         $this->assertSame('Guru Awal Diperbarui', $targetUser->name);
         $this->assertFalse($targetUser->is_active);
+    }
+
+    public function test_self_password_cannot_be_changed_through_user_management(): void
+    {
+        $user = User::factory()->create(['school_id' => $this->school->id, 'role_id' => $this->teacherRole->id, 'is_active' => true, 'must_change_password' => false]);
+        $originalHash = $user->password;
+
+        $this->actingAs($user)->put('/pengaturan/pengguna/'.$user->id, [
+            'name' => $user->name,
+            'email' => $user->email,
+            'password' => 'abcdefgh',
+        ])->assertSessionHasErrors('password');
+
+        $this->assertSame($originalHash, $user->fresh()->password);
+    }
+
+    public function test_user_service_rejects_self_password_reset_even_for_admin(): void
+    {
+        $originalHash = $this->admin->password;
+
+        try {
+            app(UserService::class)->updateUser($this->admin, ['password' => 'abcdefgh'], $this->admin);
+            $this->fail('Self-service password changes must use the password-change flow.');
+        } catch (AuthorizationException) {
+            $this->assertSame($originalHash, $this->admin->fresh()->password);
+        }
+    }
+
+    public function test_admin_can_reset_another_users_password(): void
+    {
+        $user = User::factory()->create(['school_id' => $this->school->id, 'role_id' => $this->teacherRole->id, 'is_active' => true, 'must_change_password' => false]);
+
+        $this->actingAs($this->admin)->put('/pengaturan/pengguna/'.$user->id, [
+            'name' => $user->name,
+            'email' => $user->email,
+            'password' => 'ResetPassword123',
+        ])->assertSessionHasNoErrors()->assertRedirect('/pengaturan/pengguna');
+
+        $this->assertTrue(Hash::check('ResetPassword123', $user->fresh()->password));
+        $this->assertTrue($user->fresh()->must_change_password);
     }
 
     public function test_admin_can_delete_user_via_controller(): void

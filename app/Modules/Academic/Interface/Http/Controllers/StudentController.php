@@ -12,17 +12,23 @@ use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Shared\Audit\AuditLogger;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use InvalidArgumentException;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends Controller
 {
@@ -54,34 +60,21 @@ class StudentController extends Controller
                 ->get(['id', 'name', 'grade_level'])
             : collect();
 
-        // Default ke kelas pertama agar daftar siswa tidak pernah memuat seluruh sekolah sekaligus.
-        $classGroupId = $classGroupId ?: $classes->first()?->id;
+        $students = $this->studentQuery($request, $activeTerm)->paginate(15)->withQueryString();
+        $students->through(function (Student $student) use ($schoolId) {
+            $account = $student->user;
+            $student->setAttribute('account_status', $account === null ? 'no_account'
+                : ((int) $account->school_id !== $schoolId || ! $account->hasRole('student') ? 'unavailable'
+                    : ($account->must_change_password ? 'default' : 'changed')));
+            $student->unsetRelation('user');
 
-        $query = Student::where('school_id', $schoolId)
-            ->with(['enrollments' => function ($q) use ($activeTerm) {
-                if ($activeTerm) {
-                    $q->where('term_id', $activeTerm->id)->with('classGroup');
-                }
-            }])
-            ->when($search, function ($q, $search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%")
-                        ->orWhere('nis', 'like', "%{$search}%")
-                        ->orWhere('nisn', 'like', "%{$search}%");
-                });
-            })
-            ->when($status, fn ($q, $status) => $q->where('status', $status))
-            ->when($classGroupId && $activeTerm, function ($q) use ($classGroupId, $activeTerm) {
-                $q->whereHas('enrollments', function ($sub) use ($classGroupId, $activeTerm) {
-                    $sub->where('term_id', $activeTerm->id)->where('class_group_id', $classGroupId);
-                });
-            })
-            ->latest('id');
-
-        $students = $query->paginate(15)->withQueryString();
+            return $student;
+        });
+        $counts = Student::where('school_id', $schoolId)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
         return Inertia::render('Academic/Students/Index', [
             'students' => $students,
+            'stats' => ['active' => (int) ($counts['active'] ?? 0), 'graduated' => (int) ($counts['graduated'] ?? 0), 'exited' => (int) ($counts['transferred'] ?? 0) + (int) ($counts['dropped_out'] ?? 0)],
             'can_manage' => Gate::allows('create', Student::class),
             'filters' => [
                 'search' => $search,
@@ -164,6 +157,7 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student): RedirectResponse
     {
+        abort_unless((int) $student->school_id === (int) $request->user()->school_id, 403);
         Gate::authorize('update', $student);
 
         $schoolId = (int) $request->user()->school_id;
@@ -209,7 +203,7 @@ class StudentController extends Controller
 
         $schoolId = (int) $request->user()->school_id;
         $request->validate([
-            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt,xlsx', 'max:2048'],
+            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt,xlsx', 'max:5120'],
             'csv_content' => ['required_without:csv_file', 'nullable', 'string', 'max:2097152'],
             'enroll_term_id' => ['nullable', Rule::exists('terms', 'id')->whereIn('academic_year_id', AcademicYear::where('school_id', $schoolId)->select('id'))],
             'enroll_class_group_id' => ['nullable', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)],
@@ -315,8 +309,114 @@ class StudentController extends Controller
         return 'academic.student-import.'.hash('sha256', $token);
     }
 
-    public function template(): Response
+    private function studentQuery(Request $request, ?Term $activeTerm): Builder
     {
+        return Student::where('school_id', (int) $request->user()->school_id)
+            ->with(['user.role', 'enrollments' => function ($query) use ($activeTerm) {
+                $query->where('term_id', $activeTerm?->id ?? 0)->with('classGroup');
+            }])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = (string) $request->query('search');
+                $query->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")
+                    ->orWhere('nis', 'like', "%{$search}%")->orWhere('nisn', 'like', "%{$search}%"));
+            })
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->query('status')))
+            ->when($request->filled('class_group_id'), fn ($query) => $query->whereHas('enrollments', fn ($sub) => $sub
+                ->where('term_id', $activeTerm?->id ?? 0)->where('class_group_id', $request->query('class_group_id'))))
+            ->latest('id');
+    }
+
+    public function exportExcel(Request $request): StreamedResponse
+    {
+        Gate::authorize('viewAny', Student::class);
+        $term = Term::whereHas('academicYear', fn ($query) => $query->where('school_id', (int) $request->user()->school_id))->where('is_active', true)->first();
+        $rows = (function () use ($request, $term) {
+            yield ['NIS', 'NISN', 'Nama Lengkap', 'L/P', 'Kelas', 'Status'];
+            foreach ($this->studentQuery($request, $term)->lazy(500) as $student) {
+                yield [$student->nis, $student->nisn ?? '', $student->name, $student->gender,
+                    $student->enrollments->first()?->classGroup?->name ?? '',
+                    ['active' => 'Aktif', 'graduated' => 'Lulus', 'transferred' => 'Pindah', 'dropped_out' => 'Keluar'][$student->status] ?? $student->status];
+            }
+        })();
+
+        return $this->spreadsheetDownload('data_siswa.xlsx', $rows);
+    }
+
+    private function spreadsheetDownload(string $filename, iterable $rows): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($rows) {
+            $book = new Spreadsheet;
+            try {
+                $sheet = $book->getActiveSheet();
+                $sheet->setTitle('Data Siswa');
+                foreach ($rows as $index => $row) {
+                    foreach (array_values($row) as $column => $value) {
+                        $sheet->setCellValueExplicit([$column + 1, $index + 1], (string) $value, DataType::TYPE_STRING);
+                    }
+                }
+                $sheet->freezePane('A2');
+                $sheet->getStyle('1:1')->getFont()->setBold(true);
+                (new Xlsx($book))->save('php://output');
+            } finally {
+                $book->disconnectWorksheets();
+            }
+        }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    public function resetPassword(Request $request, Student $student): RedirectResponse
+    {
+        abort_unless((int) $student->school_id === (int) $request->user()->school_id, 403);
+        Gate::authorize('update', $student);
+        $account = $student->user;
+        if (! $account || (int) $account->school_id !== (int) $student->school_id || ! $account->hasRole('student')) {
+            return back()->withErrors(['student' => 'Akun siswa tidak tersedia untuk reset sandi.']);
+        }
+        $password = Str::password(16, symbols: false);
+        DB::transaction(function () use ($account, $password, $request, $student) {
+            $account->forceFill(['password' => Hash::make($password), 'must_change_password' => true,
+                'password_changed_at' => null, 'remember_token' => Str::random(60)])->save();
+            if (config('session.driver') === 'database') {
+                DB::table(config('session.table', 'sessions'))->where('user_id', $account->id)->delete();
+            }
+            $this->auditLogger->log('academic.student.password_reset', 'student', (string) $student->id,
+                ['user_id' => $account->id], actor: $request->user(), schoolId: (int) $student->school_id);
+        });
+
+        return back()->with('message', "Sandi sementara {$student->name}: {$password}. Siswa wajib menggantinya saat login.");
+    }
+
+    public function destroy(Request $request, Student $student): RedirectResponse
+    {
+        abort_unless((int) $student->school_id === (int) $request->user()->school_id, 403);
+        Gate::authorize('delete', $student);
+
+        return DB::transaction(function () use ($request, $student) {
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            foreach (['enrollments', 'student_lifecycle_events', 'report_snapshots', 'student_notes', 'student_incidents',
+                'student_achievements', 'assistance_records', 'attendance_dispensations', 'administration_student_ledger_details', 'administration_student_ledger_documents'] as $table) {
+                if (DB::table($table)->where('student_id', $student->id)->exists()) {
+                    return back()->withErrors(['student' => 'Siswa memiliki riwayat akademik. Gunakan perubahan status atau menu Siklus Siswa.']);
+                }
+            }
+            $snapshot = $student->toArray();
+            $student->delete();
+            $this->auditLogger->log('academic.student.deleted', 'student', (string) $student->id,
+                oldValues: $snapshot, actor: $request->user(), schoolId: (int) $student->school_id);
+
+            return back()->with('message', 'Data siswa berhasil dihapus. Akun pengguna tetap tersedia di manajemen pengguna.');
+        });
+    }
+
+    public function template(Request $request): Response|StreamedResponse
+    {
+        Gate::authorize('create', Student::class);
+        if ($request->query('format') === 'xlsx') {
+            return $this->spreadsheetDownload('template_impor_siswa.xlsx', [
+                ['nis', 'nisn', 'name', 'gender', 'birth_place', 'birth_date', 'religion', 'address', 'parent_phone', 'parent_name'],
+                ['1001', '0012345678', 'Budi Santoso', 'L', 'Jakarta', '2012-05-10', 'Islam', 'Jl. Melati No. 12', '081234567890', 'Bambang Santoso'],
+            ]);
+        }
+
         $csvHeader = "nis,nisn,name,gender,birth_place,birth_date,religion,address,parent_phone,parent_name\n";
         $csvExample = "1001,0012345678,Budi Santoso,L,Jakarta,2012-05-10,Islam,Jl. Melati No. 12,081234567890,Bambang Santoso\n";
 

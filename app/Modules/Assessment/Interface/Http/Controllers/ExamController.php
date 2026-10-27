@@ -281,11 +281,14 @@ class ExamController extends Controller
                 $correct = hash_equals((string) $question->correct_answer, (string) $answer->answer);
                 $answer->update(['is_correct' => $correct, 'score' => $correct ? $item->points : 0, 'graded_at' => now()]);
             } elseif ($question->type === 'matching') {
-                $expected = json_decode((string) $question->correct_answer, true) ?: [];
-                $given = json_decode((string) $answer->answer, true) ?: [];
-                ksort($expected);
-                ksort($given);
-                $correct = $given === $expected;
+                $expected = json_decode((string) $question->correct_answer, true);
+                $given = json_decode((string) $answer->answer, true);
+                $correct = false;
+                if (is_array($expected) && $expected !== [] && is_array($given)) {
+                    ksort($expected);
+                    ksort($given);
+                    $correct = $given === $expected;
+                }
                 $answer->update(['is_correct' => $correct, 'score' => $correct ? $item->points : 0, 'graded_at' => now()]);
             }
         }$attempt->update(['status' => $attempt->exam->items->contains(fn ($i) => ($i->questionVersion ?? $i->question)->type === 'essay') ? 'pending_review' : 'graded', 'submitted_at' => now()]);

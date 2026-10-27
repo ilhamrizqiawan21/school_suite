@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Storage;
 class ReportGeneratorService
 {
     public function __construct(
-        protected AcademicQueryService $academicQuery
+        protected AcademicQueryService $academicQuery,
+        protected AssessmentAccessService $access
     ) {}
 
     /**
@@ -78,6 +79,7 @@ class ReportGeneratorService
      */
     public function exportClassLedger(int $schoolId, int $termId, int $classGroupId): array
     {
+        abort_unless($this->access->classBelongsToSchool($schoolId, $termId, $classGroupId), 404);
         $classGroup = $this->academicQuery->getClassGroupById($classGroupId);
         $term = DB::table('terms')->find($termId);
         $enrollments = $this->academicQuery->getClassEnrollmentsForAttendance($termId, $classGroupId);
@@ -92,7 +94,9 @@ class ReportGeneratorService
 
         $studentRows = [];
         foreach ($enrollments as $enr) {
-            $report = ReportSnapshot::where('enrollment_id', $enr->enrollment_id)
+            $report = ReportSnapshot::where('school_id', $schoolId)
+                ->where('class_group_id', $classGroupId)
+                ->where('enrollment_id', $enr->enrollment_id)
                 ->where('term_id', $termId)
                 ->first();
 

@@ -25,6 +25,7 @@ class BackupRestoreDrillTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['backup.password' => str_repeat('test-backup-secret-', 3)]);
 
         $this->backupTestDir = storage_path('app/testing_backups');
         $this->drillDbPath = storage_path('app/testing_drill_db.sqlite');
@@ -77,6 +78,8 @@ class BackupRestoreDrillTest extends TestCase
         $this->assertNotFalse($zip->locateName('database_dump.sql'));
         $this->assertNotFalse($zip->locateName('private_files/sample_document.txt'));
 
+        $this->assertFalse(@$zip->getFromName('database_dump.sql'));
+        $zip->setPassword((string) config('backup.password'));
         $manifestContent = $zip->getFromName('manifest.json');
         $manifest = json_decode((string) $manifestContent, true);
         $this->assertArrayHasKey('created_at', $manifest);

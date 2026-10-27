@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
-import type { Student } from '../../../types';
+import type { SharedProps, Student } from '../../../types';
 
 interface ClassItem {
     id: number;
@@ -30,11 +30,14 @@ const props = defineProps<{
     classes: ClassItem[];
     active_term?: TermItem | null;
     can_manage: boolean;
+    stats: { active: number; graduated: number; exited: number };
 }>();
+
+const page = usePage<SharedProps>();
 
 const search = ref(props.filters.search || '');
 const selectedStatus = ref(props.filters.status || '');
-const selectedClass = ref(props.filters.class_group_id || (props.classes[0] ? String(props.classes[0].id) : ''));
+const selectedClass = ref(props.filters.class_group_id || '');
 
 const showAddModal = ref(false);
 const showImportModal = ref(false);
@@ -57,6 +60,20 @@ const applyFilters = () => {
         },
         { preserveState: true, replace: true }
     );
+};
+
+const resetFilters = () => {
+    search.value = '';
+    selectedStatus.value = '';
+    selectedClass.value = '';
+    applyFilters();
+};
+
+const accountStatusLabels: Record<string, string> = {
+    no_account: 'Belum ada akun',
+    default: 'Perlu ganti sandi',
+    changed: 'Sudah diganti',
+    unavailable: 'Tidak tersedia',
 };
 
 const form = useForm({
@@ -149,23 +166,23 @@ const submitImport = () => {
     });
 };
 
-const exportPdfUrl = () => {
+const exportExcelUrl = () => {
     const params = new URLSearchParams({
         search: search.value,
         status: selectedStatus.value,
         class_group_id: selectedClass.value,
     });
-    return `/akademik/siswa/export/pdf?${params.toString()}`;
+    return `/akademik/siswa/export/excel?${params.toString()}`;
 };
 
 const resetPassword = (student: Student) => {
-    if (!student.user_id || !window.confirm(`Reset password ${student.name} ke 123456?`)) return;
+    if (!student.user_id || !['default', 'changed'].includes(student.account_status ?? '') || !window.confirm(`Buat sandi sementara baru untuk ${student.name}? Sandi akan ditampilkan setelah reset. Sampaikan secara pribadi kepada siswa.`)) return;
 
     router.post(`/akademik/siswa/${student.id}/reset-password`, {}, { preserveScroll: true });
 };
 
 const deleteStudent = (student: Student) => {
-    if (!window.confirm(`Hapus data siswa ${student.name}? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (!window.confirm(`Hapus data siswa ${student.name}? Hanya siswa tanpa riwayat akademik yang dapat dihapus. Akun pengguna tidak ikut dihapus. Tindakan ini tidak dapat dibatalkan.`)) return;
 
     router.delete(`/akademik/siswa/${student.id}`, { preserveScroll: true });
 };
@@ -200,13 +217,22 @@ const deleteStudent = (student: Student) => {
                         </svg>
                         Impor Siswa
                     </button>
-                    <a :href="exportPdfUrl()" class="student-action-button student-action-export">
+                    <a :href="exportExcelUrl()" class="student-action-button student-action-export">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414A2 2 0 0018.414 8L14 3.586A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM13 3v6h6M8 13h8m-8 4h5" />
                         </svg>
-                        Ekspor PDF
+                        Ekspor Excel
                     </a>
                 </div>
+            </div>
+
+            <div v-if="page.props.flash?.message" class="student-notice student-notice-success" role="status">{{ page.props.flash.message }}</div>
+            <div v-if="page.props.errors?.student" class="student-notice student-notice-error" role="alert">{{ page.props.errors.student }}</div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Ringkasan siswa seluruh sekolah">
+                <div class="panel student-stat"><span>Siswa aktif</span><strong>{{ stats.active }}</strong></div>
+                <div class="panel student-stat"><span>Lulus</span><strong>{{ stats.graduated }}</strong></div>
+                <div class="panel student-stat"><span>Keluar / pindah</span><strong>{{ stats.exited }}</strong></div>
             </div>
 
             <!-- Filters -->
@@ -218,14 +244,16 @@ const deleteStudent = (student: Student) => {
                         type="search"
                         placeholder="Cari nama, NIS, atau NISN... (tekan enter)"
                         class="w-full"
+                        aria-label="Cari nama, NIS, atau NISN"
                     />
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </label>
 
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <select
+                        aria-label="Filter rombel"
                         v-model="selectedClass"
                         @change="applyFilters"
                         class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
@@ -237,6 +265,7 @@ const deleteStudent = (student: Student) => {
                     </select>
 
                     <select
+                        aria-label="Filter status siswa"
                         v-model="selectedStatus"
                         @change="applyFilters"
                         class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
@@ -255,6 +284,7 @@ const deleteStudent = (student: Student) => {
                     >
                         Filter
                     </button>
+                    <button type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
                 </div>
             </div>
 
@@ -270,6 +300,7 @@ const deleteStudent = (student: Student) => {
                                 <th class="px-5 py-3.5">Rombel Aktif</th>
                                 <th class="px-5 py-3.5">Kontak Ortu</th>
                                 <th class="px-5 py-3.5">Status</th>
+                                <th v-if="can_manage" class="px-5 py-3.5">Status sandi</th>
                                 <th v-if="can_manage" class="student-actions-heading px-5 py-3.5 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -304,6 +335,7 @@ const deleteStudent = (student: Student) => {
                                         {{ statusLabels[s.status] ?? s.status }}
                                     </span>
                                 </td>
+                                <td v-if="can_manage" class="px-5 py-3.5"><span class="student-account-status" :class="`is-${s.account_status ?? 'unavailable'}`">{{ accountStatusLabels[s.account_status ?? 'unavailable'] }}</span></td>
                                 <td v-if="can_manage" class="student-actions-cell px-5 py-3.5">
                                     <div class="student-row-actions">
                                         <button v-if="can_manage" type="button" class="student-row-action student-row-action-edit" aria-label="Edit data siswa" title="Edit data siswa" @click="openEdit(s)">
@@ -312,7 +344,7 @@ const deleteStudent = (student: Student) => {
                                             </svg>
                                             <span class="sr-only">Edit</span>
                                         </button>
-                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-reset" :disabled="!s.user_id" :aria-label="s.user_id ? 'Reset password ke 123456' : 'Siswa belum memiliki akun'" :title="s.user_id ? 'Reset password ke 123456' : 'Siswa belum memiliki akun'" @click="resetPassword(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-reset" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? 'Buat sandi sementara baru' : 'Siswa belum memiliki akun'" :title="s.user_id ? 'Buat sandi sementara baru' : 'Siswa belum memiliki akun'" @click="resetPassword(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10V7a4 4 0 118 0v3" />
@@ -329,7 +361,7 @@ const deleteStudent = (student: Student) => {
                                 </td>
                             </tr>
                             <tr v-if="students.data.length === 0">
-                                <td :colspan="can_manage ? 7 : 6" class="px-5 py-12 text-center text-slate-400">
+                                <td :colspan="can_manage ? 8 : 6" class="px-5 py-12 text-center text-slate-400">
                                     Tidak ada data siswa yang cocok dengan filter.
                                 </td>
                             </tr>
@@ -351,9 +383,10 @@ const deleteStudent = (student: Student) => {
                             <span>{{ s.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
                             <span v-if="s.parent_name || s.parent_phone">Wali: {{ s.parent_name || '—' }}<span v-if="s.parent_phone"> · {{ s.parent_phone }}</span></span>
                         </div>
+                        <p v-if="can_manage" class="student-mobile-password">Status sandi: <span class="student-account-status" :class="`is-${s.account_status ?? 'unavailable'}`">{{ accountStatusLabels[s.account_status ?? 'unavailable'] }}</span></p>
                         <div v-if="can_manage" class="student-mobile-actions">
                             <button type="button" :aria-label="`Edit data ${s.name}`" @click="openEdit(s)">Edit</button>
-                            <button type="button" :disabled="!s.user_id" :aria-label="s.user_id ? `Reset password ${s.name}` : `${s.name} belum memiliki akun`" @click="resetPassword(s)">Reset sandi</button>
+                            <button type="button" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? `Reset password ${s.name}` : `${s.name} belum memiliki akun`" @click="resetPassword(s)">Reset sandi</button>
                             <button type="button" class="student-mobile-delete" :aria-label="`Hapus data ${s.name}`" @click="deleteStudent(s)">Hapus</button>
                         </div>
                     </article>
@@ -521,13 +554,14 @@ const deleteStudent = (student: Student) => {
                     <p>Kolom Kelas harus cocok dengan satu kelas tujuan yang dipilih. Impor tidak membuat kelas atau akun pengguna.</p>
                     <p>NIK dan kolom yang tidak didukung akan ditandai di preview dan tidak disimpan.</p>
                     <code class="block font-mono text-[11px] text-indigo-900">NIS, NISN, NIK, Nama Lengkap, Kelas, L/P, Tempat Lahir, Tanggal Lahir, Agama, Alamat, Nama Orang Tua, No. HP, Status</code>
-                    <a href="/akademik/siswa/template" class="inline-block mt-2 font-medium text-indigo-600 underline">Unduh Berkas Template CSV</a>
+                    <div class="flex flex-wrap gap-3 pt-2"><a href="/akademik/siswa/template?format=xlsx" class="font-medium text-indigo-600 underline">Unduh template Excel</a><a href="/akademik/siswa/template" class="font-medium text-indigo-600 underline">Template CSV</a></div>
                 </div>
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV atau XLSX *</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV atau XLSX (maks. 5 MB) *</label>
                         <input type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
+                        <p class="mt-1 text-xs text-slate-500">Maksimal 1.000 siswa per berkas. Periksa data melalui preview sebelum menyimpan.</p>
                         <div v-if="importForm.errors.csv_file" class="text-xs text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
@@ -554,6 +588,17 @@ const deleteStudent = (student: Student) => {
 </template>
 
 <style scoped>
+.student-notice { padding: .85rem 1rem; border-radius: var(--radius-sm); font-size: .85rem; overflow-wrap: anywhere; }
+.student-notice-success { color: var(--green); background: var(--green-soft); }
+.student-notice-error { color: var(--red); background: var(--red-soft); }
+.student-stat { display: grid; gap: .3rem; padding: 1rem 1.2rem; }
+.student-stat span { color: var(--ink-soft); font-size: .85rem; }
+.student-stat strong { color: var(--ink); font-size: 1.75rem; font-weight: 800; }
+.student-account-status { display: inline-block; padding: .25rem .55rem; border-radius: 999px; color: var(--ink-soft); background: var(--surface-strong); font-size: .75rem; white-space: nowrap; }
+.student-account-status.is-changed { color: var(--green); background: var(--green-soft); }
+.student-account-status.is-default { color: var(--gold); background: var(--gold-soft); }
+.student-mobile-password { margin-top: .75rem; color: var(--ink-soft); font-size: .75rem; }
+
 .student-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
 .student-action-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: .65rem .9rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: .65rem; font-size: .8rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, border-color .16s ease; }
 .student-action-button:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }

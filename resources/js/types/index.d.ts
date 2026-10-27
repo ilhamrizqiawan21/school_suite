@@ -22,6 +22,7 @@ export interface Student {
     id: number;
     school_id: number;
     user_id?: number | null;
+    account_status?: 'no_account' | 'default' | 'changed' | 'unavailable';
     nis: string;
     nisn?: string | null;
     name: string;
@@ -44,6 +45,7 @@ export interface Student {
 }
 
 export interface Teacher {
+    account_status?: 'no_account' | 'default' | 'changed' | 'unavailable';
     id: number;
     school_id: number;
     nip?: string | null;

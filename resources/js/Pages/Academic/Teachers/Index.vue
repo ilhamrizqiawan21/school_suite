@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
-import type { Teacher } from '../../../types';
+import type { Teacher, SharedProps } from '../../../types';
 
 const props = defineProps<{
     teachers: {
@@ -11,12 +11,20 @@ const props = defineProps<{
         total: number;
     };
     can_manage: boolean;
+    stats: { total: number; active: number; inactive: number };
+    employment_statuses: string[];
     filters: {
         search?: string;
         employment_status?: string;
+        is_active?: string;
     };
 }>();
 
+const page = usePage<SharedProps>();
+const activeFilter = ref(props.filters.is_active ?? '');
+const editingId = ref<number | null>(null);
+const accountLabels = { no_account: 'Belum ada akun', default: 'Wajib ganti sandi', changed: 'Sudah diubah', unavailable: 'Akun tidak tersedia' };
+const employmentOptions = [...new Set(['PNS', 'PPPK', 'GTT', ...props.employment_statuses])];
 const search = ref(props.filters.search || '');
 const selectedStatus = ref(props.filters.employment_status || '');
 
@@ -28,6 +36,7 @@ const applyFilters = () => {
         '/akademik/guru',
         {
             search: search.value || undefined,
+            is_active: activeFilter.value === '' ? undefined : activeFilter.value,
             employment_status: selectedStatus.value || undefined,
         },
         { preserveState: true, replace: true }
@@ -44,13 +53,43 @@ const form = useForm({
     is_active: true,
 });
 
+const openAdd = () => {
+    editingId.value = null;
+    form.reset();
+    form.clearErrors();
+    showAddModal.value = true;
+};
+const openEdit = (teacher: Teacher) => {
+    editingId.value = teacher.id;
+    form.clearErrors();
+    form.nip = teacher.nip ?? '';
+    form.name = teacher.name;
+    form.gender = teacher.gender;
+    form.phone = teacher.phone ?? '';
+    form.email = teacher.email ?? '';
+    form.employment_status = teacher.employment_status ?? '';
+    form.is_active = teacher.is_active;
+    showAddModal.value = true;
+};
 const submitAdd = () => {
-    form.post('/akademik/guru', {
-        onSuccess: () => {
-            showAddModal.value = false;
-            form.reset();
-        },
-    });
+    const options = { preserveScroll: true, onSuccess: () => { showAddModal.value = false; form.reset(); } };
+    if (editingId.value) form.put(`/akademik/guru/${editingId.value}`, options);
+    else form.post('/akademik/guru', options);
+};
+const resetFilters = () => {
+    search.value = '';
+    selectedStatus.value = '';
+    activeFilter.value = '';
+    applyFilters();
+};
+const exportUrl = () => '/akademik/guru/export/excel?' + new URLSearchParams({ search: search.value, employment_status: selectedStatus.value, is_active: activeFilter.value });
+const resetPassword = (teacher: Teacher) => {
+    if (!['default', 'changed'].includes(teacher.account_status ?? '') || !window.confirm(`Buat sandi sementara baru untuk ${teacher.name}? Sampaikan sandi secara pribadi kepada guru.`)) return;
+    router.post(`/akademik/guru/${teacher.id}/reset-password`, {}, { preserveScroll: true });
+};
+const deleteTeacher = (teacher: Teacher) => {
+    if (!window.confirm(`Hapus data guru ${teacher.name}? Penghapusan ditolak jika ada penugasan atau riwayat akademik. Akun pengguna tetap tersedia.`)) return;
+    router.delete(`/akademik/guru/${teacher.id}`, { preserveScroll: true });
 };
 
 const importForm = useForm({
@@ -78,7 +117,7 @@ const submitImport = () => {
     <AppLayout title="Data Guru & Tenaga Kependidikan">
         <Head title="Data Guru — School Suite" />
 
-        <div class="view space-y-6">
+        <div class="view teacher-page space-y-6">
             <!-- Header bar -->
             <div class="page-heading compact-heading">
                 <div>
@@ -87,39 +126,38 @@ const submitImport = () => {
                         Kelola data guru, status kepegawaian, dan penugasan wali kelas.
                     </p>
                 </div>
-                <div v-if="can_manage" class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <button v-if="can_manage" type="button" class="primary-button" @click="openAdd">Tambah guru</button>
+                    <a :href="exportUrl()" class="secondary-button">Ekspor Excel</a>
                     <button
                         type="button"
-                        @click="showImportModal = true"
+                        v-if="can_manage" @click="showImportModal = true"
                         class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs"
                     >
                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Impor CSV
+                        Impor Excel / CSV
                     </button>
-                    <a href="/akademik/guru/template" class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs">
+                    <a v-if="can_manage" href="/akademik/guru/template?format=xlsx" class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs">
                         Unduh template
                     </a>
                 </div>
             </div>
 
-            <section v-if="can_manage" class="panel border border-indigo-100 bg-indigo-50/40 p-5">
-                <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Guru atau tenaga kependidikan</h2></div>
-                <form class="grid gap-3 md:grid-cols-[1fr_1.5fr_130px_1.3fr_auto] items-end" @submit.prevent="submitAdd">
-                    <label class="text-xs font-semibold text-slate-700">NIP<input v-model="form.nip" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Nama lengkap<input v-model="form.name" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Gender<select v-model="form.gender" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label>
-                    <label class="text-xs font-semibold text-slate-700">Email<input v-model="form.email" type="email" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <button type="submit" :disabled="form.processing" class="primary-button !text-white justify-center disabled:opacity-50">Simpan</button>
-                </form>
-            </section>
+            <div v-if="page.props.flash?.message" class="panel p-4" role="status">{{ page.props.flash.message }}</div>
+            <div v-if="page.props.errors?.teacher" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.teacher }}</div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="panel p-4"><p>Total guru / tenaga kependidikan</p><strong class="text-2xl">{{ stats.total }}</strong></div>
+                <div class="panel p-4"><p>Aktif</p><strong class="text-2xl">{{ stats.active }}</strong></div>
+                <div class="panel p-4"><p>Nonaktif</p><strong class="text-2xl">{{ stats.inactive }}</strong></div>
+            </div>
 
             <!-- Filters -->
             <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-3">
                 <div class="flex-1 relative">
                     <input
-                        v-model="search"
+                        aria-label="Cari nama, NIP, atau email" v-model="search"
                         @keyup.enter="applyFilters"
                         type="text"
                         placeholder="Cari nama, NIP, atau email... (tekan enter)"
@@ -130,18 +168,18 @@ const submitImport = () => {
                     </svg>
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <select
-                        v-model="selectedStatus"
+                        aria-label="Status kepegawaian" v-model="selectedStatus"
                         @change="applyFilters"
                         class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
                     >
                         <option value="">Semua Status Kepegawaian</option>
-                        <option value="PNS">PNS</option>
-                        <option value="PPPK">PPPK</option>
-                        <option value="GTT">GTT / Honorer</option>
+                        <option v-for="status in employmentOptions" :key="status" :value="status">{{ status }}</option>
                     </select>
 
+                    <select v-model="activeFilter" aria-label="Status aktif" class="rounded-lg border px-3 py-2 text-sm" @change="applyFilters"><option value="">Semua status aktif</option><option value="1">Aktif</option><option value="0">Nonaktif</option></select>
+                    <button type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
                     <button
                         type="button"
                         @click="applyFilters"
@@ -164,6 +202,7 @@ const submitImport = () => {
                                 <th class="px-5 py-3.5">Status Pegawai</th>
                                 <th class="px-5 py-3.5">Wali Kelas</th>
                                 <th class="px-5 py-3.5">Status</th>
+                                <th v-if="can_manage" class="px-5 py-3.5">Status sandi / Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -183,12 +222,12 @@ const submitImport = () => {
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-                                        {{ t.employment_status || 'GTT' }}
+                                        {{ t.employment_status || '-' }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span v-if="t.homeroom_class_groups && t.homeroom_class_groups.length > 0" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                        Kelas {{ t.homeroom_class_groups[0].name }}
+                                        Kelas {{ t.homeroom_class_groups.map(group => group.name).join(', ') }}
                                     </span>
                                     <span v-else class="text-xs text-slate-400">
                                         -
@@ -199,9 +238,17 @@ const submitImport = () => {
                                         {{ t.is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
+                                <td v-if="can_manage" class="px-5 py-3.5">
+                                    <p class="mb-2 text-xs">{{ accountLabels[t.account_status ?? 'unavailable'] }}</p>
+                                    <div class="flex gap-2">
+                                        <button type="button" class="secondary-button" :aria-label="`Ubah ${t.name}`" @click="openEdit(t)">Ubah</button>
+                                        <button type="button" class="secondary-button disabled:opacity-50" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" @click="resetPassword(t)">Reset sandi</button>
+                                        <button type="button" class="secondary-button text-red-700" :aria-label="`Hapus ${t.name}`" @click="deleteTeacher(t)">Hapus</button>
+                                    </div>
+                                </td>
                             </tr>
                             <tr v-if="teachers.data.length === 0">
-                                <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+                                <td :colspan="can_manage ? 7 : 6" class="px-5 py-12 text-center text-slate-400">
                                     Tidak ada data guru yang cocok dengan filter.
                                 </td>
                             </tr>
@@ -209,9 +256,9 @@ const submitImport = () => {
                     </table>
                 </div>
 
-                <div class="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <div class="px-5 py-3.5 border-t border-slate-100 flex flex-wrap gap-3 items-center justify-between text-xs text-slate-500">
                     <div>Total {{ teachers.total }} guru</div>
-                    <div class="flex gap-1">
+                    <div class="flex flex-wrap gap-1">
                         <template v-for="(link, i) in teachers.links" :key="i">
                             <span
                                 v-if="!link.url"
@@ -233,9 +280,9 @@ const submitImport = () => {
 
         <!-- Modal Tambah Guru -->
         <div v-if="can_manage && showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+            <div role="dialog" aria-modal="true" aria-labelledby="teacher-form-title" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Tambah Guru Baru</h3>
+                    <h3 id="teacher-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Data Guru' : 'Tambah Guru Baru' }}</h3>
                     <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
@@ -275,12 +322,14 @@ const submitImport = () => {
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Status Kepegawaian</label>
                         <select v-model="form.employment_status" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
-                            <option value="PNS">PNS</option>
-                            <option value="PPPK">PPPK</option>
-                            <option value="GTT">GTT / Honorer</option>
+                            <option value="">Belum diisi</option>
+                            <option v-for="status in employmentOptions" :key="status" :value="status">{{ status }}</option>
                         </select>
                     </div>
 
+                    <label class="flex items-center gap-2 text-sm"><input v-model="form.is_active" type="checkbox" /> Data guru aktif</label>
+                    <p class="text-xs text-slate-500">Status ini berlaku untuk data guru. Akses login dikelola melalui Manajemen Pengguna.</p>
+                    <ul v-if="Object.keys(form.errors).length" class="text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                     <div class="flex justify-end gap-2 pt-3 border-t">
                         <button type="button" @click="showAddModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
                             Batal
@@ -293,24 +342,26 @@ const submitImport = () => {
             </div>
         </div>
 
-        <!-- Modal Impor CSV Guru -->
+        <!-- Modal Impor Excel / CSV Guru -->
         <div v-if="can_manage && showImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Impor Massal Pendidik (CSV)</h3>
+                    <h3 class="text-lg font-bold text-slate-900">Impor Massal Pendidik</h3>
                     <button type="button" @click="showImportModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
                 <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800 space-y-1">
                     <div class="font-semibold">Format Kolom Header:</div>
                     <code class="block font-mono text-[11px] text-indigo-900">nip,name,gender,phone,email,employment_status</code>
+                    <p>Maksimal 5 MB dan 1.000 guru per berkas. Data diperiksa sebelum disimpan. Impor tidak membuat akun login.</p>
+                    <a href="/akademik/guru/template?format=xlsx" class="inline-block mt-2 font-medium text-indigo-600 underline">Template Excel</a>
                     <a href="/akademik/guru/template" class="inline-block mt-2 font-medium text-indigo-600 underline">Unduh Berkas Template CSV</a>
                 </div>
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV *</label>
-                        <input type="file" accept=".csv,.txt" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas Excel / CSV *</label>
+                        <input type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
                         <div v-if="importForm.errors.csv_file" class="text-xs text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
@@ -327,3 +378,12 @@ const submitImport = () => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.teacher-page { min-width: 0; }
+.teacher-page .secondary-button { white-space: nowrap; }
+@media (max-width: 640px) {
+    .teacher-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }
+    .teacher-page select { max-width: 100%; }
+}
+</style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 interface ComponentItem {
@@ -10,6 +10,7 @@ interface ComponentItem {
     weight_percentage: number;
     passing_grade: number;
     sequence: number;
+    teaching_assignment_id: number | null;
 }
 
 interface SchemeItem {
@@ -27,6 +28,7 @@ interface SchemeItem {
 const props = defineProps<{
     schemes: SchemeItem[];
     can_manage: boolean;
+    teaching_assignments: { id: number; class_name: string; subject_name: string; term_name: string; academic_year_name: string }[];
 }>();
 
 const isCreateSchemeOpen = ref(false);
@@ -47,7 +49,27 @@ const componentForm = useForm({
     weight_percentage: 25,
     passing_grade: 75,
     sequence: 1,
+    teaching_assignment_id: null as number | null,
 });
+
+const bindingComponent = ref<{ schemeId: number; component: ComponentItem } | null>(null);
+const bindingForm = useForm({ teaching_assignment_id: null as number | null });
+const assignmentLabel = (id: number | null) => {
+    const assignment = props.teaching_assignments.find(item => item.id === id);
+    return assignment ? `${assignment.class_name} · ${assignment.subject_name} · ${assignment.term_name} ${assignment.academic_year_name}` : 'Umum (kelas satu mapel)';
+};
+const openBinding = (schemeId: number, component: ComponentItem) => {
+    bindingForm.reset();
+    bindingForm.clearErrors();
+    bindingComponent.value = { schemeId, component };
+};
+const submitBinding = () => {
+    if (!bindingComponent.value) return;
+    bindingForm.put(`/penilaian/skema/${bindingComponent.value.schemeId}/komponen/${bindingComponent.value.component.id}/penugasan`, {
+        preserveScroll: true,
+        onSuccess: () => { bindingComponent.value = null; },
+    });
+};
 
 const submitNewScheme = () => {
     schemeForm.post('/penilaian/skema', {
@@ -76,8 +98,12 @@ const submitNewComponent = () => {
     });
 };
 
-const totalWeight = (components: ComponentItem[]) => {
-    return components.reduce((acc, c) => acc + Number(c.weight_percentage), 0);
+const weightTotals = (components: ComponentItem[]) => {
+    const totals = new Map<number | null, number>();
+    for (const component of components) {
+        totals.set(component.teaching_assignment_id, (totals.get(component.teaching_assignment_id) ?? 0) + Number(component.weight_percentage));
+    }
+    return Array.from(totals, ([assignmentId, total]) => ({ assignmentId, label: assignmentLabel(assignmentId), total }));
 };
 </script>
 
@@ -153,17 +179,11 @@ const totalWeight = (components: ComponentItem[]) => {
                             <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
                                 Komponen Penilaian & Bobot Persentase
                             </h3>
-                            <div class="text-xs font-bold">
-                                Total Bobot:
-                                <span
-                                    :class="[
-                                        totalWeight(scheme.components) === 100
-                                            ? 'text-emerald-600'
-                                            : 'text-amber-600',
-                                    ]"
-                                >
-                                    {{ totalWeight(scheme.components) }}%
-                                </span>
+                            <div class="space-y-1 text-xs font-bold text-right">
+                                <p v-for="group in weightTotals(scheme.components)" :key="group.assignmentId ?? 'general'">
+                                    {{ group.label }}:
+                                    <span :class="group.total === 100 ? 'text-emerald-600' : 'text-amber-600'">{{ group.total }}%</span>
+                                </p>
                             </div>
                         </div>
 
@@ -174,6 +194,7 @@ const totalWeight = (components: ComponentItem[]) => {
                                         <th class="py-2.5 px-3 w-12 text-center">Urutan</th>
                                         <th class="py-2.5 px-3 w-28">Kode</th>
                                         <th class="py-2.5 px-4">Nama Komponen</th>
+                                        <th class="py-2.5 px-4">Kelas & Mata Pelajaran</th>
                                         <th class="py-2.5 px-3 text-center w-32">Bobot (%)</th>
                                         <th class="py-2.5 px-3 text-center w-32">KKTP / Batas</th>
                                     </tr>
@@ -183,11 +204,15 @@ const totalWeight = (components: ComponentItem[]) => {
                                         <td class="py-2.5 px-3 text-center text-xs text-slate-400">{{ comp.sequence }}</td>
                                         <td class="py-2.5 px-3 font-mono text-xs text-slate-700 font-semibold">{{ comp.code }}</td>
                                         <td class="py-2.5 px-4 font-medium text-slate-900">{{ comp.name }}</td>
+                                        <td class="py-2.5 px-4">
+                                            <span>{{ assignmentLabel(comp.teaching_assignment_id) }}</span>
+                                            <button v-if="props.can_manage && comp.teaching_assignment_id === null" type="button" class="block text-sm font-semibold text-indigo-600 hover:text-indigo-700" @click="openBinding(scheme.id, comp)">Pilih mata pelajaran</button>
+                                        </td>
                                         <td class="py-2.5 px-3 text-center font-bold text-slate-800">{{ comp.weight_percentage }}%</td>
                                         <td class="py-2.5 px-3 text-center text-xs font-semibold text-emerald-700">{{ comp.passing_grade }}</td>
                                     </tr>
                                     <tr v-if="scheme.components.length === 0">
-                                        <td colspan="5" class="py-6 text-center text-slate-400 text-xs">
+                                        <td colspan="6" class="py-6 text-center text-slate-400 text-xs">
                                             Belum ada komponen penilaian pada skema ini. Klik "Tambah Komponen" di atas.
                                         </td>
                                     </tr>
@@ -302,6 +327,23 @@ const totalWeight = (components: ComponentItem[]) => {
                 </div>
             </div>
 
+            <div v-if="props.can_manage && bindingComponent" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+                <form class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4" @submit.prevent="submitBinding">
+                    <h2 class="text-lg font-bold text-slate-900">Petakan {{ bindingComponent.component.name }}</h2>
+                    <p class="text-sm text-slate-500">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
+                    <label for="binding-assignment" class="block text-sm font-semibold text-slate-700">Kelas & Mata Pelajaran</label>
+                    <select id="binding-assignment" v-model="bindingForm.teaching_assignment_id" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option :value="null" disabled>Pilih mata pelajaran</option>
+                        <option v-for="assignment in props.teaching_assignments" :key="assignment.id" :value="assignment.id">{{ assignmentLabel(assignment.id) }}</option>
+                    </select>
+                    <p v-if="bindingForm.errors.teaching_assignment_id" class="text-sm text-red-600">{{ bindingForm.errors.teaching_assignment_id }}</p>
+                    <div class="flex justify-end gap-3">
+                        <button type="button" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700" :disabled="bindingForm.processing" @click="bindingComponent = null">Batal</button>
+                        <button type="submit" :disabled="bindingForm.processing" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">Simpan Pemetaan</button>
+                    </div>
+                </form>
+            </div>
+
             <!-- Modal Tambah Komponen -->
             <div
                 v-if="props.can_manage && isCreateComponentOpen"
@@ -320,6 +362,14 @@ const totalWeight = (components: ComponentItem[]) => {
                     </div>
 
                     <form @submit.prevent="submitNewComponent" class="space-y-4">
+                        <div>
+                            <label for="component-assignment" class="block text-xs font-semibold text-slate-700 mb-1">Kelas & Mata Pelajaran</label>
+                            <select id="component-assignment" v-model="componentForm.teaching_assignment_id" class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option :value="null">Umum (hanya untuk kelas dengan satu mapel)</option>
+                                <option v-for="assignment in props.teaching_assignments" :key="assignment.id" :value="assignment.id">{{ assignmentLabel(assignment.id) }}</option>
+                            </select>
+                            <p v-if="componentForm.errors.teaching_assignment_id" class="mt-1 text-sm text-red-600">{{ componentForm.errors.teaching_assignment_id }}</p>
+                        </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Komponen</label>
                             <input

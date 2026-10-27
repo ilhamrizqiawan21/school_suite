@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import type { SharedProps } from '../../../types';
 import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 interface TermItem {
     id: number;
     name: string;
+    academic_year?: { name: string };
 }
 
 interface ClassItem {
@@ -44,6 +46,7 @@ interface ScheduleItem {
 
 const props = defineProps<{
     active_term?: TermItem | null;
+    terms: TermItem[];
     classes: ClassItem[];
     teachers: TeacherItem[];
     subjects: SubjectItem[];
@@ -57,6 +60,10 @@ const props = defineProps<{
     is_student: boolean;
 }>();
 
+const page = usePage<SharedProps>();
+const selectedTerm = ref(props.active_term?.id ? String(props.active_term.id) : '');
+const editingId = ref<number | null>(null);
+const publishedCount = computed(() => props.schedules.filter(slot => slot.status === 'published').length);
 const selectedClass = ref(props.filters.class_group_id || '');
 const selectedTeacher = ref(props.filters.teacher_id || '');
 const showAddModal = ref(false);
@@ -68,12 +75,14 @@ const days = [
     { id: 4, name: 'Kamis' },
     { id: 5, name: 'Jumat' },
     { id: 6, name: 'Sabtu' },
+    { id: 7, name: 'Minggu' },
 ];
 
 const applyFilters = () => {
     router.get(
         '/akademik/jadwal',
         {
+            term_id: selectedTerm.value || undefined,
             class_group_id: selectedClass.value || undefined,
             teacher_id: selectedTeacher.value || undefined,
         },
@@ -92,18 +101,37 @@ const form = useForm({
     room: '',
 });
 
-const submitAdd = () => {
-    form.post('/akademik/jadwal', {
-        onSuccess: () => {
-            showAddModal.value = false;
-            form.reset('room');
-        },
-    });
+const openAdd = () => {
+    editingId.value = null;
+    form.reset();
+    form.clearErrors();
+    form.term_id = selectedTerm.value;
+    showAddModal.value = true;
 };
+const openEdit = (slot: ScheduleItem) => {
+    editingId.value = slot.id;
+    form.clearErrors();
+    form.term_id = String(slot.term_id);
+    form.class_group_id = String(slot.class_group_id);
+    form.subject_id = String(slot.subject_id);
+    form.teacher_id = String(slot.teacher_id);
+    form.day_of_week = slot.day_of_week;
+    form.start_time = slot.start_time.substring(0, 5);
+    form.end_time = slot.end_time.substring(0, 5);
+    form.room = slot.room ?? '';
+    showAddModal.value = true;
+};
+const submitAdd = () => {
+    const options = { preserveScroll: true, onSuccess: () => { showAddModal.value = false; } };
+    if (editingId.value) form.put(`/akademik/jadwal/${editingId.value}`, options);
+    else form.post('/akademik/jadwal', options);
+};
+const resetFilters = () => { selectedClass.value = ''; selectedTeacher.value = ''; applyFilters(); };
+const changeTerm = () => router.get('/akademik/jadwal', { term_id: selectedTerm.value });
 
 const publishAll = () => {
     if (!props.active_term) return;
-    if (confirm(`Terbitkan ${props.draft_count} jadwal draf untuk semester ini?`)) {
+    if (confirm(`Terbitkan ${props.draft_count} jadwal draf untuk seluruh kelas pada semester ini? Filter kelas/guru tidak membatasi penerbitan.`)) {
         router.post('/akademik/jadwal/terbitkan', {
             term_id: props.active_term.id,
         });
@@ -111,7 +139,7 @@ const publishAll = () => {
 };
 
 const deleteSchedule = (id: number) => {
-    if (confirm('Hapus slot jadwal ini?')) {
+    if (confirm('Hapus slot jadwal ini? Jadwal yang sudah dipakai untuk pertemuan atau guru pengganti tidak dapat dihapus.')) {
         router.delete(`/akademik/jadwal/${id}`);
     }
 };
@@ -131,7 +159,7 @@ const deleteSchedule = (id: number) => {
                     </p>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <button
                         v-if="can_manage && draft_count > 0"
                         type="button"
@@ -144,7 +172,7 @@ const deleteSchedule = (id: number) => {
                     <button
                         v-if="can_manage"
                         type="button"
-                        @click="showAddModal = true"
+                        :disabled="!active_term" @click="openAdd"
                         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-xs"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,11 +183,22 @@ const deleteSchedule = (id: number) => {
                 </div>
             </div>
 
+            <div v-if="page.props.flash?.message" class="panel p-4" role="status">{{ page.props.flash.message }}</div>
+            <div v-if="page.props.errors?.schedule || page.props.errors?.term_id" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.schedule ?? page.props.errors.term_id }}</div>
+            <div v-if="!is_student && terms.length" class="panel p-4">
+                <label class="text-sm">Semester <select v-model="selectedTerm" aria-label="Semester jadwal" class="max-w-full rounded-lg border px-3 py-2" @change="changeTerm"><option v-if="!active_term" value="">Pilih semester...</option><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.academic_year?.name }} — {{ term.name }}</option></select></label>
+            </div>
+            <p v-if="!active_term" class="panel p-4">Belum ada semester aktif atau terpilih. Atur periode akademik untuk menyusun jadwal.</p>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="panel p-4"><p>Slot sesuai filter</p><strong class="text-2xl">{{ schedules.length }}</strong></div>
+                <div class="panel p-4"><p>Terbit sesuai filter</p><strong class="text-2xl">{{ publishedCount }}</strong></div>
+                <div v-if="can_manage" class="panel p-4"><p>Draf seluruh semester terpilih</p><strong class="text-2xl">{{ draft_count }}</strong></div>
+            </div>
             <!-- Filters -->
-            <div v-if="can_manage" class="schedule-filter bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
+            <div v-if="!is_student" class="schedule-filter bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
                     <select
-                        v-model="selectedClass"
+                        aria-label="Filter kelas" v-model="selectedClass"
                         @change="applyFilters"
                         class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500"
                     >
@@ -171,7 +210,7 @@ const deleteSchedule = (id: number) => {
                 </div>
                 <div class="flex-1">
                     <select
-                        v-model="selectedTeacher"
+                        aria-label="Filter guru" v-model="selectedTeacher"
                         @change="applyFilters"
                         class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500"
                     >
@@ -182,7 +221,8 @@ const deleteSchedule = (id: number) => {
                     </select>
                 </div>
             </div>
-            <div v-else class="schedule-filter schedule-student-context">
+            <button v-if="!is_student" type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
+            <div v-if="is_student" class="schedule-filter schedule-student-context">
                 <span>Jadwal kelas</span>
                 <strong>{{ classes[0]?.name ?? 'Belum ada kelas aktif' }}</strong>
                 <span>{{ active_term?.name ?? 'Periode belum tersedia' }}</span>
@@ -219,6 +259,7 @@ const deleteSchedule = (id: number) => {
                                     >
                                         {{ s.status === 'published' ? 'Terbit' : 'Draf' }}
                                     </span>
+                                    <RowActionButton v-if="can_manage" action="edit" label="Ubah" :aria-label="`Ubah jadwal ${s.subject.name} ${s.start_time}`" @click="openEdit(s)" />
                                     <RowActionButton v-if="can_manage" action="delete" label="Hapus" :aria-label="`Hapus jadwal ${s.subject.name} ${s.start_time}`" @click="deleteSchedule(s.id)" />
                                 </div>
                             </div>
@@ -236,7 +277,7 @@ const deleteSchedule = (id: number) => {
                         </div>
 
                         <div
-                            v-if="can_manage && schedules.filter(s => s.day_of_week === d.id).length === 0"
+                            v-if="schedules.filter(s => s.day_of_week === d.id).length === 0"
                             class="schedule-empty py-8 text-center text-xs text-slate-400 italic"
                         >
                             Tidak ada jadwal
@@ -251,16 +292,15 @@ const deleteSchedule = (id: number) => {
         </div>
 
         <!-- Modal Tambah Slot Jadwal -->
-        <div v-if="showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div v-if="can_manage && showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div role="dialog" aria-modal="true" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Tambah Slot Jadwal Pelajaran</h3>
+                    <h3 class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Jadwal Pelajaran' : 'Tambah Slot Jadwal Pelajaran' }}</h3>
                     <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
-                <div v-if="form.errors.start_time" class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium">
-                    {{ form.errors.start_time }}
-                </div>
+                <ul v-if="Object.keys(form.errors).length" role="alert" class="text-sm text-red-700"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
+                <p v-if="editingId" class="text-xs text-slate-500">Perubahan disimpan sebagai draf dan perlu diterbitkan kembali. Jadwal dengan riwayat pertemuan atau guru pengganti tidak dapat diubah.</p>
 
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div class="grid grid-cols-2 gap-3">
@@ -326,6 +366,11 @@ const deleteSchedule = (id: number) => {
 </template>
 
 <style scoped>
+.schedule-page { min-width: 0; }
+.schedule-session > .flex { flex-wrap: wrap; gap: .5rem; }
+.schedule-student-context { flex-wrap: wrap; }
+@media (max-width: 640px) { .schedule-page .page-heading { flex-direction: column; align-items: stretch; gap: 1rem; } }
+
 .schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 650; }
 .schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
 </style>

@@ -6,6 +6,7 @@ namespace App\Modules\Assessment\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Assessment\Application\Services\AssessmentAccessService;
 use App\Modules\Assessment\Application\Services\ScoreService;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\Score;
@@ -19,7 +20,8 @@ class ScoreInputController extends Controller
 {
     public function __construct(
         protected ScoreService $scoreService,
-        protected AcademicQueryService $academicQuery
+        protected AcademicQueryService $academicQuery,
+        protected AssessmentAccessService $access
     ) {}
 
     public function index(Request $request): InertiaResponse
@@ -33,7 +35,10 @@ class ScoreInputController extends Controller
             ? $this->academicQuery->getClassGroups($schoolId, $activeTerm->academic_year_id)
             : collect();
 
-        $classGroupId = $request->query('class_group_id');
+        $classes = $classes->filter(fn ($class) => $this->access->canViewClass($request->user(), $activeTerm->id, (int) $class->id))->values();
+        $filters = $request->validate(['class_group_id' => ['nullable', 'integer'], 'component_id' => ['nullable', 'integer']]);
+        $classGroupId = $filters['class_group_id'] ?? $classes->first()?->id;
+        abort_if($classGroupId && ! $classes->contains('id', (int) $classGroupId), 403);
         $componentId = $request->query('component_id');
 
         $scheme = AssessmentScheme::where('school_id', $schoolId)
@@ -41,7 +46,10 @@ class ScoreInputController extends Controller
             ->with('components')
             ->first();
 
-        $components = $scheme ? $scheme->components : collect();
+        $components = $scheme && $activeTerm && $classGroupId
+            ? $scheme->components->filter(fn ($component) => $this->access->canInputComponent($request->user(), $component, $activeTerm->id, (int) $classGroupId))->values()
+            : collect();
+        abort_if($componentId && ! $components->contains('id', (int) $componentId), 403);
 
         $selectedComponent = $componentId ? $components->firstWhere('id', (int) $componentId) : $components->first();
 

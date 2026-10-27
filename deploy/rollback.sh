@@ -9,6 +9,7 @@ set -euo pipefail
 APP_DIR="/var/www/school_suite"
 RELEASES_DIR="${APP_DIR}/releases"
 CURRENT_SYMLINK="${APP_DIR}/current"
+PHP_FPM_SERVICE="${PHP_FPM_SERVICE:-php8.3-fpm}"
 
 echo "=== Memulai Prosedur Rollback Darurat School Suite ==="
 
@@ -40,8 +41,8 @@ php artisan view:cache
 # Restart Worker & Reload PHP-FPM
 if command -v systemctl &> /dev/null; then
     echo "Merestart worker dan memuat ulang PHP-FPM..."
-    sudo systemctl restart school-suite-worker || true
-    sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm || true
+    sudo systemctl restart school-suite-worker
+    sudo systemctl reload "${PHP_FPM_SERVICE}"
 fi
 
 echo "✓ Rollback darurat berhasil selesai! Rilis aktif sekarang: ${PREVIOUS_RELEASE}"

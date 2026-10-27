@@ -27,7 +27,7 @@ class DeploymentConfigurationTest extends TestCase
         $nginxConf = base_path('deploy/nginx/school-suite.conf');
         $this->assertTrue(File::exists($nginxConf));
         $nginxContents = File::get($nginxConf);
-        $this->assertStringContainsString('fastcgi_pass', $nginxContents);
+        $this->assertStringContainsString('fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;', $nginxContents);
         $this->assertStringContainsString('ssl_protocols', $nginxContents);
         $this->assertStringContainsString('server_name school.sch.id www.school.sch.id;', $nginxContents);
         $this->assertLessThan(
@@ -43,6 +43,7 @@ class DeploymentConfigurationTest extends TestCase
         $phpFpmConf = base_path('deploy/php/www.conf');
         $this->assertTrue(File::exists($phpFpmConf));
         $this->assertStringContainsString('pm = dynamic', File::get($phpFpmConf));
+        $this->assertStringContainsString('listen = /var/run/php/php8.3-fpm.sock', File::get($phpFpmConf));
 
         $systemdService = base_path('deploy/systemd/school-suite-worker.service');
         $this->assertTrue(File::exists($systemdService));

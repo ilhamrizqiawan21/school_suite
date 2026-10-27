@@ -14,6 +14,7 @@ use App\Modules\Academic\Infrastructure\Models\TeacherAttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\TeacherLeaveRequest;
 use App\Modules\Academic\Infrastructure\Models\TeacherSubstituteAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Core\Infrastructure\Models\AuditEvent;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Carbon\Carbon;
@@ -264,5 +265,73 @@ class TeacherOperationsControllersTest extends TestCase
             'end_time' => $end,
             'status' => 'published',
         ]);
+    }
+
+    public function test_admin_saves_bulk_teacher_attendance_with_individual_notes_and_audits(): void
+    {
+        $this->actingAs($this->admin)->post('/akademik/absensi-guru', ['date' => '2026-10-26', 'records' => [
+            ['teacher_id' => $this->teacher->id, 'status' => 'sick', 'notes' => 'Keterangan pertama'],
+            ['teacher_id' => $this->homeroomTeacher->id, 'status' => 'sick', 'notes' => 'Keterangan kedua'],
+        ]])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('teacher_attendance_records', ['teacher_id' => $this->teacher->id, 'status' => 'sick', 'notes' => 'Keterangan pertama']);
+        $this->assertDatabaseHas('teacher_attendance_records', ['teacher_id' => $this->homeroomTeacher->id, 'status' => 'sick', 'notes' => 'Keterangan kedua']);
+        $this->assertSame(2, AuditEvent::where('event_type', 'academic.teacher_attendance.recorded')->count());
+        $this->actingAs($this->homeroomUser)->post('/akademik/absensi-guru', ['date' => '2026-10-26', 'records' => [
+            ['teacher_id' => $this->homeroomTeacher->id, 'status' => 'present'],
+            ['teacher_id' => $this->teacher->id, 'status' => 'present'],
+        ]])->assertForbidden();
+        $this->assertSame(2, TeacherAttendanceRecord::where('status', 'sick')->count());
+    }
+
+    public function test_bulk_teacher_attendance_rejects_foreign_teacher_without_partial_save(): void
+    {
+        $other = School::create(['npsn' => '87654309', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $foreign = Teacher::create(['school_id' => $other->id, 'name' => 'Guru Lain', 'gender' => 'L']);
+        $this->actingAs($this->admin)->post('/akademik/absensi-guru', ['date' => '2026-10-26', 'records' => [
+            ['teacher_id' => $this->teacher->id, 'status' => 'present'],
+            ['teacher_id' => $foreign->id, 'status' => 'present'],
+        ]])->assertSessionHasErrors('records');
+        $this->assertDatabaseCount('teacher_attendance_records', 0);
+    }
+
+    public function test_teacher_attendance_distinguishes_unrecorded_rows_and_exposes_own_record_metadata(): void
+    {
+        TeacherAttendanceRecord::create(['school_id' => $this->school->id, 'teacher_id' => $this->teacher->id,
+            'date' => '2026-10-26', 'status' => 'sick', 'notes' => 'Catatan lama', 'recorded_by_user_id' => $this->admin->id]);
+        $this->actingAs($this->admin)->get('/akademik/absensi-guru?date=2026-10-26')->assertInertia(fn ($page) => $page
+            ->where('today', '2026-10-27')->has('rows', 2)
+            ->where('rows.0.record_id', null)->where('rows.0.recorded_by', null)->where('rows.0.updated_at', null)
+            ->where('rows.1.recorded_by', $this->admin->name)->where('rows.1.status', 'sick'));
+        $this->actingAs($this->teacherUser)->get('/akademik/absensi-guru?date=2026-10-26')->assertInertia(fn ($page) => $page
+            ->has('rows', 1)->where('rows.0.teacher_id', $this->teacher->id)->where('rows.0.recorded_by', $this->admin->name));
+        $this->actingAs($this->admin)->post('/akademik/absensi-guru', ['date' => '2026-10-26', 'records' => [
+            ['teacher_id' => $this->homeroomTeacher->id, 'status' => 'present', 'notes' => 'Baru'],
+        ]])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('teacher_attendance_records', ['teacher_id' => $this->teacher->id, 'status' => 'sick', 'notes' => 'Catatan lama']);
+        $this->assertDatabaseHas('teacher_attendance_records', ['teacher_id' => $this->homeroomTeacher->id, 'status' => 'present', 'notes' => 'Baru']);
+        $this->assertSame(1, AuditEvent::where('event_type', 'academic.teacher_attendance.recorded')->count());
+    }
+
+    public function test_teacher_leave_filters_overlap_month_and_summary_remains_scoped(): void
+    {
+        TeacherLeaveRequest::create(['school_id' => $this->school->id, 'teacher_id' => $this->teacher->id, 'type' => 'leave', 'start_date' => '2026-10-30', 'end_date' => '2026-11-03', 'reason' => 'Contoh lintas bulan', 'status' => 'approved']);
+        TeacherLeaveRequest::create(['school_id' => $this->school->id, 'teacher_id' => $this->homeroomTeacher->id, 'type' => 'sick', 'start_date' => '2026-10-27', 'end_date' => '2026-10-27', 'reason' => 'Contoh sakit', 'status' => 'pending']);
+        $this->actingAs($this->admin)->get('/akademik/izin-guru?month=2026-11&type=leave&search=lintas&status=approved')->assertInertia(fn ($page) => $page
+            ->has('leaves.data', 1)->where('leaves.data.0.duration_days', 5)->where('summary.all', 2)->where('summary.pending', 1)->where('filters.month', '2026-11')->where('today', '2026-10-27')->where('min_start_date', '2026-10-20'));
+        $this->actingAs($this->teacherUser)->get('/akademik/izin-guru')->assertInertia(fn ($page) => $page->has('leaves.data', 1)->where('summary.all', 1)->where('summary.pending', 0)->where('can_apply', true)->where('can_review', false));
+        $this->get('/akademik/izin-guru?type=invalid')->assertSessionHasErrors('type');
+        $this->get('/akademik/izin-guru?month=not-a-month')->assertSessionHasErrors('month');
+    }
+
+    public function test_teacher_can_apply_future_leave_and_only_pending_requests_can_be_reviewed_or_cancelled(): void
+    {
+        $this->actingAs($this->teacherUser)->post('/akademik/izin-guru', ['type' => 'duty', 'start_date' => '2026-11-02', 'end_date' => '2026-11-03', 'reason' => 'Contoh dinas mendatang'])->assertSessionHasNoErrors();
+        $leave = TeacherLeaveRequest::firstOrFail();
+        $this->actingAs($this->homeroomUser)->delete('/akademik/izin-guru/'.$leave->id)->assertNotFound();
+        $this->actingAs($this->teacherUser)->patch('/akademik/izin-guru/'.$leave->id.'/keputusan', ['decision' => 'approve'])->assertForbidden();
+        $this->actingAs($this->admin)->patch('/akademik/izin-guru/'.$leave->id.'/keputusan', ['decision' => 'approve'])->assertSessionHasNoErrors();
+        $this->patch('/akademik/izin-guru/'.$leave->id.'/keputusan', ['decision' => 'reject'])->assertSessionHasErrors('status');
+        $this->actingAs($this->teacherUser)->delete('/akademik/izin-guru/'.$leave->id)->assertSessionHasErrors('status');
+        $this->assertSame('approved', $leave->fresh()->status);
     }
 }

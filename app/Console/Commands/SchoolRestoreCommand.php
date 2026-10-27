@@ -4,150 +4,106 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Shared\Backup\DatabaseBackupService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use ZipArchive;
 
 class SchoolRestoreCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'school:restore
-                            {file : Path atau nama berkas zip backup yang akan dipulihkan}
-                            {--target-db= : Path berkas sqlite atau koneksi database target pemulihan (drill restore)}
-                            {--target-files= : Direktori tujuan ekstraksi berkas privat}
-                            {--force : Jalankan pemulihan tanpa konfirmasi interaktif}';
+                            {file : Path atau nama arsip backup}
+                            {--target-db= : Path SQLite atau nama koneksi MySQL terisolasi}
+                            {--target-files= : Direktori pemulihan berkas privat}
+                            {--force : Lewati konfirmasi pemulihan}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Pulihkan basis data dan berkas privat dari arsip cadangan School Suite';
+    protected $description = 'Verifikasi lalu pulihkan backup terenkripsi database dan berkas privat';
 
-    public function handle(): int
+    public function handle(DatabaseBackupService $database): int
     {
-        $this->warn('=== Prosedur Pemulihan Cadangan (Restore / Drill) School Suite ===');
-
-        $archiveInput = (string) $this->argument('file');
-        $archivePath = File::exists($archiveInput)
-            ? $archiveInput
-            : storage_path("app/backups/{$archiveInput}");
-
-        if (! File::exists($archivePath)) {
-            $this->error("Berkas arsip cadangan tidak ditemukan: {$archivePath}");
-
-            return self::FAILURE;
-        }
-
-        if (! $this->option('force')) {
-            if (! $this->confirm('PERINGATAN: Pemulihan akan menimpa data yang ada. Lanjutkan prosedur restore?', false)) {
-                $this->info('Operasi pemulihan dibatalkan oleh pengguna.');
-
+        $temporary = storage_path('app/restore_temp_'.bin2hex(random_bytes(12)));
+        try {
+            $target = $this->option('target-db');
+            if (app()->isProduction() && (! $target || ! $this->option('target-files')) && ! app()->isDownForMaintenance()) {
+                throw new RuntimeException('Aktifkan maintenance dan hentikan worker sebelum restore target operasional.');
+            }
+            if (! $this->option('force') && ! $this->confirm('Pemulihan akan menimpa data target. Lanjutkan?', false)) {
                 return self::SUCCESS;
             }
-        }
-
-        $tempExtractDir = storage_path('app/restore_temp_'.now()->format('Ymd_His'));
-        File::makeDirectory($tempExtractDir, 0755, true);
-
-        try {
-            $this->info('1/3 Mengekstrak arsip cadangan...');
+            $password = (string) config('backup.password');
+            if (strlen($password) < 32) {
+                throw new RuntimeException('BACKUP_PASSWORD wajib diisi minimal 32 karakter.');
+            }
+            $input = (string) $this->argument('file');
+            $archive = File::exists($input) ? $input : storage_path('app/backups/'.$input);
+            File::ensureDirectoryExists($temporary, 0700);
             $zip = new ZipArchive;
-            if ($zip->open($archivePath) !== true) {
-                $this->error('Gagal membuka berkas zip cadangan.');
-
-                return self::FAILURE;
+            if ($zip->open($archive) !== true) {
+                throw new RuntimeException('Arsip backup tidak dapat dibuka.');
             }
-            $zip->extractTo($tempExtractDir);
-            $zip->close();
-
-            // Baca manifest jika ada
-            $manifestFile = "{$tempExtractDir}/manifest.json";
-            if (File::exists($manifestFile)) {
-                $manifest = json_decode((string) File::get($manifestFile), true);
-                $this->line("Informasi Arsip: Waktu pembuatan {$manifest['created_at']}, DB Checksum: {$manifest['db_checksum']}");
-            }
-
-            // 2. Pemulihan Database
-            $this->info('2/3 Memulihkan basis data...');
-            $dbDumpFile = "{$tempExtractDir}/database_dump.sql";
-            if (File::exists($dbDumpFile)) {
-                $this->restoreDatabase($dbDumpFile);
-            }
-
-            // 3. Pemulihan Berkas Privat
-            $extractedFilesDir = "{$tempExtractDir}/private_files";
-            if (File::isDirectory($extractedFilesDir)) {
-                $targetFilesDir = $this->option('target-files')
-                    ? (string) $this->option('target-files')
-                    : storage_path('app/private');
-
-                $this->info("3/3 Memulihkan berkas privat ke {$targetFilesDir}...");
-                if (! File::isDirectory($targetFilesDir)) {
-                    File::makeDirectory($targetFilesDir, 0755, true);
+            try {
+                $zip->setPassword($password);
+                // Never extract unvalidated archive paths or symlinks.
+                for ($index = 0; $index < $zip->numFiles; $index++) {
+                    $name = $zip->getNameIndex($index);
+                    $stat = $zip->statIndex($index);
+                    if (! is_string($name) || $name === '' || str_contains($name, '\\') || str_starts_with($name, '/') || preg_match('~(^|/)\.\.?(/|$)|^[A-Za-z]:~', $name)) {
+                        throw new RuntimeException('Path arsip tidak valid.');
+                    }
+                    if (($stat['encryption_method'] ?? 0) !== ZipArchive::EM_AES_256) {
+                        throw new RuntimeException('Backup harus menggunakan enkripsi AES-256 pada seluruh komponen.');
+                    }
+                    $zip->getExternalAttributesIndex($index, $system, $attributes);
+                    if ((($attributes >> 16) & 0170000) === 0120000) {
+                        throw new RuntimeException('Symlink tidak diperbolehkan dalam backup.');
+                    }
+                    if (! $zip->extractTo($temporary, [$name])) {
+                        throw new RuntimeException('Dekripsi/ekstraksi gagal; periksa password dan integritas arsip.');
+                    }
                 }
-                File::copyDirectory($extractedFilesDir, $targetFilesDir);
+            } finally {
+                $zip->close();
             }
-
-            $this->info('✓ Pemulihan cadangan selesai dengan sukses!');
+            $manifestPath = $temporary.'/manifest.json';
+            if (! File::exists($manifestPath)) {
+                throw new RuntimeException('Manifest backup wajib tersedia.');
+            }
+            $manifest = json_decode((string) File::get($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+            if (($manifest['version'] ?? null) !== 2 || ! is_array($manifest['files'] ?? null) || ! isset($manifest['files']['database_dump.sql'])) {
+                throw new RuntimeException('Manifest backup tidak didukung atau tidak lengkap.');
+            }
+            $actualFiles = [];
+            foreach (File::allFiles($temporary) as $file) {
+                $name = $file->getRelativePathname();
+                if ($name === 'manifest.json') {
+                    continue;
+                }
+                $actualFiles[] = $name;
+                if (! isset($manifest['files'][$name]) || ! is_string($manifest['files'][$name]) || ! hash_equals($manifest['files'][$name], hash_file('sha256', $file->getPathname()))) {
+                    throw new RuntimeException('Checksum komponen backup tidak cocok.');
+                }
+            }
+            if (array_diff(array_keys($manifest['files']), $actualFiles) !== []) {
+                throw new RuntimeException('Komponen backup tidak lengkap.');
+            }
+            $database->restore($temporary.'/database_dump.sql', (string) ($manifest['db_format'] ?? ''), $target ? (string) $target : null);
+            if (File::isDirectory($temporary.'/private_files')) {
+                $filesTarget = (string) ($this->option('target-files') ?: storage_path('app/private'));
+                File::ensureDirectoryExists($filesTarget, 0700);
+                if (! File::copyDirectory($temporary.'/private_files', $filesTarget)) {
+                    throw new RuntimeException('Pemulihan berkas privat gagal.');
+                }
+            }
+            $this->info('Verifikasi dan pemulihan backup selesai.');
 
             return self::SUCCESS;
-        } catch (\Throwable $e) {
-            Log::error('Restore failed: '.$e->getMessage()."\n".$e->getTraceAsString());
-            $this->error('Terjadi kesalahan selama prosedur restore: '.$e->getMessage());
+        } catch (\Throwable $exception) {
+            $this->error('Restore gagal: '.$exception->getMessage());
 
             return self::FAILURE;
         } finally {
-            if (File::isDirectory($tempExtractDir)) {
-                File::deleteDirectory($tempExtractDir);
-            }
-        }
-    }
-
-    /**
-     * Pulihkan database dari file dump.
-     */
-    protected function restoreDatabase(string $dumpFile): void
-    {
-        $targetDbOption = $this->option('target-db');
-
-        // Jika target database path SQLite ditentukan (misal saat drill restore)
-        if ($targetDbOption && is_string($targetDbOption)) {
-            $targetDir = dirname($targetDbOption);
-            if (! File::isDirectory($targetDir)) {
-                File::makeDirectory($targetDir, 0755, true);
-            }
-
-            // Jika dump file adalah binary sqlite file
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $dumpFile);
-            finfo_close($finfo);
-
-            if ($mime === 'application/x-sqlite3') {
-                File::copy($dumpFile, $targetDbOption);
-
-                return;
-            }
-
-            // Jika dump file berisi teks query SQL
-            $pdo = new \PDO("sqlite:{$targetDbOption}");
-            $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            $sqlContent = (string) File::get($dumpFile);
-            $pdo->exec($sqlContent);
-
-            return;
-        }
-
-        // Default: Pulihkan ke koneksi aktif aplikasi
-        $sqlContent = (string) File::get($dumpFile);
-        if (trim($sqlContent) !== '') {
-            DB::unprepared($sqlContent);
+            File::deleteDirectory($temporary);
         }
     }
 }

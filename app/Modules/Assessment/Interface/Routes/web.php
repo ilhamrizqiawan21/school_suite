@@ -51,6 +51,7 @@ Route::middleware(['auth'])->prefix('penilaian')->name('assessment.')->group(fun
     Route::get('skema', [AssessmentSchemeController::class, 'index'])->name('schemes.index');
     Route::post('skema', [AssessmentSchemeController::class, 'store'])->name('schemes.store');
     Route::post('skema/{scheme}/komponen', [AssessmentSchemeController::class, 'storeComponent'])->name('schemes.component');
+    Route::put('skema/{scheme}/komponen/{component}/penugasan', [AssessmentSchemeController::class, 'bindComponent'])->middleware('throttle:sensitive')->name('schemes.component.bind');
 
     // Rapor & Ledger Nilai (SS-D-005)
     Route::get('rapor', [ReportCardController::class, 'index'])->name('reports.index');

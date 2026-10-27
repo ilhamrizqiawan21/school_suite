@@ -120,6 +120,11 @@ const publishReport = (reportId: number) => {
                 </div>
             </div>
 
+            <div v-if="generateForm.errors.class_group_id || generateForm.errors.term_id" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <p>{{ generateForm.errors.class_group_id || generateForm.errors.term_id }}</p>
+                <Link href="/penilaian/skema" class="mt-1 inline-block font-semibold underline">Lihat skema penilaian</Link>
+            </div>
+
             <!-- Filter Kelas -->
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-4">
                 <div v-if="!props.is_student" class="w-full sm:w-72">

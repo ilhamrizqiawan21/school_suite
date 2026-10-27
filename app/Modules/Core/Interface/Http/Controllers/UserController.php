@@ -105,7 +105,7 @@ class UserController extends Controller
             'username' => ['nullable', 'string', 'max:50', Rule::unique('users', 'username')->ignore($user->id)],
             'role_id' => ['sometimes', 'exists:roles,id'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'password' => [Rule::prohibitedIf((int) $request->user()->id === (int) $user->id), 'nullable', 'string', 'min:8'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
 

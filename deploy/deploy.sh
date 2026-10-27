@@ -14,12 +14,18 @@ CURRENT_SYMLINK="${APP_DIR}/current"
 BRANCH="${1:-main}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RELEASE_DIR="${RELEASES_DIR}/${TIMESTAMP}"
-HEALTH_CHECK_URL="http://127.0.0.1/up"
+HEALTH_CHECK_URL="${HEALTH_CHECK_URL:-https://school.sch.id/up}"
+PHP_FPM_SERVICE="${PHP_FPM_SERVICE:-php8.3-fpm}"
+
+for executable in php composer npm curl; do
+    command -v "$executable" >/dev/null || { echo "Executable wajib tidak tersedia: $executable" >&2; exit 1; }
+done
+php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);'
 
 echo "=== Memulai Deployment School Suite [${TIMESTAMP}] ==="
 
 # 1. Pastikan direktori dasar ada
-mkdir -p "${SHARED_DIR}/storage" "${SHARED_DIR}/backups" "${RELEASES_DIR}"
+mkdir -p "${SHARED_DIR}/storage/app/private" "${SHARED_DIR}/storage/framework/cache/data" "${SHARED_DIR}/storage/framework/sessions" "${SHARED_DIR}/storage/framework/views" "${SHARED_DIR}/storage/logs" "${SHARED_DIR}/backups" "${RELEASES_DIR}"
 
 # 2. Clone/Salin release baru
 echo "1/7 Menyiapkan rilis baru di ${RELEASE_DIR}..."
@@ -41,7 +47,8 @@ echo "2/7 Menghubungkan shared .env dan shared storage..."
 if [ -f "${SHARED_DIR}/.env" ]; then
     ln -sfn "${SHARED_DIR}/.env" "${RELEASE_DIR}/.env"
 else
-    echo "Peringatan: ${SHARED_DIR}/.env tidak ditemukan. Menggunakan .env lokal."
+    echo "Kesalahan: ${SHARED_DIR}/.env wajib tersedia." >&2
+    exit 1
 fi
 
 rm -rf "${RELEASE_DIR}/storage"
@@ -53,10 +60,8 @@ composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction -
 
 # 5. Build Frontend Assets
 echo "4/7 Mengompilasi aset Vue & Tailwind CSS (Vite production build)..."
-if command -v npm &> /dev/null; then
-    npm ci --silent
-    npm run build --silent
-fi
+npm ci --silent
+npm run build --silent
 
 # 6. Database Migrations
 echo "5/7 Menjalankan migrasi basis data..."
@@ -78,26 +83,23 @@ fi
 
 ln -sfn "${RELEASE_DIR}" "${CURRENT_SYMLINK}"
 
-# 9. Verifikasi Health Check
-echo "Memverifikasi kesehatan rilis..."
-if command -v curl &> /dev/null; then
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${HEALTH_CHECK_URL}" || echo "000")
-    if [ "${HTTP_STATUS}" != "200" ] && [ "${HTTP_STATUS}" != "302" ]; then
-        echo "PERINGATAN: Health check gagal dengan status HTTP ${HTTP_STATUS}."
-        if [ -n "${PREVIOUS_RELEASE}" ] && [ -d "${PREVIOUS_RELEASE}" ]; then
-            echo "Melakukan rollback otomatis ke rilis sebelumnya: ${PREVIOUS_RELEASE}..."
-            ln -sfn "${PREVIOUS_RELEASE}" "${CURRENT_SYMLINK}"
-            echo "Rollback selesai."
-            exit 1
-        fi
+# 9. Restart processes before probing so the request executes the new PHP release.
+reject_release() {
+    echo "Rilis gagal diverifikasi." >&2
+    if [ -n "${PREVIOUS_RELEASE}" ] && [ -d "${PREVIOUS_RELEASE}" ]; then
+        ln -sfn "${PREVIOUS_RELEASE}" "${CURRENT_SYMLINK}"
+        sudo systemctl restart school-suite-worker || echo "Restart worker rollback gagal." >&2
+        sudo systemctl reload "${PHP_FPM_SERVICE}" || echo "Reload FPM rollback gagal." >&2
     fi
+    exit 1
+}
+if ! sudo systemctl restart school-suite-worker || ! sudo systemctl reload "${PHP_FPM_SERVICE}"; then
+    reject_release
 fi
 
-# 10. Restart Background Queue Worker & Reload PHP-FPM
-if command -v systemctl &> /dev/null; then
-    echo "Memuat ulang worker dan PHP-FPM..."
-    sudo systemctl restart school-suite-worker || true
-    sudo systemctl reload php8.2-fpm || sudo systemctl reload php-fpm || true
+# 10. Require HTTP 200 and the application's healthy JSON payload, including first install.
+if ! bash "${RELEASE_DIR}/deploy/health-check.sh" "${HEALTH_CHECK_URL}"; then
+    reject_release
 fi
 
 # 11. Bersihkan Rilis Lama (Pertahankan 5 rilis terakhir)

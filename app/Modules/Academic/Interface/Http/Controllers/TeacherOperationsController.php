@@ -43,7 +43,7 @@ class TeacherOperationsController extends Controller
             ->where('school_id', $schoolId)
             ->whereDate('date', $date)
             ->whereIn('teacher_id', $teachers->pluck('id'))
-            ->get()->keyBy('teacher_id');
+            ->with('recordedBy:id,name')->get()->keyBy('teacher_id');
 
         $rows = $teachers->map(function (Teacher $item) use ($records): array {
             $record = $records->get($item->id);
@@ -53,6 +53,8 @@ class TeacherOperationsController extends Controller
                 'name' => $item->name,
                 'nip' => $item->nip,
                 'record_id' => $record?->id,
+                'updated_at' => $record?->updated_at?->toIso8601String(),
+                'recorded_by' => $record?->recordedBy?->name,
                 'status' => $record?->status ?? 'present',
                 'notes' => $record?->notes ?? '',
                 'substitute_url' => $record && $record->status !== 'present' ? "/akademik/absensi-guru/{$record->id}/pengganti" : null,
@@ -61,6 +63,7 @@ class TeacherOperationsController extends Controller
 
         return Inertia::render('Academic/TeacherOperations/Attendance', [
             'date' => $date,
+            'today' => today()->toDateString(),
             'rows' => $rows,
             'can_manage_all' => $actor->hasRole(['admin', 'operator']),
             'summary' => [
@@ -127,12 +130,26 @@ class TeacherOperationsController extends Controller
     {
         $actor = $request->user();
         $this->authorizeView($actor);
-        $filter = $request->validate(['status' => ['nullable', Rule::in(['all', 'pending', 'approved', 'rejected'])]])['status'] ?? 'all';
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(['all', 'pending', 'approved', 'rejected'])],
+            'search' => ['nullable', 'string', 'max:150'],
+            'type' => ['nullable', Rule::in(array_keys(TeacherLeaveRequest::TYPES))],
+            'month' => ['nullable', 'date_format:Y-m'],
+        ]);
+        $filter = $filters['status'] ?? 'all';
         $teacher = $actor->hasRole(['teacher', 'homeroom']) ? $this->operations->teacherFor($actor) : null;
-        $leaves = TeacherLeaveRequest::query()
-            ->where('school_id', $actor->school_id)
-            ->when($teacher, fn ($query) => $query->where('teacher_id', $teacher->id))
+        $base = TeacherLeaveRequest::query()->where('school_id', $actor->school_id)
+            ->when($teacher, fn ($query) => $query->where('teacher_id', $teacher->id));
+        $counts = (clone $base)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $month = ! empty($filters['month']) ? CarbonImmutable::createFromFormat('!Y-m', $filters['month']) : null;
+        $leaves = (clone $base)
             ->when($filter !== 'all', fn ($query) => $query->where('status', $filter))
+            ->when(! empty($filters['type']), fn ($query) => $query->where('type', $filters['type']))
+            ->when($month, fn ($query) => $query->whereDate('start_date', '<=', $month->endOfMonth()->toDateString())->whereDate('end_date', '>=', $month->startOfMonth()->toDateString()))
+            ->when(! empty($filters['search']), function ($query) use ($filters) {
+                $search = '%'.$filters['search'].'%';
+                $query->where(fn ($sub) => $sub->where('reason', 'like', $search)->orWhereHas('teacher', fn ($teacherQuery) => $teacherQuery->where('name', 'like', $search)->orWhere('nip', 'like', $search)));
+            })
             ->with(['teacher:id,name,nip', 'reviewedBy:id,name'])
             ->orderByDesc('start_date')->orderByDesc('id')
             ->paginate(15)->withQueryString()
@@ -149,6 +166,8 @@ class TeacherOperationsController extends Controller
                 'reason' => $leave->reason,
                 'status' => $leave->status,
                 'review_note' => $leave->review_note,
+                'reviewed_at' => $leave->reviewed_at?->toIso8601String(),
+                'duration_days' => (int) $leave->start_date->diffInDays($leave->end_date) + 1,
                 'reviewer_name' => $leave->reviewedBy?->name,
                 'can_cancel' => $teacher && (int) $leave->teacher_id === (int) $teacher->id && $leave->status === 'pending',
                 'can_review' => $actor->hasRole(['admin', 'operator']) && $leave->status === 'pending',
@@ -157,6 +176,10 @@ class TeacherOperationsController extends Controller
         return Inertia::render('Academic/TeacherOperations/Leave', [
             'leaves' => $leaves,
             'filter' => $filter,
+            'filters' => ['search' => $filters['search'] ?? '', 'type' => $filters['type'] ?? '', 'month' => $filters['month'] ?? ''],
+            'summary' => ['all' => (int) $counts->sum(), 'pending' => (int) ($counts['pending'] ?? 0), 'approved' => (int) ($counts['approved'] ?? 0), 'rejected' => (int) ($counts['rejected'] ?? 0)],
+            'today' => today()->toDateString(),
+            'min_start_date' => today()->subDays(7)->toDateString(),
             'can_apply' => $teacher !== null,
             'can_review' => $actor->hasRole(['admin', 'operator']),
             'types' => TeacherLeaveRequest::TYPES,

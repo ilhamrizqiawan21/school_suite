@@ -55,6 +55,15 @@ class AcademicSettingsController extends Controller
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
         ]);
+
+        if ($academicYear->terms()->whereDate('start_date', '<', $data['start_date'])->exists()) {
+            return back()->withErrors(['start_date' => 'Tanggal mulai tidak boleh melewati semester yang sudah tercatat.']);
+        }
+
+        if ($academicYear->terms()->whereDate('end_date', '>', $data['end_date'])->exists()) {
+            return back()->withErrors(['end_date' => 'Tanggal selesai tidak boleh mendahului semester yang sudah tercatat.']);
+        }
+
         $old = $academicYear->only(array_keys($data));
         $academicYear->update($data);
         $this->audit->log('academic.year.updated', 'AcademicYear', (string) $academicYear->id, $data, $old, $request->user(), (int) $academicYear->school_id);
@@ -65,10 +74,14 @@ class AcademicSettingsController extends Controller
     public function activateYear(Request $request, AcademicYear $academicYear): RedirectResponse
     {
         $this->authorizeOwned($request, $academicYear->school_id);
+        $oldYearIds = AcademicYear::where('school_id', $academicYear->school_id)->where('is_active', true)->pluck('id')->all();
+        $oldTermIds = Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $academicYear->school_id))->where('is_active', true)->pluck('id')->all();
         DB::transaction(function () use ($academicYear) {
             AcademicYear::where('school_id', $academicYear->school_id)->update(['is_active' => false]);
+            Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $academicYear->school_id))->update(['is_active' => false]);
             $academicYear->update(['is_active' => true]);
         });
+        $this->audit->log('academic.year.activated', 'AcademicYear', (string) $academicYear->id, ['active_year_id' => $academicYear->id, 'active_term_id' => null], ['active_year_ids' => $oldYearIds, 'active_term_ids' => $oldTermIds], $request->user(), (int) $academicYear->school_id);
 
         return back()->with('message', 'Tahun ajaran aktif berhasil diubah.');
     }
@@ -82,7 +95,13 @@ class AcademicSettingsController extends Controller
             'start_date' => ['required', 'date', 'after_or_equal:'.$academicYear->start_date->format('Y-m-d')],
             'end_date' => ['required', 'date', 'after:start_date', 'before_or_equal:'.$academicYear->end_date->format('Y-m-d')],
         ]);
-        $academicYear->terms()->create([...$data, 'is_active' => false]);
+
+        if ($academicYear->terms()->whereDate('start_date', '<=', $data['end_date'])->whereDate('end_date', '>=', $data['start_date'])->exists()) {
+            return back()->withErrors(['start_date' => 'Rentang tanggal semester bertumpang tindih dengan semester lain pada tahun ajaran ini.']);
+        }
+
+        $term = $academicYear->terms()->create([...$data, 'is_active' => false]);
+        $this->audit->log('academic.term.created', 'Term', (string) $term->id, $data, actor: $request->user(), schoolId: (int) $academicYear->school_id);
 
         return back()->with('message', 'Semester berhasil ditambahkan.');
     }
@@ -91,12 +110,15 @@ class AcademicSettingsController extends Controller
     {
         $term->load('academicYear');
         $this->authorizeOwned($request, $term->academicYear->school_id);
+        $oldYearIds = AcademicYear::where('school_id', $term->academicYear->school_id)->where('is_active', true)->pluck('id')->all();
+        $oldTermIds = Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $term->academicYear->school_id))->where('is_active', true)->pluck('id')->all();
         DB::transaction(function () use ($term) {
             Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $term->academicYear->school_id))->update(['is_active' => false]);
             AcademicYear::where('school_id', $term->academicYear->school_id)->update(['is_active' => false]);
             $term->academicYear->update(['is_active' => true]);
             $term->update(['is_active' => true]);
         });
+        $this->audit->log('academic.term.activated', 'Term', (string) $term->id, ['active_year_id' => $term->academicYear->id, 'active_term_id' => $term->id], ['active_year_ids' => $oldYearIds, 'active_term_ids' => $oldTermIds], $request->user(), (int) $term->academicYear->school_id);
 
         return back()->with('message', 'Semester aktif berhasil diubah.');
     }
@@ -106,7 +128,8 @@ class AcademicSettingsController extends Controller
         $this->authorizeManager($request);
         $schoolId = (int) $request->user()->school_id;
         $data = $this->validateSubject($request, $schoolId);
-        Subject::create([...$data, 'school_id' => $schoolId]);
+        $subject = Subject::create([...$data, 'school_id' => $schoolId]);
+        $this->audit->log('academic.subject.created', 'Subject', (string) $subject->id, $data, actor: $request->user(), schoolId: $schoolId);
 
         return back()->with('message', 'Mata pelajaran berhasil ditambahkan.');
     }
@@ -114,7 +137,10 @@ class AcademicSettingsController extends Controller
     public function updateSubject(Request $request, Subject $subject): RedirectResponse
     {
         $this->authorizeOwned($request, $subject->school_id);
-        $subject->update($this->validateSubject($request, (int) $subject->school_id, $subject->id));
+        $data = $this->validateSubject($request, (int) $subject->school_id, $subject->id);
+        $old = $subject->only(array_keys($data));
+        $subject->update($data);
+        $this->audit->log('academic.subject.updated', 'Subject', (string) $subject->id, $data, $old, $request->user(), (int) $subject->school_id);
 
         return back()->with('message', 'Mata pelajaran berhasil diperbarui.');
     }
@@ -122,10 +148,20 @@ class AcademicSettingsController extends Controller
     public function destroySubject(Request $request, Subject $subject): RedirectResponse
     {
         $this->authorizeOwned($request, $subject->school_id);
-        if ($subject->teachingAssignments()->exists()) {
-            return back()->with('error', 'Mata pelajaran masih digunakan dalam penugasan mengajar.');
+        $isInUse = $subject->teachingAssignments()->exists()
+            || DB::table('schedules')->where('subject_id', $subject->id)->exists()
+            || DB::table('lesson_sessions')->where('subject_id', $subject->id)->exists()
+            || DB::table('teaching_plans')->where('subject_id', $subject->id)->exists()
+            || DB::table('exam_questions')->where('subject_id', $subject->id)->exists()
+            || DB::table('exam_question_versions')->where('subject_id', $subject->id)->exists()
+            || DB::table('question_kko_terms')->where('subject_id', $subject->id)->exists();
+
+        if ($isInUse) {
+            return back()->with('error', 'Mata pelajaran memiliki jadwal, dokumen, atau riwayat penilaian. Nonaktifkan mapel jika sudah tidak digunakan.');
         }
+        $old = $subject->only(['code', 'name', 'category', 'order', 'is_active']);
         $subject->delete();
+        $this->audit->log('academic.subject.deleted', 'Subject', (string) $subject->id, oldValues: $old, actor: $request->user(), schoolId: (int) $subject->school_id);
 
         return back()->with('message', 'Mata pelajaran berhasil dihapus.');
     }

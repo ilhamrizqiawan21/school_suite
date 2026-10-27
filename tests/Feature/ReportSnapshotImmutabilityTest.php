@@ -20,6 +20,7 @@ use App\Modules\Assessment\Infrastructure\Models\AssessmentComponent;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use App\Modules\Assessment\Infrastructure\Models\Score;
+use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
@@ -61,7 +62,9 @@ class ReportSnapshotImmutabilityTest extends TestCase
             'status' => 'active',
         ]);
 
+        $role = Role::create(['name' => 'homeroom', 'label' => 'Wali Kelas', 'is_system' => true]);
         $this->teacherUser = User::create([
+            'role_id' => $role->id,
             'school_id' => $this->school->id,
             'name' => 'Guru Matematika',
             'username' => 'guru_math',

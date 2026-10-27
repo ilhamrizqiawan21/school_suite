@@ -12,6 +12,7 @@ use App\Shared\Audit\AuditLogger;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -209,6 +210,32 @@ class AcademicImportService
         });
     }
 
+    /** @return list<array<string, mixed>> */
+    public function parseTeacherImportFile(string $path, string $extension): array
+    {
+        $table = $extension === 'xlsx' ? $this->readBoundedStudentSpreadsheet($path) : $this->readStudentCsvFile($path);
+        $header = array_shift($table) ?? [];
+        $header = array_map(fn ($value) => trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $value) ?? ''), $header);
+        if (count($header) !== count(array_unique($header)) || array_diff(['nip', 'name', 'gender'], $header) !== []) {
+            throw new InvalidArgumentException('Header wajib nip, name, dan gender harus tersedia dan tidak boleh berulang.');
+        }
+        $rows = [];
+        foreach ($table as $index => $values) {
+            if (! collect($values)->contains(fn ($value) => trim((string) $value) !== '')) {
+                continue;
+            }
+            if (count($values) !== count($header)) {
+                throw new InvalidArgumentException('Jumlah kolom tidak cocok dengan header pada baris '.($index + 2).'.');
+            }
+            $rows[] = array_combine($header, $values);
+        }
+        if (count($rows) > 1000) {
+            throw new InvalidArgumentException('Maksimal 1.000 guru per berkas.');
+        }
+
+        return $rows;
+    }
+
     /**
      * Memvalidasi data baris guru sebelum diimpor.
      *
@@ -221,6 +248,9 @@ class AcademicImportService
      */
     public function validateTeacherRows(int $schoolId, array $rows): array
     {
+        if (count($rows) > 1000) {
+            throw new InvalidArgumentException('Maksimal 1.000 guru per berkas.');
+        }
         $validRows = [];
         $invalidRows = [];
         $seenNip = [];
@@ -260,6 +290,15 @@ class AcademicImportService
             if ($email !== null && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = "Format email [{$email}] tidak valid.";
             }
+
+            $fieldValidation = Validator::make($row, [
+                'name' => ['required', 'string', 'max:150'],
+                'nip' => ['nullable', 'string', 'max:50'],
+                'phone' => ['nullable', 'string', 'max:30'],
+                'email' => ['nullable', 'string', 'max:100'],
+                'employment_status' => ['nullable', 'string', 'max:50'],
+            ]);
+            $errors = array_merge($errors, $fieldValidation->errors()->all());
 
             if (! empty($errors)) {
                 $invalidRows[] = [

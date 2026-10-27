@@ -32,6 +32,9 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     // Siswa
     Route::get('siswa', [StudentController::class, 'index'])->name('students.index');
     Route::post('siswa', [StudentController::class, 'store'])->name('students.store');
+    Route::get('siswa/export/excel', [StudentController::class, 'exportExcel'])->name('students.export.excel');
+    Route::post('siswa/{student}/reset-password', [StudentController::class, 'resetPassword'])->middleware('throttle:sensitive')->name('students.reset-password');
+    Route::delete('siswa/{student}', [StudentController::class, 'destroy'])->middleware('throttle:sensitive')->name('students.destroy');
     Route::put('siswa/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::post('siswa/import/preview', [StudentController::class, 'previewImport'])->middleware('throttle:sensitive')->name('students.import.preview');
     Route::post('siswa/import/{token}/confirm', [StudentController::class, 'confirmImport'])->middleware('throttle:sensitive')->name('students.import.confirm');
@@ -41,6 +44,9 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     // Guru / Pendidik
     Route::get('guru', [TeacherController::class, 'index'])->name('teachers.index');
     Route::post('guru', [TeacherController::class, 'store'])->name('teachers.store');
+    Route::get('guru/export/excel', [TeacherController::class, 'exportExcel'])->name('teachers.export.excel');
+    Route::post('guru/{teacher}/reset-password', [TeacherController::class, 'resetPassword'])->middleware('throttle:sensitive')->name('teachers.reset-password');
+    Route::delete('guru/{teacher}', [TeacherController::class, 'destroy'])->middleware('throttle:sensitive')->name('teachers.destroy');
     Route::put('guru/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
     Route::post('guru/import/preview', [TeacherController::class, 'previewImport'])->middleware('throttle:sensitive')->name('teachers.import.preview');
     Route::post('guru/import/{token}/confirm', [TeacherController::class, 'confirmImport'])->middleware('throttle:sensitive')->name('teachers.import.confirm');
@@ -50,11 +56,14 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     // Rombongan Belajar / Kelas
     Route::get('kelas', [ClassGroupController::class, 'index'])->name('classes.index');
     Route::post('kelas', [ClassGroupController::class, 'store'])->name('classes.store');
+    Route::put('kelas/{classGroup}', [ClassGroupController::class, 'update'])->name('classes.update');
+    Route::delete('kelas/{classGroup}', [ClassGroupController::class, 'destroy'])->middleware('throttle:sensitive')->name('classes.destroy');
     Route::post('kelas/{classGroup}/wali-kelas', [ClassGroupController::class, 'assignHomeroom'])->name('classes.assign_homeroom');
 
     // Jadwal Pelajaran (Schedules)
     Route::get('jadwal', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::post('jadwal', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::put('jadwal/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
     Route::post('jadwal/terbitkan', [ScheduleController::class, 'publish'])->name('schedules.publish');
     Route::delete('jadwal/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
 

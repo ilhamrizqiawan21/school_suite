@@ -143,7 +143,7 @@ class DatabaseBackupService
                 if (! $maria) {
                     $command[] = '--set-gtid-purged=OFF';
                 }
-                $command = [...$command, '--result-file='.$dump, '--databases', $config['database'], '--no-create-db'];
+                $command = [...$command, '--result-file='.$dump, $config['database']];
             }
             $result = Process::timeout(1800)->input($input)->run($command);
             if (! $result->successful()) {

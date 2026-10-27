@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
-import type { ClassGroup, Teacher } from '../../../types';
+import type { ClassGroup, Teacher, SharedProps } from '../../../types';
 
 interface AcademicYearItem {
     id: number;
@@ -18,8 +18,17 @@ const props = defineProps<{
     classes: ClassGroup[];
     teachers: Teacher[];
     can_manage: boolean;
+    terms: Array<{ id: number; name: string; is_active: boolean }>;
+    active_term?: { id: number; name: string; is_active: boolean } | null;
+    stats: { classes: number; students: number; without_homeroom: number };
 }>();
 
+const page = usePage<SharedProps>();
+const search = ref('');
+const grade = ref('');
+const selectedTerm = ref(props.active_term?.id ? String(props.active_term.id) : '');
+const editingId = ref<number | null>(null);
+const visibleClasses = computed(() => props.classes.filter(cls => (!grade.value || cls.grade_level === Number(grade.value)) && cls.name.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase())));
 const selectedYear = ref(props.active_year?.id ? String(props.active_year.id) : '');
 
 const showAddClassModal = ref(false);
@@ -27,7 +36,22 @@ const showAssignHomeroomModal = ref(false);
 const selectedClassForHomeroom = ref<ClassGroup | null>(null);
 
 const changeYear = () => {
-    router.get('/akademik/kelas', { academic_year_id: selectedYear.value }, { preserveState: true });
+    router.get('/akademik/kelas', { academic_year_id: selectedYear.value });
+};
+
+const changeTerm = () => router.get('/akademik/kelas', { academic_year_id: selectedYear.value, term_id: selectedTerm.value });
+const openAdd = () => { editingId.value = null; classForm.reset(); classForm.clearErrors(); showAddClassModal.value = true; };
+const openEdit = (cls: ClassGroup) => {
+    editingId.value = cls.id;
+    classForm.clearErrors();
+    classForm.name = cls.name;
+    classForm.grade_level = cls.grade_level;
+    classForm.capacity = cls.capacity;
+    showAddClassModal.value = true;
+};
+const deleteClass = (cls: ClassGroup) => {
+    if (!window.confirm(`Hapus rombel ${cls.name}? Rombel dengan wali kelas, penugasan, atau riwayat akademik tidak dapat dihapus.`)) return;
+    router.delete(`/akademik/kelas/${cls.id}`, { preserveScroll: true });
 };
 
 const classForm = useForm({
@@ -40,12 +64,12 @@ const classForm = useForm({
 
 const submitAddClass = () => {
     classForm.academic_year_id = selectedYear.value;
-    classForm.post('/akademik/kelas', {
-        onSuccess: () => {
-            showAddClassModal.value = false;
-            classForm.reset('name', 'homeroom_teacher_id');
-        },
-    });
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => { showAddClassModal.value = false; classForm.reset('name', 'homeroom_teacher_id'); },
+    };
+    if (editingId.value) classForm.put(`/akademik/kelas/${editingId.value}`, options);
+    else classForm.post('/akademik/kelas', options);
 };
 
 const homeroomForm = useForm({
@@ -54,6 +78,7 @@ const homeroomForm = useForm({
 
 const openHomeroomModal = (cls: ClassGroup) => {
     selectedClassForHomeroom.value = cls;
+    homeroomForm.clearErrors();
     homeroomForm.teacher_id = cls.homeroom_teacher_id ? String(cls.homeroom_teacher_id) : '';
     showAssignHomeroomModal.value = true;
 };
@@ -73,7 +98,7 @@ const submitAssignHomeroom = () => {
     <AppLayout title="Rombongan Belajar & Penugasan Wali Kelas">
         <Head title="Rombongan Belajar — School Suite" />
 
-        <div class="view space-y-6">
+        <div class="view class-page space-y-6">
             <!-- Header bar -->
             <div class="page-heading compact-heading">
                 <div>
@@ -83,11 +108,11 @@ const submitAssignHomeroom = () => {
                     </p>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
                         <label class="text-xs font-semibold text-slate-600">Tahun Ajaran:</label>
                         <select
-                            v-model="selectedYear"
+                            aria-label="Tahun ajaran" v-model="selectedYear"
                             @change="changeYear"
                             class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"
                         >
@@ -96,25 +121,30 @@ const submitAssignHomeroom = () => {
                             </option>
                         </select>
                     </div>
-
+                    <select v-if="terms.length" v-model="selectedTerm" aria-label="Semester" class="rounded-lg border px-3 py-2 text-sm" @change="changeTerm"><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.name }}{{ term.is_active ? ' (Aktif)' : '' }}</option></select>
+                    <button v-if="can_manage" type="button" class="primary-button" :disabled="!selectedYear" @click="openAdd">Tambah rombel</button>
                 </div>
             </div>
 
-            <section v-if="can_manage" class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
-                <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Rombongan belajar baru</h2></div>
-                <form class="grid gap-3 md:grid-cols-[130px_1fr_140px_1.3fr_auto] items-end" @submit.prevent="submitAddClass">
-                    <label class="text-xs font-semibold text-slate-700">Tingkat<select v-model="classForm.grade_level" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option :value="7">Kelas 7</option><option :value="8">Kelas 8</option><option :value="9">Kelas 9</option><option :value="10">Kelas 10</option><option :value="11">Kelas 11</option><option :value="12">Kelas 12</option></select></label>
-                    <label class="text-xs font-semibold text-slate-700">Nama kelas<input v-model="classForm.name" required placeholder="VII-A" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Kapasitas<input v-model="classForm.capacity" type="number" min="1" max="60" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /></label>
-                    <label class="text-xs font-semibold text-slate-700">Wali kelas<select v-model="classForm.homeroom_teacher_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option value="">Belum ditentukan</option><option v-for="teacher in teachers" :key="teacher.id" :value="String(teacher.id)">{{ teacher.name }}</option></select></label>
-                    <button type="submit" :disabled="classForm.processing || !selectedYear" class="inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Simpan</button>
-                </form>
-            </section>
+            <div v-if="page.props.flash?.message" class="panel p-4" role="status">{{ page.props.flash.message }}</div>
+            <div v-if="page.props.errors?.class_group" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.class_group }}</div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="panel p-4"><p>Total rombel</p><strong class="text-2xl">{{ stats.classes }}</strong></div>
+                <div class="panel p-4"><p>Siswa aktif semester terpilih</p><strong class="text-2xl">{{ stats.students }}</strong></div>
+                <div class="panel p-4"><p>Belum ada wali kelas</p><strong class="text-2xl">{{ stats.without_homeroom }}</strong></div>
+            </div>
+            <p v-if="!active_year" class="panel p-4">Belum ada tahun ajaran. Atur tahun ajaran melalui Pengaturan Akademik terlebih dahulu.</p>
+            <p v-else-if="!active_term" class="panel p-4">Tahun ajaran ini belum memiliki semester. Jumlah siswa ditampilkan nol sampai semester tersedia.</p>
+            <div class="panel p-4 flex flex-wrap gap-3">
+                <input v-model="search" aria-label="Cari nama rombel" placeholder="Cari nama rombel..." type="search" class="min-w-0 flex-1 rounded-lg border px-3 py-2" />
+                <select v-model="grade" aria-label="Filter tingkat" class="rounded-lg border px-3 py-2"><option value="">Semua tingkat</option><option v-for="level in 12" :key="level" :value="String(level)">Kelas {{ level }}</option></select>
+                <button type="button" class="secondary-button" @click="search = ''; grade = ''">Reset filter</button>
+            </div>
 
             <!-- Grid Rombel -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 <div
-                    v-for="cls in classes"
+                    v-for="cls in visibleClasses"
                     :key="cls.id"
                     class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 transition-all flex flex-col justify-between"
                 >
@@ -127,7 +157,7 @@ const submitAssignHomeroom = () => {
                                 <h3 class="text-xl font-bold text-slate-900">Kelas {{ cls.name }}</h3>
                             </div>
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                {{ cls.enrollments_count || 0 }} / {{ cls.capacity }} Siswa
+                                {{ cls.enrollments_count || 0 }} / {{ cls.capacity }} siswa aktif
                             </span>
                         </div>
 
@@ -153,7 +183,7 @@ const submitAssignHomeroom = () => {
                         </div>
                     </div>
 
-                    <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div class="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-3 items-center">
                         <button
                             v-if="can_manage"
                             type="button"
@@ -162,20 +192,22 @@ const submitAssignHomeroom = () => {
                         >
                             {{ cls.homeroom_teacher ? 'Ubah Wali Kelas' : 'Tetapkan Wali Kelas' }}
                         </button>
+                        <button v-if="can_manage" type="button" class="secondary-button" :aria-label="`Ubah rombel ${cls.name}`" @click="openEdit(cls)">Ubah</button>
+                        <button v-if="can_manage" type="button" class="secondary-button text-red-700" :aria-label="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)">Hapus</button>
                     </div>
                 </div>
 
-                <div v-if="classes.length === 0" class="col-span-full bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
-                    Belum ada rombongan belajar pada tahun ajaran ini. Gunakan form di atas untuk menambahkan rombel.
+                <div v-if="visibleClasses.length === 0" class="col-span-full bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
+                    {{ classes.length ? 'Tidak ada rombel yang cocok dengan filter.' : 'Belum ada rombel pada tahun ajaran ini.' }}
                 </div>
             </div>
         </div>
 
         <!-- Modal Tambah Rombel -->
-        <div v-if="showAddClassModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+        <div v-if="can_manage && showAddClassModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div role="dialog" aria-modal="true" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Tambah Rombongan Belajar</h3>
+                    <h3 class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Rombongan Belajar' : 'Tambah Rombongan Belajar' }}</h3>
                     <button type="button" @click="showAddClassModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
@@ -183,12 +215,7 @@ const submitAssignHomeroom = () => {
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Tingkat Kelas (Grade Level) *</label>
                         <select v-model="classForm.grade_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
-                            <option :value="7">Kelas 7 (SMP / MTs)</option>
-                            <option :value="8">Kelas 8 (SMP / MTs)</option>
-                            <option :value="9">Kelas 9 (SMP / MTs)</option>
-                            <option :value="10">Kelas 10 (SMA / SMK)</option>
-                            <option :value="11">Kelas 11 (SMA / SMK)</option>
-                            <option :value="12">Kelas 12 (SMA / SMK)</option>
+                            <option v-for="level in 12" :key="level" :value="level">Kelas {{ level }}</option>
                         </select>
                     </div>
 
@@ -203,7 +230,7 @@ const submitAssignHomeroom = () => {
                         <input v-model="classForm.capacity" type="number" min="1" max="60" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
 
-                    <div>
+                    <div v-if="!editingId">
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Wali Kelas (Opsional)</label>
                         <select v-model="classForm.homeroom_teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option value="">(Belum ditetapkan)</option>
@@ -212,6 +239,8 @@ const submitAssignHomeroom = () => {
                         <div v-if="classForm.errors.homeroom_teacher_id" class="text-xs text-red-600 mt-1">{{ classForm.errors.homeroom_teacher_id }}</div>
                     </div>
 
+                    <ul v-if="Object.keys(classForm.errors).length" role="alert" class="text-sm text-red-700"><li v-for="(error, field) in classForm.errors" :key="field">{{ error }}</li></ul>
+                    <p v-if="editingId" class="text-xs text-slate-500">Tahun ajaran tetap. Tingkat kelas dengan siswa atau penugasan tidak dapat diubah.</p>
                     <div class="flex justify-end gap-2 pt-3 border-t">
                         <button type="button" @click="showAddClassModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
                             Batal
@@ -225,8 +254,8 @@ const submitAssignHomeroom = () => {
         </div>
 
         <!-- Modal Tetapkan Wali Kelas -->
-        <div v-if="showAssignHomeroomModal && selectedClassForHomeroom" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+        <div v-if="can_manage && showAssignHomeroomModal && selectedClassForHomeroom" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div role="dialog" aria-modal="true" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Tetapkan Wali Kelas {{ selectedClassForHomeroom.name }}</h3>
                     <button type="button" @click="showAssignHomeroomModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
@@ -234,9 +263,9 @@ const submitAssignHomeroom = () => {
 
                 <form @submit.prevent="submitAssignHomeroom" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Guru sebagai Wali Kelas *</label>
-                        <select v-model="homeroomForm.teacher_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
-                            <option value="">Pilih guru...</option>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Guru sebagai Wali Kelas</label>
+                        <select v-model="homeroomForm.teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <option value="">Tanpa wali kelas / lepaskan penetapan</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>
                         </select>
                         <div v-if="homeroomForm.errors.teacher_id" class="text-xs text-red-600 mt-1">{{ homeroomForm.errors.teacher_id }}</div>
@@ -255,3 +284,9 @@ const submitAssignHomeroom = () => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.class-page { min-width: 0; }
+.class-page select { max-width: 100%; }
+@media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; } }
+</style>

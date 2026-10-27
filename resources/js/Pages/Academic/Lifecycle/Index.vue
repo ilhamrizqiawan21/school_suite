@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import type { SharedProps } from '@/types';
 
 interface TermItem { id: number; name: string; start_date?: string; is_active?: boolean; academic_year?: { id: number; name: string } }
 interface ClassItem { id: number; name: string; grade_level: number; academic_year_id: number }
@@ -9,6 +10,8 @@ interface EnrollmentItem { id: number; student?: { id: number; nis: string; name
 interface LifecycleEvent { id: number; action: string; effective_date: string; notes?: string | null; student?: { nis: string; name: string }; source_enrollment?: { class_group?: { name: string } }; target_enrollment?: { class_group?: { name: string } } }
 
 const props = defineProps<{ terms: TermItem[]; activeTerm?: TermItem | null; classes: ClassItem[]; enrollments: EnrollmentItem[]; events: LifecycleEvent[]; can_manage: boolean }>();
+const page = usePage<SharedProps>();
+const message = computed(() => page.props.flash?.message);
 const localDate = () => { const date = new Date(); const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 10); };
 const form = useForm({ enrollment_id: '', action: 'promoted', target_term_id: '', target_class_group_id: '', effective_date: localDate(), notes: '' });
 const historySearch = ref('');
@@ -49,6 +52,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
     <AppLayout title="Siklus Siswa">
         <Head title="Siklus Siswa — School Suite" />
         <div class="lifecycle-page space-y-6">
+            <div v-if="message" class="lifecycle-success" role="status">{{ message }}</div>
             <section class="lifecycle-hero panel">
                 <div><p class="lifecycle-kicker">Administrasi akademik</p><h1>Siklus Siswa</h1><p class="lifecycle-hero-copy">Kelola kenaikan kelas, tinggal kelas, kelulusan, dan perpindahan siswa tanpa menghapus histori akademik.</p></div>
                 <div class="lifecycle-period"><span>Periode aktif</span><strong>{{ activeTerm?.academic_year?.name ?? 'Belum diatur' }}</strong><small>{{ activeTerm?.name ?? 'Tidak ada semester aktif' }}</small></div>
@@ -57,14 +61,15 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
             <section class="lifecycle-stats" aria-label="Ringkasan siklus siswa">
                 <article class="lifecycle-stat panel"><span>Siswa aktif</span><strong>{{ enrollments.length }}</strong><small>Siap diproses pada periode aktif</small></article>
                 <article class="lifecycle-stat panel lifecycle-stat-accent"><span>Riwayat keputusan</span><strong>{{ events.length }}</strong><small>Peristiwa terakhir yang tercatat</small></article>
-                <article class="lifecycle-stat panel"><span>Periode tujuan</span><strong>{{ terms.length }}</strong><small>Tahun ajaran tersedia</small></article>
+                <article class="lifecycle-stat panel"><span>Periode akademik</span><strong>{{ terms.length }}</strong><small>Term tersedia sebagai tujuan</small></article>
             </section>
 
             <section v-if="can_manage" class="lifecycle-workspace">
                 <form class="lifecycle-form panel" @submit.prevent="submit">
                     <div class="lifecycle-section-heading"><div><p class="lifecycle-kicker">Langkah 01</p><h2>Proses keputusan siswa</h2><p>Pilih siswa aktif lalu tentukan keputusan akademiknya.</p></div><span class="lifecycle-form-status">{{ form.processing ? 'Menyimpan…' : 'Siap diproses' }}</span></div>
                     <div class="lifecycle-fields">
-                        <label class="lifecycle-field lifecycle-field-wide"><span>Siswa aktif <b>*</b></span><select v-model="form.enrollment_id" required><option value="">Pilih siswa dan rombel saat ini</option><option v-for="enrollment in enrollments" :key="enrollment.id" :value="String(enrollment.id)">{{ enrollment.student?.nis }} — {{ enrollment.student?.name }} · {{ enrollment.class_group?.name ?? 'Tanpa rombel' }}</option></select><small v-if="form.errors.enrollment_id" class="lifecycle-error">{{ form.errors.enrollment_id }}</small></label>
+                        <label class="lifecycle-field lifecycle-field-wide"><span>Siswa aktif <b>*</b></span><select v-model="form.enrollment_id" required><option value="">{{ enrollments.length ? 'Pilih siswa dan rombel saat ini' : 'Tidak ada siswa aktif pada periode ini' }}</option><option v-for="enrollment in enrollments" :key="enrollment.id" :value="String(enrollment.id)">{{ enrollment.student?.nis }} — {{ enrollment.student?.name }} · {{ enrollment.class_group?.name ?? 'Tanpa rombel' }}</option></select><small v-if="form.errors.enrollment_id" class="lifecycle-error">{{ form.errors.enrollment_id }}</small></label>
+                        <div v-if="!enrollments.length" class="lifecycle-empty-guidance lifecycle-field-wide" role="status">Belum ada enrollment aktif pada periode ini. Tambahkan enrollment siswa terlebih dahulu di menu Data Siswa sebelum memproses siklus.</div>
                         <label class="lifecycle-field"><span>Keputusan <b>*</b></span><select v-model="form.action" required><option value="promoted">Naik kelas</option><option value="retained">Tinggal kelas</option><option value="graduated">Lulus</option><option value="withdrawn">Keluar</option></select></label>
                         <label class="lifecycle-field"><span>Tanggal efektif <b>*</b></span><input v-model="form.effective_date" type="date" required /><small v-if="form.errors.effective_date" class="lifecycle-error">{{ form.errors.effective_date }}</small></label>
                         <template v-if="requiresTarget">
@@ -74,7 +79,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
                         <div v-if="selectedEnrollment" class="lifecycle-selection lifecycle-field-wide"><span class="lifecycle-selection-icon">{{ selectedEnrollment.student?.name?.slice(0, 1).toUpperCase() }}</span><div><strong>{{ selectedEnrollment.student?.name }}</strong><small>{{ selectedEnrollment.student?.nis }} · {{ selectedEnrollment.class_group?.name ?? 'Tanpa rombel' }}</small></div><span class="lifecycle-selection-action">{{ actionLabels[form.action] }}</span></div>
                         <label class="lifecycle-field lifecycle-field-wide"><span>Catatan keputusan <em>opsional</em></span><textarea v-model="form.notes" rows="3" maxlength="500" placeholder="Tambahkan alasan atau catatan untuk arsip sekolah…" /><small class="lifecycle-hint">{{ form.notes.length }}/500 karakter</small></label>
                     </div>
-                    <div class="lifecycle-form-footer"><p v-if="form.errors.action" class="lifecycle-error">{{ form.errors.action }}</p><p v-else class="lifecycle-action-hint">{{ currentActionDescription }}</p><button type="submit" class="primary-button lifecycle-submit !text-white" :disabled="form.processing || !activeTerm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>Proses keputusan</button></div>
+                    <div class="lifecycle-form-footer"><p v-if="form.errors.action" class="lifecycle-error">{{ form.errors.action }}</p><p v-else class="lifecycle-action-hint">{{ currentActionDescription }}</p><button type="submit" class="primary-button lifecycle-submit !text-white" :disabled="form.processing || !activeTerm || !enrollments.length"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>Proses keputusan</button></div>
                 </form>
 
                 <aside class="lifecycle-guide panel"><div class="lifecycle-section-heading"><div><p class="lifecycle-kicker">Panduan</p><h2>Bagaimana proses ini bekerja?</h2></div></div><div class="lifecycle-guide-list"><article><span class="lifecycle-guide-number">01</span><div><strong>Naik / tinggal kelas</strong><p>Enrollment baru dibuat pada periode dan kelas tujuan. Histori lama tetap tersimpan.</p></div></article><article><span class="lifecycle-guide-number">02</span><div><strong>Lulus / keluar</strong><p>Enrollment aktif ditutup dan status siswa diperbarui otomatis.</p></div></article><article><span class="lifecycle-guide-number">03</span><div><strong>Audit tercatat</strong><p>Setiap keputusan masuk ke audit log dan riwayat siklus sekolah.</p></div></article></div><div class="lifecycle-warning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 4.7 2.8 18a2 2 0 001.75 3h14.9a2 2 0 001.75-3L13.7 4.7a2 2 0 00-3.4 0z" /></svg><span>Pastikan keputusan dan tanggal efektif sudah benar sebelum disimpan.</span></div></aside>
@@ -83,7 +88,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
             <section class="lifecycle-history panel">
                 <div class="lifecycle-history-heading"><div><p class="lifecycle-kicker">Arsip keputusan</p><h2>Riwayat siklus siswa</h2><p>Menampilkan hingga 100 keputusan terbaru dari sekolah.</p></div><span class="lifecycle-history-count">{{ filteredEvents.length }} dari {{ events.length }}</span></div>
                 <div class="lifecycle-history-toolbar"><label class="lifecycle-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg><span class="sr-only">Cari riwayat</span><input v-model="historySearch" type="search" placeholder="Cari nama, NIS, atau catatan…" /></label><select v-model="historyAction" aria-label="Filter keputusan"><option value="">Semua keputusan</option><option v-for="(label, value) in actionLabels" :key="value" :value="value">{{ label }}</option></select></div>
-                <div class="lifecycle-table-wrap"><table class="lifecycle-table"><thead><tr><th>Tanggal efektif</th><th>Siswa</th><th>Keputusan</th><th>Perpindahan</th><th>Catatan</th></tr></thead><tbody><tr v-for="event in filteredEvents" :key="event.id"><td class="lifecycle-date">{{ formatDate(event.effective_date) }}</td><td><strong>{{ event.student?.name ?? 'Siswa tidak ditemukan' }}</strong><small>{{ event.student?.nis ?? '—' }}</small></td><td><span class="lifecycle-action-badge" :class="`lifecycle-action-${event.action}`">{{ actionLabels[event.action] ?? event.action }}</span></td><td class="lifecycle-transfer"><span>{{ event.source_enrollment?.class_group?.name ?? '—' }}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg><span>{{ event.target_enrollment?.class_group?.name ?? (event.action === 'graduated' ? 'Lulus' : event.action === 'withdrawn' ? 'Keluar' : '—') }}</span></td><td class="lifecycle-note">{{ event.notes || '—' }}</td></tr><tr v-if="!filteredEvents.length"><td colspan="5" class="lifecycle-empty">Tidak ada riwayat yang cocok dengan filter.</td></tr></tbody></table></div>
+                <div class="lifecycle-table-wrap"><table class="lifecycle-table"><thead><tr><th>Tanggal efektif</th><th>Siswa</th><th>Keputusan</th><th>Perpindahan</th><th>Catatan</th></tr></thead><tbody><tr v-for="event in filteredEvents" :key="event.id"><td class="lifecycle-date">{{ formatDate(event.effective_date) }}</td><td><strong>{{ event.student?.name ?? 'Siswa tidak ditemukan' }}</strong><small>{{ event.student?.nis ?? '—' }}</small></td><td><span class="lifecycle-action-badge" :class="`lifecycle-action-${event.action}`">{{ actionLabels[event.action] ?? event.action }}</span></td><td class="lifecycle-transfer"><span>{{ event.source_enrollment?.class_group?.name ?? '—' }}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg><span>{{ event.target_enrollment?.class_group?.name ?? (event.action === 'graduated' ? 'Lulus' : event.action === 'withdrawn' ? 'Keluar' : '—') }}</span></td><td class="lifecycle-note">{{ event.notes || '—' }}</td></tr><tr v-if="!filteredEvents.length"><td colspan="5" class="lifecycle-empty">{{ events.length ? 'Tidak ada riwayat yang cocok dengan filter.' : 'Belum ada keputusan siklus siswa yang tercatat.' }}</td></tr></tbody></table></div>
             </section>
         </div>
     </AppLayout>
@@ -91,6 +96,8 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
 
 <style scoped>
 .lifecycle-page { max-width: 1320px; margin: 0 auto; }
+.lifecycle-success { padding: .8rem 1rem; color: var(--green); background: var(--green-soft); border: 1px solid color-mix(in srgb, var(--green) 24%, var(--line)); border-radius: .7rem; font-size: .78rem; font-weight: 700; }
+.lifecycle-empty-guidance { padding: .75rem .85rem; color: var(--ink-soft); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: .65rem; font-size: .7rem; line-height: 1.5; }
 .lifecycle-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; padding: 1.55rem 1.7rem; overflow: hidden; background: linear-gradient(135deg, var(--surface) 0%, var(--primary-soft) 180%); }
 .lifecycle-kicker { margin: 0; color: var(--primary); font-size: .67rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
 .lifecycle-hero h1 { margin: .35rem 0 .4rem; color: var(--ink); font-size: clamp(1.65rem, 3vw, 2.25rem); font-weight: 800; letter-spacing: -.045em; }

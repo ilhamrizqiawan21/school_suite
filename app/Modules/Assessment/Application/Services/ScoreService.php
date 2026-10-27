@@ -17,7 +17,8 @@ class ScoreService
 {
     public function __construct(
         protected GradeCalculationEngine $calculationEngine,
-        protected AuditLogger $auditLogger
+        protected AuditLogger $auditLogger,
+        protected AssessmentAccessService $access
     ) {}
 
     /**
@@ -37,9 +38,22 @@ class ScoreService
         array $entries,
         User $actor
     ): array {
-        $component = AssessmentComponent::findOrFail($componentId);
+        abort_unless($actor->is_active && (int) $actor->school_id === $schoolId, 403);
 
-        return DB::transaction(function () use ($schoolId, $component, $entries, $actor) {
+        return DB::transaction(function () use ($schoolId, $componentId, $entries, $actor) {
+            $component = AssessmentComponent::with('scheme')->lockForUpdate()->findOrFail($componentId);
+            $enrollmentIds = array_unique(array_map(fn ($entry) => (int) $entry['enrollment_id'], $entries));
+            $enrollments = DB::table('enrollments')
+                ->join('students', 'students.id', '=', 'enrollments.student_id')
+                ->whereIn('enrollments.id', $enrollmentIds)
+                ->where('students.school_id', $schoolId)
+                ->where('enrollments.status', 'active')
+                ->get(['enrollments.id', 'enrollments.term_id', 'enrollments.class_group_id']);
+            abort_unless($enrollments->count() === count($enrollmentIds), 403);
+            foreach ($enrollments as $enrollment) {
+                abort_unless($this->access->canInputComponent($actor, $component, (int) $enrollment->term_id, (int) $enrollment->class_group_id), 403);
+            }
+
             $savedCount = 0;
             $remedialCount = 0;
 

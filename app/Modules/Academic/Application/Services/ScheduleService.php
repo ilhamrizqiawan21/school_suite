@@ -36,6 +36,8 @@ class ScheduleService
         ?string $room = null,
         ?int $excludeScheduleId = null
     ): array {
+        $startTime = strlen($startTime) === 5 ? $startTime.':00' : $startTime;
+        $endTime = strlen($endTime) === 5 ? $endTime.':00' : $endTime;
         if ($startTime >= $endTime) {
             return [
                 'has_conflict' => true,
@@ -47,8 +49,8 @@ class ScheduleService
 
         // Query dasar pencocokan waktu overlap: (start_time < $endTime) AND (end_time > $startTime)
         $overlapQuery = function ($query) use ($startTime, $endTime) {
-            $query->where('start_time', '<', $endTime)
-                ->where('end_time', '>', $startTime);
+            $query->whereTime('start_time', '<', $endTime)
+                ->whereTime('end_time', '>', $startTime);
         };
 
         // 1. Benturan Guru
@@ -88,7 +90,7 @@ class ScheduleService
             $trimmedRoom = trim($room);
             $roomConflict = Schedule::where('term_id', $termId)
                 ->where('day_of_week', $dayOfWeek)
-                ->where('room', $trimmedRoom)
+                ->whereRaw('LOWER(TRIM(room)) = ?', [mb_strtolower($trimmedRoom)])
                 ->when($excludeScheduleId, fn ($q) => $q->where('id', '!=', $excludeScheduleId))
                 ->where($overlapQuery)
                 ->with(['classGroup', 'subject'])
@@ -113,6 +115,35 @@ class ScheduleService
      * @param  array<string, mixed>  $data
      */
     public function createSchedule(array $data, ?User $actor = null): Schedule
+    {
+        return DB::transaction(function () use ($data, $actor) {
+            Term::whereKey($data['term_id'])->lockForUpdate()->firstOrFail();
+            $this->validateContext($data, $actor);
+            $data['room'] = isset($data['room']) && trim($data['room']) !== '' ? trim($data['room']) : null;
+
+            return $this->createWithinTransaction($data, $actor);
+        });
+    }
+
+    private function validateContext(array $data, ?User $actor): void
+    {
+        $term = Term::with('academicYear')->findOrFail($data['term_id']);
+        $class = ClassGroup::findOrFail($data['class_group_id']);
+        $teacher = Teacher::findOrFail($data['teacher_id']);
+        $subject = Subject::findOrFail($data['subject_id']);
+        if ((int) $term->academicYear->school_id !== $class->school_id || $teacher->school_id !== $class->school_id
+            || (int) $subject->school_id !== $class->school_id || ($actor && (int) $actor->school_id !== $class->school_id)) {
+            throw new InvalidArgumentException('Semester, guru, mapel, dan rombel harus berasal dari sekolah yang sama.');
+        }
+        if ($class->academic_year_id !== (int) $term->academic_year_id) {
+            throw new InvalidArgumentException('Rombel dan semester harus berasal dari tahun ajaran yang sama.');
+        }
+        if (! $teacher->is_active || ! $subject->is_active) {
+            throw new InvalidArgumentException('Guru dan mata pelajaran harus aktif.');
+        }
+    }
+
+    private function createWithinTransaction(array $data, ?User $actor = null): Schedule
     {
         $termId = (int) $data['term_id'];
         $dayOfWeek = (int) $data['day_of_week'];
@@ -169,6 +200,30 @@ class ScheduleService
      */
     public function updateSchedule(Schedule $schedule, array $data, ?User $actor = null): Schedule
     {
+        return DB::transaction(function () use ($schedule, $data, $actor) {
+            Term::whereKey($schedule->term_id)->lockForUpdate()->firstOrFail();
+            $schedule = Schedule::whereKey($schedule->id)->lockForUpdate()->firstOrFail();
+            if ($actor && (int) $actor->school_id !== $schedule->school_id) {
+                throw new InvalidArgumentException('Jadwal tidak berasal dari sekolah ini.');
+            }
+            if (isset($data['term_id']) && (int) $data['term_id'] !== $schedule->term_id) {
+                throw new InvalidArgumentException('Semester jadwal tidak dapat diubah. Buat slot baru untuk semester lain.');
+            }
+            if ($schedule->lessonSessions()->exists() || $schedule->substituteAssignments()->exists()) {
+                throw new InvalidArgumentException('Jadwal sudah memiliki pertemuan atau penugasan guru pengganti dan tidak dapat diubah.');
+            }
+            $this->validateContext(array_merge($schedule->toArray(), $data), $actor);
+            if (array_key_exists('room', $data)) {
+                $data['room'] = $data['room'] !== null && trim($data['room']) !== '' ? trim($data['room']) : null;
+            }
+            $data['status'] = ScheduleStatusEnum::DRAFT->value;
+
+            return $this->updateWithinTransaction($schedule, $data, $actor);
+        });
+    }
+
+    private function updateWithinTransaction(Schedule $schedule, array $data, ?User $actor = null): Schedule
+    {
         $termId = (int) ($data['term_id'] ?? $schedule->term_id);
         $dayOfWeek = (int) ($data['day_of_week'] ?? $schedule->day_of_week);
         $startTime = (string) ($data['start_time'] ?? $schedule->start_time);
@@ -213,9 +268,18 @@ class ScheduleService
      */
     public function publishSchedules(int $termId, ?User $actor = null): int
     {
-        $term = Term::with('academicYear')->findOrFail($termId);
-
-        return DB::transaction(function () use ($term, $actor) {
+        return DB::transaction(function () use ($termId, $actor) {
+            $term = Term::with('academicYear')->whereKey($termId)->lockForUpdate()->firstOrFail();
+            if ($actor && (int) $actor->school_id !== (int) $term->academicYear->school_id) {
+                throw new InvalidArgumentException('Semester tidak berasal dari sekolah ini.');
+            }
+            foreach (Schedule::where('term_id', $term->id)->where('status', ScheduleStatusEnum::DRAFT->value)->get() as $draft) {
+                $this->validateContext($draft->toArray(), $actor);
+                $conflicts = $this->detectConflicts($draft->term_id, $draft->day_of_week, $draft->start_time, $draft->end_time, $draft->teacher_id, $draft->class_group_id, $draft->room, $draft->id);
+                if ($conflicts['has_conflict']) {
+                    throw new InvalidArgumentException(implode(' ', $conflicts['errors']));
+                }
+            }
             $draftCount = Schedule::where('term_id', $term->id)
                 ->where('status', ScheduleStatusEnum::DRAFT->value)
                 ->count();
@@ -246,6 +310,22 @@ class ScheduleService
      * Menghapus jadwal pelajaran.
      */
     public function deleteSchedule(Schedule $schedule, ?User $actor = null): bool
+    {
+        return DB::transaction(function () use ($schedule, $actor) {
+            Term::whereKey($schedule->term_id)->lockForUpdate()->firstOrFail();
+            $schedule = Schedule::whereKey($schedule->id)->lockForUpdate()->firstOrFail();
+            if ($actor && (int) $actor->school_id !== $schedule->school_id) {
+                throw new InvalidArgumentException('Jadwal tidak berasal dari sekolah ini.');
+            }
+            if ($schedule->lessonSessions()->exists() || $schedule->substituteAssignments()->exists()) {
+                throw new InvalidArgumentException('Jadwal sudah memiliki pertemuan atau penugasan guru pengganti dan tidak dapat dihapus.');
+            }
+
+            return $this->deleteWithinTransaction($schedule, $actor);
+        });
+    }
+
+    private function deleteWithinTransaction(Schedule $schedule, ?User $actor = null): bool
     {
         $oldValues = $schedule->toArray();
         $id = $schedule->id;

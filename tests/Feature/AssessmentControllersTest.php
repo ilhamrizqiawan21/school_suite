@@ -39,6 +39,7 @@ use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AssessmentControllersTest extends TestCase
@@ -204,6 +205,9 @@ class AssessmentControllersTest extends TestCase
             'is_active' => true,
         ]);
 
+        $teacher->update(['user_id' => $this->teacherUser->id]);
+        $homeroomTeacher = Teacher::create(['school_id' => $this->school->id, 'user_id' => $this->homeroomUser->id, 'name' => 'Wali Kelas', 'gender' => 'L', 'is_active' => true]);
+        $this->classGroup->update(['homeroom_teacher_id' => $homeroomTeacher->id]);
         $this->student->update(['user_id' => $this->studentUser->id]);
         $this->otherStudent->update(['user_id' => $this->otherStudentUser->id]);
 
@@ -1062,6 +1066,49 @@ class AssessmentControllersTest extends TestCase
         ]);
     }
 
+    #[DataProvider('matchingAnswerPayloads')]
+    public function test_matching_submission_handles_json_scalars_and_grades_valid_pairs(string $payload, bool $correct): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'type' => 'matching', 'prompt' => 'Pasangkan ibu kota.',
+            'correct_answer' => '{"0":"Jakarta","1":"Tokyo"}', 'points' => 5, 'is_active' => true,
+        ]);
+        $exam = Exam::create([
+            'school_id' => $this->school->id, 'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'created_by' => $this->adminUser->id, 'title' => 'Ujian Menjodohkan', 'starts_at' => now()->subHour(),
+            'ends_at' => now()->addHour(), 'duration_minutes' => 30, 'status' => 'published',
+        ]);
+        $exam->items()->create(['exam_question_id' => $question->id, 'sequence' => 1, 'points' => 5]);
+        $attempt = ExamAttempt::create([
+            'exam_id' => $exam->id, 'enrollment_id' => $this->enrollment->id, 'status' => 'in_progress',
+            'started_at' => now(), 'expires_at' => now()->addMinutes(30), 'question_order' => [$question->id],
+        ]);
+        $answer = ExamAnswer::create(['exam_attempt_id' => $attempt->id, 'exam_question_id' => $question->id, 'answer' => $payload]);
+
+        $this->actingAs($this->studentUser)->post('/ujian/attempt/'.$attempt->id.'/kirim')->assertRedirect('/ujian');
+
+        $this->assertSame('graded', $attempt->fresh()->status);
+        $this->assertSame($correct, $answer->fresh()->is_correct);
+        $this->assertSame($correct ? 5.0 : 0.0, (float) $answer->fresh()->score);
+        $this->assertSame($correct ? 100.0 : 0.0, (float) $attempt->fresh()->score);
+    }
+
+    public static function matchingAnswerPayloads(): array
+    {
+        return [
+            'number' => ['1', false],
+            'string' => ['"Jakarta"', false],
+            'boolean' => ['true', false],
+            'null' => ['null', false],
+            'invalid json' => ['invalid', false],
+            'nested array' => ['[["Jakarta"],"Tokyo"]', false],
+            'empty array' => ['[]', false],
+            'correct reversed keys' => ['{"1":"Tokyo","0":"Jakarta"}', true],
+            'incorrect pairs' => ['["Tokyo","Jakarta"]', false],
+        ];
+    }
+
     public function test_assessment_analytics_handles_empty_data_without_division_errors(): void
     {
         $otherSchool = School::create(['npsn' => '87654321', 'name' => 'Sekolah Terpisah', 'status' => 'active']);
@@ -1212,5 +1259,255 @@ class AssessmentControllersTest extends TestCase
     private function teacherId(): int
     {
         return (int) Teacher::query()->where('nip', '198501012010011001')->value('id');
+    }
+
+    public function test_teacher_cannot_read_or_write_scores_for_another_teachers_component(): void
+    {
+        $other = $this->createUnassignedEnrollment();
+        $assignment = TeachingAssignment::where('class_group_id', $other->class_group_id)->firstOrFail();
+        $component = $this->component->replicate();
+        $component->teaching_assignment_id = $assignment->id;
+        $component->code = 'OTHER';
+        $component->save();
+
+        $this->actingAs($this->teacherUser)->get(route('assessment.scores.index', [
+            'class_group_id' => $other->class_group_id, 'component_id' => $component->id,
+        ]))->assertForbidden();
+        $this->post(route('assessment.scores.store'), [
+            'component_id' => $component->id,
+            'scores' => [['enrollment_id' => $other->id, 'raw_score' => 99]],
+        ])->assertForbidden();
+        $this->assertDatabaseCount('scores', 0);
+    }
+
+    public function test_score_batch_rejects_unassigned_enrollment_without_partial_writes(): void
+    {
+        $other = $this->createUnassignedEnrollment();
+        $this->component->update(['teaching_assignment_id' => TeachingAssignment::where('class_group_id', $this->classGroup->id)->value('id')]);
+
+        $this->actingAs($this->teacherUser)->post(route('assessment.scores.store'), [
+            'component_id' => $this->component->id,
+            'scores' => [
+                ['enrollment_id' => $this->enrollment->id, 'raw_score' => 80],
+                ['enrollment_id' => $other->id, 'raw_score' => 99],
+            ],
+        ])->assertForbidden();
+        $this->assertDatabaseCount('scores', 0);
+    }
+
+    public function test_teacher_cannot_write_a_component_from_another_school(): void
+    {
+        $school = School::create(['npsn' => '87654321', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $scheme = $this->scheme->replicate();
+        $scheme->school_id = $school->id;
+        $scheme->save();
+        $component = $this->component->replicate();
+        $component->scheme_id = $scheme->id;
+        $component->save();
+
+        $this->actingAs($this->teacherUser)->post(route('assessment.scores.store'), [
+            'component_id' => $component->id,
+            'scores' => [['enrollment_id' => $this->enrollment->id, 'raw_score' => 99]],
+        ])->assertForbidden();
+        $this->assertDatabaseCount('scores', 0);
+    }
+
+    public function test_homeroom_cannot_generate_or_publish_another_class_report(): void
+    {
+        $other = $this->createUnassignedEnrollment();
+        $report = $this->draftReportFor($other);
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.generate'), [
+            'class_group_id' => $other->class_group_id, 'term_id' => $this->term->id,
+        ])->assertForbidden();
+        $this->post(route('assessment.reports.publish', $report))->assertForbidden();
+        $this->assertSame(ReportStatusEnum::DRAFT, $report->fresh()->status);
+    }
+
+    public function test_admin_cannot_publish_or_view_another_schools_report(): void
+    {
+        $report = $this->draftReportFor($this->enrollment);
+        $otherSchool = School::create(['npsn' => '87654321', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $otherAdmin = $this->adminUser->replicate();
+        $otherAdmin->fill(['school_id' => $otherSchool->id, 'username' => 'other_admin', 'email' => 'other@example.test']);
+        $otherAdmin->save();
+
+        $this->actingAs($otherAdmin)->post(route('assessment.reports.publish', $report))->assertForbidden();
+        $this->get(route('assessment.reports.show', $report))->assertForbidden();
+        $this->assertSame(ReportStatusEnum::DRAFT, $report->fresh()->status);
+    }
+
+    public function test_guest_and_unassigned_teacher_cannot_read_class_ledger(): void
+    {
+        $other = $this->createUnassignedEnrollment();
+        $this->actingAs($this->teacherUser)->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $other->class_group_id, 'term_id' => $this->term->id,
+        ]))->assertForbidden();
+        $role = Role::create(['name' => 'guest', 'label' => 'Tamu', 'is_system' => true]);
+        $this->teacherUser->update(['role_id' => $role->id]);
+        $this->teacherUser->unsetRelation('role');
+        $this->actingAs($this->teacherUser)->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ]))->assertForbidden();
+    }
+
+    public function test_class_ledger_rejects_cross_school_and_mismatched_academic_year(): void
+    {
+        $year = $this->academicYear->replicate();
+        $year->name = '2027/2028';
+        $year->save();
+        $term = $this->term->replicate();
+        $term->academic_year_id = $year->id;
+        $term->save();
+        $this->actingAs($this->adminUser)->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $term->id,
+        ]))->assertForbidden();
+
+        $school = School::create(['npsn' => '87654321', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $this->adminUser->update(['school_id' => $school->id]);
+        $this->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ]))->assertForbidden();
+    }
+
+    public function test_report_grades_keep_subject_specific_components_separate(): void
+    {
+        $mathAssignment = TeachingAssignment::where('class_group_id', $this->classGroup->id)->firstOrFail();
+        $this->component->update(['teaching_assignment_id' => $mathAssignment->id, 'weight_percentage' => 100]);
+        $subject = Subject::create(['school_id' => $this->school->id, 'code' => 'BHS', 'name' => 'Bahasa', 'is_active' => true]);
+        $languageAssignment = $mathAssignment->replicate();
+        $languageAssignment->subject_id = $subject->id;
+        $languageAssignment->save();
+        $languageComponent = $this->component->replicate();
+        $languageComponent->fill(['teaching_assignment_id' => $languageAssignment->id, 'code' => 'BHS', 'name' => 'Nilai Bahasa']);
+        $languageComponent->save();
+        foreach ([[$this->component->id, 90], [$languageComponent->id, 50]] as [$componentId, $score]) {
+            Score::create(['school_id' => $this->school->id, 'enrollment_id' => $this->enrollment->id, 'assessment_component_id' => $componentId, 'raw_score' => $score, 'final_score' => $score, 'recorded_by_user_id' => $this->teacherUser->id]);
+        }
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.generate'), [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $report = ReportSnapshot::where('enrollment_id', $this->enrollment->id)->firstOrFail();
+        $grades = collect($report->grades_snapshot)->keyBy('subject_id');
+        $this->assertEquals(90, $grades[$mathAssignment->subject_id]['final_score']);
+        $this->assertEquals(50, $grades[$subject->id]['final_score']);
+    }
+
+    public function test_multi_subject_report_rejects_ambiguous_generic_components(): void
+    {
+        $assignment = TeachingAssignment::where('class_group_id', $this->classGroup->id)->firstOrFail();
+        $subject = Subject::create(['school_id' => $this->school->id, 'code' => 'BHS', 'name' => 'Bahasa', 'is_active' => true]);
+        $otherAssignment = $assignment->replicate();
+        $otherAssignment->subject_id = $subject->id;
+        $otherAssignment->save();
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.generate'), [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ])->assertSessionHasErrors('class_group_id');
+        $this->assertDatabaseCount('report_snapshots', 0);
+        $this->actingAs($this->teacherUser)->post(route('assessment.scores.store'), [
+            'component_id' => $this->component->id,
+            'scores' => [['enrollment_id' => $this->enrollment->id, 'raw_score' => 90]],
+        ])->assertForbidden();
+        $this->assertDatabaseCount('scores', 0);
+    }
+
+    private function createUnassignedEnrollment(): Enrollment
+    {
+        $class = ClassGroup::create(['school_id' => $this->school->id, 'academic_year_id' => $this->academicYear->id, 'name' => 'VII-B', 'grade_level' => 7]);
+        $student = $this->student->replicate();
+        $student->fill(['nis' => 'OTHER', 'nisn' => '9999999999', 'user_id' => null]);
+        $student->save();
+        $teacher = Teacher::create(['school_id' => $this->school->id, 'name' => 'Guru Lain', 'gender' => 'L', 'is_active' => true]);
+        $assignment = TeachingAssignment::firstOrFail()->replicate();
+        $assignment->fill(['class_group_id' => $class->id, 'teacher_id' => $teacher->id]);
+        $assignment->save();
+
+        return Enrollment::create(['student_id' => $student->id, 'class_group_id' => $class->id, 'term_id' => $this->term->id, 'status' => 'active']);
+    }
+
+    private function draftReportFor(Enrollment $enrollment): ReportSnapshot
+    {
+        return ReportSnapshot::create([
+            'school_id' => $this->school->id, 'enrollment_id' => $enrollment->id, 'term_id' => $enrollment->term_id,
+            'class_group_id' => $enrollment->class_group_id, 'student_id' => $enrollment->student_id,
+            'status' => ReportStatusEnum::DRAFT, 'scheme_snapshot' => [], 'grades_snapshot' => [],
+            'attendance_snapshot' => [], 'notes_snapshot' => [], 'checksum' => hash('sha256', 'draft'),
+        ]);
+    }
+
+    public function test_admin_can_bind_legacy_component_and_create_subject_specific_component(): void
+    {
+        $assignment = TeachingAssignment::where('class_group_id', $this->classGroup->id)->firstOrFail();
+        $this->actingAs($this->adminUser)->get(route('assessment.schemes.index'))
+            ->assertOk()->assertInertia(fn (Assert $page) => $page->has('teaching_assignments', 1));
+        $this->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $assignment->id])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('assessment_components', ['id' => $this->component->id, 'teaching_assignment_id' => $assignment->id]);
+        $this->post(route('assessment.schemes.component', $this->scheme), [
+            'name' => 'Sumatif Matematika', 'code' => 'SAS-MAT', 'weight_percentage' => 60, 'passing_grade' => 75,
+            'teaching_assignment_id' => $assignment->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('assessment_components', ['code' => 'SAS-MAT', 'scheme_id' => $this->scheme->id, 'teaching_assignment_id' => $assignment->id]);
+
+        $this->actingAs($this->teacherUser)->post(route('assessment.scores.store'), [
+            'component_id' => $this->component->id, 'scores' => [['enrollment_id' => $this->enrollment->id, 'raw_score' => 88]],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('scores', ['assessment_component_id' => $this->component->id, 'enrollment_id' => $this->enrollment->id, 'raw_score' => 88]);
+    }
+
+    public function test_component_binding_rejects_foreign_school_teacher_and_rebinding_existing_scores(): void
+    {
+        $other = $this->createUnassignedEnrollment();
+        $assignment = TeachingAssignment::where('class_group_id', $this->classGroup->id)->firstOrFail();
+        $otherAssignment = TeachingAssignment::where('class_group_id', $other->class_group_id)->firstOrFail();
+        $this->actingAs($this->teacherUser)->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $assignment->id])->assertForbidden();
+        Score::create(['school_id' => $this->school->id, 'enrollment_id' => $this->enrollment->id, 'assessment_component_id' => $this->component->id, 'raw_score' => 80, 'final_score' => 80, 'recorded_by_user_id' => $this->teacherUser->id]);
+        $this->actingAs($this->adminUser)->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $otherAssignment->id])
+            ->assertSessionHasErrors('teaching_assignment_id');
+        $this->assertNull($this->component->fresh()->teaching_assignment_id);
+        $this->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $assignment->id])->assertSessionHasNoErrors();
+        $this->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $otherAssignment->id])->assertSessionHasErrors('teaching_assignment_id');
+        $this->assertSame($assignment->id, $this->component->fresh()->teaching_assignment_id);
+
+        $otherSchool = School::create(['npsn' => '87654321', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $this->adminUser->update(['school_id' => $otherSchool->id]);
+        $this->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $assignment->id])->assertNotFound();
+        $this->post(route('assessment.schemes.component', $this->scheme), [
+            'name' => 'Foreign', 'code' => 'FOREIGN', 'weight_percentage' => 100, 'passing_grade' => 75,
+        ])->assertNotFound();
+        $this->assertDatabaseMissing('assessment_components', ['code' => 'FOREIGN']);
+    }
+
+    public function test_component_binding_and_score_batch_reject_foreign_school_assignment_and_enrollment(): void
+    {
+        $school = School::create(['npsn' => '87654321', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $year = $this->academicYear->replicate();
+        $year->school_id = $school->id;
+        $year->save();
+        $term = $this->term->replicate();
+        $term->academic_year_id = $year->id;
+        $term->save();
+        $class = $this->classGroup->replicate();
+        $class->fill(['school_id' => $school->id, 'academic_year_id' => $year->id, 'homeroom_teacher_id' => null]);
+        $class->save();
+        $student = $this->student->replicate();
+        $student->fill(['school_id' => $school->id, 'user_id' => null]);
+        $student->save();
+        $enrollment = Enrollment::create(['student_id' => $student->id, 'class_group_id' => $class->id, 'term_id' => $term->id, 'status' => 'active']);
+        $assignment = TeachingAssignment::firstOrFail()->replicate();
+        $assignment->fill(['term_id' => $term->id, 'class_group_id' => $class->id]);
+        $assignment->save();
+
+        $this->actingAs($this->adminUser)->put(route('assessment.schemes.component.bind', [$this->scheme, $this->component]), ['teaching_assignment_id' => $assignment->id])->assertNotFound();
+        $this->post(route('assessment.schemes.component', $this->scheme), [
+            'name' => 'Foreign', 'code' => 'FOREIGN', 'weight_percentage' => 100, 'passing_grade' => 75, 'teaching_assignment_id' => $assignment->id,
+        ])->assertNotFound();
+        $this->actingAs($this->teacherUser)->post(route('assessment.scores.store'), [
+            'component_id' => $this->component->id,
+            'scores' => [['enrollment_id' => $this->enrollment->id, 'raw_score' => 80], ['enrollment_id' => $enrollment->id, 'raw_score' => 90]],
+        ])->assertForbidden();
+        $this->assertDatabaseCount('scores', 0);
+        $this->assertNull($this->component->fresh()->teaching_assignment_id);
     }
 }

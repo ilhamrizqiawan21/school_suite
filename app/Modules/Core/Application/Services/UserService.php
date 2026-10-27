@@ -84,6 +84,10 @@ class UserService
             throw new AuthorizationException('Actor is not authorized to update this user.');
         }
 
+        if (! empty($data['password']) && (int) $actor->id === (int) $target->id) {
+            throw new AuthorizationException('Use the password-change flow to change your own password.');
+        }
+
         if (array_key_exists('role_id', $data)) {
             $this->assertCanAssignRole($data['role_id'] !== null ? (int) $data['role_id'] : null, $actor, $target);
         }

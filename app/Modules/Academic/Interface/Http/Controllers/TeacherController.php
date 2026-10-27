@@ -8,16 +8,23 @@ use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicImportService;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Shared\Audit\AuditLogger;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use InvalidArgumentException;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TeacherController extends Controller
 {
@@ -34,25 +41,28 @@ class TeacherController extends Controller
         $search = $request->query('search');
         $status = $request->query('employment_status');
 
-        $query = Teacher::where('school_id', $schoolId)
-            ->with('homeroomClassGroups')
-            ->when($search, function ($q, $search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%")
-                        ->orWhere('nip', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            ->when($status, fn ($q, $status) => $q->where('employment_status', $status))
-            ->orderBy('name');
+        $teachers = $this->teacherQuery($request)->paginate(15)->withQueryString();
+        $teachers->through(function (Teacher $teacher) use ($schoolId) {
+            $account = $teacher->user;
+            $teacher->setAttribute('account_status', ! $account ? 'no_account'
+                : ((int) $account->school_id !== $schoolId || ! $account->hasRole(['teacher', 'homeroom']) ? 'unavailable'
+                    : ($account->must_change_password ? 'default' : 'changed')));
+            $teacher->unsetRelation('user');
 
-        $teachers = $query->paginate(15)->withQueryString();
+            return $teacher;
+        });
+        $all = Teacher::where('school_id', $schoolId);
+        $total = (clone $all)->count();
+        $active = (clone $all)->where('is_active', true)->count();
 
         return Inertia::render('Academic/Teachers/Index', [
             'teachers' => $teachers,
+            'stats' => ['total' => $total, 'active' => $active, 'inactive' => $total - $active],
+            'employment_statuses' => Teacher::where('school_id', $schoolId)->whereNotNull('employment_status')->distinct()->orderBy('employment_status')->pluck('employment_status'),
             'can_manage' => Gate::allows('create', Teacher::class),
             'filters' => [
                 'search' => $search,
+                'is_active' => $request->query('is_active'),
                 'employment_status' => $status,
             ],
         ]);
@@ -94,6 +104,7 @@ class TeacherController extends Controller
 
     public function update(Request $request, Teacher $teacher): RedirectResponse
     {
+        abort_unless((int) $teacher->school_id === (int) $request->user()->school_id, 403);
         Gate::authorize('update', $teacher);
 
         $schoolId = (int) $request->user()->school_id;
@@ -134,17 +145,17 @@ class TeacherController extends Controller
         Gate::authorize('create', Teacher::class);
 
         $request->validate([
-            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt', 'max:2048'],
+            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt,xlsx', 'max:5120'],
             'csv_content' => ['required_without:csv_file', 'nullable', 'string', 'max:2097152'],
         ]);
 
         $schoolId = (int) $request->user()->school_id;
-        $content = $request->hasFile('csv_file')
-            ? file_get_contents($request->file('csv_file')->getRealPath())
-            : (string) $request->input('csv_content');
+        $content = (string) $request->input('csv_content');
 
         try {
-            $rows = $this->importService->parseCsvString($content, ['nip', 'name', 'gender']);
+            $rows = $request->hasFile('csv_file')
+                ? $this->importService->parseTeacherImportFile($request->file('csv_file')->getRealPath(), strtolower($request->file('csv_file')->getClientOriginalExtension()))
+                : $this->importService->parseCsvString($content, ['nip', 'name', 'gender']);
 
             if (empty($rows)) {
                 return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
@@ -216,8 +227,115 @@ class TeacherController extends Controller
         return 'academic.teacher-import.'.hash('sha256', $token);
     }
 
-    public function template(): Response
+    private function teacherQuery(Request $request): Builder
     {
+        $request->validate(['search' => ['nullable', 'string', 'max:150'],
+            'employment_status' => ['nullable', 'string', 'max:50'], 'is_active' => ['nullable', 'in:0,1']]);
+
+        return Teacher::where('school_id', (int) $request->user()->school_id)
+            ->with(['user.role', 'homeroomClassGroups' => fn ($query) => $query
+                ->whereHas('academicYear', fn ($year) => $year->where('is_active', true))])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = (string) $request->query('search');
+                $query->where(fn ($sub) => $sub->where('name', 'like', "%{$search}%")->orWhere('nip', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            })
+            ->when($request->filled('employment_status'), fn ($query) => $query->where('employment_status', $request->query('employment_status')))
+            ->when($request->filled('is_active'), fn ($query) => $query->where('is_active', (int) $request->query('is_active')))
+            ->orderBy('name')->orderBy('id');
+    }
+
+    public function exportExcel(Request $request): StreamedResponse
+    {
+        Gate::authorize('viewAny', Teacher::class);
+        $teachers = $this->teacherQuery($request);
+        $rows = (function () use ($teachers) {
+            yield ['NIP', 'Nama', 'L/P', 'Telepon', 'Email', 'Status Kepegawaian', 'Wali Kelas', 'Status'];
+            foreach ($teachers->lazy(500) as $teacher) {
+                yield [$teacher->nip, $teacher->name, $teacher->gender, $teacher->phone, $teacher->email,
+                    $teacher->employment_status, $teacher->homeroomClassGroups->pluck('name')->join(', '), $teacher->is_active ? 'Aktif' : 'Nonaktif'];
+            }
+        })();
+
+        return $this->spreadsheetDownload('data_guru.xlsx', $rows);
+    }
+
+    private function spreadsheetDownload(string $filename, iterable $rows): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($rows) {
+            $book = new Spreadsheet;
+            try {
+                $sheet = $book->getActiveSheet();
+                $sheet->setTitle('Data Guru');
+                foreach ($rows as $index => $row) {
+                    foreach (array_values($row) as $column => $value) {
+                        $sheet->setCellValueExplicit([$column + 1, $index + 1], (string) $value, DataType::TYPE_STRING);
+                    }
+                }
+                $sheet->freezePane('A2');
+                $sheet->getStyle('1:1')->getFont()->setBold(true);
+                (new Xlsx($book))->save('php://output');
+            } finally {
+                $book->disconnectWorksheets();
+            }
+        }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+    }
+
+    public function resetPassword(Request $request, Teacher $teacher): RedirectResponse
+    {
+        abort_unless((int) $teacher->school_id === (int) $request->user()->school_id, 403);
+        Gate::authorize('update', $teacher);
+        $account = $teacher->user;
+        if (! $account || (int) $account->school_id !== (int) $teacher->school_id || ! $account->hasRole(['teacher', 'homeroom']) || $account->id === $request->user()->id) {
+            return back()->withErrors(['teacher' => 'Akun guru tidak tersedia untuk reset sandi. Gunakan menu profil untuk akun sendiri.']);
+        }
+        $password = Str::password(16, symbols: false);
+        DB::transaction(function () use ($account, $password, $request, $teacher) {
+            $account->forceFill(['password' => Hash::make($password), 'must_change_password' => true,
+                'password_changed_at' => null, 'remember_token' => Str::random(60)])->save();
+            if (config('session.driver') === 'database') {
+                DB::table(config('session.table', 'sessions'))->where('user_id', $account->id)->delete();
+            }
+            $this->auditLogger->log('academic.teacher.password_reset', 'teacher', (string) $teacher->id,
+                ['user_id' => $account->id], actor: $request->user(), schoolId: (int) $teacher->school_id);
+        });
+
+        return back()->with('message', "Sandi sementara {$teacher->name}: {$password}. Guru wajib menggantinya saat login.");
+    }
+
+    public function destroy(Request $request, Teacher $teacher): RedirectResponse
+    {
+        abort_unless((int) $teacher->school_id === (int) $request->user()->school_id, 403);
+        Gate::authorize('delete', $teacher);
+
+        return DB::transaction(function () use ($request, $teacher) {
+            Teacher::whereKey($teacher->id)->lockForUpdate()->firstOrFail();
+            $hasHistory = $teacher->homeroomClassGroups()->exists() || $teacher->teachingAssignments()->exists();
+            foreach (['schedules', 'lesson_sessions', 'teaching_plans', 'teaching_documents', 'teacher_attendance_records', 'teacher_leave_requests'] as $table) {
+                $hasHistory = $hasHistory || DB::table($table)->where('teacher_id', $teacher->id)->exists();
+            }
+            $hasHistory = $hasHistory || DB::table('teacher_substitute_assignments')->where('substitute_teacher_id', $teacher->id)->exists();
+            if ($hasHistory) {
+                return back()->withErrors(['teacher' => 'Guru memiliki penugasan atau riwayat akademik. Nonaktifkan data guru melalui Ubah.']);
+            }
+            $snapshot = $teacher->toArray();
+            $teacher->delete();
+            $this->auditLogger->log('academic.teacher.deleted', 'teacher', (string) $teacher->id,
+                oldValues: $snapshot, actor: $request->user(), schoolId: (int) $teacher->school_id);
+
+            return back()->with('message', 'Data guru dihapus. Akun pengguna tetap tersedia di manajemen pengguna.');
+        });
+    }
+
+    public function template(Request $request): Response|StreamedResponse
+    {
+        Gate::authorize('create', Teacher::class);
+        if ($request->query('format') === 'xlsx') {
+            return $this->spreadsheetDownload('template_impor_guru.xlsx', [
+                ['nip', 'name', 'gender', 'phone', 'email', 'employment_status'],
+                ['198501012010011001', 'Guru Contoh', 'P', '081234567891', 'guru@example.test', 'PNS'],
+            ]);
+        }
+
         $csvHeader = "nip,name,gender,phone,email,employment_status\n";
         $csvExample = "198501012010011001,Siti Aminah,P,081234567891,siti.aminah@sekolah.sch.id,PNS\n";
 

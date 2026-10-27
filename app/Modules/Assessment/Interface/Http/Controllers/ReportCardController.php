@@ -6,6 +6,7 @@ namespace App\Modules\Assessment\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Assessment\Application\Services\AssessmentAccessService;
 use App\Modules\Assessment\Application\Services\ReportGeneratorService;
 use App\Modules\Assessment\Application\Services\ReportPublishingService;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
@@ -22,7 +23,8 @@ class ReportCardController extends Controller
     public function __construct(
         protected ReportPublishingService $publishingService,
         protected ReportGeneratorService $generatorService,
-        protected AcademicQueryService $academicQuery
+        protected AcademicQueryService $academicQuery,
+        protected AssessmentAccessService $access
     ) {}
 
     public function index(Request $request): InertiaResponse
@@ -45,11 +47,15 @@ class ReportCardController extends Controller
             : collect();
         if ($isStudent) {
             $classes = $classes->where('id', $studentEnrollment?->class_group_id)->values();
+        } else {
+            $classes = $classes->filter(fn ($class) => $this->access->canViewClass($request->user(), $activeTerm->id, (int) $class->id))->values();
         }
 
         $classGroupId = $isStudent
             ? $studentEnrollment?->class_group_id
             : $request->query('class_group_id', $classes->first()?->id ? (string) $classes->first()->id : null);
+
+        abort_if($classGroupId && ! $classes->contains('id', (int) $classGroupId), 403);
 
         $reports = collect();
         if ($activeTerm && $classGroupId) {
@@ -95,6 +101,7 @@ class ReportCardController extends Controller
         $classGroupId = (int) $validated['class_group_id'];
         $termId = (int) $validated['term_id'];
 
+        abort_unless($this->access->canPublishClass($request->user(), $termId, $classGroupId), 403);
         $enrollments = $this->academicQuery->getClassEnrollmentsForAttendance($termId, $classGroupId);
 
         $count = 0;
@@ -122,9 +129,9 @@ class ReportCardController extends Controller
         return back()->with('message', 'Rapor berhasil diterbitkan dan dikunci permanen.');
     }
 
-    public function ledger(Request $request): JsonResponse|InertiaResponse
+    public function ledger(Request $request): JsonResponse|InertiaResponse|RedirectResponse
     {
-        abort_unless(! $request->user()->hasRole('student'), 403);
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom']), 403);
         $schoolId = (int) $request->user()->school_id;
         $classGroupId = (int) $request->query('class_group_id');
         $termId = (int) $request->query('term_id');
@@ -133,6 +140,7 @@ class ReportCardController extends Controller
             return back()->with('error', 'Pilih rombel dan semester terlebih dahulu.');
         }
 
+        abort_unless($this->access->canViewClass($request->user(), $termId, $classGroupId), 403);
         $ledgerData = $this->generatorService->exportClassLedger($schoolId, $termId, $classGroupId);
 
         if ($request->wantsJson()) {

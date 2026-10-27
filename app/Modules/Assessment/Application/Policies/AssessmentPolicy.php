@@ -5,19 +5,22 @@ declare(strict_types=1);
 namespace App\Modules\Assessment\Application\Policies;
 
 use App\Models\User;
+use App\Modules\Assessment\Application\Services\AssessmentAccessService;
 use App\Modules\Assessment\Domain\Enums\ReportStatusEnum;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use Illuminate\Support\Facades\DB;
 
 class AssessmentPolicy
 {
+    public function __construct(private readonly AssessmentAccessService $access) {}
+
     public function before(User $actor, string $ability): ?bool
     {
         if (! $actor->is_active) {
             return false;
         }
 
-        if ($actor->hasRole('admin')) {
+        if ($actor->hasRole('admin') && ! in_array($ability, ['viewReport', 'publishReports'], true)) {
             return true;
         }
 
@@ -39,9 +42,14 @@ class AssessmentPolicy
         return $actor->hasRole('operator');
     }
 
-    public function publishReports(User $actor): bool
+    public function publishReports(User $actor, ?ReportSnapshot $report = null): bool
     {
-        return $actor->hasRole('homeroom');
+        if ($report) {
+            return (int) $actor->school_id === (int) $report->school_id
+                && $this->access->canPublishClass($actor, (int) $report->term_id, (int) $report->class_group_id);
+        }
+
+        return $actor->hasRole(['admin', 'homeroom']);
     }
 
     public function viewReport(User $actor, ReportSnapshot $report): bool
@@ -50,8 +58,8 @@ class AssessmentPolicy
             return false;
         }
 
-        if ($actor->hasRole('admin') || $actor->hasRole('principal') || $actor->hasRole('teacher') || $actor->hasRole('homeroom')) {
-            return true;
+        if (! $actor->hasRole('student')) {
+            return $this->access->canViewClass($actor, (int) $report->term_id, (int) $report->class_group_id);
         }
 
         // Jika siswa, hanya dapat melihat rapor miliknya sendiri
