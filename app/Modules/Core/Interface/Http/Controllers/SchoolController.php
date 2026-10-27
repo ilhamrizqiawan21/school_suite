@@ -34,6 +34,7 @@ class SchoolController extends Controller
 
         return Inertia::render('Core/School/Edit', [
             'school' => $school,
+            'canUpdate' => Gate::allows('update', $school),
         ]);
     }
 
@@ -63,7 +64,7 @@ class SchoolController extends Controller
             'mission' => ['nullable', 'string', 'max:10000'],
             'theme_primary' => ['sometimes', Rule::in(['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'])],
             'logo' => ['nullable', File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(2048)],
-            'favicon' => ['nullable', File::image()->types(['png'])->max(512)->dimensions(Rule::dimensions()->maxWidth(512)->maxHeight(512))],
+            'favicon' => ['nullable', File::image()->types(['png'])->max(512)->dimensions(Rule::dimensions()->maxWidth(512)->maxHeight(512)->ratio(1))],
         ]);
 
         $oldValues = $school->only(['name', 'npsn', 'level', 'address', 'phone', 'email', 'legal_name', 'school_status', 'accreditation', 'principal_name', 'website', 'vision', 'mission', 'logo_path', 'favicon_path', 'settings']);
@@ -82,6 +83,7 @@ class SchoolController extends Controller
             $validated[$pathColumn] = $request->file($kind)->store('branding/'.$school->id, 'local');
             unset($validated[$kind]);
         }
+        unset($validated['logo'], $validated['favicon']);
         $school->update($validated);
 
         $this->auditLogger->log(

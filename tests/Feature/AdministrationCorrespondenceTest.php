@@ -185,6 +185,52 @@ class AdministrationCorrespondenceTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_document_draft_can_be_edited_and_published_with_private_verification(): void
+    {
+        $data = [
+            'letter_type' => 'outgoing', 'letter_number' => '12/ADM/2026', 'letter_date' => '2026-10-27',
+            'recipient' => 'Rahasia penerima', 'subject' => 'Perihal rahasia', 'letter_body' => 'Isi rahasia',
+            'signer_name' => 'Kepala Sekolah', 'signer_title' => 'Kepala Sekolah', 'attachment_note' => 'Satu berkas',
+        ];
+        $this->actingAs($this->admin)->post(route('administration.correspondence.store'), $data)->assertSessionHasNoErrors();
+        $record = CorrespondenceRecord::firstOrFail();
+        $this->assertNull($record->verification_token);
+        $this->get(route('administration.correspondence.pdf', $record))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $data['letter_body'] = 'Isi revisi rahasia';
+        $this->patch(route('administration.correspondence.draft', $record), $data)->assertSessionHasNoErrors();
+        $this->patch(route('administration.correspondence.status', $record), ['status' => 'sent'])->assertSessionHasErrors('status');
+        $this->patch(route('administration.correspondence.status', $record), ['status' => 'issued'])->assertSessionHasNoErrors();
+        $record->refresh();
+        $this->assertNotNull($record->verification_token);
+        $this->assertSame($this->school->name, $record->school_snapshot['name']);
+        $this->get(route('administration.correspondence.pdf', $record))->assertOk();
+        $this->patch(route('administration.correspondence.draft', $record), $data)->assertSessionHasErrors('status');
+        $this->assertSame('Isi revisi rahasia', $record->fresh()->letter_body);
+        auth()->logout();
+        $this->get(route('administration.correspondence.verify', $record->verification_token))
+            ->assertOk()->assertHeader('Cache-Control', 'no-store, private')->assertSee('12/ADM/2026')
+            ->assertDontSee('Isi revisi rahasia')->assertDontSee('Rahasia penerima')->assertDontSee('Perihal rahasia');
+        $this->get(route('administration.correspondence.verify', str_repeat('a', 64)))->assertNotFound();
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.status', $record), ['status' => 'sent'])->assertSessionHasNoErrors();
+        $this->patch(route('administration.correspondence.status', $record), ['status' => 'archived'])->assertSessionHasNoErrors();
+        auth()->logout();
+        $this->get(route('administration.correspondence.verify', $record->verification_token))->assertOk()->assertSee('Diarsipkan');
+    }
+
+    public function test_document_requires_date_and_signer_and_cannot_be_accessed_across_schools(): void
+    {
+        $this->actingAs($this->admin)->post(route('administration.correspondence.store'), [
+            'letter_type' => 'outgoing', 'letter_number' => 'X', 'recipient' => 'Y', 'subject' => 'Z', 'letter_body' => 'Isi',
+        ])->assertSessionHasErrors(['letter_date', 'signer_name', 'signer_title']);
+        $other = School::create(['name' => 'Sekolah Lain', 'npsn' => '77553313', 'level' => 'MTs']);
+        $record = CorrespondenceRecord::create([
+            'school_id' => $other->id, 'created_by' => $this->admin->id, 'letter_type' => 'outgoing',
+            'letter_number' => 'X', 'subject' => 'Z', 'letter_body' => 'Rahasia', 'status' => 'draft',
+        ]);
+        $this->get(route('administration.correspondence.pdf', $record))->assertNotFound();
+        $this->patch(route('administration.correspondence.draft', $record), [])->assertNotFound();
+    }
+
     private function makeUser(Role $role, string $email, string $name): User
     {
         return User::create([

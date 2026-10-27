@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Modules\Core\Infrastructure\Models\AuditEvent;
+use App\Modules\Core\Infrastructure\Models\BlockedIp;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -87,6 +88,38 @@ class SecurityAuditLogTest extends TestCase
                 ->where('can_manage', false)
                 ->has('audit_events', 0)
             );
+    }
+
+    public function test_admin_cannot_block_current_ip_and_receives_a_form_error(): void
+    {
+        $school = $this->createSchool('Sekolah IP', '99110001');
+        $admin = $this->createUser($school, 'admin', 'Admin', 'ip@audit.test');
+        $this->actingAs($admin)->from('/pengaturan/keamanan')->post('/pengaturan/keamanan/ip', [
+            'ip_address' => '127.0.0.1', 'reason' => 'Percobaan blokir sendiri',
+        ])->assertRedirect('/pengaturan/keamanan')->assertSessionHasErrors('ip_address');
+        $this->assertDatabaseCount('security_blocked_ips', 0);
+    }
+
+    public function test_admin_can_block_again_after_own_school_block_is_disabled(): void
+    {
+        $school = $this->createSchool('Sekolah IP', '99110002');
+        $admin = $this->createUser($school, 'admin', 'Admin', 'reblock@audit.test');
+        $item = BlockedIp::create(['school_id' => $school->id, 'ip_address' => '203.0.113.10', 'reason' => 'Lama', 'blocked_by' => $admin->id, 'is_active' => false]);
+        $this->actingAs($admin)->from('/pengaturan/keamanan')->post('/pengaturan/keamanan/ip', [
+            'ip_address' => $item->ip_address, 'reason' => 'Percobaan ulang',
+        ])->assertRedirect('/pengaturan/keamanan')->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('security_blocked_ips', 1);
+        $this->assertTrue($item->fresh()->is_active);
+    }
+
+    public function test_security_audit_history_is_paginated(): void
+    {
+        $school = $this->createSchool('Sekolah Halaman', '99110003');
+        $admin = $this->createUser($school, 'admin', 'Admin', 'pages@audit.test');
+        for ($i = 0; $i < 17; $i++) {
+            AuditEvent::create(['school_id' => $school->id, 'actor_id' => $admin->id, 'event_type' => 'core.user.updated', 'created_at' => now()]);
+        }
+        $this->actingAs($admin)->get('/pengaturan/keamanan')->assertOk()->assertInertia(fn (Assert $page) => $page->has('audit_events', 15)->where('pagination.audit.total', 17)->where('pagination.audit.last', 2));
     }
 
     private function createSchool(string $name, string $npsn): School

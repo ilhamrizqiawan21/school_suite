@@ -1,267 +1,42 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
-
-interface SubjectGrade {
-    subject_id: number;
-    subject_name: string;
-    subject_code: string;
-    teacher_name: string;
-    final_score: number | null;
-    letter_grade: string;
-    is_passing: boolean;
-}
-
-interface AttendanceSnapshot {
-    present: number;
-    sick: number;
-    permitted: number;
-    absent: number;
-}
-
-interface ReportDetail {
-    id: number;
-    status: string;
-    scheme_version: number;
-    checksum: string;
-    student: {
-        id: number;
-        name: string;
-        nis: string;
-        nisn: string;
-    };
-    class_group: {
-        id: number;
-        name: string;
-    };
-    term: {
-        id: number;
-        name: string;
-    };
-    school: {
-        name: string;
-        address: string;
-    };
-    grades: SubjectGrade[];
-    attendance: AttendanceSnapshot;
-    notes: {
-        homeroom_notes?: string;
-        attitudes?: Record<string, { predicate: string; description: string }>;
-    };
-    published_at?: string | null;
-}
-
-const props = defineProps<{
-    report: ReportDetail;
-}>();
-
-const printReport = () => {
-    window.print();
-};
+interface Grade { subject_id: number; subject_name: string; final_score: number | null; competency_description?: string | null; }
+interface Report { id: number; status: string; scheme_version: number | null; checksum: string; integrity_valid: boolean; student: { name: string; nis: string; nisn: string }; class_group: { name: string }; term: { name: string; academic_year_name: string }; school: { name: string; address: string; npsn: string; principal_name?: string; logo_data_uri?: string }; academic: { homeroom_teacher: string }; grades: Grade[]; attendance: { sick?: number; permitted?: number; absent?: number }; extracurricular: { name: string; predicate?: string; description?: string }[]; notes?: { homeroom_notes?: string; achievements?: { title: string; level?: string; rank?: string }[] }; published_at?: string | null; }
+const props = defineProps<{ report: Report }>();
+const scoreLabel = (score: number | null) => score == null ? '—' : Number(score).toLocaleString('id-ID', { maximumFractionDigits: 4 });
+const total = computed(() => props.report.grades.some(g => g.final_score != null) ? props.report.grades.reduce((sum, g) => sum + Number(g.final_score ?? 0), 0) : null);
+const printReport = () => window.print();
 </script>
-
 <template>
+    <Head :title="`Rapor — ${report.student.name}`" />
     <AppLayout>
-        <Head :title="`Rapor Siswa - ${props.report.student.name}`" />
-
-        <div class="space-y-6">
-            <!-- Navigasi & Aksi (Disembunyikan saat cetak) -->
-            <div class="print:hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <a :href="`/penilaian/rapor/${props.report.id}/pdf`" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-semibold">Unduh PDF</a>
-                    <Link
-                        href="/penilaian/rapor"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs"
-                    >
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        <span>Kembali ke Daftar Rapor</span>
-                    </Link>
-
-                    <span
-                        :class="[
-                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase',
-                            props.report.status === 'published'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-amber-100 text-amber-800',
-                        ]"
-                    >
-                        Status: {{ props.report.status }}
-                    </span>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors"
-                        @click="printReport"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                        </svg>
-                        <span>Cetak Rapor (Print / PDF)</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Lembar Rapor Baku (Printable Sheet) -->
-            <div class="bg-white p-8 sm:p-12 rounded-xl border border-slate-200 shadow-sm print:shadow-none print:border-none print:p-0 max-w-4xl mx-auto text-slate-900">
-                <!-- Kop Rapor -->
-                <div class="border-b-2 border-slate-900 pb-4 text-center mb-6">
-                    <h2 class="text-xl font-bold uppercase tracking-wide">{{ props.report.school.name }}</h2>
-                    <p class="text-xs text-slate-600">{{ props.report.school.address }}</p>
-                    <h3 class="text-base font-bold uppercase tracking-wider mt-3 underline">
-                        LAPORAN HASIL BELAJAR SISWA (RAPOR)
-                    </h3>
-                </div>
-
-                <!-- Identitas Siswa -->
-                <div class="grid grid-cols-2 gap-4 text-xs mb-6">
-                    <table class="w-full">
-                        <tbody>
-                            <tr>
-                                <td class="py-1 w-32 font-semibold">Nama Peserta Didik</td>
-                                <td class="py-1 w-4">:</td>
-                                <td class="py-1 font-bold">{{ props.report.student.name }}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-1 font-semibold">NIS / NISN</td>
-                                <td class="py-1">:</td>
-                                <td class="py-1 font-mono">{{ props.report.student.nis }} / {{ props.report.student.nisn }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <table class="w-full">
-                        <tbody>
-                            <tr>
-                                <td class="py-1 w-28 font-semibold">Kelas</td>
-                                <td class="py-1 w-4">:</td>
-                                <td class="py-1 font-bold">{{ props.report.class_group.name }}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-1 font-semibold">Semester / Tahun</td>
-                                <td class="py-1">:</td>
-                                <td class="py-1">{{ props.report.term.name }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Tabel Nilai Akademik -->
-                <div class="mb-6">
-                    <h4 class="text-xs font-bold uppercase tracking-wider mb-2">A. Capaian Kompetensi Akademik</h4>
-                    <table class="w-full text-xs border border-slate-300 border-collapse">
-                        <thead class="bg-slate-100 font-bold text-center">
-                            <tr>
-                                <th class="border border-slate-300 py-2 px-2 w-10">No</th>
-                                <th class="border border-slate-300 py-2 px-3 text-left">Mata Pelajaran</th>
-                                <th class="border border-slate-300 py-2 px-2 w-16">Nilai Akhir</th>
-                                <th class="border border-slate-300 py-2 px-2 w-14">Predikat</th>
-                                <th class="border border-slate-300 py-2 px-2 w-20">Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(gr, idx) in props.report.grades" :key="gr.subject_id">
-                                <td class="border border-slate-300 py-2 px-2 text-center">{{ idx + 1 }}</td>
-                                <td class="border border-slate-300 py-2 px-3 font-medium">
-                                    {{ gr.subject_name }}
-                                    <span class="block text-[10px] text-slate-500 font-normal">Guru: {{ gr.teacher_name }}</span>
-                                </td>
-                                <td class="border border-slate-300 py-2 px-2 text-center font-bold font-mono">
-                                    {{ gr.final_score !== null ? gr.final_score : '-' }}
-                                </td>
-                                <td class="border border-slate-300 py-2 px-2 text-center font-bold">
-                                    {{ gr.letter_grade }}
-                                </td>
-                                <td class="border border-slate-300 py-2 px-2 text-center">
-                                    <span
-                                        :class="[
-                                            gr.is_passing ? 'text-emerald-700 font-semibold' : 'text-rose-600 font-semibold',
-                                        ]"
-                                    >
-                                        {{ gr.is_passing ? 'Tuntas' : 'Perlu Bimbingan' }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr v-if="props.report.grades.length === 0">
-                                <td colspan="5" class="border border-slate-300 py-4 text-center text-slate-400">
-                                    Belum ada catatan nilai akademik.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mb-6">
-                    <h4 class="text-xs font-bold uppercase tracking-wider mb-2">B. Sikap Spiritual dan Sosial</h4>
-                    <table class="w-full text-xs border border-slate-300 border-collapse"><thead class="bg-slate-100"><tr><th class="border border-slate-300 p-2 text-left">Aspek</th><th class="border border-slate-300 p-2">Predikat</th><th class="border border-slate-300 p-2 text-left">Deskripsi</th></tr></thead><tbody><tr v-for="type in ['spiritual','social']" :key="type"><td class="border border-slate-300 p-2 font-semibold capitalize">{{ type }}</td><td class="border border-slate-300 p-2 text-center">{{ props.report.notes?.attitudes?.[type]?.predicate ?? '—' }}</td><td class="border border-slate-300 p-2">{{ props.report.notes?.attitudes?.[type]?.description ?? 'Belum dinilai.' }}</td></tr></tbody></table>
-                </div>
-
-                <!-- Rekapitulasi Presensi & Catatan -->
-                <div class="grid grid-cols-2 gap-6 mb-8 text-xs">
-                    <!-- Presensi -->
-                    <div>
-                        <h4 class="font-bold uppercase tracking-wider mb-2">B. Kehadiran</h4>
-                        <table class="w-full border border-slate-300 border-collapse">
-                            <tbody>
-                                <tr>
-                                    <td class="border border-slate-300 py-1.5 px-3">Sakit (S)</td>
-                                    <td class="border border-slate-300 py-1.5 px-3 text-center font-bold w-16">
-                                        {{ props.report.attendance.sick }} hari
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-slate-300 py-1.5 px-3">Izin (I)</td>
-                                    <td class="border border-slate-300 py-1.5 px-3 text-center font-bold">
-                                        {{ props.report.attendance.permitted }} hari
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-slate-300 py-1.5 px-3">Tanpa Keterangan (A)</td>
-                                    <td class="border border-slate-300 py-1.5 px-3 text-center font-bold">
-                                        {{ props.report.attendance.absent }} hari
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Catatan Wali Kelas -->
-                    <div>
-                        <h4 class="font-bold uppercase tracking-wider mb-2">C. Catatan Wali Kelas</h4>
-                        <div class="border border-slate-300 p-3 h-24 rounded-xs text-slate-700 italic">
-                            {{ props.report.notes?.homeroom_notes || 'Tingkatkan semangat belajar dan terus kembangkan bakat serta prestasimu.' }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tanda Tangan -->
-                <div class="grid grid-cols-3 gap-4 text-center text-xs mt-12 mb-8">
-                    <div>
-                        <p class="mb-16">Mengetahui,<br>Orang Tua / Wali</p>
-                        <p class="font-bold underline">( ............................................ )</p>
-                    </div>
-
-                    <div>
-                        <p class="mb-16">Wali Kelas,</p>
-                        <p class="font-bold underline">( ............................................ )</p>
-                    </div>
-
-                    <div>
-                        <p class="mb-16">Kepala Sekolah,</p>
-                        <p class="font-bold underline">( ............................................ )</p>
-                    </div>
-                </div>
-
-                <!-- Footer Keamanan & Checksum SHA-256 (SS-D-005) -->
-                <div class="border-t border-slate-200 pt-3 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                    <span>Dokumen Rapor Digital Resmi — Snapshot Versi {{ props.report.scheme_version }}</span>
-                    <span>SHA-256: {{ props.report.checksum }}</span>
-                </div>
-            </div>
-        </div>
+        <main class="report-preview">
+            <div class="preview-toolbar"><div><Link href="/penilaian/rapor" class="preview-back">Kembali ke daftar rapor</Link><p>Pratinjau dokumen <span :class="{ published: report.status === 'published' }">{{ report.status === 'published' ? 'Terbit dan terkunci' : 'Draf · belum diterbitkan' }}</span></p></div><div class="preview-actions"><a :href="`/penilaian/rapor/${report.id}/pdf`" class="secondary-button">Unduh PDF</a><button class="primary-button" @click="printReport">Cetak rapor</button></div></div>
+            <article class="report-sheet academic-sheet">
+                <header class="school-letterhead"><img v-if="report.school.logo_data_uri" :src="report.school.logo_data_uri" alt="Logo sekolah"><div><h2>{{ report.school.name }}</h2><p>{{ report.school.address }}</p><p>NPSN {{ report.school.npsn }}</p></div></header>
+                <section class="student-identity" aria-label="Identitas peserta didik"><div><span>Nama peserta didik</span><strong>{{ report.student.name }}</strong></div><div><span>Kelas</span><strong>{{ report.class_group.name }}</strong></div><div><span>NIS / NISN</span><strong>{{ report.student.nis }} / {{ report.student.nisn || '—' }}</strong></div><div><span>Semester</span><strong>{{ report.term.name }}</strong></div><div><span>Sekolah</span><strong>{{ report.school.name }}</strong></div><div><span>Tahun pelajaran</span><strong>{{ report.term.academic_year_name }}</strong></div></section>
+                <div class="document-title"><h1>Capaian hasil belajar</h1><strong v-if="report.status !== 'published'" class="draft-mark">Draf · belum diterbitkan</strong></div>
+                <div class="grade-scroll" tabindex="0" aria-label="Tabel nilai dan capaian kompetensi"><table class="document-table grade-table"><thead><tr><th class="number-cell">No.</th><th>Mata pelajaran</th><th class="score-heading">Nilai akhir</th><th>Capaian kompetensi</th></tr></thead><tbody><tr v-for="(grade, index) in report.grades" :key="`${grade.subject_id}-${index}`"><td class="number-cell">{{ index + 1 }}</td><td class="subject-cell">{{ grade.subject_name }}</td><td class="number-cell score-cell">{{ scoreLabel(grade.final_score) }}</td><td class="competency-cell">{{ grade.competency_description || 'Belum ada deskripsi capaian kompetensi.' }}</td></tr><tr v-if="!report.grades.length"><td colspan="4">Belum ada nilai akademik pada rapor ini.</td></tr><tr v-else class="total-row"><td colspan="2">Jumlah nilai</td><td class="number-cell">{{ scoreLabel(total) }}</td><td></td></tr></tbody></table></div><p class="table-hint">Geser tabel untuk melihat capaian kompetensi.</p>
+                <footer class="document-footer"><span>{{ report.class_group.name }} · {{ report.student.name }}</span><span>Halaman 1</span></footer>
+            </article>
+            <article class="report-sheet supplement-sheet">
+                <section class="document-section"><h3>Ekstrakurikuler</h3><table class="document-table"><thead><tr><th class="number-cell">No.</th><th>Kegiatan ekstrakurikuler</th><th>Nilai</th><th>Keterangan</th></tr></thead><tbody><tr v-for="(activity, index) in report.extracurricular" :key="index"><td class="number-cell">{{ index + 1 }}</td><td>{{ activity.name }}</td><td>{{ activity.predicate || '—' }}</td><td>{{ activity.description || '—' }}</td></tr><tr v-if="!report.extracurricular.length"><td colspan="4" class="empty-cell">Belum ada catatan ekstrakurikuler.</td></tr></tbody></table></section>
+                <section class="document-section"><h3>Prestasi</h3><table class="document-table"><thead><tr><th class="number-cell">No.</th><th>Jenis prestasi</th><th>Keterangan</th></tr></thead><tbody><tr v-for="(achievement, index) in report.notes?.achievements ?? []" :key="index"><td class="number-cell">{{ index + 1 }}</td><td>{{ achievement.title }}</td><td>{{ [achievement.level, achievement.rank].filter(Boolean).join(' · ') || '—' }}</td></tr><tr v-if="!report.notes?.achievements?.length"><td colspan="3" class="empty-cell">Belum ada catatan prestasi.</td></tr></tbody></table></section>
+                <section class="document-section"><h3>Ketidakhadiran</h3><table class="document-table attendance-table"><tbody><tr v-for="item in [{ key: 'sick', label: 'Sakit' }, { key: 'permitted', label: 'Izin' }, { key: 'absent', label: 'Tanpa keterangan' }] as const" :key="item.key"><td>{{ item.label }}</td><td>{{ report.attendance[item.key] ?? 0 }}</td><td>hari</td></tr></tbody></table></section>
+                <section class="document-section"><h3>Catatan wali kelas</h3><p class="homeroom-note">{{ report.notes?.homeroom_notes || 'Belum ada catatan wali kelas.' }}</p></section>
+                <section class="document-section"><h3>Tanggapan orang tua / wali</h3><div class="parent-response" aria-label="Ruang tanggapan tertulis orang tua atau wali"></div></section>
+                <section class="report-signatures" aria-label="Pengesahan rapor"><div><p>Orang tua / wali</p><strong>( ................................ )</strong></div><div><p>{{ report.published_at || 'Tanggal: ........................' }}<br>Wali kelas</p><strong>{{ report.academic.homeroom_teacher || '( ................................ )' }}</strong></div><div class="principal-signature"><p>Mengetahui,<br>Kepala sekolah</p><strong>{{ report.school.principal_name || '( ................................ )' }}</strong></div></section>
+                <footer class="document-footer"><span>{{ report.class_group.name }} · {{ report.student.name }}</span><span>Halaman 2</span></footer>
+                <small class="document-checksum">Pemeriksaan data SHA-256: {{ report.checksum }}</small>
+            </article>
+            <details class="report-integrity"><summary>Pemeriksaan data rapor <span :class="{ invalid: !report.integrity_valid }">{{ report.integrity_valid ? 'Checksum cocok' : 'Checksum tidak cocok' }}</span></summary><p>Checksum SHA-256 membandingkan isi skema, nilai, kehadiran, dan catatan dengan data rapor yang disimpan. Kode ini bukan tanda tangan digital.</p><code>{{ report.checksum }}</code><p v-if="!report.integrity_valid">Pemeriksaan data tidak cocok. Minta pengelola sekolah memeriksa sumber rapor sebelum digunakan.</p></details>
+        </main>
     </AppLayout>
 </template>
-
+<style scoped>
+.report-preview{max-width:1000px;min-width:0;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.preview-toolbar,.preview-actions{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}.preview-back{color:var(--primary);font-size:.85rem;font-weight:650}.preview-toolbar p{font-size:.75rem;color:var(--ink-soft);margin-top:.5rem}.preview-toolbar p span{margin-left:.5rem;color:#855b16}.preview-toolbar p span.published{color:#18734b}.report-sheet{min-width:0;max-width:100%;background:#fff;color:#202a33;padding:38px 42px;border:1px solid #dbe2e8;box-shadow:0 6px 28px #2033440a;font-family:Arial,sans-serif;border-radius:3px;min-height:1030px;display:flex;flex-direction:column}.school-letterhead{display:flex;align-items:center;justify-content:center;gap:22px;text-align:center;padding-bottom:18px;border-bottom:2px solid #263a48}.school-letterhead img{width:64px;height:64px;object-fit:contain}.school-letterhead h2{font-size:20px;font-weight:750;line-height:1.3}.school-letterhead p{font-size:11px;line-height:1.6;color:#526777}.student-identity{display:grid;grid-template-columns:2fr 1fr;gap:10px 24px;border-bottom:3px double #70818c;padding:16px 0}.student-identity>div{display:grid;grid-template-columns:115px 1fr;gap:8px;font-size:11px;line-height:1.5}.student-identity span{color:#526777}.student-identity strong{font-weight:600}.document-title{text-align:center;margin:24px 0}.document-title h1{font-size:18px;font-weight:750}.table-hint{display:none}.draft-mark{display:block;margin-top:10px;color:#855b16;font-size:11px}.document-section{margin-bottom:16px;break-inside:avoid}.document-section h3{font-size:12px;font-weight:750;margin-bottom:6px}.document-table{width:100%;table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;font-size:11px;line-height:1.5}.document-table th{background:#f1f4f6;color:#263a48;font-size:10px;font-weight:700;text-align:left}.document-table td,.document-table th{white-space:normal;overflow-wrap:anywhere;padding:8px 9px;border:1px solid #7b8993;vertical-align:middle}.document-table .number-cell{text-align:center;width:38px;white-space:nowrap}.document-table .score-heading{text-align:center;width:12%}.subject-cell{width:29%}.competency-cell{font-size:10px;line-height:1.6}.score-cell,.total-row{font-weight:700}.total-row td{background:#f8fafb}.empty-cell{color:#647786;font-size:10px}.attendance-table td:first-child{width:40%}.attendance-table td:nth-child(2){width:15%;text-align:center}.homeroom-note,.parent-response{padding:10px 12px;border:1px solid #7b8993;min-height:62px;font-size:11px;line-height:1.7;white-space:pre-line;overflow-wrap:anywhere}.parent-response{min-height:76px}.report-signatures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 60px;text-align:left;font-size:11px;margin:20px 24px 30px;break-inside:avoid}.report-signatures p{min-height:82px;line-height:1.6}.report-signatures strong{font-weight:600}.principal-signature{grid-column:1/-1;text-align:center}.document-footer{display:flex;justify-content:space-between;gap:12px;margin-top:auto;padding-top:16px;font-size:9px;color:#526777}.document-checksum{font-size:7px;color:#647786;overflow-wrap:anywhere;margin-top:6px}.report-integrity{min-width:0;padding:1rem 1.2rem;border:1px solid var(--line);border-radius:.6rem;color:var(--ink-soft);background:var(--surface);font-size:.75rem}.report-integrity summary{cursor:pointer;color:var(--ink);font-weight:650}.report-integrity summary span{margin-left:.5rem;font-size:.7rem;color:#18734b}.report-integrity summary span.invalid{color:#b43a2a}.report-integrity p{line-height:1.7;margin-top:.75rem}.report-integrity code{display:block;overflow-wrap:anywhere;margin-top:.75rem;font-size:.7rem}@media(max-width:700px){.table-hint{display:block;font-size:10px;color:#647786;margin-top:8px}.report-sheet{padding:24px 18px;min-height:850px}.school-letterhead h2{font-size:16px}.school-letterhead img{width:46px;height:46px}.student-identity{grid-template-columns:1fr}.student-identity>div{grid-template-columns:115px 1fr}.grade-scroll{min-width:0;overflow-x:auto}.grade-table{min-width:550px}.report-signatures{gap:24px;font-size:10px;margin-inline:0}.preview-actions{width:100%}}
+@media print{@page{size:A4;margin:14mm}:global(.sidebar),:global(.topbar),:global(.sidebar-backdrop),:global(.skip-link){display:none!important}:global(.app-shell),:global(.workspace){display:block!important;margin:0!important;min-height:0!important}:global(#main-content){padding:0!important;margin:0!important}:global(body){background:white!important}.preview-toolbar,.report-integrity,.table-hint{display:none!important}.report-preview{display:block;max-width:none}.report-sheet{display:block;padding:0;margin:0;border:0;box-shadow:none;border-radius:0;min-height:0}.supplement-sheet{break-before:page}.student-identity{grid-template-columns:2fr 1fr}.grade-table{min-width:0}.document-table thead{display:table-header-group}.document-table tr{break-inside:avoid}.document-footer{margin-top:30px}.report-signatures{grid-template-columns:1fr 1fr}.school-letterhead h2{font-size:18px}}
+@media print{.document-table td,.document-table th{padding:5px 7px;font-size:10px;line-height:1.4}.document-section{margin-bottom:10px}.document-section h3{font-size:11px;margin-bottom:5px}.report-signatures{margin:14px 24px 15px;gap:15px;font-size:10px}.report-signatures p{min-height:60px}.homeroom-note{min-height:45px;padding:8px;font-size:10px}.parent-response{min-height:55px}.document-footer{margin-top:15px;padding-top:10px}}
+</style>

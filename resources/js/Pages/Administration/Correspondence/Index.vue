@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, reactive } from 'vue';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 
 interface StatusOption { value: string; label: string }
 interface CorrespondenceRecord {
@@ -20,6 +20,11 @@ interface CorrespondenceRecord {
     attachment_name: string | null;
     has_attachment: boolean;
     archived_at: string | null;
+    has_document: boolean;
+    letter_body: string | null;
+    signer_name: string | null;
+    signer_title: string | null;
+    attachment_note: string | null;
 }
 
 const props = defineProps<{
@@ -39,8 +44,51 @@ const form = useForm({
     recipient: '',
     subject: '',
     summary: '',
+    letter_body: '',
+    signer_name: '',
+    signer_title: '',
+    attachment_note: '',
     attachment: null as File | null,
 });
+
+const editingId = ref<number | null>(null);
+const creating = ref(false);
+const search = ref('');
+const currentPage = ref(1);
+const filteredRecords = computed(() => {
+    const query = search.value.trim().toLocaleLowerCase();
+    return query ? props.records.filter((record) => [record.subject, record.letter_number, record.agenda_number, record.sender, record.recipient].some((value) => value?.toLocaleLowerCase().includes(query))) : props.records;
+});
+const pageCount = computed(() => Math.max(1, Math.ceil(filteredRecords.value.length / 10)));
+const visibleRecords = computed(() => filteredRecords.value.slice((currentPage.value - 1) * 10, currentPage.value * 10));
+watch([search, () => props.filter], () => { currentPage.value = 1; });
+
+function startNew(type: 'incoming' | 'outgoing') {
+    editingId.value = null;
+    form.reset();
+    form.clearErrors();
+    form.letter_type = type;
+    creating.value = true;
+    nextTick(() => document.getElementById('form-surat')?.scrollIntoView({ behavior: 'smooth' }));
+}
+
+function editDraft(record: CorrespondenceRecord) {
+    editingId.value = record.id;
+    form.reset();
+    form.clearErrors();
+    form.letter_type = 'outgoing';
+    form.letter_number = record.letter_number ?? '';
+    form.letter_date = record.letter_date ?? '';
+    form.recipient = record.recipient ?? '';
+    form.subject = record.subject;
+    form.summary = record.summary ?? '';
+    form.letter_body = record.letter_body ?? '';
+    form.signer_name = record.signer_name ?? '';
+    form.signer_title = record.signer_title ?? '';
+    form.attachment_note = record.attachment_note ?? '';
+    creating.value = true;
+    nextTick(() => document.getElementById('form-surat')?.scrollIntoView({ behavior: 'smooth' }));
+}
 
 const targets = reactive<Record<number, string>>({});
 const dispositions = reactive<Record<number, string>>({});
@@ -55,6 +103,9 @@ const tabs = [
 
 function nextStatuses(record: CorrespondenceRecord): StatusOption[] {
     const statuses = props.status_options[record.letter_type];
+    if (record.letter_type === 'outgoing' && record.status === 'draft' && !record.has_document) {
+        return statuses.filter((item) => item.value === 'sent');
+    }
     const currentIndex = statuses.findIndex((item) => item.value === record.status);
     return currentIndex >= 0 ? statuses.slice(currentIndex + 1, currentIndex + 2) : [];
 }
@@ -64,13 +115,17 @@ function labelForStatus(record: CorrespondenceRecord): string {
 }
 
 function saveRecord() {
+    if (editingId.value !== null) {
+        form.patch(`/administrasi/persuratan/surat/${editingId.value}/draf`, {
+            preserveScroll: true,
+            onSuccess: () => { form.reset(); editingId.value = null; creating.value = false; },
+        });
+        return;
+    }
     form.post('/administrasi/persuratan/surat', {
         forceFormData: true,
         preserveScroll: true,
-        onSuccess: () => {
-            form.reset();
-            form.letter_type = 'incoming';
-        },
+        onSuccess: () => { form.reset(); creating.value = false; },
     });
 }
 
@@ -81,13 +136,15 @@ function setAttachment(event: Event) {
 function updateStatus(record: CorrespondenceRecord) {
     const status = targets[record.id] || nextStatuses(record)[0]?.value;
     if (!status) return;
+    if (status === 'issued' && !window.confirm('Finalkan surat untuk membuat QR? Isi surat tidak dapat diubah setelah difinalkan.')) return;
+    if (record.letter_type === 'outgoing' && status === 'sent' && !window.confirm('Pastikan surat sudah ditandatangani dan dikirim di luar aplikasi. Tandai surat sebagai terkirim?')) return;
 
     router.patch(`/administrasi/persuratan/surat/${record.id}/status`, {
         status,
         disposition: dispositions[record.id] ?? '',
     }, {
         preserveScroll: true,
-        onSuccess: () => { delete statusErrors[record.id]; },
+        onSuccess: () => { delete statusErrors[record.id]; delete targets[record.id]; },
         onError: (errors) => { statusErrors[record.id] = errors.status || errors.disposition || 'Status surat gagal diperbarui.'; },
     });
 }
@@ -114,10 +171,20 @@ function updateStatus(record: CorrespondenceRecord) {
                 {{ flashMessage }}
             </p>
 
-            <section class="panel correspondence-panel">
-                <div class="table-title"><div><h2>Catat surat</h2><p>Nomor surat keluar diisi sesuai penomoran yang berlaku di sekolah.</p></div></div>
+            <section class="panel correspondence-panel workflow">
+                <div class="table-title"><div><h2>Mulai dari sini</h2><p>Pilih pekerjaan yang ingin dilakukan.</p></div></div>
+                <div class="workflow-actions">
+                    <button type="button" class="primary-button" @click="startNew('incoming')">Catat surat masuk</button>
+                    <button type="button" class="secondary-button" @click="startNew('outgoing')">Buat surat keluar</button>
+                </div>
+                <p class="workflow-help">Surat masuk: catat → disposisi → selesai → arsip. Surat keluar: buat draf → periksa PDF → finalkan untuk membuat QR → tandatangani dan kirim → tandai terkirim → arsip.</p>
+                <p class="workflow-help">QR memeriksa pencatatan surat. QR tidak memastikan isi dokumen tidak berubah dan bukan tanda tangan elektronik.</p>
+            </section>
+
+            <section v-show="creating" id="form-surat" class="panel correspondence-panel">
+                <div class="table-title"><div><h2>{{ editingId ? 'Ubah draf surat keluar' : form.letter_type === 'incoming' ? 'Catat surat masuk' : 'Buat surat keluar' }}</h2><p>Nomor surat keluar diisi manual sesuai penomoran sekolah.</p></div></div>
                 <form class="correspondence-form" enctype="multipart/form-data" @submit.prevent="saveRecord">
-                    <label>Jenis surat
+                    <label v-if="!editingId">Jenis surat
                         <select v-model="form.letter_type">
                             <option value="incoming">Surat masuk</option>
                             <option value="outgoing">Surat keluar</option>
@@ -133,7 +200,7 @@ function updateStatus(record: CorrespondenceRecord) {
                         <span v-if="form.errors.letter_number" class="field-error">{{ form.errors.letter_number }}</span>
                     </label>
                     <label>Tanggal surat
-                        <input v-model="form.letter_date" type="date" />
+                        <input v-model="form.letter_date" type="date" :required="form.letter_type === 'outgoing' && !!form.letter_body" />
                         <span v-if="form.errors.letter_date" class="field-error">{{ form.errors.letter_date }}</span>
                     </label>
                     <label v-if="form.letter_type === 'incoming'">Tanggal diterima <span class="required-mark">*</span>
@@ -156,14 +223,34 @@ function updateStatus(record: CorrespondenceRecord) {
                         <textarea v-model="form.summary" rows="2" maxlength="5000" />
                         <span v-if="form.errors.summary" class="field-error">{{ form.errors.summary }}</span>
                     </label>
-                    <label class="correspondence-wide">Lampiran (PDF, Office, JPG/PNG; maks. 10 MB)
+                    <template v-if="form.letter_type === 'outgoing'">
+                        <div class="correspondence-wide form-note">Isi naskah untuk membuat PDF. Kosongkan jika hanya mencatat surat yang dibuat di luar aplikasi.</div>
+                        <label class="correspondence-wide">Isi surat
+                            <textarea v-model="form.letter_body" rows="8" maxlength="20000" placeholder="Tuliskan isi surat di sini" />
+                            <span v-if="form.errors.letter_body" class="field-error">{{ form.errors.letter_body }}</span>
+                        </label>
+                        <label>Nama penandatangan <span v-if="form.letter_body" class="required-mark">*</span>
+                            <input v-model="form.signer_name" maxlength="180" :required="!!form.letter_body" />
+                            <span v-if="form.errors.signer_name" class="field-error">{{ form.errors.signer_name }}</span>
+                        </label>
+                        <label>Jabatan penandatangan <span v-if="form.letter_body" class="required-mark">*</span>
+                            <input v-model="form.signer_title" maxlength="180" :required="!!form.letter_body" />
+                            <span v-if="form.errors.signer_title" class="field-error">{{ form.errors.signer_title }}</span>
+                        </label>
+                        <label>Keterangan lampiran surat
+                            <input v-model="form.attachment_note" maxlength="180" placeholder="Contoh: 1 berkas" />
+                            <span v-if="form.errors.attachment_note" class="field-error">{{ form.errors.attachment_note }}</span>
+                        </label>
+                    </template>
+                    <label v-if="!editingId" class="correspondence-wide">Lampiran (PDF, Office, JPG/PNG; maks. 10 MB)
                         <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="setAttachment" />
                         <span v-if="form.errors.attachment" class="field-error">{{ form.errors.attachment }}</span>
                     </label>
                     <div class="correspondence-wide correspondence-actions">
                         <button class="primary-button" type="submit" :disabled="form.processing">
-                            {{ form.processing ? 'Menyimpan…' : 'Simpan surat' }}
+                            {{ form.processing ? 'Menyimpan…' : editingId ? 'Simpan perubahan' : form.letter_type === 'outgoing' ? 'Simpan draf' : 'Simpan surat masuk' }}
                         </button>
+                        <button class="secondary-button" type="button" @click="creating = false">Batal</button>
                     </div>
                 </form>
             </section>
@@ -178,8 +265,11 @@ function updateStatus(record: CorrespondenceRecord) {
                     </Link>
                 </nav>
 
-                <div v-if="records.length" class="correspondence-list">
-                    <article v-for="record in records" :key="record.id" class="correspondence-card">
+                <label class="search-label">Cari surat
+                    <input v-model="search" type="search" placeholder="Perihal, nomor, asal, atau tujuan" />
+                </label>
+                <div v-if="visibleRecords.length" class="correspondence-list">
+                    <article v-for="record in visibleRecords" :key="record.id" class="correspondence-card">
                         <div class="correspondence-card-heading">
                             <div>
                                 <span class="correspondence-kind" :class="record.letter_type === 'incoming' ? 'kind-incoming' : 'kind-outgoing'">
@@ -198,11 +288,18 @@ function updateStatus(record: CorrespondenceRecord) {
                         </dl>
                         <p v-if="record.summary" class="correspondence-summary-text">{{ record.summary }}</p>
                         <p v-if="record.disposition" class="correspondence-disposition"><strong>Disposisi:</strong> {{ record.disposition }}</p>
+                        <p v-if="record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="workflow-help">Periksa PDF draf, kemudian finalkan untuk membuat QR. Isi tidak dapat diubah setelah difinalkan.</p>
+                        <p v-else-if="record.letter_type === 'outgoing' && record.status === 'draft'" class="workflow-help">Setelah surat dikirim, tandai sebagai terkirim.</p>
+                        <p v-if="record.status === 'issued' && record.has_document" class="workflow-help">Buka PDF dengan QR, tandatangani dan kirim surat, lalu tandai terkirim.</p>
+                        <p v-else-if="record.letter_type === 'outgoing' && record.status === 'sent' && record.has_document" class="workflow-help">PDF surat memuat QR untuk memeriksa pencatatan.</p>
                         <div class="correspondence-footer">
+                            <div class="record-actions">
+                                <button v-if="record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="row-action-button" type="button" @click="editDraft(record)">Ubah draf</button>
+                                <a v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" class="row-action-button">{{ record.status === 'draft' ? 'Periksa PDF draf' : 'Buka PDF surat' }}</a>
                             <a v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="row-action-button">
                                 Unduh {{ record.attachment_name || 'lampiran' }}
                             </a>
-                            <span v-else class="muted-note">Tidak ada lampiran</span>
+                            </div>
                             <form v-if="nextStatuses(record).length" class="status-update-form" @submit.prevent="updateStatus(record)">
                                 <label class="sr-only" :for="`next-status-${record.id}`">Status berikutnya</label>
                                 <select :id="`next-status-${record.id}`" v-model="targets[record.id]">
@@ -216,7 +313,12 @@ function updateStatus(record: CorrespondenceRecord) {
                         </div>
                     </article>
                 </div>
-                <p v-else class="empty-state">Belum ada surat pada filter ini. Surat yang dicatat akan muncul di sini.</p>
+                <p v-else class="empty-state">{{ search ? 'Tidak ada surat yang cocok dengan pencarian.' : 'Belum ada surat pada filter ini. Surat yang dicatat akan muncul di sini.' }}</p>
+                <div v-if="pageCount > 1" class="pagination">
+                    <button type="button" class="secondary-button" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</button>
+                    <span>Halaman {{ currentPage }} dari {{ pageCount }}</span>
+                    <button type="button" class="secondary-button" :disabled="currentPage === pageCount" @click="currentPage++">Berikutnya</button>
+                </div>
             </section>
         </main>
     </AppLayout>
@@ -224,13 +326,23 @@ function updateStatus(record: CorrespondenceRecord) {
 
 <style scoped>
 .correspondence-panel { padding: 1.25rem; }
-.correspondence-summary { margin: 0; min-width: min(100%, 30rem); }
+.hero-card { flex-wrap: wrap; }
+.hero-card > div:first-child { flex: 1 1 18rem; min-width: 0; }
+.correspondence-summary { flex: 1 1 20rem; margin: 0; min-width: 0; }
 .correspondence-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 .correspondence-form label { display: grid; gap: .4rem; color: #42526b; font-size: .85rem; font-weight: 600; }
 .correspondence-form input, .correspondence-form select, .correspondence-form textarea, .status-update-form select, .status-update-form input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .6rem .75rem; color: #172b4d; }
 .correspondence-form input[type=file] { padding: .4rem; }
 .correspondence-wide { grid-column: 1 / -1; }
-.correspondence-actions { display: flex; justify-content: end; }
+.correspondence-actions { display: flex; justify-content: end; gap: .5rem; flex-wrap: wrap; }
+.workflow-actions, .record-actions, .pagination { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
+.workflow-help, .form-note { margin: .8rem 0 0; color: #52637c; font-size: .85rem; line-height: 1.55; }
+.form-note { margin: 0; padding: .75rem; background: #eff5ff; border-radius: .6rem; }
+.search-label { display: grid; gap: .35rem; margin-top: 1rem; max-width: 26rem; color: #42526b; font-size: .85rem; font-weight: 600; }
+.search-label input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; padding: .6rem .75rem; background: white; color: #172b4d; }
+.pagination { justify-content: end; margin-top: 1rem; color: #52637c; font-size: .85rem; }
+.secondary-button:disabled { opacity: .5; cursor: not-allowed; }
+.correspondence-card, .correspondence-card-heading > div { min-width: 0; overflow-wrap: anywhere; }
 .primary-button, .secondary-button { border: 1px solid #3157a4; border-radius: .65rem; background: #3157a4; padding: .65rem 1rem; color: white; font-weight: 700; }
 .secondary-button { background: white; color: #3157a4; white-space: nowrap; }
 .primary-button:disabled { cursor: wait; opacity: .6; }

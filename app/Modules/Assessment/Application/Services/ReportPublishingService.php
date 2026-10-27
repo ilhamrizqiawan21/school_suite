@@ -206,13 +206,7 @@ class ReportPublishingService
         ];
 
         // 5. Cryptographic Checksum untuk membuktikan Immutability
-        $checksumPayload = json_encode([
-            'scheme' => $schemeSnapshot,
-            'grades' => $gradesSnapshot,
-            'attendance' => $attendanceSnapshot,
-            'notes' => $notesSnapshot,
-        ], JSON_THROW_ON_ERROR);
-        $checksum = hash('sha256', $checksumPayload);
+        $checksum = $this->calculateChecksum($schemeSnapshot, $gradesSnapshot, $attendanceSnapshot, $notesSnapshot);
 
         return ReportSnapshot::updateOrCreate(
             [
@@ -281,6 +275,28 @@ class ReportPublishingService
             'notes' => $report->notes_snapshot,
         ], JSON_THROW_ON_ERROR);
 
-        return hash('sha256', $payload) === $report->checksum;
+        // Retain verification for older snapshots that used insertion-order JSON.
+        return hash_equals($report->checksum, $this->calculateChecksum(
+            $report->scheme_snapshot ?? [],
+            $report->grades_snapshot ?? [],
+            $report->attendance_snapshot ?? [],
+            $report->notes_snapshot ?? [],
+        )) || hash_equals($report->checksum, hash('sha256', $payload));
+    }
+
+    public function calculateChecksum(array $scheme, array $grades, array $attendance, array $notes): string
+    {
+        return hash('sha256', json_encode($this->canonicalize([
+            'scheme' => $scheme, 'grades' => $grades, 'attendance' => $attendance, 'notes' => $notes,
+        ]), JSON_THROW_ON_ERROR));
+    }
+
+    private function canonicalize(array $value): array
+    {
+        if (! array_is_list($value)) {
+            ksort($value, SORT_STRING);
+        }
+
+        return array_map(fn ($item) => is_array($item) ? $this->canonicalize($item) : $item, $value);
     }
 }

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -29,13 +30,30 @@ class StaffTaskController extends Controller
         $schoolId = (int) $actor->school_id;
         $canManage = $policy->create($actor);
 
-        $tasks = StaffTask::query()
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:180'],
+            'status' => ['nullable', Rule::in(['assigned', 'in_progress', 'completed', 'cancelled'])],
+            'priority' => ['nullable', Rule::in(['low', 'normal', 'high', 'urgent'])],
+            'assignee_id' => ['nullable', 'integer'],
+        ]);
+        $scope = StaffTask::query()
             ->where('school_id', $schoolId)
-            ->when(! $canManage, fn ($query) => $query->where('assignee_id', $actor->id))
-            ->with(['creator:id,name', 'assignee:id,name', 'activities.actor:id,name'])
-            ->latest()
-            ->limit(100)
-            ->get();
+            ->when(! $canManage, fn ($query) => $query->where('assignee_id', $actor->id));
+        $summary = [
+            'active' => (clone $scope)->whereIn('status', ['assigned', 'in_progress'])->count(),
+            'overdue' => (clone $scope)->whereIn('status', ['assigned', 'in_progress'])->where('due_at', '<', now())->count(),
+            'completed' => (clone $scope)->where('status', 'completed')->count(),
+        ];
+        $tasks = $scope
+            ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($query) => $query->where('title', 'like', '%'.$search.'%')->orWhere('category', 'like', '%'.$search.'%')))
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['priority'] ?? null, fn ($query, $priority) => $query->where('priority', $priority))
+            ->when($canManage && ($filters['assignee_id'] ?? null), fn ($query) => $query->where('assignee_id', $filters['assignee_id']))
+            ->with(['creator:id,name', 'assignee:id,name', 'activities' => fn ($query) => $query->latest('id')->limit(5)->with('actor:id,name')])
+            ->withCount('activities')
+            ->latest('id')
+            ->paginate(15)
+            ->withQueryString();
 
         $assignees = $canManage
             ? User::query()
@@ -47,7 +65,10 @@ class StaffTaskController extends Controller
             : collect();
 
         return Inertia::render('Administration/StaffTasks/Index', [
-            'tasks' => $tasks,
+            'tasks' => $tasks->items(),
+            'pagination' => ['current_page' => $tasks->currentPage(), 'last_page' => $tasks->lastPage(), 'total' => $tasks->total(), 'from' => $tasks->firstItem(), 'to' => $tasks->lastItem(), 'prev_page_url' => $tasks->previousPageUrl(), 'next_page_url' => $tasks->nextPageUrl()],
+            'filters' => $filters,
+            'summary' => $summary,
             'assignees' => $assignees,
             'can_manage' => $canManage,
             'current_user_id' => (int) $actor->id,
@@ -68,7 +89,9 @@ class StaffTaskController extends Controller
             'attachment' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png', 'extensions:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
         ]);
         $assignee = isset($data['assignee_id']) ? User::query()->where('school_id', $schoolId)->where('is_active', true)->with('role')->findOrFail($data['assignee_id']) : null;
-        abort_if($assignee && $assignee->hasRole(['student', 'parent']), 422, 'Penanggung jawab harus merupakan staf sekolah yang aktif.');
+        if ($assignee && $assignee->hasRole(['student', 'parent'])) {
+            throw ValidationException::withMessages(['assignee_id' => 'Penanggung jawab harus merupakan staf sekolah yang aktif.']);
+        }
 
         $path = $this->storeAttachment($request, $privateStorage);
         if ($path) {
@@ -104,6 +127,11 @@ class StaffTaskController extends Controller
             'attachment' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png', 'extensions:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
         ]);
 
+        $assignee = isset($data['assignee_id']) ? User::query()->where('school_id', $schoolId)->where('is_active', true)->with('role')->findOrFail($data['assignee_id']) : null;
+        if ($assignee && $assignee->hasRole(['student', 'parent'])) {
+            throw ValidationException::withMessages(['assignee_id' => 'Penanggung jawab harus merupakan staf sekolah yang aktif.']);
+        }
+
         $oldAttachmentPath = null;
         $path = $this->storeAttachment($request, $privateStorage);
         if ($path) {
@@ -112,8 +140,6 @@ class StaffTaskController extends Controller
             $data['attachment_name'] = $this->safeOriginalName($request);
         }
         unset($data['attachment']);
-        $assignee = isset($data['assignee_id']) ? User::query()->where('school_id', $schoolId)->where('is_active', true)->with('role')->findOrFail($data['assignee_id']) : null;
-        abort_if($assignee && $assignee->hasRole(['student', 'parent']), 422, 'Penanggung jawab harus merupakan staf sekolah yang aktif.');
         $data['completed_at'] = $data['status'] === 'completed' ? ($staffTask->completed_at ?? now()) : null;
         $data['progress'] = match ($data['status']) {
             'assigned' => 0,
@@ -149,7 +175,9 @@ class StaffTaskController extends Controller
             'in_progress' => $data['progress'] > 0 && $data['progress'] < 100,
             'completed' => $data['progress'] === 100,
         };
-        abort_unless($consistentProgress, 422, 'Progres harus sesuai dengan status tugas: ditugaskan 0%, berjalan 1–99%, selesai 100%.');
+        if (! $consistentProgress) {
+            throw ValidationException::withMessages(['progress' => 'Progres harus sesuai dengan status: ditugaskan 0%, berjalan 1–99%, selesai 100%.']);
+        }
 
         $service->updateProgress($staffTask, $request->user(), $data['progress'], $data['status']);
 

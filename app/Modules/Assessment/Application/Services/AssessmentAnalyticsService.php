@@ -38,9 +38,16 @@ class AssessmentAnalyticsService
         $exams = $this->visibleExams($user)->get(['exams.id', 'exams.title', 'exams.status', 'exams.starts_at']);
         $selectedExam = null;
         $examResults = ['available' => false, 'exam' => null, 'total_attempts' => 0, 'graded_attempts' => 0, 'average_score' => null, 'score_distribution' => [], 'items' => null];
+        $selectedExam = ! empty($filters['exam_id'])
+            ? $exams->firstWhere('id', (int) $filters['exam_id'])
+            : $exams->firstWhere('status', 'results_published');
+
         if (! empty($filters['exam_id'])) {
-            $selectedExam = $exams->firstWhere('id', (int) $filters['exam_id']);
             abort_unless($selectedExam, 404);
+        }
+
+        if ($selectedExam) {
+            $filters['exam_id'] = (int) $selectedExam->id;
             $examResults['exam'] = $selectedExam;
             $exam = Exam::query()->findOrFail($selectedExam->id);
             $examResults['total_attempts'] = $exam->attempts()->count();

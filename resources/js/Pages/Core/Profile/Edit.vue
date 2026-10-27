@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
+import type { SharedProps } from '@/types';
 
 const props = defineProps<{
     profile: {
@@ -13,7 +14,7 @@ const props = defineProps<{
     };
 }>();
 
-const page = usePage<any>();
+const page = usePage<SharedProps>();
 const form = useForm<{ name: string; email: string; phone: string; avatar: File | null }>({
     name: props.profile.name,
     email: props.profile.email,
@@ -24,11 +25,30 @@ const form = useForm<{ name: string; email: string; phone: string; avatar: File 
 const initials = computed(() => form.name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase());
 const selectedFileName = computed(() => form.avatar?.name ?? 'Belum ada foto baru dipilih');
 
+const avatarInput = ref<HTMLInputElement | null>(null);
+const avatarPreview = ref('');
+const clearPreview = () => {
+    if (avatarPreview.value) URL.revokeObjectURL(avatarPreview.value);
+    avatarPreview.value = '';
+};
+onBeforeUnmount(clearPreview);
+
 const selectAvatar = (event: Event) => {
+    clearPreview();
     form.avatar = (event.target as HTMLInputElement).files?.[0] ?? null;
+    form.clearErrors('avatar');
+    if (form.avatar) avatarPreview.value = URL.createObjectURL(form.avatar);
 };
 
-const submit = () => form.post('/profil', { forceFormData: true, preserveScroll: true });
+const cancelPhoto = () => {
+    form.avatar = null;
+    if (avatarInput.value) avatarInput.value.value = '';
+    clearPreview();
+};
+const submit = () => form.post('/profil', {
+    forceFormData: true, preserveScroll: true,
+    onSuccess: () => { cancelPhoto(); form.defaults(); },
+});
 </script>
 
 <template>
@@ -53,8 +73,8 @@ const submit = () => form.post('/profil', { forceFormData: true, preserveScroll:
                 <aside class="profile-identity">
                     <div class="avatar-preview">
                         <img
-                            v-if="page.props.auth?.user?.avatar_url"
-                            :src="page.props.auth.user.avatar_url"
+                            v-if="avatarPreview || page.props.auth?.user?.avatar_url"
+                            :src="avatarPreview || page.props.auth?.user?.avatar_url || undefined"
                             alt="Foto profil"
                         />
                         <span v-else>{{ initials }}</span>
@@ -70,11 +90,12 @@ const submit = () => form.post('/profil', { forceFormData: true, preserveScroll:
                         <span class="file-picker">
                             <span class="file-button">Pilih foto</span>
                             <small>{{ selectedFileName }}</small>
-                            <input type="file" accept="image/jpeg,image/png,image/webp" @change="selectAvatar" />
+                            <input ref="avatarInput" :disabled="form.processing" type="file" accept="image/jpeg,image/png,image/webp" @change="selectAvatar" />
                         </span>
                         <small>JPG, PNG, atau WebP; maksimum 2 MB.</small>
                         <em v-if="form.errors.avatar">{{ form.errors.avatar }}</em>
                     </label>
+                    <button v-if="form.avatar" type="button" class="secondary-button" :disabled="form.processing" @click="cancelPhoto">Batalkan foto baru</button>
                 </aside>
 
                 <form class="profile-form" @submit.prevent="submit">
@@ -83,16 +104,17 @@ const submit = () => form.post('/profil', { forceFormData: true, preserveScroll:
                         <p>Pastikan nama dan kontak yang digunakan selalu terbaru.</p>
                     </div>
 
+                    <div v-if="Object.keys(form.errors).length" class="notice" role="alert">Profil belum disimpan. Periksa isian yang ditandai di bawah.</div>
                     <div class="form-grid">
                         <label>
                             <span>Nama lengkap</span>
-                            <input v-model="form.name" required autocomplete="name" />
+                            <input v-model="form.name" maxlength="255" required autocomplete="name" />
                             <em v-if="form.errors.name">{{ form.errors.name }}</em>
                         </label>
 
                         <label>
                             <span>Email</span>
-                            <input v-model="form.email" type="email" required autocomplete="email" />
+                            <input v-model="form.email" maxlength="255" type="email" required autocomplete="email" />
                             <em v-if="form.errors.email">{{ form.errors.email }}</em>
                         </label>
 
@@ -104,7 +126,7 @@ const submit = () => form.post('/profil', { forceFormData: true, preserveScroll:
 
                         <label>
                             <span>Nomor kontak</span>
-                            <input v-model="form.phone" type="tel" autocomplete="tel" placeholder="Contoh: 0812 3456 7890" />
+                            <input v-model="form.phone" maxlength="30" type="tel" autocomplete="tel" placeholder="Contoh: 0812 3456 7890" />
                             <em v-if="form.errors.phone">{{ form.errors.phone }}</em>
                         </label>
                     </div>
@@ -173,6 +195,8 @@ const submit = () => form.post('/profil', { forceFormData: true, preserveScroll:
     height: 100%;
     object-fit: cover;
 }
+
+.identity-copy { min-width: 0; overflow-wrap: anywhere; }
 
 .identity-copy h2,
 .form-heading h2 {

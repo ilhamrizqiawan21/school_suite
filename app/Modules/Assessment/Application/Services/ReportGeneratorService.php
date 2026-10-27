@@ -27,19 +27,25 @@ class ReportGeneratorService
         $student = DB::table('students')->find($snapshot->student_id);
         $term = DB::table('terms')->find($snapshot->term_id);
         $classGroup = $this->academicQuery->getClassGroupById($snapshot->class_group_id);
+        $academicYear = $term ? DB::table('academic_years')->find($term->academic_year_id) : null;
+        $notes = $snapshot->notes_snapshot ?? [];
+        if (is_array($notes['homeroom_notes'] ?? null)) {
+            $notes['homeroom_notes'] = collect($notes['homeroom_notes'])->pluck('content')->filter()->implode("\n");
+        }
 
         return [
             'id' => $snapshot->id,
             'report_id' => $snapshot->id,
             'status' => $snapshot->status->value,
-            'scheme_version' => $snapshot->scheme_version,
+            'scheme_version' => data_get($snapshot->scheme_snapshot, 'version'),
             'checksum' => $snapshot->checksum,
-            'published_at' => $snapshot->published_at?->translatedFormat('d F Y'),
+            'published_at' => $snapshot->published_at?->locale('id')->translatedFormat('d F Y'),
             'school' => [
                 'name' => $school?->name ?? 'Sekolah',
                 'npsn' => $school?->npsn ?? '-',
                 'address' => $school?->address ?? '-',
                 'logo_data_uri' => $this->logoDataUri($school?->logo_path),
+                'principal_name' => $school?->principal_name,
             ],
             'student' => [
                 'id' => $student?->id ?? $snapshot->student_id,
@@ -54,6 +60,7 @@ class ReportGeneratorService
             'term' => [
                 'id' => $term?->id ?? $snapshot->term_id,
                 'name' => $term?->name ?? '-',
+                'academic_year_name' => $academicYear?->name ?? '-',
             ],
             'academic' => [
                 'class_name' => $classGroup?->name ?? '-',
@@ -61,9 +68,14 @@ class ReportGeneratorService
                 'homeroom_teacher' => $classGroup?->homeroomTeacher?->name ?? 'Wali Kelas',
             ],
             'scheme' => $snapshot->scheme_snapshot,
-            'grades' => $snapshot->grades_snapshot,
+            'grades' => array_map(fn (array $grade) => array_replace($grade, [
+                'predicate' => $grade['predicate'] ?? $grade['letter_grade'] ?? null,
+                'is_passed' => $grade['is_passed'] ?? $grade['is_passing'] ?? null,
+                'competency_description' => $grade['competency_description'] ?? null,
+            ]), $snapshot->grades_snapshot ?? []),
             'attendance' => $snapshot->attendance_snapshot,
-            'notes' => $snapshot->notes_snapshot,
+            'notes' => $notes,
+            'extracurricular' => $snapshot->extracurricular_snapshot ?? [],
         ];
     }
 

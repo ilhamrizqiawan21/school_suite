@@ -14,6 +14,7 @@ class CorrespondenceRecord extends Model
         'school_id', 'created_by', 'letter_type', 'agenda_number', 'letter_number',
         'letter_date', 'received_at', 'sender', 'recipient', 'subject', 'summary',
         'disposition', 'status', 'attachment_path', 'attachment_name', 'archived_at',
+        'letter_body', 'signer_name', 'signer_title', 'attachment_note', 'verification_token', 'school_snapshot',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class CorrespondenceRecord extends Model
             'letter_date' => 'date',
             'received_at' => 'date',
             'archived_at' => 'datetime',
+            'school_snapshot' => 'array',
         ];
     }
 

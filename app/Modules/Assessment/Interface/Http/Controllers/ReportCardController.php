@@ -65,6 +65,11 @@ class ReportCardController extends Controller
                 ->when($isStudent, fn ($query) => $query->where('student_id', $studentId))
                 ->when($isStudent, fn ($query) => $query->where('status', 'published'))
                 ->get();
+            $students = DB::table('students')->where('school_id', $schoolId)->whereIn('id', $reports->pluck('student_id'))->get(['id', 'name', 'nis'])->keyBy('id');
+            $reports->each(function ($report) use ($students): void {
+                $report->setAttribute('student_name', $students->get($report->student_id)?->name ?? 'Siswa');
+                $report->setAttribute('nis', $students->get($report->student_id)?->nis ?? '—');
+            });
         }
 
         return Inertia::render('Assessment/Reports/Index', [
@@ -82,6 +87,7 @@ class ReportCardController extends Controller
         Gate::authorize('viewReport', $report);
 
         $reportData = $this->generatorService->formatReportView($report);
+        $reportData['integrity_valid'] = $this->publishingService->verifyReportIntegrity($report);
 
         return Inertia::render('Assessment/Reports/Show', [
             'report' => $reportData,
@@ -103,9 +109,15 @@ class ReportCardController extends Controller
 
         abort_unless($this->access->canPublishClass($request->user(), $termId, $classGroupId), 403);
         $enrollments = $this->academicQuery->getClassEnrollmentsForAttendance($termId, $classGroupId);
+        $publishedEnrollmentIds = ReportSnapshot::where('school_id', $schoolId)
+            ->where('term_id', $termId)->where('class_group_id', $classGroupId)
+            ->where('status', 'published')->pluck('enrollment_id');
 
         $count = 0;
         foreach ($enrollments as $enr) {
+            if ($publishedEnrollmentIds->contains((int) $enr->enrollment_id)) {
+                continue;
+            }
             $this->publishingService->generateReportSnapshot(
                 schoolId: $schoolId,
                 enrollmentId: (int) $enr->enrollment_id,

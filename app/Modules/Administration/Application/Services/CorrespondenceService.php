@@ -7,6 +7,7 @@ namespace App\Modules\Administration\Application\Services;
 use App\Models\User;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceRecord;
 use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Modules\Core\Infrastructure\Models\School;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -92,7 +93,9 @@ class CorrespondenceService
             $this->assertOwnedByActor($actor, $record);
             $allowedTransitions = $record->letter_type === 'incoming'
                 ? ['received' => ['disposition'], 'disposition' => ['done'], 'done' => ['archived']]
-                : ['draft' => ['sent'], 'sent' => ['archived']];
+                : (filled($record->letter_body)
+                    ? ['draft' => ['issued'], 'issued' => ['sent'], 'sent' => ['archived']]
+                    : ['draft' => ['sent'], 'sent' => ['archived']]);
 
             if (! in_array($status, $allowedTransitions[$record->status] ?? [], true)) {
                 throw ValidationException::withMessages([
@@ -104,6 +107,12 @@ class CorrespondenceService
                 throw ValidationException::withMessages([
                     'disposition' => 'Isi disposisi sebelum surat diteruskan.',
                 ]);
+            }
+
+            if ($status === 'issued' && filled($record->letter_body)) {
+                $school = School::query()->findOrFail($record->school_id);
+                $record->school_snapshot = $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website']);
+                $record->verification_token = bin2hex(random_bytes(32));
             }
 
             $oldValues = ['status' => $record->status, 'disposition' => $record->disposition];
@@ -125,6 +134,21 @@ class CorrespondenceService
                 $actor,
                 (int) $record->school_id,
             );
+        });
+    }
+
+    /** @param array<string, mixed> $data */
+    public function updateDraft(User $actor, CorrespondenceRecord $record, array $data): void
+    {
+        DB::transaction(function () use ($actor, $record, $data): void {
+            $record = CorrespondenceRecord::query()->where('school_id', $actor->school_id)->lockForUpdate()->findOrFail($record->id);
+            if ($record->letter_type !== 'outgoing' || $record->status !== 'draft' || blank($record->letter_body)) {
+                throw ValidationException::withMessages(['status' => 'Hanya draf surat keluar yang dapat diubah.']);
+            }
+            $old = $record->only(array_keys($data));
+            $record->fill($data)->save();
+            $this->audit->log('administration.correspondence.draft_updated', 'CorrespondenceRecord', (string) $record->id,
+                ['fields' => array_keys($data)], ['fields' => array_keys($old)], $actor, (int) $record->school_id);
         });
     }
 

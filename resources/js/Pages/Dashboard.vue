@@ -124,7 +124,6 @@ const homeroomActions = [
     { title: 'Dashboard perwalian', description: 'Pantau ringkasan kelas binaan, absensi, dan profil siswa.', href: '/wali-kelas', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
     { title: 'Catatan observasi & BK', description: 'Catat pembinaan karakter dan koordinasi guru bimbingan konseling.', href: '/wali-kelas/catatan', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
     { title: 'Kedisiplinan & prestasi', description: 'Rekam poin prestasi, catatan dispensasi, dan penanganan insiden.', href: '/wali-kelas/kedisiplinan', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-    { title: 'WhatsApp orang tua', description: 'Kirim notifikasi presensi dan pengumuman ke kontak orang tua.', href: '/komunikasi/whatsapp', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
     { title: 'Input nilai pelajaran', description: 'Lengkapi capaian belajar dan tugas pada kelas yang Anda ampu.', href: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2-2a2 2 0 00-2 2v2h6V5a2 2 0 00-2-2h-2zm-1 9h4m-4 4h4' },
     { title: 'Penilaian sikap', description: 'Evaluasi catatan karakter dan sikap kelas binaan.', href: '/penilaian/sikap', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
     { title: 'Rapor kelas', description: 'Tinjau rekapan nilai rapor dan kesiapan cetak hasil belajar.', href: '/penilaian/rapor', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
@@ -197,7 +196,7 @@ const focusCopy = computed(() => {
     if (isAdmin.value) return 'Pantau warga sekolah, komunikasi, dan data akademik tanpa berpindah-pindah konteks.';
     if (isOperator.value) return 'Kelola master data siswa, guru, rombel, jadwal, dan skema penilaian secara terpadu.';
     if (isPrincipal.value) return 'Pantau denyut akademik, laporan capaian, dan kesiapan operasional dari satu ruang pimpinan.';
-    if (isHomeroom.value) return 'Pantau kehadiran, catatan pembinaan, kedisiplinan, serta komunikasi langsung dengan orang tua siswa.';
+    if (isHomeroom.value) return 'Pantau kehadiran, catatan pembinaan, kedisiplinan, dan informasi kelas.';
     if (isTeacher.value) return 'Kelola materi pembelajaran, presensi, bank soal, dan evaluasi hasil belajar siswa.';
     if (isStudent.value) return 'Akses materi pelajaran, jadwal kelas, ujian CBT, dan pantau capaian belajarmu.';
     return 'Akses modul yang tersedia sesuai hak akses akun Anda.';

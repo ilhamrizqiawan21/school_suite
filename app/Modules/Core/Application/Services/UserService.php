@@ -10,6 +10,7 @@ use App\Shared\Audit\AuditLogger;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 class UserService
@@ -86,6 +87,15 @@ class UserService
 
         if (! empty($data['password']) && (int) $actor->id === (int) $target->id) {
             throw new AuthorizationException('Use the password-change flow to change your own password.');
+        }
+
+        if ((int) $actor->id === (int) $target->id) {
+            if (array_key_exists('is_active', $data) && ! $data['is_active']) {
+                throw ValidationException::withMessages(['is_active' => 'Akun yang sedang digunakan tidak dapat dinonaktifkan.']);
+            }
+            if (array_key_exists('role_id', $data) && (int) $data['role_id'] !== (int) $target->role_id) {
+                throw ValidationException::withMessages(['role_id' => 'Peran akun yang sedang digunakan tidak dapat diubah. Gunakan akun administrator lain.']);
+            }
         }
 
         if (array_key_exists('role_id', $data)) {

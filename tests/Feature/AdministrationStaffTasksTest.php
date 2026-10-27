@@ -125,7 +125,8 @@ class AdministrationStaffTasksTest extends TestCase
 
         $this->actingAs($this->teacher)
             ->patch(route('administration.staff-tasks.progress', $task), ['progress' => 100, 'status' => 'in_progress'])
-            ->assertStatus(422);
+            ->assertRedirect()
+            ->assertSessionHasErrors('progress');
 
         $this->assertDatabaseHas('administration_staff_tasks', ['id' => $task->id, 'progress' => 0, 'status' => 'assigned']);
     }
@@ -154,5 +155,77 @@ class AdministrationStaffTasksTest extends TestCase
             'school_id' => $this->teacher->school_id,
             'event_type' => 'administration.staff_task.attachment_downloaded',
         ]);
+    }
+
+    public function test_tasks_are_paginated_and_filters_keep_assignee_scope(): void
+    {
+        for ($index = 0; $index < 17; $index++) {
+            StaffTask::create([
+                'school_id' => $this->admin->school_id,
+                'created_by' => $this->admin->id,
+                'assignee_id' => $this->teacher->id,
+                'title' => 'Administrasi '.$index,
+                'priority' => $index === 0 ? 'urgent' : 'normal',
+                'status' => 'assigned',
+                'progress' => 0,
+            ]);
+        }
+        StaffTask::create([
+            'school_id' => $this->admin->school_id,
+            'created_by' => $this->admin->id,
+            'assignee_id' => $this->admin->id,
+            'title' => 'Tugas admin privat',
+            'priority' => 'urgent',
+            'status' => 'assigned',
+            'progress' => 0,
+        ]);
+
+        $this->actingAs($this->teacher)->get(route('administration.staff-tasks.index'))
+            ->assertOk()->assertInertia(fn ($page) => $page->has('tasks', 15)->where('pagination.total', 17)->where('summary.active', 17));
+        $this->get(route('administration.staff-tasks.index', ['page' => 2]))
+            ->assertOk()->assertInertia(fn ($page) => $page->has('tasks', 2)->where('pagination.total', 17));
+        $this->get(route('administration.staff-tasks.index', ['priority' => 'urgent', 'assignee_id' => $this->admin->id]))
+            ->assertOk()->assertInertia(fn ($page) => $page->has('tasks', 1)->where('tasks.0.assignee_id', $this->teacher->id));
+        $this->actingAs($this->admin)->get(route('administration.staff-tasks.index', ['search' => 'privat', 'status' => 'assigned']))
+            ->assertOk()->assertInertia(fn ($page) => $page->has('tasks', 1)->where('tasks.0.title', 'Tugas admin privat'));
+    }
+
+    public function test_assignee_cannot_restart_a_cancelled_task(): void
+    {
+        $task = StaffTask::create([
+            'school_id' => $this->admin->school_id,
+            'created_by' => $this->admin->id,
+            'assignee_id' => $this->teacher->id,
+            'title' => 'Tugas dibatalkan',
+            'priority' => 'normal',
+            'status' => 'cancelled',
+            'progress' => 20,
+        ]);
+        $this->actingAs($this->teacher)->patch(route('administration.staff-tasks.progress', $task), ['progress' => 50, 'status' => 'in_progress'])
+            ->assertRedirect()->assertSessionHasErrors('progress');
+        $this->assertDatabaseHas('administration_staff_tasks', ['id' => $task->id, 'status' => 'cancelled', 'progress' => 20]);
+    }
+
+    public function test_invalid_assignee_on_update_does_not_store_uploaded_file(): void
+    {
+        Storage::fake('local');
+        $student = User::whereHas('role', fn ($query) => $query->where('name', 'student'))->firstOrFail();
+        $task = StaffTask::create([
+            'school_id' => $this->admin->school_id,
+            'created_by' => $this->admin->id,
+            'title' => 'Tugas awal',
+            'priority' => 'normal',
+            'status' => 'assigned',
+            'progress' => 0,
+        ]);
+        $this->actingAs($this->admin)->patch(route('administration.staff-tasks.update', $task), [
+            'title' => 'Tugas baru',
+            'priority' => 'normal',
+            'status' => 'assigned',
+            'assignee_id' => $student->id,
+            'attachment' => UploadedFile::fake()->create('dokumen.pdf', 20, 'application/pdf'),
+        ])->assertRedirect()->assertSessionHasErrors('assignee_id');
+        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->assertDatabaseHas('administration_staff_tasks', ['id' => $task->id, 'title' => 'Tugas awal']);
     }
 }

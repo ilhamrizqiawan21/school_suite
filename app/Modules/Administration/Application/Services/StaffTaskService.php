@@ -11,6 +11,7 @@ use App\Shared\Audit\AuditLogger;
 use App\Shared\Files\PrivateStorageService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StaffTaskService
 {
@@ -60,6 +61,11 @@ class StaffTaskService
     {
         DB::transaction(function () use ($task, $actor, $progress, $status): void {
             abort_unless((int) $actor->school_id === (int) $task->school_id && (int) $task->assignee_id === (int) $actor->id && $actor->is_active && $actor->hasRole(['principal', 'teacher', 'homeroom', 'counselor', 'librarian']), 403);
+            $task = StaffTask::query()->lockForUpdate()->findOrFail($task->id);
+            abort_unless((int) $task->assignee_id === (int) $actor->id, 403);
+            if ($task->status === 'cancelled') {
+                throw ValidationException::withMessages(['progress' => 'Tugas telah dibatalkan. Hubungi admin untuk membuka kembali tugas.']);
+            }
             $before = ['progress' => $task->progress, 'status' => $task->status];
             $completedAt = $status === 'completed' ? ($task->completed_at ?? now()) : null;
             $task->update(['progress' => $progress, 'status' => $status, 'completed_at' => $completedAt]);
@@ -107,6 +113,8 @@ class StaffTaskService
     private function assertValidAssignee(int $schoolId, int $userId): void
     {
         $assignee = User::query()->with('role')->where('school_id', $schoolId)->where('is_active', true)->findOrFail($userId);
-        abort_if($assignee->hasRole(['student', 'parent']), 422, 'Penanggung jawab harus merupakan staf sekolah yang aktif.');
+        if ($assignee->hasRole(['student', 'parent'])) {
+            throw ValidationException::withMessages(['assignee_id' => 'Penanggung jawab harus merupakan staf sekolah yang aktif.']);
+        }
     }
 }

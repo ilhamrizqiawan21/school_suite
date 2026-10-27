@@ -383,6 +383,42 @@ class AssessmentControllersTest extends TestCase
         ]);
     }
 
+    public function test_question_pack_reports_incompatible_questions_as_form_errors(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
+            'type' => 'essay', 'prompt' => 'Soal tingkat SMA', 'points' => 2,
+            'jenjang' => 'SMA', 'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
+        ]);
+
+        $this->actingAs($this->teacherUser)->from(route('assessment.question-packs.index'))
+            ->post(route('assessment.question-packs.store'), [
+                'name' => 'Paket salah jenjang', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+                'randomize_questions' => false, 'randomize_options' => false, 'status' => 'draft',
+                'items' => [['question_id' => $question->id, 'points' => 2]],
+            ])->assertRedirect(route('assessment.question-packs.index'))->assertSessionHasErrors(['items']);
+
+        $this->assertDatabaseMissing('question_packs', ['name' => 'Paket salah jenjang']);
+    }
+
+    public function test_question_pack_reports_missing_question_version_as_form_error(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
+            'type' => 'essay', 'prompt' => 'Soal tanpa versi', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
+        ]);
+
+        $this->actingAs($this->teacherUser)->from(route('assessment.question-packs.index'))
+            ->post(route('assessment.question-packs.store'), [
+                'name' => 'Paket tanpa versi', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+                'randomize_questions' => false, 'randomize_options' => false, 'status' => 'draft',
+                'items' => [['question_id' => $question->id, 'points' => 2]],
+            ])->assertRedirect(route('assessment.question-packs.index'))->assertSessionHasErrors(['items']);
+
+        $this->assertDatabaseMissing('question_packs', ['name' => 'Paket tanpa versi']);
+    }
+
     public function test_teacher_can_create_exam_from_pack_containing_copy_shared_question(): void
     {
         Teacher::query()->firstOrFail()->update(['user_id' => $this->teacherUser->id]);
@@ -815,6 +851,24 @@ class AssessmentControllersTest extends TestCase
         $this->assertNotEmpty($report->checksum);
     }
 
+    public function test_batch_generation_skips_already_published_reports(): void
+    {
+        $report = ReportSnapshot::create([
+            'school_id' => $this->school->id, 'enrollment_id' => $this->enrollment->id,
+            'term_id' => $this->term->id, 'class_group_id' => $this->classGroup->id,
+            'student_id' => $this->student->id, 'status' => ReportStatusEnum::PUBLISHED,
+            'scheme_snapshot' => [], 'grades_snapshot' => [], 'attendance_snapshot' => [],
+            'notes_snapshot' => [], 'checksum' => hash('sha256', 'published-original'), 'published_at' => now(),
+        ]);
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.generate'), [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(ReportStatusEnum::PUBLISHED, $report->fresh()->status);
+        $this->assertSame(hash('sha256', 'published-original'), $report->fresh()->checksum);
+    }
+
     public function test_student_can_only_view_their_own_report_snapshot(): void
     {
         // Buat report untuk Ahmad
@@ -1164,6 +1218,14 @@ class AssessmentControllersTest extends TestCase
             'exam_attempt_id' => $attempt->id, 'exam_question_id' => $question->id, 'question_version_id' => $version->id,
             'answer' => '4', 'is_correct' => true, 'score' => 5,
         ]);
+
+        $this->actingAs($this->adminUser)->get('/penilaian/analisis')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.exam_id', $exam->id)
+                ->where('exam_results.exam.id', $exam->id)
+                ->where('exam_results.available', true)
+            );
 
         $this->actingAs($this->adminUser)->get('/penilaian/analisis?exam_id='.$exam->id.'&subject_id='.$subjectId)
             ->assertOk()

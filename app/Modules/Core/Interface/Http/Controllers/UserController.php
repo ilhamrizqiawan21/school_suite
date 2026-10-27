@@ -29,13 +29,19 @@ class UserController extends Controller
     {
         Gate::authorize('viewAny', User::class);
 
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'role' => ['nullable', 'string', 'exists:roles,name'],
+            'status' => ['nullable', Rule::in(['active', 'inactive'])],
+        ]);
+
         $currentUser = $request->user();
         $schoolId = $currentUser?->school_id;
 
         $query = User::with('role:id,name,label')
             ->where('school_id', $schoolId);
 
-        if ($search = $request->input('search')) {
+        if ($search = $filters['search'] ?? null) {
             $query->where(function ($q) use ($search): void {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
@@ -43,15 +49,27 @@ class UserController extends Controller
             });
         }
 
-        if ($role = $request->input('role')) {
+        if ($role = $filters['role'] ?? null) {
             $query->whereHas('role', function ($q) use ($role): void {
                 $q->where('name', $role);
             });
         }
 
-        $users = $query->orderBy('name')
+        if (! empty($filters['status'])) {
+            $query->where('is_active', $filters['status'] === 'active');
+        }
+
+        $users = $query->select(['id', 'name', 'username', 'email', 'phone', 'is_active', 'role_id', 'school_id'])
+            ->orderBy('name')->orderBy('id')
             ->paginate(15)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (User $user): array => [
+                'id' => $user->id, 'name' => $user->name, 'username' => $user->username,
+                'email' => $user->email, 'phone' => $user->phone, 'is_active' => $user->is_active,
+                'role' => $user->role,
+                'can_update' => Gate::allows('update', $user),
+                'can_delete' => Gate::allows('delete', $user),
+            ]);
 
         $roleQuery = Role::query()->orderBy('id');
         if (! $currentUser?->hasRole('admin')) {
@@ -62,11 +80,13 @@ class UserController extends Controller
         return Inertia::render('Core/Users/Index', [
             'users' => $users,
             'roles' => $roles,
+            'filter_roles' => Role::query()->orderBy('label')->get(['id', 'name', 'label']),
+            'current_user_id' => $currentUser->id,
             'can_create' => Gate::allows('create', User::class),
             'can_update' => $currentUser?->hasRole('admin') || $currentUser?->hasPermission(PermissionEnum::USERS_UPDATE->value),
             'can_delete' => $currentUser?->hasRole('admin') || $currentUser?->hasPermission(PermissionEnum::USERS_DELETE->value),
             'can_manage_roles' => $currentUser?->hasRole('admin') ?? false,
-            'filters' => $request->only(['search', 'role']),
+            'filters' => $filters,
         ]);
     }
 

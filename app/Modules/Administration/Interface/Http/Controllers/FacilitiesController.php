@@ -33,18 +33,21 @@ class FacilitiesController extends Controller
                 ->orWhere('category', 'like', "%{$search}%")))
             ->when(in_array($status, ['available', 'borrowed', 'maintenance', 'inactive'], true), fn ($query) => $query->where('status', $status))
             ->orderBy('name')
-            ->get();
+            ->paginate(10, ['*'], 'asset_page')->withQueryString();
 
         $loans = FacilityLoan::query()
             ->where('school_id', $schoolId)
             ->with('asset:id,inventory_code,name')
+            ->orderByRaw('CASE WHEN returned_at IS NULL THEN 0 ELSE 1 END')
             ->latest('id')
-            ->limit(30)
-            ->get();
+            ->paginate(10, ['*'], 'loan_page')->withQueryString();
 
         return Inertia::render('Administration/Facilities/Index', [
-            'assets' => $assets,
-            'loans' => $loans,
+            'assets' => $assets->items(),
+            'loans' => $loans->items(),
+            'asset_pages' => ['current' => $assets->currentPage(), 'last' => $assets->lastPage(), 'total' => $assets->total(), 'previous' => $assets->previousPageUrl(), 'next' => $assets->nextPageUrl()],
+            'loan_pages' => ['current' => $loans->currentPage(), 'last' => $loans->lastPage(), 'total' => $loans->total(), 'previous' => $loans->previousPageUrl(), 'next' => $loans->nextPageUrl()],
+            'available_assets' => FacilityAsset::query()->where('school_id', $schoolId)->where('status', 'available')->where('condition', '!=', 'damaged')->whereDoesntHave('activeLoan')->orderBy('name')->get(['id', 'inventory_code', 'name']),
             'filters' => ['search' => $search, 'status' => $status],
             'summary' => [
                 'total' => FacilityAsset::where('school_id', $schoolId)->count(),
@@ -67,8 +70,6 @@ class FacilitiesController extends Controller
             'status' => ['required', Rule::in(['available', 'maintenance', 'inactive'])],
             'notes' => ['nullable', 'string', 'max:5000'],
         ]);
-        abort_if($data['condition'] === 'damaged' && $data['status'] === 'available', 422, 'Aset rusak harus berstatus pemeliharaan atau nonaktif.');
-
         $this->facilities->createAsset($request->user(), $data);
 
         return back()->with('message', 'Aset berhasil ditambahkan.');

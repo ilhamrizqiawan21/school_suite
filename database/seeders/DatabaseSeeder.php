@@ -22,6 +22,10 @@ class DatabaseSeeder extends Seeder
             DemoTeachingPlanningSeeder::class,
             DemoAssessmentContentSeeder::class,
             DemoLearningCommunicationSeeder::class,
+            DemoCommunicationSeeder::class,
+            DemoCorrespondenceSeeder::class,
+            DemoStaffFacilitiesSeeder::class,
+            DemoReportSeeder::class,
         ]);
     }
 }

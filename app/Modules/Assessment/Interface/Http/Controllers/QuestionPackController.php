@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -110,12 +111,16 @@ class QuestionPackController extends Controller
     public function update(Request $request, QuestionPack $pack): RedirectResponse
     {
         $this->authorizePack($request, $pack, 'edit');
-        abort_unless($pack->status !== 'archived', 422, 'Pulihkan paket sebelum mengubahnya.');
+        if ($pack->status === 'archived') {
+            throw ValidationException::withMessages(['items' => 'Pulihkan paket sebelum mengubahnya.']);
+        }
         $data = $this->validatedData($request);
 
         DB::transaction(function () use ($data, $pack, $request) {
             $locked = QuestionPack::query()->whereKey($pack->id)->lockForUpdate()->firstOrFail();
-            abort_unless($locked->status !== 'archived', 422, 'Paket telah diarsipkan.');
+            if ($locked->status === 'archived') {
+                throw ValidationException::withMessages(['items' => 'Paket telah diarsipkan. Muat ulang halaman untuk melihat status terbaru.']);
+            }
             $oldItems = $locked->items()->get()->keyBy('exam_question_id');
             $questions = $this->resolveQuestions($request, $data['items'], $locked);
             $locked->fill($this->packAttributes($data, $request, (int) $locked->created_by));
@@ -218,10 +223,14 @@ class QuestionPackController extends Controller
             ->get()
             ->keyBy('id');
 
-        abort_unless($questions->count() === count(array_unique($ids)), 422, 'Paket berisi soal yang tidak tersedia di sekolah ini.');
+        if ($questions->count() !== count(array_unique($ids))) {
+            throw ValidationException::withMessages(['items' => 'Paket berisi soal yang tidak tersedia di sekolah ini. Muat ulang halaman dan pilih kembali soal.']);
+        }
         foreach ($questions as $question) {
             $wasInPack = $existing->has($question->id);
-            abort_unless($question->is_active || $wasInPack, 422, 'Soal arsip tidak dapat ditambahkan ke paket.');
+            if (! $question->is_active && ! $wasInPack) {
+                throw ValidationException::withMessages(['items' => 'Soal arsip tidak dapat ditambahkan ke paket. Muat ulang halaman dan pilih soal aktif.']);
+            }
             if ($user->hasRole(['teacher', 'homeroom'])) {
                 abort_unless((int) $question->owner_id === (int) $user->id || $wasInPack
                     || QuestionShareController::permits($user, 'question', (int) $question->id, 'copy'), 403, 'Anda hanya dapat menambahkan soal milik sendiri atau yang boleh disalin.');
@@ -267,16 +276,16 @@ class QuestionPackController extends Controller
             if (! $question->is_active && $existing) {
                 $versionId = $existing->question_version_id;
             } else {
-                abort_unless($question->jenjang === null || $question->jenjang === $pack->jenjang, 422, 'Jenjang soal harus sesuai dengan paket.');
-                abort_unless(
-                    $question->curriculum === null
-                        || $pack->curriculum === 'both'
-                        || in_array($question->curriculum, [$pack->curriculum, 'both'], true),
-                    422,
-                    'Kurikulum soal harus sesuai dengan paket.'
-                );
+                if ($question->jenjang !== null && $question->jenjang !== $pack->jenjang) {
+                    throw ValidationException::withMessages(['items' => 'Jenjang soal harus sesuai dengan paket. Hapus soal yang tidak sesuai atau ubah jenjang paket.']);
+                }
+                if ($question->curriculum !== null && $pack->curriculum !== 'both' && ! in_array($question->curriculum, [$pack->curriculum, 'both'], true)) {
+                    throw ValidationException::withMessages(['items' => 'Kurikulum soal harus sesuai dengan paket. Hapus soal yang tidak sesuai atau ubah kurikulum paket.']);
+                }
                 $version = $versions->get($question->id.':'.$question->current_version);
-                abort_unless($version, 422, 'Versi soal terbaru belum tersedia.');
+                if (! $version) {
+                    throw ValidationException::withMessages(['items' => 'Versi terbaru salah satu soal belum tersedia. Periksa dan simpan kembali soal di Bank Soal.']);
+                }
                 $versionId = $version->id;
             }
 

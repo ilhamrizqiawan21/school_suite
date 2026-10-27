@@ -59,6 +59,43 @@ class BrandingProfileTest extends TestCase
         $this->assertDatabaseHas('audit_events', ['event_type' => 'core.profile.updated', 'actor_id' => $this->admin->id]);
     }
 
+    public function test_invalid_school_details_are_returned_as_field_errors_without_changing_profile(): void
+    {
+        $this->actingAs($this->admin)->from('/pengaturan/sekolah')->post('/pengaturan/sekolah', [
+            'name' => 'Nama tidak boleh tersimpan', 'npsn' => $this->school->npsn, 'level' => 'SMP',
+            'website' => 'bukan-url', 'phone' => str_repeat('1', 31), 'school_status' => 'Tidak dikenal',
+        ])->assertRedirect('/pengaturan/sekolah')->assertSessionHasErrors(['website', 'phone', 'school_status']);
+
+        $this->assertSame('Sekolah Branding', $this->school->fresh()->name);
+    }
+
+    public function test_favicon_must_be_square_and_failed_upload_keeps_current_branding(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('branding/old.png', 'existing');
+        $this->school->update(['favicon_path' => 'branding/old.png']);
+
+        $this->actingAs($this->admin)->from('/pengaturan/sekolah')->post('/pengaturan/sekolah', [
+            'name' => $this->school->name, 'npsn' => $this->school->npsn, 'level' => 'SMP',
+            'favicon' => UploadedFile::fake()->image('favicon.png', 100, 50),
+        ])->assertRedirect('/pengaturan/sekolah')->assertSessionHasErrors('favicon');
+
+        $this->assertSame('branding/old.png', $this->school->fresh()->favicon_path);
+        Storage::disk('local')->assertExists('branding/old.png');
+    }
+
+    public function test_duplicate_email_does_not_partially_update_own_profile(): void
+    {
+        User::create(['school_id' => $this->school->id, 'role_id' => $this->admin->role_id,
+            'name' => 'Other Admin', 'email' => 'taken@brand.test', 'password' => 'Password123', 'is_active' => true]);
+
+        $this->actingAs($this->admin)->from('/profil')->post('/profil', [
+            'name' => 'Should not persist', 'email' => 'taken@brand.test',
+        ])->assertRedirect('/profil')->assertSessionHasErrors('email');
+
+        $this->assertSame('Admin', $this->admin->fresh()->name);
+    }
+
     public function test_password_change_invalidates_other_database_sessions(): void
     {
         config(['session.driver' => 'database']);

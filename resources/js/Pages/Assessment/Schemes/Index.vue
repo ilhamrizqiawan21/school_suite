@@ -54,6 +54,7 @@ const componentForm = useForm({
 
 const bindingComponent = ref<{ schemeId: number; component: ComponentItem } | null>(null);
 const bindingForm = useForm({ teaching_assignment_id: null as number | null });
+const roundingLabel = (rule: SchemeItem['rounding_rule']) => ({ half_up: 'Pembulatan normal', floor: 'Selalu ke bawah', ceil: 'Selalu ke atas' })[rule];
 const assignmentLabel = (id: number | null) => {
     const assignment = props.teaching_assignments.find(item => item.id === id);
     return assignment ? `${assignment.class_name} · ${assignment.subject_name} · ${assignment.term_name} ${assignment.academic_year_name}` : 'Umum (kelas satu mapel)';
@@ -81,8 +82,22 @@ const submitNewScheme = () => {
     });
 };
 
+const openSchemeForm = () => {
+    schemeForm.clearErrors();
+    isCreateSchemeOpen.value = true;
+};
+
+const closeSchemeForm = () => {
+    if (schemeForm.processing) return;
+    schemeForm.clearErrors();
+    schemeForm.reset();
+    isCreateSchemeOpen.value = false;
+};
+
 const openAddComponentModal = (schemeId: number) => {
     selectedSchemeIdForComp.value = schemeId;
+    componentForm.reset();
+    componentForm.clearErrors();
     isCreateComponentOpen.value = true;
 };
 
@@ -103,7 +118,7 @@ const weightTotals = (components: ComponentItem[]) => {
     for (const component of components) {
         totals.set(component.teaching_assignment_id, (totals.get(component.teaching_assignment_id) ?? 0) + Number(component.weight_percentage));
     }
-    return Array.from(totals, ([assignmentId, total]) => ({ assignmentId, label: assignmentLabel(assignmentId), total }));
+    return Array.from(totals, ([assignmentId, total]) => ({ assignmentId, label: assignmentLabel(assignmentId), total: Math.round(total * 100) / 100 }));
 };
 </script>
 
@@ -114,18 +129,18 @@ const weightTotals = (components: ComponentItem[]) => {
         <div class="view space-y-6">
             <!-- Header Halaman -->
             <div class="page-heading compact-heading">
-                <div v-if="props.can_manage">
+                <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Skema & Bobot Penilaian</h1>
                     <p class="text-sm text-slate-500 mt-1">
-                        Konfigurasi formula pembobotan dinamis, aturan pembulatan, dan batas kelulusan KKTP berversi.
+                        Konfigurasi formula pembobotan, aturan pembulatan, dan batas kelulusan KKTP berversi.
                     </p>
                 </div>
 
-                <div>
+                <div v-if="props.can_manage">
                     <button
                         type="button"
                         class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors"
-                        @click="isCreateSchemeOpen = true"
+                        @click="openSchemeForm"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -155,8 +170,9 @@ const weightTotals = (components: ComponentItem[]) => {
                                 >
                                     Aktif
                                 </span>
+                                <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">Versi lama</span>
                             </div>
-                            <p class="text-xs text-slate-500 font-mono">Kode: {{ scheme.code }} | Pembulatan: {{ scheme.rounding_rule }} ({{ scheme.decimal_places }} desimal) | KKTP Default: {{ scheme.passing_grade_default }}</p>
+                            <p class="text-xs text-slate-500 font-mono">Kode: {{ scheme.code }} | {{ roundingLabel(scheme.rounding_rule) }} ({{ scheme.decimal_places }} desimal) | KKTP default: {{ scheme.passing_grade_default }}</p>
                         </div>
 
                         <div v-if="props.can_manage">
@@ -182,7 +198,7 @@ const weightTotals = (components: ComponentItem[]) => {
                             <div class="space-y-1 text-xs font-bold text-right">
                                 <p v-for="group in weightTotals(scheme.components)" :key="group.assignmentId ?? 'general'">
                                     {{ group.label }}:
-                                    <span :class="group.total === 100 ? 'text-emerald-600' : 'text-amber-600'">{{ group.total }}%</span>
+                                    <span :class="Math.abs(group.total - 100) < 0.001 ? 'text-emerald-600' : 'text-amber-600'">{{ group.total.toLocaleString('id-ID') }}%{{ Math.abs(group.total - 100) < 0.001 ? ' · sesuai' : ' · target 100%' }}</span>
                                 </p>
                             </div>
                         </div>
@@ -213,7 +229,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     </tr>
                                     <tr v-if="scheme.components.length === 0">
                                         <td colspan="6" class="py-6 text-center text-slate-400 text-xs">
-                                            Belum ada komponen penilaian pada skema ini. Klik "Tambah Komponen" di atas.
+                                            {{ props.can_manage ? 'Belum ada komponen penilaian. Tambahkan komponen agar skema dapat digunakan untuk menyusun rapor.' : 'Belum ada komponen penilaian pada skema ini.' }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -232,17 +248,20 @@ const weightTotals = (components: ComponentItem[]) => {
                 v-if="props.can_manage && isCreateSchemeOpen"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
-                <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
+                <div class="bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4">
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-bold text-slate-900">Buat Skema Penilaian Baru</h2>
                         <button
                             type="button"
                             class="text-slate-400 hover:text-slate-600"
-                            @click="isCreateSchemeOpen = false"
+                            :disabled="schemeForm.processing"
+                            aria-label="Tutup formulir skema"
+                            @click="closeSchemeForm"
                         >
                             &times;
                         </button>
                     </div>
+                    <p class="text-sm text-slate-500">Skema baru akan menjadi skema aktif sekolah. Versi sebelumnya tetap tersimpan untuk riwayat rapor yang sudah diterbitkan.</p>
 
                     <form @submit.prevent="submitNewScheme" class="space-y-4">
                         <div>
@@ -254,6 +273,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                 placeholder="Contoh: Kurikulum Merdeka 2024"
                                 class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
+                            <p v-if="schemeForm.errors.name" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.name }}</p>
                         </div>
 
                         <div>
@@ -266,6 +286,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                 class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
                             />
                             <p class="text-[11px] text-slate-400 mt-1">Jika kode sama sudah ada, versi akan otomatis dinaikkan (+1).</p>
+                            <p v-if="schemeForm.errors.code" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.code }}</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -279,6 +300,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     <option value="floor">Floor (Kebawah)</option>
                                     <option value="ceil">Ceil (Keatas)</option>
                                 </select>
+                                <p v-if="schemeForm.errors.rounding_rule" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.rounding_rule }}</p>
                             </div>
 
                             <div>
@@ -291,6 +313,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     required
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
+                                <p v-if="schemeForm.errors.decimal_places" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.decimal_places }}</p>
                             </div>
                         </div>
 
@@ -305,13 +328,15 @@ const weightTotals = (components: ComponentItem[]) => {
                                 required
                                 class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
+                            <p v-if="schemeForm.errors.passing_grade_default" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.passing_grade_default }}</p>
                         </div>
 
                         <div class="flex items-center justify-end gap-3 pt-3">
                             <button
                                 type="button"
                                 class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                                @click="isCreateSchemeOpen = false"
+                                :disabled="schemeForm.processing"
+                                @click="closeSchemeForm"
                             >
                                 Batal
                             </button>
@@ -328,7 +353,7 @@ const weightTotals = (components: ComponentItem[]) => {
             </div>
 
             <div v-if="props.can_manage && bindingComponent" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                <form class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4" @submit.prevent="submitBinding">
+                <form class="bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" @submit.prevent="submitBinding">
                     <h2 class="text-lg font-bold text-slate-900">Petakan {{ bindingComponent.component.name }}</h2>
                     <p class="text-sm text-slate-500">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
                     <label for="binding-assignment" class="block text-sm font-semibold text-slate-700">Kelas & Mata Pelajaran</label>
@@ -338,7 +363,7 @@ const weightTotals = (components: ComponentItem[]) => {
                     </select>
                     <p v-if="bindingForm.errors.teaching_assignment_id" class="text-sm text-red-600">{{ bindingForm.errors.teaching_assignment_id }}</p>
                     <div class="flex justify-end gap-3">
-                        <button type="button" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700" :disabled="bindingForm.processing" @click="bindingComponent = null">Batal</button>
+                        <button type="button" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700" :disabled="bindingForm.processing" @click="bindingComponent = null; bindingForm.clearErrors()">Batal</button>
                         <button type="submit" :disabled="bindingForm.processing" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">Simpan Pemetaan</button>
                     </div>
                 </form>
@@ -349,7 +374,7 @@ const weightTotals = (components: ComponentItem[]) => {
                 v-if="props.can_manage && isCreateComponentOpen"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
-                <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
+                <div class="bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4">
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-bold text-slate-900">Tambah Komponen Penilaian</h2>
                         <button
@@ -379,6 +404,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                 placeholder="Contoh: Formatif 1 / Ulangan Harian"
                                 class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
+                            <p v-if="componentForm.errors.name" class="mt-1 text-sm text-red-600">{{ componentForm.errors.name }}</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -391,6 +417,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     placeholder="F1 / UTS / UAS"
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
                                 />
+                                <p v-if="componentForm.errors.code" class="mt-1 text-sm text-red-600">{{ componentForm.errors.code }}</p>
                             </div>
 
                             <div>
@@ -401,6 +428,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     min="1"
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
+                                <p v-if="componentForm.errors.sequence" class="mt-1 text-sm text-red-600">{{ componentForm.errors.sequence }}</p>
                             </div>
                         </div>
 
@@ -416,6 +444,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     required
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
+                                <p v-if="componentForm.errors.weight_percentage" class="mt-1 text-sm text-red-600">{{ componentForm.errors.weight_percentage }}</p>
                             </div>
 
                             <div>
@@ -429,6 +458,7 @@ const weightTotals = (components: ComponentItem[]) => {
                                     required
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
+                                <p v-if="componentForm.errors.passing_grade" class="mt-1 text-sm text-red-600">{{ componentForm.errors.passing_grade }}</p>
                             </div>
                         </div>
 
@@ -436,7 +466,8 @@ const weightTotals = (components: ComponentItem[]) => {
                             <button
                                 type="button"
                                 class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                                @click="isCreateComponentOpen = false"
+                                :disabled="componentForm.processing"
+                                @click="isCreateComponentOpen = false; componentForm.clearErrors()"
                             >
                                 Batal
                             </button>

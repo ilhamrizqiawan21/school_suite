@@ -29,6 +29,8 @@ class AssessmentSchemeController extends Controller
 
         $schemes = AssessmentScheme::where('school_id', $schoolId)
             ->with('components')
+            ->orderByDesc('is_active')
+            ->orderBy('code')
             ->orderByDesc('version')
             ->get();
 
@@ -61,21 +63,26 @@ class AssessmentSchemeController extends Controller
 
         $schoolId = (int) $request->user()->school_id;
 
-        // Cari versi terakhir untuk kode skema ini
-        $lastVersion = (int) AssessmentScheme::where('school_id', $schoolId)
-            ->where('code', $validated['code'])
-            ->max('version');
+        DB::transaction(function () use ($schoolId, $validated): void {
+            AssessmentScheme::where('school_id', $schoolId)->lockForUpdate()->get(['id']);
+            $lastVersion = (int) AssessmentScheme::where('school_id', $schoolId)
+                ->where('code', $validated['code'])
+                ->max('version');
 
-        AssessmentScheme::create([
-            'school_id' => $schoolId,
-            'name' => $validated['name'],
-            'code' => $validated['code'],
-            'version' => $lastVersion + 1,
-            'is_active' => true,
-            'rounding_rule' => RoundingRuleEnum::from($validated['rounding_rule']),
-            'decimal_places' => (int) $validated['decimal_places'],
-            'passing_grade_default' => (float) $validated['passing_grade_default'],
-        ]);
+            // Raport memakai satu skema aktif per sekolah, jadi versi baru menggantikan versi aktif sebelumnya.
+            AssessmentScheme::where('school_id', $schoolId)->where('is_active', true)->update(['is_active' => false]);
+
+            AssessmentScheme::create([
+                'school_id' => $schoolId,
+                'name' => $validated['name'],
+                'code' => $validated['code'],
+                'version' => $lastVersion + 1,
+                'is_active' => true,
+                'rounding_rule' => RoundingRuleEnum::from($validated['rounding_rule']),
+                'decimal_places' => (int) $validated['decimal_places'],
+                'passing_grade_default' => (float) $validated['passing_grade_default'],
+            ]);
+        });
 
         return back()->with('message', 'Skema penilaian baru berhasil disimpan.');
     }

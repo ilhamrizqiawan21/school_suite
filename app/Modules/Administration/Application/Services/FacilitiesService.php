@@ -20,7 +20,9 @@ class FacilitiesService
     {
         return DB::transaction(function () use ($actor, $attributes): FacilityAsset {
             abort_unless($actor->is_active && $actor->school_id !== null, 403);
-            abort_if(($attributes['condition'] ?? null) === 'damaged' && ($attributes['status'] ?? null) === 'available', 422, 'Aset rusak harus berstatus pemeliharaan atau nonaktif.');
+            if (($attributes['condition'] ?? null) === 'damaged' && ($attributes['status'] ?? null) === 'available') {
+                throw ValidationException::withMessages(['status' => 'Aset rusak harus berstatus perawatan atau nonaktif.']);
+            }
             $asset = FacilityAsset::create([
                 ...$attributes,
                 'school_id' => (int) $actor->school_id,
@@ -38,7 +40,9 @@ class FacilitiesService
     public function updateAsset(User $actor, int $assetId, array $attributes): FacilityAsset
     {
         return DB::transaction(function () use ($actor, $assetId, $attributes): FacilityAsset {
-            abort_if(($attributes['condition'] ?? null) === 'damaged' && ($attributes['status'] ?? null) === 'available', 422, 'Aset rusak harus berstatus pemeliharaan atau nonaktif.');
+            if (($attributes['condition'] ?? null) === 'damaged' && ($attributes['status'] ?? null) === 'available') {
+                throw ValidationException::withMessages(['status' => 'Aset rusak harus berstatus perawatan atau nonaktif.']);
+            }
             $asset = FacilityAsset::query()
                 ->where('school_id', $actor->school_id)
                 ->lockForUpdate()

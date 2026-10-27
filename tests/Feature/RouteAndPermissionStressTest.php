@@ -13,12 +13,15 @@ use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Administration\Infrastructure\Models\Announcement;
 use App\Modules\Core\Domain\PermissionEnum;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\Permission;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RouteAndPermissionStressTest extends TestCase
@@ -355,7 +358,6 @@ class RouteAndPermissionStressTest extends TestCase
             '/wali-kelas',
             '/wali-kelas/catatan',
             '/wali-kelas/kedisiplinan',
-            '/komunikasi/whatsapp',
             '/pengaturan/pengguna',
             '/pengaturan/sekolah',
             '/pengaturan/keamanan',
@@ -383,7 +385,6 @@ class RouteAndPermissionStressTest extends TestCase
             '/wali-kelas',
             '/wali-kelas/catatan',
             '/wali-kelas/kedisiplinan',
-            '/komunikasi/whatsapp',
             '/penilaian/skor',
             '/penilaian/sikap',
             '/penilaian/rapor',
@@ -494,7 +495,6 @@ class RouteAndPermissionStressTest extends TestCase
         // Teacher is strictly forbidden from homeroom specific routes, reports, and system settings
         $forbiddenForTeacher = [
             '/laporan',
-            '/komunikasi/whatsapp',
             '/pengaturan/pengguna',
             '/pengaturan/sekolah',
             '/pengaturan/keamanan',
@@ -556,8 +556,6 @@ class RouteAndPermissionStressTest extends TestCase
             );
         }
 
-        $this->get('/komunikasi/whatsapp')->assertForbidden();
-
         // Principal is forbidden from classroom teaching execution routes
         $forbiddenForPrincipal = [
             '/akademik/presensi',
@@ -601,7 +599,6 @@ class RouteAndPermissionStressTest extends TestCase
             '/penilaian/analisis',
             '/laporan',
             '/komunikasi',
-            '/komunikasi/whatsapp',
             '/profil',
             '/pengaturan/pengguna',
             '/pengaturan/sekolah',
@@ -674,7 +671,6 @@ class RouteAndPermissionStressTest extends TestCase
             '/penilaian/analisis',
             '/laporan',
             '/komunikasi',
-            '/komunikasi/whatsapp',
             '/pengaturan/keamanan',
             '/pengaturan/sekolah',
             '/profil',
@@ -758,5 +754,62 @@ class RouteAndPermissionStressTest extends TestCase
             $response->getStatusCode(),
             'Expected CommunicationController to return 200 OK for Student'
         );
+    }
+
+    public function test_creator_can_review_targeted_communication_without_exposing_it_to_other_roles(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->adminUser)->post('/komunikasi/pengumuman', [
+            'title' => 'Info untuk siswa', 'body' => 'Silakan periksa jadwal.',
+            'audience_role' => 'student', 'class_group_id' => (string) $this->classGroup->id,
+            'attachment' => UploadedFile::fake()->create('info.pdf', 10, 'application/pdf'),
+        ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionHas('message', 'Pengumuman berhasil diterbitkan. Notifikasi dibuat untuk 1 akun.');
+        $this->post('/komunikasi/kalender', [
+            'title' => 'Agenda siswa', 'event_type' => 'academic', 'starts_at' => now()->addDay()->toDateTimeString(),
+            'audience_role' => 'student', 'class_group_id' => $this->classGroup->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $announcement = Announcement::query()->where('title', 'Info untuk siswa')->firstOrFail();
+        $this->assertDatabaseHas('user_notifications', ['user_id' => $this->studentUser->id, 'title' => 'Info untuk siswa']);
+        $this->get('/komunikasi')->assertOk()->assertInertia(fn ($page) => $page
+            ->has('announcements', 1)->where('announcements.0.id', $announcement->id)
+            ->has('events', 1)->where('events.0.title', 'Agenda siswa'));
+        $this->get('/komunikasi/pengumuman/'.$announcement->id.'/lampiran')->assertOk();
+        $this->actingAs($this->principalUser)->get('/komunikasi')->assertOk()->assertInertia(fn ($page) => $page
+            ->has('announcements', 0)->has('events', 0));
+        $this->get('/komunikasi/pengumuman/'.$announcement->id.'/lampiran')->assertNotFound();
+        $this->actingAs($this->studentUser)->get('/komunikasi')->assertOk()->assertInertia(fn ($page) => $page
+            ->has('announcements', 1)->has('events', 1));
+    }
+
+    public function test_communication_rejects_parent_target_with_a_class(): void
+    {
+        $this->actingAs($this->adminUser)->post('/komunikasi/pengumuman', [
+            'title' => 'Info orang tua', 'body' => 'Isi informasi', 'audience_role' => 'parent', 'class_group_id' => $this->classGroup->id,
+        ])->assertSessionHasErrors('class_group_id');
+        $this->post('/komunikasi/kalender', [
+            'title' => 'Rapat orang tua', 'event_type' => 'meeting', 'starts_at' => now()->addDay()->toDateTimeString(),
+            'audience_role' => 'parent', 'class_group_id' => $this->classGroup->id,
+        ])->assertSessionHasErrors('class_group_id');
+        $this->assertDatabaseMissing('announcements', ['title' => 'Info orang tua']);
+        $this->assertDatabaseMissing('academic_calendar_events', ['title' => 'Rapat orang tua']);
+    }
+
+    public function test_teacher_sees_class_targeted_announcements_only_for_assigned_classes(): void
+    {
+        $otherClass = ClassGroup::create([
+            'school_id' => $this->school->id, 'academic_year_id' => $this->academicYear->id,
+            'name' => 'X-MIPA-2', 'grade_level' => 10,
+        ]);
+        foreach ([[$this->classGroup->id, 'Kelas guru'], [$otherClass->id, 'Kelas lain']] as [$classId, $title]) {
+            Announcement::create([
+                'school_id' => $this->school->id, 'author_id' => $this->adminUser->id,
+                'class_group_id' => $classId, 'audience_role' => 'teacher',
+                'title' => $title, 'body' => 'Informasi kelas.', 'published_at' => now(),
+            ]);
+        }
+
+        $this->actingAs($this->teacherUser)->get('/komunikasi')->assertOk()
+            ->assertInertia(fn ($page) => $page->has('announcements', 1)->where('announcements.0.title', 'Kelas guru'));
     }
 }

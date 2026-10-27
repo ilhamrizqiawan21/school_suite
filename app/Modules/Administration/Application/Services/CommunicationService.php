@@ -27,7 +27,8 @@ class CommunicationService
                 'published_at' => now(),
             ]);
 
-            $this->audience($author->school_id, $data['audience_role'] ?? null, $data['class_group_id'] ?? null)
+            $classGroupId = isset($data['class_group_id']) ? (int) $data['class_group_id'] : null;
+            $this->audience((int) $author->school_id, $data['audience_role'] ?? null, $classGroupId)
                 ->each(fn (int $userId) => $announcement->notifications()->create([
                     'user_id' => $userId,
                     'title' => $announcement->title,

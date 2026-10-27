@@ -12,6 +12,8 @@ use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\Exam;
+use App\Modules\Assessment\Infrastructure\Models\ExamAnswer;
+use App\Modules\Assessment\Infrastructure\Models\ExamAttempt;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestionItem;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestionVersion;
@@ -24,6 +26,7 @@ use App\Modules\Assessment\Infrastructure\Models\QuestionTag;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Modules\Assessment\Infrastructure\Models\StudentAttitude;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 
 class DemoAssessmentContentSeeder extends Seeder
 {
@@ -160,7 +163,122 @@ class DemoAssessmentContentSeeder extends Seeder
             );
         }
 
+        $this->seedPublishedAnalyticsExample($user, $assignment, $questions);
+
         $this->seedScoresAndAttitudes($user, $term, $assignments);
+    }
+
+    /** @param list<ExamQuestion> $questions */
+    private function seedPublishedAnalyticsExample(User $user, TeachingAssignment $assignment, array $questions): void
+    {
+        $exam = Exam::query()->firstOrCreate(
+            ['teaching_assignment_id' => $assignment->id, 'created_by' => $user->id, 'title' => 'Demo Analisis IPA - Hasil Terbit'],
+            [
+                'school_id' => $user->school_id,
+                'instructions' => 'Contoh ujian sintetis untuk melihat distribusi nilai dan analisis butir.',
+                'starts_at' => now()->subDays(10),
+                'ends_at' => now()->subDays(10)->addMinutes(30),
+                'duration_minutes' => 30,
+                'randomize_questions' => false,
+                'randomize_options' => false,
+                'max_violations' => 3,
+                'status' => 'results_published',
+            ]
+        );
+        $exam->forceFill([
+            'starts_at' => now()->subDays(10),
+            'ends_at' => now()->subDays(10)->addMinutes(30),
+            'status' => 'results_published',
+        ])->save();
+
+        $versions = [];
+        foreach ($questions as $index => $question) {
+            $version = ExamQuestionVersion::query()
+                ->where('exam_question_id', $question->id)
+                ->where('version_number', $question->current_version)
+                ->first();
+            if (! $version) {
+                continue;
+            }
+
+            $exam->items()->firstOrCreate(
+                ['exam_question_id' => $question->id],
+                ['question_version_id' => $version->id, 'sequence' => $index + 1, 'points' => $question->points]
+            );
+            $versions[$question->id] = $version;
+        }
+
+        $enrollments = Enrollment::query()
+            ->where('term_id', $assignment->term_id)
+            ->where('class_group_id', $assignment->class_group_id)
+            ->where('status', 'active')
+            ->orderBy('roll_number')
+            ->limit(8)
+            ->get();
+        $scores = [55, 62, 68, 74, 81, 86, 92, 96];
+        $objectiveThresholds = [50, 65, 76, 86, 72, 82];
+
+        foreach ($enrollments as $index => $enrollment) {
+            $score = $scores[$index % count($scores)];
+            $attempt = ExamAttempt::query()->firstOrCreate(
+                ['exam_id' => $exam->id, 'enrollment_id' => $enrollment->id],
+                [
+                    'status' => 'graded',
+                    'started_at' => now()->subDays(10)->addMinutes($index),
+                    'expires_at' => now()->subDays(10)->addMinutes(30 + $index),
+                    'last_heartbeat_at' => now()->subDays(10)->addMinutes(20 + $index),
+                    'submitted_at' => now()->subDays(10)->addMinutes(25 + $index),
+                    'score' => $score,
+                    'question_order' => array_map('intval', array_keys($versions)),
+                ]
+            );
+
+            $earnedPoints = 0.0;
+            $possiblePoints = 0.0;
+            foreach ($questions as $questionIndex => $question) {
+                $version = $versions[$question->id] ?? null;
+                if (! $version) {
+                    continue;
+                }
+
+                $isEssay = $version->type === 'essay';
+                $correct = ! $isEssay && $score >= ($objectiveThresholds[$questionIndex] ?? 80);
+                $answer = $isEssay
+                    ? 'Contoh jawaban sintetis siswa untuk analisis dampak dan solusi lingkungan.'
+                    : ($correct ? (string) $version->correct_answer : $this->incorrectDemoAnswer($version->options, (string) $version->correct_answer));
+                $itemScore = $isEssay
+                    ? round((float) $question->points * $score / 100, 2)
+                    : ($correct ? (float) $question->points : 0);
+                $earnedPoints += $itemScore;
+                $possiblePoints += (float) $question->points;
+
+                ExamAnswer::query()->firstOrCreate(
+                    ['exam_attempt_id' => $attempt->id, 'exam_question_id' => $question->id],
+                    [
+                        'question_version_id' => $version->id,
+                        'answer' => $answer,
+                        'is_correct' => $isEssay ? null : $correct,
+                        'score' => $itemScore,
+                        'graded_by' => $user->id,
+                        'graded_at' => now()->subDays(10)->addMinutes(25 + $index),
+                    ]
+                );
+            }
+
+            $attempt->update(['score' => $possiblePoints > 0 ? round($earnedPoints / $possiblePoints * 100, 2) : 0]);
+        }
+    }
+
+    /** @param array<mixed>|null $options */
+    private function incorrectDemoAnswer(?array $options, string $correctAnswer): string
+    {
+        foreach ($options ?? [] as $option) {
+            if ((string) $option !== $correctAnswer) {
+                return (string) $option;
+            }
+        }
+
+        return $correctAnswer === 'true' ? 'false' : 'true';
     }
 
     /** @return list<ExamQuestion> */
@@ -296,7 +414,7 @@ class DemoAssessmentContentSeeder extends Seeder
         return $questions;
     }
 
-    /** @param \Illuminate\Support\Collection<int, TeachingAssignment> $assignments */
+    /** @param Collection<int, TeachingAssignment> $assignments */
     private function seedScoresAndAttitudes(User $user, Term $term, $assignments): void
     {
         $classGroupIds = $assignments->pluck('class_group_id')->unique()->all();

@@ -26,7 +26,4 @@ Route::middleware(['auth', 'throttle:sensitive'])->prefix('komunikasi')->name('c
     Route::post('/chat/ruang', [EngagementController::class, 'createRoom'])->middleware('role:teacher,homeroom')->name('chat.rooms.store');
     Route::post('/chat/ruang/{room}/pesan', [EngagementController::class, 'sendMessage'])->middleware('role:teacher,homeroom,student')->name('chat.messages.store');
     Route::post('/chat/pesan/{message}/moderasi', [EngagementController::class, 'moderate'])->middleware('role:teacher,homeroom')->name('chat.messages.moderate');
-    Route::get('/whatsapp', [EngagementController::class, 'whatsapp'])->name('whatsapp.index');
-    Route::post('/whatsapp', [EngagementController::class, 'prepareWhatsapp'])->name('whatsapp.prepare');
-    Route::post('/whatsapp/{log}/terkirim', [EngagementController::class, 'markWhatsappSent'])->name('whatsapp.sent');
 });

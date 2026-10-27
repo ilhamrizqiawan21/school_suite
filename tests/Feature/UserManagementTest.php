@@ -196,6 +196,40 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $targetUser->id]);
     }
 
+    public function test_user_list_filters_and_paginates_only_current_school_accounts(): void
+    {
+        User::factory()->count(17)->create([
+            'school_id' => $this->school->id, 'role_id' => $this->teacherRole->id,
+            'is_active' => false, 'name' => 'Guru Pencarian',
+        ]);
+        User::factory()->create(['school_id' => $this->school->id, 'role_id' => $this->teacherRole->id, 'is_active' => true, 'name' => 'Guru Pencarian']);
+        $otherSchool = School::create(['name' => 'Sekolah Lain', 'npsn' => '55554445', 'level' => 'SMA']);
+        User::factory()->create(['school_id' => $otherSchool->id, 'role_id' => $this->teacherRole->id, 'is_active' => false, 'name' => 'Guru Pencarian']);
+
+        $this->actingAs($this->admin)->get('/pengaturan/pengguna?search=Guru&role=teacher&status=inactive')
+            ->assertInertia(fn ($page) => $page->where('users.total', 17)->has('users.data', 15)
+                ->where('users.last_page', 2)->where('users.data.0.can_update', true)
+                ->where('filters.status', 'inactive')->missing('users.data.0.school_id'));
+        $this->get('/pengaturan/pengguna?search=Guru&role=teacher&status=inactive&page=2')
+            ->assertInertia(fn ($page) => $page->has('users.data', 2)->where('users.current_page', 2));
+    }
+
+    public function test_current_account_cannot_be_deactivated_or_demoted(): void
+    {
+        $payload = ['name' => $this->admin->name, 'email' => $this->admin->email];
+        $this->actingAs($this->admin)->put('/pengaturan/pengguna/'.$this->admin->id, [
+            ...$payload, 'is_active' => false,
+        ])->assertSessionHasErrors('is_active');
+        $this->put('/pengaturan/pengguna/'.$this->admin->id, [
+            ...$payload, 'role_id' => $this->teacherRole->id,
+        ])->assertSessionHasErrors('role_id');
+
+        $this->assertTrue($this->admin->fresh()->is_active);
+        $this->assertSame($this->adminRole->id, $this->admin->fresh()->role_id);
+        $this->get('/pengaturan/pengguna')->assertInertia(fn ($page) => $page
+            ->where('users.data.0.can_delete', false));
+    }
+
     public function test_admin_can_view_and_update_school_profile(): void
     {
         $this->actingAs($this->admin);

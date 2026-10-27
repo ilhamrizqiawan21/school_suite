@@ -86,7 +86,7 @@ class FacilitiesControllersTest extends TestCase
                 'inventory_code' => 'INV-RUSAK', 'name' => 'Proyektor rusak', 'category' => 'Elektronik',
                 'condition' => 'damaged', 'status' => 'available',
             ])
-            ->assertStatus(422);
+            ->assertRedirect('/administrasi/sarpras')->assertSessionHasErrors('status');
 
         $asset = $this->makeAsset($this->school, $this->admin, 'INV-RUSAK-EXISTING');
         $asset->update(['condition' => 'damaged']);
@@ -101,6 +101,28 @@ class FacilitiesControllersTest extends TestCase
             ->assertSessionHasErrors('asset_id');
 
         $this->assertDatabaseCount('facility_loans', 0);
+    }
+
+    public function test_asset_pagination_does_not_hide_borrowable_options_when_filtering(): void
+    {
+        for ($i = 1; $i <= 12; $i++) {
+            $this->makeAsset($this->school, $this->admin, 'INV-PAGE-'.$i);
+        }
+        $this->actingAs($this->admin)->get('/administrasi/sarpras?status=maintenance')
+            ->assertOk()->assertInertia(fn ($page) => $page->has('assets', 0)->has('available_assets', 12));
+        $this->actingAs($this->admin)->get('/administrasi/sarpras')
+            ->assertOk()->assertInertia(fn ($page) => $page->has('assets', 10)->where('asset_pages.total', 12)->where('asset_pages.last', 2));
+    }
+
+    public function test_open_loan_remains_visible_ahead_of_newer_returned_loans(): void
+    {
+        $asset = $this->makeAsset($this->school, $this->admin, 'INV-OPEN');
+        $open = FacilityLoan::create(['school_id' => $this->school->id, 'asset_id' => $asset->id, 'recorded_by' => $this->admin->id, 'borrower_name' => 'Peminjam aktif', 'borrowed_at' => today()]);
+        for ($i = 0; $i < 12; $i++) {
+            FacilityLoan::create(['school_id' => $this->school->id, 'asset_id' => $asset->id, 'recorded_by' => $this->admin->id, 'borrower_name' => 'Sudah kembali', 'borrowed_at' => today(), 'returned_at' => today(), 'return_condition' => 'good']);
+        }
+        $this->actingAs($this->admin)->get('/administrasi/sarpras')->assertOk()
+            ->assertInertia(fn ($page) => $page->has('loans', 10)->where('loans.0.id', $open->id)->where('loan_pages.total', 13));
     }
 
     public function test_asset_loan_return_workflow_updates_availability_and_records_audit(): void

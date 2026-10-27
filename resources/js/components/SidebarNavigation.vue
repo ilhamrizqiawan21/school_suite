@@ -96,7 +96,6 @@ const sections: NavSection[] = [
             { name: 'Ruang Wali Kelas', href: '/wali-kelas', key: 'homeroom', exact: true, activePrefix: '/wali-kelas', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
             { name: 'Catatan Observasi & BK', href: '/wali-kelas/catatan', key: 'homeroom-observations', activePrefix: '/wali-kelas/catatan', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
             { name: 'Kedisiplinan & Prestasi', href: '/wali-kelas/kedisiplinan', key: 'homeroom-discipline', activePrefix: '/wali-kelas/kedisiplinan', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-            { name: 'WhatsApp Orang Tua', href: '/komunikasi/whatsapp', key: 'homeroom-whatsapp', activePrefix: '/komunikasi/whatsapp', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
         ],
     },
     {
@@ -104,7 +103,6 @@ const sections: NavSection[] = [
         items: [
             { name: 'Pengumuman & Agenda', href: '/komunikasi', key: 'communication', exact: true, activePrefix: '/komunikasi', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z' },
             { name: 'Diskusi Chat', href: '/komunikasi/chat', key: 'communication-chat', activePrefix: '/komunikasi/chat', icon: 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z' },
-            { name: 'WhatsApp Orang Tua', href: '/komunikasi/whatsapp', key: 'communication-whatsapp', activePrefix: '/komunikasi/whatsapp', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
         ],
     },
     {
@@ -162,10 +160,8 @@ const roleVisibility: Record<string, string[]> = {
     homeroom: ['homeroom'],
     'homeroom-observations': ['homeroom'],
     'homeroom-discipline': ['homeroom'],
-    'homeroom-whatsapp': ['homeroom'],
     communication: ['admin', 'operator', 'teacher', 'homeroom', 'student'],
     'communication-chat': ['teacher', 'homeroom', 'student'],
-    'communication-whatsapp': ['admin', 'operator'],
     'staff-tasks': ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'counselor', 'librarian'],
     facilities: ['admin', 'operator'],
     correspondence: ['admin', 'operator'],

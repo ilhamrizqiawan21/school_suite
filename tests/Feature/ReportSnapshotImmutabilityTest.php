@@ -13,6 +13,7 @@ use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Assessment\Application\Services\ReportGeneratorService;
 use App\Modules\Assessment\Application\Services\ReportPublishingService;
 use App\Modules\Assessment\Domain\Enums\ReportStatusEnum;
 use App\Modules\Assessment\Domain\Enums\RoundingRuleEnum;
@@ -265,6 +266,55 @@ class ReportSnapshotImmutabilityTest extends TestCase
     /**
      * Rapor yang telah terbit terkunci dan dilarang di-regenerate sembarangan.
      */
+    public function test_checksum_ignores_object_key_order_but_detects_score_and_list_changes(): void
+    {
+        $scheme = ['version' => 2, 'code' => 'DEMO'];
+        $grades = [['subject_id' => 1, 'final_score' => 88], ['subject_id' => 2, 'final_score' => 76]];
+        $checksum = $this->publishingService->calculateChecksum($scheme, $grades, ['present' => 90], []);
+        $report = new ReportSnapshot([
+            'scheme_snapshot' => array_reverse($scheme, true),
+            'grades_snapshot' => array_map(fn ($grade) => array_reverse($grade, true), $grades),
+            'attendance_snapshot' => ['present' => 90], 'notes_snapshot' => [], 'checksum' => $checksum,
+        ]);
+
+        $this->assertTrue($this->publishingService->verifyReportIntegrity($report));
+        $report->grades_snapshot = array_reverse($grades);
+        $this->assertFalse($this->publishingService->verifyReportIntegrity($report));
+        $grades[0]['final_score'] = 99;
+        $report->grades_snapshot = $grades;
+        $this->assertFalse($this->publishingService->verifyReportIntegrity($report));
+    }
+
+    public function test_legacy_checksum_can_still_be_verified(): void
+    {
+        $payload = ['scheme' => ['version' => 1, 'code' => 'OLD'], 'grades' => [], 'attendance' => [], 'notes' => []];
+        $report = new ReportSnapshot([
+            'scheme_snapshot' => $payload['scheme'], 'grades_snapshot' => [],
+            'attendance_snapshot' => [], 'notes_snapshot' => [],
+            'checksum' => hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR)),
+        ]);
+
+        $this->assertTrue($this->publishingService->verifyReportIntegrity($report));
+    }
+
+    public function test_report_view_normalizes_legacy_grades_without_changing_the_snapshot(): void
+    {
+        $report = new ReportSnapshot([
+            'school_id' => $this->school->id, 'student_id' => $this->student->id,
+            'term_id' => $this->term->id, 'class_group_id' => $this->classGroup->id,
+            'status' => 'draft', 'scheme_snapshot' => ['version' => 3],
+            'grades_snapshot' => [['subject_id' => 1, 'letter_grade' => 'A', 'is_passing' => true]],
+            'notes_snapshot' => ['homeroom_notes' => [['content' => 'Catatan untuk orang tua.']]],
+        ]);
+        $view = app(ReportGeneratorService::class)->formatReportView($report);
+
+        $this->assertSame(3, $view['scheme_version']);
+        $this->assertSame('A', $view['grades'][0]['predicate']);
+        $this->assertTrue($view['grades'][0]['is_passed']);
+        $this->assertSame('Catatan untuk orang tua.', $view['notes']['homeroom_notes']);
+        $this->assertArrayNotHasKey('predicate', $report->grades_snapshot[0]);
+    }
+
     public function test_generating_already_published_report_throws_exception(): void
     {
         $report = $this->publishingService->generateReportSnapshot(

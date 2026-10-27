@@ -104,6 +104,15 @@ class RoleMatrixAccessTest extends TestCase
         $this->get('/pengaturan/sekolah')->assertStatus(200);
     }
 
+    public function test_whatsapp_routes_are_unavailable(): void
+    {
+        $this->actingAs($this->usersByRole[RoleEnum::ADMIN->value]);
+
+        $this->get('/komunikasi/whatsapp')->assertNotFound();
+        $this->post('/komunikasi/whatsapp', [])->assertNotFound();
+        $this->post('/komunikasi/whatsapp/1/terkirim')->assertNotFound();
+    }
+
     /**
      * Matriks Uji 2: Operator memiliki izin melihat dan mengelola pengguna serta profil sekolah.
      */
@@ -226,7 +235,6 @@ class RoleMatrixAccessTest extends TestCase
         $this->post('/penilaian/rapor/generate-batch', [])->assertForbidden();
         $this->post('/komunikasi/pengumuman', [])->assertForbidden();
         $this->post('/komunikasi/kalender', [])->assertForbidden();
-        $this->post('/komunikasi/whatsapp', [])->assertForbidden();
         $this->post('/penilaian/sikap', [])->assertForbidden();
         $this->post('/akademik/kelas-daring', [])->assertForbidden();
     }

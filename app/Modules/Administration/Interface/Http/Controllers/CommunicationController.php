@@ -6,6 +6,7 @@ namespace App\Modules\Administration\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Administration\Application\Services\CommunicationService;
 use App\Modules\Administration\Infrastructure\Models\AcademicCalendarEvent;
 use App\Modules\Administration\Infrastructure\Models\Announcement;
@@ -39,8 +40,12 @@ class CommunicationController extends Controller
             ->with(['author:id,name', 'classGroup:id,name'])
             ->where('school_id', $schoolId)
             ->where(fn ($query) => $query->whereNull('published_at')->orWhere('published_at', '<=', now()))
-            ->where(fn ($query) => $query->whereNull('audience_role')->orWhere('audience_role', $user->role?->name))
-            ->where(fn ($query) => $query->whereNull('class_group_id')->orWhereIn('class_group_id', $classIds))
+            ->where(function ($query) use ($user, $classIds): void {
+                $query->where(function ($audience) use ($user, $classIds): void {
+                    $audience->where(fn ($role) => $role->whereNull('audience_role')->orWhere('audience_role', $user->role?->name))
+                        ->where(fn ($class) => $class->whereNull('class_group_id')->orWhereIn('class_group_id', $classIds));
+                })->when($user->hasRole(self::MANAGER_ROLES), fn ($scope) => $scope->orWhere('author_id', $user->id));
+            })
             ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
             ->latest('published_at')
             ->get();
@@ -48,8 +53,12 @@ class CommunicationController extends Controller
         $events = AcademicCalendarEvent::query()
             ->with(['creator:id,name', 'classGroup:id,name'])
             ->where('school_id', $schoolId)
-            ->where(fn ($query) => $query->whereNull('audience_role')->orWhere('audience_role', $user->role?->name))
-            ->where(fn ($query) => $query->whereNull('class_group_id')->orWhereIn('class_group_id', $classIds))
+            ->where(function ($query) use ($user, $classIds): void {
+                $query->where(function ($audience) use ($user, $classIds): void {
+                    $audience->where(fn ($role) => $role->whereNull('audience_role')->orWhere('audience_role', $user->role?->name))
+                        ->where(fn ($class) => $class->whereNull('class_group_id')->orWhereIn('class_group_id', $classIds));
+                })->when($user->hasRole(self::MANAGER_ROLES), fn ($scope) => $scope->orWhere('created_by', $user->id));
+            })
             ->where('starts_at', '>=', now()->subMonth())
             ->orderBy('starts_at')
             ->get();
@@ -75,7 +84,6 @@ class CommunicationController extends Controller
             'active_tab' => $request->query('tab', 'announcements'),
             'can_manage' => $user->hasRole(self::MANAGER_ROLES),
             'can_chat' => $user->hasRole(['teacher', 'homeroom', 'student']),
-            'can_whatsapp' => $user->hasRole(['admin', 'operator', 'homeroom']),
         ]);
     }
 
@@ -86,7 +94,7 @@ class CommunicationController extends Controller
             'title' => ['required', 'string', 'max:180'],
             'body' => ['required', 'string', 'max:20000'],
             'audience_role' => ['nullable', Rule::in(['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student', 'parent'])],
-            'class_group_id' => ['nullable', 'integer', Rule::exists('class_groups', 'id')->where('school_id', $request->user()->school_id)],
+            'class_group_id' => ['nullable', Rule::prohibitedIf(in_array($request->input('audience_role'), ['parent', 'principal', 'admin', 'operator'], true)), 'integer', Rule::exists('class_groups', 'id')->where('school_id', $request->user()->school_id)],
             'expires_at' => ['nullable', 'date', 'after:now'],
             'attachment' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
         ]);
@@ -98,9 +106,10 @@ class CommunicationController extends Controller
             $validated['attachment_name'] = $file->getClientOriginalName();
         }
 
-        $this->communication->publishAnnouncement($request->user(), $validated);
+        $announcement = $this->communication->publishAnnouncement($request->user(), $validated);
+        $recipientCount = $announcement->notifications()->count();
 
-        return back()->with('message', 'Pengumuman berhasil diterbitkan dan notifikasi telah dibuat.');
+        return back()->with('message', "Pengumuman berhasil diterbitkan. Notifikasi dibuat untuk {$recipientCount} akun.");
     }
 
     public function destroyAnnouncement(Request $request, Announcement $announcement): RedirectResponse
@@ -121,8 +130,9 @@ class CommunicationController extends Controller
         abort_unless(
             (int) $announcement->school_id === (int) $user->school_id
             && $announcement->attachment_path
-            && (! $announcement->audience_role || $announcement->audience_role === $user->role?->name)
-            && (! $announcement->class_group_id || in_array((int) $announcement->class_group_id, $classIds, true))
+            && (($user->hasRole(self::MANAGER_ROLES) && (int) $announcement->author_id === (int) $user->id)
+                || ((! $announcement->audience_role || $announcement->audience_role === $user->role?->name)
+                    && (! $announcement->class_group_id || in_array((int) $announcement->class_group_id, $classIds, true))))
             && (! $announcement->expires_at || $announcement->expires_at->isFuture()),
             404
         );
@@ -155,7 +165,7 @@ class CommunicationController extends Controller
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'audience_role' => ['nullable', Rule::in(['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student', 'parent'])],
-            'class_group_id' => ['nullable', 'integer', Rule::exists('class_groups', 'id')->where('school_id', $request->user()->school_id)],
+            'class_group_id' => ['nullable', Rule::prohibitedIf(in_array($request->input('audience_role'), ['parent', 'principal', 'admin', 'operator'], true)), 'integer', Rule::exists('class_groups', 'id')->where('school_id', $request->user()->school_id)],
         ]);
 
         AcademicCalendarEvent::create([
@@ -193,10 +203,18 @@ class CommunicationController extends Controller
         if (! $user->hasRole('student')) {
             $activeTerm = $this->academicQuery->getActiveTerm((int) $user->school_id);
 
-            return $activeTerm
+            $classIds = $activeTerm
                 ? $this->academicQuery->getClassGroups((int) $user->school_id, $activeTerm->academic_year_id)
                     ->pluck('id')->map(fn ($id) => (int) $id)->all()
                 : [];
+
+            if ($user->hasRole(['teacher', 'homeroom'])) {
+                return TeachingAssignment::query()->whereIn('class_group_id', $classIds)
+                    ->whereHas('teacher', fn ($teacher) => $teacher->where('school_id', $user->school_id)->where('user_id', $user->id))
+                    ->distinct()->pluck('class_group_id')->map(fn ($id) => (int) $id)->all();
+            }
+
+            return $classIds;
         }
 
         $schoolId = (int) $user->school_id;
