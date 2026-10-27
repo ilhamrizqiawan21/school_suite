@@ -37,9 +37,12 @@ const sections: NavSection[] = [
         title: 'Akademik',
         items: [
             { name: 'Data Siswa', href: '/akademik/siswa', key: 'students', activePrefix: '/akademik/siswa', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+            { name: 'Buku Induk', href: '/akademik/buku-induk', key: 'student-ledger', activePrefix: '/akademik/buku-induk', icon: 'M5 4.75A2.25 2.25 0 017.25 2.5H19v18H7.25A2.25 2.25 0 015 18.25v-13.5ZM5 18.25A2.25 2.25 0 017.25 16H19M9 6h6m-6 3h6m-6 3h4' },
             { name: 'Data Guru', href: '/akademik/guru', key: 'teachers', activePrefix: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
             { name: 'Rombel / Kelas', href: '/akademik/kelas', key: 'classes', activePrefix: '/akademik/kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
             { name: 'Jadwal Pelajaran', href: '/akademik/jadwal', key: 'schedules', activePrefix: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+            { name: 'Absensi Guru', href: '/akademik/absensi-guru', key: 'teacher-attendance', activePrefix: '/akademik/absensi-guru', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9 2 2 4-4' },
+            { name: 'Izin & Cuti Guru', href: '/akademik/izin-guru', key: 'teacher-leave', activePrefix: '/akademik/izin-guru', icon: 'M8 2v4m8-4v4M3 10h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2zm4 9h3m-3 4h6' },
             { name: 'Presensi Siswa', href: '/akademik/presensi', key: 'attendance', activePrefix: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
             { name: 'Rekap Presensi', href: '/akademik/presensi/rekap', key: 'attendance-report', activePrefix: '/akademik/presensi/rekap', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14z', roles: ['principal'] },
             {
@@ -105,6 +108,14 @@ const sections: NavSection[] = [
         ],
     },
     {
+        title: 'Tata Usaha',
+        items: [
+            { name: 'Persuratan & Arsip', href: '/administrasi/persuratan', key: 'correspondence', activePrefix: '/administrasi/persuratan', icon: 'M7 3h7l5 5v13H5V3h2zm7 0v5h5M8 12h8m-8 4h8' },
+            { name: 'Tugas Staf', href: '/administrasi/tugas', key: 'staff-tasks', activePrefix: '/administrasi/tugas', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5h6m-6 7h6m-6 4h6' },
+            { name: 'Sarana & Prasarana', href: '/administrasi/sarpras', key: 'facilities', activePrefix: '/administrasi/sarpras', icon: 'M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01' },
+        ],
+    },
+    {
         title: 'Pengaturan',
         items: [
             { name: 'Profil Saya', href: '/profil', key: 'profile', activePrefix: '/profil', icon: 'M5.121 17.804A9 9 0 1118.88 17.804M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
@@ -124,9 +135,12 @@ const displayName = (item: NavItem) => item.key === 'learning' && currentRole.va
     : item.name;
 const roleVisibility: Record<string, string[]> = {
     students: ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
+    'student-ledger': ['admin', 'operator'],
     teachers: ['admin', 'operator', 'principal'],
     classes: ['admin', 'operator', 'principal', 'teacher', 'homeroom'],
     schedules: ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],
+    'teacher-attendance': ['admin', 'operator', 'teacher', 'homeroom'],
+    'teacher-leave': ['admin', 'operator', 'teacher', 'homeroom'],
     attendance: ['teacher', 'homeroom'],
     'attendance-report': ['principal'],
     journals: ['teacher', 'homeroom'],
@@ -152,6 +166,9 @@ const roleVisibility: Record<string, string[]> = {
     communication: ['admin', 'operator', 'teacher', 'homeroom', 'student'],
     'communication-chat': ['teacher', 'homeroom', 'student'],
     'communication-whatsapp': ['admin', 'operator'],
+    'staff-tasks': ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'counselor', 'librarian'],
+    facilities: ['admin', 'operator'],
+    correspondence: ['admin', 'operator'],
     profile: ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],
     users: ['admin', 'operator'],
     school: ['admin', 'operator'],

@@ -207,42 +207,60 @@ class StudentController extends Controller
     {
         Gate::authorize('create', Student::class);
 
+        $schoolId = (int) $request->user()->school_id;
         $request->validate([
-            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt', 'max:2048'],
+            'csv_file' => ['required_without:csv_content', 'nullable', 'file', 'mimes:csv,txt,xlsx', 'max:2048'],
             'csv_content' => ['required_without:csv_file', 'nullable', 'string', 'max:2097152'],
-            'enroll_term_id' => ['nullable', 'exists:terms,id'],
-            'enroll_class_group_id' => ['nullable', 'exists:class_groups,id'],
+            'enroll_term_id' => ['nullable', Rule::exists('terms', 'id')->whereIn('academic_year_id', AcademicYear::where('school_id', $schoolId)->select('id'))],
+            'enroll_class_group_id' => ['nullable', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)],
         ]);
 
-        $schoolId = (int) $request->user()->school_id;
-        $content = $request->hasFile('csv_file')
-            ? file_get_contents($request->file('csv_file')->getRealPath())
-            : (string) $request->input('csv_content');
-
         try {
-            $rows = $this->importService->parseCsvString($content, ['nis', 'name', 'gender']);
+            $parsed = $request->hasFile('csv_file')
+                ? $this->importService->parseStudentImportFile(
+                    $request->file('csv_file')->getRealPath(),
+                    strtolower($request->file('csv_file')->getClientOriginalExtension())
+                )
+                : $this->importService->parseStudentImportCsvString((string) $request->input('csv_content'));
+            $rows = $parsed['rows'];
 
             if (empty($rows)) {
-                return back()->withErrors(['csv_file' => 'Berkas CSV kosong atau format header tidak valid.']);
+                return back()->withErrors(['csv_file' => 'Berkas kosong atau format header tidak valid.']);
             }
 
-            $validation = $this->importService->validateStudentRows($schoolId, $rows);
+            $termId = $request->filled('enroll_term_id') ? (int) $request->input('enroll_term_id') : null;
+            $classGroupId = $request->filled('enroll_class_group_id') ? (int) $request->input('enroll_class_group_id') : null;
+            $targetClass = null;
+            if ($classGroupId !== null) {
+                $targetClass = ClassGroup::query()->where('school_id', $schoolId)->whereKey($classGroupId)->firstOrFail();
+                if ($termId === null) {
+                    return back()->withErrors(['enroll_term_id' => 'Pilih periode akademik untuk penempatan kelas.']);
+                }
+                $term = Term::query()->whereKey($termId)->whereHas('academicYear', fn ($query) => $query->where('school_id', $schoolId))->firstOrFail();
+                if ((int) $targetClass->academic_year_id !== (int) $term->academic_year_id) {
+                    return back()->withErrors(['enroll_class_group_id' => 'Kelas dan periode harus berasal dari tahun ajaran yang sama.']);
+                }
+            }
+
+            $validation = $this->importService->validateStudentRows($schoolId, $rows, $targetClass?->name);
             $token = (string) Str::uuid();
             Cache::put($this->importCacheKey($token), [
                 'user_id' => (int) $request->user()->id,
                 'school_id' => $schoolId,
                 'valid_rows' => $validation['valid_rows'],
                 'invalid_rows' => $validation['invalid_rows'],
-                'enroll_term_id' => $request->filled('enroll_term_id') ? (int) $request->input('enroll_term_id') : null,
-                'enroll_class_group_id' => $request->filled('enroll_class_group_id') ? (int) $request->input('enroll_class_group_id') : null,
+                'enroll_term_id' => $termId,
+                'enroll_class_group_id' => $classGroupId,
             ], now()->addMinutes(15));
 
             $previewRows = collect($validation['valid_rows'])->map(fn (array $row) => [
                 'row' => $row['row_index'], 'identifier' => $row['nis'], 'name' => $row['name'],
                 'gender' => $row['gender'], 'valid' => true, 'errors' => [],
+                'status' => $row['status'],
             ])->concat(collect($validation['invalid_rows'])->map(fn (array $row) => [
                 'row' => $row['row_index'], 'identifier' => $row['data']['nis'] ?? '',
                 'name' => $row['data']['name'] ?? '', 'gender' => $row['data']['gender'] ?? '',
+                'status' => $row['data']['status'] ?? '',
                 'valid' => false, 'errors' => $row['errors'],
             ]))->sortBy('row')->values();
 
@@ -252,6 +270,7 @@ class StudentController extends Controller
                 'index_url' => '/akademik/siswa',
                 'confirm_url' => "/akademik/siswa/import/{$token}/confirm",
                 'rows' => $previewRows,
+                'warnings' => $parsed['warnings'],
                 'valid_count' => count($validation['valid_rows']),
                 'invalid_count' => count($validation['invalid_rows']),
             ]);

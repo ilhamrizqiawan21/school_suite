@@ -157,6 +157,74 @@ class AcademicControllersTest extends TestCase
         $this->assertDatabaseMissing('students', ['nis' => '2001']);
     }
 
+    public function test_emadrasah_import_confirms_without_creating_users_and_rejects_wrong_class_term_pair(): void
+    {
+        $class = ClassGroup::create([
+            'school_id' => $this->school->id,
+            'academic_year_id' => $this->academicYear->id,
+            'grade_level' => 7,
+            'name' => '7A',
+            'capacity' => 32,
+        ]);
+        $csv = "NIS,NISN,NIK,Nama Lengkap,Kelas,L/P,Status\n00071,0012345678,3201010101010001,Siti Aminah,7A,P,Aktif\n";
+        $file = UploadedFile::fake()->createWithContent('students.csv', $csv);
+        $userCount = User::count();
+
+        $preview = $this->actingAs($this->admin)->post('/akademik/siswa/import/preview', [
+            'csv_file' => $file,
+            'enroll_term_id' => $this->term->id,
+            'enroll_class_group_id' => $class->id,
+        ]);
+
+        $preview->assertOk()->assertInertia(fn ($page) => $page
+            ->component('Academic/Imports/Preview')
+            ->where('valid_count', 1)
+            ->where('invalid_count', 0)
+            ->where('warnings.0', 'Kolom NIK terdeteksi tetapi tidak disimpan oleh data siswa School Suite.')
+        );
+        $page = $preview->viewData('page');
+        $page = is_string($page) ? json_decode($page, true) : $page;
+        $token = $page['props']['token'] ?? $page['page']['props']['token'] ?? null;
+        $this->assertNotNull($token);
+
+        $this->actingAs($this->admin)->post("/akademik/siswa/import/{$token}/confirm")->assertRedirect();
+        $this->assertDatabaseHas('students', ['school_id' => $this->school->id, 'nis' => '00071', 'nisn' => '0012345678', 'user_id' => null]);
+        $this->assertDatabaseHas('enrollments', ['term_id' => $this->term->id, 'class_group_id' => $class->id]);
+        $this->assertSame($userCount, User::count());
+
+        $retry = UploadedFile::fake()->createWithContent('students.csv', $csv);
+        $this->actingAs($this->admin)->post('/akademik/siswa/import/preview', [
+            'csv_file' => $retry,
+            'enroll_term_id' => $this->term->id,
+            'enroll_class_group_id' => $class->id,
+        ])->assertInertia(fn ($page) => $page->where('valid_count', 0)->where('invalid_count', 1));
+    }
+
+    public function test_student_import_rejects_class_and_term_from_different_academic_years(): void
+    {
+        $otherYear = AcademicYear::create([
+            'school_id' => $this->school->id,
+            'name' => '2026/2027',
+            'start_date' => '2026-07-15',
+            'end_date' => '2027-06-20',
+            'is_active' => false,
+        ]);
+        $class = ClassGroup::create([
+            'school_id' => $this->school->id,
+            'academic_year_id' => $otherYear->id,
+            'grade_level' => 7,
+            'name' => '7A',
+            'capacity' => 32,
+        ]);
+        $file = UploadedFile::fake()->createWithContent('students.csv', "NIS,Nama Lengkap,L/P\n1234,Budi,L\n");
+
+        $this->actingAs($this->admin)->post('/akademik/siswa/import/preview', [
+            'csv_file' => $file,
+            'enroll_term_id' => $this->term->id,
+            'enroll_class_group_id' => $class->id,
+        ])->assertSessionHasErrors('enroll_class_group_id');
+    }
+
     public function test_can_download_student_import_template(): void
     {
         $response = $this->actingAs($this->admin)->get('/akademik/siswa/template');

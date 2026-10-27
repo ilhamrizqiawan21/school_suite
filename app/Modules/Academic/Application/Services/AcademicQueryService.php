@@ -98,6 +98,74 @@ class AcademicQueryService
     }
 
     /**
+     * Resolve the active student cohort for a school term without exposing Academic models to other modules.
+     *
+     * @return list<int>
+     */
+    public function getActiveEnrolledStudentIds(int $schoolId, int $termId, ?int $classGroupId = null): array
+    {
+        return DB::table('enrollments')
+            ->join('students', 'students.id', '=', 'enrollments.student_id')
+            ->join('class_groups', 'class_groups.id', '=', 'enrollments.class_group_id')
+            ->join('terms', 'terms.id', '=', 'enrollments.term_id')
+            ->join('academic_years', 'academic_years.id', '=', 'terms.academic_year_id')
+            ->where('enrollments.term_id', $termId)
+            ->where('enrollments.status', 'active')
+            ->where('students.school_id', $schoolId)
+            ->where('students.status', 'active')
+            ->where('class_groups.school_id', $schoolId)
+            ->where('academic_years.school_id', $schoolId)
+            ->when($classGroupId !== null, fn ($query) => $query->where('enrollments.class_group_id', $classGroupId))
+            ->distinct()
+            ->orderBy('students.id')
+            ->pluck('students.id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Resolve student display fields for another module while keeping school scope in Academic.
+     *
+     * @param  list<int>  $studentIds
+     * @return BaseCollection<int, Student>
+     */
+    public function getStudentSummaries(int $schoolId, array $studentIds): BaseCollection
+    {
+        return Student::query()
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $studentIds)
+            ->get(['id', 'school_id', 'nis', 'name'])
+            ->keyBy('id');
+    }
+
+    /** @return list<int> */
+    public function getStudentIdsMatchingSearch(int $schoolId, string $search): array
+    {
+        return Student::query()
+            ->where('school_id', $schoolId)
+            ->where(fn ($query) => $query->where('name', 'like', "%{$search}%")->orWhere('nis', 'like', "%{$search}%"))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Resolve term names for another module while enforcing the owning school's boundary.
+     *
+     * @param  list<int>  $termIds
+     * @return BaseCollection<int, Term>
+     */
+    public function getTermSummaries(int $schoolId, array $termIds): BaseCollection
+    {
+        return Term::query()
+            ->whereIn('id', $termIds)
+            ->whereHas('academicYear', fn ($query) => $query->where('school_id', $schoolId))
+            ->get(['id', 'name', 'academic_year_id'])
+            ->keyBy('id');
+    }
+
+    /**
      * Ambil data enrollment untuk rekap presensi kelas pada semester tertentu.
      *
      * @return BaseCollection<int, object>

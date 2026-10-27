@@ -6,6 +6,10 @@ use App\Modules\Administration\Interface\Http\Controllers\CommunicationControlle
 use App\Modules\Administration\Interface\Http\Controllers\EngagementController;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__.'/staff_tasks.php';
+require __DIR__.'/facilities.php';
+require __DIR__.'/correspondence.php';
+
 Route::middleware(['auth', 'throttle:sensitive'])->prefix('komunikasi')->name('communication.')->group(function () {
     Route::get('/', [CommunicationController::class, 'index'])->name('index');
     Route::post('/pengumuman', [CommunicationController::class, 'storeAnnouncement'])->name('announcements.store');

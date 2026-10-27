@@ -23,6 +23,7 @@ flowchart TD
     subgraph EKSPANSI ["TAHAP 4: EKSPANSI PASCA-PILOT"]
         S08 --> S09["S09–S13: LMS, CBT, SPMB, Perpustakaan, Sarpras"]
         S09 --> S14["S14: Integrasi Teacher Desk API"]
+        S08 --> S15["S15: Integrasi eMadrasah (TU & Administrasi)"]
     end
 ```
 
@@ -42,6 +43,7 @@ flowchart TD
 | **S08** | Deployment Production & Hardening | Server production live, SSL/TLS, auto backup aktif | **SELESAI (Commit berikutnya)** |
 | **S09–S13** | Ekspansi Modul (LMS, CBT, SPMB, Sipus) | Gate kelulusan per modul mandiri | **BERIKUTNYA (Pasca-Pilot)** |
 | **S14** | Integrasi Teacher Desk | Idempotensi, sinkronisasi API teruji | Pasca-Stabil |
+| **S15** | Integrasi eMadrasah (TU & Administrasi) | Porting modul TU, pemetaan data, impor/ekspor dan UAT klien | **PERENCANAAN** ([task plan](EMADRASAH_INTEGRATION_TASKS.md)) |
 
 ---
 
@@ -379,3 +381,15 @@ flowchart TD
   - Penanganan kasus konflik (misal: data diubah di web dan di desktop bersamaan).
   - Penolakan sinkronisasi jika token guru dicabut atau periode akademik telah dikunci.
   - *Bukti:* Test suite integrasi `tests/Feature/IntegrationTest.php` lulus 100%.
+
+---
+
+### [ ] TAHAP S15: Integrasi eMadrasah — Tata Usaha & Administrasi
+
+> Rencana task rinci, asumsi arsitektur, pemetaan role/data, dan gate penerimaan ada di [`EMADRASAH_INTEGRATION_TASKS.md`](EMADRASAH_INTEGRATION_TASKS.md). Sumber kode eMadrasah yang ditinjau: `ilhamrizqiawan21/emadrasah-laravel`.
+
+- [ ] Konfirmasi cakupan dan alur kerja admin/TU bersama klien.
+- [ ] Putuskan arsitektur porting ke modular monolith School Suite; database dan identitas School Suite tetap menjadi sumber kebenaran.
+- [ ] Porting persuratan, arsip, task staf, dan sarana-prasarana dengan scope sekolah, policy, audit, serta file privat.
+- [ ] Sediakan impor data awal yang dapat dipreview, idempotent, dan direkonsiliasi; adaptasi pemetaan kolom EMIS sesuai kebutuhan klien.
+- [ ] Selesaikan E2E, migrasi/restore drill, dokumentasi onboarding, dan UAT sebelum cutover.

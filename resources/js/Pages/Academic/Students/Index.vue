@@ -198,7 +198,7 @@ const deleteStudent = (student: Student) => {
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Impor CSV
+                        Impor Siswa
                     </button>
                     <a :href="exportPdfUrl()" class="student-action-button student-action-export">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -508,29 +508,31 @@ const deleteStudent = (student: Student) => {
             </div>
         </div>
 
-        <!-- Modal Impor CSV -->
+        <!-- Modal Impor siswa -->
         <div v-if="showImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Impor Massal Siswa (CSV)</h3>
+                    <h3 class="text-lg font-bold text-slate-900">Impor Massal Siswa</h3>
                     <button type="button" @click="showImportModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
                 <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800 space-y-1">
-                    <div class="font-semibold">Format Kolom Header:</div>
-                    <code class="block font-mono text-[11px] text-indigo-900">nis,nisn,name,gender,birth_place,birth_date,religion,address,parent_phone,parent_name</code>
+                    <div class="font-semibold">Terima CSV School Suite dan ekspor siswa eMadrasah (CSV/XLSX).</div>
+                    <p>Kolom Kelas harus cocok dengan satu kelas tujuan yang dipilih. Impor tidak membuat kelas atau akun pengguna.</p>
+                    <p>NIK dan kolom yang tidak didukung akan ditandai di preview dan tidak disimpan.</p>
+                    <code class="block font-mono text-[11px] text-indigo-900">NIS, NISN, NIK, Nama Lengkap, Kelas, L/P, Tempat Lahir, Tanggal Lahir, Agama, Alamat, Nama Orang Tua, No. HP, Status</code>
                     <a href="/akademik/siswa/template" class="inline-block mt-2 font-medium text-indigo-600 underline">Unduh Berkas Template CSV</a>
                 </div>
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV *</label>
-                        <input type="file" accept=".csv,.txt" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV atau XLSX *</label>
+                        <input type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
                         <div v-if="importForm.errors.csv_file" class="text-xs text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Opsi: Langsung Masukkan ke Rombel</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas tujuan (wajib jika kolom Kelas terisi)</label>
                         <select v-model="importForm.enroll_class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option value="">(Hanya simpan data siswa, jangan tempatkan ke rombel)</option>
                             <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>

@@ -14,6 +14,9 @@ use App\Modules\Academic\Interface\Http\Controllers\TeacherController;
 use App\Modules\Academic\Interface\Http\Controllers\TeachingPlanController;
 use Illuminate\Support\Facades\Route;
 
+require __DIR__.'/buku_induk.php';
+require __DIR__.'/teacher_operations.php';
+
 Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(function () {
     Route::middleware('throttle:sensitive')->prefix('pengaturan')->name('settings.')->group(function () {
         Route::get('/', [AcademicSettingsController::class, 'index'])->name('index');

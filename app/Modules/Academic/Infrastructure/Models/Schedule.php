@@ -76,4 +76,12 @@ class Schedule extends Model
     {
         return $this->hasMany(LessonSession::class, 'schedule_id');
     }
+
+    /**
+     * @return HasMany<TeacherSubstituteAssignment, $this>
+     */
+    public function substituteAssignments(): HasMany
+    {
+        return $this->hasMany(TeacherSubstituteAssignment::class, 'schedule_id');
+    }
 }

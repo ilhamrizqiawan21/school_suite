@@ -12,6 +12,8 @@ use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
 class AcademicImportServiceTest extends TestCase
@@ -45,6 +47,57 @@ class AcademicImportServiceTest extends TestCase
         $this->assertEquals('Andi Saputra', $parsed[0]['name']);
         $this->assertEquals('L', $parsed[0]['gender']);
         $this->assertEquals('Bunga Mawar', $parsed[1]['name']);
+    }
+
+    public function test_parses_emadrasah_headers_preserves_leading_zeroes_and_warns_for_unsupported_values(): void
+    {
+        $csv = "NIS,NISN,NIK,Nama Lengkap,Kelas,L/P,Tempat Lahir,Tanggal Lahir,Agama,Alamat,Nama Orang Tua,No. HP,Status\n"
+            ."0007,0012345678,3201010101010001,Siti Aminah,7A,P,Bandung,03/04/2012,Islam,Jalan Melati,Hasan,08123456789,Aktif\n";
+
+        $parsed = $this->importService->parseStudentImportCsvString($csv);
+
+        $this->assertSame('0007', $parsed['rows'][0]['nis']);
+        $this->assertSame('0012345678', $parsed['rows'][0]['nisn']);
+        $this->assertSame('2012-04-03', $parsed['rows'][0]['birth_date']);
+        $this->assertSame('7A', $parsed['rows'][0]['source_class']);
+        $this->assertSame('active', $this->importService->validateStudentRows($this->school->id, $parsed['rows'], '7A')['valid_rows'][0]['status']);
+        $this->assertStringContainsString('NIK', $parsed['warnings'][0]);
+    }
+
+    public function test_emadrasah_class_mapping_and_duplicate_rows_are_rejected_explicitly(): void
+    {
+        $csv = "NIS,Nama Lengkap,Kelas,L/P,Status\n0008,Ali,7A,L,Aktif\n0008,Budi,7B,L,Aktif\n";
+        $rows = $this->importService->parseStudentImportCsvString($csv)['rows'];
+
+        $mismatched = $this->importService->validateStudentRows($this->school->id, [$rows[0]], '8A');
+        $this->assertFalse($mismatched['is_valid']);
+        $this->assertStringContainsString('tidak cocok', $mismatched['invalid_rows'][0]['errors'][0]);
+
+        $unmapped = $this->importService->validateStudentRows($this->school->id, [$rows[0]]);
+        $this->assertStringContainsString('Pilih kelas dan periode', $unmapped['invalid_rows'][0]['errors'][0]);
+
+        $duplicates = $this->importService->validateStudentRows($this->school->id, $rows, '7A');
+        $this->assertCount(1, $duplicates['valid_rows']);
+        $this->assertStringContainsString('terduplikasi', $duplicates['invalid_rows'][0]['errors'][0]);
+    }
+
+    public function test_reads_bounded_xlsx_with_formatted_identifier_cells(): void
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray([['NIS', 'NISN', 'Nama Lengkap', 'Kelas', 'L/P'], [7, 12345678, 'Siti', '7A', 'P']]);
+        $sheet->getStyle('A2:B2')->getNumberFormat()->setFormatCode('0000000000');
+        $path = tempnam(sys_get_temp_dir(), 'emadrasah-import-').'.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+
+        try {
+            $parsed = $this->importService->parseStudentImportFile($path, 'xlsx');
+            $this->assertSame('0000000007', $parsed['rows'][0]['nis']);
+            $this->assertSame('0012345678', $parsed['rows'][0]['nisn']);
+        } finally {
+            $spreadsheet->disconnectWorksheets();
+            @unlink($path);
+        }
     }
 
     public function test_rejects_csv_rows_with_mismatched_column_counts(): void

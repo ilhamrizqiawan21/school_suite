@@ -1,0 +1,167 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Administration\Application\Services;
+
+use App\Models\User;
+use App\Modules\Administration\Infrastructure\Models\CorrespondenceRecord;
+use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Shared\Audit\AuditLogger;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Throwable;
+
+class CorrespondenceService
+{
+    public function __construct(private readonly AuditLogger $audit, private readonly SchoolScopeService $schoolScope) {}
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function create(User $actor, array $data, ?UploadedFile $attachment = null): CorrespondenceRecord
+    {
+        $schoolId = (int) $actor->school_id;
+        $storedPath = null;
+
+        try {
+            return DB::transaction(function () use ($actor, $data, $attachment, $schoolId, &$storedPath): CorrespondenceRecord {
+                $this->schoolScope->lockSchool($schoolId);
+                $record = new CorrespondenceRecord([
+                    ...$data,
+                    'school_id' => $schoolId,
+                    'created_by' => $actor->id,
+                    'status' => $data['letter_type'] === 'incoming' ? 'received' : 'draft',
+                ]);
+
+                if ($attachment) {
+                    $storedPath = $this->storeAttachment($attachment, $schoolId);
+                    $record->attachment_path = $storedPath;
+                    $record->attachment_name = $this->safeOriginalName($attachment);
+                }
+
+                $record->save();
+
+                if ($record->letter_type === 'incoming') {
+                    $year = $record->received_at?->format('Y') ?? now()->format('Y');
+                    $nextNumber = CorrespondenceRecord::query()
+                        ->where('school_id', $schoolId)
+                        ->where('letter_type', 'incoming')
+                        ->where('agenda_number', 'like', "IN/{$year}/%")
+                        ->count() + 1;
+                    $record->agenda_number = sprintf('IN/%s/%06d', $year, $nextNumber);
+                    $record->save();
+                }
+
+                $this->audit->log(
+                    'administration.correspondence.created',
+                    'CorrespondenceRecord',
+                    (string) $record->id,
+                    [
+                        'letter_type' => $record->letter_type,
+                        'agenda_number' => $record->agenda_number,
+                        'letter_number' => $record->letter_number,
+                        'status' => $record->status,
+                        'has_attachment' => (bool) $record->attachment_path,
+                    ],
+                    actor: $actor,
+                    schoolId: $schoolId,
+                );
+
+                return $record;
+            });
+        } catch (Throwable $exception) {
+            if ($storedPath !== null) {
+                Storage::disk('local')->delete($storedPath);
+            }
+
+            throw $exception;
+        }
+    }
+
+    public function updateStatus(User $actor, CorrespondenceRecord $record, string $status, ?string $disposition): void
+    {
+        DB::transaction(function () use ($actor, $record, $status, $disposition): void {
+            $record = CorrespondenceRecord::query()
+                ->where('school_id', $actor->school_id)
+                ->lockForUpdate()
+                ->findOrFail($record->id);
+            $this->assertOwnedByActor($actor, $record);
+            $allowedTransitions = $record->letter_type === 'incoming'
+                ? ['received' => ['disposition'], 'disposition' => ['done'], 'done' => ['archived']]
+                : ['draft' => ['sent'], 'sent' => ['archived']];
+
+            if (! in_array($status, $allowedTransitions[$record->status] ?? [], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Perubahan status surat tidak sesuai urutan alur.',
+                ]);
+            }
+
+            if ($record->letter_type === 'incoming' && $status === 'disposition' && blank($disposition)) {
+                throw ValidationException::withMessages([
+                    'disposition' => 'Isi disposisi sebelum surat diteruskan.',
+                ]);
+            }
+
+            $oldValues = ['status' => $record->status, 'disposition' => $record->disposition];
+            $record->status = $status;
+            if ($disposition !== null) {
+                $record->disposition = $disposition;
+            }
+            if ($status === 'archived') {
+                $record->archived_at = now();
+            }
+            $record->save();
+
+            $this->audit->log(
+                'administration.correspondence.status_changed',
+                'CorrespondenceRecord',
+                (string) $record->id,
+                ['status' => $record->status, 'disposition' => $record->disposition],
+                $oldValues,
+                $actor,
+                (int) $record->school_id,
+            );
+        });
+    }
+
+    public function assertOwnedByActor(User $actor, CorrespondenceRecord $record): void
+    {
+        if ((int) $actor->school_id !== (int) $record->school_id) {
+            abort(404);
+        }
+    }
+
+    public function logAttachmentDownload(User $actor, CorrespondenceRecord $record): void
+    {
+        $this->assertOwnedByActor($actor, $record);
+        $this->audit->log(
+            'administration.correspondence.attachment_downloaded',
+            'CorrespondenceRecord',
+            (string) $record->id,
+            ['attachment_name' => $record->attachment_name],
+            actor: $actor,
+            schoolId: (int) $record->school_id,
+        );
+    }
+
+    private function storeAttachment(UploadedFile $attachment, int $schoolId): string
+    {
+        return $attachment->storeAs(
+            "correspondence/{$schoolId}",
+            Str::uuid().'.'.$attachment->extension(),
+            'local',
+        );
+    }
+
+    private function safeOriginalName(UploadedFile $attachment): string
+    {
+        $name = basename(str_replace('\\', '/', $attachment->getClientOriginalName()));
+        $name = preg_replace('/[\x00-\x1F\x7F]/u', '', $name) ?? '';
+
+        return Str::limit($name !== '' ? $name : 'lampiran', 255, '');
+    }
+}
