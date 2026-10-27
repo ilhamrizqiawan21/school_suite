@@ -14,8 +14,17 @@ CURRENT_SYMLINK="${APP_DIR}/current"
 BRANCH="${1:-main}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RELEASE_DIR="${RELEASES_DIR}/${TIMESTAMP}"
-HEALTH_CHECK_URL="${HEALTH_CHECK_URL:-https://school.sch.id/up}"
+HEALTH_CHECK_URL="${HEALTH_CHECK_URL:-}"
 PHP_FPM_SERVICE="${PHP_FPM_SERVICE:-php8.3-fpm}"
+
+if [ -z "${HEALTH_CHECK_URL}" ]; then
+    echo "Kesalahan: HEALTH_CHECK_URL wajib diisi, misalnya https://<domain-aplikasi>/up." >&2
+    exit 1
+fi
+case "${HEALTH_CHECK_URL}" in
+    https://*) ;;
+    *) echo "Kesalahan: HEALTH_CHECK_URL harus menggunakan HTTPS." >&2; exit 1 ;;
+esac
 
 for executable in php composer npm curl; do
     command -v "$executable" >/dev/null || { echo "Executable wajib tidak tersedia: $executable" >&2; exit 1; }
@@ -90,6 +99,12 @@ reject_release() {
         ln -sfn "${PREVIOUS_RELEASE}" "${CURRENT_SYMLINK}"
         sudo systemctl restart school-suite-worker || echo "Restart worker rollback gagal." >&2
         sudo systemctl reload "${PHP_FPM_SERVICE}" || echo "Reload FPM rollback gagal." >&2
+    else
+        if [ -L "${CURRENT_SYMLINK}" ] && [ "$(readlink "${CURRENT_SYMLINK}")" = "${RELEASE_DIR}" ]; then
+            rm -f "${CURRENT_SYMLINK}"
+        fi
+        sudo systemctl stop school-suite-worker || echo "Stop worker setelah rilis pertama gagal." >&2
+        sudo systemctl reload "${PHP_FPM_SERVICE}" || echo "Reload FPM setelah rilis pertama gagal." >&2
     fi
     exit 1
 }

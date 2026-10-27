@@ -20,6 +20,7 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
   - Pastikan berkas ZIP tersimpan aman di `storage/app/backups/`.
 - [ ] **Konfigurasi Environment Production (`.env`):**
   - Runtime CLI dan PHP-FPM memakai PHP 8.3.x; `composer.lock` dikunci dengan `config.platform.php=8.3.0`.
+  - `HEALTH_CHECK_URL=https://<domain-aplikasi>/up` disetel pada environment shell saat deploy.
   - `APP_ENV=production`
   - `APP_DEBUG=false`
   - `APP_KEY` telah terisi kunci enkripsi 32-karakter.

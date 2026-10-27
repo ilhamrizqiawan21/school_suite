@@ -2,8 +2,12 @@
 set -euo pipefail
 
 # Probe the local TLS vhost using its real certificate and hostname.
-HEALTH_CHECK_URL="${1:-https://school.sch.id/up}"
+HEALTH_CHECK_URL="${1:-}"
 HEALTH_CHECK_IP="${HEALTH_CHECK_IP:-127.0.0.1}"
+if [ -z "${HEALTH_CHECK_URL}" ]; then
+    echo "Kesalahan: URL health check wajib diberikan sebagai argumen HTTPS." >&2
+    exit 1
+fi
 read -r HEALTH_HOST HEALTH_PORT < <(php -r '
 $url = parse_url($argv[1]);
 if (($url["scheme"] ?? "") !== "https" || empty($url["host"])) { exit(1); }

@@ -195,6 +195,53 @@ Saya mencoba inisialisasi MySQL sementara di `/tmp/school-suite-mysql-drill-2026
 
 - `test(backup): cover isolated MySQL restore with pilot dataset` (akan diisi setelah commit dibuat).
 
+## Tugas 4 — Health check deployment dan rollback (27 Oktober 2026)
+
+### File yang diubah
+
+- `deploy/deploy.sh`: `HEALTH_CHECK_URL` wajib diisi, harus memakai HTTPS, dan kegagalan probe pada instalasi pertama menghapus symlink `current` lalu menghentikan worker; jika ada previous release, symlink dipulihkan ke rilis itu.
+- `deploy/health-check.sh`: tidak lagi memakai domain placeholder; URL wajib diberikan dan curl memiliki `--connect-timeout 5 --max-time 15`.
+- `tests/Feature/DeploymentConfigurationTest.php`: memeriksa URL wajib, timeout eksplisit, dan pembersihan symlink saat belum ada rilis sebelumnya.
+- `docs/PROJECT_STATUS.md`: mencatat dry run rollback; probe endpoint HTTPS production masih terbuka.
+
+### Perintah verifikasi dan output asli
+
+`bash -n deploy/deploy.sh && bash -n deploy/health-check.sh && bash -n deploy/rollback.sh` selesai dengan exit code 0 dan tanpa output.
+
+`HEALTH_CHECK_URL= bash deploy/deploy.sh`:
+
+```text
+Kesalahan: HEALTH_CHECK_URL wajib diisi, misalnya https://<domain-aplikasi>/up.
+```
+
+Exit code: `1`.
+
+`php artisan test --compact tests/Feature/DeploymentConfigurationTest.php tests/Feature/DeploymentHealthProbeTest.php`:
+
+```json
+{"tool":"phpunit","result":"passed","tests":10,"passed":10,"assertions":77,"duration_ms":1190}
+```
+
+Dry run fungsi rollback aktual yang diekstrak dari `deploy.sh` memakai direktori `/tmp` dan stub `sudo`:
+
+```text
+Rilis gagal diverifikasi.
+Rilis gagal diverifikasi.
+first install: exit=1, current symlink removed
+previous release: exit=1, current symlink restored
+```
+
+Tes health probe memakai stub curl menguji payload sehat, payload salah, redirect, HTTP redirect, 503, dan timeout; seluruh 10 tes konfigurasi/probe lulus. Server HTTP lokal tidak dipakai karena health check mewajibkan HTTPS dan memvalidasi JSON aplikasi.
+
+### Risiko dan verifikasi yang belum dilakukan
+
+- Tidak ada rilis/deploy pada server nyata. HTTPS domain production, sertifikat, vhost Nginx, dan payload dari rilis aktif belum diuji end-to-end.
+- URL health check kini harus diberikan eksplisit oleh operator saat deploy.
+
+### Commit
+
+- `fix(deploy): require health URL and roll back failed first release` (akan diisi setelah commit dibuat).
+
 ## Identitas
 
 - Task/issue: Restrukturisasi, Perapihan & Pelengkapan Menu Navigasi Sidebar dan Alur Kerja Dashboard Non-Admin (Guru, Wali Kelas, Siswa, Kepala Sekolah, Operator)

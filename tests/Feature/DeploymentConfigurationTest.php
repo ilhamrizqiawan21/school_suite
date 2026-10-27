@@ -57,6 +57,13 @@ class DeploymentConfigurationTest extends TestCase
         $this->assertStringContainsString('git archive "${BRANCH}"', $deployContents);
         $this->assertStringContainsString('composer install', $deployContents);
         $this->assertStringContainsString('artisan migrate', $deployContents);
+        $this->assertStringContainsString('HEALTH_CHECK_URL wajib diisi', $deployContents);
+        $this->assertStringContainsString('sudo systemctl stop school-suite-worker', $deployContents);
+        $this->assertStringContainsString('rm -f "${CURRENT_SYMLINK}"', $deployContents);
+
+        $healthCheckContents = File::get(base_path('deploy/health-check.sh'));
+        $this->assertStringContainsString('--connect-timeout 5 --max-time 15', $healthCheckContents);
+        $this->assertStringNotContainsString('school.sch.id/up', $healthCheckContents);
 
         $rollbackScript = base_path('deploy/rollback.sh');
         $this->assertTrue(File::exists($rollbackScript));

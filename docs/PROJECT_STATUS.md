@@ -27,7 +27,7 @@ Terakhir diperbarui: 27 Oktober 2026
 ## Blocker sebelum data nyata
 
 - Drill restore backup pada MySQL terisolasi dan restore backup SQLite berbasis file belum dibuktikan.
-- Health check deployment, termasuk kegagalan saat instalasi pertama, masih perlu verifikasi.
+- Health check deployment, termasuk rollback saat instalasi pertama dan saat ada rilis sebelumnya, telah diverifikasi melalui dry run; endpoint HTTPS domain production belum diproba.
 - Pengujian negatif lintas kelas/sekolah dan kesesuaian menu sidebar terhadap hak akses semua peran belum dituntaskan.
 - PHP 8.3 CLI/FPM asli belum tersedia pada mesin verifikasi; lockfile diuji dengan Composer platform 8.3.0 pada PHP lokal 8.5.4.
 
