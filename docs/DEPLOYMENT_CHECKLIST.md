@@ -19,6 +19,7 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
   - Jalankan pencadangan cadangan snapshot manual: `php artisan school:backup`.
   - Pastikan berkas ZIP tersimpan aman di `storage/app/backups/`.
 - [ ] **Konfigurasi Environment Production (`.env`):**
+  - Runtime CLI dan PHP-FPM memakai PHP 8.3.x; `composer.lock` dikunci dengan `config.platform.php=8.3.0`.
   - `APP_ENV=production`
   - `APP_DEBUG=false`
   - `APP_KEY` telah terisi kunci enkripsi 32-karakter.

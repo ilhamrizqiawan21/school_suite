@@ -2,6 +2,88 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Tugas 1 — Kompatibilitas dependency PHP 8.3 (27 Oktober 2026)
+
+### File yang diubah
+
+- `composer.json`: menambahkan `config.platform.php=8.3.0`.
+- `composer.lock`: menurunkan dependency Symfony yang mensyaratkan PHP >=8.4.1 ke rilis Symfony 7.4 yang mendukung PHP 8.3; paket Symfony 16 turun, dan `symfony/polyfill-php83` ditambahkan.
+- `docs/DEPLOYMENT_CHECKLIST.md`: mensyaratkan CLI dan PHP-FPM 8.3.x.
+
+### Perintah verifikasi dan output asli
+
+PHP lokal: `php -v`
+
+```text
+PHP 8.5.4 (cli) (built: Oct 19 2026 14:35:18) (NTS)
+Copyright (c) The PHP Group
+Built by Ubuntu
+Zend Engine v4.5.4, Copyright (c) Zend Technologies
+    with Zend OPcache v8.5.4, Copyright (c), by Zend Technologies
+```
+
+`composer validate`
+
+```text
+Cannot create cache directory /home/ilhamzp/.cache/composer/files/, or directory is not writable. Proceeding without cache. See also cache-read-only config if your filesystem is read-only.
+./composer.json is valid
+```
+
+`composer check-platform-reqs`
+
+```text
+Checking platform requirements for packages in the vendor dir
+composer-runtime-api 2.2.2      success
+ext-ctype            *          success provided by symfony/polyfill-ctype
+ext-dom              20031129   success
+ext-fileinfo         8.5.4      success
+ext-filter           8.5.4      success
+ext-gd               8.5.4      success
+ext-hash             8.5.4      success
+ext-iconv            8.5.4      success
+ext-json             8.5.4      success
+ext-libxml           8.5.4      success
+ext-mbstring         *          success provided by symfony/polyfill-mbstring
+ext-openssl          8.5.4      success
+ext-pcre             8.5.4      success
+ext-phar             8.5.4      success
+ext-session          8.5.4      success
+ext-simplexml        8.5.4      success
+ext-tokenizer         8.5.4      success
+ext-xml              8.5.4      success
+ext-xmlreader         8.5.4      success
+ext-xmlwriter        8.5.4      success
+ext-zip              1.22.7     success
+ext-zlib             8.5.4      success
+php                  8.5.4      success
+php-64bit            8.5.4      success
+```
+
+`composer install --no-interaction` was run after moving the existing `vendor/` directory aside. It verified the lock and installed 127 packages with exit code 0. Relevant original output:
+
+```text
+Installing dependencies from lock file (including require-dev)
+Verifying lock file contents can be installed on current platform.
+Package operations: 127 installs, 0 updates, 0 removals
+Generating optimized autoload files
+> Illuminate\Foundation\ComposerScripts::postAutoloadDump
+> @php artisan package:discover --ansi
+...
+84 packages you are using are looking for funding.
+```
+
+`composer check-platform-reqs --lock` also passed all locked requirements. It reported PHP 8.5.4, the actual local runtime.
+
+### Risiko dan verifikasi yang belum dilakukan
+
+- PHP 8.3 binary/FPM tidak tersedia di mesin ini (`command -v php8.3` tidak menemukan executable), sehingga `composer install` dan `check-platform-reqs` belum dijalankan pada PHP 8.3 asli. Hasil ini membuktikan solver menerima platform PHP 8.3.0 dan semua paket terkunci mengizinkannya; target runtime tetap perlu diuji di host/container PHP 8.3.
+- Composer cache di home tidak dapat ditulis; Composer berjalan tanpa cache.
+- Regenerasi memakai Packagist setelah akses jaringan diizinkan; install bersih menyelesaikan seluruh 127 paket.
+
+### Commit
+
+- `fix(deps): constrain Composer platform to PHP 8.3` (akan diisi setelah commit dibuat).
+
 ## Identitas
 
 - Task/issue: Restrukturisasi, Perapihan & Pelengkapan Menu Navigasi Sidebar dan Alur Kerja Dashboard Non-Admin (Guru, Wali Kelas, Siswa, Kepala Sekolah, Operator)
