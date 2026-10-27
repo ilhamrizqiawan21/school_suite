@@ -112,21 +112,35 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .brand strong { color: #fff; font-size: 14px; font-weight: 800; letter-spacing: -.015em; line-height: 1.25; white-space: nowrap; }
 .brand small { display: -webkit-box; margin-top: 3px; color: var(--sidebar-muted); font-size: 11px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .nav-stack { display: flex; flex-direction: column; gap: 3px; padding: 2px 0 12px; }
-.nav-label { margin: 8px 11px 5px; color: #aebfda; font-size: 11px; font-weight: 700; letter-spacing: .025em; line-height: 1.4; }
+.nav-label { margin: 8px 11px 5px; color: #aebfda; font-size: 12px; font-weight: 700; letter-spacing: .025em; line-height: 1.4; }
 .nav-label-spaced { margin-top: 17px; }
 .nav-item { width: 100%; min-height: 41px; display: flex; align-items: center; gap: 11px; padding: 8px 11px; border: 1px solid transparent; border-radius: 10px; color: #d2dcef; background: transparent; text-align: left; line-height: 1.35; transition: background .16s var(--ease), color .16s var(--ease), border-color .16s var(--ease); }
 .nav-item:hover { color: #fff; background: rgba(255,255,255,.085); }
 .nav-item:focus-visible { outline: 2px solid #f2bc55; outline-offset: 2px; }
-.nav-item.is-active { color: var(--sidebar-active-ink); background: var(--sidebar-active-bg); border-color: rgba(255,255,255,.65); font-weight: 750; box-shadow: 0 2px 7px rgba(8,22,48,.16); }
+.nav-item.is-active { color: var(--sidebar-active-ink); background: var(--sidebar-active-bg); font-weight: 700; }
 .nav-item svg { width: 18px; height: 18px; flex: 0 0 18px; }
 .nav-item span { flex: 1; }
 .nav-item em { min-width: 22px; height: 20px; display: grid; place-items: center; padding: 0 6px; border-radius: 8px; color: #d8eeea; background: rgba(255,255,255,.1); font-style: normal; font-size: 10px; font-weight: 800; }
 .nav-item.is-active em { color: var(--primary-strong); background: #d8e2f7; }
 .nav-item em.accent { color: #503300; background: #f4c66e; }
 .workspace { min-height: 100vh; margin-left: var(--sidebar); transition: margin-left .22s var(--ease); }
-.sidebar { transition: transform .22s var(--ease); }
-.app-shell.is-sidebar-closed .sidebar { transform: translateX(-100%); }
-.app-shell.is-sidebar-closed .workspace { margin-left: 0; }
+.sidebar { transition: width .22s var(--ease), transform .22s var(--ease); }
+@media (min-width: 961px) {
+  .app-shell.is-sidebar-rail { --sidebar: 72px; }
+  .app-shell.is-sidebar-rail .sidebar { width: 72px; padding-right: 8px; padding-left: 8px; }
+  .app-shell.is-sidebar-rail .brand { justify-content: center; padding-right: 0; padding-left: 0; }
+  .app-shell.is-sidebar-rail .brand-copy,
+  .app-shell.is-sidebar-rail .nav-section-trigger .nav-label,
+  .app-shell.is-sidebar-rail .nav-group-chevron,
+  .app-shell.is-sidebar-rail .nav-item span,
+  .app-shell.is-sidebar-rail .nav-item em { display: none; }
+  .app-shell.is-sidebar-rail .nav-section-trigger,
+  .app-shell.is-sidebar-rail .nav-item { justify-content: center; gap: 0; padding-right: 6px; padding-left: 6px; }
+  .app-shell.is-sidebar-rail .nav-section-trigger > svg:first-child { flex-basis: 20px; width: 20px; height: 20px; }
+  .app-shell.is-sidebar-rail .nav-section-content,
+  .app-shell.is-sidebar-rail .nav-submenu { margin-left: 0; padding-left: 0; border-left: 0; }
+  .app-shell.is-sidebar-rail .nav-nested-block { margin-left: 0; padding-left: 0; background: transparent; }
+}
 .topbar { position: sticky; top: 0; z-index: 30; height: var(--topbar); display: flex; align-items: center; gap: 13px; padding: 0 28px; background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
 .global-search { width: clamp(220px, 28vw, 380px); height: 40px; display: flex; align-items: center; gap: 9px; padding: 0 11px; color: var(--ink-faint); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 10px; }
 .global-search svg, .table-search svg { width: 17px; height: 17px; }
@@ -367,7 +381,6 @@ input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--primary)
   :root { --topbar: 64px; }
   .sidebar { width: min(var(--sidebar), calc(100vw - 52px)); transform: translateX(-105%); transition: transform .24s var(--ease); box-shadow: 20px 0 45px rgba(4,30,27,.22); }
   .sidebar.is-open { transform: none; }
-  .app-shell.is-sidebar-closed .sidebar { transform: translateX(-105%); }
   .sidebar-backdrop { position: fixed; inset: 0; z-index: 35; background: rgba(8,22,20,.45); backdrop-filter: blur(2px); }
   .sidebar-backdrop.is-visible { display: block; }
   .workspace { margin-left: 0; }

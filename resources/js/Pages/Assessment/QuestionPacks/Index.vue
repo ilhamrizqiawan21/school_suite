@@ -12,6 +12,7 @@ type QuestionOption = {
     jenjang: string | null;
     curriculum: string | null;
     current_version: number;
+    version_available: number | boolean | null;
     subject_name: string | null;
     subject_code: string | null;
 };
@@ -21,6 +22,8 @@ type PackItemForm = {
     points: number;
     prompt: string;
     type: string;
+    jenjang: string | null;
+    curriculum: string | null;
     question_active: boolean;
 };
 
@@ -46,6 +49,7 @@ const props = defineProps<{
 const showForm = ref(false);
 const editing = ref<number | null>(null);
 const questionSearch = ref('');
+const packError = ref('');
 const filterForm = ref({ ...props.filters });
 const blank = (): PackForm => ({
     name: '', description: '', jenjang: '', curriculum: 'merdeka', duration_minutes: '',
@@ -54,6 +58,12 @@ const blank = (): PackForm => ({
 const form = useForm<PackForm>(blank());
 const editingPack = computed(() => props.packs.data.find((pack) => pack.id === editing.value));
 const selectedQuestionIds = computed(() => new Set(form.items.map((item) => item.question_id)));
+const incompatibleItems = computed(() => form.items.filter((item) => {
+    const jenjangMismatch = Boolean(item.jenjang && form.jenjang && item.jenjang !== form.jenjang);
+    const curriculumMismatch = Boolean(item.curriculum && item.curriculum !== 'both' && form.curriculum !== 'both' && item.curriculum !== form.curriculum);
+
+    return jenjangMismatch || curriculumMismatch;
+}));
 const availableQuestions = computed(() => {
     const term = questionSearch.value.trim().toLocaleLowerCase();
 
@@ -78,6 +88,7 @@ function openCreate() {
     form.defaults(blank());
     form.reset();
     questionSearch.value = '';
+    packError.value = '';
     showForm.value = true;
 }
 
@@ -98,11 +109,14 @@ function openEdit(pack: any) {
             points: Number(item.points),
             prompt: item.question_version?.prompt ?? item.question?.prompt ?? 'Soal tidak tersedia',
             type: item.question_version?.type ?? item.question?.type ?? '—',
+            jenjang: item.question_version?.jenjang ?? item.question?.jenjang ?? null,
+            curriculum: item.question_version?.curriculum ?? item.question?.curriculum ?? null,
             question_active: Boolean(item.question?.is_active),
         })),
     });
     form.reset();
     questionSearch.value = '';
+    packError.value = '';
     showForm.value = true;
 }
 
@@ -110,14 +124,23 @@ function closeForm() {
     showForm.value = false;
     editing.value = null;
     form.clearErrors();
+    packError.value = '';
 }
 
 function addQuestion(question: QuestionOption) {
+    if (!question.version_available) {
+        packError.value = 'Soal ini belum memiliki versi tersimpan. Buka Bank Soal, simpan soalnya, lalu coba lagi.';
+        return;
+    }
+
+    packError.value = '';
     form.items.push({
         question_id: question.id,
         points: Number(question.points) || 1,
         prompt: question.prompt,
         type: question.type,
+        jenjang: question.jenjang,
+        curriculum: question.curriculum,
         question_active: true,
     });
 }
@@ -131,7 +154,19 @@ function moveItem(index: number, direction: -1 | 1) {
 }
 
 function submit() {
-    if (!form.items.length) return;
+    if (!form.items.length) {
+        packError.value = 'Tambahkan minimal satu soal sebelum menyimpan paket.';
+        return;
+    }
+    if (!form.jenjang) {
+        packError.value = 'Pilih jenjang paket sebelum menyimpan.';
+        return;
+    }
+    if (incompatibleItems.value.length) {
+        packError.value = 'Ada soal yang jenjang atau kurikulumnya tidak sesuai dengan paket. Ubah klasifikasi paket atau hapus soal bertanda tidak sesuai.';
+        return;
+    }
+    packError.value = '';
     const payload = {
         ...form.data(),
         duration_minutes: form.duration_minutes === '' ? null : form.duration_minutes,
@@ -236,11 +271,12 @@ function typeLabel(type: string) {
                     <div class="question-picker">
                         <label>Cari soal yang tersedia<input v-model="questionSearch" placeholder="Cari teks soal atau mapel" /></label>
                         <div class="question-options">
-                            <button v-for="question in availableQuestions" :key="question.id" type="button" class="question-option" @click="addQuestion(question)">
-                                <span><b>{{ question.subject_code ? `${question.subject_code} · ` : '' }}{{ typeLabel(question.type) }}</b><small>{{ question.prompt }}</small></span><strong>+ Tambah</strong>
+                            <button v-for="question in availableQuestions" :key="question.id" type="button" class="question-option" :disabled="!question.version_available" @click="addQuestion(question)">
+                                <span><b>{{ question.subject_code ? `${question.subject_code} · ` : '' }}{{ typeLabel(question.type) }}</b><small>{{ question.prompt }}</small></span><strong>{{ question.version_available ? '+ Tambah' : 'Versi belum tersimpan' }}</strong>
                             </button>
                             <p v-if="!availableQuestions.length" class="empty-picker">Tidak ada soal aktif yang cocok dengan pencarian dan klasifikasi paket.</p>
                         </div>
+                        <p v-if="availableQuestions.some((question) => !question.version_available)" class="picker-hint">Soal tanpa versi tersimpan tidak dapat dimasukkan ke paket. Simpan ulang soal tersebut di Bank Soal terlebih dahulu.</p>
                     </div>
                     <ol class="selected-items">
                         <li v-for="(item, index) in form.items" :key="item.question_id" class="selected-item">
@@ -251,15 +287,16 @@ function typeLabel(type: string) {
                         </li>
                         <li v-if="!form.items.length" class="empty-selected">Tambahkan minimal satu soal dari daftar di atas.</li>
                     </ol>
+                    <p v-if="incompatibleItems.length" class="form-error item-warning">{{ incompatibleItems.length }} soal tidak sesuai dengan jenjang atau kurikulum paket. Perbaiki sebelum menyimpan.</p>
                 </section>
 
-                <p v-if="form.hasErrors" class="form-error">{{ Object.values(form.errors)[0] }}</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="closeForm">Batal</button><button class="primary-button" :disabled="form.processing || !form.items.length">{{ form.processing ? 'Menyimpan…' : 'Simpan paket' }}</button></div>
+                <p v-if="packError || form.hasErrors" class="form-error">{{ packError || Object.values(form.errors)[0] }}</p>
+                <div class="modal-actions"><button type="button" class="secondary-button" @click="closeForm">Batal</button><button class="primary-button" :disabled="form.processing || !form.items.length || incompatibleItems.length > 0">{{ form.processing ? 'Menyimpan…' : 'Simpan paket' }}</button></div>
             </form>
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-.pack-hero,.hero-actions,.pack-card-heading,.form-heading,.item-builder-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem}.hero-actions,.pack-actions{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.pack-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.stat-card{padding:1rem 1.2rem;display:grid;gap:.3rem}.stat-card span,.pack-metrics,.pack-randomization,.pack-description,.item-builder-heading p{color:#64748b;font-size:.82rem}.stat-card strong{font-size:1.7rem}.filters-panel{padding:1rem}.filters-grid{display:grid;grid-template-columns:2fr repeat(3,minmax(130px,1fr));gap:.8rem;align-items:end}.filters-grid label,.pack-form label{display:grid;gap:.35rem;font-size:.8rem;font-weight:650}.filters-grid input,.filters-grid select,.pack-form input:not([type=checkbox]),.pack-form select,.pack-form textarea{width:100%;border:1px solid #cbd5e1;border-radius:.6rem;padding:.62rem .7rem;background:#fff;color:#0f172a}.filter-button{min-height:42px}.pack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.pack-card{padding:1.1rem;min-width:0}.pack-card h2{margin-top:.45rem;font-weight:850;font-size:1.05rem}.pack-badges{display:flex;gap:.35rem;flex-wrap:wrap}.status-badge{border-radius:999px;padding:.2rem .55rem;font-size:.68rem;font-weight:750;background:#f1f5f9;color:#475569}.status-active{background:#dcfce7;color:#166534}.status-archived{background:#fee2e2;color:#991b1b}.level-badge{background:#e0f2fe;color:#075985}.curriculum-badge{background:#eef2ff;color:#4338ca}.pack-metrics{display:flex;gap:.5rem .8rem;flex-wrap:wrap;margin-top:.8rem}.pack-randomization{margin-top:.4rem}.pack-description{margin-top:.65rem;white-space:pre-wrap}.pack-items{margin-top:.8rem;padding-top:.65rem;border-top:1px solid #e2e8f0;font-size:.8rem}.pack-items summary{cursor:pointer;font-weight:750}.pack-items ol{display:grid;gap:.55rem;margin-top:.6rem;padding-left:1.4rem}.pack-items li{padding-left:.15rem}.pack-items li span,.pack-items li small{display:block;overflow-wrap:anywhere}.pack-items li small{color:#64748b}.danger-text{color:#b91c1c}.pagination{display:flex;justify-content:center;gap:.35rem}.pagination :deep(a){padding:.4rem .65rem;border:1px solid #e2e8f0;border-radius:.4rem;font-size:.8rem}.pagination :deep(a.current){background:#4f46e5;color:#fff;border-color:#4f46e5}.pagination :deep(a.disabled){opacity:.45;pointer-events:none}.modal-backdrop{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:1rem;background:#0f172a99}.pack-form{width:min(1000px,97vw);max-height:94vh;overflow:auto;display:grid;gap:1rem;padding:1.3rem;background:#fff;border-radius:1rem}.form-heading h2{font-size:1.25rem;font-weight:850}.close-button,.remove-button{border:0;background:transparent;font-size:1.5rem;line-height:1;cursor:pointer}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.span-all{grid-column:1/-1}.settings-grid{display:flex;gap:1rem;flex-wrap:wrap}.toggle-row{display:flex!important;align-items:center;gap:.45rem}.toggle-row input{accent-color:#4f46e5}.item-builder{display:grid;gap:.8rem;padding:1rem;border:1px solid #e2e8f0;border-radius:.85rem}.item-builder h3{font-weight:850}.question-picker{display:grid;gap:.5rem}.question-options{max-height:190px;overflow:auto;display:grid;gap:.35rem}.question-option{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.55rem .65rem;text-align:left;border:1px solid #e2e8f0;border-radius:.55rem}.question-option span,.question-option small{display:block;min-width:0}.question-option small{margin-top:.15rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.question-option strong{flex-shrink:0;color:#4338ca;font-size:.75rem}.empty-picker,.empty-selected{padding:.7rem;color:#64748b;font-size:.8rem}.selected-items{display:grid;gap:.45rem;list-style:none;padding:0;margin:0}.selected-item{display:grid;grid-template-columns:3rem minmax(0,1fr) 6rem 2rem;align-items:center;gap:.65rem;padding:.6rem;border:1px solid #e2e8f0;border-radius:.6rem}.sequence-controls{display:grid;justify-items:center;gap:.1rem}.sequence-controls button{width:1.8rem;height:1.5rem;border:1px solid #cbd5e1;border-radius:.35rem;color:#334155}.sequence-controls button:disabled{opacity:.35}.sequence-controls span{font-size:.75rem;font-weight:800}.selected-copy{min-width:0;display:grid;gap:.16rem;font-size:.78rem}.selected-copy>span{color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.archived-note{color:#b45309;font-weight:500}.points-field{min-width:0}.remove-button{color:#b91c1c}.modal-actions{display:flex;justify-content:flex-end;gap:.6rem}.form-error{color:#b91c1c;font-size:.85rem}@media(max-width:850px){.filters-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.search-field,.filter-button{grid-column:1/-1}.pack-grid{grid-template-columns:1fr}}@media(max-width:600px){.pack-hero,.pack-card-heading{align-items:stretch;flex-direction:column}.pack-stats{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.span-all,.search-field,.filter-button{grid-column:auto}.selected-item{grid-template-columns:2.4rem minmax(0,1fr) 4.7rem 1.5rem;gap:.4rem;padding:.45rem}.pack-actions{justify-content:flex-start}}
+.pack-hero,.hero-actions,.pack-card-heading,.form-heading,.item-builder-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem}.hero-actions,.pack-actions{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.pack-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.stat-card{padding:1rem 1.2rem;display:grid;gap:.3rem}.stat-card span,.pack-metrics,.pack-randomization,.pack-description,.item-builder-heading p{color:#64748b;font-size:.82rem}.stat-card strong{font-size:1.7rem}.filters-panel{padding:1rem}.filters-grid{display:grid;grid-template-columns:2fr repeat(3,minmax(130px,1fr));gap:.8rem;align-items:end}.filters-grid label,.pack-form label{display:grid;gap:.35rem;font-size:.8rem;font-weight:650}.filters-grid input,.filters-grid select,.pack-form input:not([type=checkbox]),.pack-form select,.pack-form textarea{width:100%;border:1px solid #cbd5e1;border-radius:.6rem;padding:.62rem .7rem;background:#fff;color:#0f172a}.filter-button{min-height:42px}.pack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.pack-card{padding:1.1rem;min-width:0}.pack-card h2{margin-top:.45rem;font-weight:850;font-size:1.05rem}.pack-badges{display:flex;gap:.35rem;flex-wrap:wrap}.status-badge{border-radius:999px;padding:.2rem .55rem;font-size:.68rem;font-weight:750;background:#f1f5f9;color:#475569}.status-active{background:#dcfce7;color:#166534}.status-archived{background:#fee2e2;color:#991b1b}.level-badge{background:#e0f2fe;color:#075985}.curriculum-badge{background:#eef2ff;color:#4338ca}.pack-metrics{display:flex;gap:.5rem .8rem;flex-wrap:wrap;margin-top:.8rem}.pack-randomization{margin-top:.4rem}.pack-description{margin-top:.65rem;white-space:pre-wrap}.pack-items{margin-top:.8rem;padding-top:.65rem;border-top:1px solid #e2e8f0;font-size:.8rem}.pack-items summary{cursor:pointer;font-weight:750}.pack-items ol{display:grid;gap:.55rem;margin-top:.6rem;padding-left:1.4rem}.pack-items li{padding-left:.15rem}.pack-items li span,.pack-items li small{display:block;overflow-wrap:anywhere}.pack-items li small{color:#64748b}.danger-text{color:#b91c1c}.pagination{display:flex;justify-content:center;gap:.35rem}.pagination :deep(a){padding:.4rem .65rem;border:1px solid #e2e8f0;border-radius:.4rem;font-size:.8rem}.pagination :deep(a.current){background:#4f46e5;color:#fff;border-color:#4f46e5}.pagination :deep(a.disabled){opacity:.45;pointer-events:none}.modal-backdrop{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:1rem;background:#0f172a99}.pack-form{width:min(1000px,97vw);max-height:94vh;overflow:auto;display:grid;gap:1rem;padding:1.3rem;background:#fff;border-radius:1rem}.form-heading h2{font-size:1.25rem;font-weight:850}.close-button,.remove-button{border:0;background:transparent;font-size:1.5rem;line-height:1;cursor:pointer}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.span-all{grid-column:1/-1}.settings-grid{display:flex;gap:1rem;flex-wrap:wrap}.toggle-row{display:flex!important;align-items:center;gap:.45rem}.toggle-row input{accent-color:#4f46e5}.item-builder{display:grid;gap:.8rem;padding:1rem;border:1px solid #e2e8f0;border-radius:.85rem}.item-builder h3{font-weight:850}.question-picker{display:grid;gap:.5rem}.question-options{max-height:190px;overflow:auto;display:grid;gap:.35rem}.question-option{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.55rem .65rem;text-align:left;border:1px solid #e2e8f0;border-radius:.55rem}.question-option:disabled{opacity:.58;cursor:not-allowed}.question-option span,.question-option small{display:block;min-width:0}.question-option small{margin-top:.15rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.question-option strong{flex-shrink:0;color:#4338ca;font-size:.75rem}.empty-picker,.empty-selected{padding:.7rem;color:#64748b;font-size:.8rem}.picker-hint{color:#92400e;font-size:.78rem}.selected-items{display:grid;gap:.45rem;list-style:none;padding:0;margin:0}.selected-item{display:grid;grid-template-columns:3rem minmax(0,1fr) 6rem 2rem;align-items:center;gap:.65rem;padding:.6rem;border:1px solid #e2e8f0;border-radius:.6rem}.sequence-controls{display:grid;justify-items:center;gap:.1rem}.sequence-controls button{width:1.8rem;height:1.5rem;border:1px solid #cbd5e1;border-radius:.35rem;color:#334155}.sequence-controls button:disabled{opacity:.35}.sequence-controls span{font-size:.75rem;font-weight:800}.selected-copy{min-width:0;display:grid;gap:.16rem;font-size:.78rem}.selected-copy>span{color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.archived-note{color:#b45309;font-weight:500}.points-field{min-width:0}.remove-button{color:#b91c1c}.modal-actions{display:flex;justify-content:flex-end;gap:.6rem}.form-error{color:#b91c1c;font-size:.85rem}.item-warning{margin-top:.4rem}@media(max-width:850px){.filters-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.search-field,.filter-button{grid-column:1/-1}.pack-grid{grid-template-columns:1fr}}@media(max-width:600px){.pack-hero,.pack-card-heading{align-items:stretch;flex-direction:column}.pack-stats{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.span-all,.search-field,.filter-button{grid-column:auto}.selected-item{grid-template-columns:2.4rem minmax(0,1fr) 4.7rem 1.5rem;gap:.4rem;padding:.45rem}.pack-actions{justify-content:flex-start}}
 </style>

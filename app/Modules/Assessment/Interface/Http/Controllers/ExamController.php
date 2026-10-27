@@ -34,8 +34,16 @@ class ExamController extends Controller
         $ids = $term ? $this->visibleAssignmentIds($request, $term->id) : [];
         $assignments = $term ? $this->academicQuery->getLearningTeachingAssignments($term->id, $user->hasRole(['teacher', 'homeroom']) ? (int) $user->id : null)->whereIn('id', $ids)->values() : collect();
         $canManage = $user->hasRole(['admin', 'operator', 'teacher', 'homeroom']);
-        $questions = $canManage ? ExamQuestion::where('school_id', $schoolId)->where('is_active', true)->when($user->hasRole(['teacher', 'homeroom']), fn ($q) => $q->where('owner_id', $user->id))->latest()->get(['id', 'type', 'prompt', 'points']) : collect();
-        $packs = $canManage ? QuestionPack::query()->where('school_id', $schoolId)->where('status', 'active')->when($user->hasRole(['teacher', 'homeroom']), fn ($q) => $q->where('created_by', $user->id))->with(['items.questionVersion:id,type,prompt,points'])->withCount('items')->orderBy('name')->get()->map(fn (QuestionPack $pack) => [
+        $questions = $canManage ? ExamQuestion::where('school_id', $schoolId)->where('is_active', true)->when($user->hasRole(['teacher', 'homeroom']), fn ($q) => $q->where(function ($scope) use ($user) {
+            $scope->where('owner_id', $user->id)->orWhereExists(function ($shares) use ($user): void {
+                $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'exam_questions.id')->where('question_shares.resource_type', 'question')->where('question_shares.school_id', $user->school_id)->where('question_shares.recipient_id', $user->id)->where('question_shares.status', 'accepted')->whereIn('question_shares.permission', ['copy', 'edit'])->where('question_shares.active_key', 'active');
+            });
+        }))->latest()->get(['id', 'type', 'prompt', 'points']) : collect();
+        $packs = $canManage ? QuestionPack::query()->where('school_id', $schoolId)->where('status', 'active')->when($user->hasRole(['teacher', 'homeroom']), fn ($q) => $q->where(function ($scope) use ($user) {
+            $scope->where('created_by', $user->id)->orWhereExists(function ($shares) use ($user): void {
+                $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'question_packs.id')->where('question_shares.resource_type', 'pack')->where('question_shares.school_id', $user->school_id)->where('question_shares.recipient_id', $user->id)->where('question_shares.status', 'accepted')->where('question_shares.permission', 'edit')->where('question_shares.active_key', 'active');
+            });
+        }))->with(['items.questionVersion:id,type,prompt,points'])->withCount('items')->orderBy('name')->get()->map(fn (QuestionPack $pack) => [
             'id' => $pack->id,
             'name' => $pack->name,
             'duration_minutes' => $pack->duration_minutes,
@@ -49,7 +57,7 @@ class ExamController extends Controller
         $attempts = $user->hasRole('student') ? ExamAttempt::with('exam:id,title,starts_at,ends_at,status')->whereIn('exam_id', $exams->pluck('id'))->whereIn('enrollment_id', $this->studentEnrollmentIds($request, $term?->id))->get() : collect();
         $canManageQuestionBank = $user->hasRole(['teacher', 'homeroom']);
 
-        return Inertia::render('Assessment/Exams/Index', ['assignments' => $assignments, 'questions' => $questions, 'packs' => $packs, 'exams' => $exams, 'attempts' => $attempts, 'components' => $components, 'can_manage' => $canManage, 'can_manage_question_bank' => $canManageQuestionBank, 'is_student' => $user->hasRole('student')]);
+        return Inertia::render('Assessment/Exams/Index', ['assignments' => $assignments, 'questions' => $questions, 'packs' => $packs, 'exams' => $exams, 'attempts' => $attempts, 'components' => $components, 'can_manage' => $canManage, 'can_manage_question_bank' => $canManageQuestionBank, 'is_student' => $user->hasRole('student'), 'server_now' => now()->toIso8601String()]);
     }
 
     public function storeExam(Request $request): RedirectResponse
@@ -66,7 +74,11 @@ class ExamController extends Controller
         $pack = null;
         if (! empty($data['question_pack_id'])) {
             $pack = QuestionPack::query()->whereKey($data['question_pack_id'])->where('school_id', $request->user()->school_id)->where('status', 'active')
-                ->when($request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where('created_by', $request->user()->id))
+                ->when($request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where(function ($scope) use ($request) {
+                    $scope->where('created_by', $request->user()->id)->orWhereExists(function ($shares) use ($request): void {
+                        $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'question_packs.id')->where('question_shares.resource_type', 'pack')->where('question_shares.school_id', $request->user()->school_id)->where('question_shares.recipient_id', $request->user()->id)->where('question_shares.status', 'accepted')->where('question_shares.permission', 'edit')->where('question_shares.active_key', 'active');
+                    });
+                }))
                 ->with(['items.question', 'items.questionVersion'])->firstOrFail();
             abort_unless($pack->items->isNotEmpty(), 422, 'Paket soal kosong.');
             foreach ($pack->items as $item) {
@@ -77,7 +89,11 @@ class ExamController extends Controller
         $questions = ExamQuestion::where('school_id', $request->user()->school_id)
             ->when(! $pack, fn ($query) => $query->where('is_active', true))
             ->whereIn('id', $data['question_ids'])
-            ->when(! $pack && $request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where('owner_id', $request->user()->id))
+            ->when(! $pack && $request->user()->hasRole(['teacher', 'homeroom']), fn ($query) => $query->where(function ($scope) use ($request) {
+                $scope->where('owner_id', $request->user()->id)->orWhereExists(function ($shares) use ($request): void {
+                    $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'exam_questions.id')->where('question_shares.resource_type', 'question')->where('question_shares.school_id', $request->user()->school_id)->where('question_shares.recipient_id', $request->user()->id)->where('question_shares.status', 'accepted')->whereIn('question_shares.permission', ['copy', 'edit'])->where('question_shares.active_key', 'active');
+                });
+            }))
             ->get();
         abort_unless($questions->count() === count(array_unique($data['question_ids'])), 422, 'Soal ujian tidak valid.');
         $versionMap = ExamQuestionVersion::whereIn('exam_question_id', $questions->pluck('id'))->get()
@@ -110,6 +126,7 @@ class ExamController extends Controller
     public function publish(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExamManager($request, $exam);
+        abort_unless($exam->status === 'draft', 422, 'Hanya draf ujian yang dapat diterbitkan.');
         abort_unless($exam->items()->exists(), 422);
         $exam->update(['status' => 'published']);
         $this->audit->log('assessment.exam.published', 'exam', (string) $exam->id, ['status' => 'published'], actor: $request->user(), schoolId: (int) $exam->school_id);
@@ -122,6 +139,7 @@ class ExamController extends Controller
         abort_unless($request->user()->hasRole('student') && (int) $exam->school_id === (int) $request->user()->school_id, 403);
         abort_unless($exam->status === 'published' && now()->between($exam->starts_at, $exam->ends_at), 422, 'Ujian belum tersedia atau telah berakhir.');
         $assignment = DB::table('teaching_assignments')->find($exam->teaching_assignment_id);
+        abort_unless($assignment, 404, 'Penugasan ujian tidak ditemukan.');
         $enrollment = DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')->where('students.user_id', $request->user()->id)->where('enrollments.term_id', $assignment->term_id)->where('enrollments.class_group_id', $assignment->class_group_id)->where('enrollments.status', 'active')->select('enrollments.id')->first();
         abort_unless($enrollment, 403);
         $existing = ExamAttempt::where('exam_id', $exam->id)->where('enrollment_id', $enrollment->id)->first();
@@ -129,10 +147,21 @@ class ExamController extends Controller
             return redirect('/ujian/attempt/'.$existing->id);
         }
         $ids = $exam->items()->pluck('exam_question_id')->all();
+        $startedAt = now();
+        $expires = $startedAt->copy()->addMinutes($exam->duration_minutes)->min($exam->ends_at);
+        $attempt = ExamAttempt::create([
+            'exam_id' => $exam->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => 'in_progress',
+            'started_at' => $startedAt,
+            'expires_at' => $expires,
+            'last_heartbeat_at' => $startedAt,
+            'question_order' => $ids,
+            'random_seed' => random_int(1, PHP_INT_MAX),
+        ]);
         if ($exam->randomize_questions) {
-            shuffle($ids);
-        }$expires = now()->addMinutes($exam->duration_minutes)->min($exam->ends_at);
-        $attempt = ExamAttempt::create(['exam_id' => $exam->id, 'enrollment_id' => $enrollment->id, 'status' => 'in_progress', 'started_at' => now(), 'expires_at' => $expires, 'last_heartbeat_at' => now(), 'question_order' => $ids]);
+            $attempt->update(['question_order' => $this->deterministicOrder($ids, $attempt->random_seed, 'question')]);
+        }
         ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'started', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
 
         return redirect('/ujian/attempt/'.$attempt->id);
@@ -151,17 +180,15 @@ class ExamController extends Controller
             $q = $item?->questionVersion ?? $item?->question;
             $options = $q?->options;
             if ($q && $attempt->exam->randomize_options && is_array($options)) {
-                mt_srand($attempt->id * 100000 + $q->id);
-                shuffle($options);
-                mt_srand();
+                $options = $this->deterministicOrder($options, $attempt->random_seed ?? $attempt->id, 'option-'.$q->id);
             }
             $matchingPairs = $q?->matching_pairs ?? [];
-            $matchingOptions = collect($matchingPairs)->pluck('right')->shuffle()->values()->all();
+            $matchingOptions = $this->deterministicOrder(collect($matchingPairs)->pluck('right')->values()->all(), $attempt->random_seed ?? $attempt->id, 'matching-'.$id);
 
             return ['id' => $id, 'type' => $q?->type, 'prompt' => $q?->prompt, 'options' => $options, 'matching_pairs' => collect($matchingPairs)->map(fn ($pair) => ['left' => $pair['left']])->values(), 'matching_options' => $matchingOptions, 'points' => $item?->points, 'answer' => $attempt->answers->firstWhere('exam_question_id', $id)?->answer];
         })->filter()->values();
 
-        return Inertia::render('Assessment/Exams/Attempt', ['attempt' => $attempt->only(['id', 'status', 'expires_at', 'violation_count']), 'exam' => $attempt->exam->only(['id', 'title', 'instructions', 'max_violations']), 'questions' => $questions]);
+        return Inertia::render('Assessment/Exams/Attempt', ['attempt' => $attempt->only(['id', 'status', 'expires_at', 'violation_count', 'random_seed']), 'exam' => $attempt->exam->only(['id', 'title', 'instructions', 'max_violations']), 'questions' => $questions]);
     }
 
     public function autosave(Request $request, ExamAttempt $attempt): RedirectResponse
@@ -194,7 +221,8 @@ class ExamController extends Controller
         ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => $data['type'], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
         $attempt->refresh();
         if ($attempt->violation_count >= $attempt->exam->max_violations) {
-            $this->finalize($attempt);
+            $attempt->update(['status' => 'locked']);
+            ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'locked', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
         }
 
         return back();
@@ -208,6 +236,53 @@ class ExamController extends Controller
         }
 
         return redirect('/ujian')->with('message', 'Jawaban ujian berhasil dikirim.');
+    }
+
+    public function monitor(Request $request, Exam $exam): Response
+    {
+        $this->authorizeExamManager($request, $exam);
+
+        return Inertia::render('Assessment/Exams/Monitor', [
+            'exam' => $exam->only(['id', 'title', 'starts_at', 'ends_at', 'duration_minutes', 'max_violations', 'status']),
+            'snapshot' => $this->monitorSnapshot($exam),
+            'server_now' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function unlock(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        $attempt->load('exam');
+        $this->authorizeExamManager($request, $attempt->exam);
+        abort_unless($attempt->status === 'locked', 422, 'Hanya sesi terkunci yang dapat dibuka kembali.');
+        abort_unless(now()->lessThan($attempt->expires_at), 422, 'Waktu sesi sudah habis.');
+        $attempt->update(['status' => 'in_progress', 'last_heartbeat_at' => now()]);
+        ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'unlocked', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
+
+        return back()->with('message', 'Sesi siswa dibuka kembali.');
+    }
+
+    public function extend(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        $attempt->load('exam');
+        $this->authorizeExamManager($request, $attempt->exam);
+        $data = $request->validate(['minutes' => ['required', 'integer', 'min:1', 'max:120']]);
+        abort_unless(in_array($attempt->status, ['in_progress', 'locked'], true), 422, 'Sesi sudah selesai.');
+        $newExpiry = $attempt->expires_at->copy()->addMinutes($data['minutes'])->min($attempt->exam->ends_at);
+        $attempt->update(['expires_at' => $newExpiry]);
+        ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'time_extended', 'payload' => ['minutes' => $data['minutes']], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
+
+        return back()->with('message', 'Waktu sesi ditambah hingga '.$newExpiry->format('H:i').'.');
+    }
+
+    public function forceFinish(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        $attempt->load('exam');
+        $this->authorizeExamManager($request, $attempt->exam);
+        abort_unless(in_array($attempt->status, ['in_progress', 'locked'], true), 422, 'Sesi sudah selesai.');
+        $this->finalize($attempt);
+        ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'forced_finish', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
+
+        return back()->with('message', 'Sesi siswa dipaksa selesai dan masuk ke hasil.');
     }
 
     public function gradeEssay(Request $request, ExamAnswer $answer): RedirectResponse
@@ -226,6 +301,9 @@ class ExamController extends Controller
     public function publishResults(Request $request, Exam $exam): RedirectResponse
     {
         $this->authorizeExamManager($request, $exam);
+        abort_unless($exam->status === 'published', 422, 'Hasil hanya dapat diterbitkan dari ujian yang sudah terbit.');
+        abort_if($exam->attempts()->where('status', 'in_progress')->exists(), 422, 'Masih ada siswa yang sedang mengerjakan ujian.');
+        abort_if($exam->attempts()->where('status', 'locked')->exists(), 422, 'Masih ada sesi siswa yang terkunci. Buka kunci atau paksa selesai dahulu.');
         abort_if($exam->attempts()->where('status', 'pending_review')->exists(), 422, 'Masih ada esai yang belum dikoreksi.');
         DB::transaction(function () use ($exam, $request) {
             $exam->update(['status' => 'results_published']);
@@ -265,10 +343,20 @@ class ExamController extends Controller
     public function results(Request $request, Exam $exam): Response
     {
         $this->authorizeExamManager($request, $exam);
-        $attempts = $exam->attempts()->with(['answers.question', 'answers.questionVersion'])->get();
+        $attempts = $exam->attempts()->with(['answers.question', 'answers.questionVersion', 'events'])->get();
         $students = DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')->whereIn('enrollments.id', $attempts->pluck('enrollment_id'))->get(['enrollments.id as enrollment_id', 'students.nis', 'students.name'])->keyBy('enrollment_id');
 
-        return Inertia::render('Assessment/Exams/Results', ['exam' => $exam, 'attempts' => $attempts->map(fn ($a) => [...$a->toArray(), 'student' => $students->get($a->enrollment_id)])]);
+        return Inertia::render('Assessment/Exams/Results', [
+            'exam' => $exam,
+            'attempts' => $attempts->map(fn ($a) => [...$a->toArray(), 'student' => $students->get($a->enrollment_id)]),
+            'summary' => [
+                'total' => $attempts->count(),
+                'submitted' => $attempts->whereIn('status', ['submitted', 'graded', 'pending_review'])->count(),
+                'graded' => $attempts->where('status', 'graded')->count(),
+                'pending_review' => $attempts->where('status', 'pending_review')->count(),
+                'average' => $attempts->whereNotNull('score')->avg('score'),
+            ],
+        ]);
     }
 
     private function finalize(ExamAttempt $attempt): void
@@ -302,6 +390,52 @@ class ExamController extends Controller
         $total = (float) $attempt->exam->items->sum('points');
         $score = $total ? round(((float) $attempt->answers->sum('score') / $total) * 100, 2) : 0;
         $attempt->update(['score' => $score, 'status' => $pending ? 'pending_review' : 'graded']);
+    }
+
+    /** @return array{summary: array<string, int>, students: list<array<string, mixed>>} */
+    private function monitorSnapshot(Exam $exam): array
+    {
+        $assignment = DB::table('teaching_assignments')->where('id', $exam->teaching_assignment_id)->first(['term_id', 'class_group_id']);
+        if (! $assignment) {
+            return ['summary' => ['total' => 0, 'online' => 0, 'offline' => 0, 'finished' => 0, 'locked' => 0, 'not_started' => 0], 'students' => []];
+        }
+        $students = DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')
+            ->where('enrollments.term_id', $assignment->term_id)->where('enrollments.class_group_id', $assignment->class_group_id)->where('enrollments.status', 'active')
+            ->orderBy('students.name')->get(['enrollments.id as enrollment_id', 'students.name', 'students.nis']);
+        $attempts = $exam->attempts()->withCount(['answers as answered_count' => fn ($query) => $query->whereNotNull('answer')->whereRaw("TRIM(answer) <> ''")])->get()->keyBy('enrollment_id');
+        $totalQuestions = (int) $exam->items()->count();
+        $now = now();
+        $summary = ['total' => $students->count(), 'online' => 0, 'offline' => 0, 'finished' => 0, 'locked' => 0, 'not_started' => 0];
+        $rows = $students->map(function ($student) use ($attempts, $totalQuestions, $now, &$summary): array {
+            $attempt = $attempts->get($student->enrollment_id);
+            $status = 'not_started';
+            if ($attempt) {
+                if ($attempt->status === 'locked') {
+                    $status = 'locked';
+                } elseif ($attempt->status === 'in_progress') {
+                    $status = $attempt->last_heartbeat_at && $attempt->last_heartbeat_at->greaterThan($now->copy()->subSeconds(45)) ? 'online' : 'offline';
+                } else {
+                    $status = 'finished';
+                }
+            }
+            $summary[$status]++;
+
+            return ['enrollment_id' => $student->enrollment_id, 'name' => $student->name, 'nis' => $student->nis, 'status' => $status, 'answered' => (int) ($attempt?->answered_count ?? 0), 'total_questions' => $totalQuestions, 'violation_count' => (int) ($attempt?->violation_count ?? 0), 'attempt_id' => $attempt?->id, 'expires_at' => $attempt?->expires_at, 'last_heartbeat_at' => $attempt?->last_heartbeat_at];
+        })->values()->all();
+
+        return ['summary' => $summary, 'students' => $rows];
+    }
+
+    /** @template T */
+    private function deterministicOrder(array $values, int $seed, string $scope): array
+    {
+        $indexed = [];
+        foreach (array_values($values) as $index => $value) {
+            $indexed[] = ['value' => $value, 'key' => hash('sha256', $seed.'|'.$scope.'|'.$index.'|'.(string) (is_scalar($value) ? $value : json_encode($value)))];
+        }
+        usort($indexed, fn (array $left, array $right): int => $left['key'] <=> $right['key']);
+
+        return array_column($indexed, 'value');
     }
 
     private function assertActive(ExamAttempt $a): void

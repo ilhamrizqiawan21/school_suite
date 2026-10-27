@@ -62,6 +62,7 @@ function loadSelectedPlan(plan: SelectedPlan | null) {
         waktu: plan.data?.waktu ?? { jp_per_minggu: 2, minggu_efektif: { '1': 18, '2': 18 } },
     };
     form.clearErrors();
+    form.defaults();
 }
 
 watch(() => props.selected_plan, (plan) => loadSelectedPlan(plan), { immediate: true });
@@ -131,7 +132,7 @@ function savePlan() {
         : reference);
     const options = {
         preserveScroll: true,
-        onSuccess: () => { notice.value = 'ATP/Silabus berhasil disimpan.'; },
+        onSuccess: () => { form.defaults(); notice.value = 'ATP/Silabus berhasil disimpan.'; },
     };
     if (isEditing.value && selectedId.value) {
         form.put(`/akademik/perangkat/atp/${selectedId.value}`, options);
@@ -194,7 +195,7 @@ function deletePlan() {
                     <form class="editor-form" @submit.prevent="savePlan">
                         <div class="editor-topline">
                             <div><span class="section-kicker">{{ isEditing ? 'Dokumen tersimpan' : 'Dokumen baru' }}</span><h2 id="editor-title">{{ isEditing ? currentPlan?.subject_name : 'Susun ATP / Silabus' }}</h2></div>
-                            <span class="save-state" :class="{ saving: form.processing }"><span class="state-dot" />{{ form.processing ? 'Menyimpan…' : 'Draft tersimpan di formulir' }}</span>
+                            <span class="save-state" :class="{ saving: form.processing, unsaved: form.isDirty && !form.processing }"><span class="state-dot" />{{ form.processing ? 'Menyimpan…' : form.isDirty ? 'Perubahan belum disimpan' : isEditing ? 'Perubahan tersimpan' : 'Dokumen baru · belum disimpan' }}</span>
                         </div>
 
                         <div class="document-fields">
@@ -294,5 +295,10 @@ function deletePlan() {
 .reference-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.45rem}
 @media(max-width:740px){.reference-actions{width:100%;justify-content:flex-start}}
 .cp-list{display:grid;gap:.65rem}.cp-card{padding:.85rem;border:1px solid var(--plan-line);border-radius:.75rem;background:var(--plan-canvas)}.cp-card-heading{display:flex;align-items:center;gap:.55rem;margin-bottom:.65rem}.cp-card-heading strong{flex:1;color:var(--plan-ink);font-size:.84rem}.cp-card-heading .row-index{padding:0}.cp-fields{display:grid;grid-template-columns:120px minmax(170px,.7fr) minmax(0,1.6fr);gap:.65rem}.cp-content textarea{min-height:112px;resize:vertical}
+.planning-page{container-type:inline-size}
+.page-intro .action-primary{white-space:nowrap}
+.save-state.unsaved .state-dot{background:#cf8a21}
+@container (max-width: 950px){.planning-layout{grid-template-columns:minmax(0,1fr)}.plan-rail{position:static}.plan-list{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));max-height:none;overflow:visible}.plan-item{min-width:0}.package-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width: 700px){.cp-fields{grid-template-columns:minmax(0,1fr)}.cp-content{grid-column:1}}
 @media(max-width:740px){.cp-fields{grid-template-columns:minmax(0,1fr)}.cp-content{grid-column:1}}
 </style>

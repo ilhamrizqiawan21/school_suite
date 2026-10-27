@@ -86,6 +86,13 @@ class CommunicationController extends Controller
         ]);
     }
 
+    public function calendar(Request $request): Response
+    {
+        $request->merge(['tab' => 'calendar']);
+
+        return $this->index($request);
+    }
+
     public function storeAnnouncement(Request $request): RedirectResponse
     {
         $this->authorizeManager($request);

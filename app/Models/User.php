@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Database\Factories\UserFactory;
@@ -11,8 +12,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 #[Fillable(['school_id', 'role_id', 'name', 'username', 'email', 'phone', 'avatar_path', 'is_active', 'password', 'must_change_password', 'password_changed_at'])]
 #[Hidden(['password', 'remember_token'])]
@@ -54,21 +57,41 @@ class User extends Authenticatable
     }
 
     /**
+     * Profil guru tambahan yang ditautkan ke akun ini.
+     *
+     * Akun dengan peran utama Operator/TU tetap bisa memiliki profil guru.
+     * Dengan relasi ini, satu akun dapat menjalankan pekerjaan administrasi
+     * sekaligus pekerjaan mengajar tanpa mengganti peran utamanya.
+     */
+    public function teacherProfile(): HasOne
+    {
+        return $this->hasOne(Teacher::class, 'user_id');
+    }
+
+    /**
      * Check if user has specific role(s).
      *
      * @param  string|list<string>  $roles
      */
     public function hasRole(string|array $roles): bool
     {
-        if ($this->role === null) {
-            return false;
+        $requestedRoles = is_string($roles) ? [$roles] : $roles;
+        $primaryRole = $this->role?->name;
+
+        if ($primaryRole !== null && in_array($primaryRole, $requestedRoles, true)) {
+            return true;
         }
 
-        if (is_string($roles)) {
-            return $this->role->name === $roles;
-        }
-
-        return in_array($this->role->name, $roles, true);
+        // Operator/TU dapat ditautkan ke profil guru aktif. Profil tambahan
+        // ini memberi akses guru tanpa mengubah akses administrasi akun.
+        return $primaryRole === 'operator'
+            && in_array('teacher', $requestedRoles, true)
+            && $this->school_id !== null
+            && DB::table('teachers')
+                ->where('user_id', $this->id)
+                ->where('school_id', $this->school_id)
+                ->where('is_active', true)
+                ->exists();
     }
 
     /**

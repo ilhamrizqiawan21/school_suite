@@ -68,7 +68,7 @@ class QuestionPackController extends Controller
                     $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'exam_questions.id')
                         ->where('question_shares.resource_type', 'question')->where('question_shares.school_id', $user->school_id)
                         ->where('question_shares.recipient_id', $user->id)->where('question_shares.status', 'accepted')
-                        ->where('question_shares.permission', 'copy')->where('question_shares.active_key', 'active');
+                        ->whereIn('question_shares.permission', ['copy', 'edit'])->where('question_shares.active_key', 'active');
                 });
             }))
             ->select([
@@ -76,6 +76,14 @@ class QuestionPackController extends Controller
                 'exam_questions.jenjang', 'exam_questions.curriculum', 'exam_questions.current_version',
                 'subjects.name as subject_name', 'subjects.code as subject_code',
             ])
+            ->selectSub(
+                ExamQuestionVersion::query()
+                    ->selectRaw('1')
+                    ->whereColumn('exam_question_versions.exam_question_id', 'exam_questions.id')
+                    ->whereColumn('exam_question_versions.version_number', 'exam_questions.current_version')
+                    ->limit(1),
+                'version_available'
+            )
             ->orderByDesc('exam_questions.updated_at')
             ->get();
 
@@ -138,7 +146,7 @@ class QuestionPackController extends Controller
 
     public function archive(Request $request, QuestionPack $pack): RedirectResponse
     {
-        $this->authorizePack($request, $pack);
+        $this->authorizePack($request, $pack, 'edit');
         $pack->update(['status' => 'archived']);
         $this->audit->log('assessment.question_pack.archived', 'question_pack', (string) $pack->id, [], actor: $request->user(), schoolId: (int) $pack->school_id);
 
@@ -147,7 +155,7 @@ class QuestionPackController extends Controller
 
     public function restore(Request $request, QuestionPack $pack): RedirectResponse
     {
-        $this->authorizePack($request, $pack);
+        $this->authorizePack($request, $pack, 'edit');
         $pack->update(['status' => 'draft']);
         $this->audit->log('assessment.question_pack.restored', 'question_pack', (string) $pack->id, ['status' => 'draft'], actor: $request->user(), schoolId: (int) $pack->school_id);
 
@@ -232,8 +240,11 @@ class QuestionPackController extends Controller
                 throw ValidationException::withMessages(['items' => 'Soal arsip tidak dapat ditambahkan ke paket. Muat ulang halaman dan pilih soal aktif.']);
             }
             if ($user->hasRole(['teacher', 'homeroom'])) {
-                abort_unless((int) $question->owner_id === (int) $user->id || $wasInPack
-                    || QuestionShareController::permits($user, 'question', (int) $question->id, 'copy'), 403, 'Anda hanya dapat menambahkan soal milik sendiri atau yang boleh disalin.');
+                if ((int) $question->owner_id !== (int) $user->id && ! $wasInPack
+                    && ! QuestionShareController::permits($user, 'question', (int) $question->id, 'copy')
+                    && ! QuestionShareController::permits($user, 'question', (int) $question->id, 'edit')) {
+                    throw ValidationException::withMessages(['items' => 'Salah satu soal tidak lagi dapat digunakan oleh akun ini. Muat ulang Bank Soal dan pilih soal yang masih dibagikan.']);
+                }
             }
         }
 

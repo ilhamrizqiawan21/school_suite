@@ -296,6 +296,32 @@ class AcademicControllersTest extends TestCase
         ]);
     }
 
+    public function test_operator_account_can_be_linked_as_teacher_without_losing_tu_role(): void
+    {
+        $operatorRole = Role::create(['name' => 'operator', 'label' => 'Operator TU', 'is_system' => true]);
+        $operator = User::create([
+            'school_id' => $this->school->id,
+            'role_id' => $operatorRole->id,
+            'name' => 'Staf TU Merangkap Guru',
+            'username' => 'tu-guru',
+            'email' => 'tu-guru@school.test',
+            'password' => bcrypt('OperatorPass123!'),
+            'is_active' => true,
+        ]);
+        $this->actingAs($this->admin)->post('/akademik/guru', [
+            'user_id' => $operator->id,
+            'name' => 'Staf TU Merangkap Guru',
+            'gender' => 'L',
+            'is_active' => true,
+        ])->assertSessionHasNoErrors();
+        $teacher = Teacher::where('user_id', $operator->id)->firstOrFail();
+
+        $this->assertTrue($operator->fresh()->hasRole('operator'));
+        $this->assertTrue($operator->fresh()->hasRole('teacher'));
+        $this->actingAs($operator)->get('/pembelajaran')->assertOk();
+        $this->assertDatabaseHas('teachers', ['id' => $teacher->id, 'user_id' => $operator->id]);
+    }
+
     public function test_admin_can_manage_classes_and_assign_homeroom(): void
     {
         $teacher = Teacher::create([

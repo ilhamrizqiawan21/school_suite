@@ -11,6 +11,15 @@ const props = defineProps<{
         total: number;
     };
     can_manage: boolean;
+    can_link_accounts: boolean;
+    account_candidates: Array<{
+        id: number;
+        name: string;
+        email?: string | null;
+        role?: string | null;
+        role_label?: string | null;
+        linked_teacher_id?: number | null;
+    }>;
     stats: { total: number; active: number; inactive: number };
     employment_statuses: string[];
     filters: {
@@ -51,6 +60,7 @@ const form = useForm({
     email: '',
     employment_status: 'PNS',
     is_active: true,
+    user_id: null as number | null,
 });
 
 const openAdd = () => {
@@ -69,6 +79,7 @@ const openEdit = (teacher: Teacher) => {
     form.email = teacher.email ?? '';
     form.employment_status = teacher.employment_status ?? '';
     form.is_active = teacher.is_active;
+    form.user_id = teacher.user_id ?? null;
     showAddModal.value = true;
 };
 const submitAdd = () => {
@@ -124,6 +135,9 @@ const submitImport = () => {
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Pendidik & Tenaga Kependidikan</h1>
                     <p class="text-sm text-slate-500 mt-1">
                         Kelola data guru, status kepegawaian, dan penugasan wali kelas.
+                    </p>
+                    <p class="mt-2 max-w-3xl text-xs text-slate-500">
+                        Satu akun dapat merangkap: peran utama tetap Operator/TU untuk pekerjaan administrasi, lalu admin menautkan profil guru agar akun tersebut juga menerima akses mengajar.
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
@@ -328,7 +342,23 @@ const submitImport = () => {
                     </div>
 
                     <label class="flex items-center gap-2 text-sm"><input v-model="form.is_active" type="checkbox" /> Data guru aktif</label>
-                    <p class="text-xs text-slate-500">Status ini berlaku untuk data guru. Akses login dikelola melalui Manajemen Pengguna.</p>
+                    <div v-if="can_link_accounts" class="space-y-1">
+                        <label class="block text-xs font-semibold text-slate-700">Akun login (opsional)</label>
+                        <select v-model="form.user_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <option :value="null">Tidak ditautkan</option>
+                            <option
+                                v-for="account in account_candidates"
+                                :key="account.id"
+                                :value="account.id"
+                                :disabled="Boolean(account.linked_teacher_id && account.linked_teacher_id !== editingId)"
+                            >
+                                {{ account.name }} · {{ account.role_label || account.role }}{{ account.linked_teacher_id && account.linked_teacher_id !== editingId ? ' · sudah ditautkan' : '' }}
+                            </option>
+                        </select>
+                        <p class="text-xs text-slate-500">Staf TU/operator yang ditautkan tetap mempertahankan akses TU dan memperoleh akses guru.</p>
+                        <div v-if="form.errors.user_id" class="text-xs text-red-600 mt-1">{{ form.errors.user_id }}</div>
+                    </div>
+                    <p v-else class="text-xs text-slate-500">Status ini berlaku untuk data guru. Penautan akun login hanya dapat dilakukan admin.</p>
                     <ul v-if="Object.keys(form.errors).length" class="text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                     <div class="flex justify-end gap-2 pt-3 border-t">
                         <button type="button" @click="showAddModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '../layouts/AppLayout.vue';
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
+type TeacherAttendanceStatus = 'present' | 'permitted' | 'sick' | 'absent';
 
 interface DashboardStats {
     modules_ready: number;
@@ -13,7 +15,8 @@ interface DashboardStats {
     attendance_trend?: Array<{ month_key: string; label: string; rate: number; present: number; total: number }>;
     principal_overview?: PrincipalOverview;
     teacher_overview?: {
-        date: string; has_teacher_profile: boolean; has_active_term: boolean; today_total: number;
+        date: string; teacher_id: number | null; has_teacher_profile: boolean; has_active_term: boolean;
+        attendance_status: TeacherAttendanceStatus | null; attendance_recorded_at: string | null; today_total: number;
         today_schedule: Array<{ id: number; class_name: string | null; subject_name: string | null; start_time: string; end_time: string; room: string | null }>;
         pending_journals: number; pending_reviews: number;
     };
@@ -66,6 +69,25 @@ const latestLoginLogs = computed(() => props.stats?.latest_login_logs ?? []);
 const attendanceTrend = computed(() => props.stats?.attendance_trend ?? []);
 const teacherOverview = computed(() => props.stats?.teacher_overview);
 const teacherDate = computed(() => teacherOverview.value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date(`${teacherOverview.value.date}T00:00:00`)) : '');
+const teacherAttendanceStatusLabel = computed(() => {
+    const status = teacherOverview.value?.attendance_status;
+    if (!status) return 'Belum tercatat';
+    return ({ present: 'Hadir', permitted: 'Izin', sick: 'Sakit', absent: 'Alpha' } satisfies Record<TeacherAttendanceStatus, string>)[status];
+});
+const recordingTeacherAttendance = ref(false);
+function markTeacherPresent() {
+    const overview = teacherOverview.value;
+    if (!overview?.teacher_id || overview.attendance_status || recordingTeacherAttendance.value) return;
+
+    router.post('/akademik/absensi-guru', {
+        date: overview.date,
+        records: [{ teacher_id: overview.teacher_id, status: 'present', notes: '' }],
+    }, {
+        preserveScroll: true,
+        onStart: () => { recordingTeacherAttendance.value = true; },
+        onFinish: () => { recordingTeacherAttendance.value = false; },
+    });
+}
 const principalOverview = computed(() => props.stats?.principal_overview);
 const principalSummary = computed(() => principalOverview.value?.summary);
 const principalPeriod = computed(() => principalOverview.value?.period ?? 'term');
@@ -113,6 +135,7 @@ const adminActions = [
     { title: 'Kelola guru', description: 'Perbarui data guru dan penugasan pengajar.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
     { title: 'Kelola kelas', description: 'Atur rombel, kapasitas, dan wali kelas.', href: '/akademik/kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1' },
     { title: 'Jadwal pelajaran', description: 'Tinjau jadwal aktif dan kesiapan pembelajaran.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Absensi guru', description: 'Catat kehadiran harian dan tinjau guru yang belum mengisi.', href: '/akademik/absensi-guru', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0m-1 9 2 2 4-4' },
     { title: 'Pusat laporan', description: 'Lihat rekapan akademik dan ekspor data sekolah.', href: '/laporan', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14v14z' },
     { title: 'Komunikasi sekolah', description: 'Terbitkan pengumuman dan agenda untuk warga sekolah.', href: '/komunikasi', icon: 'M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5' },
     { title: 'Log login', description: 'Pantau percobaan login dan aktivitas keamanan akun.', href: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
@@ -123,6 +146,7 @@ const operatorActions = [
     { title: 'Penugasan guru', description: 'Atur data guru aktif dan penugasan mengajar semester.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
     { title: 'Rombongan belajar', description: 'Kelola rombel, kuota kelas, dan penetapan wali kelas.', href: '/akademik/kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1' },
     { title: 'Jadwal pelajaran', description: 'Susun jadwal mingguan, cek bentrok, dan terbitkan jadwal.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Absensi guru', description: 'Isi dan periksa absensi harian seluruh guru.', href: '/akademik/absensi-guru', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0a2 2 0 104 0m-1 9 2 2 4-4' },
     { title: 'Skema penilaian', description: 'Atur komponen nilai, bobot evaluasi, dan format rapor.', href: '/penilaian/skema', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
     { title: 'Kelola pengguna', description: 'Atur akun siswa, guru, dan staf sekolah.', href: '/pengaturan/pengguna', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8zm14 10v-2a3 3 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
     { title: 'Identitas sekolah', description: 'Periksa profil kelembagaan dan konfigurasi dasar.', href: '/pengaturan/sekolah', icon: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19.4 15a1.7 1.7 0 00.34 1.88l.06.06-1.9 1.9-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.03 1.56V20h-2.68v-.09a1.7 1.7 0 00-1.03-1.56 1.7 1.7 0 00-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 007.8 15a1.7 1.7 0 00-1.56-1.03H6v-2.68h.24A1.7 1.7 0 007.8 10a1.7 1.7 0 00-.34-1.88L7.4 8.06l1.9-1.9.06.06a1.7 1.7 0 001.88.34 1.7 1.7 0 001.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0019.4 15z' },
@@ -341,7 +365,10 @@ const principalAttendanceChart = computed(() => {
             <header class="dashboard-intro">
                 <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
-                    <div><h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : `${firstName}, ini pusat kerjamu.` }}</h1></div>
+                    <div>
+                        <h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : isStudent ? `Hai, ${firstName}.` : `${firstName}, ini pusat kerjamu.` }}</h1>
+                        <p v-if="isStudent">Pantau jadwal, tugas, ujian, dan capaian belajarmu dari satu tempat.</p>
+                    </div>
                     <div class="date-stamp"><strong>{{ today.day }}</strong><span>{{ today.month }}<br>{{ today.year }}</span></div>
                 </div>
             </header>
@@ -390,6 +417,12 @@ const principalAttendanceChart = computed(() => {
                 <article class="teacher-day">
                     <header><div><span class="eyebrow">{{ teacherDate }}</span><h2>Jadwal mengajar hari ini</h2></div><Link href="/akademik/jadwal">Semua jadwal ↗</Link></header>
                     <p class="teacher-context">Jadwal terbit pada {{ activePeriod }} · {{ teacherOverview.today_total }} pertemuan.</p>
+                    <div class="teacher-attendance-action" aria-live="polite">
+                        <div><span class="eyebrow">Absensi Anda hari ini</span><strong>{{ teacherAttendanceStatusLabel }}</strong><small v-if="teacherOverview.attendance_recorded_at">Tercatat {{ formatDateTime(teacherOverview.attendance_recorded_at) }}</small><small v-else-if="teacherOverview.has_teacher_profile">Belum tercatat. Tandai hadir dengan satu klik.</small><small v-else>Hubungi operator untuk menghubungkan akun ke data guru.</small></div>
+                        <button v-if="!teacherOverview.attendance_status && teacherOverview.has_teacher_profile" type="button" class="teacher-attendance-button" :disabled="recordingTeacherAttendance" @click="markTeacherPresent">{{ recordingTeacherAttendance ? 'Menyimpan…' : 'Hadir hari ini' }}</button>
+                        <span v-else-if="teacherOverview.attendance_status === 'present'" class="teacher-attendance-saved">Sudah dicatat</span>
+                        <Link href="/akademik/absensi-guru" class="teacher-attendance-link">Buka menu absensi ↗</Link>
+                    </div>
                     <ol v-if="teacherOverview.today_schedule.length" class="teacher-schedule"><li v-for="lesson in teacherOverview.today_schedule" :key="lesson.id"><strong class="teacher-time">{{ lesson.start_time }}–{{ lesson.end_time }}</strong><div><strong>{{ lesson.subject_name || 'Mata pelajaran' }}</strong><span>{{ lesson.class_name || 'Kelas' }} · {{ lesson.room || 'Ruang belum ditentukan' }}</span></div></li></ol>
                     <p v-else class="teacher-empty">Belum ada jadwal terbit untuk Anda hari ini pada semester aktif.</p>
                     <p v-if="teacherOverview.today_total > 5" class="teacher-context">Menampilkan 5 dari {{ teacherOverview.today_total }} pertemuan. Buka semua jadwal untuk melihat selengkapnya.</p>
@@ -412,7 +445,7 @@ const principalAttendanceChart = computed(() => {
                 </aside>
             </div>
 
-            <section v-if="!isAdmin" class="metrics-strip" :class="{ 'teacher-metrics': isTeacher }" aria-label="Ringkasan metrik">
+            <section v-if="!isAdmin" class="metrics-strip" :class="{ 'teacher-metrics': isTeacher, 'student-metrics': isStudent }" aria-label="Ringkasan metrik">
                 <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
                     <div class="metric-head"><span>{{ metric.label }}</span><span class="metric-arrow" aria-hidden="true">↗</span></div>
                     <strong>{{ metric.value ?? '—' }}</strong>
@@ -470,7 +503,7 @@ const principalAttendanceChart = computed(() => {
             </section>
 
             <section v-if="!isTeacher && !isHomeroom && !isPrincipal" class="workflow-section">
-                <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Pantauan harian</span><h2>Pengumuman dan log login</h2></div><span class="workflow-count">2 area penting</span></div>
+                <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Pantauan harian</span><h2>Pengumuman dan log login</h2></div><Link href="/akademik/absensi-guru" class="admin-card-link">Buka absensi guru ↗</Link><span class="workflow-count">2 area penting</span></div>
                 <div v-if="isAdmin" class="admin-overview-grid">
                     <section class="admin-overview-card announcement-card">
                         <header class="admin-card-header"><div class="admin-card-title"><span class="admin-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5" /></svg></span><span class="admin-card-copy"><strong>Pengumuman</strong><span>5 pengumuman terakhir</span></span></div><Link href="/komunikasi" class="admin-card-link">Lihat semua ↗</Link></header>
@@ -481,30 +514,33 @@ const principalAttendanceChart = computed(() => {
                         <ol class="admin-list"><li v-for="item in latestLoginLogs" :key="item.id"><span><strong>{{ item.user_name }}</strong><small>{{ item.ip_address ?? 'IP tidak tersedia' }}</small></span><time :class="item.status === 'success' ? 'login-success' : 'login-failed'">{{ item.status === 'success' ? 'Berhasil' : 'Gagal' }} · {{ formatDateTime(item.created_at) }}</time></li><li v-if="!latestLoginLogs.length" class="admin-empty">Belum ada log login.</li></ol>
                     </section>
                 </div>
-                <div v-else-if="isStudent" class="student-overview-grid">
-                    <article class="student-overview-card attendance-card">
-                        <header><span class="student-card-kicker">Kehadiran</span><Link href="/pembelajaran/progress">Lihat progres ↗</Link></header>
-                        <div class="attendance-rate"><strong>{{ studentAttendancePercent }}%</strong><span>hadir</span></div>
-                        <div class="attendance-meter" role="progressbar" :aria-valuenow="studentAttendancePercent" aria-valuemin="0" aria-valuemax="100" :aria-label="`Kehadiran ${studentAttendancePercent}%`"><span :style="{ width: `${studentAttendancePercent}%` }" /></div>
-                        <p>{{ roleMetrics.attendance_present ?? 0 }} dari {{ roleMetrics.attendance_total ?? 0 }} catatan presensi berstatus hadir.</p>
-                    </article>
+                <div v-else-if="isStudent" class="student-overview">
+                    <div class="section-heading student-section-heading"><div><span class="eyebrow">Ringkasan belajarmu</span><h2>Yang perlu kamu lihat hari ini</h2></div><span class="workflow-count">{{ activePeriod }}</span></div>
+                    <div class="student-overview-grid">
+                        <article class="student-overview-card attendance-card">
+                            <header><span class="student-card-kicker">Kehadiran</span><Link href="/pembelajaran/progress">Lihat progres ↗</Link></header>
+                            <div class="attendance-rate"><strong>{{ studentAttendancePercent }}%</strong><span>hadir</span></div>
+                            <div class="attendance-meter" role="progressbar" :aria-valuenow="studentAttendancePercent" aria-valuemin="0" aria-valuemax="100" :aria-label="`Kehadiran ${studentAttendancePercent}%`"><span :style="{ width: `${studentAttendancePercent}%` }" /></div>
+                            <p>{{ roleMetrics.attendance_present ?? 0 }} dari {{ roleMetrics.attendance_total ?? 0 }} catatan presensi berstatus hadir.</p>
+                        </article>
 
-                    <article class="student-overview-card assignment-card">
-                        <header><span class="student-card-kicker">Tugas</span><Link href="/pembelajaran">Buka ruang belajar ↗</Link></header>
-                        <div class="assignment-counts">
-                            <div><strong>{{ roleMetrics.assignments_submitted ?? 0 }}</strong><span>Sudah dikumpulkan</span></div>
-                            <div><strong>{{ roleMetrics.assignments_pending ?? 0 }}</strong><span>Belum dikumpulkan</span></div>
-                        </div>
-                        <p>{{ roleMetrics.assignments_total ?? 0 }} tugas diterbitkan untuk kelas aktif.</p>
-                    </article>
+                        <article class="student-overview-card assignment-card">
+                            <header><span class="student-card-kicker">Tugas</span><Link href="/pembelajaran">Buka ruang belajar ↗</Link></header>
+                            <div class="assignment-counts">
+                                <div><strong>{{ roleMetrics.assignments_submitted ?? 0 }}</strong><span>Sudah dikumpulkan</span></div>
+                                <div><strong>{{ roleMetrics.assignments_pending ?? 0 }}</strong><span>Belum dikumpulkan</span></div>
+                            </div>
+                            <p>{{ roleMetrics.assignments_total ?? 0 }} tugas diterbitkan untuk kelas aktif.</p>
+                        </article>
 
-                    <article class="student-overview-card student-announcements-card">
-                        <header><span class="student-card-kicker">Pengumuman</span><Link href="/komunikasi">Lihat semua ↗</Link></header>
-                        <ol v-if="latestAnnouncements.length" class="student-announcement-list">
-                            <li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }} · {{ formatDateTime(item.published_at) }}</span></li>
-                        </ol>
-                        <p v-else class="student-announcement-empty">Belum ada pengumuman terbaru untuk kelasmu.</p>
-                    </article>
+                        <article class="student-overview-card student-announcements-card">
+                            <header><span class="student-card-kicker">Pengumuman</span><Link href="/komunikasi">Lihat semua ↗</Link></header>
+                            <ol v-if="latestAnnouncements.length" class="student-announcement-list">
+                                <li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }} · {{ formatDateTime(item.published_at) }}</span></li>
+                            </ol>
+                            <p v-else class="student-announcement-empty">Belum ada pengumuman terbaru untuk kelasmu.</p>
+                        </article>
+                    </div>
                 </div>
                 <div v-else class="section-heading"><div><span class="eyebrow">Alur kerja</span><h2>{{ isPrincipal ? 'Pantauan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Alur kerja perwalian' : isTeacher ? 'Pekerjaan mengajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} langkah lanjutan</span></div>
                 <div v-if="!isAdmin && !isStudent" class="workflow-list">
@@ -553,7 +589,7 @@ const principalAttendanceChart = computed(() => {
 
 <style scoped>
 .teacher-shortcuts{margin-top:1.5rem}.teacher-shortcuts h2{font-size:1.1rem;font-weight:750;margin-bottom:.8rem}.teacher-shortcuts>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.teacher-shortcuts a{display:grid;gap:.5rem;min-width:0;padding:1rem;border:1px solid var(--line);border-radius:.85rem;background:var(--surface);text-decoration:none}.teacher-shortcuts strong{font-size:.9rem;color:var(--blue)}.teacher-shortcuts span{font-size:.8rem;color:var(--ink-soft);line-height:1.6}@media(max-width:600px){.teacher-shortcuts>div{grid-template-columns:1fr}}
-.teacher-overview{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1rem}.teacher-day,.teacher-attention{min-width:0;padding:1.3rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.teacher-day header{display:flex;align-items:start;justify-content:space-between;gap:1rem;flex-wrap:wrap}.teacher-day h2,.teacher-attention h2{font-size:1.1rem;font-weight:750;margin:.4rem 0}.teacher-day header a,.teacher-links a{color:var(--blue);font-size:.85rem;font-weight:650}.teacher-context,.teacher-empty{color:var(--ink-soft);font-size:.85rem;line-height:1.6;margin:.7rem 0}.teacher-empty{padding:1.3rem 0}.teacher-schedule{padding:0;list-style:none;margin:1rem 0}.teacher-schedule li{display:flex;align-items:start;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}.teacher-time{flex:0 0 auto;font-size:.85rem;color:var(--blue)}.teacher-schedule li>div{min-width:0;display:grid;gap:.35rem;font-size:.9rem;overflow-wrap:anywhere}.teacher-schedule span{font-size:.8rem;color:var(--ink-soft)}.teacher-links{display:flex;flex-wrap:wrap;gap:.75rem 1rem;margin-top:1rem}.teacher-attention>a{display:flex;gap:.8rem;align-items:start;padding:1.2rem 0;color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}.teacher-attention>a>strong{font-size:1.7rem;line-height:1;color:var(--blue)}.teacher-attention>a>span{flex:1;min-width:0;font-size:.9rem;font-weight:650}.teacher-attention small{display:block;margin-top:.4rem;color:var(--ink-soft);font-size:.8rem;font-weight:400;line-height:1.5}.teacher-notice{grid-column:1/-1;padding:1rem;background:var(--gold-soft);border-radius:.75rem;font-size:.85rem;line-height:1.6}@media(max-width:950px){.teacher-overview{grid-template-columns:minmax(0,1fr)}}@media(max-width:480px){.teacher-schedule li{flex-direction:column;gap:.4rem}.teacher-day,.teacher-attention{padding:1rem}}
+.teacher-overview{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1rem}.teacher-day,.teacher-attention{min-width:0;padding:1.3rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.teacher-day header{display:flex;align-items:start;justify-content:space-between;gap:1rem;flex-wrap:wrap}.teacher-day h2,.teacher-attention h2{font-size:1.1rem;font-weight:750;margin:.4rem 0}.teacher-day header a,.teacher-links a{color:var(--blue);font-size:.85rem;font-weight:650}.teacher-context,.teacher-empty{color:var(--ink-soft);font-size:.85rem;line-height:1.6;margin:.7rem 0}.teacher-empty{padding:1.3rem 0}.teacher-schedule{padding:0;list-style:none;margin:1rem 0}.teacher-schedule li{display:flex;align-items:start;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}.teacher-time{flex:0 0 auto;font-size:.85rem;color:var(--blue)}.teacher-schedule li>div{min-width:0;display:grid;gap:.35rem;font-size:.9rem;overflow-wrap:anywhere}.teacher-schedule span{font-size:.8rem;color:var(--ink-soft)}.teacher-links{display:flex;flex-wrap:wrap;gap:.75rem 1rem;margin-top:1rem}.teacher-attendance-action{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem 1rem;margin:1rem 0;padding:.9rem 1rem;border:1px solid color-mix(in srgb,var(--blue) 22%,var(--line));border-radius:.8rem;background:color-mix(in srgb,var(--blue) 6%,var(--surface))}.teacher-attendance-action>div{display:grid;gap:.2rem;flex:1;min-width:10rem}.teacher-attendance-action .eyebrow{margin:0}.teacher-attendance-action strong{font-size:1rem;color:var(--ink)}.teacher-attendance-action small{color:var(--ink-soft);font-size:.76rem;line-height:1.4}.teacher-attendance-button{min-height:2.75rem;padding:.65rem 1rem;border:0;border-radius:.65rem;background:var(--blue);color:white;font-size:.84rem;font-weight:750;cursor:pointer}.teacher-attendance-button:disabled{opacity:.6;cursor:wait}.teacher-attendance-saved{padding:.5rem .7rem;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:.76rem;font-weight:750}.teacher-attendance-link{color:var(--blue);font-size:.8rem;font-weight:700;text-decoration:none}.teacher-attendance-link:hover{text-decoration:underline}.teacher-attention>a{display:flex;gap:.8rem;align-items:start;padding:1.2rem 0;color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}.teacher-attention>a>strong{font-size:1.7rem;line-height:1;color:var(--blue)}.teacher-attention>a>span{flex:1;min-width:0;font-size:.9rem;font-weight:650}.teacher-attention small{display:block;margin-top:.4rem;color:var(--ink-soft);font-size:.8rem;font-weight:400;line-height:1.5}.teacher-notice{grid-column:1/-1;padding:1rem;background:var(--gold-soft);border-radius:.75rem;font-size:.85rem;line-height:1.6}@media(max-width:950px){.teacher-overview{grid-template-columns:minmax(0,1fr)}}@media(max-width:480px){.teacher-schedule li{flex-direction:column;gap:.4rem}.teacher-day,.teacher-attention{padding:1rem}.teacher-attendance-action{align-items:stretch}.teacher-attendance-button,.teacher-attendance-link{width:100%;text-align:center}}
 .dashboard-view { width: 100%; max-width: 1320px; margin: 0 auto; color: var(--ink); }
 .dashboard-intro { padding: 8px 2px 27px; }
 .intro-kicker { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
@@ -570,12 +606,21 @@ const principalAttendanceChart = computed(() => {
 .teacher-metrics .metric-item::before { width: 4px; height: auto; bottom: 0; }
 .teacher-metrics .metric-item strong { color: color-mix(in srgb, var(--metric-accent) 78%, var(--ink)); }
 .teacher-metrics .metric-tone-1 { --metric-accent: #3269bc; }.teacher-metrics .metric-tone-2 { --metric-accent: #3d9b78; }.teacher-metrics .metric-tone-3 { --metric-accent: #ad7c2b; }.teacher-metrics .metric-tone-4 { --metric-accent: #8264b5; }
+.student-metrics .metric-item { border-color: color-mix(in srgb, var(--metric-accent) 32%, var(--line)); background: color-mix(in srgb, var(--metric-accent) 8%, var(--surface)); }
+.student-metrics .metric-item::before { width: 4px; height: auto; bottom: 0; background: var(--metric-accent); }
+.student-metrics .metric-item strong { color: color-mix(in srgb, var(--metric-accent) 78%, var(--ink)); }
+.student-metrics .metric-tone-1 { --metric-accent: #3269bc; }.student-metrics .metric-tone-2 { --metric-accent: #3d9b78; }.student-metrics .metric-tone-3 { --metric-accent: #ad7c2b; }.student-metrics .metric-tone-4 { --metric-accent: #8264b5; }
 .metric-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.metric-item span, .metric-item small { display: block; color: var(--ink-soft); font-size: 10px; }.metric-head > span:first-child { color: var(--ink); font-size: 13px; font-weight: 800; letter-spacing: -.015em; }.metric-arrow { color: var(--ink-faint) !important; font-size: 14px !important; line-height: 1; }.metric-item strong { display: block; margin: 15px 0 5px; color: var(--ink); font-size: 27px; letter-spacing: -.05em; line-height: 1; }.metric-item small { color: var(--ink-faint); font-size: 10px; }
 .workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: 20px; letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: 10px; }.workflow-list { border-top: 1px solid var(--line); }.workflow-row { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); transition: padding .18s ease, background .18s ease; }.workflow-row:hover { padding-left: 12px; padding-right: 12px; background: var(--surface-subtle); }.workflow-index { width: 23px; color: var(--ink-faint); font: 700 11px Georgia, serif; }.workflow-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 auto; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }.workflow-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.workflow-copy { display: grid; gap: 4px; flex: 1; }.workflow-copy strong { color: var(--ink); font-size: 12px; }.workflow-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.4; }.workflow-arrow { color: var(--ink-faint); font-size: 18px; }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: 10px; }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: 800 12px Georgia, serif; }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
 .attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: 14px; }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 10px; white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: 10px; }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: 10px; }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: 11px; text-align: center; }
 .admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.student-overview { margin-top: 34px; }
+.student-section-heading { align-items: end; margin-bottom: 12px; }
 .student-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
-.student-overview-card { min-width: 0; min-height: 230px; padding: 19px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }
+.student-overview-card { display: flex; min-width: 0; min-height: 230px; flex-direction: column; padding: 19px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }
+.student-overview-card.attendance-card { border-top: 3px solid var(--green); }
+.student-overview-card.assignment-card { border-top: 3px solid var(--blue); }
+.student-overview-card.student-announcements-card { border-top: 3px solid var(--gold); }
 .student-overview-card > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .student-card-kicker { color: var(--ink); font-size: 14px; font-weight: 800; }
 .student-overview-card > header a { color: var(--blue); font-size: 10px; font-weight: 700; text-decoration: none; white-space: nowrap; }
@@ -586,6 +631,7 @@ const principalAttendanceChart = computed(() => {
 .attendance-meter { height: 8px; margin-top: 14px; overflow: hidden; background: var(--surface-subtle); border-radius: 999px; }
 .attendance-meter span { display: block; height: 100%; background: var(--green); border-radius: inherit; transition: width .2s ease; }
 .student-overview-card > p { margin: 13px 0 0; line-height: 1.5; }
+.student-overview-card > p:last-child { margin-top: auto; padding-top: 13px; }
 .assignment-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 25px; }
 .assignment-counts > div { display: grid; gap: 7px; padding: 13px; background: var(--surface-subtle); border-radius: 12px 12px 12px 4px; }
 .assignment-counts strong { color: var(--ink); font-size: 27px; line-height: 1; }

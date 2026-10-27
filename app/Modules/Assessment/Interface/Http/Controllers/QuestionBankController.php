@@ -166,7 +166,7 @@ class QuestionBankController extends Controller
 
     public function archive(Request $request, ExamQuestion $question): RedirectResponse
     {
-        $this->authorizeQuestion($request, $question);
+        $this->authorizeQuestion($request, $question, 'edit');
         $question->update(['is_active' => false]);
         $this->audit->log('assessment.question.archived', 'exam_question', (string) $question->id, [], actor: $request->user(), schoolId: (int) $question->school_id);
 
@@ -175,7 +175,7 @@ class QuestionBankController extends Controller
 
     public function restore(Request $request, ExamQuestion $question): RedirectResponse
     {
-        $this->authorizeQuestion($request, $question);
+        $this->authorizeQuestion($request, $question, 'edit');
         $question->update(['is_active' => true]);
         $this->audit->log('assessment.question.restored', 'exam_question', (string) $question->id, [], actor: $request->user(), schoolId: (int) $question->school_id);
 
@@ -315,7 +315,14 @@ class QuestionBankController extends Controller
         $schoolId = (int) $user->school_id;
         $status = (string) $request->query('status', 'active');
         $query = ExamQuestion::query()->where('school_id', $schoolId)
-            ->when($user->hasRole(['teacher', 'homeroom']), fn (Builder $q) => $q->where('owner_id', $user->id))
+            ->when($user->hasRole(['teacher', 'homeroom']), fn (Builder $q) => $q->where(function (Builder $scope) use ($user): void {
+                $scope->where('owner_id', $user->id)->orWhereExists(function ($shares) use ($user): void {
+                    $shares->selectRaw('1')->from('question_shares')->whereColumn('question_shares.resource_id', 'exam_questions.id')
+                        ->where('question_shares.resource_type', 'question')->where('question_shares.school_id', $user->school_id)
+                        ->where('question_shares.recipient_id', $user->id)->where('question_shares.status', 'accepted')
+                        ->where('question_shares.permission', 'edit')->where('question_shares.active_key', 'active');
+                });
+            }))
             ->when($status === 'active', fn (Builder $q) => $q->where('is_active', true))
             ->when($status === 'archived', fn (Builder $q) => $q->where('is_active', false))
             ->when($request->filled('type'), fn (Builder $q) => $q->where('type', $request->query('type')))

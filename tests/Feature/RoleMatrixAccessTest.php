@@ -113,6 +113,26 @@ class RoleMatrixAccessTest extends TestCase
         $this->post('/komunikasi/whatsapp/1/terkirim')->assertNotFound();
     }
 
+    public function test_sidebar_visibility_is_shared_by_the_server_for_each_role(): void
+    {
+        $admin = $this->usersByRole[RoleEnum::ADMIN->value];
+        $this->actingAs($admin)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('students')
+                && $keys->contains('users')
+                && $keys->contains('security')
+                && ! $keys->contains('journals'))
+        );
+
+        $teacher = $this->usersByRole[RoleEnum::TEACHER->value];
+        $this->actingAs($teacher)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('journals')
+                && $keys->contains('learning-resources')
+                && ! $keys->contains('student-ledger')
+                && ! $keys->contains('security')
+                && ! $keys->contains('admissions'))
+        );
+    }
+
     /**
      * Matriks Uji 2: Operator memiliki izin melihat dan mengelola pengguna serta profil sekolah.
      */

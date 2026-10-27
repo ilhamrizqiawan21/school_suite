@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,10 +40,53 @@ class QuestionShareController extends Controller
             ->whereHas('role', fn ($query) => $query->whereIn('name', self::MANAGER_ROLES))
             ->orderBy('name')->get(['id', 'name', 'username']);
 
+        $resourceIds = collect([$sent->getCollection(), $received->getCollection()])->flatten()
+            ->groupBy('resource_type')->map(fn ($shares) => $shares->pluck('resource_id')->unique()->values());
+        $sharedQuestionNames = ExamQuestion::query()->where('school_id', $schoolId)
+            ->whereIn('id', $resourceIds->get('question', collect()))
+            ->pluck('prompt', 'id')->map(fn ($prompt) => mb_strimwidth(strip_tags((string) $prompt), 0, 100, '…'));
+        $sharedPackNames = QuestionPack::query()->where('school_id', $schoolId)
+            ->whereIn('id', $resourceIds->get('pack', collect()))->pluck('name', 'id');
+        $resourceName = function (QuestionShare $share) use ($sharedQuestionNames, $sharedPackNames): string {
+            $name = $share->resource_type === 'question'
+                ? $sharedQuestionNames->get($share->resource_id)
+                : $sharedPackNames->get($share->resource_id);
+
+            return $name ?: 'Sumber sudah dihapus';
+        };
+        foreach ([$sent, $received] as $paginator) {
+            $paginator->getCollection()->transform(function (QuestionShare $share) use ($resourceName): QuestionShare {
+                $share->setAttribute('resource_name', $resourceName($share));
+
+                return $share;
+            });
+        }
+
+        $resourceOptions = [
+            'questions' => ExamQuestion::query()->leftJoin('subjects', 'subjects.id', '=', 'exam_questions.subject_id')
+                ->where('exam_questions.school_id', $schoolId)->where('exam_questions.owner_id', $request->user()->id)
+                ->where('exam_questions.is_active', true)
+                ->select(['exam_questions.id', 'exam_questions.prompt', 'exam_questions.type', 'exam_questions.jenjang', 'exam_questions.curriculum', 'subjects.name as subject_name', 'subjects.code as subject_code'])
+                ->latest('exam_questions.updated_at')->get()
+                ->map(fn (ExamQuestion $question) => [
+                    'id' => $question->id, 'name' => mb_strimwidth(strip_tags((string) $question->prompt), 0, 110, '…'),
+                    'type' => $question->type, 'jenjang' => $question->jenjang, 'curriculum' => $question->curriculum,
+                    'subject_name' => $question->subject_name, 'subject_code' => $question->subject_code,
+                ])->values(),
+            'packs' => QuestionPack::query()->where('school_id', $schoolId)->where('created_by', $request->user()->id)
+                ->where('status', '!=', 'archived')->withCount('items')->latest('updated_at')
+                ->get(['id', 'name', 'jenjang', 'curriculum', 'status'])
+                ->map(fn (QuestionPack $pack) => [
+                    'id' => $pack->id, 'name' => $pack->name, 'jenjang' => $pack->jenjang,
+                    'curriculum' => $pack->curriculum, 'status' => $pack->status, 'items_count' => $pack->items_count,
+                ])->values(),
+        ];
+
         return Inertia::render('Assessment/QuestionShares/Index', [
             'sent' => $sent,
             'received' => $received,
             'recipients' => $users,
+            'resource_options' => $resourceOptions,
             'resource' => ['type' => $request->query('type'), 'id' => $request->query('id')],
         ]);
     }
@@ -59,10 +103,17 @@ class QuestionShareController extends Controller
         ]);
         $user = $request->user();
         $resource = $this->resolveResource((int) $user->school_id, $data['resource_type'], (int) $data['resource_id']);
-        abort_unless($resource, 404);
+        if (! $resource) {
+            throw ValidationException::withMessages(['resource_id' => 'Sumber soal atau paket tidak ditemukan di sekolah ini.']);
+        }
         $this->authorizeResourceOwner($user, $resource);
+        if (($resource instanceof ExamQuestion && ! $resource->is_active) || ($resource instanceof QuestionPack && $resource->status === 'archived')) {
+            throw ValidationException::withMessages(['resource_id' => 'Sumber yang sudah diarsipkan tidak dapat dibagikan.']);
+        }
         $recipient = User::query()->where('school_id', $user->school_id)->where('is_active', true)->findOrFail($data['recipient_id']);
-        abort_unless($recipient->hasRole(self::MANAGER_ROLES) && (int) $recipient->id !== (int) $user->id, 422, 'Penerima harus pengguna pengelola bank soal lain di sekolah yang sama.');
+        if (! $recipient->hasRole(self::MANAGER_ROLES) || (int) $recipient->id === (int) $user->id) {
+            throw ValidationException::withMessages(['recipient_id' => 'Penerima harus guru atau wali kelas lain di sekolah yang sama.']);
+        }
 
         try {
             $share = DB::transaction(function () use ($user, $data, $recipient): QuestionShare {
@@ -108,10 +159,15 @@ class QuestionShareController extends Controller
             abort_unless($share->status === 'accepted', 403);
         }
 
+        $isRecipient = (int) $request->user()->id === (int) $share->recipient_id;
+
         return Inertia::render('Assessment/QuestionShares/Show', [
             'share' => $share->load(['sender:id,name', 'recipient:id,name', 'events.actor:id,name']),
-            'resource' => $this->resourcePayload($resource),
-            'can_copy' => (int) $request->user()->id === (int) $share->recipient_id && $share->permission === 'copy' && $share->status === 'accepted',
+            'resource' => $this->resourcePayload(
+                $resource,
+                ! $isRecipient || in_array($share->permission, ['copy', 'edit'], true),
+            ),
+            'can_copy' => $isRecipient && $share->permission === 'copy' && $share->status === 'accepted',
         ]);
     }
 
@@ -120,13 +176,17 @@ class QuestionShareController extends Controller
         $this->authorizeShareParticipant($request, $share);
         abort_unless((int) $request->user()->id === (int) $share->recipient_id, 403);
         abort_unless(in_array($decision, ['accept', 'reject'], true), 404);
-        abort_unless($share->status === 'pending', 422, 'Permintaan ini sudah diputuskan.');
+        if ($share->status !== 'pending') {
+            throw ValidationException::withMessages(['share' => 'Permintaan ini sudah diputuskan.']);
+        }
         $data = $request->validate(['decision_note' => ['nullable', 'string', 'max:2000']]);
         $nextStatus = $decision === 'accept' ? 'accepted' : 'rejected';
 
         DB::transaction(function () use ($request, $share, $nextStatus, $data): void {
             $locked = QuestionShare::query()->whereKey($share->id)->lockForUpdate()->firstOrFail();
-            abort_unless($locked->status === 'pending', 422, 'Permintaan ini sudah diputuskan.');
+            if ($locked->status !== 'pending') {
+                throw ValidationException::withMessages(['share' => 'Permintaan ini sudah diputuskan oleh pengguna lain.']);
+            }
             $locked->update([
                 'status' => $nextStatus,
                 'active_key' => $nextStatus === 'accepted' ? 'active' : null,
@@ -145,11 +205,15 @@ class QuestionShareController extends Controller
     {
         $this->authorizeShareParticipant($request, $share);
         abort_unless((int) $request->user()->id === (int) $share->sender_id, 403);
-        abort_unless(in_array($share->status, ['pending', 'accepted'], true), 422, 'Berbagi ini sudah tidak aktif.');
+        if (! in_array($share->status, ['pending', 'accepted'], true)) {
+            throw ValidationException::withMessages(['share' => 'Berbagi ini sudah tidak aktif.']);
+        }
 
         DB::transaction(function () use ($request, $share): void {
             $locked = QuestionShare::query()->whereKey($share->id)->lockForUpdate()->firstOrFail();
-            abort_unless(in_array($locked->status, ['pending', 'accepted'], true), 422, 'Berbagi ini sudah tidak aktif.');
+            if (! in_array($locked->status, ['pending', 'accepted'], true)) {
+                throw ValidationException::withMessages(['share' => 'Berbagi ini sudah tidak aktif.']);
+            }
             $previous = $locked->status;
             $locked->update(['status' => 'revoked', 'active_key' => null, 'revoked_at' => now()]);
             $this->recordEvent($locked, $request->user(), 'revoked', $locked->permission, $locked->permission, $previous, 'revoked', null);
@@ -164,7 +228,7 @@ class QuestionShareController extends Controller
     {
         $this->authorizeShareParticipant($request, $share);
         abort_unless((int) $request->user()->id === (int) $share->recipient_id, 403);
-        abort_unless($share->status === 'accepted' && $share->permission === 'copy', 403);
+        abort_unless($share->status === 'accepted' && $share->active_key === 'active' && $share->permission === 'copy', 403);
         $source = $this->resolveResource((int) $share->school_id, $share->resource_type, (int) $share->resource_id);
         abort_unless($source, 404);
 
@@ -213,7 +277,10 @@ class QuestionShareController extends Controller
         }
 
         /** @var QuestionPack $source */
-        $source->load('items');
+        $source->load('items.question', 'items.questionVersion');
+        if ($source->status === 'archived' || $source->items->isEmpty() || $source->items->contains(fn ($item) => ! $item->question || ! $item->questionVersion)) {
+            throw ValidationException::withMessages(['share' => 'Paket tidak dapat disalin karena sudah diarsipkan, kosong, atau memiliki item tanpa versi soal.']);
+        }
         $copy = DB::transaction(function () use ($source, $request): QuestionPack {
             $copy = QuestionPack::create([
                 'school_id' => $source->school_id, 'created_by' => $request->user()->id,
@@ -237,7 +304,7 @@ class QuestionShareController extends Controller
     {
         return QuestionShare::query()->where('school_id', $user->school_id)->where('recipient_id', $user->id)
             ->where('resource_type', $type)->where('resource_id', $id)->where('status', 'accepted')
-            ->where('permission', $permission)->exists();
+            ->where('permission', $permission)->where('active_key', 'active')->exists();
     }
 
     private function resolveResource(int $schoolId, string $type, int $id): ExamQuestion|QuestionPack|null
@@ -270,17 +337,22 @@ class QuestionShareController extends Controller
         abort_unless(in_array((int) $request->user()->id, [(int) $share->sender_id, (int) $share->recipient_id], true), 403);
     }
 
-    private function resourcePayload(ExamQuestion|QuestionPack $resource): array
+    private function resourcePayload(ExamQuestion|QuestionPack $resource, bool $includeAnswerKey = true): array
     {
         if ($resource instanceof ExamQuestion) {
             $version = $resource->currentVersionRecord() ?? $resource;
 
-            return ['type' => 'question', 'id' => $resource->id, 'name' => mb_strimwidth(strip_tags((string) $version->prompt), 0, 120), 'content' => [
+            $content = [
                 'type' => $version->type, 'prompt' => $version->prompt, 'options' => $version->options,
                 'matching_pairs' => $version->matching_pairs, 'essay_rubric' => $version->essay_rubric,
-                'correct_answer' => $version->correct_answer, 'explanation' => $version->explanation,
                 'points' => $version->points, 'jenjang' => $version->jenjang, 'curriculum' => $version->curriculum,
-            ]];
+            ];
+            if ($includeAnswerKey) {
+                $content['correct_answer'] = $version->correct_answer;
+                $content['explanation'] = $version->explanation;
+            }
+
+            return ['type' => 'question', 'id' => $resource->id, 'name' => mb_strimwidth(strip_tags((string) $version->prompt), 0, 120), 'content' => $content];
         }
         $resource->load('items.questionVersion');
 

@@ -13,6 +13,7 @@ use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Assessment\Application\Services\ReportPublishingService;
 use App\Modules\Assessment\Domain\Enums\ReportStatusEnum;
 use App\Modules\Assessment\Domain\Enums\RoundingRuleEnum;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentComponent;
@@ -354,44 +355,44 @@ class PilotSchoolSeeder extends Seeder
                 );
 
                 // Buat 1 contoh ReportSnapshot berstatus PUBLISHED untuk verifikasi cetak instan
+                $schemeSnapshot = ['name' => $scheme->name, 'code' => $scheme->code];
+                $gradesSnapshot = [
+                    [
+                        'subject_id' => $subjects['MAT-01']->id,
+                        'subject_name' => 'Matematika',
+                        'subject_code' => 'MAT-01',
+                        'teacher_name' => 'Budi Hartono, S.Pd.',
+                        'final_score' => 89.5,
+                        'letter_grade' => 'B',
+                        'is_passing' => true,
+                    ],
+                    [
+                        'subject_id' => $subjects['BIN-01']->id,
+                        'subject_name' => 'Bahasa Indonesia',
+                        'subject_code' => 'BIN-01',
+                        'teacher_name' => 'Siti Aminah, S.Pd.',
+                        'final_score' => 91.0,
+                        'letter_grade' => 'A',
+                        'is_passing' => true,
+                    ],
+                ];
+                $attendanceSnapshot = ['present' => 95, 'sick' => 2, 'permitted' => 1, 'absent' => 0];
+                $notesSnapshot = [
+                    'homeroom_notes' => 'Menunjukkan prestasi belajar yang sangat baik dan konsisten. Terus pertahankan prestasimu!',
+                ];
+
                 ReportSnapshot::firstOrCreate(
                     ['enrollment_id' => $enrollment->id, 'term_id' => $termActive->id],
                     [
                         'school_id' => $school->id,
                         'class_group_id' => $class7A->id,
                         'student_id' => $student->id,
-                        'scheme_snapshot' => ['name' => $scheme->name, 'code' => $scheme->code],
-                        'grades_snapshot' => [
-                            [
-                                'subject_id' => $subjects['MAT-01']->id,
-                                'subject_name' => 'Matematika',
-                                'subject_code' => 'MAT-01',
-                                'teacher_name' => 'Budi Hartono, S.Pd.',
-                                'final_score' => 89.5,
-                                'letter_grade' => 'B',
-                                'is_passing' => true,
-                            ],
-                            [
-                                'subject_id' => $subjects['BIN-01']->id,
-                                'subject_name' => 'Bahasa Indonesia',
-                                'subject_code' => 'BIN-01',
-                                'teacher_name' => 'Siti Aminah, S.Pd.',
-                                'final_score' => 91.0,
-                                'letter_grade' => 'A',
-                                'is_passing' => true,
-                            ],
-                        ],
-                        'attendance_snapshot' => [
-                            'present' => 95,
-                            'sick' => 2,
-                            'permitted' => 1,
-                            'absent' => 0,
-                        ],
-                        'notes_snapshot' => [
-                            'homeroom_notes' => 'Menunjukkan prestasi belajar yang sangat baik dan konsisten. Terus pertahankan prestasimu!',
-                        ],
+                        'scheme_snapshot' => $schemeSnapshot,
+                        'grades_snapshot' => $gradesSnapshot,
+                        'attendance_snapshot' => $attendanceSnapshot,
+                        'notes_snapshot' => $notesSnapshot,
                         'status' => ReportStatusEnum::PUBLISHED,
-                        'checksum' => hash('sha256', "pilot-report-{$student->id}-{$termActive->id}"),
+                        'checksum' => app(ReportPublishingService::class)->calculateChecksum($schemeSnapshot, $gradesSnapshot, $attendanceSnapshot, $notesSnapshot),
                         'published_at' => now(),
                     ]
                 );

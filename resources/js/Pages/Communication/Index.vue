@@ -20,6 +20,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage<{ flash?: { message?: string } }>();
+const communicationBase = window.location.pathname.startsWith('/guru/') ? '/guru' : '/komunikasi';
 const tab = ref(['announcements', 'calendar', 'notifications'].includes(props.active_tab) ? props.active_tab : 'announcements');
 const showAnnouncementForm = ref(false);
 const showEventForm = ref(false);
@@ -53,12 +54,12 @@ const handleAttachment = (event: Event) => {
     announcementForm.attachment = (event.target as HTMLInputElement).files?.[0] ?? null;
 };
 
-const submitAnnouncement = () => announcementForm.post('/komunikasi/pengumuman', {
+const submitAnnouncement = () => announcementForm.post(`${communicationBase}/pengumuman`, {
     forceFormData: true,
     onSuccess: () => { announcementForm.reset(); showAnnouncementForm.value = false; tab.value = 'announcements'; },
 });
 
-const submitEvent = () => eventForm.post('/komunikasi/kalender', {
+const submitEvent = () => eventForm.post(`${communicationBase}/kalender`, {
     onSuccess: () => { eventForm.reset(); showEventForm.value = false; tab.value = 'calendar'; },
 });
 
@@ -67,7 +68,7 @@ const remove = (url: string, label: string) => {
 };
 
 const markRead = (notification: NotificationItem) => {
-    if (!notification.read_at) router.post(`/komunikasi/notifikasi/${notification.id}/baca`, {}, { preserveScroll: true });
+    if (!notification.read_at) router.post(`${communicationBase}/notifikasi/${notification.id}/baca`, {}, { preserveScroll: true });
 };
 </script>
 
@@ -82,7 +83,7 @@ const markRead = (notification: NotificationItem) => {
                     <p>Bagikan informasi sekolah, lihat jadwal kegiatan, dan pantau notifikasi Anda.</p>
                 </div>
                 <div class="hero-actions">
-                    <Link v-if="can_chat" class="secondary-button" href="/komunikasi/chat">Chat kelas</Link>
+                    <Link v-if="can_chat" class="secondary-button" :href="`${communicationBase}/chat`">Chat kelas</Link>
                 </div>
             </section>
 

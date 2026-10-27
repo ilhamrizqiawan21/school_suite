@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '../../docs/mockup/styles.css';
+@import './shell.css';
 @import './settings.css';
 @import './learning.css';
 @import './teacher.css';

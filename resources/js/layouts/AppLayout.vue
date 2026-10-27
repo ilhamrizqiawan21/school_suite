@@ -12,7 +12,7 @@ interface PageProps {
     appName?: string;
     school?: { name?: string; logo_url?: string | null; favicon_url?: string | null; theme_primary?: string };
     activePeriod?: { label?: string };
-    auth?: { user?: { role?: string } };
+    auth?: { user?: { id?: number; role?: string } };
     [key: string]: unknown;
 }
 
@@ -21,10 +21,12 @@ const appName = computed(() => !page.props.appName || page.props.appName === 'La
 const currentRole = computed(() => page.props.auth?.user?.role);
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
 const sidebarOpen = ref(false);
-const desktopSidebarClosed = ref(false);
+const desktopSidebarRail = ref(false);
 const isMobileViewport = ref(false);
-const sidebarExpanded = computed(() => isMobileViewport.value ? sidebarOpen.value : !desktopSidebarClosed.value);
-const sidebarToggleLabel = computed(() => sidebarExpanded.value ? 'Tutup sidebar' : 'Buka sidebar');
+const sidebarExpanded = computed(() => isMobileViewport.value ? sidebarOpen.value : !desktopSidebarRail.value);
+const sidebarToggleLabel = computed(() => isMobileViewport.value
+    ? (sidebarOpen.value ? 'Tutup navigasi' : 'Buka navigasi')
+    : (desktopSidebarRail.value ? 'Perlebar sidebar' : 'Perkecil sidebar'));
 const darkTheme = ref(false);
 const searchInput = ref<HTMLInputElement | null>(null);
 let removeNavigateListener: VoidFunction | null = null;
@@ -37,7 +39,10 @@ const toggleSidebar = () => {
         return;
     }
 
-    desktopSidebarClosed.value = !desktopSidebarClosed.value;
+    desktopSidebarRail.value = !desktopSidebarRail.value;
+    try {
+        localStorage.setItem('school-suite-sidebar-mode', desktopSidebarRail.value ? 'rail' : 'full');
+    } catch { /* Storage may be unavailable in private browsing. */ }
 };
 
 const toggleTheme = () => {
@@ -49,7 +54,6 @@ const toggleTheme = () => {
 const closeOnEscape = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
         sidebarOpen.value = false;
-        if (!isMobileViewport.value) desktopSidebarClosed.value = true;
     }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
@@ -65,6 +69,9 @@ onMounted(() => {
     };
     syncSidebarViewport();
     sidebarViewportQuery.addEventListener('change', syncSidebarViewport);
+    try {
+        desktopSidebarRail.value = localStorage.getItem('school-suite-sidebar-mode') === 'rail';
+    } catch { desktopSidebarRail.value = false; }
 
     if (page.props.school?.theme_primary) document.documentElement.style.setProperty('--primary', page.props.school.theme_primary);
     if (page.props.school?.favicon_url) {
@@ -88,7 +95,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace, 'is-sidebar-closed': desktopSidebarClosed && !isMobileViewport }">
+    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace, 'is-sidebar-rail': desktopSidebarRail && !isMobileViewport }">
         <Head :title="title" />
 
         <!-- Accessibility: Skip Link -->

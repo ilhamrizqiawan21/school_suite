@@ -16,12 +16,10 @@ class TeacherDirectoryService
     {
         return DB::table('teachers')
             ->join('users', 'users.id', '=', 'teachers.user_id')
-            ->join('roles', 'roles.id', '=', 'users.role_id')
             ->where('teachers.school_id', $schoolId)
             ->where('teachers.is_active', true)
             ->where('users.school_id', $schoolId)
             ->where('users.is_active', true)
-            ->where('roles.name', 'teacher')
             ->when($excludedUserIds !== [], fn ($query) => $query->whereNotIn('users.id', $excludedUserIds))
             ->orderBy('users.name')
             ->get(['users.id', 'users.name', 'users.email']);
@@ -31,13 +29,11 @@ class TeacherDirectoryService
     {
         return DB::table('teachers')
             ->join('users', 'users.id', '=', 'teachers.user_id')
-            ->join('roles', 'roles.id', '=', 'users.role_id')
             ->where('teachers.school_id', $schoolId)
             ->where('teachers.user_id', $userId)
             ->where('teachers.is_active', true)
             ->where('users.school_id', $schoolId)
             ->where('users.is_active', true)
-            ->where('roles.name', 'teacher')
             ->exists();
     }
 }

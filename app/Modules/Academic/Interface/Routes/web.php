@@ -107,3 +107,7 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     Route::get('siklus-siswa', [StudentLifecycleController::class, 'index'])->name('lifecycle.index');
     Route::post('siklus-siswa', [StudentLifecycleController::class, 'store'])->middleware('throttle:sensitive')->name('lifecycle.store');
 });
+
+Route::middleware(['auth', 'role:principal'])->prefix('kepsek/laporan')->name('principal.reports.')->group(function (): void {
+    Route::get('rekap-absensi', [AttendanceController::class, 'recap'])->name('attendance');
+});

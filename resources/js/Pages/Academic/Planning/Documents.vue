@@ -223,4 +223,7 @@ function monthName(month: number) { return new Intl.DateTimeFormat('id-ID', { mo
 .capacity-warning{padding:.7rem .8rem;border:1px solid #d6a333;border-radius:.55rem;background:#fff6dd;color:#684708;font-size:.78rem;line-height:1.45}
 @media(max-width:700px){.month-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.month-grid{grid-template-columns:minmax(0,1fr)}}
+.documents-page{container-type:inline-size}
+@container (max-width: 950px){.page-heading{align-items:stretch;flex-direction:column}.heading-actions{width:100%;flex-wrap:wrap}.workspace{grid-template-columns:minmax(0,1fr)}.document-list{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:300px;overflow:auto}.list-heading,.empty-list{grid-column:1/-1}.document-item{min-width:0;margin-top:0}.metadata-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(130px,.55fr)}}
+@container (max-width: 700px){.document-list{grid-template-columns:minmax(0,1fr);max-height:240px}.list-heading,.empty-list{grid-column:auto}.type-grid,.metadata-grid,.allocation-grid{grid-template-columns:minmax(0,1fr)}.month-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

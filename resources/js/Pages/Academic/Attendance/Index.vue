@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
@@ -31,6 +31,7 @@ const subjectId = ref(props.selected_subject?.id ? String(props.selected_subject
 const month = ref(props.month);
 const selectedSessionId = ref(props.selected_session_id ? String(props.selected_session_id) : '');
 const studentList = ref<StudentItem[]>(cloneStudents(props.students));
+const bulkStatus = ref<AttendanceStatus>('present');
 
 const form = useForm({
     session_id: selectedSessionId.value,
@@ -95,12 +96,22 @@ function selectSession(session: SessionItem) {
     visit();
 }
 
-function markAllPresent() {
-    studentList.value.forEach((student) => { student.status = 'present'; });
+function applyBulkStatus() {
+    studentList.value.forEach((student) => { student.status = bulkStatus.value; });
 }
 
 function resetChanges() {
     studentList.value = cloneStudents(props.students);
+}
+
+function statusButtonClass(status: AttendanceStatus, selected: boolean): string {
+    if (!selected) return 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50';
+    return {
+        present: 'border-emerald-600 bg-emerald-600 text-white',
+        sick: 'border-amber-500 bg-amber-500 text-white',
+        permitted: 'border-blue-600 bg-blue-600 text-white',
+        absent: 'border-rose-600 bg-rose-600 text-white',
+    }[status];
 }
 
 function submitAttendance() {
@@ -112,21 +123,43 @@ function submitAttendance() {
     }));
     form.post('/akademik/presensi', { preserveScroll: true });
 }
+
+function exportSessionCsv() {
+    if (!selectedSession.value) return;
+    const escapeCsv = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
+    const statusLabels: Record<AttendanceStatus, string> = { present: 'Hadir', sick: 'Sakit', permitted: 'Izin', absent: 'Alpa' };
+    const rows = [
+        ['No', 'NIS', 'Nama siswa', 'JK', 'Status', 'Catatan'],
+        ...studentList.value.map((student, index) => [student.roll_number || index + 1, student.nis, student.name, student.gender, statusLabels[student.status], student.notes]),
+    ];
+    const content = `\uFEFF${rows.map((row) => row.map(escapeCsv).join(',')).join('\r\n')}`;
+    const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `presensi-${props.selected_class?.name.replaceAll(/[^a-z0-9-]/gi, '-')}-${selectedSession.value.date}.csv`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 </script>
 
 <template>
-    <AppLayout title="Presensi Siswa">
-        <Head title="Presensi Siswa — School Suite" />
-        <div class="view space-y-5 attendance-page">
-            <header class="page-heading compact-heading">
+    <AppLayout title="Absensi Siswa">
+        <Head title="Absensi Siswa — School Suite" />
+        <div class="view attendance-page mx-auto w-full max-w-[1440px] space-y-5">
+            <header class="page-heading compact-heading flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Presensi per Pertemuan</h1>
-                    <p class="mt-1 text-sm text-slate-500">Pilih kelas, mata pelajaran, dan pertemuan untuk mencatat atau meninjau kehadiran.</p>
+                    <p class="eyebrow">KEHADIRAN SISWA</p>
+                    <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">Absensi Siswa</h1>
+                    <p class="mt-1 text-sm text-slate-500">Pilih kelas, mata pelajaran, dan bulan. Buka sesi untuk mencatat presensi.</p>
                 </div>
-                <a href="/akademik/presensi/rekap" class="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-sm font-semibold text-indigo-700">Lihat Rekap</a>
+                <div class="flex flex-wrap gap-2">
+                    <Link href="/" class="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">← Kembali</Link>
+                    <button type="button" class="inline-flex min-h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!selectedSession || !studentList.length" @click="exportSessionCsv">Ekspor CSV</button>
+                    <a href="/akademik/presensi/rekap" class="inline-flex min-h-10 items-center rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Rekap Absensi</a>
+                </div>
             </header>
 
-            <section class="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-xs md:grid-cols-3" aria-label="Filter presensi">
+            <section class="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs sm:grid-cols-2 xl:grid-cols-3" aria-label="Filter presensi">
                 <label class="block text-xs font-semibold text-slate-600">Kelas
                     <select v-model="classId" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" @change="changeClass">
                         <option value="" disabled>Pilih kelas</option>
@@ -139,12 +172,12 @@ function submitAttendance() {
                         <option v-for="item in subjects" :key="item.id" :value="String(item.id)">{{ item.name }} ({{ item.code }})</option>
                     </select>
                 </label>
-                <label class="block text-xs font-semibold text-slate-600">Bulan riwayat
+                <label class="block text-xs font-semibold text-slate-600">Bulan
                     <input v-model="month" type="month" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" @change="changeMonth">
                 </label>
             </section>
 
-            <section v-if="classes.length && subjects.length" class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.42fr)]">
+            <section v-if="classes.length && subjects.length" class="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.38fr)]">
                 <div class="min-w-0 space-y-4">
                     <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
                         <div>
@@ -154,7 +187,22 @@ function submitAttendance() {
                             </h2>
                             <p v-if="selectedSession" class="mt-1 text-sm text-slate-500">{{ selected_subject?.name }} · {{ selectedSession.start_time }}–{{ selectedSession.end_time }}</p>
                         </div>
-                        <button v-if="studentList.length" type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300" @click="markAllPresent">Tandai semua hadir</button>
+                        <div v-if="studentList.length" class="flex w-full flex-wrap items-end gap-2 sm:w-auto">
+                            <label class="min-w-40 flex-1 text-xs font-semibold text-slate-600 sm:flex-none">Input massal
+                                <select v-model="bulkStatus" class="mt-1 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                                    <option value="present">Hadir</option><option value="sick">Sakit</option><option value="permitted">Izin</option><option value="absent">Alpa</option>
+                                </select>
+                            </label>
+                            <button type="button" class="min-h-10 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300" @click="applyBulkStatus">Terapkan ke semua</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-600" aria-label="Legenda status">
+                        <span class="font-bold text-slate-800">Legenda:</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-emerald-500"/>Hadir</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-amber-500"/>Sakit</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-blue-500"/>Izin</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-rose-500"/>Alpa</span>
                     </div>
 
                     <div v-if="selectedSession" class="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-4">
@@ -164,20 +212,20 @@ function submitAttendance() {
                         <div class="rounded-lg bg-rose-50 p-3 text-center"><span class="block text-xs font-semibold text-rose-700">Alpa</span><strong class="text-lg text-rose-900">{{ summary.absent }}</strong></div>
                     </div>
 
-                    <form v-if="selectedSession" class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs" @submit.prevent="submitAttendance">
+                    <form v-if="selectedSession" class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs" @submit.prevent="submitAttendance">
                         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
-                            <div><h3 class="font-bold text-slate-900">Daftar peserta didik</h3><p class="text-xs text-slate-500">{{ studentList.length }} siswa · perubahan tersimpan untuk pertemuan terpilih</p></div>
+                            <div><h3 class="font-bold text-slate-900">Daftar siswa</h3><p class="text-xs text-slate-500">{{ studentList.length }} siswa · {{ selected_subject?.name }}</p></div>
                             <span v-if="selectedSession.attendance_count" class="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">{{ selectedSession.attendance_count }}/{{ selectedSession.student_count }} tercatat</span>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full min-w-[760px] border-collapse text-left text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th class="px-4 py-3">No / NIS</th><th class="px-4 py-3">Nama siswa</th><th class="px-4 py-3">Status pertemuan</th><th class="px-4 py-3">Catatan</th></tr></thead>
+                            <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th class="w-24 px-4 py-3">No / NIS</th><th class="min-w-44 px-4 py-3">Nama siswa</th><th class="min-w-64 px-4 py-3">Status</th><th class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
                                 <tbody class="divide-y divide-slate-100 text-slate-700">
                                     <tr v-for="(student, index) in studentList" :key="student.enrollment_id" class="hover:bg-slate-50">
                                         <td class="whitespace-nowrap px-4 py-3 text-xs"><span class="block font-semibold text-slate-700">{{ student.roll_number || index + 1 }}</span><span class="text-slate-500">{{ student.nis }}</span></td>
                                         <td class="px-4 py-3"><span class="font-semibold text-slate-900">{{ student.name }}</span><span class="ml-2 text-xs text-slate-500">{{ student.gender }}</span></td>
                                         <td class="px-4 py-3"><div class="flex flex-wrap gap-1.5">
-                                            <button v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="student.status === option[0] ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'" class="min-h-9 rounded-md border px-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300" @click="student.status = option[0]">{{ option[1] }}</button>
+                                            <button v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="statusButtonClass(option[0], student.status === option[0])" class="min-h-9 rounded-md border px-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300" @click="student.status = option[0]">{{ option[1] }}</button>
                                         </div></td>
                                         <td class="px-4 py-3"><input v-model="student.notes" type="text" maxlength="255" placeholder="Opsional" class="w-full min-w-40 rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></td>
                                     </tr>
@@ -193,7 +241,7 @@ function submitAttendance() {
                                 <template v-else>Semua perubahan tersimpan</template>
                             </p>
                             <div class="flex items-center gap-2">
-                                <button v-if="isDirty" type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" @click="resetChanges">Batalkan perubahan</button>
+                                <button type="button" :disabled="!isDirty" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50" @click="resetChanges">Reset</button>
                                 <button type="submit" :disabled="form.processing || !canSave || studentList.length === 0" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-50">{{ form.processing ? 'Menyimpan…' : 'Simpan presensi' }}</button>
                             </div>
                         </div>

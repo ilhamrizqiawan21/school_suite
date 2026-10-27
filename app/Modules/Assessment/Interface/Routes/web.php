@@ -70,11 +70,18 @@ Route::middleware(['auth', 'throttle:sensitive'])->prefix('laporan')->name('repo
 });
 Route::middleware(['auth', 'throttle:sensitive'])->get('/penilaian/rapor/{report}/pdf', [ReportingController::class, 'reportPdf'])->name('assessment.reports.pdf');
 
+Route::middleware(['auth', 'role:principal'])->prefix('kepsek')->name('principal.')->group(function () {
+    Route::get('statistik', [AssessmentAnalyticsController::class, 'index'])->name('statistics');
+    Route::get('performa-guru', [ReportingController::class, 'index'])->name('teacher-performance');
+    Route::get('laporan/nilai', [ReportCardController::class, 'index'])->name('reports.scores');
+});
+
 Route::middleware(['auth', 'throttle:sensitive'])->prefix('ujian')->name('exams.')->group(function () {
     Route::get('/', [ExamController::class, 'index'])->name('index');
     Route::post('/', [ExamController::class, 'storeExam'])->name('store');
     Route::post('/{exam}/terbitkan', [ExamController::class, 'publish'])->name('publish');
     Route::post('/{exam}/mulai', [ExamController::class, 'start'])->name('start');
+    Route::get('/{exam}/monitor', [ExamController::class, 'monitor'])->name('monitor');
     Route::get('/{exam}/hasil', [ExamController::class, 'results'])->name('results');
     Route::post('/{exam}/hasil/terbitkan', [ExamController::class, 'publishResults'])->name('results.publish');
     Route::get('/{exam}/hasil/export', [ExamController::class, 'export'])->name('results.export');
@@ -83,5 +90,8 @@ Route::middleware(['auth', 'throttle:sensitive'])->prefix('ujian')->name('exams.
     Route::post('/attempt/{attempt}/heartbeat', [ExamController::class, 'heartbeat'])->name('heartbeat');
     Route::post('/attempt/{attempt}/pelanggaran', [ExamController::class, 'violation'])->name('violation');
     Route::post('/attempt/{attempt}/kirim', [ExamController::class, 'submit'])->name('submit');
+    Route::post('/attempt/{attempt}/buka-kunci', [ExamController::class, 'unlock'])->name('unlock');
+    Route::post('/attempt/{attempt}/tambah-waktu', [ExamController::class, 'extend'])->name('extend');
+    Route::post('/attempt/{attempt}/paksa-selesai', [ExamController::class, 'forceFinish'])->name('force-finish');
     Route::post('/jawaban/{answer}/nilai', [ExamController::class, 'gradeEssay'])->name('essay.grade');
 });

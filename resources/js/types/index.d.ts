@@ -48,6 +48,7 @@ export interface Teacher {
     account_status?: 'no_account' | 'default' | 'changed' | 'unavailable';
     id: number;
     school_id: number;
+    user_id?: number | null;
     nip?: string | null;
     name: string;
     gender: 'L' | 'P';

@@ -157,7 +157,10 @@ class AssessmentAnalyticsService
             $version = $item->questionVersion ?? $item->question;
             $itemAnswers = $answers->get($item->exam_question_id, collect());
             $objective = in_array($version?->type, ['multiple_choice', 'true_false', 'matching'], true);
-            $objectiveAnswers = $itemAnswers->filter(fn ($answer) => $answer->is_correct !== null);
+            // Jawaban kosong tetap dibuat sebagai baris ExamAnswer saat attempt
+            // difinalisasi. Baris tersebut tidak boleh ikut menjadi penyebut
+            // rasio benar karena siswa tidak pernah menjawab butirnya.
+            $objectiveAnswers = $itemAnswers->filter(fn ($answer) => $answer->is_correct !== null && trim((string) $answer->answer) !== '');
             $correctCount = $objectiveAnswers->where('is_correct', true)->count();
             $scoreSum = $itemAnswers->sum(fn ($answer) => (float) ($answer->score ?? 0));
             $averagePoints = $gradedCount ? round($scoreSum / $gradedCount, 2) : null;

@@ -12,6 +12,7 @@ use App\Modules\Academic\Infrastructure\Models\Schedule;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\TeacherAttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Administration\Infrastructure\Models\Announcement;
@@ -108,20 +109,27 @@ Route::get('/', function (PrincipalDashboardService $principalDashboard) {
 
         $teacherId = Teacher::where('school_id', $schoolId)
             ->where('user_id', $user->id)
+            ->where('is_active', true)
             ->value('id');
 
         if ($user->hasRole('teacher')) {
             $assignments = TeachingAssignment::query()->where('term_id', $activeTermId)->where('teacher_id', $teacherId ?? 0);
             $schoolNow = now('Asia/Jakarta');
             $today = $schoolNow->toDateString();
+            $teacherAttendance = $teacherId
+                ? TeacherAttendanceRecord::query()->where('school_id', $schoolId)->where('teacher_id', $teacherId)->whereDate('date', $today)->first()
+                : null;
             $todaySchedules = Schedule::query()->where('school_id', $schoolId)->where('teacher_id', $teacherId ?? 0)
                 ->where('term_id', $activeTermId)->where('status', 'published')->where('day_of_week', $schoolNow->dayOfWeekIso)
                 ->when(! $activeTerm || $activeTerm->start_date->toDateString() > $today || $activeTerm->end_date->toDateString() < $today, fn ($query) => $query->whereRaw('1 = 0'));
             $stats['role_metrics']['classes_count'] = (clone $assignments)->distinct()->count('class_group_id');
             $stats['teacher_overview'] = [
                 'date' => $today,
+                'teacher_id' => $teacherId,
                 'has_teacher_profile' => $teacherId !== null,
                 'has_active_term' => $activeTerm !== null,
+                'attendance_status' => $teacherAttendance?->status,
+                'attendance_recorded_at' => $teacherAttendance?->updated_at?->toIso8601String(),
                 'today_total' => (clone $todaySchedules)->count(),
                 'today_schedule' => $todaySchedules->with(['classGroup:id,name', 'subject:id,name'])->orderBy('start_time')->limit(5)->get()->map(fn (Schedule $schedule) => [
                     'id' => $schedule->id, 'class_name' => $schedule->classGroup?->name, 'subject_name' => $schedule->subject?->name,
@@ -239,6 +247,10 @@ Route::get('/', function (PrincipalDashboardService $principalDashboard) {
 // Observability & Health Check Subsystem (SS-F-009)
 Route::get('/up', HealthCheckController::class)->name('health.up');
 Route::get('/health', HealthCheckController::class)->name('health.index');
+
+Route::get('/kepsek/dashboard', fn () => redirect('/'))
+    ->middleware(['auth', 'role:principal'])
+    ->name('principal.dashboard');
 
 // Route Pengunduhan Berkas Privat dengan URL Bertanda Tangan (SS-F-008)
 Route::get('/berkas-privat/unduh', [PrivateFileController::class, 'download'])

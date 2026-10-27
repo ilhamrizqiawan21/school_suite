@@ -43,7 +43,9 @@ class EngagementController extends Controller
         abort_unless($term && in_array((int) $data['teaching_assignment_id'], $this->visibleAssignmentIds($request, $term->id), true), 403);
         $room = ClassChatRoom::firstOrCreate(['school_id' => $request->user()->school_id, 'teaching_assignment_id' => $data['teaching_assignment_id']], ['name' => $data['name'], 'is_active' => true]);
 
-        return redirect('/komunikasi/chat?room_id='.$room->id)->with('message', 'Ruang chat tersedia.');
+        $chatPath = $request->is('guru/*') ? '/guru/chat' : '/komunikasi/chat';
+
+        return redirect($chatPath.'?room_id='.$room->id)->with('message', 'Ruang chat tersedia.');
     }
 
     public function sendMessage(Request $request, ClassChatRoom $room): RedirectResponse

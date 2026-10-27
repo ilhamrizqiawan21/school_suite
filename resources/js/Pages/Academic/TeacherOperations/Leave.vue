@@ -74,13 +74,13 @@ function setStartDate() {
         <main class="view leave-page space-y-6">
             <section class="hero-card">
                 <div><p class="eyebrow">Administrasi akademik</p><h1>Izin &amp; cuti guru</h1><p>{{ can_review ? 'Tinjau pengajuan guru. Pengajuan yang disetujui akan dicatat otomatis pada absensi.' : 'Ajukan izin, sakit, cuti, atau dinas luar dan pantau keputusan sekolah.' }}</p></div>
-                <div class="flex flex-wrap gap-2"><Link class="secondary-button" href="/akademik/absensi-guru">Absensi guru</Link><button v-if="can_apply" class="primary-button" :disabled="form.processing" @click="showForm ? closeForm() : showForm = true">{{ showForm ? 'Tutup formulir' : 'Ajukan izin/cuti' }}</button></div>
+                <div class="flex flex-wrap gap-2"><Link class="secondary-button" href="/akademik/absensi-guru">Absensi guru</Link><button v-if="can_apply" type="button" class="primary-button" :disabled="form.processing" @click="showForm ? closeForm() : showForm = true">{{ showForm ? 'Tutup formulir' : 'Ajukan izin/cuti' }}</button></div>
             </section>
 
             <p v-if="message" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">{{ message }}</p>
 
             <ul v-if="actionErrors.length" class="panel p-4 text-sm text-red-700" role="alert"><li v-for="error in actionErrors" :key="error">{{ error }}</li></ul>
-            <section class="grade-summary" aria-label="Ringkasan seluruh pengajuan"><div v-for="tab in statusTabs" :key="tab.value"><span>{{ tab.label }}</span><strong>{{ summary[tab.value] }}</strong></div></section>
+            <section class="leave-summary" aria-label="Ringkasan seluruh pengajuan"><div v-for="tab in statusTabs" :key="tab.value" :class="`leave-summary-${tab.value}`"><span>{{ tab.label }}</span><strong>{{ summary[tab.value] }}</strong></div></section>
 
             <section v-if="showForm && can_apply" class="panel p-5">
                 <div class="mb-4"><h2 class="text-base font-semibold text-slate-900">Pengajuan baru</h2><p class="mt-1 text-sm text-slate-500">Rentang maksimal {{ max_days }} hari kalender. Pengajuan tidak dapat bertumpuk dengan pengajuan yang masih aktif.</p></div>
@@ -105,15 +105,15 @@ function setStartDate() {
                 </form>
             </section>
 
-            <form class="panel p-4 flex flex-wrap items-end gap-3" @submit.prevent="applyFilters">
-                <label class="grid gap-1 text-sm min-w-0 flex-1">Cari pengajuan<input v-model="search" type="search" placeholder="Nama, NIP, atau alasan…" class="rounded-lg border px-3 py-2" /></label>
-                <label class="grid gap-1 text-sm">Jenis pengajuan<select v-model="selectedType" class="rounded-lg border px-3 py-2"><option value="">Semua jenis</option><option v-for="(label, value) in types" :key="value" :value="value">{{ label }}</option></select></label>
-                <label class="grid gap-1 text-sm">Bulan izin/cuti<input v-model="month" type="month" class="rounded-lg border px-3 py-2" /></label>
-                <button class="secondary-button" type="submit">Terapkan filter</button><button class="secondary-button" type="button" @click="resetFilters">Reset filter</button>
+            <form class="panel leave-filter-form" @submit.prevent="applyFilters">
+                <label class="leave-filter-search">Cari pengajuan<input v-model="search" type="search" placeholder="Nama, NIP, atau alasan…" /></label>
+                <label class="leave-filter-type">Jenis pengajuan<select v-model="selectedType"><option value="">Semua jenis</option><option v-for="(label, value) in types" :key="value" :value="value">{{ label }}</option></select></label>
+                <label class="leave-filter-month">Bulan izin/cuti<input v-model="month" type="month" /></label>
+                <div class="leave-filter-actions"><button class="secondary-button" type="submit">Terapkan filter</button><button class="secondary-button" type="button" @click="resetFilters">Reset filter</button></div>
             </form>
-            <p class="text-sm text-slate-500">{{ leaves.total }} pengajuan sesuai filter. Ringkasan menampilkan seluruh pengajuan yang dapat Anda akses.</p>
+            <p class="leave-result-count">{{ leaves.total }} pengajuan sesuai filter. Ringkasan menampilkan seluruh pengajuan yang dapat Anda akses.</p>
             <nav class="flex flex-wrap gap-2" aria-label="Filter status pengajuan">
-                <Link v-for="tab in statusTabs" :key="tab.value" class="rounded-full border px-4 py-2 text-sm font-semibold transition" :class="filter === tab.value ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'" :href="filterUrl(tab.value)">{{ tab.label }} ({{ summary[tab.value] }})</Link>
+                <Link v-for="tab in statusTabs" :key="tab.value" class="rounded-full border px-4 py-2 text-sm font-semibold transition" :class="filter === tab.value ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'" :href="filterUrl(tab.value)" :aria-current="filter === tab.value ? 'page' : undefined">{{ tab.label }} ({{ summary[tab.value] }})</Link>
             </nav>
 
             <section class="panel overflow-hidden">
@@ -130,9 +130,9 @@ function setStartDate() {
                         <div v-if="leave.reviewer_name" class="text-xs text-slate-500">Diputuskan oleh {{ leave.reviewer_name }}<span v-if="leave.reviewed_at"> · {{ new Date(leave.reviewed_at).toLocaleString('id-ID') }}</span></div>
                         <div v-if="leave.can_review" class="flex flex-col justify-center gap-2">
                             <input v-model="reviewNotes[leave.id]" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm" maxlength="255" placeholder="Catatan keputusan (opsional)" :aria-label="`Catatan keputusan ${leave.teacher_name}`" />
-                            <div class="flex flex-wrap justify-end gap-2"><button class="secondary-button" :disabled="busyId !== null" @click="review(leave, 'reject')">Tolak</button><button class="primary-button" :disabled="busyId !== null" @click="review(leave, 'approve')">Setujui</button></div>
+                            <div class="flex flex-wrap justify-end gap-2"><button type="button" class="secondary-button" :disabled="busyId !== null" @click="review(leave, 'reject')">Tolak</button><button type="button" class="primary-button" :disabled="busyId !== null" @click="review(leave, 'approve')">Setujui</button></div>
                         </div>
-                        <div v-else-if="leave.can_cancel" class="flex items-center justify-end"><button class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100" :disabled="busyId !== null" @click="cancel(leave)">Batalkan pengajuan</button></div>
+                        <div v-else-if="leave.can_cancel" class="flex items-center justify-end"><button type="button" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100" :disabled="busyId !== null" @click="cancel(leave)">Batalkan pengajuan</button></div>
                     </article>
                 </div>
                 <nav v-if="leaves.links.length > 3" class="flex flex-wrap justify-end gap-1 border-t border-slate-200 px-5 py-4" aria-label="Halaman pengajuan">
@@ -150,9 +150,28 @@ function setStartDate() {
 .leave-page { min-width: 0; }
 .leave-page input, .leave-page select { width: 100%; min-width: 0; max-width: 100%; }
 .leave-page article { overflow-wrap: anywhere; }
+.leave-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+.leave-summary > div { display: grid; gap: .25rem; min-width: 0; padding: .85rem 1rem; border: 1px solid var(--line); border-top: 3px solid var(--leave-tone); border-radius: .8rem; background: var(--surface); }
+.leave-summary span { color: var(--ink-soft); font-size: .76rem; }
+.leave-summary strong { color: var(--leave-tone); font-size: 1.45rem; line-height: 1.1; }
+.leave-summary-all { --leave-tone: #3269bc; }.leave-summary-pending { --leave-tone: #ad7c2b; }.leave-summary-approved { --leave-tone: #32805f; }.leave-summary-rejected { --leave-tone: #bd4c4c; }
+.leave-filter-form { display: grid; grid-template-columns: minmax(220px, 1.4fr) minmax(150px, .9fr) minmax(160px, 1fr) auto; align-items: end; gap: .75rem; padding: 1rem; }
+.leave-filter-form > label { display: grid; gap: .4rem; min-width: 0; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
+.leave-filter-form input, .leave-filter-form select { min-height: 2.65rem; padding: .55rem .7rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink); font-size: .82rem; }
+.leave-filter-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.leave-filter-actions button { white-space: nowrap; }
+.leave-result-count { margin: 0; color: var(--ink-soft); font-size: .82rem; line-height: 1.5; }
 @media (max-width: 640px) {
     .leave-page .hero-card { align-items: stretch; flex-direction: column; }
-    .leave-page form > label { width: 100%; flex-basis: 100%; min-width: 0; }
-    .leave-page .grade-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .leave-page form:not(.leave-filter-form) > label { width: 100%; flex-basis: 100%; min-width: 0; }
+    .leave-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .leave-filter-form { grid-template-columns: minmax(0, 1fr); }
+    .leave-filter-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 641px) and (max-width: 1100px) {
+    .leave-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .leave-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .leave-filter-search, .leave-filter-actions { grid-column: 1 / -1; }
+    .leave-filter-actions { justify-content: flex-end; }
 }
 </style>

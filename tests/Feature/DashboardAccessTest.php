@@ -13,6 +13,7 @@ use App\Modules\Academic\Infrastructure\Models\Schedule;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\TeacherAttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Administration\Infrastructure\Models\Announcement;
@@ -252,11 +253,25 @@ class DashboardAccessTest extends TestCase
                 ->where('stats.role_metrics.teaching_assignments', 2)
                 ->where('stats.role_metrics.active_questions', 1)
                 ->where('stats.role_metrics.classes_count', 1)
+                ->where('stats.teacher_overview.teacher_id', $teacher->id)
+                ->where('stats.teacher_overview.attendance_status', null)
                 ->where('stats.teacher_overview.today_total', 1)
                 ->where('stats.teacher_overview.today_schedule.0.subject_name', 'Matematika')
                 ->where('stats.teacher_overview.pending_journals', 1)
                 ->where('stats.teacher_overview.pending_reviews', 1)
             );
+
+        $this->actingAs($teacherUser)->post('/akademik/absensi-guru', [
+            'date' => '2026-10-27',
+            'records' => [['teacher_id' => $teacher->id, 'status' => 'present', 'notes' => '']],
+        ])->assertRedirect();
+        $this->assertSame('present', TeacherAttendanceRecord::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereDate('date', '2026-10-27')
+            ->value('status'));
+        $this->get('/')->assertInertia(fn (Assert $page) => $page
+            ->where('stats.teacher_overview.attendance_status', 'present')
+        );
     }
 
     public function test_student_accesses_dashboard_with_student_metrics(): void

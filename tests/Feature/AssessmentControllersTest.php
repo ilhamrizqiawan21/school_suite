@@ -357,6 +357,82 @@ class AssessmentControllersTest extends TestCase
         ]);
     }
 
+    public function test_exam_monitor_exposes_roster_and_supports_supervisor_actions(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'type' => 'multiple_choice', 'prompt' => 'Soal monitor', 'options' => ['A', 'B'],
+            'correct_answer' => 'A', 'points' => 2, 'is_active' => true, 'current_version' => 1,
+        ]);
+        $exam = Exam::create([
+            'school_id' => $this->school->id, 'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'created_by' => $this->adminUser->id, 'title' => 'Monitor CBT', 'starts_at' => now()->subHour(),
+            'ends_at' => now()->addHours(2), 'duration_minutes' => 60, 'max_violations' => 3, 'status' => 'published',
+        ]);
+        $exam->items()->create(['exam_question_id' => $question->id, 'sequence' => 1, 'points' => 2]);
+        $attempt = ExamAttempt::create([
+            'exam_id' => $exam->id, 'enrollment_id' => $this->enrollment->id, 'status' => 'locked',
+            'started_at' => now()->subMinutes(20), 'expires_at' => now()->addMinutes(40),
+            'last_heartbeat_at' => now()->subMinute(), 'violation_count' => 3,
+            'question_order' => [$question->id], 'random_seed' => 42,
+        ]);
+
+        $this->actingAs($this->adminUser)->get(route('exams.monitor', $exam))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Assessment/Exams/Monitor')
+                ->where('snapshot.summary.total', 2)
+                ->where('snapshot.summary.locked', 1)
+                ->where('snapshot.summary.not_started', 1)
+                ->has('snapshot.students', 2));
+
+        $this->actingAs($this->adminUser)->post(route('exams.unlock', $attempt))->assertRedirect();
+        $this->assertSame('in_progress', $attempt->fresh()->status);
+
+        $oldExpiry = $attempt->fresh()->expires_at;
+        $this->actingAs($this->adminUser)->post(route('exams.extend', $attempt), ['minutes' => 10])->assertRedirect();
+        $this->assertTrue($attempt->fresh()->expires_at->greaterThan($oldExpiry));
+
+        $this->actingAs($this->adminUser)->post(route('exams.force-finish', $attempt))->assertRedirect();
+        $this->assertSame('graded', $attempt->fresh()->status);
+    }
+
+    public function test_randomized_exam_options_are_stable_for_the_same_attempt(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'type' => 'multiple_choice', 'prompt' => 'Pilihan stabil', 'options' => ['A', 'B', 'C'],
+            'correct_answer' => 'A', 'points' => 1, 'is_active' => true, 'current_version' => 1,
+        ]);
+        $exam = Exam::create([
+            'school_id' => $this->school->id, 'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'created_by' => $this->adminUser->id, 'title' => 'Urutan stabil', 'starts_at' => now()->subHour(),
+            'ends_at' => now()->addHour(), 'duration_minutes' => 30, 'randomize_options' => true, 'status' => 'published',
+        ]);
+        $exam->items()->create(['exam_question_id' => $question->id, 'sequence' => 1, 'points' => 1]);
+        $attempt = ExamAttempt::create([
+            'exam_id' => $exam->id, 'enrollment_id' => $this->enrollment->id, 'status' => 'in_progress',
+            'started_at' => now(), 'expires_at' => now()->addMinutes(30), 'question_order' => [$question->id], 'random_seed' => 4242,
+        ]);
+
+        $first = null;
+        $this->actingAs($this->studentUser)->get(route('exams.attempt', $attempt))->assertInertia(fn (Assert $page) => $page
+            ->where('questions.0.options', function ($options) use (&$first): bool {
+                $first = $options;
+
+                return true;
+            }));
+        $second = null;
+        $this->actingAs($this->studentUser)->get(route('exams.attempt', $attempt))->assertInertia(fn (Assert $page) => $page
+            ->where('questions.0.options', function ($options) use (&$second): bool {
+                $second = $options;
+
+                return true;
+            }));
+
+        $this->assertSame($first, $second);
+    }
+
     public function test_manager_can_create_question_pack_with_snapshot_items(): void
     {
         $question = ExamQuestion::create([
@@ -460,6 +536,42 @@ class AssessmentControllersTest extends TestCase
         $this->assertDatabaseHas('exam_question_items', [
             'exam_id' => $exam->id, 'exam_question_id' => $question->id,
             'question_version_id' => $version->id, 'points' => 4,
+        ]);
+    }
+
+    public function test_edit_shared_question_is_available_and_usable_in_question_pack(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
+            'type' => 'essay', 'prompt' => 'Soal kolaborasi untuk paket', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'is_active' => true, 'current_version' => 1,
+        ]);
+        $version = ExamQuestionVersion::create([
+            'exam_question_id' => $question->id, 'version_number' => 1,
+            'type' => 'essay', 'prompt' => 'Soal kolaborasi untuk paket', 'points' => 2,
+            'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'created_by' => $this->teacherUser->id,
+        ]);
+        QuestionShare::create([
+            'school_id' => $this->school->id, 'sender_id' => $this->teacherUser->id,
+            'recipient_id' => $this->homeroomUser->id, 'resource_type' => 'question',
+            'resource_id' => $question->id, 'permission' => 'edit',
+            'status' => 'accepted', 'active_key' => 'active',
+        ]);
+
+        $this->actingAs($this->homeroomUser)->get(route('assessment.question-packs.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('question_options', fn ($options) => collect($options)->contains(fn ($option) => (int) $option['id'] === $question->id)));
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.question-packs.store'), [
+            'name' => 'Paket kolaborasi edit', 'jenjang' => 'SMP', 'curriculum' => 'merdeka',
+            'randomize_questions' => false, 'randomize_options' => false, 'status' => 'draft',
+            'items' => [['question_id' => $question->id, 'points' => 3]],
+        ])->assertRedirect();
+
+        $pack = QuestionPack::query()->where('name', 'Paket kolaborasi edit')->firstOrFail();
+        $this->assertDatabaseHas('question_pack_items', [
+            'question_pack_id' => $pack->id, 'exam_question_id' => $question->id,
+            'question_version_id' => $version->id, 'points' => 3,
         ]);
     }
 
@@ -1018,6 +1130,59 @@ class AssessmentControllersTest extends TestCase
         $this->assertDatabaseHas('question_shares', ['id' => $share->id, 'status' => 'revoked', 'active_key' => null]);
         $this->actingAs($this->homeroomUser)->get(route('assessment.question-shares.show', $share))->assertForbidden();
         $this->assertDatabaseHas('audit_events', ['target_type' => 'question_share', 'target_id' => (string) $share->id, 'event_type' => 'assessment.question_share.revoked']);
+    }
+
+    public function test_view_only_question_share_redacts_answer_key_from_recipient(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
+            'type' => 'multiple_choice', 'prompt' => 'Soal tanpa kunci', 'options' => ['A', 'B'],
+            'correct_answer' => 'A', 'explanation' => 'Penjelasan rahasia', 'points' => 1,
+            'is_active' => true, 'current_version' => 1,
+        ]);
+        ExamQuestionVersion::create([
+            'exam_question_id' => $question->id, 'version_number' => 1,
+            'type' => 'multiple_choice', 'prompt' => 'Soal tanpa kunci', 'options' => ['A', 'B'],
+            'correct_answer' => 'A', 'explanation' => 'Penjelasan rahasia', 'points' => 1,
+            'created_by' => $this->teacherUser->id,
+        ]);
+        $share = QuestionShare::create([
+            'school_id' => $this->school->id, 'sender_id' => $this->teacherUser->id,
+            'recipient_id' => $this->homeroomUser->id, 'resource_type' => 'question',
+            'resource_id' => $question->id, 'permission' => 'view', 'status' => 'accepted',
+            'active_key' => 'active',
+        ]);
+
+        $this->actingAs($this->homeroomUser)->get(route('assessment.question-shares.show', $share))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->missing('resource.content.correct_answer')
+                ->missing('resource.content.explanation'));
+    }
+
+    public function test_question_share_index_exposes_owned_resources_and_resolves_shared_names(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->teacherUser->id,
+            'type' => 'essay', 'prompt' => 'Jelaskan proses fotosintesis', 'points' => 2, 'is_active' => true, 'current_version' => 1,
+        ]);
+        $pack = QuestionPack::create([
+            'school_id' => $this->school->id, 'created_by' => $this->teacherUser->id,
+            'name' => 'Paket IPA VII', 'jenjang' => 'SMP', 'curriculum' => 'merdeka', 'status' => 'draft',
+        ]);
+        $share = QuestionShare::create([
+            'school_id' => $this->school->id, 'sender_id' => $this->teacherUser->id, 'recipient_id' => $this->homeroomUser->id,
+            'resource_type' => 'question', 'resource_id' => $question->id, 'permission' => 'view', 'status' => 'pending', 'active_key' => 'active',
+        ]);
+
+        $this->actingAs($this->teacherUser)->get(route('assessment.question-shares.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Assessment/QuestionShares/Index')
+                ->where('sent.data.0.id', $share->id)
+                ->where('sent.data.0.resource_name', 'Jelaskan proses fotosintesis')
+                ->where('resource_options.questions.0.id', $question->id)
+                ->where('resource_options.packs.0.id', $pack->id));
     }
 
     public function test_copy_share_creates_recipient_owned_question_without_changing_source_owner(): void

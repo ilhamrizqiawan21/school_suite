@@ -17,6 +17,7 @@ const roomForm = useForm({
 });
 const messageForm = useForm({ body: '' });
 const showRoom = ref(false);
+const communicationBase = window.location.pathname.startsWith('/guru/') ? '/guru' : '/komunikasi';
 
 const roomName = (room: any) => {
     const name = String(room?.name ?? '').trim();
@@ -32,7 +33,7 @@ const roomName = (room: any) => {
 const send = () => {
     if (!props.selected_room) return;
 
-    messageForm.post(`/komunikasi/chat/ruang/${props.selected_room.id}/pesan`, {
+    messageForm.post(`${communicationBase}/chat/ruang/${props.selected_room.id}/pesan`, {
         preserveScroll: true,
         onSuccess: () => messageForm.reset(),
     });
@@ -42,7 +43,7 @@ const moderate = (id: number) => {
     const reason = prompt('Alasan moderasi');
 
     if (reason) {
-        router.post(`/komunikasi/chat/pesan/${id}/moderasi`, { reason }, { preserveScroll: true });
+        router.post(`${communicationBase}/chat/pesan/${id}/moderasi`, { reason }, { preserveScroll: true });
     }
 };
 </script>
@@ -85,7 +86,7 @@ const moderate = (id: number) => {
                             :class="{ active: selected_room?.id === room.id }"
                             type="button"
                             :aria-pressed="selected_room?.id === room.id"
-                            @click="router.get('/komunikasi/chat', { room_id: room.id })"
+                            @click="router.get(`${communicationBase}/chat`, { room_id: room.id })"
                         >
                             <span>{{ roomName(room) }}</span>
                             <small>{{ selected_room?.id === room.id ? 'Sedang dibuka' : 'Buka percakapan' }}</small>
@@ -148,7 +149,7 @@ const moderate = (id: number) => {
             <div v-if="showRoom" class="modal-backdrop" @click.self="showRoom = false">
                 <form
                     class="modal-card room-modal"
-                    @submit.prevent="roomForm.post('/komunikasi/chat/ruang', { onSuccess: () => (showRoom = false) })"
+                    @submit.prevent="roomForm.post(`${communicationBase}/chat/ruang`, { onSuccess: () => (showRoom = false) })"
                 >
                     <div class="modal-header">
                         <div>

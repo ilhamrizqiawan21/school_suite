@@ -2,9 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Modules\Academic\Application\Services\TeacherDirectoryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Shared\Navigation\SidebarNavigationService;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -50,10 +49,6 @@ class HandleInertiaRequests extends Middleware
                     'username' => $user->username,
                     'role' => $user->role?->name,
                     'role_label' => $user->role?->label ?? 'Pengguna',
-                    'can_access_admissions' => $user->hasRole('admin') || ($user->hasRole('teacher') && DB::table('admission_committee_members')
-                        ->where('school_id', $user->school_id)
-                        ->where('user_id', $user->id)
-                        ->exists() && app(TeacherDirectoryService::class)->isActiveTeacherUser((int) $user->school_id, (int) $user->id)),
                     'phone' => $user->phone,
                     'avatar_url' => $user->avatar_path ? route('core.profile.avatar') : null,
                 ],
@@ -66,6 +61,9 @@ class HandleInertiaRequests extends Middleware
                     'theme_primary' => data_get($user->school->settings, 'theme_primary', '#3157a4'),
                 ] : null,
             ] : null,
+            'navigation' => fn () => [
+                'visible_keys' => $user ? app(SidebarNavigationService::class)->visibleKeys($user) : [],
+            ],
             'school' => [
                 'name' => $user?->school?->name ?? config('app.school_name', 'Sekolah Pilot School Suite'),
                 'logo_url' => $user?->school?->logo_path ? route('branding.school', [$user->school, 'logo']) : null,

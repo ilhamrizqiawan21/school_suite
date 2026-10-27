@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Academic\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Academic\Application\Services\AcademicImportService;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Shared\Audit\AuditLogger;
@@ -60,6 +61,8 @@ class TeacherController extends Controller
             'stats' => ['total' => $total, 'active' => $active, 'inactive' => $total - $active],
             'employment_statuses' => Teacher::where('school_id', $schoolId)->whereNotNull('employment_status')->distinct()->orderBy('employment_status')->pluck('employment_status'),
             'can_manage' => Gate::allows('create', Teacher::class),
+            'can_link_accounts' => $request->user()->hasRole('admin'),
+            'account_candidates' => $request->user()->hasRole('admin') ? $this->teacherAccountCandidates($schoolId) : [],
             'filters' => [
                 'search' => $search,
                 'is_active' => $request->query('is_active'),
@@ -82,7 +85,15 @@ class TeacherController extends Controller
             'email' => ['nullable', 'email', 'max:100'],
             'employment_status' => ['nullable', 'string', 'max:50'],
             'is_active' => ['boolean'],
+            'user_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where(fn ($query) => $query
+                ->where('school_id', $schoolId)
+                ->where('is_active', true))],
         ]);
+
+        $this->validateTeacherAccountLink($request, $validated['user_id'] ?? null);
+        if (! $request->user()->hasRole('admin')) {
+            unset($validated['user_id']);
+        }
 
         $validated['school_id'] = $schoolId;
         $validated['is_active'] = $validated['is_active'] ?? true;
@@ -117,7 +128,16 @@ class TeacherController extends Controller
             'email' => ['nullable', 'email', 'max:100'],
             'employment_status' => ['nullable', 'string', 'max:50'],
             'is_active' => ['required', 'boolean'],
+            'user_id' => ['sometimes', 'nullable', 'integer', Rule::exists('users', 'id')->where(fn ($query) => $query
+                ->where('school_id', $schoolId)
+                ->where('is_active', true))],
         ]);
+
+        if (! $request->user()->hasRole('admin')) {
+            unset($validated['user_id']);
+        } elseif (array_key_exists('user_id', $validated)) {
+            $this->validateTeacherAccountLink($request, $validated['user_id'], $teacher->id);
+        }
 
         $oldValues = $teacher->toArray();
         $teacher->update($validated);
@@ -242,6 +262,61 @@ class TeacherController extends Controller
             ->when($request->filled('employment_status'), fn ($query) => $query->where('employment_status', $request->query('employment_status')))
             ->when($request->filled('is_active'), fn ($query) => $query->where('is_active', (int) $request->query('is_active')))
             ->orderBy('name')->orderBy('id');
+    }
+
+    /**
+     * Akun aktif yang boleh ditautkan ke profil guru.
+     * Akun yang sudah dipakai profil lain tetap dikirim agar UI dapat
+     * menampilkan statusnya dan mencegah admin memilihnya secara keliru.
+     */
+    private function teacherAccountCandidates(int $schoolId)
+    {
+        $linkedTeacherIds = Teacher::query()
+            ->where('school_id', $schoolId)
+            ->whereNotNull('user_id')
+            ->pluck('id', 'user_id');
+
+        return User::query()
+            ->with('role:id,name,label')
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($query) => $query->whereIn('name', ['operator', 'teacher', 'homeroom']))
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'role_id'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role?->name,
+                'role_label' => $user->role?->label,
+                'linked_teacher_id' => $linkedTeacherIds->get($user->id),
+            ])->values();
+    }
+
+    private function validateTeacherAccountLink(Request $request, ?int $userId, ?int $ignoreTeacherId = null): void
+    {
+        if ($userId === null) {
+            return;
+        }
+
+        abort_unless($request->user()->hasRole('admin'), 403, 'Hanya admin yang dapat menetapkan akun guru tambahan.');
+
+        $account = User::query()
+            ->with('role:id,name')
+            ->where('id', $userId)
+            ->where('school_id', $request->user()->school_id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        abort_unless(in_array($account->role?->name, ['operator', 'teacher', 'homeroom'], true), 422, 'Akun harus memiliki peran TU/operator atau guru.');
+
+        $alreadyLinked = Teacher::query()
+            ->where('school_id', $request->user()->school_id)
+            ->where('user_id', $userId)
+            ->when($ignoreTeacherId !== null, fn ($query) => $query->where('id', '!=', $ignoreTeacherId))
+            ->exists();
+
+        abort_unless(! $alreadyLinked, 422, 'Akun tersebut sudah ditautkan ke profil guru lain.');
     }
 
     public function exportExcel(Request $request): StreamedResponse

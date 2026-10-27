@@ -69,6 +69,28 @@ class LearningControllersTest extends TestCase
             'title' => 'Latihan Pecahan',
             'revision_limit' => 2,
         ]);
+
+        $assignment = LearningAssignment::where('title', 'Latihan Pecahan')->firstOrFail();
+        $this->get(route('learning.assignments.index'))->assertInertia(fn ($page) => $page
+            ->component('Learning/Index')->where('section', 'assignments'));
+        $this->get(route('learning.assignments.show', $assignment))->assertInertia(fn ($page) => $page
+            ->component('Learning/TaskShow')->where('assignment.id', $assignment->id));
+        $this->get(route('learning.assignments.submissions', $assignment))->assertInertia(fn ($page) => $page
+            ->component('Learning/TaskSubmissions')->has('submissions'));
+    }
+
+    public function test_material_upload_rejects_formats_outside_the_material_library_allowlist(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->teacher);
+
+        $this->post(route('learning.materials.store'), [
+            'teaching_assignment_id' => $this->teachingAssignment->id,
+            'title' => 'Format Tidak Diizinkan',
+            'file' => UploadedFile::fake()->create('materi.pptx', 120, 'application/vnd.openxmlformats-officedocument.presentationml.presentation'),
+        ])->assertSessionHasErrors('file');
+
+        $this->assertDatabaseMissing('learning_materials', ['title' => 'Format Tidak Diizinkan']);
     }
 
     public function test_student_can_read_material_submit_work_and_teacher_can_review_it(): void
@@ -96,6 +118,10 @@ class LearningControllersTest extends TestCase
 
         $this->actingAs($this->student);
         $this->get(route('learning.index'))->assertOk();
+        $this->get(route('siswa.tugas.show', $assignment))->assertInertia(fn ($page) => $page
+            ->component('Learning/TaskShow')
+            ->where('back_url', route('siswa.tugas.index'))
+            ->where('submit_url', route('siswa.tugas.kumpul', $assignment)));
         $this->post(route('learning.materials.read', $material))->assertRedirect()->assertSessionHasNoErrors();
 
         $this->post(route('learning.assignments.submit', $assignment), [
@@ -138,6 +164,25 @@ class LearningControllersTest extends TestCase
             'score' => 88,
         ]);
         $this->get(route('learning.progress.index'))->assertOk();
+    }
+
+    public function test_student_lms_endpoints_match_the_legacy_siswa_paths(): void
+    {
+        $this->actingAs($this->student);
+
+        $this->get(route('siswa.materi.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Learning/Index')->where('section', 'materials'));
+        $this->get(route('siswa.tugas.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Learning/Index')->where('section', 'assignments'));
+        $this->get(route('siswa.progress'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Learning/Progress')->where('is_student', true));
+
+        $this->actingAs($this->teacher)
+            ->get(route('siswa.materi.index'))
+            ->assertForbidden();
     }
 
     public function test_school_admin_cannot_access_lms_authoring_flow_but_can_view_progress(): void
