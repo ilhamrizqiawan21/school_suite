@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Academic\Application\Services;
 
-use App\Modules\Academic\Infrastructure\Models\TeachingDocument;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
+use App\Modules\Academic\Infrastructure\Models\TeachingDocument;
 use App\Modules\Academic\Infrastructure\Models\TeachingPlan;
 
 /** Pure transformations shared by document editors and the administration-package exporter. */
@@ -64,6 +64,7 @@ class TeachingPlanDocumentService
             while ($remaining > 0 && $cursor < count($weekSlots)) {
                 if ($weekSlots[$cursor]['capacity'] === 0) {
                     $cursor++;
+
                     continue;
                 }
                 $chunk = min($remaining, $weekSlots[$cursor]['capacity']);
@@ -77,7 +78,9 @@ class TeachingPlanDocumentService
                     $weekSlots[$cursor]['capacity'] -= $chunk;
                     $remaining -= $chunk;
                 }
-                if ($weekSlots[$cursor]['capacity'] === 0) $cursor++;
+                if ($weekSlots[$cursor]['capacity'] === 0) {
+                    $cursor++;
+                }
             }
         }
 
@@ -149,13 +152,17 @@ class TeachingPlanDocumentService
 
     public function normalizeSemester(?string $semester): ?string
     {
-        if ($semester === null || $semester === '') return null;
+        if ($semester === null || $semester === '') {
+            return null;
+        }
+
         return in_array(mb_strtolower($semester), ['genap', '2', 'even'], true) ? 'genap' : 'ganjil';
     }
 
     private function semesterForUnit(array $unit, $chapters): string
     {
         $chapter = $chapters->get((string) ($unit['chapter_id'] ?? ''));
+
         return $this->normalizeSemester((string) ($chapter['semester'] ?? '1')) ?? 'ganjil';
     }
 

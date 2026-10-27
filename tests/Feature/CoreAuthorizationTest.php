@@ -14,6 +14,7 @@ use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -264,7 +265,7 @@ class CoreAuthorizationTest extends TestCase
         try {
             (new UserService)->updateUser($operator, ['role_id' => $this->adminRole->id], $operator);
             $this->fail('A non-admin actor must not promote their own account.');
-        } catch (AuthorizationException) {
+        } catch (ValidationException) {
             $this->assertSame($this->operatorRole->id, $operator->fresh()->role_id);
         }
     }

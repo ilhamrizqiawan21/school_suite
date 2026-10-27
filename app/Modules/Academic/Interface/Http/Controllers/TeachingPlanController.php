@@ -6,21 +6,21 @@ namespace App\Modules\Academic\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\TeachingPlanDocumentService;
-use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
-use App\Modules\Academic\Infrastructure\Models\TeachingDocument;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
+use App\Modules\Academic\Infrastructure\Models\TeachingDocument;
 use App\Modules\Academic\Infrastructure\Models\TeachingPlan;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
-use Illuminate\Support\Str;
 use ZipArchive;
 
 class TeachingPlanController extends Controller
@@ -312,7 +312,7 @@ class TeachingPlanController extends Controller
         $directory = storage_path('app/tmp/teaching-package-'.Str::uuid());
         abort_unless(mkdir($directory, 0700, true), 500, 'Folder paket sementara tidak dapat dibuat.');
         $zipPath = $directory.'.zip';
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         abort_unless($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true, 500, 'Paket ZIP tidak dapat dibuat.');
         $manifestLines = ['Paket Administrasi Pembelajaran', 'Guru: '.$request->user()->name, 'Periode: '.$activeTerm->name, 'Dibuat: '.now()->format('d-m-Y H:i'), ''];
         $entryNumber = 0;
@@ -326,8 +326,10 @@ class TeachingPlanController extends Controller
                 $this->documentService->normalizeSemester($activeTerm->semester_type),
             ) as $item) {
                 $manifestLines[] = $plan->subject?->name.' / Kelas '.$plan->grade_level.' — '.$item['label'].': '.($item['status'] === 'ready' ? 'Disiapkan' : 'Dilewati').' ('.$item['reason'].')';
-                if ($item['status'] !== 'ready') continue;
-                $word = new PhpWord();
+                if ($item['status'] !== 'ready') {
+                    continue;
+                }
+                $word = new PhpWord;
                 $section = $word->addSection(['marginTop' => 900, 'marginBottom' => 900, 'marginLeft' => 1000, 'marginRight' => 1000]);
                 $section->addTitle($item['label'], 1);
                 $section->addText(($plan->subject?->name ?? 'Mata pelajaran').' · Kelas '.$plan->grade_level.' · '.$activeTerm->name);
@@ -341,7 +343,9 @@ class TeachingPlanController extends Controller
         }
         $zip->addFromString('MANIFEST.txt', implode("\n", $manifestLines));
         $zip->close();
-        foreach (glob($directory.'/*.docx') ?: [] as $file) @unlink($file);
+        foreach (glob($directory.'/*.docx') ?: [] as $file) {
+            @unlink($file);
+        }
         @rmdir($directory);
         $filename = 'Paket-Administrasi-'.Str::slug($request->user()->name).'-'.now()->format('Ymd').'.zip';
 
@@ -406,6 +410,7 @@ class TeachingPlanController extends Controller
                 $section->addTitle((string) ($reference['name'] ?? 'Acuan'), 2);
                 $section->addText((string) ($reference['content'] ?? ''));
             }
+
             return;
         }
         if ($id === '02-atp') {
@@ -413,10 +418,13 @@ class TeachingPlanController extends Controller
             foreach ($chapters as $chapterId => $chapter) {
                 $section->addTitle((string) ($chapter['title'] ?? 'Bab'), 2);
                 foreach (($data['units'] ?? []) as $unit) {
-                    if ((string) ($unit['chapter_id'] ?? '') !== (string) $chapterId) continue;
+                    if ((string) ($unit['chapter_id'] ?? '') !== (string) $chapterId) {
+                        continue;
+                    }
                     $section->addText(trim(($unit['code'] ?? '').' · '.($unit['objective'] ?? '').' · '.($unit['material'] ?? '')));
                 }
             }
+
             return;
         }
         if ($id === '03-alokasi') {
@@ -427,17 +435,25 @@ class TeachingPlanController extends Controller
                 $section->addTitle('Semester '.Str::headline($semester), 2);
                 $section->addText($row['effective_weeks'].' minggu efektif × '.$row['jp_per_week'].' JP = '.$row['effective_jp'].' JP efektif; rencana '.$row['planned_jp'].' JP; selisih '.$row['delta_jp'].' JP; mulai '.now()->setMonth($month)->translatedFormat('F').'.');
             }
+
             return;
         }
         if (str_starts_with($id, '11-modul-')) {
             $module = $item['module'] ?? [];
             foreach (($module['bagian'] ?? []) as $key => $value) {
-                if (trim((string) $value) !== '') $section->addText(Str::headline((string) $key).': '.$value);
+                if (trim((string) $value) !== '') {
+                    $section->addText(Str::headline((string) $key).': '.$value);
+                }
             }
             foreach (($module['langkah'] ?? []) as $index => $step) {
                 $section->addTitle('Pertemuan '.($index + 1), 2);
-                foreach ($step as $key => $value) if (trim((string) $value) !== '') $section->addText(Str::headline((string) $key).': '.$value);
+                foreach ($step as $key => $value) {
+                    if (trim((string) $value) !== '') {
+                        $section->addText(Str::headline((string) $key).': '.$value);
+                    }
+                }
             }
+
             return;
         }
         if (str_starts_with($id, '07-pertemuan-') || str_starts_with($id, '08-pertemuan-')) {
@@ -451,18 +467,27 @@ class TeachingPlanController extends Controller
                     'Catatan' => $session['notes'] ?? null, 'Refleksi' => $session['reflection'] ?? null,
                     'Tindak lanjut' => $session['follow_up'] ?? null,
                 ] as $label => $value) {
-                    if (trim((string) $value) !== '') $section->addText($label.': '.$value);
+                    if (trim((string) $value) !== '') {
+                        $section->addText($label.': '.$value);
+                    }
                 }
                 $attendance = $session['attendance_summary'] ?? [];
-                if ($attendance) $section->addText('Presensi — hadir: '.($attendance['present'] ?? 0).', sakit: '.($attendance['sick'] ?? 0).', izin: '.($attendance['permitted'] ?? 0).', alpa: '.($attendance['absent'] ?? 0));
+                if ($attendance) {
+                    $section->addText('Presensi — hadir: '.($attendance['present'] ?? 0).', sakit: '.($attendance['sick'] ?? 0).', izin: '.($attendance['permitted'] ?? 0).', alpa: '.($attendance['absent'] ?? 0));
+                }
             }
+
             return;
         }
 
         $document = $documents->first(fn (TeachingDocument $saved) => $saved->id === ($item['document_id'] ?? null));
-        if (! $document) return;
+        if (! $document) {
+            return;
+        }
         $content = $document->content ?? [];
-        if ($document->semester) $section->addText('Semester '.Str::headline($document->semester));
+        if ($document->semester) {
+            $section->addText('Semester '.Str::headline($document->semester));
+        }
         if ($document->type === 'alokasi_waktu') {
             foreach (['ganjil', 'genap'] as $semester) {
                 $weeks = (int) data_get($content, "effective_weeks.$semester", 0);
@@ -474,7 +499,9 @@ class TeachingPlanController extends Controller
             foreach (($content['chapters'] ?? []) as $chapter) {
                 $section->addTitle((string) ($chapter['title'] ?? $chapter['name'] ?? 'Bab'), 2);
                 foreach (($content['units'] ?? []) as $unit) {
-                    if ((string) ($unit['chapter_id'] ?? '') !== (string) ($chapter['id'] ?? '')) continue;
+                    if ((string) ($unit['chapter_id'] ?? '') !== (string) ($chapter['id'] ?? '')) {
+                        continue;
+                    }
                     $section->addText(trim(($unit['code'] ?? '').' · '.($unit['objective'] ?? '').' · '.($unit['material'] ?? '').' · '.($unit['jp'] ?? 0).' JP'));
                 }
             }
@@ -488,12 +515,18 @@ class TeachingPlanController extends Controller
                 }
                 foreach ($this->documentService->promesDistribution($plan, $semester, $allocationContent) as $slot) {
                     $items = collect($slot['units'])->map(fn (array $unit) => $unit['title'].' ('.$unit['jp'].' JP)')->implode('; ');
-                    if ($items !== '') $section->addText('Bulan '.$slot['month'].', minggu '.$slot['week'].': '.$items);
+                    if ($items !== '') {
+                        $section->addText('Bulan '.$slot['month'].', minggu '.$slot['week'].': '.$items);
+                    }
                 }
             }
         } elseif ($document->type === 'kktp') {
-            foreach (($content['intervals'] ?? []) as $interval) $section->addText(($interval['label'] ?? '').' ('.($interval['range'] ?? 'Rentang belum ditentukan').'): '.($interval['description'] ?? ''));
-            foreach (($content['units'] ?? []) as $unit) $section->addText(($unit['title'] ?? $unit['objective'] ?? 'Unit').' — KKM: '.($unit['kkm'] ?? 'belum ditetapkan'));
+            foreach (($content['intervals'] ?? []) as $interval) {
+                $section->addText(($interval['label'] ?? '').' ('.($interval['range'] ?? 'Rentang belum ditentukan').'): '.($interval['description'] ?? ''));
+            }
+            foreach (($content['units'] ?? []) as $unit) {
+                $section->addText(($unit['title'] ?? $unit['objective'] ?? 'Unit').' — KKM: '.($unit['kkm'] ?? 'belum ditetapkan'));
+            }
         }
     }
 

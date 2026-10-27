@@ -226,6 +226,25 @@ class AcademicQueryService
             ->get();
     }
 
+    /** @param list<int> $classGroupIds
+     * @return list<int>
+     */
+    public function getClassGroupIdsTaughtByTeacher(int $schoolId, int $teacherUserId, array $classGroupIds): array
+    {
+        return DB::table('teaching_assignments')
+            ->join('teachers', 'teaching_assignments.teacher_id', '=', 'teachers.id')
+            ->join('class_groups', 'teaching_assignments.class_group_id', '=', 'class_groups.id')
+            ->where('teachers.user_id', $teacherUserId)
+            ->where('teachers.school_id', $schoolId)
+            ->where('class_groups.school_id', $schoolId)
+            ->whereIn('teaching_assignments.class_group_id', $classGroupIds)
+            ->distinct()
+            ->orderBy('teaching_assignments.class_group_id')
+            ->pluck('teaching_assignments.class_group_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
     /**
      * Ambil ID rombel aktif untuk seorang siswa berdasarkan user_id.
      *

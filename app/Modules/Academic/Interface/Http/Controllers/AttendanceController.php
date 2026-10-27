@@ -10,8 +10,8 @@ use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
-use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\Term;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -73,13 +73,13 @@ class AttendanceController extends Controller
         if ($selectedClass && $activeTerm) {
             $sessions = $selectedSubject
                 ? LessonSession::where('school_id', $schoolId)
-                ->where('term_id', $activeTerm->id)
-                ->where('teacher_id', $teacher?->id)
-                ->where('class_group_id', $selectedClass->id)
-                ->where('subject_id', $selectedSubject->id)
-                ->whereBetween('date', [$monthStart, $monthEnd])
-                ->withCount('attendanceRecords')
-                ->orderByDesc('date')->orderByDesc('start_time')->get()
+                    ->where('term_id', $activeTerm->id)
+                    ->where('teacher_id', $teacher?->id)
+                    ->where('class_group_id', $selectedClass->id)
+                    ->where('subject_id', $selectedSubject->id)
+                    ->whereBetween('date', [$monthStart, $monthEnd])
+                    ->withCount('attendanceRecords')
+                    ->orderByDesc('date')->orderByDesc('start_time')->get()
                 : collect();
 
             $selectedSessionId = (int) $request->query('session_id', 0);

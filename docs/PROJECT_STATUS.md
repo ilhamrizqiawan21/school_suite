@@ -1,10 +1,10 @@
 # Project Status — School Suite
 
-Terakhir diperbarui: 25 Oktober 2026
+Terakhir diperbarui: 27 Oktober 2026
 
 ## Keadaan saat ini
 
-- Fase: S08 Deployment Production & Server Hardening selesai; Fondasi Inti dan Pilot (S01–S08) 100% siap operasional live.
+- Fase: S08 Deployment Production & Server Hardening. Kesiapan operasional live belum dapat dinyatakan sampai verifikasi backup/restore MySQL, health check deploy, dan otorisasi lintas peran selesai.
 - Kesiapan:
   - S01 Fondasi: Bootstrap Laravel 13, Inertia.js v3, Vue 3, Vite v8, Tailwind CSS v4, TypeScript, struktur 9 modul monolit modular, layout shell dasar, dan boundary test arsitektur selesai.
   - S02 Akses: Skema basis data Core, otorisasi server-side Default Deny, engine audit log terpusat, autentikasi rate-limited, UI kelola user & profil sekolah, dan matriks akses multi-peran selesai.
@@ -12,7 +12,7 @@ Terakhir diperbarui: 25 Oktober 2026
   - S04 Operasi Akademik Harian: Skema jadwal & presensi, validasi benturan jadwal mingguan (`ScheduleService`), koreksi presensi massal dengan audit trail otomatis (`AttendanceService`), serta UI jadwal & presensi harian selesai.
   - S05 Ruang Kerja Wali Kelas & Kesiswaan: Skema catatan kesiswaan, isolasi privasi catatan rahasia/BK (`StudentObservationService`, `SS-F-006`), monitoring Early Warning absensi (`HomeroomAttendanceService`), dispensasi surat izin, dan dashboard perwalian selesai.
   - S06 Penilaian, Rapor & Formula Berversi: Skema nilai berversi, engine formula ketuntasan & remedial ($\min(\text{remedial}, \text{KKTP})$) di Domain layer (`GradeCalculationEngine`), immutable report snapshot dengan hash SHA-256 (`SS-D-005`), UI input nilai guru, dan cetak rapor siap cetak selesai.
-  - S07 Persiapan Pilot, Backup/Restore & Observability: Penyimpanan privat terisolasi (`PrivateStorageService`, `SS-F-008`), queue background jobs, skrip backup & drill restore terverifikasi 100% (`SS-F-009`), endpoint `/up` & sanitasi logging, dataset pilot lengkap (`PilotSchoolSeeder`), dan user guide selesai.
+  - S07 Persiapan Pilot, Backup/Restore & Observability: Penyimpanan privat terisolasi (`PrivateStorageService`, `SS-F-008`), queue background jobs, skrip backup dan restore tersedia (`SS-F-009`), endpoint `/up` & sanitasi logging, dataset pilot (`PilotSchoolSeeder`), dan user guide. Pemulihan MySQL dan restore SQLite berbasis file masih menunggu drill terisolasi.
   - S08 Deployment Production & Server Hardening:
     - Template reverse proxy Nginx production dengan SSL/TLS TLSv1.2/1.3, gzip, dan proteksi file tersembunyi (`deploy/nginx/school-suite.conf`).
     - Optimasi runtime PHP-FPM (`deploy/php/www.conf`) dan OPcache production (`deploy/php/opcache.ini`).
@@ -21,10 +21,15 @@ Terakhir diperbarui: 25 Oktober 2026
     - Security headers middleware (`SecurityHeadersMiddleware`): `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `HSTS`.
     - Skrip otomasi deployment zero-downtime atomik (`deploy/deploy.sh`) dan skrip rollback darurat (`deploy/rollback.sh`).
     - Panduan checklist rilis produksi di `docs/DEPLOYMENT_CHECKLIST.md`.
-  - Seluruh CI dan test suite (140 tests, 692 assertions, Unit, Feature, Architecture, Lint `pint`, Typecheck `vue-tsc`, Build `vite`, Docs Governance) hijau 100%.
+  - Verifikasi lokal 27 Oktober 2026: `php artisan test --compact` — 343 tes, 342 lulus, 1 dilewati, 3.156 assertion; `vendor/bin/pint --test` — lulus; `npm run typecheck` — lulus; `npm run build` — lulus (754 modul ditransformasi). Test suite memakai SQLite in-memory untuk sebagian tes; hasil ini tidak membuktikan restore MySQL atau deploy server.
 - Langkah berikut: Ekspansi Modul Pasca-Pilot (S09 Modul Pembelajaran / LMS, S10 CBT, S11 SPMB, S12 Sipus, S13 TU & Sarpras).
 
 ## Blocker sebelum data nyata
+
+- Drill restore backup pada MySQL terisolasi dan restore backup SQLite berbasis file belum dibuktikan.
+- Health check deployment, termasuk kegagalan saat instalasi pertama, masih perlu verifikasi.
+- Pengujian negatif lintas kelas/sekolah dan kesesuaian menu sidebar terhadap hak akses semua peran belum dituntaskan.
+- PHP 8.3 CLI/FPM asli belum tersedia pada mesin verifikasi; lockfile diuji dengan Composer platform 8.3.0 pada PHP lokal 8.5.4.
 
 - Profil sekolah pilot, ukuran data, format rapor, dan aturan pembulatan belum dikunci.
 - Kebijakan retensi, backup operasional, dan penanggung jawab pemulihan belum disahkan.

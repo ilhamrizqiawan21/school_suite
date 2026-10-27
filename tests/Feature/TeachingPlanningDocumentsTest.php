@@ -11,20 +11,22 @@ use App\Modules\Academic\Infrastructure\Models\LessonSession;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingDocument;
-use App\Modules\Academic\Infrastructure\Models\TeachingPlan;
 use App\Modules\Academic\Infrastructure\Models\TeachingJournal;
+use App\Modules\Academic\Infrastructure\Models\TeachingPlan;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use ZipArchive;
 use Tests\TestCase;
+use ZipArchive;
 
 class TeachingPlanningDocumentsTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $owner;
+
     private User $other;
+
     private TeachingPlan $plan;
 
     protected function setUp(): void
@@ -77,12 +79,14 @@ class TeachingPlanningDocumentsTest extends TestCase
         $response = $this->actingAs($this->owner)->get('/akademik/perangkat/paket-administrasi/unduh');
         $response->assertOk()->assertHeader('content-type', 'application/zip');
         $zipPath = $response->baseResponse->getFile()->getPathname();
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         self::assertTrue($zip->open($zipPath) === true);
         self::assertNotFalse($zip->locateName('MANIFEST.txt'));
         $atpDocumentExists = false;
         for ($index = 0; $index < $zip->numFiles; $index++) {
-            if (str_contains((string) $zip->getNameIndex($index), 'matematika-kelas-7-atp-silabus.docx')) $atpDocumentExists = true;
+            if (str_contains((string) $zip->getNameIndex($index), 'matematika-kelas-7-atp-silabus.docx')) {
+                $atpDocumentExists = true;
+            }
         }
         self::assertTrue($atpDocumentExists);
         $manifest = $zip->getFromName('MANIFEST.txt');
@@ -105,14 +109,16 @@ class TeachingPlanningDocumentsTest extends TestCase
         TeachingJournal::create(['lesson_session_id' => $session->id, 'topic' => 'Bilangan bulat', 'learning_objectives' => 'Mengurutkan bilangan']);
 
         $response = $this->actingAs($this->owner)->get('/akademik/perangkat/paket-administrasi/unduh');
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         self::assertTrue($zip->open($response->baseResponse->getFile()->getPathname()) === true);
         $manifest = (string) $zip->getFromName('MANIFEST.txt');
         self::assertStringContainsString('Jurnal pertemuan semester Ganjil: Disiapkan', $manifest);
         $meetingDocumentName = null;
         for ($index = 0; $index < $zip->numFiles; $index++) {
             $name = $zip->getNameIndex($index);
-            if (str_contains((string) $name, 'jurnal-pertemuan-semester-ganjil.docx')) $meetingDocumentName = $name;
+            if (str_contains((string) $name, 'jurnal-pertemuan-semester-ganjil.docx')) {
+                $meetingDocumentName = $name;
+            }
         }
         self::assertNotNull($meetingDocumentName);
         self::assertStringStartsWith('PK', (string) $zip->getFromName($meetingDocumentName));

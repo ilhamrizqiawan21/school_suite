@@ -14,12 +14,15 @@ use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 
 class JournalController extends Controller
 {
@@ -326,7 +329,7 @@ class JournalController extends Controller
         $school = $request->user()->school;
         abort_unless($school, 404);
         $journal = $session->journal;
-        $phpWord = new \PhpOffice\PhpWord\PhpWord;
+        $phpWord = new PhpWord;
         $phpWord->setDefaultFontName('Times New Roman');
         $phpWord->setDefaultFontSize(11);
         $section = $phpWord->addSection([
@@ -368,7 +371,9 @@ class JournalController extends Controller
             ['Tindak lanjut', $journal->follow_up],
             ['Catatan tambahan', $journal->notes],
         ] as [$label, $value]) {
-            if ($label === 'Topik / tema' && blank($value)) continue;
+            if ($label === 'Topik / tema' && blank($value)) {
+                continue;
+            }
             $table = $section->addTable($tableStyle);
             $table->addRow();
             $table->addCell(2600, $labelStyle)->addText($label, ['bold' => true]);
@@ -412,7 +417,7 @@ class JournalController extends Controller
         $filename = $this->journalFilename($session, 'docx');
 
         return response()->streamDownload(
-            fn () => \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007')->save('php://output'),
+            fn () => IOFactory::createWriter($phpWord, 'Word2007')->save('php://output'),
             $filename,
             ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
         );
@@ -431,7 +436,7 @@ class JournalController extends Controller
         $session = $this->authorizedSession($request, $lessonSessionId);
         abort_unless($session->journal, 404);
 
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('academic.journal-pdf', [
+        return Pdf::loadView('academic.journal-pdf', [
             'session' => $session,
             'journal' => $session->journal,
             'attendance' => $this->attendanceSummary($session),

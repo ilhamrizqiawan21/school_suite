@@ -7,8 +7,8 @@ namespace App\Modules\Academic\Application\Services;
 use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
-use App\Modules\Academic\Infrastructure\Models\TeachingJournal;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
+use App\Modules\Academic\Infrastructure\Models\TeachingJournal;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 

@@ -42,7 +42,7 @@ class MysqlBackupRestoreTest extends TestCase
             $this->assertSame("\0\x01test", $restored->table('children')->value('payload'));
             $this->assertSame(1, $restored->table('children')->join('parents', 'parents.id', '=', 'children.parent_id')->count());
             $this->assertSame('changed after backup', DB::table('parents')->value('name'));
-            $this->assertSame(1, (int) $restored->selectOne("SELECT COUNT(*) total FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ?", [$target])->total);
+            $this->assertSame(1, (int) $restored->selectOne('SELECT COUNT(*) total FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ?', [$target])->total);
         } finally {
             DB::purge('backup_mysql_source');
             DB::purge('backup_mysql_target');

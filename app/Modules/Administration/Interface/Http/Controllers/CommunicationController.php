@@ -6,7 +6,6 @@ namespace App\Modules\Administration\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
-use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Administration\Application\Services\CommunicationService;
 use App\Modules\Administration\Infrastructure\Models\AcademicCalendarEvent;
 use App\Modules\Administration\Infrastructure\Models\Announcement;
@@ -209,9 +208,7 @@ class CommunicationController extends Controller
                 : [];
 
             if ($user->hasRole(['teacher', 'homeroom'])) {
-                return TeachingAssignment::query()->whereIn('class_group_id', $classIds)
-                    ->whereHas('teacher', fn ($teacher) => $teacher->where('school_id', $user->school_id)->where('user_id', $user->id))
-                    ->distinct()->pluck('class_group_id')->map(fn ($id) => (int) $id)->all();
+                return $this->academicQuery->getClassGroupIdsTaughtByTeacher((int) $user->school_id, (int) $user->id, $classIds);
             }
 
             return $classIds;

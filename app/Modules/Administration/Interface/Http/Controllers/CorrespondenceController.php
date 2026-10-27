@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Administration\Application\Services\CorrespondenceService;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceRecord;
-use App\Modules\Core\Infrastructure\Models\School;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -153,7 +152,7 @@ class CorrespondenceController extends Controller
         $user = $this->authorizeManager($request->user());
         $this->correspondence->assertOwnedByActor($user, $record);
         abort_unless($record->letter_type === 'outgoing' && filled($record->letter_body), 404);
-        $school = $record->school_snapshot ?? School::query()->findOrFail($record->school_id)->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website']);
+        $school = $record->school_snapshot ?? $this->correspondence->getSchoolLegalSnapshot((int) $record->school_id);
         $qr = null;
         if ($record->verification_token && in_array($record->status, ['issued', 'sent', 'archived'], true)) {
             $writer = new Writer(new ImageRenderer(new RendererStyle(220, 2), new SvgImageBackEnd));

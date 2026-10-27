@@ -20,7 +20,7 @@ class TeachingPlanDocumentServiceTest extends TestCase
                 ['id' => 'u2', 'chapter_id' => 'b', 'code' => 'TP2', 'objective' => 'Aljabar', 'jp' => 2],
             ],
         ]]);
-        $service = new TeachingPlanDocumentService();
+        $service = new TeachingPlanDocumentService;
         $allocation = $service->allocation($plan);
         self::assertSame(6, $allocation['ganjil']['effective_jp']);
         self::assertSame(4, $allocation['ganjil']['planned_jp']);

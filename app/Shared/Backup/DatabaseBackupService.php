@@ -127,7 +127,7 @@ class DatabaseBackupService
             }
             $contents = "[client]\n";
             foreach ($options as $key => $value) {
-                $contents .= $key.'="'.strtr((string) $value, ["\\" => "\\\\", '"' => '\\"', "\n" => '\\n', "\r" => '\\r']).'"'."\n";
+                $contents .= $key.'="'.strtr((string) $value, ['\\' => '\\\\', '"' => '\\"', "\n" => '\\n', "\r" => '\\r']).'"'."\n";
             }
             File::put($credentials, $contents);
             $maria = $connection->getDriverName() === 'mariadb';

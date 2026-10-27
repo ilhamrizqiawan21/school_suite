@@ -28,4 +28,12 @@ class SchoolScopeService
             'principal_name' => $school->principal_name,
         ];
     }
+
+    /** @return array{name:?string, legal_name:?string, npsn:?string, address:?string, phone:?string, email:?string, website:?string} */
+    public function getSchoolLegalSnapshot(int $schoolId): array
+    {
+        $school = School::query()->findOrFail($schoolId);
+
+        return $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website']);
+    }
 }

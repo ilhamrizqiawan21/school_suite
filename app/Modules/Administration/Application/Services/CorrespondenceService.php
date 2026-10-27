@@ -7,7 +7,6 @@ namespace App\Modules\Administration\Application\Services;
 use App\Models\User;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceRecord;
 use App\Modules\Core\Application\Services\SchoolScopeService;
-use App\Modules\Core\Infrastructure\Models\School;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +18,12 @@ use Throwable;
 class CorrespondenceService
 {
     public function __construct(private readonly AuditLogger $audit, private readonly SchoolScopeService $schoolScope) {}
+
+    /** @return array{name:?string, legal_name:?string, npsn:?string, address:?string, phone:?string, email:?string, website:?string} */
+    public function getSchoolLegalSnapshot(int $schoolId): array
+    {
+        return $this->schoolScope->getSchoolLegalSnapshot($schoolId);
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -110,8 +115,7 @@ class CorrespondenceService
             }
 
             if ($status === 'issued' && filled($record->letter_body)) {
-                $school = School::query()->findOrFail($record->school_id);
-                $record->school_snapshot = $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website']);
+                $record->school_snapshot = $this->schoolScope->getSchoolLegalSnapshot((int) $record->school_id);
                 $record->verification_token = bin2hex(random_bytes(32));
             }
 
