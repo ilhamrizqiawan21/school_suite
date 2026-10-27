@@ -33,6 +33,7 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     Route::get('siswa', [StudentController::class, 'index'])->name('students.index');
     Route::post('siswa', [StudentController::class, 'store'])->name('students.store');
     Route::get('siswa/export/excel', [StudentController::class, 'exportExcel'])->name('students.export.excel');
+    Route::get('siswa/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
     Route::post('siswa/{student}/reset-password', [StudentController::class, 'resetPassword'])->middleware('throttle:sensitive')->name('students.reset-password');
     Route::delete('siswa/{student}', [StudentController::class, 'destroy'])->middleware('throttle:sensitive')->name('students.destroy');
     Route::put('siswa/{student}', [StudentController::class, 'update'])->name('students.update');

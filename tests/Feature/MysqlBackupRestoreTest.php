@@ -8,7 +8,6 @@ use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use PDO;
-use PDOException;
 use Tests\TestCase;
 
 class MysqlBackupRestoreTest extends TestCase
@@ -16,15 +15,11 @@ class MysqlBackupRestoreTest extends TestCase
     public function test_pilot_school_mysql_backup_restores_all_tables_and_data_checksums_into_an_empty_database(): void
     {
         $socket = getenv('BACKUP_MYSQL_TEST_SOCKET');
-        if (! $socket || ! is_file($socket)) {
+        if (! $socket) {
             $this->markTestSkipped('MySQL drill skipped: set BACKUP_MYSQL_TEST_SOCKET to an isolated local MySQL socket.');
         }
 
-        try {
-            $pdo = new PDO('mysql:unix_socket='.$socket, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        } catch (PDOException) {
-            $this->markTestSkipped('MySQL drill skipped: the configured isolated MySQL socket is not accepting root connections.');
-        }
+        $pdo = new PDO('mysql:unix_socket='.$socket, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 
         $source = 'backup_source_'.bin2hex(random_bytes(6));
         $target = 'backup_target_'.bin2hex(random_bytes(6));
@@ -63,6 +58,8 @@ class MysqlBackupRestoreTest extends TestCase
                 '--force' => true,
             ])->assertSuccessful();
 
+            DB::statement('CREATE TABLE backup_edge_cases (id BIGINT PRIMARY KEY, text_value TEXT, nullable_value TEXT NULL, blob_value BLOB) ENGINE=InnoDB');
+            DB::table('backup_edge_cases')->insert(['id' => 1, 'text_value' => "O'Brien \\ 日本", 'nullable_value' => null, 'blob_value' => "\0\x01test"]);
             $source = DB::connection('backup_mysql_source');
             $expectedCounts = $this->tableCounts($source);
             $this->assertNotEmpty($expectedCounts);
@@ -88,6 +85,15 @@ class MysqlBackupRestoreTest extends TestCase
             $restored = DB::connection('backup_mysql_target');
             $this->assertSame($expectedCounts, $this->tableCounts($restored));
             $this->assertSame($expectedChecksums, $this->importantDataChecksums($restored));
+            $edgeCase = $restored->table('backup_edge_cases')->first();
+            $this->assertSame("O'Brien \\ 日本", $edgeCase->text_value);
+            $this->assertNull($edgeCase->nullable_value);
+            $this->assertSame("\0\x01test", $edgeCase->blob_value);
+            $restored->table('backup_edge_cases')->where('id', 1)->update(['text_value' => 'changed target']);
+            $this->artisan('school:restore', ['file' => $archive, '--target-db' => 'backup_mysql_target', '--target-files' => $directory.'/files', '--force' => true])->expectsOutputToContain('Target MySQL harus kosong')->assertFailed();
+            $this->assertSame($expectedCounts, $this->tableCounts($restored));
+            $this->assertSame($expectedChecksums, $this->importantDataChecksums($restored));
+            $this->assertSame('changed target', $restored->table('backup_edge_cases')->value('text_value'));
         } finally {
             DB::purge('backup_mysql_source');
             DB::purge('backup_mysql_target');
@@ -106,7 +112,7 @@ class MysqlBackupRestoreTest extends TestCase
             ->where('table_schema', $connection->getDatabaseName())
             ->where('table_type', 'BASE TABLE')
             ->orderBy('table_name')
-            ->pluck('table_name');
+            ->pluck('TABLE_NAME');
 
         $counts = [];
         foreach ($tables as $table) {

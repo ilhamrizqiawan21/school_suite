@@ -12,7 +12,7 @@ Terakhir diperbarui: 27 Oktober 2026
   - S04 Operasi Akademik Harian: Skema jadwal & presensi, validasi benturan jadwal mingguan (`ScheduleService`), koreksi presensi massal dengan audit trail otomatis (`AttendanceService`), serta UI jadwal & presensi harian selesai.
   - S05 Ruang Kerja Wali Kelas & Kesiswaan: Skema catatan kesiswaan, isolasi privasi catatan rahasia/BK (`StudentObservationService`, `SS-F-006`), monitoring Early Warning absensi (`HomeroomAttendanceService`), dispensasi surat izin, dan dashboard perwalian selesai.
   - S06 Penilaian, Rapor & Formula Berversi: Skema nilai berversi, engine formula ketuntasan & remedial ($\min(\text{remedial}, \text{KKTP})$) di Domain layer (`GradeCalculationEngine`), immutable report snapshot dengan hash SHA-256 (`SS-D-005`), UI input nilai guru, dan cetak rapor siap cetak selesai.
-  - S07 Persiapan Pilot, Backup/Restore & Observability: Penyimpanan privat terisolasi (`PrivateStorageService`, `SS-F-008`), queue background jobs, skrip backup dan restore tersedia (`SS-F-009`), endpoint `/up` & sanitasi logging, dataset pilot (`PilotSchoolSeeder`), dan user guide. Pemulihan MySQL dan restore SQLite berbasis file masih menunggu drill terisolasi.
+  - S07 Persiapan Pilot, Backup/Restore & Observability: Penyimpanan privat terisolasi (`PrivateStorageService`, `SS-F-008`), queue background jobs, skrip backup dan restore tersedia (`SS-F-009`), endpoint `/up` & sanitasi logging, dataset pilot (`PilotSchoolSeeder`), dan user guide. Drill MySQL 8.4.11 dan restore SQLite berbasis file sudah lulus secara terisolasi; operasi server tetap mengikuti runbook.
   - S08 Deployment Production & Server Hardening:
     - Template reverse proxy Nginx production dengan SSL/TLS TLSv1.2/1.3, gzip, dan proteksi file tersembunyi (`deploy/nginx/school-suite.conf`).
     - Optimasi runtime PHP-FPM (`deploy/php/www.conf`) dan OPcache production (`deploy/php/opcache.ini`).
@@ -21,7 +21,7 @@ Terakhir diperbarui: 27 Oktober 2026
     - Security headers middleware (`SecurityHeadersMiddleware`): `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `HSTS`.
     - Skrip otomasi deployment zero-downtime atomik (`deploy/deploy.sh`) dan skrip rollback darurat (`deploy/rollback.sh`).
     - Panduan checklist rilis produksi di `docs/DEPLOYMENT_CHECKLIST.md`.
-  - Verifikasi lokal 27 Oktober 2026: `php artisan test --compact` — 347 tes, 346 lulus, 1 dilewati, 3.192 assertion; `vendor/bin/pint --test` — lulus; `npm run typecheck` — lulus; `npm run build` — lulus (754 modul ditransformasi). Test suite memakai SQLite in-memory untuk sebagian tes; hasil ini tidak membuktikan restore MySQL atau deploy server.
+  - Verifikasi lokal 27 Oktober 2026: `php artisan test --compact` — 350 tes, 349 lulus, 1 tes MySQL dilewati, 3.200 assertions. Tes MySQL dijalankan terpisah pada server drill 8.4.11 — 1 tes/20 assertions lulus. Pint, typecheck, build, shell syntax, dan diff check lulus. Bukti serta batas penerapan: [Audit backend](AUDIT_BACKEND_2026-10-27.md). Deployment live belum dilakukan.
 - Langkah berikut: Ekspansi Modul Pasca-Pilot (S09 Modul Pembelajaran / LMS, S10 CBT, S11 SPMB, S12 Sipus, S13 TU & Sarpras).
 
 ## Blocker sebelum data nyata

@@ -40,7 +40,9 @@ class SchoolBackupCommand extends Command
             $format = $database->dump($dump);
             chmod($dump, 0600);
             if (! $this->option('database-only') && File::isDirectory(storage_path('app/private'))) {
-                File::copyDirectory(storage_path('app/private'), $temporary.'/private_files');
+                if (! File::copyDirectory(storage_path('app/private'), $temporary.'/private_files')) {
+                    throw new RuntimeException('Penyalinan berkas privat untuk backup gagal.');
+                }
             }
             $checksums = [];
             foreach (File::allFiles($temporary) as $file) {

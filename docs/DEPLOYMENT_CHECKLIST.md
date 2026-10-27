@@ -21,6 +21,8 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
 - [ ] **Konfigurasi Environment Production (`.env`):**
   - Runtime CLI dan PHP-FPM memakai PHP 8.3.x; `composer.lock` dikunci dengan `config.platform.php=8.3.0`.
   - `HEALTH_CHECK_URL=https://<domain-aplikasi>/up` disetel pada environment shell saat deploy.
+  - PHP CLI dan FPM minimal 8.3; socket/service harus sesuai template.
+  - `BACKUP_PASSWORD` secret terpisah minimal 32 karakter dan salinan kunci offsite tersedia.
   - `APP_ENV=production`
   - `APP_DEBUG=false`
   - `APP_KEY` telah terisi kunci enkripsi 32-karakter.
@@ -36,7 +38,7 @@ Jalankan skrip otomasi deployment zero-downtime:
 
 ```bash
 cd /var/www/school_suite
-./deploy/deploy.sh main
+HEALTH_CHECK_URL=https://school.sch.id/up ./deploy/deploy.sh main
 ```
 
 Pantau tahapan rilis yang berjalan:
@@ -88,6 +90,8 @@ Jika ditemukan kegagalan kritis atau regresi yang tidak dapat diperbaiki dalam 5
 2. **Jika Terjadi Kerusakan Basis Data:**
    Ikuti panduan pemulihan cadangan mandiri di [`RUNBOOK_BACKUP_RESTORE.md`](RUNBOOK_BACKUP_RESTORE.md):
    ```bash
+   php artisan down
+   # Hentikan worker/scheduler; siapkan target bersih sesuai runbook.
    php artisan school:restore backup_pra_deploy.zip --force
    ```
 3. Beritahukan penanggung jawab teknis sekolah dan dokumentasikan insiden di log rilis.

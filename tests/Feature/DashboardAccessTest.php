@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\AcademicYear;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
+use App\Modules\Academic\Infrastructure\Models\LessonSession;
+use App\Modules\Academic\Infrastructure\Models\Schedule;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
@@ -18,7 +20,10 @@ use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
+use App\Modules\Learning\Infrastructure\Models\AssignmentSubmission;
+use App\Modules\Learning\Infrastructure\Models\LearningAssignment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -167,6 +172,7 @@ class DashboardAccessTest extends TestCase
 
     public function test_teacher_accesses_dashboard_with_teacher_metrics(): void
     {
+        $this->travelTo(Carbon::parse('2026-10-27 08:00:00', 'Asia/Jakarta'));
         $teacherUser = User::create([
             'school_id' => $this->school->id,
             'role_id' => $this->teacherRole->id,
@@ -205,6 +211,29 @@ class DashboardAccessTest extends TestCase
             'term_id' => $this->activeTerm->id,
         ]);
 
+        $schedule = Schedule::create([
+            'school_id' => $this->school->id, 'teacher_id' => $teacher->id, 'term_id' => $this->activeTerm->id,
+            'class_group_id' => $class->id, 'subject_id' => $subject->id, 'day_of_week' => 2,
+            'start_time' => '08:00', 'end_time' => '09:00', 'room' => 'Ruang 1', 'status' => 'published',
+        ]);
+        Schedule::create([...$schedule->only($schedule->getFillable()), 'status' => 'draft']);
+        $otherTeacher = Teacher::create(['school_id' => $this->school->id, 'name' => 'Guru lain', 'is_active' => true]);
+        Schedule::create([...$schedule->only($schedule->getFillable()), 'teacher_id' => $otherTeacher->id]);
+        $otherSubject = Subject::create(['school_id' => $this->school->id, 'name' => 'IPA', 'code' => 'IPA']);
+        $ownAssignment = TeachingAssignment::create(['teacher_id' => $teacher->id, 'subject_id' => $otherSubject->id, 'class_group_id' => $class->id, 'term_id' => $this->activeTerm->id]);
+        $foreignAssignment = TeachingAssignment::create(['teacher_id' => $otherTeacher->id, 'subject_id' => $otherSubject->id, 'class_group_id' => $class->id, 'term_id' => $this->activeTerm->id]);
+        $student = Student::create(['school_id' => $this->school->id, 'name' => 'Siswa uji', 'nis' => 'TEACHER-001', 'status' => 'active']);
+        $enrollment = Enrollment::create(['student_id' => $student->id, 'class_group_id' => $class->id, 'term_id' => $this->activeTerm->id, 'status' => 'active']);
+        foreach ([$ownAssignment, $foreignAssignment] as $assignment) {
+            $task = LearningAssignment::create(['school_id' => $this->school->id, 'teaching_assignment_id' => $assignment->id, 'created_by' => $teacherUser->id, 'title' => 'Tugas uji', 'instructions' => 'Kerjakan', 'max_score' => 100]);
+            AssignmentSubmission::create(['learning_assignment_id' => $task->id, 'enrollment_id' => $enrollment->id, 'status' => 'submitted', 'review_status' => 'pending', 'submitted_at' => now()]);
+        }
+        LessonSession::create([
+            'school_id' => $this->school->id, 'teacher_id' => $teacher->id, 'term_id' => $this->activeTerm->id,
+            'class_group_id' => $class->id, 'subject_id' => $subject->id, 'date' => '2026-10-26',
+            'start_time' => '08:00', 'end_time' => '09:00', 'meeting_number' => 1, 'status' => 'scheduled',
+        ]);
+
         ExamQuestion::create([
             'school_id' => $this->school->id,
             'owner_id' => $teacherUser->id,
@@ -220,8 +249,13 @@ class DashboardAccessTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
                 ->has('stats')
-                ->where('stats.role_metrics.teaching_assignments', 1)
+                ->where('stats.role_metrics.teaching_assignments', 2)
                 ->where('stats.role_metrics.active_questions', 1)
+                ->where('stats.role_metrics.classes_count', 1)
+                ->where('stats.teacher_overview.today_total', 1)
+                ->where('stats.teacher_overview.today_schedule.0.subject_name', 'Matematika')
+                ->where('stats.teacher_overview.pending_journals', 1)
+                ->where('stats.teacher_overview.pending_reviews', 1)
             );
     }
 

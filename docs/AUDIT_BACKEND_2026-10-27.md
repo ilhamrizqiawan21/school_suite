@@ -1,5 +1,7 @@
 # Audit backend — 27 Oktober 2026
 
+Status perbaikan: B01–B11 telah ditangani pada kode dan tes regresi. Bagian temuan di bawah menyimpan keadaan saat audit; bukti perbaikan terbaru terdapat pada bagian akhir. Deploy dan penerapan secret produksi belum dilakukan.
+
 ## Kesimpulan dan cakupan
 
 Rekomendasi: tahan penggunaan nilai/rapor resmi dan rilis produksi sampai temuan P1 diselesaikan. Skor triase 55/100 (berisiko), berdasarkan kontrol akses objek, perhitungan rapor, dan pemulihan data yang belum memadai. Skor bukan sertifikasi keamanan.
@@ -123,3 +125,39 @@ Checklist: petakan backend; periksa otorisasi objek; telusuri integritas nilai/r
 | Keringkasan | 4/5 | Ringkasan dapat dibaca terpisah; laporan rinci mempertahankan bukti 11 temuan. |
 
 Rata-rata 4,0/5. Peningkatan terpenting: reproduksi negatif B01/B03/B04, tes multi-mapel B02, dan drill MySQL B05. Penilaian ini seharusnya sesuai harapan pengguna untuk audit backend awal, tetapi belum merupakan audit seluruh produk termasuk frontend.
+
+
+## Penyelesaian temuan — 27 Oktober 2026
+
+| ID | Perbaikan | Bukti utama |
+|---|---|---|
+| B01 | AssessmentAccessService membatasi komponen/enrollment pada sekolah, kelas/term, guru pengampu; batch ditolak tanpa perubahan parsial. Grid hanya menampilkan cakupan yang berizin. | AssessmentControllersTest: guru lain, enrollment lain, komponen sekolah lain, assignment guru sekolah lain. |
+| B02 | Rapor menghitung komponen per teaching assignment; komponen generik ditolak pada kelas multi-mapel. UI skema menyediakan pemetaan komponen ke mapel. | Tes dua mapel bernilai berbeda dan penolakan komponen ambigu; typecheck/build lulus. |
+| B03 | Policy dan service memeriksa sekolah serta penugasan wali saat generate/publish; admin tetap dibatasi sekolah. | Tes wali kelas lain dan rapor sekolah lain. |
+| B04 | Ledger memakai allowlist role dan cakupan kelas; query service memeriksa hubungan sekolah–tahun–term. | Tes guest, guru tanpa penugasan, sekolah lain, tahun akademik tidak cocok. |
+| B05 | Dump/import native MySQL dengan schema dan snapshot InnoDB; target harus kosong agar objek versi lain tidak tersisa. | Drill MySQL 8.4.11 dengan migrasi dan seed pilot: jumlah tabel/baris dan checksum data penting cocok; target berisi data ditolak tanpa mutasi. |
+| B06 | Template Nginx, FPM, OPcache, deploy/rollback memakai PHP 8.3; kegagalan restart/reload wajib menggagalkan rilis. | DeploymentConfigurationTest dan bash syntax check. |
+| B07 | Endpoint manajemen akun dan UserService menolak perubahan password sendiri; alur mandiri memakai PasswordController. | UserManagementTest: request dan service langsung; reset pengguna lain tetap berfungsi. |
+| B08 | Format SQLite dikenali pada restore default dan target eksplisit; snapshot menyertakan WAL, validasi quick_check dan penggantian melalui staging. | BackupRecoverySafetyTest: default/explicit live path, WAL, binary rusak, quotes/Unicode/NULL. |
+| B09 | Seluruh entry ZIP AES-256, secret terpisah, checksum semua komponen sebelum mutasi, private temp/permissions dan cleanup. | Arsip tanpa password tidak terbaca; password salah, dump berubah, komponen hilang, path traversal ditolak. |
+| B10 | Probe HTTPS hostname aplikasi melalui loopback, TLS tervalidasi, timeout, HTTP 200 dan payload healthy wajib; rilis pertama yang gagal tidak dibiarkan aktif. | DeploymentHealthProbeTest: healthy, unhealthy, vhost HTML, 301/302, 503, timeout; syntax check. |
+| B11 | Matching hanya mengurutkan array hasil decode; scalar/invalid dinilai salah tanpa TypeError. | Sembilan kasus matching termasuk scalar, nested/invalid, dan pasangan valid. |
+
+Verifikasi akhir yang benar-benar dijalankan:
+
+- `php artisan test --compact`: **350 tes, 349 lulus, 1 dilewati, 3.200 assertions**. Tes yang dilewati membutuhkan socket server MySQL terisolasi.
+- `BACKUP_MYSQL_TEST_SOCKET=<socket-drill> php artisan test --compact --filter=MysqlBackupRestoreTest`: **1 tes, 20 assertions lulus** pada MySQL **8.4.11**, target database acak terisolasi, tanpa port jaringan. Meliputi dataset pilot, teks berpetik/Unicode, NULL, biner, dan penolakan target tidak kosong. Perintah ini dijalankan dengan izin di luar sandbox karena sandbox menolak koneksi socket.
+- `vendor/bin/pint --test`: lulus.
+- `npm run typecheck` dan `npm run build`: lulus.
+- `bash -n deploy/deploy.sh deploy/rollback.sh deploy/health-check.sh` dan `git diff --check`: lulus.
+
+Batas penerapan:
+
+- Isi BACKUP_PASSWORD minimal 32 karakter pada secret store operasional; simpan kunci lama bersama arsip lama secara aman. Tidak mengisi atau mengganti secret produksi otomatis.
+- Arsip ZIP lama tanpa format/enkripsi versi 2 ditolak: pertahankan dan uji konversi/pemulihan dalam lingkungan terisolasi. Baca RUNBOOK_BACKUP_RESTORE.md.
+- Restore MySQL membutuhkan target kosong. Semua restore dalam APP_ENV=production memerlukan maintenance; worker/scheduler harus dihentikan operator. Import DDL tidak menyediakan rollback transaksi otomatis.
+- Isi HEALTH_CHECK_URL HTTPS domain aplikasi saat deploy, dan sesuaikan service/socket FPM bila memakai versi PHP lain yang didukung. Deploy nyata, sertifikat, dan restart service produksi belum diuji di server.
+- Nilai historis ambigu tidak ditebak/dimigrasikan otomatis. Petakan komponen yang belum terikat melalui UI skema; data yang mencampur beberapa kelas/term harus dipisahkan dengan bukti asal sebelum dipetakan. Snapshot terbit yang sudah salah memerlukan tinjauan operator; tidak diubah diam-diam.
+- Audit frontend menyeluruh serta uji browser untuk UI pemetaan belum termasuk verifikasi ini. Working tree berubah oleh pekerjaan lain selama sesi; perubahan tersebut dipertahankan.
+
+Evaluasi perbaikan: akurasi 4/5 (regresi dan drill nyata lulus; server live belum diuji), kelengkapan 4/5 (B01–B11 ditangani; data historis memerlukan keputusan operator), kejelasan 4/5 (langkah operasi ada di runbook), tindakan 4/5 (kode siap diperiksa; secret/deploy belum diterapkan), keringkasan 4/5 (ringkasan dipisahkan dari riwayat bukti). Rata-rata 4,0/5; peningkatan berikutnya adalah smoke test staging dan verifikasi browser pemetaan komponen.

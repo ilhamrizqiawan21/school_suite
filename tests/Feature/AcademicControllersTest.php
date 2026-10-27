@@ -114,6 +114,34 @@ class AcademicControllersTest extends TestCase
         );
     }
 
+    public function test_admin_can_download_student_pdf_with_active_filters_applied(): void
+    {
+        Student::create([
+            'school_id' => $this->school->id,
+            'nis' => '2001',
+            'nisn' => '0012345678',
+            'name' => 'Nadia Contoh',
+            'gender' => 'P',
+            'status' => 'active',
+            'parent_name' => 'Wali Contoh',
+            'parent_phone' => '081234567890',
+        ]);
+        Student::create([
+            'school_id' => $this->school->id,
+            'nis' => '2002',
+            'name' => 'Siswa Lain',
+            'gender' => 'L',
+            'status' => 'graduated',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get('/akademik/siswa/export/pdf?search=Nadia&status=active');
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'attachment; filename=data-siswa.pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
     public function test_admin_can_create_student(): void
     {
         $class = ClassGroup::create([

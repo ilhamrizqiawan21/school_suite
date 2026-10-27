@@ -64,6 +64,7 @@ const page = usePage<SharedProps>();
 const selectedTerm = ref(props.active_term?.id ? String(props.active_term.id) : '');
 const editingId = ref<number | null>(null);
 const publishedCount = computed(() => props.schedules.filter(slot => slot.status === 'published').length);
+const schedulesForDay = (dayId: number) => props.schedules.filter(slot => slot.day_of_week === dayId);
 const selectedClass = ref(props.filters.class_group_id || '');
 const selectedTeacher = ref(props.filters.teacher_id || '');
 const showAddModal = ref(false);
@@ -185,43 +186,29 @@ const deleteSchedule = (id: number) => {
 
             <div v-if="page.props.flash?.message" class="panel p-4" role="status">{{ page.props.flash.message }}</div>
             <div v-if="page.props.errors?.schedule || page.props.errors?.term_id" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.schedule ?? page.props.errors.term_id }}</div>
-            <div v-if="!is_student && terms.length" class="panel p-4">
-                <label class="text-sm">Semester <select v-model="selectedTerm" aria-label="Semester jadwal" class="max-w-full rounded-lg border px-3 py-2" @change="changeTerm"><option v-if="!active_term" value="">Pilih semester...</option><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.academic_year?.name }} — {{ term.name }}</option></select></label>
-            </div>
             <p v-if="!active_term" class="panel p-4">Belum ada semester aktif atau terpilih. Atur periode akademik untuk menyusun jadwal.</p>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div class="panel p-4"><p>Slot sesuai filter</p><strong class="text-2xl">{{ schedules.length }}</strong></div>
-                <div class="panel p-4"><p>Terbit sesuai filter</p><strong class="text-2xl">{{ publishedCount }}</strong></div>
-                <div v-if="can_manage" class="panel p-4"><p>Draf seluruh semester terpilih</p><strong class="text-2xl">{{ draft_count }}</strong></div>
-            </div>
-            <!-- Filters -->
-            <div v-if="!is_student" class="schedule-filter bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
-                <div class="flex-1">
-                    <select
-                        aria-label="Filter kelas" v-model="selectedClass"
-                        @change="applyFilters"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500"
-                    >
-                        <option value="">Semua Rombongan Belajar</option>
-                        <option v-for="c in classes" :key="c.id" :value="String(c.id)">
-                            Kelas {{ c.name }}
-                        </option>
+            <div v-if="!is_student" class="schedule-controls panel">
+                <label class="schedule-term-control">Semester
+                    <select v-model="selectedTerm" aria-label="Semester jadwal" :disabled="!terms.length" @change="changeTerm">
+                        <option v-if="!active_term" value="">Pilih semester...</option>
+                        <option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.academic_year?.name }} — {{ term.name }}</option>
                     </select>
-                </div>
-                <div class="flex-1">
-                    <select
-                        aria-label="Filter guru" v-model="selectedTeacher"
-                        @change="applyFilters"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500"
-                    >
-                        <option value="">Semua Guru Pengajar</option>
-                        <option v-for="t in teachers" :key="t.id" :value="String(t.id)">
-                            {{ t.name }}
-                        </option>
-                    </select>
-                </div>
+                </label>
+                <label class="schedule-filter-control">
+                    <span>Rombongan belajar</span>
+                    <select aria-label="Filter kelas" v-model="selectedClass" @change="applyFilters"><option value="">Semua rombongan belajar</option><option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option></select>
+                </label>
+                <label class="schedule-filter-control">
+                    <span>Guru pengajar</span>
+                    <select aria-label="Filter guru" v-model="selectedTeacher" @change="applyFilters"><option value="">Semua guru pengajar</option><option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }}</option></select>
+                </label>
+                <button type="button" class="secondary-button schedule-reset" @click="resetFilters">Reset filter</button>
             </div>
-            <button v-if="!is_student" type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
+            <div class="schedule-metrics" :class="{ 'schedule-metrics-manager': can_manage }">
+                <div class="panel schedule-metric schedule-metric-slots"><p>Slot sesuai filter</p><strong>{{ schedules.length }}</strong><span>pada semester terpilih</span></div>
+                <div class="panel schedule-metric schedule-metric-published"><p>Jadwal terbit</p><strong>{{ publishedCount }}</strong><span>dari hasil filter</span></div>
+                <div v-if="can_manage" class="panel schedule-metric schedule-metric-drafts"><p>Draf seluruh semester</p><strong>{{ draft_count }}</strong><span>siap ditinjau sebelum terbit</span></div>
+            </div>
             <div v-if="is_student" class="schedule-filter schedule-student-context">
                 <span>Jadwal kelas</span>
                 <strong>{{ classes[0]?.name ?? 'Belum ada kelas aktif' }}</strong>
@@ -229,22 +216,24 @@ const deleteSchedule = (id: number) => {
             </div>
 
             <!-- Weekly Timetable Grid -->
-            <div v-if="schedules.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div
+            <div v-if="schedules.length" class="schedule-week-scroll" tabindex="0" aria-label="Jadwal mingguan, geser mendatar untuk melihat semua hari">
+              <div class="schedule-week-grid">
+                <section
                     v-for="d in days"
                     :key="d.id"
                     class="schedule-day-card bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs flex flex-col"
+                    :aria-label="`${d.name}, ${schedulesForDay(d.id).length} sesi`"
                 >
                     <div class="schedule-day-header bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                         <h3 class="font-bold text-slate-800 text-sm">{{ d.name }}</h3>
                         <span class="text-xs text-slate-400 font-medium">
-                            {{ schedules.filter(s => s.day_of_week === d.id).length }} Sesi
+                            {{ schedulesForDay(d.id).length }} Sesi
                         </span>
                     </div>
 
                     <div class="p-3 divide-y divide-slate-100 flex-1 space-y-2">
                         <div
-                            v-for="s in schedules.filter(s => s.day_of_week === d.id)"
+                            v-for="s in schedulesForDay(d.id)"
                             :key="s.id"
                             class="schedule-session p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 transition group relative"
                         >
@@ -277,14 +266,16 @@ const deleteSchedule = (id: number) => {
                         </div>
 
                         <div
-                            v-if="schedules.filter(s => s.day_of_week === d.id).length === 0"
+                            v-if="schedulesForDay(d.id).length === 0"
                             class="schedule-empty py-8 text-center text-xs text-slate-400 italic"
                         >
                             Tidak ada jadwal
                         </div>
                     </div>
-                </div>
+                </section>
+              </div>
             </div>
+            <p v-if="schedules.length" class="schedule-scroll-hint">Geser ke samping untuk melihat seluruh hari.</p>
             <div v-else class="schedule-no-results">
                 <strong>{{ is_student ? 'Belum ada jadwal terbit untuk kelasmu' : 'Belum ada jadwal pelajaran' }}</strong>
                 <span>{{ is_student ? 'Jadwal yang sudah diterbitkan sekolah akan muncul di sini.' : 'Tambahkan slot jadwal atau ubah filter untuk melihat jadwal.' }}</span>
@@ -293,10 +284,10 @@ const deleteSchedule = (id: number) => {
 
         <!-- Modal Tambah Slot Jadwal -->
         <div v-if="can_manage && showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div role="dialog" aria-modal="true" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div role="dialog" aria-modal="true" aria-labelledby="schedule-form-title" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Jadwal Pelajaran' : 'Tambah Slot Jadwal Pelajaran' }}</h3>
-                    <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                    <h3 id="schedule-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Jadwal Pelajaran' : 'Tambah Slot Jadwal Pelajaran' }}</h3>
+                    <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600" aria-label="Tutup formulir jadwal">✕</button>
                 </div>
 
                 <ul v-if="Object.keys(form.errors).length" role="alert" class="text-sm text-red-700"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
@@ -356,7 +347,7 @@ const deleteSchedule = (id: number) => {
                             Batal
                         </button>
                         <button type="submit" :disabled="form.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                            Simpan Jadwal
+                            {{ form.processing ? 'Menyimpan…' : 'Simpan Jadwal' }}
                         </button>
                     </div>
                 </form>
@@ -369,7 +360,33 @@ const deleteSchedule = (id: number) => {
 .schedule-page { min-width: 0; }
 .schedule-session > .flex { flex-wrap: wrap; gap: .5rem; }
 .schedule-student-context { flex-wrap: wrap; }
-@media (max-width: 640px) { .schedule-page .page-heading { flex-direction: column; align-items: stretch; gap: 1rem; } }
+.schedule-page .page-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; }
+.schedule-page .page-heading > div:first-child { min-width: 0; }
+.schedule-page .page-heading h1 { max-width: 24ch; }
+.schedule-page .page-heading > :last-child { justify-content: flex-end; }
+.schedule-controls { display: grid; grid-template-columns: minmax(220px, 1.15fr) minmax(170px, 1fr) minmax(170px, 1fr) auto; align-items: end; gap: .8rem; padding: 1rem; }
+.schedule-term-control, .schedule-filter-control { display: grid; gap: .4rem; min-width: 0; color: var(--ink-soft); font-size: .77rem; font-weight: 700; }
+.schedule-term-control select, .schedule-filter-control select { display: block; width: 100%; max-width: 100%; min-width: 0; min-height: 42px; padding: .55rem .75rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); color: var(--ink); font-size: .82rem; }
+.schedule-term-control select:disabled { cursor: not-allowed; opacity: .65; }
+.schedule-reset { justify-self: start; min-height: 42px; white-space: nowrap; }
+.schedule-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.schedule-metrics-manager { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.schedule-metric { display: grid; gap: .25rem; min-width: 0; padding: 1rem; border-top: 3px solid var(--metric-tone); background: color-mix(in srgb, var(--metric-tone) 7%, var(--surface)); }
+.schedule-metric p { margin: 0; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
+.schedule-metric strong { color: var(--metric-tone); font-size: 1.65rem; line-height: 1.15; }
+.schedule-metric span { color: var(--ink-faint); font-size: .72rem; line-height: 1.4; }
+.schedule-metric-slots { --metric-tone: #3269bc; }.schedule-metric-published { --metric-tone: #32805f; }.schedule-metric-drafts { --metric-tone: #ad7c2b; }
+.schedule-week-scroll { max-width: 100%; overflow-x: auto; padding-bottom: .35rem; scrollbar-color: var(--line-strong) transparent; }
+.schedule-week-grid { display: grid; width: 100%; min-width: 1356px; grid-template-columns: repeat(7, minmax(180px, 1fr)); align-items: start; gap: 1rem; }
+.schedule-day-card { min-width: 0; }
+.schedule-page .schedule-empty { padding: .8rem .25rem; }
+.schedule-scroll-hint { display: none; margin: -.9rem 0 0; color: var(--ink-faint); font-size: .72rem; }
+.schedule-session { min-width: 0; overflow-wrap: anywhere; }
+.schedule-no-results { display: grid; gap: .35rem; padding: 2rem; border: 1px dashed var(--line-strong); border-radius: 1rem; background: var(--surface); color: var(--ink-soft); text-align: center; }
+.schedule-no-results strong { color: var(--ink); font-size: 1rem; }
+.schedule-no-results span { font-size: .85rem; line-height: 1.5; }
+@media (max-width: 1200px) { .schedule-page .page-heading { grid-template-columns: minmax(0, 1fr); }.schedule-page .page-heading > :last-child { justify-content: flex-start; }.schedule-controls { grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(0, 1fr)); }.schedule-term-control { grid-column: auto; }.schedule-reset { grid-column: 1 / -1; justify-self: end; }.schedule-scroll-hint { display: block; } }
+@media (max-width: 640px) { .schedule-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.schedule-page .page-heading > :last-child { width: 100%; flex-direction: column; align-items: stretch; }.schedule-page .page-heading > :last-child button { justify-content: center; }.schedule-controls, .schedule-metrics, .schedule-metrics-manager { grid-template-columns: minmax(0, 1fr); }.schedule-term-control { grid-column: auto; }.schedule-reset { width: 100%; } }
 
 .schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 650; }
 .schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }

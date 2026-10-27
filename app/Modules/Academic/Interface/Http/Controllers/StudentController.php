@@ -11,7 +11,9 @@ use App\Modules\Academic\Infrastructure\Models\AcademicYear;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Shared\Audit\AuditLogger;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -340,6 +342,30 @@ class StudentController extends Controller
         })();
 
         return $this->spreadsheetDownload('data_siswa.xlsx', $rows);
+    }
+
+    public function exportPdf(Request $request, SchoolScopeService $schoolScope): Response
+    {
+        Gate::authorize('viewAny', Student::class);
+
+        $schoolId = (int) $request->user()->school_id;
+        $term = Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $schoolId))
+            ->where('is_active', true)
+            ->first();
+        $students = $this->studentQuery($request, $term)->get();
+        $school = (object) $schoolScope->getSchoolDetails($schoolId);
+
+        return Pdf::loadView('academic.students-export', [
+            'students' => $students,
+            'school' => $school,
+            'term' => $term,
+            'filters' => [
+                'search' => $request->query('search'),
+                'status' => $request->query('status'),
+                'class_group_id' => $request->query('class_group_id'),
+            ],
+            'generatedAt' => now('Asia/Jakarta'),
+        ])->setPaper('a4', 'landscape')->download('data-siswa.pdf');
     }
 
     private function spreadsheetDownload(string $filename, iterable $rows): StreamedResponse

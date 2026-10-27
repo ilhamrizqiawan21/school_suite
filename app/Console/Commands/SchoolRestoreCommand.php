@@ -25,7 +25,7 @@ class SchoolRestoreCommand extends Command
         $temporary = storage_path('app/restore_temp_'.bin2hex(random_bytes(12)));
         try {
             $target = $this->option('target-db');
-            if (app()->isProduction() && (! $target || ! $this->option('target-files')) && ! app()->isDownForMaintenance()) {
+            if (app()->isProduction() && ! app()->isDownForMaintenance()) {
                 throw new RuntimeException('Aktifkan maintenance dan hentikan worker sebelum restore target operasional.');
             }
             if (! $this->option('force') && ! $this->confirm('Pemulihan akan menimpa data target. Lanjutkan?', false)) {

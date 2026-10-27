@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use PDO;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -57,7 +58,9 @@ class BackupRecoverySafetyTest extends TestCase
         $this->assertSame(0, (int) $restored->query("SELECT COUNT(*) FROM sqlite_master WHERE name='stale'")->fetchColumn());
     }
 
-    public function test_file_sqlite_backup_includes_wal_and_restores_to_default_connection(): void
+    #[TestWith([false])]
+    #[TestWith([true])]
+    public function test_file_sqlite_backup_includes_wal_and_restores_to_default_connection(bool $explicitTarget): void
     {
         DB::purge('backup_test');
         $path = $this->directory.'/live.sqlite';
@@ -68,7 +71,11 @@ class BackupRecoverySafetyTest extends TestCase
         DB::table('records')->insert(['id' => 1, 'value' => 'before']);
         $archive = $this->backup();
         DB::table('records')->where('id', 1)->update(['value' => 'after']);
-        $this->artisan('school:restore', ['file' => $archive, '--force' => true])->assertSuccessful();
+        $arguments = ['file' => $archive, '--force' => true];
+        if ($explicitTarget) {
+            $arguments['--target-db'] = $path;
+        }
+        $this->artisan('school:restore', $arguments)->assertSuccessful();
         $this->assertSame('before', DB::table('records')->where('id', 1)->value('value'));
     }
 
@@ -113,6 +120,24 @@ class BackupRecoverySafetyTest extends TestCase
         $this->assertFileDoesNotExist(storage_path('app/'.$outside));
     }
 
+    public function test_production_restore_requires_maintenance_even_with_explicit_targets(): void
+    {
+        $this->app->instance('env', 'production');
+        $target = $this->directory.'/target.sqlite';
+        $this->artisan('school:restore', ['file' => 'unused.zip', '--target-db' => $target, '--target-files' => $this->directory.'/files', '--force' => true])->expectsOutputToContain('Aktifkan maintenance')->assertFailed();
+        $this->assertFileDoesNotExist($target);
+    }
+
+    public function test_invalid_sqlite_binary_cannot_replace_existing_database(): void
+    {
+        $binary = "SQLite format 3\0".str_repeat('invalid', 30);
+        $archive = $this->archive(['database_dump.sql' => $binary], ['database_dump.sql' => hash('sha256', $binary)], 'sqlite-binary');
+        $target = $this->directory.'/unchanged.sqlite';
+        File::put($target, 'unchanged');
+        $this->artisan('school:restore', ['file' => $archive, '--target-db' => $target, '--force' => true])->assertFailed();
+        $this->assertSame('unchanged', File::get($target));
+    }
+
     private function backup(): string
     {
         $this->artisan('school:backup', ['--destination' => $this->directory, '--database-only' => true])->assertSuccessful();
@@ -120,13 +145,13 @@ class BackupRecoverySafetyTest extends TestCase
         return glob($this->directory.'/*.zip')[0];
     }
 
-    private function archive(array $files, array $checksums): string
+    private function archive(array $files, array $checksums, string $format = 'sqlite-sql'): string
     {
         $path = $this->directory.'/custom.zip';
         $zip = new ZipArchive;
         $zip->open($path, ZipArchive::CREATE);
         $zip->setPassword((string) config('backup.password'));
-        $files['manifest.json'] = json_encode(['version' => 2, 'db_format' => 'sqlite-sql', 'files' => $checksums], JSON_THROW_ON_ERROR);
+        $files['manifest.json'] = json_encode(['version' => 2, 'db_format' => $format, 'files' => $checksums], JSON_THROW_ON_ERROR);
         foreach ($files as $name => $content) {
             $zip->addFromString($name, $content);
             $zip->setEncryptionName($name, ZipArchive::EM_AES_256);

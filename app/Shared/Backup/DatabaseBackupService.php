@@ -59,6 +59,12 @@ class DatabaseBackupService
             if (! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
                 throw new RuntimeException('Dump MySQL membutuhkan koneksi target MySQL/MariaDB.');
             }
+            $databaseName = $connection->getDatabaseName();
+            foreach (['tables' => 'table_schema', 'routines' => 'routine_schema', 'events' => 'event_schema'] as $catalog => $schemaColumn) {
+                if ($connection->table('information_schema.'.$catalog)->where($schemaColumn, $databaseName)->exists()) {
+                    throw new RuntimeException('Target MySQL harus kosong: gunakan database pemulihan bersih agar objek lama tidak tertinggal.');
+                }
+            }
             $this->runMysql($connection, $dump, true);
 
             return;
@@ -94,8 +100,14 @@ class DatabaseBackupService
                 $pdo->exec((string) File::get($dump));
                 $pdo = null;
             }
+            $validation = new PDO('sqlite:'.$staged);
+            if ($validation->query('PRAGMA quick_check')->fetchColumn() !== 'ok') {
+                throw new RuntimeException('Integritas database SQLite tidak valid.');
+            }
+            $validation = null;
             chmod($staged, 0600);
-            if ($target === null) {
+            if ($target === null || $database === $connection->getDatabaseName()
+                || (realpath($database) !== false && realpath($database) === realpath($connection->getDatabaseName()))) {
                 DB::purge();
             }
             // Restore must run offline: discard sidecars belonging to the old database.

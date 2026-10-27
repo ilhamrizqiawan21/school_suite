@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Modules\Academic\Application\Services\PrincipalDashboardService;
 use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
+use App\Modules\Academic\Infrastructure\Models\LessonSession;
+use App\Modules\Academic\Infrastructure\Models\Schedule;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
@@ -107,6 +109,31 @@ Route::get('/', function (PrincipalDashboardService $principalDashboard) {
         $teacherId = Teacher::where('school_id', $schoolId)
             ->where('user_id', $user->id)
             ->value('id');
+
+        if ($user->hasRole('teacher')) {
+            $assignments = TeachingAssignment::query()->where('term_id', $activeTermId)->where('teacher_id', $teacherId ?? 0);
+            $schoolNow = now('Asia/Jakarta');
+            $today = $schoolNow->toDateString();
+            $todaySchedules = Schedule::query()->where('school_id', $schoolId)->where('teacher_id', $teacherId ?? 0)
+                ->where('term_id', $activeTermId)->where('status', 'published')->where('day_of_week', $schoolNow->dayOfWeekIso)
+                ->when(! $activeTerm || $activeTerm->start_date->toDateString() > $today || $activeTerm->end_date->toDateString() < $today, fn ($query) => $query->whereRaw('1 = 0'));
+            $stats['role_metrics']['classes_count'] = (clone $assignments)->distinct()->count('class_group_id');
+            $stats['teacher_overview'] = [
+                'date' => $today,
+                'has_teacher_profile' => $teacherId !== null,
+                'has_active_term' => $activeTerm !== null,
+                'today_total' => (clone $todaySchedules)->count(),
+                'today_schedule' => $todaySchedules->with(['classGroup:id,name', 'subject:id,name'])->orderBy('start_time')->limit(5)->get()->map(fn (Schedule $schedule) => [
+                    'id' => $schedule->id, 'class_name' => $schedule->classGroup?->name, 'subject_name' => $schedule->subject?->name,
+                    'start_time' => substr($schedule->start_time, 0, 5), 'end_time' => substr($schedule->end_time, 0, 5), 'room' => $schedule->room,
+                ])->values(),
+                'pending_journals' => LessonSession::query()->where('school_id', $schoolId)->where('teacher_id', $teacherId ?? 0)
+                    ->where('term_id', $activeTermId)->where('status', '!=', 'cancelled')->whereDate('date', '<=', $today)->whereDoesntHave('journal')->count(),
+                'pending_reviews' => AssignmentSubmission::query()->where('review_status', 'pending')->whereNotNull('submitted_at')
+                    ->whereHas('assignment', fn ($query) => $query->where('school_id', $schoolId)
+                        ->whereHas('teachingAssignment', fn ($query) => $query->where('term_id', $activeTermId)->where('teacher_id', $teacherId ?? 0)))->count(),
+            ];
+        }
 
         if ($teacherId && $activeTerm) {
             $monthlyAttendance = DB::table('attendance_records')

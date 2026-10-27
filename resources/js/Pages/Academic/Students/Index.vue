@@ -175,6 +175,15 @@ const exportExcelUrl = () => {
     return `/akademik/siswa/export/excel?${params.toString()}`;
 };
 
+const exportPdfUrl = () => {
+    const params = new URLSearchParams({
+        search: search.value,
+        status: selectedStatus.value,
+        class_group_id: selectedClass.value,
+    });
+    return `/akademik/siswa/export/pdf?${params.toString()}`;
+};
+
 const resetPassword = (student: Student) => {
     if (!student.user_id || !['default', 'changed'].includes(student.account_status ?? '') || !window.confirm(`Buat sandi sementara baru untuk ${student.name}? Sandi akan ditampilkan setelah reset. Sampaikan secara pribadi kepada siswa.`)) return;
 
@@ -222,6 +231,10 @@ const deleteStudent = (student: Student) => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414A2 2 0 0018.414 8L14 3.586A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM13 3v6h6M8 13h8m-8 4h5" />
                         </svg>
                         Ekspor Excel
+                    </a>
+                    <a :href="exportPdfUrl()" class="student-action-button student-action-export">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2zm7 0v5h5M8 14h8m-8 3h6" /></svg>
+                        Ekspor PDF
                     </a>
                 </div>
             </div>
