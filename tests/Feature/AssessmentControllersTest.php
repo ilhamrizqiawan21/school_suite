@@ -904,6 +904,49 @@ class AssessmentControllersTest extends TestCase
         $responseSiti->assertForbidden();
     }
 
+    public function test_student_report_list_contains_only_own_published_reports(): void
+    {
+        $ownPublished = ReportSnapshot::create([
+            'school_id' => $this->school->id, 'enrollment_id' => $this->enrollment->id,
+            'term_id' => $this->term->id, 'class_group_id' => $this->classGroup->id,
+            'student_id' => $this->student->id, 'status' => ReportStatusEnum::PUBLISHED,
+            'scheme_snapshot' => [], 'grades_snapshot' => [], 'attendance_snapshot' => [],
+            'notes_snapshot' => [], 'checksum' => hash('sha256', 'own-published'), 'published_at' => now(),
+        ]);
+        ReportSnapshot::create([
+            'school_id' => $this->school->id, 'enrollment_id' => $this->otherEnrollment->id,
+            'term_id' => $this->term->id, 'class_group_id' => $this->classGroup->id,
+            'student_id' => $this->otherStudent->id, 'status' => ReportStatusEnum::PUBLISHED,
+            'scheme_snapshot' => [], 'grades_snapshot' => [], 'attendance_snapshot' => [],
+            'notes_snapshot' => [], 'checksum' => hash('sha256', 'other-published'), 'published_at' => now(),
+        ]);
+
+        $this->actingAs($this->studentUser)->get(route('assessment.reports.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Assessment/Reports/Index')
+                ->has('reports', 1)
+                ->where('reports.0.id', $ownPublished->id)
+            );
+
+    }
+
+    public function test_student_cannot_view_their_own_draft_report_snapshot(): void
+    {
+        $ownDraft = ReportSnapshot::create([
+            'school_id' => $this->school->id, 'enrollment_id' => $this->enrollment->id,
+            'term_id' => $this->term->id, 'class_group_id' => $this->classGroup->id,
+            'student_id' => $this->student->id, 'status' => ReportStatusEnum::DRAFT,
+            'scheme_snapshot' => [], 'grades_snapshot' => [], 'attendance_snapshot' => [],
+            'notes_snapshot' => [], 'checksum' => hash('sha256', 'own-draft'),
+        ]);
+
+        $this->actingAs($this->studentUser)->get(route('assessment.reports.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('reports', 0));
+        $this->get(route('assessment.reports.show', $ownDraft))->assertForbidden();
+    }
+
     public function test_class_ledger_view_returns_matrix_data_and_json(): void
     {
         $response = $this->actingAs($this->homeroomUser)
@@ -1404,11 +1447,47 @@ class AssessmentControllersTest extends TestCase
         $this->actingAs($this->teacherUser)->getJson(route('assessment.reports.ledger', [
             'class_group_id' => $other->class_group_id, 'term_id' => $this->term->id,
         ]))->assertForbidden();
+
+        $parentRole = Role::create(['name' => 'parent', 'label' => 'Orang Tua', 'is_system' => true]);
+        $parent = User::create([
+            'school_id' => $this->school->id, 'role_id' => $parentRole->id,
+            'name' => 'Orang Tua Uji', 'username' => 'parent_ledger_test',
+            'email' => 'parent.ledger@test.example', 'password' => bcrypt('password'), 'is_active' => true,
+        ]);
+        $this->actingAs($parent)->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ]))->assertForbidden();
+
+        $this->actingAs($this->studentUser)->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ]))->assertForbidden();
+
         $role = Role::create(['name' => 'guest', 'label' => 'Tamu', 'is_system' => true]);
         $this->teacherUser->update(['role_id' => $role->id]);
         $this->teacherUser->unsetRelation('role');
         $this->actingAs($this->teacherUser)->getJson(route('assessment.reports.ledger', [
             'class_group_id' => $this->classGroup->id, 'term_id' => $this->term->id,
+        ]))->assertForbidden();
+    }
+
+    public function test_operator_cannot_read_another_schools_class_ledger(): void
+    {
+        $operatorRole = Role::create(['name' => 'operator', 'label' => 'Operator', 'is_system' => true]);
+        $operator = User::create([
+            'school_id' => $this->school->id, 'role_id' => $operatorRole->id,
+            'name' => 'Operator Uji', 'username' => 'operator_ledger_test',
+            'email' => 'operator.ledger@test.example', 'password' => bcrypt('password'), 'is_active' => true,
+        ]);
+        $otherSchool = School::create(['npsn' => '87654321', 'name' => 'Sekolah Lain', 'status' => 'active']);
+        $otherClass = ClassGroup::create([
+            'school_id' => $otherSchool->id,
+            'academic_year_id' => $this->academicYear->id,
+            'name' => 'VII-X',
+            'grade_level' => 7,
+        ]);
+
+        $this->actingAs($operator)->getJson(route('assessment.reports.ledger', [
+            'class_group_id' => $otherClass->id, 'term_id' => $this->term->id,
         ]))->assertForbidden();
     }
 

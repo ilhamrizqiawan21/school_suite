@@ -82,7 +82,7 @@ Generating optimized autoload files
 
 ### Commit
 
-- `fix(deps): constrain Composer platform to PHP 8.3` (akan diisi setelah commit dibuat).
+- `6007c52 fix(deps): constrain Composer platform to PHP 8.3`.
 
 ## Tugas 2 — Bukti kualitas dan status proyek (27 Oktober 2026)
 
@@ -141,7 +141,7 @@ Perintah selesai dengan exit code 0.
 
 ### Commit
 
-- `fix(quality): resolve architecture and test-suite failures` (akan diisi setelah commit dibuat).
+- `960faba fix(quality): resolve architecture and test-suite failures`.
 
 ## Tugas 3 — Drill backup/restore MySQL dan SQLite file (27 Oktober 2026)
 
@@ -183,17 +183,18 @@ Check that mysqld is running and that the socket: '/var/run/mysqld/mysqld.sock' 
 permission denied while trying to connect to the Docker API at unix:///var/run/docker.sock
 ```
 
-Saya mencoba inisialisasi MySQL sementara di `/tmp/school-suite-mysql-drill-20261027b`. Inisialisasi menghasilkan system tables, tetapi daemon tidak menerima koneksi; startup berikutnya melaporkan `InnoDB Unable to lock ./ibdata1 error: 11`. Tidak ada koneksi operasional yang digunakan. Tabel sumber/target drill belum dibuat karena server uji tidak dapat menerima koneksi.
+Pada pemeriksaan awal sesi ini MySQL lokal tidak dapat dihubungi; inisialisasi sementara di `/tmp/school-suite-mysql-drill-20261027b` gagal karena `InnoDB Unable to lock ./ibdata1 error: 11`. Tidak ada koneksi operasional yang digunakan.
+
+Pembaruan bukti yang muncul kemudian di working tree saat tugas berlangsung (perubahan kode/dokumen tersebut tidak termasuk commit Tugas 5): `docs/AUDIT_BACKEND_2026-10-27.md` mencatat perintah `BACKUP_MYSQL_TEST_SOCKET=<socket-drill> php artisan test --compact --filter=MysqlBackupRestoreTest` lulus pada MySQL 8.4.11 dengan 1 tes/20 assertions, target acak terisolasi, tanpa port jaringan. Dokumen audit juga mencatat drill membandingkan jumlah baris/checksum dataset pilot dan menolak target yang tidak kosong. Output PHPUnit mentah dan path socket tidak tercantum di dokumen audit.
 
 ### Risiko dan verifikasi yang belum dilakukan
 
-- Dump/restore MySQL belum benar-benar berjalan pada server. Tes terotomasi siap menjalankan skenario penuh saat `BACKUP_MYSQL_TEST_SOCKET` menunjuk socket MySQL/MariaDB terisolasi yang dapat diakses root.
-- Karena drill MySQL belum tersedia, keberhasilan restore schema/data produksi hanya didukung oleh implementasi dump native dan tes SQLite; belum ada bukti runtime MySQL di sesi ini.
-- Tes otomatis MySQL skip, bukan pass. Keluaran terarah di atas menyebut satu skip; alasan skip dalam tes: `MySQL drill skipped: set BACKUP_MYSQL_TEST_SOCKET to an isolated local MySQL socket.`
+- Hasil awal sesi ini memang skip; bukti MySQL 8.4.11 yang dicatat kemudian di audit tidak menyertakan output mentah atau socket agar dapat direproduksi dari sesi ini.
+- Perintah `BackupRecoverySafetyTest` awal lulus, dan dokumen audit yang diperbarui kemudian menyebut cakupan restore SQLite file default/explicit; detail akhir tercantum di `docs/AUDIT_BACKEND_2026-10-27.md`.
 
 ### Commit
 
-- `test(backup): cover isolated MySQL restore with pilot dataset` (akan diisi setelah commit dibuat).
+- `e64ad50 test(backup): cover isolated MySQL restore with pilot dataset`.
 
 ## Tugas 4 — Health check deployment dan rollback (27 Oktober 2026)
 
@@ -237,6 +238,90 @@ Tes health probe memakai stub curl menguji payload sehat, payload salah, redirec
 
 - Tidak ada rilis/deploy pada server nyata. HTTPS domain production, sertifikat, vhost Nginx, dan payload dari rilis aktif belum diuji end-to-end.
 - URL health check kini harus diberikan eksplisit oleh operator saat deploy.
+
+### Commit
+
+- `ec7a57f fix(deploy): require health URL and roll back failed first release`.
+
+## Tugas 5 — Verifikasi otorisasi per peran (27 Oktober 2026)
+
+### File yang diubah
+
+- `tests/Feature/AssessmentControllersTest.php`: menambah tes bahwa parent, student, guest dan operator lintas sekolah ditolak pada ledger; daftar rapor siswa hanya berisi rapor miliknya yang terbit; rapor draft miliknya tidak muncul dan tidak dapat dibuka.
+- `docs/HANDOFF.md` dan `docs/PROJECT_STATUS.md`: mencatat hasil aktual, komposisi role, ketidakcocokan navigasi/route, dan blocker.
+
+### Perintah verifikasi dan output asli
+
+`php artisan test --compact`:
+
+```json
+{"tool":"phpunit","result":"passed","tests":350,"passed":349,"assertions":3200,"duration_ms":30724,"skipped":1}
+```
+
+`vendor/bin/pint --test`:
+
+```json
+{"tool":"pint","result":"passed"}
+```
+
+`npm run typecheck`:
+
+```text
+> typecheck
+> vue-tsc --noEmit
+```
+
+Exit code: `0`.
+
+`npm run build` (output ringkas dari build yang lulus):
+
+```text
+vite v8.3.5 building client environment for production...
+✓ 754 modules transformed.
+✓ built in 3.48s
+```
+
+Perintah khusus yang diminta, `php artisan test --compact tests/Feature/RoleMatrixAccessTest.php tests/Feature/RouteAndPermissionStressTest.php`:
+
+```json
+{"tool":"phpunit","result":"passed","tests":22,"passed":22,"assertions":533,"duration_ms":3313}
+```
+
+`php artisan test --compact tests/Feature/AssessmentControllersTest.php`:
+
+```json
+{"tool":"phpunit","result":"passed","tests":57,"passed":57,"assertions":470,"duration_ms":8002}
+```
+
+### Daftar role dan batas audit
+
+`RoleEnum` berisi sembilan role: `admin`, `operator`, `principal`, `teacher`, `homeroom`, `counselor`, `librarian`, `student`, `parent`. `PilotSchoolSeeder` hanya membuat tujuh: `admin`, `principal`, `operator`, `teacher`, `homeroom`, `counselor`, `student`. Maka usulan daftar delapan role dari permintaan kurang `counselor` dan `librarian`; `guest` bukan role kanonis di enum atau seeder, sedangkan `parent` ada di enum tetapi tidak dibuat oleh Pilot seeder. `guest` diuji sebagai status tanpa role/aktor unauthenticated sesuai konteks.
+
+Tes negatif langsung yang terverifikasi: guru tidak dapat membaca/menulis nilai penugasan kelas guru lain (tes yang sudah ada); wali kelas tidak dapat menerbitkan rapor kelas lain (tes yang sudah ada); parent, guest, dan student menerima 403 untuk `/penilaian/ledger`; student hanya melihat rapor terbit miliknya dan menerima 403 untuk snapshot draft; operator menerima 403 untuk ledger sekolah lain. Tes di atas juga memverifikasi rute negatif ini dengan request HTTP Laravel. Tidak ada perubahan kebijakan akses yang dibuat pada tugas ini.
+
+### Ketidakcocokan menu dan akses URL
+
+Audit statis `resources/js/components/SidebarNavigation.vue` dibanding route/policy/controller menemukan beberapa tautan yang disembunyikan dari sidebar tetapi URL langsung tidak memberi 403 kepada role di bawah ini. Ini dilaporkan sebagai ketidakcocokan dan tidak diubah diam-diam:
+
+| Menu/URL | Role yang tercatat | Perilaku URL langsung |
+|---|---|---|
+| `/akademik/jadwal` | Parent tidak diberi menu; student justru diberi menu | Route hanya `auth`; `SchedulePolicy::viewAny` mengizinkan authenticated user, sehingga parent juga dapat masuk. |
+| `/akademik/kelas` | Student tidak diberi menu | `ClassGroupPolicy::viewAny` mengizinkan student; route tidak menolak role itu. |
+| `/akademik/presensi/rekap` | Menu hanya untuk principal | `AttendancePolicy::viewAny` juga mengizinkan operator, teacher, dan homeroom (atau permission yang sesuai). |
+| `/wali-kelas/catatan` dan `/wali-kelas/kedisiplinan` | Menu hanya untuk homeroom | Route/policy juga memberi akses sebagian role teacher/counselor, jadi URL langsung tidak konsisten dengan menu. |
+| `/komunikasi` | Menu tidak mencantumkan principal | `RouteAndPermissionStressTest::test_principal_role_actions_succeed_and_boundaries_enforced` mengharapkan principal mendapat HTTP 200. |
+
+`RoleMatrixAccessTest` dan `RouteAndPermissionStressTest` lulus, tetapi keduanya tidak membandingkan DOM sidebar dengan seluruh URL untuk semua role. Tidak ada pengujian browser/DOM parity untuk sembilan role; daftar ketidakcocokan di atas bukan inventaris lengkap semua menu aplikasi.
+
+### Risiko dan hal yang belum diverifikasi
+
+- Tes unit/feature menegaskan batas objek yang diminta, namun tidak membuktikan kesesuaian semua menu terhadap seluruh izin dan seluruh route. Ketidakcocokan URL/menu yang diketahui di atas masih terbuka.
+- Pengujian MySQL terisolasi tetap skip karena server MySQL lokal tidak tersedia; endpoint health HTTPS produksi belum diuji; runtime PHP 8.3 asli tidak tersedia. Detail bukti berada pada Tugas 1, 3, dan 4.
+- Tidak dilakukan uji browser terhadap setiap role. `npm run typecheck` dan `npm run build` lulus, tetapi tidak menggantikan uji otorisasi UI end-to-end.
+
+### Commit
+
+- `test(auth): cover cross-role assessment boundaries` (commit Tugas 5).
 
 ### Commit
 

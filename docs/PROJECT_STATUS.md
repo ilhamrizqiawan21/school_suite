@@ -21,14 +21,14 @@ Terakhir diperbarui: 27 Oktober 2026
     - Security headers middleware (`SecurityHeadersMiddleware`): `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `HSTS`.
     - Skrip otomasi deployment zero-downtime atomik (`deploy/deploy.sh`) dan skrip rollback darurat (`deploy/rollback.sh`).
     - Panduan checklist rilis produksi di `docs/DEPLOYMENT_CHECKLIST.md`.
-  - Verifikasi lokal 27 Oktober 2026: `php artisan test --compact` — 343 tes, 342 lulus, 1 dilewati, 3.156 assertion; `vendor/bin/pint --test` — lulus; `npm run typecheck` — lulus; `npm run build` — lulus (754 modul ditransformasi). Test suite memakai SQLite in-memory untuk sebagian tes; hasil ini tidak membuktikan restore MySQL atau deploy server.
+  - Verifikasi lokal 27 Oktober 2026: `php artisan test --compact` — 347 tes, 346 lulus, 1 dilewati, 3.192 assertion; `vendor/bin/pint --test` — lulus; `npm run typecheck` — lulus; `npm run build` — lulus (754 modul ditransformasi). Test suite memakai SQLite in-memory untuk sebagian tes; hasil ini tidak membuktikan restore MySQL atau deploy server.
 - Langkah berikut: Ekspansi Modul Pasca-Pilot (S09 Modul Pembelajaran / LMS, S10 CBT, S11 SPMB, S12 Sipus, S13 TU & Sarpras).
 
 ## Blocker sebelum data nyata
 
 - Drill restore backup pada MySQL terisolasi dan restore backup SQLite berbasis file belum dibuktikan.
 - Health check deployment, termasuk rollback saat instalasi pertama dan saat ada rilis sebelumnya, telah diverifikasi melalui dry run; endpoint HTTPS domain production belum diproba.
-- Pengujian negatif lintas kelas/sekolah dan kesesuaian menu sidebar terhadap hak akses semua peran belum dituntaskan.
+- Pengujian negatif lintas kelas/sekolah yang diminta sudah ditambahkan/dijalankan. Audit menemukan URL jadwal, kelas, rekap presensi, perwalian, dan komunikasi yang akses langsungnya tidak selalu cocok dengan visibilitas sidebar; audit semua route/menu dan parity browser belum tuntas.
 - PHP 8.3 CLI/FPM asli belum tersedia pada mesin verifikasi; lockfile diuji dengan Composer platform 8.3.0 pada PHP lokal 8.5.4.
 
 - Profil sekolah pilot, ukuran data, format rapor, dan aturan pembulatan belum dikunci.
