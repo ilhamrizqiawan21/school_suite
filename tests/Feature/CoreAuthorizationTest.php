@@ -233,6 +233,30 @@ class CoreAuthorizationTest extends TestCase
         $this->assertSame('Guru B', $foreignUser->fresh()->name);
     }
 
+    public function test_global_admin_without_school_cannot_manage_school_user_objects(): void
+    {
+        $globalAdmin = User::create([
+            'school_id' => null,
+            'role_id' => $this->adminRole->id,
+            'name' => 'Admin Global',
+            'email' => 'admin.global@school.test',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+        $schoolUser = User::create([
+            'school_id' => $this->schoolA->id,
+            'role_id' => $this->teacherRole->id,
+            'name' => 'Guru Sekolah',
+            'email' => 'guru.global-boundary@school.test',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+
+        $this->assertFalse(Gate::forUser($globalAdmin)->allows('view', $schoolUser));
+        $this->assertFalse(Gate::forUser($globalAdmin)->allows('update', $schoolUser));
+        $this->assertFalse(Gate::forUser($globalAdmin)->allows('delete', $schoolUser));
+    }
+
     public function test_non_admin_with_user_create_permission_cannot_assign_admin_role(): void
     {
         $operator = User::create([

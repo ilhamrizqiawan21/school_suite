@@ -138,6 +138,57 @@ class BackupRecoverySafetyTest extends TestCase
         $this->assertSame('unchanged', File::get($target));
     }
 
+    public function test_private_files_are_replaced_as_a_directory_after_database_restore(): void
+    {
+        $dump = 'CREATE TABLE records (id INTEGER PRIMARY KEY);';
+        $archive = $this->archive([
+            'database_dump.sql' => $dump,
+            'private_files/new.txt' => 'restored',
+        ], [
+            'database_dump.sql' => hash('sha256', $dump),
+            'private_files/new.txt' => hash('sha256', 'restored'),
+        ]);
+        $targetFiles = $this->directory.'/target-files';
+        File::makeDirectory($targetFiles, 0700);
+        File::put($targetFiles.'/old.txt', 'before');
+
+        $this->artisan('school:restore', [
+            'file' => $archive,
+            '--target-db' => $this->directory.'/restored.sqlite',
+            '--target-files' => $targetFiles,
+            '--force' => true,
+        ])->assertSuccessful();
+
+        $this->assertFileExists($targetFiles.'/new.txt');
+        $this->assertFileDoesNotExist($targetFiles.'/old.txt');
+        $this->assertSame('restored', File::get($targetFiles.'/new.txt'));
+    }
+
+    public function test_database_failure_does_not_mutate_private_file_target(): void
+    {
+        $dump = 'THIS IS NOT VALID SQL;';
+        $archive = $this->archive([
+            'database_dump.sql' => $dump,
+            'private_files/new.txt' => 'must not activate',
+        ], [
+            'database_dump.sql' => hash('sha256', $dump),
+            'private_files/new.txt' => hash('sha256', 'must not activate'),
+        ]);
+        $targetFiles = $this->directory.'/failed-target-files';
+        File::makeDirectory($targetFiles, 0700);
+        File::put($targetFiles.'/old.txt', 'before');
+
+        $this->artisan('school:restore', [
+            'file' => $archive,
+            '--target-db' => $this->directory.'/failed.sqlite',
+            '--target-files' => $targetFiles,
+            '--force' => true,
+        ])->assertFailed();
+
+        $this->assertFileExists($targetFiles.'/old.txt');
+        $this->assertFileDoesNotExist($targetFiles.'/new.txt');
+    }
+
     private function backup(): string
     {
         $this->artisan('school:backup', ['--destination' => $this->directory, '--database-only' => true])->assertSuccessful();

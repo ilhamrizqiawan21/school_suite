@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Logging\SanitizeSensitiveDataProcessor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Monolog\Level;
 use Monolog\LogRecord;
 use Tests\TestCase;
@@ -48,6 +49,24 @@ class HealthCheckTest extends TestCase
         $healthResponse = $this->get('/health');
         $healthResponse->assertOk();
         $healthResponse->assertJson(['status' => 'healthy']);
+    }
+
+    public function test_historical_failed_jobs_do_not_make_health_check_unhealthy(): void
+    {
+        if (! Schema::hasTable('failed_jobs')) {
+            $this->markTestSkipped('failed_jobs table is unavailable.');
+        }
+
+        DB::table('failed_jobs')->insert([
+            'uuid' => (string) Str::uuid(),
+            'connection' => 'testing',
+            'queue' => 'default',
+            'payload' => '{}',
+            'exception' => 'Historical failure retained for review',
+            'failed_at' => now(),
+        ]);
+
+        $this->get('/up')->assertOk()->assertJson(['status' => 'healthy']);
     }
 
     public function test_sensitive_data_processor_redacts_credentials_in_logs(): void

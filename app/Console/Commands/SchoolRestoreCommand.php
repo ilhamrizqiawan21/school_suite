@@ -23,6 +23,7 @@ class SchoolRestoreCommand extends Command
     public function handle(DatabaseBackupService $database): int
     {
         $temporary = storage_path('app/restore_temp_'.bin2hex(random_bytes(12)));
+        $stagedFiles = null;
         try {
             $target = $this->option('target-db');
             if (app()->isProduction() && ! app()->isDownForMaintenance()) {
@@ -87,13 +88,17 @@ class SchoolRestoreCommand extends Command
             if (array_diff(array_keys($manifest['files']), $actualFiles) !== []) {
                 throw new RuntimeException('Komponen backup tidak lengkap.');
             }
-            $database->restore($temporary.'/database_dump.sql', (string) ($manifest['db_format'] ?? ''), $target ? (string) $target : null);
+
+            $filesTarget = null;
             if (File::isDirectory($temporary.'/private_files')) {
                 $filesTarget = (string) ($this->option('target-files') ?: storage_path('app/private'));
-                File::ensureDirectoryExists($filesTarget, 0700);
-                if (! File::copyDirectory($temporary.'/private_files', $filesTarget)) {
-                    throw new RuntimeException('Pemulihan berkas privat gagal.');
-                }
+                $stagedFiles = $this->stagePrivateFiles($temporary.'/private_files', $filesTarget);
+            }
+
+            $database->restore($temporary.'/database_dump.sql', (string) ($manifest['db_format'] ?? ''), $target ? (string) $target : null);
+            if ($stagedFiles !== null && $filesTarget !== null) {
+                $this->activatePrivateFiles($stagedFiles, $filesTarget);
+                $stagedFiles = null;
             }
             $this->info('Verifikasi dan pemulihan backup selesai.');
 
@@ -103,7 +108,63 @@ class SchoolRestoreCommand extends Command
 
             return self::FAILURE;
         } finally {
+            if ($stagedFiles !== null) {
+                File::deleteDirectory($stagedFiles);
+            }
             File::deleteDirectory($temporary);
+        }
+    }
+
+    private function stagePrivateFiles(string $source, string $target): string
+    {
+        if ($target === '' || is_link($target)) {
+            throw new RuntimeException('Target berkas privat tidak valid.');
+        }
+
+        $parent = dirname($target);
+        File::ensureDirectoryExists($parent, 0700);
+        $staged = $parent.'/.'.basename($target).'.restore-'.bin2hex(random_bytes(8));
+
+        if (! File::copyDirectory($source, $staged)) {
+            File::deleteDirectory($staged);
+            throw new RuntimeException('Persiapan berkas privat untuk pemulihan gagal.');
+        }
+
+        chmod($staged, 0700);
+
+        return $staged;
+    }
+
+    private function activatePrivateFiles(string $staged, string $target): void
+    {
+        $previous = null;
+        if (is_link($target)) {
+            throw new RuntimeException('Target berkas privat tidak valid.');
+        }
+
+        if (is_dir($target)) {
+            $previous = dirname($target).'/.'.basename($target).'.previous-'.bin2hex(random_bytes(8));
+            if (! rename($target, $previous)) {
+                throw new RuntimeException('Direktori berkas privat lama tidak dapat diamankan.');
+            }
+        }
+
+        try {
+            if (! rename($staged, $target)) {
+                throw new RuntimeException('Direktori berkas privat baru tidak dapat diaktifkan.');
+            }
+        } catch (\Throwable $exception) {
+            if (is_dir($target)) {
+                File::deleteDirectory($target);
+            }
+            if ($previous !== null && ! rename($previous, $target)) {
+                throw new RuntimeException('Pemulihan direktori berkas privat lama gagal.', 0, $exception);
+            }
+            throw $exception;
+        }
+
+        if ($previous !== null) {
+            File::deleteDirectory($previous);
         }
     }
 }

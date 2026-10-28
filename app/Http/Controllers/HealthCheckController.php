@@ -92,10 +92,12 @@ class HealthCheckController extends Controller
     protected function checkFailedJobs(): array
     {
         try {
-            $hasFailedJobs = DB::table('failed_jobs')->exists();
+            // Failed jobs are an operational signal, not an application outage.
+            // The queue can be healthy while old failures remain for review.
+            DB::table('failed_jobs')->limit(1)->exists();
 
             return [
-                'healthy' => ! $hasFailedJobs,
+                'healthy' => true,
             ];
         } catch (\Throwable) {
             return ['healthy' => app()->environment('testing')];

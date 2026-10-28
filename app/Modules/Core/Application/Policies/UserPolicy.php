@@ -50,7 +50,7 @@ class UserPolicy
         }
 
         // Cross-school inspection is strictly forbidden
-        if ($actor->school_id !== null && $target->school_id !== null && $actor->school_id !== $target->school_id) {
+        if (! $this->belongsToSameSchool($actor, $target)) {
             return false;
         }
 
@@ -76,7 +76,7 @@ class UserPolicy
         }
 
         // Cross-school modification is strictly forbidden
-        if ($actor->school_id !== null && $target->school_id !== null && $actor->school_id !== $target->school_id) {
+        if (! $this->belongsToSameSchool($actor, $target)) {
             return false;
         }
 
@@ -94,11 +94,18 @@ class UserPolicy
         }
 
         // Cross-school deletion is strictly forbidden
-        if ($actor->school_id !== null && $target->school_id !== null && $actor->school_id !== $target->school_id) {
+        if (! $this->belongsToSameSchool($actor, $target)) {
             return false;
         }
 
         // Non-admin target can be deleted if actor has delete permission
         return $actor->hasPermission(PermissionEnum::USERS_DELETE->value);
+    }
+
+    private function belongsToSameSchool(User $actor, User $target): bool
+    {
+        return $actor->school_id !== null
+            && $target->school_id !== null
+            && (int) $actor->school_id === (int) $target->school_id;
     }
 }
