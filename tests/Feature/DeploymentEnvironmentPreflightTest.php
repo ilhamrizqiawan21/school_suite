@@ -31,6 +31,32 @@ class DeploymentEnvironmentPreflightTest extends TestCase
         }
     }
 
+    #[DataProvider('safePasswordChangeValues')]
+    public function test_password_change_enforcement_is_required_or_defaults_to_enabled(?string $value): void
+    {
+        $directory = sys_get_temp_dir().'/school-env-'.bin2hex(random_bytes(8));
+        File::makeDirectory($directory, 0700);
+        $environmentFile = $directory.'/.env';
+        $overrides = $value === null ? [] : ['ENFORCE_PASSWORD_CHANGE' => $value];
+        File::put($environmentFile, $this->environment($overrides));
+
+        try {
+            $process = $this->runPreflight($environmentFile);
+
+            $this->assertTrue($process->isSuccessful(), $process->getErrorOutput());
+        } finally {
+            File::deleteDirectory($directory);
+        }
+    }
+
+    public static function safePasswordChangeValues(): array
+    {
+        return [
+            'true' => ['true'],
+            'empty' => [null],
+        ];
+    }
+
     #[DataProvider('unsafeProductionEnvironments')]
     public function test_unsafe_production_environment_is_rejected_without_printing_values(string $key, string $value): void
     {
@@ -65,6 +91,9 @@ class DeploymentEnvironmentPreflightTest extends TestCase
             'insecure session cookie' => ['SESSION_SECURE_COOKIE', 'false'],
             'weak backup password' => ['BACKUP_PASSWORD', 'too-short'],
             'debug log level' => ['LOG_LEVEL', 'debug'],
+            'password change disabled with false' => ['ENFORCE_PASSWORD_CHANGE', 'false'],
+            'password change disabled with zero' => ['ENFORCE_PASSWORD_CHANGE', '0'],
+            'password change disabled with off' => ['ENFORCE_PASSWORD_CHANGE', 'OFF'],
         ];
     }
 
@@ -76,6 +105,7 @@ class DeploymentEnvironmentPreflightTest extends TestCase
             'APP_DEBUG' => 'false',
             'APP_URL' => 'https://school.test',
             'APP_KEY' => 'base64:application-key-placeholder',
+            'ENFORCE_PASSWORD_CHANGE' => 'true',
             'SESSION_SECURE_COOKIE' => 'true',
             'BACKUP_PASSWORD' => 'backup-secret-that-must-never-be-printed-1234567890',
             'LOG_LEVEL' => 'info',

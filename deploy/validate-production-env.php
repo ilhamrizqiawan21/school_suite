@@ -65,6 +65,11 @@ if ($required('APP_ENV') !== 'production') {
     $failures[] = 'APP_ENV';
 }
 
+$enforcePasswordChange = strtolower(trim((string) ($values['ENFORCE_PASSWORD_CHANGE'] ?? '')));
+if (in_array($enforcePasswordChange, ['false', '0', 'off', 'no'], true)) {
+    $failures[] = 'ENFORCE_PASSWORD_CHANGE';
+}
+
 if (! $boolean((string) ($values['APP_DEBUG'] ?? ''), false)) {
     $failures[] = 'APP_DEBUG';
 }

@@ -26,6 +26,7 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
   - `APP_ENV=production`
   - `APP_DEBUG=false`
   - `APP_KEY` telah terisi kunci enkripsi 32-karakter.
+  - `ENFORCE_PASSWORD_CHANGE=true` (atau kosong, yang diperlakukan sebagai aktif); nilai `false`, `0`, `off`, dan `no` ditolak untuk production.
   - `DB_CONNECTION=mysql` dengan database `school_suite` dan kredensial terisolasi.
   - `SESSION_SECURE_COOKIE=true` (untuk enkripsi cookie via HTTPS).
   - Hak akses file `.env` dikunci ketat (`chmod 600 .env` milik `www-data:www-data`).
