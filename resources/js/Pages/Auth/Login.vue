@@ -14,7 +14,9 @@ const showPassword = ref(false);
 onMounted(()=>{try{document.documentElement.dataset.theme=localStorage.getItem('school-suite-theme')==='dark'?'dark':'light'}catch(_){document.documentElement.dataset.theme='light'}if(props.branding?.theme_primary)document.documentElement.style.setProperty('--primary',props.branding.theme_primary);if(props.branding?.favicon_url){let link=document.querySelector<HTMLLinkElement>('link[rel="icon"]');if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link)}link.href=props.branding.favicon_url}});
 
 const submit = () => {
-    form.post('/login', {
+    // Keep the deployment prefix when the app is mounted below the domain root
+    // (for example, /school_suite/login behind the shared Apache vhost).
+    form.post(window.location.pathname, {
         onFinish: () => {
             form.reset('password');
         },
