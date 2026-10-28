@@ -550,3 +550,66 @@ $ git ls-files | grep -E '^\\.playwright-mcp/|^[^/]+\\.png$'
 ### Risiko / belum terbukti
 
 - Karena snapshot memuat indikator data sensitif dan masih ada di riwayat Git lama, penghapusan dari index tidak menghapusnya dari riwayat. **BELUM TERBUKTI** apakah seluruh isi historis bebas dari data pribadi/credential. Konfirmasi pemilik repo diperlukan sebelum pembersihan riwayat yang mengubah commit lama.
+
+## Tugas 2 — Ketidakcocokan menu vs akses URL, Langkah A (28 Oktober 2026)
+
+Tidak ada policy, middleware, atau menu yang diubah pada langkah ini. Matriks berikut adalah keputusan yang masih menunggu pemilik produk.
+
+| Butir | Route dan kontrol server saat ini | Role diizinkan server saat ini | Role yang diberi menu saat ini | Opsi 1 — perketat server | Opsi 2 — tambah menu | Rekomendasi sementara |
+|---|---|---|---|---|---|---|
+| a | `GET /akademik/jadwal`; group `auth`; `SchedulePolicy::viewAny` mengembalikan true untuk user aktif terautentikasi | admin, operator, principal, teacher, homeroom, student, dan parent yang lolos `auth` | sidebar item umum; student juga melihatnya; parent tidak diberi menu | Batasi `viewAny`/route ke role yang memang perlu jadwal; parent dikeluarkan | Tambahkan menu jadwal untuk parent | Opsi 1. Menu parent tidak ada dan jadwal dapat memuat informasi kelas/guru; paling kecil hak aksesnya. Tes student yang ada harus dipertahankan. |
+| b | `GET /akademik/kelas`; group `auth`; `ClassGroupPolicy::viewAny` memeriksa permission atau role | admin, operator, principal, teacher, homeroom, student; parent tidak termasuk policy | sidebar item umum; student tidak diberi menu karena tidak ada `studentHref` khusus | Keluarkan student dari `viewAny` atau beri route read-only terpisah | Tambahkan menu student dengan halaman read-only yang jelas | Opsi 1 sementara. Rombel dapat memuat daftar siswa/wali; tidak menambah paparan data tanpa kebutuhan produk eksplisit. |
+| c | `GET /akademik/presensi/rekap`; group `auth`; controller memakai `authorize('viewAny', AttendanceRecord::class)` | admin, operator, principal, teacher, homeroom sesuai policy/middleware | menu akademik memakai URL utama untuk non-principal; principal dialihkan ke `/kepsek/laporan/rekap-absensi`; audit menyebut menu praktis principal | Batasi rekap ke principal (atau definisikan role operasional eksplisit) dan pertahankan route khusus principal | Tambahkan menu rekap bagi operator/teacher/homeroom | Opsi 1 untuk default karena rekap presensi adalah data siswa sensitif; dampak ke tes role yang sekarang harus diputuskan bersama. |
+| d | `GET /wali-kelas/catatan` dan `GET /wali-kelas/kedisiplinan`; middleware group `auth, role:teacher,homeroom`; policy catatan juga memberi kemampuan create kepada counselor/principal | route saat ini teacher, homeroom; policy catatan create juga counselor/principal; service membatasi data berdasarkan sekolah/relasi | kedua menu ditampilkan sebagai item perwalian; tidak ada pemetaan role khusus di item | Pisahkan route/policy menjadi homeroom-only atau endpoint BK terpisah untuk counselor/principal | Tambahkan menu untuk role yang benar-benar membutuhkan akses, dengan scope read/write eksplisit | Opsi 1 untuk data catatan/BK dan kedisiplinan sampai kebutuhan counselor/teacher disahkan; risiko kebocoran catatan sensitif paling tinggi di butir ini. |
+| e | `GET /komunikasi/`; middleware `auth, role:admin,operator,principal,teacher,homeroom,student`; controller index | admin, operator, principal, teacher, homeroom, student; parent ditolak | principal diarahkan item komunikasi ke `/kepsek/pengumuman`, bukan URL dasar `/komunikasi`; tes mengharapkan principal 200 pada route dasar | Hapus principal dari route dasar atau ubah ekspektasi tes bila route khusus menjadi satu-satunya akses | Tambahkan menu/tautan principal yang secara eksplisit menuju route komunikasi yang diizinkan | Opsi 2 dengan route principal read-only yang konsisten. Ini menjaga tes dan menghindari false 404/403 dari URL yang memang server izinkan. |
+
+### Bukti kode yang dipakai
+
+```text
+app/Modules/Academic/Interface/Routes/web.php:
+Route::get('kelas', ...); Route::get('jadwal', ...); Route::get('presensi/rekap', ...);
+app/Modules/Academic/Application/Policies/SchedulePolicy.php: viewAny() => true
+app/Modules/Academic/Application/Policies/ClassGroupPolicy.php: viewAny() => permission/operator/principal/teacher/homeroom/student
+app/Modules/Academic/Application/Policies/AttendancePolicy.php: viewAny() => permission/operator/principal/teacher/homeroom
+app/Modules/Homeroom/Interface/Routes/web.php: middleware auth,role:teacher,homeroom
+app/Modules/Administration/Interface/Routes/web.php: /komunikasi role includes principal
+resources/js/components/SidebarNavigation.vue: principalHref/teacherHref/studentHref determine visible destination
+```
+
+**Langkah B belum dikerjakan.** Mohon pilih opsi 1 atau 2 untuk butir a, b, c, d, dan e sebelum saya mengubah policy/middleware/menu atau menambah tes parity.
+
+## Tugas 3 — Bukti restore MySQL (28 Oktober 2026)
+
+- Runtime lokal: PHP 8.3.36; MySQL server binary: `mysqld 8.0.46-0ubuntu0.22.04.4`.
+- Datadir dan socket yang digunakan berada di `/tmp/school-suite-mysql-ffZMEU`; tidak menyentuh database operasional.
+- Server sempat melaporkan `mysqld is alive`, tetapi proses pengujian berikut tidak menghasilkan hasil PHPUnit yang dapat dipakai. Percobaan kedua pada datadir yang sama gagal dengan `InnoDB Unable to lock ./ibdata1 error: 11`.
+
+```text
+$ mysqladmin --no-defaults --socket=/tmp/school-suite-mysql-ffZMEU/mysql.sock -uroot ping
+mysqld is alive
+$ mysqld --no-defaults --version
+/usr/sbin/mysqld  Ver 8.0.46-0ubuntu0.22.04.4 for Linux on x86_64 ((Ubuntu))
+$ BACKUP_MYSQL_TEST_SOCKET=/tmp/school-suite-mysql-ffZMEU/mysql.sock php artisan test --compact --filter=MysqlBackupRestoreTest
+(tidak menghasilkan output PHPUnit; proses dihentikan setelah socket tidak lagi tersedia)
+$ tail mysql.err
+[ERROR] [MY-012574] [InnoDB] Unable to lock ./ibdata1 error: 11
+```
+
+**BELUM TERBUKTI:** test restore MySQL, perbandingan jumlah baris seluruh tabel, checksum data penting, dan alasan skip pada run yang gagal. Klaim lulus MySQL lama di dokumen status/audit telah diturunkan menjadi belum terbukti.
+
+## Tugas 4 — Validator ENFORCE_PASSWORD_CHANGE (28 Oktober 2026)
+
+- Validator production menolak `false`, `0`, `off`, dan `no` tanpa membedakan kapitalisasi; nilai kosong diperlakukan sebagai aktif.
+- Test `php artisan test --compact tests/Feature/DeploymentEnvironmentPreflightTest.php` lulus 13 tes / 34 assertions.
+
+```text
+{"tool":"phpunit","result":"passed","tests":13,"passed":13,"assertions":34,"duration_ms":1367}
+```
+
+## Verifikasi suite penuh (28 Oktober 2026)
+
+```text
+{"tool":"phpunit","result":"failed","tests":393,"passed":133,"assertions":916,"failed":245,"errors":14,"skipped":1}
+```
+
+Run penuh gagal dengan banyak respons 404 pada test feature; ini **BELUM TERBUKTI** sebagai regresi kode sebelum konfigurasi test/path-prefix diperiksa. Tidak ada test atau policy yang dilonggarkan.

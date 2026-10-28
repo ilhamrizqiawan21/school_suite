@@ -146,7 +146,7 @@ Rata-rata 4,0/5. Peningkatan terpenting: reproduksi negatif B01/B03/B04, tes mul
 Verifikasi akhir yang benar-benar dijalankan:
 
 - `php artisan test --compact`: **350 tes, 349 lulus, 1 dilewati, 3.200 assertions**. Tes yang dilewati membutuhkan socket server MySQL terisolasi.
-- `BACKUP_MYSQL_TEST_SOCKET=<socket-drill> php artisan test --compact --filter=MysqlBackupRestoreTest`: **1 tes, 20 assertions lulus** pada MySQL **8.4.11**, target database acak terisolasi, tanpa port jaringan. Meliputi dataset pilot, teks berpetik/Unicode, NULL, biner, dan penolakan target tidak kosong. Perintah ini dijalankan dengan izin di luar sandbox karena sandbox menolak koneksi socket.
+- Klaim drill MySQL 8.4.11 sebelumnya tidak memiliki output mentah yang dapat diaudit pada sesi ini dan tidak dipertahankan sebagai bukti. Pada 28 Oktober 2026, `BACKUP_MYSQL_TEST_SOCKET=/tmp/school-suite-mysql-ffZMEU/mysql.sock php artisan test --compact --filter=MysqlBackupRestoreTest` BELUM TERBUKTI: server sementara sempat siap, lalu proses kedua gagal memperoleh lock `ibdata1`, sehingga test tidak menghasilkan hasil lulus.
 - `vendor/bin/pint --test`: lulus.
 - `npm run typecheck` dan `npm run build`: lulus.
 - `bash -n deploy/deploy.sh deploy/rollback.sh deploy/health-check.sh` dan `git diff --check`: lulus.
