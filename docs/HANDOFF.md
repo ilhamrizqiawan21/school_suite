@@ -670,3 +670,44 @@ $ APP_ENV=testing APP_URL=https://example.com/sekolah php artisan test --compact
 ```
 
 Percobaan awal sebelum `<server name="APP_URL" ...>` menghasilkan 246 failure/14 error pada APP_URL subpath karena nilai path tetap mempengaruhi request test. Setelah kedua sumber environment dikunci, suite subpath hijau.
+
+## Tugas B — Dampak keputusan akses, belum diubah (28 Oktober 2026)
+
+### B1 — Rekap presensi
+
+Route dan ekspor saat ini memakai `role:principal`:
+
+- `GET /akademik/presensi/rekap`: admin, operator, teacher, dan homeroom kehilangan akses langsung; principal tetap bisa.
+- `GET /akademik/presensi/rekap/export`: admin, operator, teacher, dan homeroom juga kehilangan akses langsung; principal tetap bisa.
+- `AttendancePolicy::viewAny` tetap mengizinkan operasi presensi umum untuk role operasional. Pembatasan ini hanya diterapkan pada route rekap/ekspor.
+
+Opsi:
+
+1. Pertahankan principal-only. Tambahkan endpoint/menu laporan terpisah bila admin/operator membutuhkan agregat non-sensitif.
+2. Kembalikan akses admin/operator/teacher/homeroom, lalu tetapkan scope data dan menu per role; admin/operator dapat melihat agregat, teacher/homeroom hanya kelas yang ditugaskan.
+
+### B2 — Counselor dan `/wali-kelas/catatan`
+
+Route group saat ini memakai `auth,role:homeroom`, sehingga counselor tidak bisa membuka `/wali-kelas/catatan` maupun endpoint POST/DELETE di bawahnya. `StudentNotePolicy::create` masih menyatakan counselor boleh membuat catatan, sehingga ada ketidakselarasan policy-versus-route; policy create itu belum dapat dipakai melalui route saat ini.
+
+Opsi:
+
+1. Beri counselor jalur eksplisit, misalnya route BK terpisah atau middleware `role:homeroom,counselor` dengan scope `access_level`/kelas yang ketat; tambahkan menu counselor dan test isolasi catatan rahasia.
+2. Pertahankan homeroom-only dan hapus hak create counselor dari policy agar backend tidak menyatakan kemampuan yang tidak tersedia.
+
+### Bukti mentah
+
+```text
+$ APP_ENV=testing APP_URL=https://example.com php artisan route:list --path=akademik/presensi/rekap
+GET|HEAD akademik/presensi/rekap ...
+GET|HEAD akademik/presensi/rekap/export ...
+
+$ rg -n 'presensi/rekap|role:principal|role:homeroom|function create|hasRole\\(.counselor' app/Modules/Academic/Interface/Routes/web.php app/Modules/Homeroom/Interface/Routes/web.php app/Modules/Homeroom/Application/Policies/StudentNotePolicy.php
+... presensi/rekap ... middleware('role:principal')
+... presensi/rekap/export ... middleware(['throttle:sensitive', 'role:principal'])
+... Route::middleware(['auth', 'role:homeroom']) ...
+... public function create(User $actor): bool
+... || $actor->hasRole('counselor')
+```
+
+**Tidak ada policy, middleware, menu, atau test akses yang diubah untuk Tugas B. Mohon pilih opsi untuk B1 dan B2 sebelum saya lanjut. Tugas C dan D belum dikerjakan karena instruksi berhenti setelah laporan keputusan akses ini.**
