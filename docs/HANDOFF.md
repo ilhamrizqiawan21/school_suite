@@ -649,3 +649,24 @@ $ APP_URL=https://school.test APP_ENV=testing php artisan test --compact
 ```
 
 Tes yang dilewati tetap merupakan `MysqlBackupRestoreTest` karena socket MySQL terisolasi tidak tersedia pada run penuh. Sebelum konfigurasi `APP_URL` test diperbaiki, run tanpa override menghasilkan 393 test dengan 133 lulus, 245 gagal, 14 error, dan 1 dilewati; itu adalah kegagalan konfigurasi subpath, bukan hasil suite final.
+
+## Tugas A — Kunci APP_URL pada PHPUnit (28 Oktober 2026)
+
+- `phpunit.xml` kini mengunci `APP_URL=http://localhost` dengan `force="true"` pada `<env>` dan nilai yang sama pada `<server>` agar nilai dari `.env`/shell tidak bocor ke test.
+- Test khusus `DeploymentConfigurationTest::test_subpath_app_url_is_rendered_as_the_frontend_base_path` sengaja menyetel `config('app.url')` ke `https://example.com/sekolah` dan memverifikasi meta `app-base-path=/sekolah`.
+- Tidak ada variabel subpath lain yang ditemukan pada konfigurasi test; subpath frontend berasal dari `app-base-path` pada Blade dan dibaca oleh `resources/js/app.ts`.
+
+### Verifikasi mentah
+
+```text
+$ APP_ENV=testing APP_URL=https://example.com/sekolah php artisan test --compact tests/Feature/DeploymentConfigurationTest.php --filter=test_subpath_app_url_is_rendered_as_the_frontend_base_path
+{"tool":"phpunit","result":"passed","tests":1,"passed":1,"assertions":1,"duration_ms":291}
+
+$ APP_ENV=testing APP_URL=https://example.com php artisan test --compact
+{"tool":"phpunit","result":"passed","tests":395,"passed":394,"assertions":3662,"duration_ms":76928,"skipped":1}
+
+$ APP_ENV=testing APP_URL=https://example.com/sekolah php artisan test --compact
+{"tool":"phpunit","result":"passed","tests":395,"passed":394,"assertions":3662,"duration_ms":88392,"skipped":1}
+```
+
+Percobaan awal sebelum `<server name="APP_URL" ...>` menghasilkan 246 failure/14 error pada APP_URL subpath karena nilai path tetap mempengaruhi request test. Setelah kedua sumber environment dikunci, suite subpath hijau.

@@ -29,6 +29,22 @@ class DeploymentConfigurationTest extends TestCase
         $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     }
 
+    public function test_subpath_app_url_is_rendered_as_the_frontend_base_path(): void
+    {
+        $originalUrl = config('app.url');
+        config(['app.url' => 'https://example.com/sekolah']);
+
+        try {
+            $html = view('app', [
+                'page' => ['component' => 'Auth/Login', 'props' => [], 'url' => '/login', 'version' => null],
+            ])->render();
+
+            $this->assertStringContainsString('<meta name="app-base-path" content="/sekolah">', $html);
+        } finally {
+            config(['app.url' => $originalUrl]);
+        }
+    }
+
     public function test_local_vite_dev_server_is_allowed_by_content_security_policy(): void
     {
         $hotFile = tempnam(sys_get_temp_dir(), 'school-suite-vite-hot-');
