@@ -58,11 +58,13 @@ class DeploymentConfigurationTest extends TestCase
 
         try {
             $response = $this->get('/up');
-
-            $response->assertHeader(
-                'Content-Security-Policy',
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
-            );
+            $csp = (string) $response->headers->get('Content-Security-Policy');
+            $this->assertStringContainsString("script-src 'self' 'nonce-", $csp);
+            $this->assertStringContainsString("style-src 'self' 'nonce-", $csp);
+            $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp);
+            $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $csp);
+            $this->assertStringContainsString("style-src-attr 'unsafe-inline'", $csp);
+            $this->assertStringNotContainsString('http://127.0.0.1:5173', $csp);
         } finally {
             Vite::useHotFile(public_path('/hot'));
             File::delete($hotFile);
@@ -78,11 +80,13 @@ class DeploymentConfigurationTest extends TestCase
 
         try {
             $response = $this->get('/up');
-
-            $response->assertHeader(
-                'Content-Security-Policy',
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
-            );
+            $csp = (string) $response->headers->get('Content-Security-Policy');
+            $this->assertStringContainsString("script-src 'self' 'nonce-", $csp);
+            $this->assertStringContainsString("style-src 'self' 'nonce-", $csp);
+            $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $csp);
+            $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $csp);
+            $this->assertStringContainsString("style-src-attr 'unsafe-inline'", $csp);
+            $this->assertStringNotContainsString('http://127.0.0.1:5173', $csp);
         } finally {
             Vite::useHotFile(public_path('/hot'));
             File::delete($hotFile);
@@ -134,7 +138,22 @@ class DeploymentConfigurationTest extends TestCase
 
         $systemdService = base_path('deploy/systemd/school-suite-worker.service');
         $this->assertTrue(File::exists($systemdService));
-        $this->assertStringContainsString('queue:work', File::get($systemdService));
+        $systemdContents = File::get($systemdService);
+        $this->assertStringContainsString('queue:work', $systemdContents);
+        $this->assertStringContainsString('ProtectSystem=strict', $systemdContents);
+        $this->assertStringContainsString('ReadWritePaths=/var/www/school_suite/shared/storage', $systemdContents);
+        $this->assertStringContainsString('StandardOutput=journal', $systemdContents);
+
+        $schedulerService = base_path('deploy/systemd/school-suite-scheduler.service');
+        $this->assertTrue(File::exists($schedulerService));
+        $this->assertStringContainsString('schedule:run', File::get($schedulerService));
+
+        $schedulerTimer = base_path('deploy/systemd/school-suite-scheduler.timer');
+        $this->assertTrue(File::exists($schedulerTimer));
+        $this->assertStringContainsString('OnCalendar=*-*-* *:*:00', File::get($schedulerTimer));
+
+        $this->assertFalse((bool) config('filesystems.disks.local.serve'));
+        $this->assertGreaterThan(120, (int) config('queue.connections.database.retry_after'));
 
         $deployScript = base_path('deploy/deploy.sh');
         $this->assertTrue(File::exists($deployScript));
@@ -147,6 +166,8 @@ class DeploymentConfigurationTest extends TestCase
         $this->assertStringContainsString('HEALTH_CHECK_URL wajib diisi', $deployContents);
         $this->assertStringContainsString('validate-production-env.php', $deployContents);
         $this->assertStringContainsString('DEPLOY_SCRIPT_DIR', $deployContents);
+        $this->assertStringContainsString('SCHEDULER_TIMER_SERVICE', $deployContents);
+        $this->assertStringContainsString('systemctl enable --now', $deployContents);
         $this->assertStringContainsString('sudo systemctl stop school-suite-worker', $deployContents);
         $this->assertStringContainsString('rm -f "${CURRENT_SYMLINK}"', $deployContents);
 
@@ -168,10 +189,16 @@ class DeploymentConfigurationTest extends TestCase
         $rollbackScript = base_path('deploy/rollback.sh');
         $this->assertTrue(File::exists($rollbackScript));
         $this->assertTrue(is_executable($rollbackScript));
-        $this->assertStringContainsString('ln -sfn', File::get($rollbackScript));
+        $rollbackContents = File::get($rollbackScript);
+        $this->assertStringContainsString('ln -sfn', $rollbackContents);
+        $this->assertStringContainsString('health-check.sh', $rollbackContents);
+        $this->assertStringContainsString('HEALTH_CHECK_URL wajib diisi', $rollbackContents);
 
         $checklist = base_path('docs/DEPLOYMENT_CHECKLIST.md');
         $this->assertTrue(File::exists($checklist));
+        $checklistContents = File::get($checklist);
+        $this->assertStringContainsString('school-suite-scheduler.timer', $checklistContents);
+        $this->assertStringContainsString('verifikasi health check', $checklistContents);
     }
 
     public function test_scheduled_backup_and_worker_restart_are_configured(): void

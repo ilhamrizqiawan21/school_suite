@@ -9,7 +9,8 @@
 
 [Unit]
 Description=School Suite Queue Worker
-After=network.target mysql.service
+After=network-online.target mysql.service
+Wants=network-online.target
 
 [Service]
 Type=simple
@@ -19,9 +20,36 @@ WorkingDirectory=/var/www/school_suite/current
 ExecStart=/usr/bin/php /var/www/school_suite/current/artisan queue:work --sleep=3 --tries=3 --max-time=3600 --timeout=120
 Restart=always
 RestartSec=5
-StandardOutput=append:/var/log/school_suite_worker.log
-StandardError=append:/var/log/school_suite_worker_error.log
+UMask=0077
+
+# Least-privilege runtime sandbox. Laravel's shared storage remains writable.
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/www/school_suite/shared/storage /var/www/school_suite/current/storage
+
+# Send structured logs to journald with bounded rate limiting.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=school-suite-worker
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=1000
 
 [Install]
 WantedBy=multi-user.target
-

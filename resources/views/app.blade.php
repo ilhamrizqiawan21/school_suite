@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title inertia>{{ config('app.name', 'School Suite') }}</title>
 
-        <script>
+        <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
             (() => {
                 try {
                     if (localStorage.getItem('school-suite-theme') === 'dark') {

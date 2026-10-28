@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Shared\Files\PrivateStorageService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class PrivateStorageTest extends TestCase
@@ -54,6 +55,17 @@ class PrivateStorageTest extends TestCase
         $this->assertSame($content, $response->streamedContent());
     }
 
+    public function test_signed_url_with_traversal_path_is_rejected_without_server_error(): void
+    {
+        $signedUrl = URL::temporarySignedRoute(
+            'private.file.download',
+            now()->addMinutes(15),
+            ['path' => '../secret.pdf'],
+        );
+
+        $this->get($signedUrl)->assertNotFound();
+    }
+
     public function test_expired_signed_url_returns_403(): void
     {
         $path = 'documents/reports/rapor-expired.pdf';
@@ -75,14 +87,22 @@ class PrivateStorageTest extends TestCase
         $response->assertNotFound();
     }
 
-    public function test_path_traversal_sanitization(): void
+    public function test_path_traversal_segments_are_rejected_instead_of_stripped(): void
     {
-        $maliciousPath = '../../etc/shadow';
-        $content = 'dummy';
+        foreach (['../../etc/shadow', 'documents/../secret.pdf', 'documents\\..\\secret.pdf'] as $maliciousPath) {
+            $this->assertThrows(
+                fn () => $this->storageService->put($maliciousPath, 'dummy'),
+                \InvalidArgumentException::class,
+            );
+        }
 
-        $this->storageService->put($maliciousPath, $content);
+        $this->assertFalse($this->storageService->exists('etc/shadow'));
+    }
 
-        // Path yang dibersihkan harus 'etc/shadow' di dalam disk fake
-        $this->assertTrue($this->storageService->exists('etc/shadow'));
+    public function test_dot_segments_are_canonicalized_without_allowing_parent_traversal(): void
+    {
+        $this->storageService->put('./documents/./sample.pdf', 'CONTENT');
+
+        $this->assertTrue($this->storageService->exists('documents/sample.pdf'));
     }
 }

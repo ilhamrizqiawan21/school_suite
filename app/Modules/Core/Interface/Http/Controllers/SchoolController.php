@@ -62,6 +62,9 @@ class SchoolController extends Controller
             'website' => ['nullable', 'url:http,https', 'max:255'],
             'vision' => ['nullable', 'string', 'max:5000'],
             'mission' => ['nullable', 'string', 'max:10000'],
+            'letterhead_parent_institution' => ['nullable', 'string', 'max:255'],
+            'letterhead_city' => ['nullable', 'string', 'max:100'],
+            'letterhead_postal_code' => ['nullable', 'string', 'max:15'],
             'theme_primary' => ['sometimes', Rule::in(['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'])],
             'logo' => ['nullable', File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(2048)],
             'favicon' => ['nullable', File::image()->types(['png'])->max(512)->dimensions(Rule::dimensions()->maxWidth(512)->maxHeight(512)->ratio(1))],
@@ -70,8 +73,13 @@ class SchoolController extends Controller
         $oldValues = $school->only(['name', 'npsn', 'level', 'address', 'phone', 'email', 'legal_name', 'school_status', 'accreditation', 'principal_name', 'website', 'vision', 'mission', 'logo_path', 'favicon_path', 'settings']);
         $settings = $school->settings ?? [];
         $settings['theme_primary'] = $validated['theme_primary'] ?? data_get($settings, 'theme_primary', '#3157a4');
+        $settings['letterhead'] = [
+            'parent_institution' => $validated['letterhead_parent_institution'] ?? null,
+            'city' => $validated['letterhead_city'] ?? null,
+            'postal_code' => $validated['letterhead_postal_code'] ?? null,
+        ];
         $validated['settings'] = $settings;
-        unset($validated['theme_primary']);
+        unset($validated['theme_primary'], $validated['letterhead_parent_institution'], $validated['letterhead_city'], $validated['letterhead_postal_code']);
         foreach (['logo', 'favicon'] as $kind) {
             if (! $request->hasFile($kind)) {
                 continue;

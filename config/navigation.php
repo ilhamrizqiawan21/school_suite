@@ -44,7 +44,7 @@ return [
         'homeroom-discipline' => ['homeroom'],
         'communication' => ['admin', 'operator', 'teacher', 'homeroom', 'principal', 'student'],
         'communication-chat' => ['teacher', 'homeroom', 'principal', 'student'],
-        'correspondence' => ['admin', 'operator'],
+        'correspondence' => ['admin', 'operator', 'principal'],
         'staff-tasks' => ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'counselor', 'librarian'],
         'facilities' => ['admin', 'operator'],
         'profile' => ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],

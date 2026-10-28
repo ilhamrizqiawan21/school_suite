@@ -16,6 +16,7 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RELEASE_DIR="${RELEASES_DIR}/${TIMESTAMP}"
 HEALTH_CHECK_URL="${HEALTH_CHECK_URL:-}"
 PHP_FPM_SERVICE="${PHP_FPM_SERVICE:-php8.3-fpm}"
+SCHEDULER_TIMER_SERVICE="${SCHEDULER_TIMER_SERVICE:-school-suite-scheduler.timer}"
 DEPLOY_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "${HEALTH_CHECK_URL}" ]; then
@@ -116,6 +117,10 @@ reject_release() {
     exit 1
 }
 if ! sudo systemctl restart school-suite-worker || ! sudo systemctl reload "${PHP_FPM_SERVICE}"; then
+    reject_release
+fi
+if ! sudo systemctl enable --now "${SCHEDULER_TIMER_SERVICE}"; then
+    echo "Kesalahan: scheduler timer ${SCHEDULER_TIMER_SERVICE} gagal diaktifkan." >&2
     reject_release
 fi
 

@@ -498,3 +498,31 @@ Audit statis `resources/js/components/SidebarNavigation.vue` dibanding route/pol
 
 1. Kembalikan branch ke commit sebelum S08: `git reset --hard b035233`.
 2. Hapus direktori `deploy/`.
+
+## S15-T04 — Redesign Persuratan, Arsip, PDF Resmi, dan QR (28 Oktober 2026)
+
+### Hasil implementasi
+
+- Halaman Persuratan & Arsip kini memiliki antrean tindakan, empat bagian kerja, wizard surat masuk 4 langkah, wizard surat keluar 5 langkah, tabel responsif, serta antrean persetujuan kepala sekolah.
+- Surat keluar memakai alur `Draf → Menunggu Persetujuan → Disetujui → Menunggu Tanda Tangan/TTE diproses → Terbit → Terkirim → Diarsipkan`. Endpoint status umum tidak dapat melewati proses tanda tangan untuk dokumen baru.
+- Empat renderer Blade terpisah tersedia untuk surat resmi umum, undangan, surat tugas, dan surat pernyataan. Semua menggunakan A4, kop dari profil sekolah, watermark draf, normalisasi paragraf, blok tanda tangan yang dijaga dari page break, dan renderer yang sama untuk preview serta sumber finalisasi.
+- Profil sekolah menampung instansi pembina, kota, dan kode pos. Profil pejabat menampung nama, jabatan, NIP, pangkat/golongan, cakupan template, serta status aktif.
+- Jalur manual menyimpan PDF sumber ber-QR sebagai versi privat, mewajibkan unggahan PDF hasil tanda tangan basah, lalu menjadikan hasil pindai sebagai arsip final immutable dengan SHA-256.
+- Jalur BSrE memakai adapter provider, job antrean, idempotency key, retry, status gagal tersendiri, metadata sertifikat, dan audit log. Konfigurasi produksi tetap nonaktif secara default melalui `BSRE_ENABLED=false`.
+- QR publik hanya menampilkan metadata terbatas dan hasil pemeriksaan hash `Valid`, `Dokumen berubah`, atau `Tidak dapat diverifikasi`; isi surat tidak dapat diunduh dari halaman tersebut. Klaim sertifikat hanya tampil terverifikasi bila provider mengembalikan metadata `verified=true`.
+- Nomor surat keluar divalidasi unik per sekolah dan tahun. Data lama tetap ditandai melalui `is_legacy` dan tidak otomatis memperoleh klaim immutable/TTE.
+
+### Verifikasi
+
+- `php artisan test --compact tests/Feature/AdministrationCorrespondenceTest.php`: 17 tes, 230 assertion lulus.
+- `php artisan test --compact`: 388 tes, 387 lulus, 1 dilewati sesuai konfigurasi, 3.627 assertion.
+- `npm run typecheck`: lulus.
+- `npm run build`: lulus.
+- Pint pada seluruh file PHP scope persuratan/core terkait: lulus.
+- `git diff --check`: lulus.
+- Empat template dirender dan diperiksa dengan `pdfinfo`, `pdftotext`, dan `pdftoppm`: A4 portrait, contoh pendek satu halaman, urutan teks benar, dan blok tanda tangan tidak terpotong.
+- Pemeriksaan browser pada desktop dan viewport 390×844: tabel berubah menjadi susunan berlabel di mobile, wizard dan kartu antrean tetap terbaca, serta tidak ada console error/warning.
+
+### Batas integrasi
+
+- BSrE produksi belum diaktifkan. Client harus menyediakan endpoint resmi, token/kredensial sandbox atau produksi, sertifikat penandatangan, serta kontrak respons provider. Aplikasi tidak menyimpan PIN atau kata sandi penandatangan.

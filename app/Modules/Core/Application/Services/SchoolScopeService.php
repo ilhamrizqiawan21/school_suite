@@ -34,8 +34,15 @@ class SchoolScopeService
     public function getSchoolLegalSnapshot(int $schoolId): array
     {
         $school = School::query()->findOrFail($schoolId);
+        $snapshot = $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website', 'level', 'school_status', 'accreditation', 'principal_name']);
+        $letterhead = data_get($school->settings, 'letterhead', []);
 
-        return $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website', 'level', 'school_status', 'accreditation', 'principal_name']);
+        return [
+            ...$snapshot,
+            'parent_institution' => data_get($letterhead, 'parent_institution'),
+            'city' => data_get($letterhead, 'city'),
+            'postal_code' => data_get($letterhead, 'postal_code'),
+        ];
     }
 
     public function getSchoolLogoDataUri(int $schoolId): ?string

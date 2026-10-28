@@ -21,7 +21,10 @@ interface SchoolData {
     mission?: string;
     logo_path?: string;
     favicon_path?: string;
-    settings?: { theme_primary?: string };
+    settings?: {
+        theme_primary?: string;
+        letterhead?: { parent_institution?: string; city?: string; postal_code?: string };
+    };
 }
 
 const props = defineProps<{
@@ -45,6 +48,9 @@ const form = useForm({
     website: props.school.website ?? '',
     vision: props.school.vision ?? '',
     mission: props.school.mission ?? '',
+    letterhead_parent_institution: props.school.settings?.letterhead?.parent_institution ?? '',
+    letterhead_city: props.school.settings?.letterhead?.city ?? '',
+    letterhead_postal_code: props.school.settings?.letterhead?.postal_code ?? '',
     theme_primary: props.school.settings?.theme_primary ?? '#3157a4',
     logo: null as File | null,
     favicon: null as File | null,
@@ -116,6 +122,14 @@ const submit = () => {
                             <label><span>Jenjang sekolah *</span><select v-model="form.level" required><option v-for="level in ['SD', 'SMP', 'SMA', 'SMK', 'MI', 'MTs', 'MA']" :key="level" :value="level">{{ level }}</option></select><em v-if="form.errors.level">{{ form.errors.level }}</em></label>
                             <label><span>Status sekolah</span><select v-model="form.school_status"><option value="">Belum diisi</option><option>Negeri</option><option>Swasta</option></select><em v-if="form.errors.school_status">{{ form.errors.school_status }}</em></label>
                             <label class="wide"><span>Alamat lengkap</span><textarea v-model="form.address" rows="3" placeholder="Jalan, kelurahan, kecamatan, kota/kabupaten, dan kode pos"></textarea><em v-if="form.errors.address">{{ form.errors.address }}</em></label>
+                        </div>
+                    </section>
+                    <section class="panel settings-section">
+                        <div class="section-heading"><h2>Kop surat resmi</h2><p>Data ini dipakai pada PDF persuratan. Kosongkan instansi pembina bila tidak tercantum pada kop sekolah.</p></div>
+                        <div class="fields">
+                            <label class="wide"><span>Instansi pembina / yayasan</span><input v-model="form.letterhead_parent_institution" maxlength="255" placeholder="Contoh: Pemerintah Kabupaten … / Yayasan …" /><em v-if="form.errors.letterhead_parent_institution">{{ form.errors.letterhead_parent_institution }}</em></label>
+                            <label><span>Kota/kabupaten penerbit</span><input v-model="form.letterhead_city" maxlength="100" placeholder="Contoh: Jakarta" /><em v-if="form.errors.letterhead_city">{{ form.errors.letterhead_city }}</em></label>
+                            <label><span>Kode pos</span><input v-model="form.letterhead_postal_code" maxlength="15" inputmode="numeric" /><em v-if="form.errors.letterhead_postal_code">{{ form.errors.letterhead_postal_code }}</em></label>
                         </div>
                     </section>
                     <section class="panel settings-section">

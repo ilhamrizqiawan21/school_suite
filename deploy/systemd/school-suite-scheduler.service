@@ -1,0 +1,45 @@
+# ==============================================================================
+# Systemd Service Unit — School Suite Scheduler
+# Path: /etc/systemd/system/school-suite-scheduler.service
+# ==============================================================================
+
+[Unit]
+Description=School Suite Laravel Scheduler
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/school_suite/current
+ExecStart=/usr/bin/php /var/www/school_suite/current/artisan schedule:run --no-interaction
+TimeoutStartSec=30min
+UMask=0077
+
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/www/school_suite/shared/storage /var/www/school_suite/shared/backups /var/www/school_suite/current/storage
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=school-suite-scheduler
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=1000

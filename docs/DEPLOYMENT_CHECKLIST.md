@@ -34,6 +34,19 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
 
 ## 2. Fase Eksekusi Deployment
 
+Sebelum rilis pertama, pasang unit scheduler dan worker ke systemd lalu aktifkan timer scheduler:
+
+```bash
+sudo install -o root -g root -m 0644 deploy/systemd/school-suite-worker.service /etc/systemd/system/
+sudo install -o root -g root -m 0644 deploy/systemd/school-suite-scheduler.service /etc/systemd/system/
+sudo install -o root -g root -m 0644 deploy/systemd/school-suite-scheduler.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable school-suite-worker
+sudo systemctl enable --now school-suite-scheduler.timer
+```
+
+Timer `school-suite-scheduler.timer` menjalankan `artisan schedule:run` setiap menit. Jadwal aplikasi untuk backup harian dan restart queue worker tetap didefinisikan di `routes/console.php`.
+
 Jalankan skrip otomasi deployment zero-downtime:
 
 ```bash
@@ -67,11 +80,14 @@ Segera lakukan verifikasi operasional setelah rilis aktif:
   - Header `X-Frame-Options: SAMEORIGIN` aktif.
   - Header `X-Content-Type-Options: nosniff` aktif.
   - Header `Strict-Transport-Security` aktif.
-- [ ] **Verifikasi Background Worker:**
+  - CSP production memakai nonce untuk script dan blok style inline; `style-src-attr 'unsafe-inline'` dibatasi hanya untuk atribut style Vue yang nilainya dinamis. Tidak ada `unsafe-inline` pada `script-src` atau `style-src`.
+- [ ] **Verifikasi Background Worker & Scheduler:**
   ```bash
   sudo systemctl status school-suite-worker
+  sudo systemctl status school-suite-scheduler.timer
   ```
   - Status worker harus `active (running)`.
+  - Timer scheduler harus `active (waiting)` dan memanggil `school-suite-scheduler.service` setiap menit.
 - [ ] **Uji Coba Masuk Pengguna (Smoke Testing):**
   - Masuk sebagai Administrator: verifikasi dashboard dan manajemen pengguna.
   - Masuk sebagai Guru: verifikasi lembar input nilai dan presensi.
@@ -83,10 +99,11 @@ Segera lakukan verifikasi operasional setelah rilis aktif:
 
 Jika ditemukan kegagalan kritis atau regresi yang tidak dapat diperbaiki dalam 5 menit:
 
-1. **Jalankan Rollback Cepat:**
+1. **Jalankan Rollback Cepat dan verifikasi health check:**
    ```bash
-   ./deploy/rollback.sh
+   HEALTH_CHECK_URL=https://school.sch.id/up ./deploy/rollback.sh
    ```
+   - Skrip wajib menunggu health check HTTP 200 dengan payload `{"status":"healthy"}` sebelum melaporkan rollback berhasil.
 2. **Jika Terjadi Kerusakan Basis Data:**
    Ikuti panduan pemulihan cadangan mandiri di [`RUNBOOK_BACKUP_RESTORE.md`](RUNBOOK_BACKUP_RESTORE.md):
    ```bash

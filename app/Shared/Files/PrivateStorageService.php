@@ -82,12 +82,27 @@ class PrivateStorageService
     }
 
     /**
-     * Cegah directory traversal attacks dengan membersihkan path.
+     * Cegah directory traversal attacks dan kembalikan path relatif kanonis.
      */
     protected function sanitizePath(string $path): string
     {
-        $clean = str_replace(['../', '..\\'], '', $path);
-        $clean = ltrim($clean, '/\\');
+        $normalized = str_replace('\\', '/', $path);
+
+        if (str_contains($normalized, "\0")) {
+            throw new InvalidArgumentException('Path berkas privat tidak valid.');
+        }
+
+        $segments = explode('/', $normalized);
+
+        if (in_array('..', $segments, true)) {
+            throw new InvalidArgumentException('Path berkas privat tidak boleh memuat segmen parent traversal.');
+        }
+
+        $segments = array_values(array_filter(
+            $segments,
+            static fn (string $segment): bool => $segment !== '' && $segment !== '.',
+        ));
+        $clean = implode('/', $segments);
 
         if ($clean === '') {
             throw new InvalidArgumentException('Path berkas privat tidak boleh kosong.');

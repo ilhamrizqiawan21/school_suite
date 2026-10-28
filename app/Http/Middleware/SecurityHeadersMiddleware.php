@@ -16,11 +16,17 @@ class SecurityHeadersMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $nonce = Vite::useCspNonce();
+
         /** @var Response $response */
         $response = $next($request);
 
-        $scriptSource = "'self' 'unsafe-inline'";
-        $styleSource = "'self' 'unsafe-inline'";
+        $strictCsp = config('app.env') !== 'local';
+        $scriptSource = "'self'".($strictCsp ? " 'nonce-{$nonce}'" : " 'unsafe-inline'");
+        $styleSource = "'self'".($strictCsp ? " 'nonce-{$nonce}'" : " 'unsafe-inline'");
+        // Vue still emits dynamic style attributes for progress bars and theme colors;
+        // keep that allowance scoped to attributes instead of permitting inline blocks.
+        $styleAttributeSource = $strictCsp ? "; style-src-attr 'unsafe-inline'" : '';
         $connectSource = "'self'";
 
         if (config('app.env') === 'local' && Vite::isRunningHot()) {
@@ -44,7 +50,7 @@ class SecurityHeadersMiddleware
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
             'Cross-Origin-Opener-Policy' => 'same-origin',
             'Cross-Origin-Resource-Policy' => 'same-origin',
-            'Content-Security-Policy' => "default-src 'self'; script-src {$scriptSource}; style-src {$styleSource}; img-src 'self' data: blob:; font-src 'self' data:; connect-src {$connectSource}; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+            'Content-Security-Policy' => "default-src 'self'; script-src {$scriptSource}; style-src {$styleSource}{$styleAttributeSource}; img-src 'self' data: blob:; font-src 'self' data:; connect-src {$connectSource}; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
         ];
 
         if ($request->isSecure() || config('app.env') === 'production') {
