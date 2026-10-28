@@ -2,6 +2,31 @@ import '../css/app.css';
 import { createApp, h, type DefineComponent } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 
+type InertiaVisitUrl = Parameters<typeof router.visit>[0];
+
+const appBasePath = document.querySelector<HTMLMetaElement>('meta[name="app-base-path"]')
+    ?.content
+    ?.replace(/\/+$/, '') ?? '';
+
+const prefixAppPath = (path: string): string => {
+    if (!appBasePath || !path.startsWith('/') || path.startsWith('//')) return path;
+    if (path === appBasePath || path.startsWith(`${appBasePath}/`)) return path;
+
+    return `${appBasePath}${path}`;
+};
+
+const normalizeVisitUrl = (url: InertiaVisitUrl): InertiaVisitUrl => {
+    if (typeof url === 'string') return prefixAppPath(url);
+    if (url instanceof URL) return url;
+
+    return { ...url, url: prefixAppPath(url.url) };
+};
+
+const originalVisit = router.visit.bind(router);
+router.visit = ((url: InertiaVisitUrl, options?: Parameters<typeof router.visit>[1]) => {
+    originalVisit(normalizeVisitUrl(url), options);
+}) as typeof router.visit;
+
 const setupTableScrollAffordances = () => {
     const tableScrollers = new Set<HTMLElement>();
     const resizeObserver = typeof ResizeObserver === 'undefined'
