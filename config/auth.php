@@ -114,4 +114,10 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    | Password rotation can be temporarily relaxed for a demo environment.
+    | Keep the secure default enabled unless explicitly disabled in .env.
+    */
+    'enforce_password_change' => env('ENFORCE_PASSWORD_CHANGE', true),
+
 ];

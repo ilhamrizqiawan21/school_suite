@@ -80,7 +80,7 @@ class AuthController extends Controller
             );
         }
 
-        if ($user?->must_change_password) {
+        if (config('auth.enforce_password_change') && $user?->must_change_password) {
             return redirect()->route('core.password.edit');
         }
 

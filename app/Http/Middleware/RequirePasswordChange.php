@@ -12,7 +12,7 @@ class RequirePasswordChange
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()?->must_change_password && ! $request->routeIs('core.password.*', 'logout')) {
+        if (config('auth.enforce_password_change') && $request->user()?->must_change_password && ! $request->routeIs('core.password.*', 'logout')) {
             return redirect()->route('core.password.edit')->with('status', 'Ganti kata sandi awal sebelum melanjutkan.');
         }
 
