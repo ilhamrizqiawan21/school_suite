@@ -711,3 +711,16 @@ $ rg -n 'presensi/rekap|role:principal|role:homeroom|function create|hasRole\\(.
 ```
 
 **Tidak ada policy, middleware, menu, atau test akses yang diubah untuk Tugas B. Mohon pilih opsi untuk B1 dan B2 sebelum saya lanjut. Tugas C dan D belum dikerjakan karena instruksi berhenti setelah laporan keputusan akses ini.**
+
+## Tugas C — Ulang bukti restore MySQL (28 Oktober 2026)
+
+**BELUM TERBUKTI.** Docker tidak tersedia pada mesin verifikasi, sehingga MySQL 8.4 terisolasi sesuai instruksi tidak dapat dibuat. Tidak ada koneksi atau perubahan ke database operasional dan tidak ada klaim lulus yang dibuat.
+
+### Bukti mentah
+
+```text
+$ docker --version
+/bin/bash: line 1: docker: command not found
+```
+
+`MysqlBackupRestoreTest` tidak dijalankan pada percobaan ini karena prasyarat Docker/MySQL 8.4 terisolasi tidak tersedia. Versi server dan output restore MySQL: **BELUM TERBUKTI**.
