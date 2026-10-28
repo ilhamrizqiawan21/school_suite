@@ -24,7 +24,7 @@ class CorrespondenceRecord extends Model
         'letter_date', 'letter_year', 'received_at', 'sender', 'recipient', 'subject', 'summary',
         'disposition', 'status', 'attachment_path', 'attachment_name', 'archived_at',
         'approval_required', 'approval_status', 'approved_by', 'approved_at', 'approval_note',
-        'signature_method', 'document_hash', 'letter_body', 'signer_name', 'signer_title',
+        'signature_method', 'document_hash', 'letter_body', 'signer_name', 'signer_title', 'signer_identifier_type', 'signer_identifier',
         'attachment_note', 'verification_token', 'verification_expires_at', 'verification_revoked_at', 'school_snapshot',
         'signatory_id', 'recipient_address', 'opening_greeting', 'closing_text', 'carbon_copy',
         'signer_snapshot', 'is_legacy',
