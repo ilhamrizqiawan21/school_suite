@@ -62,7 +62,7 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     Route::post('kelas/{classGroup}/wali-kelas', [ClassGroupController::class, 'assignHomeroom'])->name('classes.assign_homeroom');
 
     // Jadwal Pelajaran (Schedules)
-    Route::get('jadwal', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('jadwal', [ScheduleController::class, 'index'])->middleware('role:admin,operator,principal,teacher,homeroom,student')->name('schedules.index');
     Route::post('jadwal', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::put('jadwal/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
     Route::post('jadwal/terbitkan', [ScheduleController::class, 'publish'])->name('schedules.publish');
@@ -70,8 +70,8 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
 
     // Presensi Siswa (Attendance)
     Route::get('presensi', [AttendanceController::class, 'index'])->middleware('role:teacher,homeroom')->name('attendance.index');
-    Route::get('presensi/rekap', [AttendanceController::class, 'recap'])->name('attendance.recap');
-    Route::get('presensi/rekap/export', [AttendanceController::class, 'exportRecap'])->middleware('throttle:sensitive')->name('attendance.recap.export');
+    Route::get('presensi/rekap', [AttendanceController::class, 'recap'])->middleware('role:principal')->name('attendance.recap');
+    Route::get('presensi/rekap/export', [AttendanceController::class, 'exportRecap'])->middleware(['throttle:sensitive', 'role:principal'])->name('attendance.recap.export');
     Route::post('presensi', [AttendanceController::class, 'record'])->middleware('role:teacher,homeroom')->name('attendance.record');
     Route::post('presensi/{attendanceRecord}/koreksi', [AttendanceController::class, 'correct'])->middleware('role:teacher,homeroom')->name('attendance.correct');
 

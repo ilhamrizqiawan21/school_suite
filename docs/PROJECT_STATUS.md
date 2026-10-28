@@ -21,14 +21,14 @@ Terakhir diperbarui: 28 Oktober 2026
     - Security headers middleware (`SecurityHeadersMiddleware`): `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `HSTS`.
     - Skrip otomasi deployment zero-downtime atomik (`deploy/deploy.sh`) dan skrip rollback darurat (`deploy/rollback.sh`).
     - Panduan checklist rilis produksi di `docs/DEPLOYMENT_CHECKLIST.md`.
-  - Verifikasi lokal 28 Oktober 2026 dengan PHP 8.3.36: `php artisan test --compact` — 393 tes, 133 lulus, 245 gagal, 14 error, 1 dilewati, 916 assertions. Run ini gagal dan tidak boleh dipakai sebagai bukti kesiapan. Drill MySQL terisolasi BELUM TERBUKTI. Deployment live belum dilakukan.
+  - Verifikasi lokal 28 Oktober 2026 dengan PHP 8.3.36 dan konfigurasi test `APP_URL=https://school.test APP_ENV=testing`: `php artisan test --compact` — 394 tes, 393 lulus, 1 dilewati, 3.661 assertions. Drill MySQL terisolasi BELUM TERBUKTI. Pint, typecheck, dan build lulus. Deployment live belum dilakukan.
 - Langkah berikut: Ekspansi Modul Pasca-Pilot (S09 Modul Pembelajaran / LMS, S10 CBT, S11 SPMB, S12 Sipus, S13 TU & Sarpras).
 
 ## Blocker sebelum data nyata
 
 - Drill restore backup pada MySQL terisolasi dan restore backup SQLite berbasis file belum dibuktikan.
 - Health check deployment, termasuk rollback saat instalasi pertama dan saat ada rilis sebelumnya, telah diverifikasi melalui dry run; endpoint HTTPS domain production belum diproba.
-- Pengujian negatif lintas kelas/sekolah yang diminta sudah ditambahkan/dijalankan. Audit menemukan URL jadwal, kelas, rekap presensi, perwalian, dan komunikasi yang akses langsungnya tidak selalu cocok dengan visibilitas sidebar; audit semua route/menu dan parity browser belum tuntas.
+- Pengujian negatif lintas kelas/sekolah yang diminta sudah ditambahkan/dijalankan. Parity server/menu untuk jadwal, kelas, rekap presensi, perwalian, dan komunikasi telah diterapkan dan diverifikasi; browser QA live tetap terpisah dari suite feature.
 - PHP CLI yang dipakai pada verifikasi ini adalah PHP 8.3.36; kecocokan PHP-FPM production tetap BELUM TERBUKTI.
 
 - Profil sekolah pilot, ukuran data, format rapor, dan aturan pembulatan belum dikunci.

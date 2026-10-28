@@ -25,7 +25,7 @@ class SchedulePolicy
 
     public function viewAny(User $actor): bool
     {
-        return true; // Seluruh pengguna terautentikasi dapat melihat jadwal pelajaran
+        return $actor->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student']);
     }
 
     public function view(User $actor, Schedule $schedule): bool

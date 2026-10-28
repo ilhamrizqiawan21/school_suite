@@ -144,6 +144,7 @@ class RoleMatrixAccessTest extends TestCase
                 && $keys->contains('assessment-analytics')
                 && $keys->contains('reporting')
                 && $keys->contains('teacher-performance')
+                && $keys->contains('communication')
                 && $keys->contains('school')
                 && ! $keys->contains('learning-resources')
                 && ! $keys->contains('learning-materials')
@@ -183,6 +184,33 @@ class RoleMatrixAccessTest extends TestCase
             'role_id' => 1,
             'password' => 'password123',
         ])->assertStatus(403);
+    }
+
+    public function test_sensitive_route_access_matches_role_visibility(): void
+    {
+        $this->actingAs($this->usersByRole[RoleEnum::STUDENT->value]);
+        $this->get('/akademik/jadwal')->assertOk();
+        $this->get('/akademik/kelas')->assertForbidden();
+        $this->get('/akademik/presensi/rekap')->assertForbidden();
+        $this->get('/wali-kelas/catatan')->assertForbidden();
+        $this->get('/wali-kelas/kedisiplinan')->assertForbidden();
+
+        $this->actingAs($this->usersByRole[RoleEnum::TEACHER->value]);
+        $this->get('/akademik/presensi/rekap')->assertForbidden();
+        $this->get('/wali-kelas/catatan')->assertForbidden();
+        $this->get('/wali-kelas/kedisiplinan')->assertForbidden();
+
+        $this->actingAs($this->usersByRole[RoleEnum::HOMEROOM->value]);
+        $this->get('/akademik/jadwal')->assertOk();
+        $this->get('/akademik/kelas')->assertOk();
+        $this->get('/akademik/presensi/rekap')->assertForbidden();
+        $this->get('/wali-kelas/catatan')->assertOk();
+        $this->get('/wali-kelas/kedisiplinan')->assertOk();
+
+        $this->actingAs($this->usersByRole[RoleEnum::PRINCIPAL->value]);
+        $this->get('/akademik/presensi/rekap')->assertOk();
+        $this->get('/komunikasi')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('communication')));
     }
 
     public function test_principal_school_profile_is_read_only_even_without_explicit_view_permission(): void

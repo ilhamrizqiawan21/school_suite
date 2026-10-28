@@ -29,8 +29,7 @@ class ClassGroupPolicy
             || $actor->hasRole('operator')
             || $actor->hasRole('principal')
             || $actor->hasRole('teacher')
-            || $actor->hasRole('homeroom')
-            || $actor->hasRole('student');
+            || $actor->hasRole('homeroom');
     }
 
     public function view(User $actor, ClassGroup $classGroup): bool

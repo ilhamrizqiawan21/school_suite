@@ -7,7 +7,7 @@ use App\Modules\Homeroom\Interface\Http\Controllers\StudentDisciplineController;
 use App\Modules\Homeroom\Interface\Http\Controllers\StudentObservationController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'role:teacher,homeroom'])->prefix('wali-kelas')->name('homeroom.')->group(function () {
+Route::middleware(['auth', 'role:homeroom'])->prefix('wali-kelas')->name('homeroom.')->group(function () {
     Route::get('/', [HomeroomDashboardController::class, 'index'])->name('dashboard');
 
     // Catatan Observasi Siswa

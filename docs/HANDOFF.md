@@ -613,3 +613,39 @@ $ tail mysql.err
 ```
 
 Run penuh gagal dengan banyak respons 404 pada test feature; ini **BELUM TERBUKTI** sebagai regresi kode sebelum konfigurasi test/path-prefix diperiksa. Tidak ada test atau policy yang dilonggarkan.
+
+## Tugas 2 — Langkah B selesai (28 Oktober 2026)
+
+Pilihan yang diterapkan: **a1, b1, c1, d1, e2**.
+
+- a: GET jadwal kini dibatasi ke role admin/operator/principal/teacher/homeroom/student; `SchedulePolicy::viewAny` memakai daftar role yang sama. Parent tidak lagi dapat membuka URL langsung.
+- b: `ClassGroupPolicy::viewAny` tidak lagi mengizinkan student. Menu kelas memang tidak diberikan kepada student dan URL langsung menghasilkan 403.
+- c: rekap presensi dan ekspornya kini hanya role principal. Policy presensi umum tetap dipertahankan untuk layar input presensi guru/wali kelas; pembatasan rekap dilakukan di route agar tidak merusak operasi input.
+- d: seluruh route `/wali-kelas` kini role homeroom saja. Fixture test dipisah menjadi role `homeroom` dan `teacher`; guru biasa tidak lagi dapat membuka catatan/kedisiplinan.
+- e: principal tetap diberi menu komunikasi melalui `principalHref=/kepsek/pengumuman`; route dasar `/komunikasi` juga tetap 200 sesuai kontrak test.
+- Ditambahkan test parity role di `RoleMatrixAccessTest` untuk jalur positif/negatif dan visibilitas menu principal.
+
+### Verifikasi mentah
+
+```text
+$ APP_URL=https://school.test APP_ENV=testing php artisan test --compact tests/Feature/RoleMatrixAccessTest.php tests/Feature/HomeroomControllersTest.php tests/Feature/RouteAndPermissionStressTest.php
+{"tool":"phpunit","result":"passed","tests":37,"passed":37,"assertions":656,"duration_ms":5038}
+
+$ vendor/bin/pint --test app/Modules/Academic/Application/Policies/SchedulePolicy.php app/Modules/Academic/Application/Policies/ClassGroupPolicy.php app/Modules/Academic/Interface/Routes/web.php app/Modules/Homeroom/Interface/Routes/web.php tests/Feature/HomeroomControllersTest.php tests/Feature/RoleMatrixAccessTest.php
+{"tool":"pint","result":"passed"}
+
+$ npm run typecheck
+> typecheck
+> vue-tsc --noEmit
+(exit 0, tidak ada output error)
+
+$ npm run build
+vite v8.3.5 building client environment for production...
+✓ 766 modules transformed.
+✓ built in 10.01s
+
+$ APP_URL=https://school.test APP_ENV=testing php artisan test --compact
+{"tool":"phpunit","result":"passed","tests":394,"passed":393,"assertions":3661,"duration_ms":83889,"skipped":1}
+```
+
+Tes yang dilewati tetap merupakan `MysqlBackupRestoreTest` karena socket MySQL terisolasi tidak tersedia pada run penuh. Sebelum konfigurasi `APP_URL` test diperbaiki, run tanpa override menghasilkan 393 test dengan 133 lulus, 245 gagal, 14 error, dan 1 dilewati; itu adalah kegagalan konfigurasi subpath, bukan hasil suite final.

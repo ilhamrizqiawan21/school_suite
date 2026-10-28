@@ -55,6 +55,7 @@ class HomeroomControllersTest extends TestCase
 
         $adminRole = Role::create(['name' => 'admin', 'label' => 'Administrator', 'is_system' => true]);
         $teacherRole = Role::create(['name' => 'teacher', 'label' => 'Guru', 'is_system' => true]);
+        $homeroomRole = Role::create(['name' => 'homeroom', 'label' => 'Wali Kelas', 'is_system' => true]);
         $studentRole = Role::create(['name' => 'student', 'label' => 'Siswa', 'is_system' => true]);
 
         // Permissions
@@ -84,7 +85,7 @@ class HomeroomControllersTest extends TestCase
 
         $this->homeroomTeacherUser = User::create([
             'school_id' => $this->school->id,
-            'role_id' => $teacherRole->id,
+            'role_id' => $homeroomRole->id,
             'name' => 'Budi Santoso',
             'username' => 'budi_wali',
             'email' => 'homeroom@school.test',
