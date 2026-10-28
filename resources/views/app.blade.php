@@ -3,7 +3,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="app-base-path" content="{{ rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?: '', '/') }}">
         <title inertia>{{ config('app.name', 'School Suite') }}</title>
+
+        <link rel="icon" type="image/png" href="{{ asset('icon-192.png') }}">
+        <link rel="apple-touch-icon" href="{{ asset('icon-192.png') }}">
 
         <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
             (() => {

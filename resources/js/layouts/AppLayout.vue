@@ -18,6 +18,8 @@ interface PageProps {
 }
 
 const page = usePage<PageProps>();
+const appBasePath = document.querySelector<HTMLMetaElement>('meta[name="app-base-path"]')?.content?.replace(/\/+$/, '') ?? '';
+const fallbackLogoUrl = `${appBasePath}/icon-192.png`;
 const appName = computed(() => !page.props.appName || page.props.appName === 'Laravel' ? 'School Suite' : page.props.appName);
 const currentRole = computed(() => page.props.auth?.user?.role);
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
@@ -124,7 +126,7 @@ onBeforeUnmount(() => {
         <aside id="sidebar" class="sidebar" :class="{ 'is-open': sidebarOpen }" aria-label="Navigasi utama">
             <div class="brand">
                 <div class="brand-mark" aria-hidden="true">
-                    <img :src="page.props.school?.logo_url || '/icon-192.png'" alt="">
+                    <img :src="page.props.school?.logo_url || fallbackLogoUrl" alt="">
                 </div>
                 <div class="brand-copy">
                     <strong>{{ appName }}</strong>
