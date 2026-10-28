@@ -724,3 +724,59 @@ $ docker --version
 ```
 
 `MysqlBackupRestoreTest` tidak dijalankan pada percobaan ini karena prasyarat Docker/MySQL 8.4 terisolasi tidak tersedia. Versi server dan output restore MySQL: **BELUM TERBUKTI**.
+
+## Tugas D — Uji migrasi persuratan pada data lama (28 Oktober 2026)
+
+Pengujian memakai copy baru `/tmp/school-suite-correspondence-migration-20261028.sqlite`, dibuat dari `/tmp/school-suite-before-correspondence-migrations.sqlite`. Copy sumber berisi 2 record persuratan lama dan hanya migrasi persuratan awal; database operasional tidak disentuh.
+
+### Hasil migrasi
+
+- Lima migrasi `2026_10_28_600001`, `600002`, `700000`, `700001`, dan `800000` berhasil dijalankan.
+- Jumlah `correspondence_records` tetap 2 dan `distinct(id)` tetap 2.
+- Perbandingan jumlah baris seluruh 87 tabel sumber hanya berbeda pada tabel `migrations` (41 → 49), sesuai penambahan migrasi; tidak ada tabel data yang kehilangan/menambah baris.
+- Tidak ada duplicate key outgoing (`school_id`, `letter_year`, `outgoing_letter_number`).
+- Empat trigger provenance SQLite terbentuk dan seluruh record ber-letter-date memiliki `letter_year`.
+
+### Rollback
+
+`migrate:rollback --step=5 --force` berhasil mengembalikan kelima migrasi tersebut. Setelah rollback: record tetap 2, distinct id tetap 2, tabel workflow baru 0, kolom lama `letter_number` ada, dan kolom baru `signer_identifier` sudah hilang.
+
+### Bukti mentah
+
+```text
+$ php -r '...baseline...'
+baseline correspondence_records=2
+distinct ids=2
+
+$ DB_CONNECTION=sqlite DB_DATABASE=/tmp/school-suite-correspondence-migration-20261028.sqlite APP_ENV=testing APP_URL=http://localhost php artisan migrate --force
+INFO  Running migrations.
+2026_10_28_600001_add_official_letter_metadata ... DONE
+2026_10_28_600002_harden_correspondence_integrity ... DONE
+2026_10_28_700000_redesign_correspondence_workflow ... DONE
+2026_10_28_700001_enforce_correspondence_provenance ... DONE
+2026_10_28_800000_add_signer_identifier_to_correspondence_records ... DONE
+
+common_tables=87 count_mismatches=1
+COUNT_MISMATCH migrations before=41 after=49
+correspondence_after=2 distinct_ids=2
+new_tables=3
+new_columns=letter_year signer_identifier_type signer_identifier
+duplicate_outgoing_keys=0
+triggers=4
+records_with_letter_date_but_null_year=0
+
+$ DB_CONNECTION=sqlite DB_DATABASE=/tmp/school-suite-correspondence-migration-20261028.sqlite APP_ENV=testing APP_URL=http://localhost php artisan migrate:rollback --step=5 --force
+INFO  Rolling back migrations.
+2026_10_28_800000_add_signer_identifier_to_correspondence_records ... DONE
+2026_10_28_700001_enforce_correspondence_provenance ... DONE
+2026_10_28_700000_redesign_correspondence_workflow ... DONE
+2026_10_28_600002_harden_correspondence_integrity ... DONE
+2026_10_28_600001_add_official_letter_metadata ... DONE
+
+rollback correspondence_records=2 distinct_ids=2 new_tables=0 pending_2026_10_28_target_migrations=0
+has_old_letter_number=yes has_new_signer_identifier=no
+```
+
+### Risiko
+
+Migrasi workflow mengubah constraint nomor surat menjadi berbasis tahun, menambah tabel versi dokumen/signature request, dan menambah kolom metadata. Data lama tidak hilang pada copy ini, tetapi rollback menghapus struktur baru; backup dan uji pada salinan wajib dilakukan sebelum production. SQLite memakai implementasi kolom/trigger yang berbeda dari MySQL, sehingga kompatibilitas MySQL production tetap **BELUM TERBUKTI**.
