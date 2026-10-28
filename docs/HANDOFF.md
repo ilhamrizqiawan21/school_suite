@@ -526,3 +526,27 @@ Audit statis `resources/js/components/SidebarNavigation.vue` dibanding route/pol
 ### Batas integrasi
 
 - BSrE produksi belum diaktifkan. Client harus menyediakan endpoint resmi, token/kredensial sandbox atau produksi, sertifikat penandatangan, serta kontrak respons provider. Aplikasi tidak menyimpan PIN atau kata sandi penandatangan.
+
+## Tugas 1 — Pembersihan artefak sesi browser (28 Oktober 2026)
+
+### Hasil
+
+- Tidak ditemukan referensi ke sepuluh nama PNG root atau direktori `.playwright-mcp/` di `docs/`, `README*`, atau `tests/`.
+- 26 snapshot YAML di `.playwright-mcp/` dan 10 PNG root dikeluarkan dari Git index dengan `git rm --cached`; salinan lokal tidak dihapus.
+- `.gitignore` ditambah `/.playwright-mcp/` dan `/*.png`. Pola PNG hanya cocok di root, sehingga PNG sah di `public/` dan `resources/` tidak terkena.
+- Pemeriksaan string pada snapshot menemukan indikator data akun/identitas (misalnya field email, nama, siswa, token/cookie) pada beberapa snapshot. Nilainya tidak disalin ke dokumen. Ini berarti artefak pernah memuat data yang berpotensi pribadi/rahasia; pembersihan riwayat Git belum dilakukan.
+- Pemeriksaan biner PNG root tidak menemukan string metadata sensitif dengan pola yang dicari.
+
+### Bukti mentah
+
+```text
+$ rg -n --hidden --glob 'docs/**' --glob 'README*' --glob 'tests/**' 'material-dashboard-final\\.png|material-dashboard\\.png|nilai-implementasi\\.png|nilai-tabel\\.png|playwright-student-ledger-redacted\\.png|score-verify-2\\.png|score-verify\\.png|task-dashboard-dark\\.png|task-dashboard-full\\.png|task-dashboard\\.png|\\.playwright-mcp/' .
+(tidak ada output)
+
+$ git ls-files | grep -E '^\\.playwright-mcp/|^[^/]+\\.png$'
+(tidak ada output setelah perubahan index)
+```
+
+### Risiko / belum terbukti
+
+- Karena snapshot memuat indikator data sensitif dan masih ada di riwayat Git lama, penghapusan dari index tidak menghapusnya dari riwayat. **BELUM TERBUKTI** apakah seluruh isi historis bebas dari data pribadi/credential. Konfirmasi pemilik repo diperlukan sebelum pembersihan riwayat yang mengubah commit lama.
