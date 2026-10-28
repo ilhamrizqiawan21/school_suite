@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Academic\Infrastructure\Models;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,7 @@ class Teacher extends Model
         'nip',
         'name',
         'gender',
+        'birth_date',
         'phone',
         'email',
         'employment_status',
@@ -31,8 +33,30 @@ class Teacher extends Model
     protected $casts = [
         'school_id' => 'integer',
         'user_id' => 'integer',
+        'birth_date' => 'immutable_date',
         'is_active' => 'boolean',
     ];
+
+    public function retirementDate(): ?CarbonImmutable
+    {
+        return $this->birth_date?->addYears(60);
+    }
+
+    public function retirementStatus(?CarbonImmutable $today = null): string
+    {
+        $retirementDate = $this->retirementDate();
+        if ($retirementDate === null) {
+            return 'missing';
+        }
+
+        $today ??= CarbonImmutable::today();
+
+        return match (true) {
+            $retirementDate->lessThanOrEqualTo($today) => 'reached',
+            $retirementDate->lessThanOrEqualTo($today->addYear()) => 'upcoming',
+            default => 'not_due',
+        };
+    }
 
     /**
      * @return BelongsTo<User, $this>

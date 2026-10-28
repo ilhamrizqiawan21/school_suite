@@ -21,11 +21,13 @@ const props = defineProps<{
         linked_teacher_id?: number | null;
     }>;
     stats: { total: number; active: number; inactive: number };
+    retirement_stats: { upcoming: number; reached: number; missing: number };
     employment_statuses: string[];
     filters: {
         search?: string;
         employment_status?: string;
         is_active?: string;
+        retirement?: string;
     };
 }>();
 
@@ -36,6 +38,22 @@ const accountLabels = { no_account: 'Belum ada akun', default: 'Wajib ganti sand
 const employmentOptions = [...new Set(['PNS', 'PPPK', 'GTT', ...props.employment_statuses])];
 const search = ref(props.filters.search || '');
 const selectedStatus = ref(props.filters.employment_status || '');
+const selectedRetirement = ref(props.filters.retirement || '');
+const retirementLabels = {
+    missing: 'Tanggal lahir belum diisi',
+    not_due: 'Belum mendekati pensiun',
+    upcoming: 'Pensiun dalam 1 tahun',
+    reached: 'Sudah mencapai 60 tahun',
+} as const;
+const retirementClasses = {
+    missing: 'text-slate-600 bg-slate-100',
+    not_due: 'text-emerald-700 bg-emerald-50',
+    upcoming: 'text-amber-700 bg-amber-50',
+    reached: 'text-rose-700 bg-rose-50',
+} as const;
+const dateLabel = (value?: string | null) => value
+    ? new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`))
+    : '-';
 
 const showAddModal = ref(false);
 const showImportModal = ref(false);
@@ -47,6 +65,7 @@ const applyFilters = () => {
             search: search.value || undefined,
             is_active: activeFilter.value === '' ? undefined : activeFilter.value,
             employment_status: selectedStatus.value || undefined,
+            retirement: selectedRetirement.value || undefined,
         },
         { preserveState: true, replace: true }
     );
@@ -58,6 +77,7 @@ const form = useForm({
     gender: 'L',
     phone: '',
     email: '',
+    birth_date: '',
     employment_status: 'PNS',
     is_active: true,
     user_id: null as number | null,
@@ -77,6 +97,7 @@ const openEdit = (teacher: Teacher) => {
     form.gender = teacher.gender;
     form.phone = teacher.phone ?? '';
     form.email = teacher.email ?? '';
+    form.birth_date = teacher.birth_date ? teacher.birth_date.slice(0, 10) : '';
     form.employment_status = teacher.employment_status ?? '';
     form.is_active = teacher.is_active;
     form.user_id = teacher.user_id ?? null;
@@ -91,9 +112,10 @@ const resetFilters = () => {
     search.value = '';
     selectedStatus.value = '';
     activeFilter.value = '';
+    selectedRetirement.value = '';
     applyFilters();
 };
-const exportUrl = () => '/akademik/guru/export/excel?' + new URLSearchParams({ search: search.value, employment_status: selectedStatus.value, is_active: activeFilter.value });
+const exportUrl = () => '/akademik/guru/export/excel?' + new URLSearchParams({ search: search.value, employment_status: selectedStatus.value, is_active: activeFilter.value, retirement: selectedRetirement.value });
 const resetPassword = (teacher: Teacher) => {
     if (!['default', 'changed'].includes(teacher.account_status ?? '') || !window.confirm(`Buat sandi sementara baru untuk ${teacher.name}? Sampaikan sandi secara pribadi kepada guru.`)) return;
     router.post(`/akademik/guru/${teacher.id}/reset-password`, {}, { preserveScroll: true });
@@ -166,6 +188,11 @@ const submitImport = () => {
                 <div class="panel p-4"><p>Aktif</p><strong class="text-2xl">{{ stats.active }}</strong></div>
                 <div class="panel p-4"><p>Nonaktif</p><strong class="text-2xl">{{ stats.inactive }}</strong></div>
             </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="panel p-4"><p>Akan pensiun dalam 1 tahun</p><strong class="text-2xl text-amber-700">{{ retirement_stats.upcoming }}</strong></div>
+                <div class="panel p-4"><p>Sudah mencapai usia 60</p><strong class="text-2xl text-rose-700">{{ retirement_stats.reached }}</strong></div>
+                <div class="panel p-4"><p>Tanggal lahir belum diisi</p><strong class="text-2xl text-slate-600">{{ retirement_stats.missing }}</strong></div>
+            </div>
 
             <!-- Filters -->
             <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-3">
@@ -193,6 +220,12 @@ const submitImport = () => {
                     </select>
 
                     <select v-model="activeFilter" aria-label="Status aktif" class="rounded-lg border px-3 py-2 text-sm" @change="applyFilters"><option value="">Semua status aktif</option><option value="1">Aktif</option><option value="0">Nonaktif</option></select>
+                    <select v-model="selectedRetirement" aria-label="Status masa pensiun" class="rounded-lg border px-3 py-2 text-sm" @change="applyFilters">
+                        <option value="">Semua status masa pensiun</option>
+                        <option value="upcoming">Pensiun dalam 1 tahun</option>
+                        <option value="reached">Sudah mencapai 60 tahun</option>
+                        <option value="missing">Tanggal lahir belum diisi</option>
+                    </select>
                     <button type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
                     <button
                         type="button"
@@ -212,6 +245,7 @@ const submitImport = () => {
                             <tr>
                                 <th class="px-5 py-3.5">Nama & NIP</th>
                                 <th class="px-5 py-3.5">L/P</th>
+                                <th class="px-5 py-3.5">Masa Pensiun</th>
                                 <th class="px-5 py-3.5">Kontak</th>
                                 <th class="px-5 py-3.5">Status Pegawai</th>
                                 <th class="px-5 py-3.5">Wali Kelas</th>
@@ -228,6 +262,12 @@ const submitImport = () => {
                                 <td class="px-5 py-3.5">
                                     <span :class="t.gender === 'L' ? 'text-blue-700 bg-blue-50 px-2 py-0.5 rounded-sm font-semibold' : 'text-pink-700 bg-pink-50 px-2 py-0.5 rounded-sm font-semibold'">
                                         {{ t.gender }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-xs">
+                                    <div class="font-medium text-slate-700">{{ dateLabel(t.retirement_date) }}</div>
+                                    <span :class="`inline-flex mt-1 items-center px-2 py-0.5 rounded-full font-medium ${retirementClasses[t.retirement_status ?? 'missing']}`">
+                                        {{ retirementLabels[t.retirement_status ?? 'missing'] }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5 text-xs text-slate-500">
@@ -262,7 +302,7 @@ const submitImport = () => {
                                 </td>
                             </tr>
                             <tr v-if="teachers.data.length === 0">
-                                <td :colspan="can_manage ? 7 : 6" class="px-5 py-12 text-center text-slate-400">
+                                <td :colspan="can_manage ? 8 : 7" class="px-5 py-12 text-center text-slate-400">
                                     Tidak ada data guru yang cocok dengan filter.
                                 </td>
                             </tr>
@@ -320,6 +360,13 @@ const submitImport = () => {
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
                         <input v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <div v-if="form.errors.name" class="text-xs text-red-600 mt-1">{{ form.errors.name }}</div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lahir</label>
+                        <input v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <p class="mt-1 text-xs text-slate-500">Tanggal pensiun dihitung pada ulang tahun ke-60.</p>
+                        <div v-if="form.errors.birth_date" class="text-xs text-red-600 mt-1">{{ form.errors.birth_date }}</div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -382,7 +429,7 @@ const submitImport = () => {
 
                 <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800 space-y-1">
                     <div class="font-semibold">Format Kolom Header:</div>
-                    <code class="block font-mono text-[11px] text-indigo-900">nip,name,gender,phone,email,employment_status</code>
+                    <code class="block font-mono text-[11px] text-indigo-900">nip,name,gender,birth_date,phone,email,employment_status</code>
                     <p>Maksimal 5 MB dan 1.000 guru per berkas. Data diperiksa sebelum disimpan. Impor tidak membuat akun login.</p>
                     <a href="/akademik/guru/template?format=xlsx" class="inline-block mt-2 font-medium text-indigo-600 underline">Template Excel</a>
                     <a href="/akademik/guru/template" class="inline-block mt-2 font-medium text-indigo-600 underline">Unduh Berkas Template CSV</a>

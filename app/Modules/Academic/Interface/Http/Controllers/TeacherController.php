@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\Academic\Application\Services\AcademicImportService;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Shared\Audit\AuditLogger;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,11 +44,14 @@ class TeacherController extends Controller
         $status = $request->query('employment_status');
 
         $teachers = $this->teacherQuery($request)->paginate(15)->withQueryString();
-        $teachers->through(function (Teacher $teacher) use ($schoolId) {
+        $today = CarbonImmutable::today();
+        $teachers->through(function (Teacher $teacher) use ($schoolId, $today) {
             $account = $teacher->user;
             $teacher->setAttribute('account_status', ! $account ? 'no_account'
                 : ((int) $account->school_id !== $schoolId || ! $account->hasRole(['teacher', 'homeroom']) ? 'unavailable'
                     : ($account->must_change_password ? 'default' : 'changed')));
+            $teacher->setAttribute('retirement_date', $teacher->retirementDate()?->toDateString());
+            $teacher->setAttribute('retirement_status', $teacher->retirementStatus($today));
             $teacher->unsetRelation('user');
 
             return $teacher;
@@ -55,10 +59,18 @@ class TeacherController extends Controller
         $all = Teacher::where('school_id', $schoolId);
         $total = (clone $all)->count();
         $active = (clone $all)->where('is_active', true)->count();
+        $activeWithBirthDate = (clone $all)->where('is_active', true)->whereNotNull('birth_date');
+        $sixtyYearsAgo = $today->subYears(60)->toDateString();
+        $fiftyNineYearsAgo = $today->subYears(59)->toDateString();
 
         return Inertia::render('Academic/Teachers/Index', [
             'teachers' => $teachers,
             'stats' => ['total' => $total, 'active' => $active, 'inactive' => $total - $active],
+            'retirement_stats' => [
+                'upcoming' => (clone $activeWithBirthDate)->where('birth_date', '>', $sixtyYearsAgo)->where('birth_date', '<=', $fiftyNineYearsAgo)->count(),
+                'reached' => (clone $activeWithBirthDate)->where('birth_date', '<=', $sixtyYearsAgo)->count(),
+                'missing' => (clone $all)->where('is_active', true)->whereNull('birth_date')->count(),
+            ],
             'employment_statuses' => Teacher::where('school_id', $schoolId)->whereNotNull('employment_status')->distinct()->orderBy('employment_status')->pluck('employment_status'),
             'can_manage' => Gate::allows('create', Teacher::class),
             'can_link_accounts' => $request->user()->hasRole('admin'),
@@ -67,6 +79,7 @@ class TeacherController extends Controller
                 'search' => $search,
                 'is_active' => $request->query('is_active'),
                 'employment_status' => $status,
+                'retirement' => $request->query('retirement'),
             ],
         ]);
     }
@@ -81,6 +94,7 @@ class TeacherController extends Controller
             'nip' => ['nullable', 'string', 'max:50', Rule::unique('teachers')->where('school_id', $schoolId)],
             'name' => ['required', 'string', 'max:150'],
             'gender' => ['required', 'in:L,P'],
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:100'],
             'employment_status' => ['nullable', 'string', 'max:50'],
@@ -124,6 +138,7 @@ class TeacherController extends Controller
             'nip' => ['nullable', 'string', 'max:50', Rule::unique('teachers')->where('school_id', $schoolId)->ignore($teacher->id)],
             'name' => ['required', 'string', 'max:150'],
             'gender' => ['required', 'in:L,P'],
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:100'],
             'employment_status' => ['nullable', 'string', 'max:50'],
@@ -250,7 +265,12 @@ class TeacherController extends Controller
     private function teacherQuery(Request $request): Builder
     {
         $request->validate(['search' => ['nullable', 'string', 'max:150'],
-            'employment_status' => ['nullable', 'string', 'max:50'], 'is_active' => ['nullable', 'in:0,1']]);
+            'employment_status' => ['nullable', 'string', 'max:50'], 'is_active' => ['nullable', 'in:0,1'],
+            'retirement' => ['nullable', 'in:missing,upcoming,reached']]);
+
+        $today = CarbonImmutable::today();
+        $sixtyYearsAgo = $today->subYears(60)->toDateString();
+        $fiftyNineYearsAgo = $today->subYears(59)->toDateString();
 
         return Teacher::where('school_id', (int) $request->user()->school_id)
             ->with(['user.role', 'homeroomClassGroups' => fn ($query) => $query
@@ -261,6 +281,9 @@ class TeacherController extends Controller
             })
             ->when($request->filled('employment_status'), fn ($query) => $query->where('employment_status', $request->query('employment_status')))
             ->when($request->filled('is_active'), fn ($query) => $query->where('is_active', (int) $request->query('is_active')))
+            ->when($request->query('retirement') === 'missing', fn ($query) => $query->whereNull('birth_date'))
+            ->when($request->query('retirement') === 'reached', fn ($query) => $query->whereNotNull('birth_date')->where('birth_date', '<=', $sixtyYearsAgo))
+            ->when($request->query('retirement') === 'upcoming', fn ($query) => $query->whereNotNull('birth_date')->where('birth_date', '>', $sixtyYearsAgo)->where('birth_date', '<=', $fiftyNineYearsAgo))
             ->orderBy('name')->orderBy('id');
     }
 
@@ -324,9 +347,9 @@ class TeacherController extends Controller
         Gate::authorize('viewAny', Teacher::class);
         $teachers = $this->teacherQuery($request);
         $rows = (function () use ($teachers) {
-            yield ['NIP', 'Nama', 'L/P', 'Telepon', 'Email', 'Status Kepegawaian', 'Wali Kelas', 'Status'];
+            yield ['NIP', 'Nama', 'L/P', 'Tanggal Lahir', 'Tanggal Pensiun', 'Status Pensiun', 'Telepon', 'Email', 'Status Kepegawaian', 'Wali Kelas', 'Status'];
             foreach ($teachers->lazy(500) as $teacher) {
-                yield [$teacher->nip, $teacher->name, $teacher->gender, $teacher->phone, $teacher->email,
+                yield [$teacher->nip, $teacher->name, $teacher->gender, $teacher->birth_date?->format('Y-m-d'), $teacher->retirementDate()?->format('Y-m-d'), $teacher->retirementStatus(), $teacher->phone, $teacher->email,
                     $teacher->employment_status, $teacher->homeroomClassGroups->pluck('name')->join(', '), $teacher->is_active ? 'Aktif' : 'Nonaktif'];
             }
         })();
@@ -406,13 +429,13 @@ class TeacherController extends Controller
         Gate::authorize('create', Teacher::class);
         if ($request->query('format') === 'xlsx') {
             return $this->spreadsheetDownload('template_impor_guru.xlsx', [
-                ['nip', 'name', 'gender', 'phone', 'email', 'employment_status'],
-                ['198501012010011001', 'Guru Contoh', 'P', '081234567891', 'guru@example.test', 'PNS'],
+                ['nip', 'name', 'gender', 'birth_date', 'phone', 'email', 'employment_status'],
+                ['198501012010011001', 'Guru Contoh', 'P', '1966-05-15', '081234567891', 'guru@example.test', 'PNS'],
             ]);
         }
 
-        $csvHeader = "nip,name,gender,phone,email,employment_status\n";
-        $csvExample = "198501012010011001,Siti Aminah,P,081234567891,siti.aminah@sekolah.sch.id,PNS\n";
+        $csvHeader = "nip,name,gender,birth_date,phone,email,employment_status\n";
+        $csvExample = "198501012010011001,Siti Aminah,P,1966-05-15,081234567891,siti.aminah@sekolah.sch.id,PNS\n";
 
         return response($csvHeader.$csvExample, 200, [
             'Content-Type' => 'text/csv',

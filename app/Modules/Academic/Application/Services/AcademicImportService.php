@@ -227,7 +227,11 @@ class AcademicImportService
             if (count($values) !== count($header)) {
                 throw new InvalidArgumentException('Jumlah kolom tidak cocok dengan header pada baris '.($index + 2).'.');
             }
-            $rows[] = array_combine($header, $values);
+            $row = array_combine($header, $values);
+            if (array_key_exists('birth_date', $row)) {
+                $row['birth_date'] = $this->normalizeImportDate($row['birth_date']);
+            }
+            $rows[] = $row;
         }
         if (count($rows) > 1000) {
             throw new InvalidArgumentException('Maksimal 1.000 guru per berkas.');
@@ -285,6 +289,8 @@ class AcademicImportService
                 $errors[] = 'Jenis kelamin harus "L" atau "P".';
             }
 
+            $row['birth_date'] = $this->normalizeImportDate($row['birth_date'] ?? null);
+
             // 4. Validasi Email
             $email = isset($row['email']) && trim((string) $row['email']) !== '' ? trim((string) $row['email']) : null;
             if ($email !== null && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -296,6 +302,7 @@ class AcademicImportService
                 'nip' => ['nullable', 'string', 'max:50'],
                 'phone' => ['nullable', 'string', 'max:30'],
                 'email' => ['nullable', 'string', 'max:100'],
+                'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
                 'employment_status' => ['nullable', 'string', 'max:50'],
             ]);
             $errors = array_merge($errors, $fieldValidation->errors()->all());
@@ -313,6 +320,7 @@ class AcademicImportService
                     'nip' => $nip,
                     'name' => $name,
                     'gender' => $gender,
+                    'birth_date' => $row['birth_date'] ?? null,
                     'phone' => $row['phone'] ?? null,
                     'email' => $email,
                     'employment_status' => $row['employment_status'] ?? 'GTT',

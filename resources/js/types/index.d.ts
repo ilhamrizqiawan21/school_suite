@@ -54,6 +54,9 @@ export interface Teacher {
     gender: 'L' | 'P';
     phone?: string | null;
     email?: string | null;
+    birth_date?: string | null;
+    retirement_date?: string | null;
+    retirement_status?: 'missing' | 'not_due' | 'upcoming' | 'reached';
     employment_status?: string | null;
     is_active: boolean;
     homeroom_class_groups?: Array<{
