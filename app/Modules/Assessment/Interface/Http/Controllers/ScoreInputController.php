@@ -59,8 +59,7 @@ class ScoreInputController extends Controller
         abort_if($classGroupId && ! $classes->contains('id', (int) $classGroupId), 403);
         if (! $selectedAssignment && $teachingAssignments->isNotEmpty()) {
             $selectedAssignment = $teachingAssignments->first(function ($assignment) use ($scheme, $request) {
-                return $scheme?->components->contains(fn ($component) =>
-                    (int) ($component->teaching_assignment_id ?? 0) === (int) $assignment->id
+                return $scheme?->components->contains(fn ($component) => (int) ($component->teaching_assignment_id ?? 0) === (int) $assignment->id
                     && $this->access->canInputComponent($request->user(), $component, (int) $assignment->term_id, (int) $assignment->class_group_id)
                 ) ?? false;
             }) ?? $teachingAssignments->firstWhere('class_group_id', (int) $classGroupId)
@@ -73,8 +72,7 @@ class ScoreInputController extends Controller
         $components = $scheme && $activeTerm && $classGroupId
             ? $scheme->components
                 ->filter(fn ($component) => $this->access->canInputComponent($request->user(), $component, $activeTerm->id, (int) $classGroupId))
-                ->when($selectedAssignment, fn ($items) => $items->filter(fn ($component) =>
-                    $component->teaching_assignment_id === null
+                ->when($selectedAssignment, fn ($items) => $items->filter(fn ($component) => $component->teaching_assignment_id === null
                     || (int) $component->teaching_assignment_id === (int) $selectedAssignment->id
                 ))
                 ->values()

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Logging\SanitizeSensitiveDataProcessor;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Monolog\Level;
 use Monolog\LogRecord;
 use Tests\TestCase;
@@ -13,6 +15,9 @@ class HealthCheckTest extends TestCase
 {
     public function test_health_check_endpoint_returns_200_ok_when_healthy(): void
     {
+        if (Schema::hasTable('failed_jobs')) {
+            DB::table('failed_jobs')->delete();
+        }
         $response = $this->get('/up');
 
         $response->assertOk();
@@ -20,11 +25,10 @@ class HealthCheckTest extends TestCase
             'status',
             'timestamp',
             'app_version',
-            'environment',
             'checks' => [
                 'database' => ['healthy'],
                 'storage' => ['healthy', 'writable'],
-                'failed_jobs' => ['healthy', 'count'],
+                'failed_jobs' => ['healthy'],
             ],
         ]);
         $response->assertJson([
@@ -34,6 +38,11 @@ class HealthCheckTest extends TestCase
                 'storage' => ['healthy' => true, 'writable' => true],
             ],
         ]);
+        $payload = $response->json();
+        $this->assertArrayNotHasKey('environment', $payload);
+        $this->assertArrayNotHasKey('path', $payload['checks']['storage']);
+        $this->assertArrayNotHasKey('error', $payload['checks']['database']);
+        $this->assertArrayNotHasKey('count', $payload['checks']['failed_jobs']);
 
         // Uji endpoint alternatif /health
         $healthResponse = $this->get('/health');

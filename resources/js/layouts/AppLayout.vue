@@ -3,8 +3,9 @@ import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import TopNavbar from '../components/TopNavbar.vue';
 import SidebarNavigation from '../components/SidebarNavigation.vue';
+import Breadcrumbs from '../components/Breadcrumbs.vue';
 
-defineProps<{
+const layoutProps = defineProps<{
     title?: string;
 }>();
 
@@ -45,10 +46,24 @@ const toggleSidebar = () => {
     } catch { /* Storage may be unavailable in private browsing. */ }
 };
 
+const readStoredTheme = () => {
+    try {
+        return localStorage.getItem('school-suite-theme') === 'dark';
+    } catch { /* Storage may be unavailable in private browsing. */
+        return false;
+    }
+};
+
+const persistTheme = (isDark: boolean) => {
+    try {
+        localStorage.setItem('school-suite-theme', isDark ? 'dark' : 'light');
+    } catch { /* Storage may be unavailable in private browsing. */ }
+};
+
 const toggleTheme = () => {
     darkTheme.value = !darkTheme.value;
     document.documentElement.dataset.theme = darkTheme.value ? 'dark' : 'light';
-    localStorage.setItem('school-suite-theme', darkTheme.value ? 'dark' : 'light');
+    persistTheme(darkTheme.value);
 };
 
 const closeOnEscape = (event: KeyboardEvent) => {
@@ -79,7 +94,7 @@ onMounted(() => {
         if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
         link.href = page.props.school.favicon_url;
     }
-    darkTheme.value = localStorage.getItem('school-suite-theme') === 'dark';
+    darkTheme.value = readStoredTheme();
     document.documentElement.dataset.theme = darkTheme.value ? 'dark' : 'light';
     document.addEventListener('keydown', closeOnEscape);
     removeNavigateListener = router.on('navigate', () => { sidebarOpen.value = false; });
@@ -142,6 +157,7 @@ onBeforeUnmount(() => {
                 <TopNavbar />
             </header>
             <main id="main-content" tabindex="-1" :class="{ 'role-guru-main': isTeacherWorkspace }">
+                <Breadcrumbs :title="layoutProps.title" />
                 <slot />
             </main>
         </div>

@@ -325,6 +325,8 @@ const attendanceAverage = computed(() => {
     if (!monthsWithData.length) return 0;
     return Math.round((monthsWithData.reduce((sum, item) => sum + item.rate, 0) / monthsWithData.length) * 10) / 10;
 });
+const formatAttendancePoint = (point: { label: string; rate: number | null; present: number; total: number }) => `${point.label}: ${percentLabel(point.rate)} hadir (${point.present}/${point.total})`;
+const attendanceDataSummary = computed(() => attendanceTrend.value.filter((item) => item.total > 0).map(formatAttendancePoint).join(' · '));
 const principalAttendanceChart = computed(() => {
     const width = 760;
     const height = 264;
@@ -357,6 +359,7 @@ const principalAttendanceChart = computed(() => {
         hasData: points.some((point) => point.total > 0),
     };
 });
+const principalAttendanceDataSummary = computed(() => principalTrend.value.filter((point) => point.total > 0).map(formatAttendancePoint).join(' · '));
 </script>
 
 <template>
@@ -458,7 +461,7 @@ const principalAttendanceChart = computed(() => {
                     <section class="principal-chart-panel" aria-labelledby="principal-attendance-title">
                         <div class="principal-panel-heading"><div><span>Tren sekolah</span><h2 id="principal-attendance-title">Kehadiran siswa</h2><p>Persentase siswa hadir dari catatan presensi tiap rentang waktu.</p></div><Link href="/akademik/presensi/rekap">Lihat rekap ↗</Link></div>
                         <div v-if="principalAttendanceChart.hasData" class="principal-chart-wrap">
-                            <svg class="principal-chart" :viewBox="`0 0 ${principalAttendanceChart.width} ${principalAttendanceChart.height}`" role="img" aria-labelledby="principal-chart-label">
+                            <svg class="principal-chart" :viewBox="`0 0 ${principalAttendanceChart.width} ${principalAttendanceChart.height}`" role="img" aria-labelledby="principal-chart-label" aria-describedby="principal-attendance-data">
                                 <title id="principal-chart-label">Tren kehadiran sekolah: {{ principalTrend.filter((point) => point.total > 0).map((point) => `${point.label} ${percentLabel(point.rate)}`).join(', ') }}</title>
                                 <g class="chart-grid"><line v-for="grid in principalAttendanceChart.grid" :key="grid.value" x1="42" x2="736" :y1="grid.y" :y2="grid.y" /><text v-for="grid in principalAttendanceChart.grid" :key="`principal-${grid.value}`" x="0" :y="grid.y + 4">{{ grid.value }}%</text></g>
                                 <polyline v-for="(segment, index) in principalAttendanceChart.segments" :key="index" class="chart-line" :points="segment" />
@@ -467,6 +470,7 @@ const principalAttendanceChart = computed(() => {
                                     <text :x="point.x" y="252" text-anchor="middle">{{ point.label }}</text>
                                 </g>
                             </svg>
+                            <p id="principal-attendance-data" class="chart-data-summary">Data dalam teks: {{ principalAttendanceDataSummary }}</p>
                         </div>
                         <div v-else class="principal-empty">Belum ada data kehadiran untuk dibuat grafik.</div>
                     </section>
@@ -563,7 +567,7 @@ const principalAttendanceChart = computed(() => {
                         <span class="chart-legend"><i /> Hadir</span>
                     </div>
                     <div v-if="attendanceHasData" class="attendance-chart-wrap">
-                        <svg class="attendance-chart" :viewBox="'0 0 ' + attendanceChart.width + ' ' + attendanceChart.height" role="img" aria-labelledby="attendance-chart-label">
+                        <svg class="attendance-chart" :viewBox="'0 0 ' + attendanceChart.width + ' ' + attendanceChart.height" role="img" aria-labelledby="attendance-chart-label" aria-describedby="attendance-chart-data">
                             <title id="attendance-chart-label">Grafik garis kehadiran siswa per bulan</title>
                             <g class="chart-grid">
                                 <line v-for="grid in attendanceChart.grid" :key="grid.value" :x1="42" :x2="740" :y1="grid.y" :y2="grid.y" />
@@ -577,6 +581,7 @@ const principalAttendanceChart = computed(() => {
                                 <text :x="point.x" y="266" text-anchor="middle">{{ point.label }}</text>
                             </g>
                         </svg>
+                        <p id="attendance-chart-data" class="chart-data-summary">Data dalam teks: {{ attendanceDataSummary }}</p>
                     </div>
                     <div v-else class="attendance-empty">Belum ada presensi siswa pada periode aktif untuk ditampilkan.</div>
                 </div>
@@ -612,7 +617,7 @@ const principalAttendanceChart = computed(() => {
 .student-metrics .metric-tone-1 { --metric-accent: #3269bc; }.student-metrics .metric-tone-2 { --metric-accent: #3d9b78; }.student-metrics .metric-tone-3 { --metric-accent: #ad7c2b; }.student-metrics .metric-tone-4 { --metric-accent: #8264b5; }
 .metric-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.metric-item span, .metric-item small { display: block; color: var(--ink-soft); font-size: 10px; }.metric-head > span:first-child { color: var(--ink); font-size: 13px; font-weight: 800; letter-spacing: -.015em; }.metric-arrow { color: var(--ink-faint) !important; font-size: 14px !important; line-height: 1; }.metric-item strong { display: block; margin: 15px 0 5px; color: var(--ink); font-size: 27px; letter-spacing: -.05em; line-height: 1; }.metric-item small { color: var(--ink-faint); font-size: 10px; }
 .workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: 20px; letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: 10px; }.workflow-list { border-top: 1px solid var(--line); }.workflow-row { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); transition: padding .18s ease, background .18s ease; }.workflow-row:hover { padding-left: 12px; padding-right: 12px; background: var(--surface-subtle); }.workflow-index { width: 23px; color: var(--ink-faint); font: 700 11px Georgia, serif; }.workflow-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 auto; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }.workflow-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.workflow-copy { display: grid; gap: 4px; flex: 1; }.workflow-copy strong { color: var(--ink); font-size: 12px; }.workflow-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.4; }.workflow-arrow { color: var(--ink-faint); font-size: 18px; }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: 10px; }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: 800 12px Georgia, serif; }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
-.attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: 14px; }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 10px; white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: 10px; }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: 10px; }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: 11px; text-align: center; }
+.attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: 14px; }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 10px; white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-data-summary { margin: 10px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: 10px; }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: 10px; }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: 11px; text-align: center; }
 .admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .student-overview { margin-top: 34px; }
 .student-section-heading { align-items: end; margin-bottom: 12px; }

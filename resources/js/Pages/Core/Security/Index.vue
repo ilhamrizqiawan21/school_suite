@@ -21,7 +21,10 @@ const dt = (value: string) => new Intl.DateTimeFormat('id-ID', { dateStyle: 'med
 const expired = (item: Block) => Boolean(item.expires_at && new Date(item.expires_at).getTime() <= Date.now());
 const active = (item: Block) => item.is_active && !expired(item);
 function openBlock() { form.reset(); form.clearErrors(); show.value = true; }
-function block() { form.post('/pengaturan/keamanan/ip', { preserveScroll: true, onSuccess: () => { form.reset(); show.value = false; } }); }
+function block() {
+    if (form.processing || !window.confirm(`Blokir alamat IP ${form.ip_address}? Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.`)) return;
+    form.post('/pengaturan/keamanan/ip', { preserveScroll: true, onSuccess: () => { form.reset(); show.value = false; } });
+}
 function act(url: string, method: 'post' | 'delete', confirmation: string) {
     if (pending.value || !window.confirm(confirmation)) return;
     pending.value = true;

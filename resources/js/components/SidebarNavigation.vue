@@ -100,7 +100,8 @@ const sections: NavSection[] = [
             { name: 'Skema Penilaian', href: '/penilaian/skema', key: 'schemes', activePrefix: '/penilaian/skema', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
             { name: 'Rapor Siswa', href: '/penilaian/rapor', principalHref: '/kepsek/laporan/nilai', key: 'reports', activePrefix: '/penilaian/rapor', principalActivePrefix: '/kepsek/laporan/nilai', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
             { name: 'Analisis', href: '/penilaian/analisis', principalHref: '/kepsek/statistik', key: 'assessment-analytics', activePrefix: '/penilaian/analisis', principalActivePrefix: '/kepsek/statistik', icon: 'M3 3v18h18M8 15l4-4 4 3 5-7' },
-            { name: 'Pusat Laporan', href: '/laporan', principalHref: '/kepsek/performa-guru', key: 'reporting', activePrefix: '/laporan', principalActivePrefix: '/kepsek/performa-guru', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012 2h14a2 2 0 012 2v14z' },
+            { name: 'Pusat Laporan', href: '/laporan', key: 'reporting', activePrefix: '/laporan', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012 2h14a2 2 0 012 2v14z' },
+            { name: 'Kinerja Guru', href: '/laporan', principalHref: '/kepsek/performa-guru', key: 'teacher-performance', activePrefix: '/laporan', principalActivePrefix: '/kepsek/performa-guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0' },
         ],
     },
     {
@@ -149,9 +150,10 @@ const displayName = (item: NavItem) => {
     if (currentRole.value !== 'principal') return item.name;
 
     return ({
-        reports: 'Nilai',
+        reports: 'Rapor Siswa',
         'assessment-analytics': 'Statistik',
-        reporting: 'Performa Guru',
+        reporting: 'Pusat Laporan',
+        'teacher-performance': 'Kinerja Guru',
         communication: 'Pengumuman',
         'communication-chat': 'Kalender',
         'attendance-report': 'Rekap Absensi',
@@ -209,6 +211,7 @@ const activeSectionKey = computed(() => visibleSections.value.find((section) =>
     section.items.some((item) => isItemActive(item) || item.children?.some((child) => isItemActive(child))),
 )?.title ?? null);
 const expandedGroups = ref<Record<string, boolean>>({});
+const groupsLoaded = ref(false);
 const isExpanded = (key: string, active = false) => Object.hasOwn(expandedGroups.value, key)
     ? expandedGroups.value[key] === true
     : active;
@@ -217,20 +220,32 @@ const isSectionActive = (section: NavSection) => section.items.some((item) =>
 );
 const isNestedGroupActive = (item: NavItem) => item.children?.some((child) => isItemActive(child)) ?? false;
 const toggleGroup = (key: string, active: boolean) => {
-    expandedGroups.value[key] = !isExpanded(key, active);
+    // Replace the record so every toggle is observed consistently, including
+    // after an Inertia navigation or when the stored preference was just read.
+    expandedGroups.value = {
+        ...expandedGroups.value,
+        [key]: !isExpanded(key, active),
+    };
     persistExpandedGroups();
 };
 const groupId = (key: string) => `nav-group-${key.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 const openActiveGroups = () => {
+    if (!groupsLoaded.value) return;
+
+    const nextGroups = { ...expandedGroups.value };
     if (activeSectionKey.value && !Object.hasOwn(expandedGroups.value, activeSectionKey.value)) {
-        expandedGroups.value[activeSectionKey.value] = true;
+        nextGroups[activeSectionKey.value] = true;
     }
     const activeNested = visibleSections.value.flatMap((section) => section.items).find((item) => isNestedGroupActive(item));
     if (activeNested && !Object.hasOwn(expandedGroups.value, activeNested.key)) {
-        expandedGroups.value[activeNested.key] = true;
+        nextGroups[activeNested.key] = true;
+    }
+    if (Object.keys(nextGroups).length !== Object.keys(expandedGroups.value).length) {
+        expandedGroups.value = nextGroups;
     }
 };
 const loadExpandedGroups = () => {
+    groupsLoaded.value = false;
     expandedGroups.value = {};
     try {
         const saved = localStorage.getItem(`school-suite-nav-groups:${userId.value ?? 'guest'}`);
@@ -241,6 +256,7 @@ const loadExpandedGroups = () => {
             ) as Record<string, boolean>;
         }
     } catch { /* Storage may be unavailable or contain invalid data. */ }
+    groupsLoaded.value = true;
     openActiveGroups();
     persistExpandedGroups();
 };
@@ -258,7 +274,8 @@ watch(userId, (nextUserId, previousUserId) => {
     if (nextUserId !== previousUserId) loadExpandedGroups();
 });
 
-watch(currentUrl, () => {
+watch([currentUrl, activeSectionKey, visibleSections], () => {
+    if (!groupsLoaded.value) return;
     openActiveGroups();
     persistExpandedGroups();
 });

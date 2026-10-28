@@ -7,7 +7,7 @@ type SnapshotStudent = {
     enrollment_id: number;
     name: string;
     nis: string | null;
-    status: 'online' | 'offline' | 'finished' | 'locked' | 'not_started';
+    status: 'online' | 'offline' | 'finished' | 'locked' | 'cheated' | 'not_started';
     answered: number;
     total_questions: number;
     violation_count: number;
@@ -28,8 +28,8 @@ const filteredStudents = computed(() => props.snapshot.students.filter((student)
     return matchesSearch && (status.value === 'all' || student.status === status.value);
 }));
 const progress = (student: SnapshotStudent) => student.total_questions ? Math.round((student.answered / student.total_questions) * 100) : 0;
-const statusLabel = (value: SnapshotStudent['status']) => ({ online: 'Online', offline: 'Offline', finished: 'Selesai', locked: 'Terkunci', not_started: 'Belum masuk' })[value];
-const statusHint = (student: SnapshotStudent) => student.status === 'online' && student.last_heartbeat_at ? `Aktif ${new Date(student.last_heartbeat_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` : student.status === 'finished' ? 'Jawaban sudah dikirim' : 'Belum ada aktivitas terbaru';
+const statusLabel = (value: SnapshotStudent['status']) => ({ online: 'Online', offline: 'Offline', finished: 'Selesai', locked: 'Terkunci', cheated: 'Pelanggaran · nilai 0', not_started: 'Belum masuk' })[value];
+const statusHint = (student: SnapshotStudent) => student.status === 'online' && student.last_heartbeat_at ? `Aktif ${new Date(student.last_heartbeat_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}` : student.status === 'finished' ? 'Jawaban sudah dikirim' : student.status === 'cheated' ? 'Ujian dihentikan otomatis' : 'Belum ada aktivitas terbaru';
 const formatDate = (value?: string | null) => value ? new Date(value).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 const refresh = () => {
     refreshing.value = true;

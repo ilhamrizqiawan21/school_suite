@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 type AttendanceStatus = 'present' | 'sick' | 'permitted' | 'absent';
@@ -101,6 +101,7 @@ function applyBulkStatus() {
 }
 
 function resetChanges() {
+    if (!isDirty.value || !window.confirm('Reset perubahan absensi yang belum disimpan?')) return;
     studentList.value = cloneStudents(props.students);
 }
 
@@ -140,6 +141,29 @@ function exportSessionCsv() {
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+function restoreSelection() {
+    classId.value = props.selected_class?.id ? String(props.selected_class.id) : '';
+    subjectId.value = props.selected_subject?.id ? String(props.selected_subject.id) : '';
+    month.value = props.month;
+    selectedSessionId.value = props.selected_session_id ? String(props.selected_session_id) : '';
+}
+
+const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+    if (isDirty.value) { event.preventDefault(); event.returnValue = ''; }
+};
+
+let removeBeforeListener: (() => void) | undefined;
+onMounted(() => {
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    removeBeforeListener = router.on('before', event => {
+        if (event.detail.visit.method === 'get' && isDirty.value && !window.confirm('Ada perubahan absensi yang belum disimpan. Tinggalkan perubahan?')) {
+            restoreSelection();
+            event.preventDefault();
+        }
+    });
+});
+onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnload); removeBeforeListener?.(); });
 </script>
 
 <template>

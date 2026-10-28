@@ -77,6 +77,7 @@ function editAsset(asset: Asset) {
 }
 
 function cancelEdit() {
+    if (assetForm.isDirty && !window.confirm('Batalkan perubahan data aset yang belum disimpan?')) return;
     editingAssetId.value = null;
     assetForm.defaults(blankAsset());
     assetForm.reset();

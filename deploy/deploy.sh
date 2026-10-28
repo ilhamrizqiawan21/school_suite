@@ -16,6 +16,7 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RELEASE_DIR="${RELEASES_DIR}/${TIMESTAMP}"
 HEALTH_CHECK_URL="${HEALTH_CHECK_URL:-}"
 PHP_FPM_SERVICE="${PHP_FPM_SERVICE:-php8.3-fpm}"
+DEPLOY_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "${HEALTH_CHECK_URL}" ]; then
     echo "Kesalahan: HEALTH_CHECK_URL wajib diisi, misalnya https://<domain-aplikasi>/up." >&2
@@ -30,6 +31,12 @@ for executable in php composer npm curl; do
     command -v "$executable" >/dev/null || { echo "Executable wajib tidak tersedia: $executable" >&2; exit 1; }
 done
 php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);'
+
+if [ ! -f "${SHARED_DIR}/.env" ]; then
+    echo "Kesalahan: ${SHARED_DIR}/.env wajib tersedia." >&2
+    exit 1
+fi
+php "${DEPLOY_SCRIPT_DIR}/validate-production-env.php" "${SHARED_DIR}/.env"
 
 echo "=== Memulai Deployment School Suite [${TIMESTAMP}] ==="
 

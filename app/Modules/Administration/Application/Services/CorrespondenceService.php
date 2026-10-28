@@ -19,10 +19,33 @@ class CorrespondenceService
 {
     public function __construct(private readonly AuditLogger $audit, private readonly SchoolScopeService $schoolScope) {}
 
-    /** @return array{name:?string, legal_name:?string, npsn:?string, address:?string, phone:?string, email:?string, website:?string} */
+    /** @return array<string, mixed> */
     public function getSchoolLegalSnapshot(int $schoolId): array
     {
-        return $this->schoolScope->getSchoolLegalSnapshot($schoolId);
+        $snapshot = $this->schoolScope->getSchoolLegalSnapshot($schoolId);
+        $logo = $this->schoolScope->getSchoolLogoDataUri($schoolId);
+        if ($logo !== null) {
+            $snapshot['logo_data_uri'] = $logo;
+        }
+
+        return $snapshot;
+    }
+
+    public function documentHash(CorrespondenceRecord $record, array $schoolSnapshot): string
+    {
+        return hash('sha256', json_encode([
+            'letter_template' => $record->letter_template,
+            'letter_number' => $record->letter_number,
+            'letter_date' => $record->letter_date?->toDateString(),
+            'recipient' => $record->recipient,
+            'subject' => $record->subject,
+            'summary' => $record->summary,
+            'letter_body' => $record->letter_body,
+            'attachment_note' => $record->attachment_note,
+            'signer_name' => $record->signer_name,
+            'signer_title' => $record->signer_title,
+            'school' => collect($schoolSnapshot)->except('logo_data_uri')->all(),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -41,6 +64,7 @@ class CorrespondenceService
                     'school_id' => $schoolId,
                     'created_by' => $actor->id,
                     'status' => $data['letter_type'] === 'incoming' ? 'received' : 'draft',
+                    'approval_status' => ($data['approval_required'] ?? false) ? 'pending' : 'not_required',
                 ]);
 
                 if ($attachment) {
@@ -115,8 +139,14 @@ class CorrespondenceService
             }
 
             if ($status === 'issued' && filled($record->letter_body)) {
-                $record->school_snapshot = $this->schoolScope->getSchoolLegalSnapshot((int) $record->school_id);
+                if ($record->approval_required && $record->approval_status !== 'approved') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Surat harus disetujui kepala sekolah sebelum diterbitkan.',
+                    ]);
+                }
+                $record->school_snapshot = $this->getSchoolLegalSnapshot((int) $record->school_id);
                 $record->verification_token = bin2hex(random_bytes(32));
+                $record->document_hash = $this->documentHash($record, $record->school_snapshot);
             }
 
             $oldValues = ['status' => $record->status, 'disposition' => $record->disposition];
@@ -141,6 +171,35 @@ class CorrespondenceService
         });
     }
 
+    public function approve(User $actor, CorrespondenceRecord $record, bool $approved, ?string $note): void
+    {
+        DB::transaction(function () use ($actor, $record, $approved, $note): void {
+            $record = CorrespondenceRecord::query()
+                ->where('school_id', $actor->school_id)
+                ->lockForUpdate()
+                ->findOrFail($record->id);
+            abort_unless($actor->hasRole('principal'), 403);
+            if (! $record->approval_required || $record->letter_type !== 'outgoing' || $record->status !== 'draft') {
+                throw ValidationException::withMessages(['approval' => 'Surat ini tidak menunggu persetujuan.']);
+            }
+
+            $record->approval_status = $approved ? 'approved' : 'rejected';
+            $record->approved_by = $actor->id;
+            $record->approved_at = now();
+            $record->approval_note = $note;
+            $record->save();
+
+            $this->audit->log(
+                $approved ? 'administration.correspondence.approved' : 'administration.correspondence.rejected',
+                'CorrespondenceRecord',
+                (string) $record->id,
+                ['approval_status' => $record->approval_status, 'approval_note' => $record->approval_note],
+                actor: $actor,
+                schoolId: (int) $record->school_id,
+            );
+        });
+    }
+
     /** @param array<string, mixed> $data */
     public function updateDraft(User $actor, CorrespondenceRecord $record, array $data): void
     {
@@ -150,7 +209,25 @@ class CorrespondenceService
                 throw ValidationException::withMessages(['status' => 'Hanya draf surat keluar yang dapat diubah.']);
             }
             $old = $record->only(array_keys($data));
-            $record->fill($data)->save();
+            $wasApprovalRequired = (bool) $record->approval_required;
+            $materialFields = array_diff(array_keys($data), ['approval_required']);
+            $record->fill($data);
+            $materialChanged = collect($materialFields)->contains(fn (string $field): bool => $record->isDirty($field));
+            $approvalRequired = (bool) $record->approval_required;
+
+            if (! $approvalRequired) {
+                $record->approval_status = 'not_required';
+                $record->approved_by = null;
+                $record->approved_at = null;
+                $record->approval_note = null;
+            } elseif (! $wasApprovalRequired || $materialChanged) {
+                $record->approval_status = 'pending';
+                $record->approved_by = null;
+                $record->approved_at = null;
+                $record->approval_note = null;
+            }
+
+            $record->save();
             $this->audit->log('administration.correspondence.draft_updated', 'CorrespondenceRecord', (string) $record->id,
                 ['fields' => array_keys($data)], ['fields' => array_keys($old)], $actor, (int) $record->school_id);
         });

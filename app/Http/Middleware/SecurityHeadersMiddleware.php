@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 class SecurityHeadersMiddleware
@@ -18,6 +19,23 @@ class SecurityHeadersMiddleware
         /** @var Response $response */
         $response = $next($request);
 
+        $scriptSource = "'self' 'unsafe-inline'";
+        $styleSource = "'self' 'unsafe-inline'";
+        $connectSource = "'self'";
+
+        if (config('app.env') === 'local' && Vite::isRunningHot()) {
+            $viteUrl = parse_url((string) Vite::devServerUrl());
+
+            if (is_array($viteUrl) && in_array($viteUrl['scheme'] ?? null, ['http', 'https'], true) && isset($viteUrl['host'])) {
+                $viteOrigin = $viteUrl['scheme'].'://'.$viteUrl['host'].(isset($viteUrl['port']) ? ':'.$viteUrl['port'] : '');
+                $viteWebSocketOrigin = ($viteUrl['scheme'] === 'https' ? 'wss' : 'ws').'://'.$viteUrl['host'].(isset($viteUrl['port']) ? ':'.$viteUrl['port'] : '');
+
+                $scriptSource .= ' '.$viteOrigin;
+                $styleSource .= ' '.$viteOrigin;
+                $connectSource .= ' '.$viteOrigin.' '.$viteWebSocketOrigin;
+            }
+        }
+
         $headers = [
             'X-Frame-Options' => 'SAMEORIGIN',
             'X-Content-Type-Options' => 'nosniff',
@@ -26,7 +44,7 @@ class SecurityHeadersMiddleware
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
             'Cross-Origin-Opener-Policy' => 'same-origin',
             'Cross-Origin-Resource-Policy' => 'same-origin',
-            'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+            'Content-Security-Policy' => "default-src 'self'; script-src {$scriptSource}; style-src {$styleSource}; img-src 'self' data: blob:; font-src 'self' data:; connect-src {$connectSource}; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
         ];
 
         if ($request->isSecure() || config('app.env') === 'production') {

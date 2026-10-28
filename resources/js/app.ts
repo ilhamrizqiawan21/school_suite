@@ -1,6 +1,58 @@
 import '../css/app.css';
 import { createApp, h, type DefineComponent } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
+
+const setupTableScrollAffordances = () => {
+    const tableScrollers = new Set<HTMLElement>();
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => window.requestAnimationFrame(refreshTableScrollers));
+
+    const updateTableScroller = (element: HTMLElement) => {
+        const maxScrollLeft = element.scrollWidth - element.clientWidth;
+        const hasOverflow = maxScrollLeft > 1;
+        const canScrollLeft = hasOverflow && element.scrollLeft > 1;
+        const canScrollRight = hasOverflow && element.scrollLeft < maxScrollLeft - 1;
+
+        element.classList.toggle('table-scroll-affordance', hasOverflow);
+        element.classList.toggle('can-scroll-left', canScrollLeft);
+        element.classList.toggle('can-scroll-right', canScrollRight);
+    };
+
+    const refreshTableScrollers = () => {
+        const currentTableScrollers = new Set<HTMLElement>();
+
+        document.querySelectorAll<HTMLElement>('.table-scroll, .overflow-x-auto').forEach((element) => {
+            const isTableScroller = element.classList.contains('table-scroll')
+                || Array.from(element.children).some((child) => child.tagName === 'TABLE');
+
+            if (isTableScroller) currentTableScrollers.add(element);
+        });
+
+        tableScrollers.forEach((element) => {
+            if (!currentTableScrollers.has(element)) {
+                resizeObserver?.unobserve(element);
+                tableScrollers.delete(element);
+            }
+        });
+
+        currentTableScrollers.forEach((element) => {
+            if (tableScrollers.has(element)) return;
+
+            tableScrollers.add(element);
+            element.addEventListener('scroll', () => updateTableScroller(element), { passive: true });
+            resizeObserver?.observe(element);
+        });
+
+        tableScrollers.forEach(updateTableScroller);
+    };
+
+    const scheduleRefresh = () => window.requestAnimationFrame(refreshTableScrollers);
+
+    window.addEventListener('resize', scheduleRefresh);
+    router.on('navigate', scheduleRefresh);
+    scheduleRefresh();
+};
 
 createInertiaApp({
     title: (title) => (title ? `${title} — School Suite` : 'School Suite'),
@@ -16,6 +68,7 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el);
+        setupTableScrollAffordances();
     },
 });
 

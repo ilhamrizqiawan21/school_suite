@@ -131,6 +131,25 @@ class RoleMatrixAccessTest extends TestCase
                 && ! $keys->contains('security')
                 && ! $keys->contains('admissions'))
         );
+
+        $principal = $this->usersByRole[RoleEnum::PRINCIPAL->value];
+        $this->actingAs($principal)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('students')
+                && $keys->contains('teachers')
+                && $keys->contains('classes')
+                && $keys->contains('schedules')
+                && $keys->contains('attendance-report')
+                && $keys->contains('learning-progress')
+                && $keys->contains('reports')
+                && $keys->contains('assessment-analytics')
+                && $keys->contains('reporting')
+                && $keys->contains('teacher-performance')
+                && $keys->contains('school')
+                && ! $keys->contains('learning-resources')
+                && ! $keys->contains('learning-materials')
+                && ! $keys->contains('scores')
+                && ! $keys->contains('security'))
+        );
     }
 
     /**
@@ -163,6 +182,26 @@ class RoleMatrixAccessTest extends TestCase
             'email' => 'ilegal@matrix.test',
             'role_id' => 1,
             'password' => 'password123',
+        ])->assertStatus(403);
+    }
+
+    public function test_principal_school_profile_is_read_only_even_without_explicit_view_permission(): void
+    {
+        $principal = $this->usersByRole[RoleEnum::PRINCIPAL->value];
+        $principal->role->permissions()->detach(
+            Permission::query()->where('name', PermissionEnum::SCHOOL_VIEW->value)->value('id')
+        );
+        $this->actingAs($principal);
+
+        $this->get('/pengaturan/sekolah')->assertInertia(fn (Assert $page) => $page
+            ->component('Core/School/Edit')
+            ->where('canUpdate', false)
+        );
+
+        $this->put('/pengaturan/sekolah', [
+            'name' => 'Tidak boleh diubah kepala sekolah',
+            'npsn' => '66667777',
+            'level' => 'SMA',
         ])->assertStatus(403);
     }
 

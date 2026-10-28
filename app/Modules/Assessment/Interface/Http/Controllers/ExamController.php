@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Assessment\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Administration\Application\Services\NotificationService;
 use App\Modules\Assessment\Infrastructure\Models\Exam;
 use App\Modules\Assessment\Infrastructure\Models\ExamAnswer;
 use App\Modules\Assessment\Infrastructure\Models\ExamAttempt;
@@ -24,7 +26,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamController extends Controller
 {
-    public function __construct(private readonly AcademicQueryService $academicQuery, private readonly AuditLogger $audit) {}
+    private const MAX_VIOLATIONS = 3;
+
+    public function __construct(private readonly AcademicQueryService $academicQuery, private readonly AuditLogger $audit, private readonly NotificationService $notifications) {}
 
     public function index(Request $request): Response
     {
@@ -63,7 +67,8 @@ class ExamController extends Controller
     public function storeExam(Request $request): RedirectResponse
     {
         $this->authorizeManager($request);
-        $data = $request->validate(['teaching_assignment_id' => ['required', 'integer'], 'assessment_component_id' => ['nullable', 'exists:assessment_components,id'], 'title' => ['required', 'string', 'max:180'], 'instructions' => ['nullable', 'string', 'max:5000'], 'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date', 'after:starts_at'], 'duration_minutes' => ['required', 'integer', 'min:1', 'max:480'], 'randomize_questions' => ['required', 'boolean'], 'randomize_options' => ['required', 'boolean'], 'max_violations' => ['required', 'integer', 'min:1', 'max:20'], 'question_pack_id' => ['nullable', 'integer'], 'question_ids' => ['nullable', 'array', 'min:1'], 'question_ids.*' => ['integer']]);
+        $data = $request->validate(['teaching_assignment_id' => ['required', 'integer'], 'assessment_component_id' => ['nullable', 'exists:assessment_components,id'], 'title' => ['required', 'string', 'max:180'], 'instructions' => ['nullable', 'string', 'max:5000'], 'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date', 'after:starts_at'], 'duration_minutes' => ['required', 'integer', 'min:1', 'max:480'], 'randomize_questions' => ['required', 'boolean'], 'randomize_options' => ['required', 'boolean'], 'max_violations' => ['nullable', 'integer', 'min:3', 'max:3'], 'question_pack_id' => ['nullable', 'integer'], 'question_ids' => ['nullable', 'array', 'min:1'], 'question_ids.*' => ['integer']]);
+        $data['max_violations'] = self::MAX_VIOLATIONS;
         abort_unless(((bool) ($data['question_pack_id'] ?? null)) !== ((bool) ($data['question_ids'] ?? [])), 422, 'Pilih tepat satu sumber soal: paket atau soal manual.');
         $term = $this->academicQuery->getActiveTerm((int) $request->user()->school_id);
         abort_unless($term && in_array((int) $data['teaching_assignment_id'], $this->visibleAssignmentIds($request, $term->id), true), 403);
@@ -215,17 +220,35 @@ class ExamController extends Controller
     public function violation(Request $request, ExamAttempt $attempt): RedirectResponse
     {
         $this->authorizeAttempt($request, $attempt);
-        $this->assertActive($attempt);
-        $data = $request->validate(['type' => ['required', 'in:tab_hidden,window_blur,fullscreen_exit']]);
-        $attempt->increment('violation_count');
-        ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => $data['type'], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
-        $attempt->refresh();
-        if ($attempt->violation_count >= $attempt->exam->max_violations) {
-            $attempt->update(['status' => 'locked']);
-            ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'locked', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
-        }
+        $data = $request->validate(['type' => ['required', 'in:tab_hidden,window_blur,fullscreen_exit,copy_attempt,paste_attempt,context_menu,keyboard_shortcut,mobile_signal,forced_close']]);
 
-        return back();
+        [$attempt, $terminated] = DB::transaction(function () use ($attempt, $data, $request): array {
+            $lockedAttempt = ExamAttempt::query()->with('exam')->lockForUpdate()->findOrFail($attempt->id);
+            abort_unless($lockedAttempt->status === 'in_progress', 422);
+            if (now()->greaterThan($lockedAttempt->expires_at)) {
+                $this->finalize($lockedAttempt);
+                abort(422, 'Waktu ujian telah habis.');
+            }
+
+            $violationCount = min(self::MAX_VIOLATIONS, (int) $lockedAttempt->violation_count + 1);
+            $terminated = $violationCount >= self::MAX_VIOLATIONS;
+            $lockedAttempt->update([
+                'violation_count' => $violationCount,
+                'status' => $terminated ? 'cheated' : 'in_progress',
+                'score' => $terminated ? 0 : $lockedAttempt->score,
+                'submitted_at' => $terminated ? now() : $lockedAttempt->submitted_at,
+            ]);
+            ExamEvent::create(['exam_attempt_id' => $lockedAttempt->id, 'type' => $data['type'], 'payload' => ['violation_number' => $violationCount], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
+            if ($terminated) {
+                ExamEvent::create(['exam_attempt_id' => $lockedAttempt->id, 'type' => 'cheating_terminated', 'payload' => ['reason' => 'Batas pelanggaran tercapai', 'score' => 0], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
+            }
+
+            return [$lockedAttempt->fresh(['exam']), $terminated];
+        });
+        $this->audit->log('assessment.exam.violation', 'exam_attempt', (string) $attempt->id, ['type' => $data['type'], 'violation_count' => $attempt->violation_count, 'terminated' => $terminated, 'score' => $attempt->score], actor: $request->user(), schoolId: (int) $attempt->exam->school_id);
+        $this->notifyViolation($attempt, $data['type'], $terminated);
+
+        return back()->with('message', $terminated ? 'Ujian dihentikan karena batas pelanggaran tercapai. Nilai siswa ditetapkan 0.' : 'Pelanggaran ujian tercatat.');
     }
 
     public function submit(Request $request, ExamAttempt $attempt): RedirectResponse
@@ -253,7 +276,7 @@ class ExamController extends Controller
     {
         $attempt->load('exam');
         $this->authorizeExamManager($request, $attempt->exam);
-        abort_unless($attempt->status === 'locked', 422, 'Hanya sesi terkunci yang dapat dibuka kembali.');
+        abort_unless($attempt->status === 'locked' && (int) $attempt->violation_count < self::MAX_VIOLATIONS, 422, 'Sesi dengan batas pelanggaran tercapai tidak dapat dibuka kembali.');
         abort_unless(now()->lessThan($attempt->expires_at), 422, 'Waktu sesi sudah habis.');
         $attempt->update(['status' => 'in_progress', 'last_heartbeat_at' => now()]);
         ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'unlocked', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
@@ -267,6 +290,7 @@ class ExamController extends Controller
         $this->authorizeExamManager($request, $attempt->exam);
         $data = $request->validate(['minutes' => ['required', 'integer', 'min:1', 'max:120']]);
         abort_unless(in_array($attempt->status, ['in_progress', 'locked'], true), 422, 'Sesi sudah selesai.');
+        abort_unless((int) $attempt->violation_count < self::MAX_VIOLATIONS, 422, 'Sesi dengan batas pelanggaran tercapai tidak dapat ditambah waktunya.');
         $newExpiry = $attempt->expires_at->copy()->addMinutes($data['minutes'])->min($attempt->exam->ends_at);
         $attempt->update(['expires_at' => $newExpiry]);
         ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'time_extended', 'payload' => ['minutes' => $data['minutes']], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
@@ -279,6 +303,12 @@ class ExamController extends Controller
         $attempt->load('exam');
         $this->authorizeExamManager($request, $attempt->exam);
         abort_unless(in_array($attempt->status, ['in_progress', 'locked'], true), 422, 'Sesi sudah selesai.');
+        if ((int) $attempt->violation_count >= self::MAX_VIOLATIONS) {
+            $attempt->update(['status' => 'cheated', 'score' => 0, 'submitted_at' => now()]);
+            ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'cheating_terminated', 'payload' => ['reason' => 'Batas pelanggaran tercapai', 'score' => 0], 'ip_address' => $request->ip(), 'occurred_at' => now()]);
+
+            return back()->with('message', 'Sesi ditutup sebagai pelanggaran dan nilainya 0.');
+        }
         $this->finalize($attempt);
         ExamEvent::create(['exam_attempt_id' => $attempt->id, 'type' => 'forced_finish', 'ip_address' => $request->ip(), 'occurred_at' => now()]);
 
@@ -308,7 +338,7 @@ class ExamController extends Controller
         DB::transaction(function () use ($exam, $request) {
             $exam->update(['status' => 'results_published']);
             if ($exam->assessment_component_id) {
-                foreach ($exam->attempts()->whereIn('status', ['graded', 'submitted'])->get() as $a) {
+                foreach ($exam->attempts()->whereIn('status', ['graded', 'submitted', 'cheated'])->get() as $a) {
                     Score::updateOrCreate(['enrollment_id' => $a->enrollment_id, 'assessment_component_id' => $exam->assessment_component_id], ['school_id' => $exam->school_id, 'raw_score' => $a->score, 'final_score' => $a->score, 'recorded_by_user_id' => $request->user()->id, 'notes' => 'Sinkronisasi ujian '.$exam->title]);
                 }
             }
@@ -351,7 +381,7 @@ class ExamController extends Controller
             'attempts' => $attempts->map(fn ($a) => [...$a->toArray(), 'student' => $students->get($a->enrollment_id)]),
             'summary' => [
                 'total' => $attempts->count(),
-                'submitted' => $attempts->whereIn('status', ['submitted', 'graded', 'pending_review'])->count(),
+                'submitted' => $attempts->whereIn('status', ['submitted', 'graded', 'pending_review', 'cheated'])->count(),
                 'graded' => $attempts->where('status', 'graded')->count(),
                 'pending_review' => $attempts->where('status', 'pending_review')->count(),
                 'average' => $attempts->whereNotNull('score')->avg('score'),
@@ -385,6 +415,11 @@ class ExamController extends Controller
 
     private function recalculate(ExamAttempt $attempt): void
     {
+        if ($attempt->status === 'cheated' || (int) $attempt->violation_count >= self::MAX_VIOLATIONS) {
+            $attempt->update(['status' => 'cheated', 'score' => 0]);
+
+            return;
+        }
         $attempt->load('exam.items.question', 'exam.items.questionVersion', 'answers');
         $pending = $attempt->exam->items->filter(fn ($i) => ($i->questionVersion ?? $i->question)->type === 'essay')->contains(fn ($i) => $attempt->answers->firstWhere('exam_question_id', $i->exam_question_id)?->score === null);
         $total = (float) $attempt->exam->items->sum('points');
@@ -392,12 +427,27 @@ class ExamController extends Controller
         $attempt->update(['score' => $score, 'status' => $pending ? 'pending_review' : 'graded']);
     }
 
+    private function notifyViolation(ExamAttempt $attempt, string $type, bool $terminated): void
+    {
+        $attempt->loadMissing('exam');
+        $exam = $attempt->exam;
+        $studentName = DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')->where('enrollments.id', $attempt->enrollment_id)->value('students.name') ?? 'Siswa';
+        $teacherUserId = DB::table('teaching_assignments')->join('teachers', 'teachers.id', '=', 'teaching_assignments.teacher_id')->where('teaching_assignments.id', $exam->teaching_assignment_id)->value('teachers.user_id');
+        $recipientIds = User::query()->where('school_id', $exam->school_id)->where('is_active', true)->whereHas('role', fn ($query) => $query->whereIn('name', ['admin', 'operator', 'principal']))->pluck('id');
+        if ($teacherUserId) {
+            $recipientIds->push((int) $teacherUserId);
+        }
+        $label = $terminated ? 'Ujian dihentikan karena pelanggaran' : 'Pelanggaran CBT terdeteksi';
+        $body = sprintf('%s melakukan pelanggaran (%s) pada ujian "%s". Pelanggaran ke-%d dari %d.%s', $studentName, $type, $exam->title, $attempt->violation_count, self::MAX_VIOLATIONS, $terminated ? ' Nilai otomatis 0.' : '');
+        $this->notifications->notifyUsers($recipientIds, $label, $body, '/ujian/'.$exam->id.'/monitor');
+    }
+
     /** @return array{summary: array<string, int>, students: list<array<string, mixed>>} */
     private function monitorSnapshot(Exam $exam): array
     {
         $assignment = DB::table('teaching_assignments')->where('id', $exam->teaching_assignment_id)->first(['term_id', 'class_group_id']);
         if (! $assignment) {
-            return ['summary' => ['total' => 0, 'online' => 0, 'offline' => 0, 'finished' => 0, 'locked' => 0, 'not_started' => 0], 'students' => []];
+            return ['summary' => ['total' => 0, 'online' => 0, 'offline' => 0, 'finished' => 0, 'locked' => 0, 'cheated' => 0, 'not_started' => 0], 'students' => []];
         }
         $students = DB::table('enrollments')->join('students', 'students.id', '=', 'enrollments.student_id')
             ->where('enrollments.term_id', $assignment->term_id)->where('enrollments.class_group_id', $assignment->class_group_id)->where('enrollments.status', 'active')
@@ -405,12 +455,14 @@ class ExamController extends Controller
         $attempts = $exam->attempts()->withCount(['answers as answered_count' => fn ($query) => $query->whereNotNull('answer')->whereRaw("TRIM(answer) <> ''")])->get()->keyBy('enrollment_id');
         $totalQuestions = (int) $exam->items()->count();
         $now = now();
-        $summary = ['total' => $students->count(), 'online' => 0, 'offline' => 0, 'finished' => 0, 'locked' => 0, 'not_started' => 0];
+        $summary = ['total' => $students->count(), 'online' => 0, 'offline' => 0, 'finished' => 0, 'locked' => 0, 'cheated' => 0, 'not_started' => 0];
         $rows = $students->map(function ($student) use ($attempts, $totalQuestions, $now, &$summary): array {
             $attempt = $attempts->get($student->enrollment_id);
             $status = 'not_started';
             if ($attempt) {
-                if ($attempt->status === 'locked') {
+                if ($attempt->status === 'cheated') {
+                    $status = 'cheated';
+                } elseif ($attempt->status === 'locked') {
                     $status = 'locked';
                 } elseif ($attempt->status === 'in_progress') {
                     $status = $attempt->last_heartbeat_at && $attempt->last_heartbeat_at->greaterThan($now->copy()->subSeconds(45)) ? 'online' : 'offline';

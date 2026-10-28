@@ -28,7 +28,8 @@ class CorrespondenceController extends Controller
 
     public function index(Request $request): Response
     {
-        $user = $this->authorizeManager($request->user());
+        $user = $this->authorizeViewer($request->user());
+        $canManage = $user->hasRole(['admin', 'operator']);
         $filter = $request->string('filter', 'all')->toString();
         abort_unless(in_array($filter, ['all', 'incoming', 'outgoing', 'archived'], true), 404);
 
@@ -40,7 +41,8 @@ class CorrespondenceController extends Controller
             ->latest('created_at')
             ->get([
                 'id', 'letter_type', 'agenda_number', 'letter_number', 'letter_date', 'received_at',
-                'sender', 'recipient', 'subject', 'summary', 'disposition', 'status',
+                'letter_template', 'classification', 'urgency', 'sender', 'recipient', 'subject', 'summary', 'disposition', 'status',
+                'approval_required', 'approval_status', 'approved_at', 'approval_note', 'signature_method', 'document_hash',
                 'attachment_name', 'attachment_path', 'archived_at', 'created_at',
                 'letter_body', 'signer_name', 'signer_title', 'attachment_note',
             ])
@@ -49,6 +51,9 @@ class CorrespondenceController extends Controller
                 'letter_type' => $record->letter_type,
                 'agenda_number' => $record->agenda_number,
                 'letter_number' => $record->letter_number,
+                'letter_template' => $record->letter_template,
+                'classification' => $record->classification,
+                'urgency' => $record->urgency,
                 'letter_date' => $record->letter_date?->toDateString(),
                 'received_at' => $record->received_at?->toDateString(),
                 'sender' => $record->sender,
@@ -57,6 +62,12 @@ class CorrespondenceController extends Controller
                 'summary' => $record->summary,
                 'disposition' => $record->disposition,
                 'status' => $record->status,
+                'approval_required' => (bool) $record->approval_required,
+                'approval_status' => $record->approval_status,
+                'approved_at' => $record->approved_at?->toDateTimeString(),
+                'approval_note' => $record->approval_note,
+                'signature_method' => $record->signature_method,
+                'document_hash' => $record->document_hash,
                 'attachment_name' => $record->attachment_name,
                 'has_attachment' => (bool) $record->attachment_path,
                 'has_document' => filled($record->letter_body),
@@ -70,6 +81,7 @@ class CorrespondenceController extends Controller
         return Inertia::render('Administration/Correspondence/Index', [
             'records' => $records,
             'filter' => $filter,
+            'can_manage' => $canManage,
             'status_options' => [
                 'incoming' => [
                     ['value' => 'received', 'label' => 'Diterima'],
@@ -92,17 +104,22 @@ class CorrespondenceController extends Controller
         $user = $this->authorizeManager($request->user());
         $validated = $request->validate([
             'letter_type' => ['required', Rule::in(['incoming', 'outgoing'])],
+            'letter_template' => ['nullable', Rule::in(['official_school', 'invitation', 'assignment', 'statement'])],
             'letter_number' => [Rule::requiredIf($request->input('letter_type') === 'outgoing'), 'nullable', 'string', 'max:100'],
             'letter_date' => ['nullable', 'date', Rule::requiredIf(filled($request->input('letter_body')))],
             'received_at' => [Rule::requiredIf($request->input('letter_type') === 'incoming'), 'nullable', 'date'],
             'sender' => [Rule::requiredIf($request->input('letter_type') === 'incoming'), 'nullable', 'string', 'max:180'],
             'recipient' => [Rule::requiredIf($request->input('letter_type') === 'outgoing'), 'nullable', 'string', 'max:180'],
             'subject' => ['required', 'string', 'max:200'],
+            'classification' => ['nullable', 'string', 'max:40'],
+            'urgency' => ['nullable', Rule::in(['ordinary', 'urgent', 'immediate'])],
             'summary' => ['nullable', 'string', 'max:5000'],
             'letter_body' => ['nullable', 'string', 'max:20000', Rule::prohibitedIf($request->input('letter_type') !== 'outgoing')],
             'signer_name' => ['nullable', 'string', 'max:180', Rule::requiredIf(filled($request->input('letter_body')))],
             'signer_title' => ['nullable', 'string', 'max:180', Rule::requiredIf(filled($request->input('letter_body')))],
             'attachment_note' => ['nullable', 'string', 'max:255'],
+            'approval_required' => ['sometimes', 'boolean'],
+            'signature_method' => ['nullable', Rule::in(['manual', 'principal_approval'])],
             'attachment' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png', 'extensions:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
         ]);
 
@@ -133,23 +150,42 @@ class CorrespondenceController extends Controller
         $this->correspondence->assertOwnedByActor($user, $record);
         $data = $request->validate([
             'letter_number' => ['required', 'string', 'max:100'],
+            'letter_template' => ['nullable', Rule::in(['official_school', 'invitation', 'assignment', 'statement'])],
             'letter_date' => ['required', 'date'],
             'recipient' => ['required', 'string', 'max:180'],
             'subject' => ['required', 'string', 'max:200'],
+            'classification' => ['nullable', 'string', 'max:40'],
+            'urgency' => ['nullable', Rule::in(['ordinary', 'urgent', 'immediate'])],
             'summary' => ['nullable', 'string', 'max:5000'],
             'letter_body' => ['required', 'string', 'max:20000'],
             'signer_name' => ['required', 'string', 'max:180'],
             'signer_title' => ['required', 'string', 'max:180'],
             'attachment_note' => ['nullable', 'string', 'max:255'],
+            'approval_required' => ['sometimes', 'boolean'],
+            'signature_method' => ['nullable', Rule::in(['manual', 'principal_approval'])],
         ]);
         $this->correspondence->updateDraft($user, $record, $data);
 
         return back()->with('message', 'Draf surat berhasil disimpan.');
     }
 
+    public function approve(Request $request, CorrespondenceRecord $record): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole('principal'), 403);
+        $this->correspondence->assertOwnedByActor($user, $record);
+        $validated = $request->validate([
+            'decision' => ['required', Rule::in(['approve', 'reject'])],
+            'note' => ['nullable', 'string', 'max:3000'],
+        ]);
+        $this->correspondence->approve($user, $record, $validated['decision'] === 'approve', $validated['note'] ?? null);
+
+        return back()->with('message', $validated['decision'] === 'approve' ? 'Surat disetujui kepala sekolah.' : 'Surat ditolak kepala sekolah.');
+    }
+
     public function pdf(Request $request, CorrespondenceRecord $record): HttpResponse
     {
-        $user = $this->authorizeManager($request->user());
+        $user = $this->authorizeViewer($request->user());
         $this->correspondence->assertOwnedByActor($user, $record);
         abort_unless($record->letter_type === 'outgoing' && filled($record->letter_body), 404);
         $school = $record->school_snapshot ?? $this->correspondence->getSchoolLegalSnapshot((int) $record->school_id);
@@ -168,14 +204,14 @@ class CorrespondenceController extends Controller
         abort_unless(preg_match('/\A[a-f0-9]{64}\z/', $token), 404);
         $record = CorrespondenceRecord::query()->where('verification_token', $token)->whereIn('status', ['issued', 'sent', 'archived'])->firstOrFail();
 
-        return response()->view('correspondence.verify', ['record' => $record, 'school' => $record->school_snapshot])
+        return response()->view('correspondence.verify', ['record' => $record, 'school' => $record->school_snapshot ?? []])
             ->header('Cache-Control', 'no-store, private')->header('X-Robots-Tag', 'noindex, nofollow')
             ->header('Referrer-Policy', 'no-referrer')->header('X-Content-Type-Options', 'nosniff');
     }
 
     public function downloadAttachment(Request $request, int $record): StreamedResponse
     {
-        $user = $this->authorizeManager($request->user());
+        $user = $this->authorizeViewer($request->user());
         $correspondence = CorrespondenceRecord::query()
             ->where('school_id', $user->school_id)
             ->whereKey($record)
@@ -192,6 +228,13 @@ class CorrespondenceController extends Controller
     private function authorizeManager(?User $user): User
     {
         abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole(['admin', 'operator']), 403);
+
+        return $user;
+    }
+
+    private function authorizeViewer(?User $user): User
+    {
+        abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole(['admin', 'operator', 'principal']), 403);
 
         return $user;
     }

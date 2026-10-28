@@ -9,6 +9,9 @@ interface CorrespondenceRecord {
     letter_type: 'incoming' | 'outgoing';
     agenda_number: string | null;
     letter_number: string | null;
+    letter_template: string;
+    classification: string | null;
+    urgency: string | null;
     letter_date: string | null;
     received_at: string | null;
     sender: string | null;
@@ -17,6 +20,12 @@ interface CorrespondenceRecord {
     summary: string | null;
     disposition: string | null;
     status: string;
+    approval_required: boolean;
+    approval_status: string;
+    approved_at: string | null;
+    approval_note: string | null;
+    signature_method: string;
+    document_hash: string | null;
     attachment_name: string | null;
     has_attachment: boolean;
     archived_at: string | null;
@@ -31,6 +40,7 @@ const props = defineProps<{
     records: CorrespondenceRecord[];
     filter: 'all' | 'incoming' | 'outgoing' | 'archived';
     status_options: { incoming: StatusOption[]; outgoing: StatusOption[] };
+    can_manage: boolean;
 }>();
 
 const page = usePage();
@@ -38,6 +48,9 @@ const flashMessage = computed(() => (page.props.flash as { message?: string }).m
 const form = useForm({
     letter_type: 'incoming' as 'incoming' | 'outgoing',
     letter_number: '',
+    letter_template: 'official_school',
+    classification: '',
+    urgency: 'ordinary',
     letter_date: '',
     received_at: '',
     sender: '',
@@ -48,6 +61,8 @@ const form = useForm({
     signer_name: '',
     signer_title: '',
     attachment_note: '',
+    approval_required: false,
+    signature_method: 'manual',
     attachment: null as File | null,
 });
 
@@ -78,6 +93,9 @@ function editDraft(record: CorrespondenceRecord) {
     form.clearErrors();
     form.letter_type = 'outgoing';
     form.letter_number = record.letter_number ?? '';
+    form.letter_template = record.letter_template || 'official_school';
+    form.classification = record.classification ?? '';
+    form.urgency = record.urgency ?? 'ordinary';
     form.letter_date = record.letter_date ?? '';
     form.recipient = record.recipient ?? '';
     form.subject = record.subject;
@@ -86,6 +104,8 @@ function editDraft(record: CorrespondenceRecord) {
     form.signer_name = record.signer_name ?? '';
     form.signer_title = record.signer_title ?? '';
     form.attachment_note = record.attachment_note ?? '';
+    form.approval_required = record.approval_required;
+    form.signature_method = record.signature_method || 'manual';
     creating.value = true;
     nextTick(() => document.getElementById('form-surat')?.scrollIntoView({ behavior: 'smooth' }));
 }
@@ -127,6 +147,12 @@ function saveRecord() {
         preserveScroll: true,
         onSuccess: () => { form.reset(); creating.value = false; },
     });
+}
+
+function approveRecord(record: CorrespondenceRecord, decision: 'approve' | 'reject') {
+    const message = decision === 'approve' ? 'Setujui surat ini untuk diterbitkan?' : 'Tolak surat ini agar operator memperbaikinya?';
+    if (!window.confirm(message)) return;
+    router.patch(`/administrasi/persuratan/surat/${record.id}/persetujuan`, { decision }, { preserveScroll: true });
 }
 
 function setAttachment(event: Event) {
@@ -173,7 +199,7 @@ function updateStatus(record: CorrespondenceRecord) {
 
             <section class="panel correspondence-panel workflow">
                 <div class="table-title"><div><h2>Mulai dari sini</h2><p>Pilih pekerjaan yang ingin dilakukan.</p></div></div>
-                <div class="workflow-actions">
+                <div v-if="can_manage" class="workflow-actions">
                     <button type="button" class="primary-button" @click="startNew('incoming')">Catat surat masuk</button>
                     <button type="button" class="secondary-button" @click="startNew('outgoing')">Buat surat keluar</button>
                 </div>
@@ -181,7 +207,7 @@ function updateStatus(record: CorrespondenceRecord) {
                 <p class="workflow-help">QR memeriksa pencatatan surat. QR tidak memastikan isi dokumen tidak berubah dan bukan tanda tangan elektronik.</p>
             </section>
 
-            <section v-show="creating" id="form-surat" class="panel correspondence-panel">
+            <section v-if="can_manage" v-show="creating" id="form-surat" class="panel correspondence-panel">
                 <div class="table-title"><div><h2>{{ editingId ? 'Ubah draf surat keluar' : form.letter_type === 'incoming' ? 'Catat surat masuk' : 'Buat surat keluar' }}</h2><p>Nomor surat keluar diisi manual sesuai penomoran sekolah.</p></div></div>
                 <form class="correspondence-form" enctype="multipart/form-data" @submit.prevent="saveRecord">
                     <label v-if="!editingId">Jenis surat
@@ -194,6 +220,16 @@ function updateStatus(record: CorrespondenceRecord) {
                     <label v-if="form.letter_type === 'outgoing'">Nomor surat keluar <span class="required-mark">*</span>
                         <input v-model="form.letter_number" maxlength="100" required autocomplete="off" placeholder="Contoh: 001/ADM/2026" />
                         <span v-if="form.errors.letter_number" class="field-error">{{ form.errors.letter_number }}</span>
+                    </label>
+                    <label v-if="form.letter_type === 'outgoing'">Format surat
+                        <select v-model="form.letter_template">
+                            <option value="official_school">Surat resmi sekolah</option>
+                            <option value="invitation">Undangan</option>
+                            <option value="assignment">Surat tugas</option>
+                            <option value="statement">Surat keterangan</option>
+                        </select>
+                        <span class="field-hint">Struktur kop, identitas, nomor, perihal, isi, dan penandatangan dijaga konsisten.</span>
+                        <span v-if="form.errors.letter_template" class="field-error">{{ form.errors.letter_template }}</span>
                     </label>
                     <label v-else>Nomor surat dari pengirim
                         <input v-model="form.letter_number" maxlength="100" autocomplete="off" />
@@ -219,6 +255,16 @@ function updateStatus(record: CorrespondenceRecord) {
                         <input v-model="form.subject" maxlength="200" required autocomplete="off" />
                         <span v-if="form.errors.subject" class="field-error">{{ form.errors.subject }}</span>
                     </label>
+                    <label v-if="form.letter_type === 'outgoing'">Sifat surat
+                        <select v-model="form.urgency">
+                            <option value="ordinary">Biasa</option>
+                            <option value="urgent">Segera</option>
+                            <option value="immediate">Sangat segera</option>
+                        </select>
+                    </label>
+                    <label v-if="form.letter_type === 'outgoing'">Klasifikasi
+                        <input v-model="form.classification" maxlength="40" placeholder="Contoh: Umum" />
+                    </label>
                     <label class="correspondence-wide">Ringkasan
                         <textarea v-model="form.summary" rows="2" maxlength="5000" />
                         <span v-if="form.errors.summary" class="field-error">{{ form.errors.summary }}</span>
@@ -240,6 +286,10 @@ function updateStatus(record: CorrespondenceRecord) {
                         <label>Keterangan lampiran surat
                             <input v-model="form.attachment_note" maxlength="180" placeholder="Contoh: 1 berkas" />
                             <span v-if="form.errors.attachment_note" class="field-error">{{ form.errors.attachment_note }}</span>
+                        </label>
+                        <label class="correspondence-wide approval-option">
+                            <span><input v-model="form.approval_required" type="checkbox" /> Minta persetujuan kepala sekolah sebelum diterbitkan</span>
+                            <small>Persetujuan tercatat sebagai audit. Ini bukan tanda tangan elektronik tersertifikasi.</small>
                         </label>
                     </template>
                     <label v-if="!editingId" class="correspondence-wide">Lampiran (PDF, Office, JPG/PNG; maks. 10 MB)
@@ -294,13 +344,18 @@ function updateStatus(record: CorrespondenceRecord) {
                         <p v-else-if="record.letter_type === 'outgoing' && record.status === 'sent' && record.has_document" class="workflow-help">PDF surat memuat QR untuk memeriksa pencatatan.</p>
                         <div class="correspondence-footer">
                             <div class="record-actions">
-                                <button v-if="record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="row-action-button" type="button" @click="editDraft(record)">Ubah draf</button>
+                                <button v-if="can_manage && record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="row-action-button" type="button" @click="editDraft(record)">Ubah draf</button>
                                 <a v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" class="row-action-button">{{ record.status === 'draft' ? 'Periksa PDF draf' : 'Buka PDF surat' }}</a>
                             <a v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="row-action-button">
                                 Unduh {{ record.attachment_name || 'lampiran' }}
                             </a>
                             </div>
-                            <form v-if="nextStatuses(record).length" class="status-update-form" @submit.prevent="updateStatus(record)">
+                            <div v-if="!can_manage && record.approval_required && record.status === 'draft' && record.approval_status === 'pending'" class="approval-actions">
+                                <span class="approval-pending">Menunggu persetujuan kepala sekolah</span>
+                                <button class="primary-button" type="button" @click="approveRecord(record, 'approve')">Setujui</button>
+                                <button class="secondary-button" type="button" @click="approveRecord(record, 'reject')">Tolak</button>
+                            </div>
+                            <form v-if="can_manage && nextStatuses(record).length" class="status-update-form" @submit.prevent="updateStatus(record)">
                                 <label class="sr-only" :for="`next-status-${record.id}`">Status berikutnya</label>
                                 <select :id="`next-status-${record.id}`" v-model="targets[record.id]">
                                     <option v-for="status in nextStatuses(record)" :key="status.value" :value="status.value">{{ status.label }}</option>
@@ -347,6 +402,11 @@ function updateStatus(record: CorrespondenceRecord) {
 .secondary-button { background: white; color: #3157a4; white-space: nowrap; }
 .primary-button:disabled { cursor: wait; opacity: .6; }
 .required-mark, .field-error { color: #b42318; }
+.field-hint, .approval-option small { color: #64748b; font-size: .76rem; font-weight: 500; line-height: 1.4; }
+.approval-option { gap: .25rem !important; }
+.approval-option input { width: auto; min-height: auto; margin-right: .35rem; }
+.approval-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; border-top: 1px solid #e2e8f0; padding-top: .75rem; }
+.approval-pending { color: #92500a; font-size: .82rem; font-weight: 700; }
 .field-error { font-size: .78rem; font-weight: 500; }
 .correspondence-tabs { display: flex; flex-wrap: wrap; gap: .5rem; border-bottom: 1px solid #dbe3ef; padding: 0 0 .8rem; }
 .correspondence-tab { border: 1px solid #dbe3ef; border-radius: 999px; padding: .45rem .85rem; color: #42526b; font-size: .85rem; font-weight: 600; text-decoration: none; }

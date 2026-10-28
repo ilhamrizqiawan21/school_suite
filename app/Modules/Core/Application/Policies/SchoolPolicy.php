@@ -40,6 +40,12 @@ class SchoolPolicy
             return false;
         }
 
+        // Kepala sekolah mendapat akses monitoring profil sekolah secara baca-saja.
+        // Hak ubah tetap ditutup oleh update() di bawah.
+        if ($actor->hasRole('principal')) {
+            return true;
+        }
+
         return $actor->hasPermission(PermissionEnum::SCHOOL_VIEW->value);
     }
 

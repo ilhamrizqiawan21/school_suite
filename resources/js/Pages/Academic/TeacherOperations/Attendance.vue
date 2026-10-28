@@ -98,7 +98,7 @@ function applyBulkStatus() {
     bulkMessage.value = `${indices.length} guru ditandai ${statuses.find(status => status.value === bulkStatus.value)?.label}. Periksa lalu klik Simpan absensi.`;
 }
 function resetChanges() {
-    if (busy.value) return;
+    if (busy.value || !changedCount.value || !window.confirm('Batalkan perubahan absensi yang belum disimpan?')) return;
     form.records = initialRecords();
     bulkMessage.value = '';
     form.clearErrors();

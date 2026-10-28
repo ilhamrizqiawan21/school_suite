@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Modules\Administration\Interface\Http\Controllers\CorrespondenceController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'role:admin,operator', 'throttle:sensitive'])
+Route::middleware(['auth', 'role:admin,operator,principal', 'throttle:sensitive'])
     ->prefix('administrasi/persuratan')
     ->name('administration.correspondence.')
     ->group(function (): void {
@@ -19,3 +19,7 @@ Route::middleware(['auth', 'role:admin,operator', 'throttle:sensitive'])
 
 Route::get('/verifikasi-surat/{token}', [CorrespondenceController::class, 'verify'])
     ->middleware('throttle:60,1')->name('administration.correspondence.verify');
+
+Route::middleware(['auth', 'role:principal', 'throttle:sensitive'])
+    ->patch('/administrasi/persuratan/surat/{record}/persetujuan', [CorrespondenceController::class, 'approve'])
+    ->name('administration.correspondence.approve');

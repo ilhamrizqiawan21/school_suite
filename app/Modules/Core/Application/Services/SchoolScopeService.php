@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Application\Services;
 
 use App\Modules\Core\Infrastructure\Models\School;
+use Illuminate\Support\Facades\Storage;
 
 class SchoolScopeService
 {
@@ -29,11 +30,23 @@ class SchoolScopeService
         ];
     }
 
-    /** @return array{name:?string, legal_name:?string, npsn:?string, address:?string, phone:?string, email:?string, website:?string} */
+    /** @return array{name:?string, legal_name:?string, npsn:?string, address:?string, phone:?string, email:?string, website:?string, level:?string, school_status:?string, accreditation:?string, principal_name:?string} */
     public function getSchoolLegalSnapshot(int $schoolId): array
     {
         $school = School::query()->findOrFail($schoolId);
 
-        return $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website']);
+        return $school->only(['name', 'legal_name', 'npsn', 'address', 'phone', 'email', 'website', 'level', 'school_status', 'accreditation', 'principal_name']);
+    }
+
+    public function getSchoolLogoDataUri(int $schoolId): ?string
+    {
+        $school = School::query()->findOrFail($schoolId);
+        if (! $school->logo_path || ! Storage::disk('local')->exists($school->logo_path)) {
+            return null;
+        }
+
+        $mime = Storage::disk('local')->mimeType($school->logo_path) ?: 'image/png';
+
+        return 'data:'.$mime.';base64,'.base64_encode(Storage::disk('local')->get($school->logo_path));
     }
 }

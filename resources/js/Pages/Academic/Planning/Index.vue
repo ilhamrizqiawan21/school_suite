@@ -67,7 +67,7 @@ function loadSelectedPlan(plan: SelectedPlan | null) {
 
 watch(() => props.selected_plan, (plan) => loadSelectedPlan(plan), { immediate: true });
 
-function startNewPlan() {
+function resetNewPlan() {
     selectedId.value = null;
     packageChoice.value = 'merdeka';
     form.reset();
@@ -78,8 +78,16 @@ function startNewPlan() {
     form.clearErrors();
     notice.value = '';
 }
+function confirmDiscardChanges(message = 'Ada perubahan ATP/Silabus yang belum disimpan. Buang perubahan?') {
+    return !form.isDirty || window.confirm(message);
+}
+function startNewPlan() {
+    if (!confirmDiscardChanges()) return;
+    resetNewPlan();
+}
 
 function selectPlan(id: number) {
+    if (id === selectedId.value || !confirmDiscardChanges()) return;
     loadingPlan.value = true;
     notice.value = '';
     router.get('/akademik/perangkat/atp', { plan_id: id }, {
@@ -118,11 +126,20 @@ function addUnit(chapterId?: string | number) {
     form.content.units.push({ id: newKey('unit'), chapter_id: parent, code: '', objective: '', material: '', jp: 2, kkm: null });
 }
 function removeUnit(id: string | number) {
+    const unit = form.content.units.find((row) => row.id === id);
+    if (!window.confirm(`Hapus unit “${unit?.code || unit?.objective || 'pembelajaran'}” dari ATP/Silabus?`)) return;
     form.content.units = form.content.units.filter((unit) => unit.id !== id);
 }
 function removeChapter(id: string | number) {
+    const chapter = form.content.chapters.find((row) => row.id === id);
+    const removedUnits = form.content.units.filter((unit) => unit.chapter_id === id).length;
+    if (!window.confirm(`Hapus bab “${chapter?.title || 'tanpa judul'}”${removedUnits ? ` beserta ${removedUnits} unit pembelajaran` : ''} dari ATP/Silabus?`)) return;
     form.content.chapters = form.content.chapters.filter((chapter) => chapter.id !== id);
     form.content.units = form.content.units.filter((unit) => unit.chapter_id !== id);
+}
+function removeReference(reference: ReferenceRow, label: string) {
+    if (!window.confirm(`Hapus ${label}?`)) return;
+    form.content.references.splice(form.content.references.indexOf(reference), 1);
 }
 
 function savePlan() {
@@ -147,7 +164,7 @@ function deletePlan() {
         preserveScroll: true,
         onSuccess: () => {
             selectedId.value = null;
-            startNewPlan();
+            resetNewPlan();
             notice.value = 'ATP/Silabus berhasil dihapus.';
         },
     });
@@ -216,7 +233,7 @@ function deletePlan() {
                             <div class="section-heading"><div><span class="section-kicker">Landasan kurikulum</span><h3>{{ ['merdeka', 'kbc'].includes(form.curriculum) ? 'Capaian Pembelajaran (CP)' : form.curriculum === 'k13' ? 'Kompetensi Inti (KI)' : 'Referensi &amp; capaian' }}</h3><p>{{ ['merdeka', 'kbc'].includes(form.curriculum) ? 'Catat CP per fase dan elemen. Capaian ini akan dibawa ke Modul Ajar dan paket administrasi.' : form.curriculum === 'k13' ? 'Isi KI-1 sampai KI-4 atau tambahkan referensi capaian lainnya.' : 'Tambahkan acuan kurikulum yang menjadi dasar perencanaan.' }}</p></div><div class="reference-actions"><button v-if="form.curriculum === 'k13'" type="button" class="action-secondary" @click="addK13Presets">Isi contoh KI-1 sampai KI-4</button><button v-if="['merdeka', 'kbc'].includes(form.curriculum)" type="button" class="action-secondary" @click="addCp">＋ Tambah CP</button><button type="button" class="action-secondary" @click="addReference">＋ Tambah referensi</button></div></div>
                             <div v-if="['merdeka', 'kbc'].includes(form.curriculum)" class="cp-list">
                                 <article v-for="(reference, index) in cpRows" :key="reference.key" class="cp-card">
-                                    <div class="cp-card-heading"><span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span><strong>Capaian Pembelajaran</strong><button type="button" class="remove-button" :aria-label="`Hapus CP ${index + 1}`" @click="form.content.references.splice(form.content.references.indexOf(reference), 1)">Hapus</button></div>
+                                    <div class="cp-card-heading"><span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span><strong>Capaian Pembelajaran</strong><button type="button" class="remove-button" :aria-label="`Hapus CP ${index + 1}`" @click="removeReference(reference, `CP ${index + 1}`)">Hapus</button></div>
                                     <div class="cp-fields"><label class="field"><span>Fase</span><select v-model="reference.phase" required><option v-for="phase in ['A', 'B', 'C', 'D', 'E', 'F']" :key="phase" :value="phase">Fase {{ phase }}</option></select></label><label class="field"><span>Elemen (opsional)</span><input v-model="reference.element" maxlength="100" placeholder="Contoh: Bilangan" /></label><label class="field cp-content"><span>Deskripsi CP</span><textarea v-model="reference.content" rows="5" maxlength="10000" required placeholder="Tuliskan capaian pembelajaran untuk fase dan elemen ini…" /></label></div>
                                 </article>
                                 <div v-if="!cpRows.length" class="section-empty"><strong>CP belum ditambahkan</strong><br />Gunakan “Tambah CP”, lalu isi fase, elemen, dan deskripsi capaian.</div>
@@ -225,7 +242,7 @@ function deletePlan() {
                                 <article v-for="(reference, index) in generalReferences" :key="reference.key" class="reference-row">
                                     <span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span>
                                     <div class="reference-fields"><label class="field"><span>Nama referensi</span><input v-model="reference.name" placeholder="Contoh: Capaian Pembelajaran Fase D" /></label><label class="field"><span>Isi / catatan</span><textarea v-model="reference.content" rows="2" placeholder="Tuliskan capaian atau ringkasan acuan…" /></label></div>
-                                    <button type="button" class="remove-button" :aria-label="`Hapus referensi ${reference.name || index + 1}`" @click="form.content.references.splice(form.content.references.indexOf(reference), 1)">Hapus</button>
+                                    <button type="button" class="remove-button" :aria-label="`Hapus referensi ${reference.name || index + 1}`" @click="removeReference(reference, `referensi ${reference.name || index + 1}`)">Hapus</button>
                                 </article>
                             </div>
                             <div v-if="!form.content.references.length" class="section-empty">Belum ada referensi kurikulum. Tambahkan CP atau acuan yang relevan.</div>

@@ -5,13 +5,20 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Vite;
 use Tests\TestCase;
 
 class DeploymentConfigurationTest extends TestCase
 {
     public function test_security_headers_are_present_in_responses(): void
     {
+        if (Schema::hasTable('failed_jobs')) {
+            DB::table('failed_jobs')->delete();
+        }
+
         $response = $this->get('/up');
 
         $response->assertOk();
@@ -20,6 +27,86 @@ class DeploymentConfigurationTest extends TestCase
         $response->assertHeader('X-XSS-Protection', '1; mode=block');
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    }
+
+    public function test_local_vite_dev_server_is_allowed_by_content_security_policy(): void
+    {
+        $hotFile = tempnam(sys_get_temp_dir(), 'school-suite-vite-hot-');
+        File::put($hotFile, 'http://127.0.0.1:5173');
+        Vite::useHotFile($hotFile);
+        config(['app.env' => 'local']);
+
+        try {
+            $response = $this->get('/up');
+
+            $response->assertHeader(
+                'Content-Security-Policy',
+                "default-src 'self'; script-src 'self' 'unsafe-inline' http://127.0.0.1:5173; style-src 'self' 'unsafe-inline' http://127.0.0.1:5173; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' http://127.0.0.1:5173 ws://127.0.0.1:5173; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+            );
+        } finally {
+            Vite::useHotFile(public_path('/hot'));
+            File::delete($hotFile);
+        }
+    }
+
+    public function test_production_content_security_policy_does_not_allow_vite_dev_server(): void
+    {
+        $hotFile = tempnam(sys_get_temp_dir(), 'school-suite-vite-hot-');
+        File::put($hotFile, 'http://127.0.0.1:5173');
+        Vite::useHotFile($hotFile);
+        config(['app.env' => 'production']);
+
+        try {
+            $response = $this->get('/up');
+
+            $response->assertHeader(
+                'Content-Security-Policy',
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+            );
+        } finally {
+            Vite::useHotFile(public_path('/hot'));
+            File::delete($hotFile);
+        }
+    }
+
+    public function test_staging_content_security_policy_does_not_allow_vite_dev_server(): void
+    {
+        $hotFile = tempnam(sys_get_temp_dir(), 'school-suite-vite-hot-');
+        File::put($hotFile, 'http://127.0.0.1:5173');
+        Vite::useHotFile($hotFile);
+        config(['app.env' => 'staging']);
+
+        try {
+            $response = $this->get('/up');
+
+            $response->assertHeader(
+                'Content-Security-Policy',
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+            );
+        } finally {
+            Vite::useHotFile(public_path('/hot'));
+            File::delete($hotFile);
+        }
+    }
+
+    public function test_malformed_vite_hot_url_does_not_relax_content_security_policy(): void
+    {
+        $hotFile = tempnam(sys_get_temp_dir(), 'school-suite-vite-hot-');
+        File::put($hotFile, 'not a valid URL');
+        Vite::useHotFile($hotFile);
+        config(['app.env' => 'local']);
+
+        try {
+            $response = $this->get('/up');
+
+            $response->assertHeader(
+                'Content-Security-Policy',
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+            );
+        } finally {
+            Vite::useHotFile(public_path('/hot'));
+            File::delete($hotFile);
+        }
     }
 
     public function test_deployment_artifacts_exist_and_are_executable(): void
@@ -58,8 +145,21 @@ class DeploymentConfigurationTest extends TestCase
         $this->assertStringContainsString('composer install', $deployContents);
         $this->assertStringContainsString('artisan migrate', $deployContents);
         $this->assertStringContainsString('HEALTH_CHECK_URL wajib diisi', $deployContents);
+        $this->assertStringContainsString('validate-production-env.php', $deployContents);
+        $this->assertStringContainsString('DEPLOY_SCRIPT_DIR', $deployContents);
         $this->assertStringContainsString('sudo systemctl stop school-suite-worker', $deployContents);
         $this->assertStringContainsString('rm -f "${CURRENT_SYMLINK}"', $deployContents);
+
+        $environmentPreflight = base_path('deploy/validate-production-env.php');
+        $this->assertTrue(File::exists($environmentPreflight));
+        $this->assertStringContainsString('BACKUP_PASSWORD', File::get($environmentPreflight));
+
+        $environmentExample = File::get(base_path('.env.example'));
+        $this->assertStringContainsString('APP_ENV=production', $environmentExample);
+        $this->assertStringContainsString('APP_DEBUG=false', $environmentExample);
+        $this->assertStringContainsString('APP_URL=https://example.com', $environmentExample);
+        $this->assertStringContainsString('LOG_LEVEL=info', $environmentExample);
+        $this->assertStringContainsString('SESSION_SECURE_COOKIE=true', $environmentExample);
 
         $healthCheckContents = File::get(base_path('deploy/health-check.sh'));
         $this->assertStringContainsString('--connect-timeout 5 --max-time 15', $healthCheckContents);

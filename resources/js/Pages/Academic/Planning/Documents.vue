@@ -150,26 +150,46 @@ watch(() => props.active_term, (term) => { if (!isEditing.value) form.academic_t
 
 function resetDocument() {
     activeId.value = null; form.clearErrors(); form.reset(); form.type = 'prota'; form.title = documentTypes[0].label;
-    form.academic_term_id = props.active_term?.id ?? null; form.semester = null; form.plan_id = null; form.content = starterContent('prota'); notice.value = '';
+    form.academic_term_id = props.active_term?.id ?? null; form.semester = null; form.plan_id = null; form.content = starterContent('prota'); form.defaults(); notice.value = '';
 }
-function createDocument() { resetDocument(); }
+function confirmDiscardChanges(message = 'Ada perubahan dokumen yang belum disimpan. Buang perubahan?') {
+    return !form.isDirty || window.confirm(message);
+}
+function createDocument() {
+    if (!confirmDiscardChanges()) return;
+    resetDocument();
+}
 function editDocument(document: PlanningDocument) {
+    if (!confirmDiscardChanges()) return;
     activeId.value = document.id; form.clearErrors(); form.type = document.type; form.title = document.title;
     form.academic_term_id = props.active_term?.id ?? null; form.semester = document.semester; form.plan_id = document.plan_id ?? null;
     form.content = mergeContent(document.type, document.content ?? {}); notice.value = '';
     if (selectedPlan.value && ['prota', 'promes', 'kktp'].includes(form.type)) syncUnitsFromPlan();
+    form.defaults();
 }
-function changeType(type: DocumentType) { if (!isEditing.value && type !== form.type) form.type = type; }
+function changeType(type: DocumentType) {
+    if (isEditing.value || type === form.type || !confirmDiscardChanges('Mengganti jenis dokumen akan membuang isian dokumen baru saat ini. Lanjutkan?')) return;
+    form.type = type;
+}
 function addChapter() { form.content.chapters.push({ id: newKey('chapter'), title: '', semester: form.semester ?? 'ganjil' }); }
-function removeChapter(id: string | number) { form.content.chapters = chapters.value.filter((row) => row.id !== id); form.content.units = units.value.filter((row) => row.chapter_id !== id); }
+function removeChapter(id: string | number) {
+    const chapter = chapters.value.find((row) => row.id === id);
+    const removedUnits = units.value.filter((row) => row.chapter_id === id).length;
+    if (!window.confirm(`Hapus bab “${chapter?.title || 'tanpa judul'}”${removedUnits ? ` beserta ${removedUnits} unit pembelajaran` : ''} dari dokumen?`)) return;
+    form.content.chapters = chapters.value.filter((row) => row.id !== id); form.content.units = units.value.filter((row) => row.chapter_id !== id);
+}
 function addUnit(chapterId?: string | number) { form.content.units.push({ id: newKey('unit'), chapter_id: chapterId ?? chapters.value[0]?.id ?? '', code: '', objective: '', material: '', jp: 2, ...(form.type === 'kktp' ? { kkm: null } : {}) }); }
-function removeUnit(id: string | number) { form.content.units = units.value.filter((row) => row.id !== id); }
+function removeUnit(id: string | number) {
+    const unit = units.value.find((row) => row.id === id);
+    if (!window.confirm(`Keluarkan unit “${unitLabel(unit ?? {})}” dari dokumen?`)) return;
+    form.content.units = units.value.filter((row) => row.id !== id);
+}
 function chapterName(id: string | number) { return chapters.value.find((chapter) => String(chapter.id) === String(id))?.title || 'Tanpa bab'; }
 function saveDocument() {
     notice.value = '';
     if (!form.academic_term_id) { form.setError('academic_term_id', 'Periode akademik aktif belum tersedia.'); return; }
     if (!form.plan_id) { form.setError('plan_id', 'Pilih ATP/Silabus sebelum menyimpan dokumen.'); return; }
-    const options = { preserveScroll: true, onSuccess: () => { notice.value = 'Dokumen berhasil disimpan.'; } };
+    const options = { preserveScroll: true, onSuccess: () => { form.defaults(); notice.value = 'Dokumen berhasil disimpan.'; } };
     if (activeId.value !== null) form.put(`${endpoint}/${activeId.value}`, options); else form.post(endpoint, options);
 }
 function deleteDocument(document: PlanningDocument) {

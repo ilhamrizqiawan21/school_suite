@@ -21,6 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommunicationController extends Controller
 {
+    private const VIEWER_ROLES = ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'];
+
     private const MANAGER_ROLES = ['admin', 'operator', 'teacher', 'homeroom'];
 
     public function __construct(
@@ -30,6 +32,7 @@ class CommunicationController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorizeViewer($request);
         $user = $request->user();
         $schoolId = (int) $user->school_id;
         $activeTerm = $this->academicQuery->getActiveTerm($schoolId);
@@ -120,7 +123,7 @@ class CommunicationController extends Controller
 
     public function destroyAnnouncement(Request $request, Announcement $announcement): RedirectResponse
     {
-        $this->authorizeOwnedManager($request, $announcement->school_id);
+        $this->authorizeOwnedManager($request, (int) $announcement->school_id, (int) $announcement->author_id);
         if ($announcement->attachment_path) {
             Storage::disk('local')->delete($announcement->attachment_path);
         }
@@ -131,6 +134,7 @@ class CommunicationController extends Controller
 
     public function downloadAttachment(Request $request, Announcement $announcement): StreamedResponse
     {
+        $this->authorizeViewer($request);
         $user = $request->user();
         $classIds = $this->visibleClassIds($request);
         abort_unless(
@@ -185,7 +189,7 @@ class CommunicationController extends Controller
 
     public function destroyEvent(Request $request, AcademicCalendarEvent $event): RedirectResponse
     {
-        $this->authorizeOwnedManager($request, $event->school_id);
+        $this->authorizeOwnedManager($request, (int) $event->school_id, (int) $event->created_by);
         $event->delete();
 
         return back()->with('message', 'Agenda kalender berhasil dihapus.');
@@ -196,38 +200,51 @@ class CommunicationController extends Controller
         abort_unless($request->user()->hasRole(self::MANAGER_ROLES), 403);
     }
 
-    private function authorizeOwnedManager(Request $request, int $schoolId): void
+    private function authorizeViewer(Request $request): void
+    {
+        abort_unless($request->user()->hasRole(self::VIEWER_ROLES), 403);
+    }
+
+    private function authorizeOwnedManager(Request $request, int $schoolId, int $ownerId): void
     {
         $this->authorizeManager($request);
-        abort_unless((int) $request->user()->school_id === $schoolId, 404);
+        $user = $request->user();
+        abort_unless((int) $user->school_id === $schoolId, 404);
+        abort_unless(
+            $user->hasRole(['admin', 'operator'])
+            || ($user->hasRole(['teacher', 'homeroom']) && (int) $user->id === $ownerId),
+            403
+        );
     }
 
     /** @return list<int> */
     private function visibleClassIds(Request $request): array
     {
         $user = $request->user();
-        if (! $user->hasRole('student')) {
-            $activeTerm = $this->academicQuery->getActiveTerm((int) $user->school_id);
-
-            $classIds = $activeTerm
-                ? $this->academicQuery->getClassGroups((int) $user->school_id, $activeTerm->academic_year_id)
-                    ->pluck('id')->map(fn ($id) => (int) $id)->all()
-                : [];
-
-            if ($user->hasRole(['teacher', 'homeroom'])) {
-                return $this->academicQuery->getClassGroupIdsTaughtByTeacher((int) $user->school_id, (int) $user->id, $classIds);
-            }
-
-            return $classIds;
-        }
-
         $schoolId = (int) $user->school_id;
         $activeTerm = $this->academicQuery->getActiveTerm($schoolId);
 
-        return $this->academicQuery->getStudentClassGroupIds(
-            (int) $user->id,
-            $activeTerm?->id,
-            $schoolId
-        );
+        if ($user->hasRole('student')) {
+            return $this->academicQuery->getStudentClassGroupIds(
+                (int) $user->id,
+                $activeTerm?->id,
+                $schoolId
+            );
+        }
+
+        $classIds = $activeTerm
+            ? $this->academicQuery->getClassGroups($schoolId, $activeTerm->academic_year_id)
+                ->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : [];
+
+        if ($user->hasRole(['teacher', 'homeroom'])) {
+            return $this->academicQuery->getClassGroupIdsTaughtByTeacher($schoolId, (int) $user->id, $classIds);
+        }
+
+        if ($user->hasRole(['admin', 'operator', 'principal'])) {
+            return $classIds;
+        }
+
+        return [];
     }
 }

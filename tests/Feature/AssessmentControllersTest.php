@@ -386,15 +386,49 @@ class AssessmentControllersTest extends TestCase
                 ->where('snapshot.summary.not_started', 1)
                 ->has('snapshot.students', 2));
 
-        $this->actingAs($this->adminUser)->post(route('exams.unlock', $attempt))->assertRedirect();
-        $this->assertSame('in_progress', $attempt->fresh()->status);
+        $this->actingAs($this->adminUser)->post(route('exams.unlock', $attempt))->assertStatus(422);
+        $this->assertSame('locked', $attempt->fresh()->status);
 
         $oldExpiry = $attempt->fresh()->expires_at;
-        $this->actingAs($this->adminUser)->post(route('exams.extend', $attempt), ['minutes' => 10])->assertRedirect();
-        $this->assertTrue($attempt->fresh()->expires_at->greaterThan($oldExpiry));
+        $this->actingAs($this->adminUser)->post(route('exams.extend', $attempt), ['minutes' => 10])->assertStatus(422);
+        $this->assertTrue($attempt->fresh()->expires_at->equalTo($oldExpiry));
 
         $this->actingAs($this->adminUser)->post(route('exams.force-finish', $attempt))->assertRedirect();
-        $this->assertSame('graded', $attempt->fresh()->status);
+        $this->assertSame('cheated', $attempt->fresh()->status);
+        $this->assertSame(0.0, (float) $attempt->fresh()->score);
+    }
+
+    public function test_three_violations_terminate_attempt_zero_score_and_notify_staff(): void
+    {
+        $question = ExamQuestion::create([
+            'school_id' => $this->school->id, 'owner_id' => $this->adminUser->id,
+            'type' => 'multiple_choice', 'prompt' => 'Soal anti curang', 'options' => ['A', 'B'],
+            'correct_answer' => 'A', 'points' => 10, 'is_active' => true, 'current_version' => 1,
+        ]);
+        $exam = Exam::create([
+            'school_id' => $this->school->id, 'teaching_assignment_id' => TeachingAssignment::query()->value('id'),
+            'created_by' => $this->adminUser->id, 'title' => 'CBT anti curang', 'starts_at' => now()->subMinute(),
+            'ends_at' => now()->addHour(), 'duration_minutes' => 30, 'max_violations' => 3, 'status' => 'published',
+        ]);
+        $exam->items()->create(['exam_question_id' => $question->id, 'sequence' => 1, 'points' => 10]);
+        $attempt = ExamAttempt::create([
+            'exam_id' => $exam->id, 'enrollment_id' => $this->enrollment->id, 'status' => 'in_progress',
+            'started_at' => now(), 'expires_at' => now()->addMinutes(30), 'last_heartbeat_at' => now(),
+            'question_order' => [$question->id], 'random_seed' => 7,
+        ]);
+
+        foreach (['tab_hidden', 'copy_attempt', 'paste_attempt'] as $type) {
+            $this->actingAs($this->studentUser)->post(route('exams.violation', $attempt), ['type' => $type])->assertRedirect();
+        }
+
+        $attempt->refresh();
+        $this->assertSame('cheated', $attempt->status);
+        $this->assertSame(3, $attempt->violation_count);
+        $this->assertSame(0.0, (float) $attempt->score);
+        $this->assertSame(1, $attempt->events()->where('type', 'cheating_terminated')->count());
+        $this->assertDatabaseHas('user_notifications', ['user_id' => $this->adminUser->id, 'title' => 'Ujian dihentikan karena pelanggaran']);
+        $this->assertDatabaseHas('user_notifications', ['user_id' => $this->teacherUser->id, 'title' => 'Ujian dihentikan karena pelanggaran']);
+        $this->actingAs($this->adminUser)->post(route('exams.force-finish', $attempt))->assertStatus(422);
     }
 
     public function test_randomized_exam_options_are_stable_for_the_same_attempt(): void

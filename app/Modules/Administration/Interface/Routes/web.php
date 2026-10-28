@@ -10,7 +10,7 @@ require __DIR__.'/staff_tasks.php';
 require __DIR__.'/facilities.php';
 require __DIR__.'/correspondence.php';
 
-Route::middleware(['auth', 'throttle:sensitive'])->prefix('komunikasi')->name('communication.')->group(function () {
+Route::middleware(['auth', 'role:admin,operator,principal,teacher,homeroom,student', 'throttle:sensitive'])->prefix('komunikasi')->name('communication.')->group(function () {
     Route::get('/', [CommunicationController::class, 'index'])->name('index');
     Route::post('/pengumuman', [CommunicationController::class, 'storeAnnouncement'])->name('announcements.store');
     Route::delete('/pengumuman/{announcement}', [CommunicationController::class, 'destroyAnnouncement'])->name('announcements.destroy');

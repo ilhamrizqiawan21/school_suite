@@ -21,8 +21,6 @@ class ProfileController extends Controller
 
     public function edit(Request $request): Response
     {
-        Gate::authorize('update', $request->user());
-
         return Inertia::render('Core/Profile/Edit', ['profile' => $request->user()->only('id', 'name', 'username', 'email', 'phone', 'avatar_path')]);
     }
 

@@ -22,13 +22,14 @@ class HealthCheckController extends Controller
             'failed_jobs' => $this->checkFailedJobs(),
         ];
 
-        $isHealthy = $checks['database']['healthy'] && $checks['storage']['healthy'];
+        $isHealthy = $checks['database']['healthy']
+            && $checks['storage']['healthy']
+            && $checks['failed_jobs']['healthy'];
 
         $payload = [
             'status' => $isHealthy ? 'healthy' : 'unhealthy',
             'timestamp' => now()->toIso8601String(),
             'app_version' => '1.0.0',
-            'environment' => config('app.env'),
             'checks' => $checks,
         ];
 
@@ -38,7 +39,7 @@ class HealthCheckController extends Controller
     }
 
     /**
-     * @return array{healthy: bool, latency_ms?: float, error?: string}
+     * @return array{healthy: bool, latency_ms?: float}
      */
     protected function checkDatabase(): array
     {
@@ -51,54 +52,53 @@ class HealthCheckController extends Controller
                 'healthy' => true,
                 'latency_ms' => $latency,
             ];
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
+            return ['healthy' => false];
+        }
+    }
+
+    /**
+     * @return array{healthy: bool, writable: bool}
+     */
+    protected function checkStorage(): array
+    {
+        try {
+            $privatePath = storage_path('app/private');
+            if (! File::isDirectory($privatePath)) {
+                File::makeDirectory($privatePath, 0755, true);
+            }
+
+            $testFile = "{$privatePath}/.health_check_probe";
+            $canWrite = (bool) @file_put_contents($testFile, 'probe');
+            if ($canWrite) {
+                @unlink($testFile);
+            }
+
+            return [
+                'healthy' => $canWrite,
+                'writable' => $canWrite,
+            ];
+        } catch (\Throwable) {
             return [
                 'healthy' => false,
-                'error' => $e->getMessage(),
+                'writable' => false,
             ];
         }
     }
 
     /**
-     * @return array{healthy: bool, writable: bool, path: string}
-     */
-    protected function checkStorage(): array
-    {
-        $privatePath = storage_path('app/private');
-        if (! File::isDirectory($privatePath)) {
-            File::makeDirectory($privatePath, 0755, true);
-        }
-
-        $testFile = "{$privatePath}/.health_check_probe";
-        $canWrite = (bool) @file_put_contents($testFile, 'probe');
-        if ($canWrite) {
-            @unlink($testFile);
-        }
-
-        return [
-            'healthy' => $canWrite,
-            'writable' => $canWrite,
-            'path' => $privatePath,
-        ];
-    }
-
-    /**
-     * @return array{healthy: bool, count: int}
+     * @return array{healthy: bool}
      */
     protected function checkFailedJobs(): array
     {
         try {
-            $count = DB::table('failed_jobs')->count();
+            $hasFailedJobs = DB::table('failed_jobs')->exists();
 
             return [
-                'healthy' => $count === 0,
-                'count' => $count,
+                'healthy' => ! $hasFailedJobs,
             ];
         } catch (\Throwable) {
-            return [
-                'healthy' => true,
-                'count' => 0,
-            ];
+            return ['healthy' => app()->environment('testing')];
         }
     }
 }

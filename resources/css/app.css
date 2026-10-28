@@ -86,7 +86,8 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
 
 .row-action-button {
     display: inline-flex;
-    min-height: 38px;
+    min-width: 40px;
+    min-height: 40px;
     align-items: center;
     justify-content: center;
     gap: .4rem;
@@ -449,4 +450,42 @@ button.bg-rose-600,
 button.bg-amber-500,
 button.bg-slate-900 {
     color: #ffffff !important;
+}
+
+/* The JS affordance class is added only to table wrappers with real overflow. */
+.table-scroll-affordance {
+    position: relative;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+}
+
+@media (max-width: 720px) {
+    .table-scroll-affordance {
+        padding-bottom: 4px;
+        scrollbar-color: var(--line-strong) transparent;
+    }
+
+    .table-scroll-affordance::before,
+    .table-scroll-affordance::after {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        bottom: 4px;
+        display: none;
+        width: 1.25rem;
+        content: '';
+        pointer-events: none;
+    }
+
+    .table-scroll-affordance.can-scroll-left::before {
+        left: 0;
+        display: block;
+        background: linear-gradient(to right, var(--surface), transparent);
+    }
+
+    .table-scroll-affordance.can-scroll-right::after {
+        right: 0;
+        display: block;
+        background: linear-gradient(to left, var(--surface), transparent);
+    }
 }

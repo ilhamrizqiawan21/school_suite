@@ -26,6 +26,8 @@ class AdministrationCorrespondenceTest extends TestCase
 
     private User $teacher;
 
+    private User $principal;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -34,12 +36,13 @@ class AdministrationCorrespondenceTest extends TestCase
         Route::getRoutes()->refreshNameLookups();
 
         $this->school = School::create(['name' => 'Madrasah Persuratan', 'npsn' => '77553311', 'level' => 'MTs']);
-        $roles = collect(['admin', 'operator', 'teacher'])->mapWithKeys(fn (string $name): array => [
+        $roles = collect(['admin', 'operator', 'teacher', 'principal'])->mapWithKeys(fn (string $name): array => [
             $name => Role::create(['name' => $name, 'label' => ucfirst($name), 'is_system' => true]),
         ]);
         $this->admin = $this->makeUser($roles['admin'], 'admin@persuratan.test', 'Admin Persuratan');
         $this->operator = $this->makeUser($roles['operator'], 'operator@persuratan.test', 'Operator Persuratan');
         $this->teacher = $this->makeUser($roles['teacher'], 'teacher@persuratan.test', 'Guru Persuratan');
+        $this->principal = $this->makeUser($roles['principal'], 'principal@persuratan.test', 'Kepala Sekolah');
     }
 
     public function test_admin_and_operator_can_view_correspondence_but_teacher_cannot(): void
@@ -229,6 +232,97 @@ class AdministrationCorrespondenceTest extends TestCase
         ]);
         $this->get(route('administration.correspondence.pdf', $record))->assertNotFound();
         $this->patch(route('administration.correspondence.draft', $record), [])->assertNotFound();
+    }
+
+    public function test_principal_approval_is_required_when_requested_and_document_hash_is_published(): void
+    {
+        $data = [
+            'letter_type' => 'outgoing', 'letter_number' => '15/ADM/2026', 'letter_date' => '2026-10-28',
+            'recipient' => 'Dinas Pendidikan', 'subject' => 'Surat resmi sekolah', 'letter_body' => 'Isi surat yang telah diperiksa.',
+            'signer_name' => 'Kepala Sekolah', 'signer_title' => 'Kepala Sekolah', 'approval_required' => true,
+            'signature_method' => 'principal_approval', 'letter_template' => 'official_school', 'urgency' => 'ordinary',
+        ];
+        $this->actingAs($this->admin)->post(route('administration.correspondence.store'), $data)->assertSessionHasNoErrors();
+        $record = CorrespondenceRecord::firstOrFail();
+        $this->assertTrue($record->approval_required);
+        $this->assertSame('pending', $record->approval_status);
+
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.status', $record), ['status' => 'issued'])
+            ->assertSessionHasErrors('status');
+        $this->actingAs($this->principal)->get(route('administration.correspondence.index'))
+            ->assertOk()->assertInertia(fn ($page) => $page->where('can_manage', false)->has('records', 1));
+        $this->actingAs($this->principal)->patch(route('administration.correspondence.approve', $record), [
+            'decision' => 'approve', 'note' => 'Format dan isi telah diperiksa.',
+        ])->assertSessionHasNoErrors();
+        $record->refresh();
+        $this->assertSame('approved', $record->approval_status);
+        $this->assertNotNull($record->approved_at);
+
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.status', $record), ['status' => 'issued'])
+            ->assertSessionHasNoErrors();
+        $record->refresh();
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', (string) $record->document_hash);
+        $this->assertArrayHasKey('legal_name', $record->school_snapshot);
+        $this->actingAs($this->admin)->get(route('administration.correspondence.pdf', $record))->assertOk();
+        auth()->logout();
+        $this->get(route('administration.correspondence.verify', $record->verification_token))
+            ->assertOk()->assertSee($record->document_hash);
+    }
+
+    public function test_material_draft_edit_after_approval_requires_reapproval_before_issue(): void
+    {
+        $data = [
+            'letter_type' => 'outgoing', 'letter_number' => '16/ADM/2026', 'letter_date' => '2026-10-28',
+            'recipient' => 'Dinas Pendidikan', 'subject' => 'Surat yang perlu disetujui', 'letter_body' => 'Isi awal.',
+            'signer_name' => 'Kepala Sekolah', 'signer_title' => 'Kepala Sekolah', 'approval_required' => true,
+        ];
+        $this->actingAs($this->admin)->post(route('administration.correspondence.store'), $data)->assertSessionHasNoErrors();
+        $record = CorrespondenceRecord::firstOrFail();
+
+        $this->actingAs($this->principal)->patch(route('administration.correspondence.approve', $record), [
+            'decision' => 'approve', 'note' => 'Disetujui.',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('approved', $record->fresh()->approval_status);
+
+        $data['letter_body'] = 'Isi yang telah diubah.';
+        unset($data['approval_required']);
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.draft', $record), $data)
+            ->assertSessionHasNoErrors();
+
+        $record->refresh();
+        $this->assertSame('pending', $record->approval_status);
+        $this->assertNull($record->approved_by);
+        $this->assertNull($record->approved_at);
+        $this->assertNull($record->approval_note);
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.status', $record), ['status' => 'issued'])
+            ->assertSessionHasErrors('status');
+    }
+
+    public function test_disabling_approval_clears_existing_approval_and_allows_issue(): void
+    {
+        $data = [
+            'letter_type' => 'outgoing', 'letter_number' => '17/ADM/2026', 'letter_date' => '2026-10-28',
+            'recipient' => 'Dinas Pendidikan', 'subject' => 'Surat tanpa persetujuan', 'letter_body' => 'Isi surat.',
+            'signer_name' => 'Kepala Sekolah', 'signer_title' => 'Kepala Sekolah', 'approval_required' => true,
+        ];
+        $this->actingAs($this->admin)->post(route('administration.correspondence.store'), $data)->assertSessionHasNoErrors();
+        $record = CorrespondenceRecord::firstOrFail();
+        $this->actingAs($this->principal)->patch(route('administration.correspondence.approve', $record), [
+            'decision' => 'approve', 'note' => 'Disetujui.',
+        ])->assertSessionHasNoErrors();
+
+        $data['approval_required'] = false;
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.draft', $record), $data)
+            ->assertSessionHasNoErrors();
+
+        $record->refresh();
+        $this->assertFalse($record->approval_required);
+        $this->assertSame('not_required', $record->approval_status);
+        $this->assertNull($record->approved_by);
+        $this->assertNull($record->approved_at);
+        $this->assertNull($record->approval_note);
+        $this->actingAs($this->admin)->patch(route('administration.correspondence.status', $record), ['status' => 'issued'])
+            ->assertSessionHasNoErrors();
     }
 
     private function makeUser(Role $role, string $email, string $name): User

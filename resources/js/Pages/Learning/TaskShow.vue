@@ -43,6 +43,8 @@ const handleFiles = (event: Event) => {
 };
 
 const submit = () => {
+    const action = props.submission ? 'Kirim revisi' : 'Kirim jawaban';
+    if (!window.confirm(`${action} untuk tugas “${props.assignment.title}”? Jawaban akan dicatat untuk diperiksa guru.`)) return;
     form.post(props.submit_url, {
         forceFormData: true,
         preserveScroll: true,

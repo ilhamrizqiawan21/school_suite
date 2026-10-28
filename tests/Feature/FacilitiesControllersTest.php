@@ -9,6 +9,7 @@ use App\Modules\Administration\Infrastructure\Models\FacilityAsset;
 use App\Modules\Administration\Infrastructure\Models\FacilityLoan;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -127,6 +128,7 @@ class FacilitiesControllersTest extends TestCase
 
     public function test_asset_loan_return_workflow_updates_availability_and_records_audit(): void
     {
+        $this->travelTo(Carbon::parse('2026-10-27 10:00:00'));
         $asset = $this->makeAsset($this->school, $this->admin, 'INV-PROY-01');
 
         $this->actingAs($this->operator)->post('/administrasi/sarpras/peminjaman', [

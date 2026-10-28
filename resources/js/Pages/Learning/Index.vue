@@ -221,6 +221,8 @@ const openSubmission = (assignment: Assignment) => {
 
 const submitWork = () => {
     if (!selectedAssignment.value) return;
+    const action = selectedAssignment.value.submissions.length ? 'Kirim revisi' : 'Kirim jawaban';
+    if (!window.confirm(`${action} untuk tugas “${selectedAssignment.value.title}”? Jawaban akan dicatat untuk diperiksa guru.`)) return;
     submissionForm.post(studentEndpoint(`/tugas/${selectedAssignment.value.id}/${props.capabilities.submit ? 'kumpul' : 'kumpulkan'}`), {
         forceFormData: true,
         onSuccess: () => {
