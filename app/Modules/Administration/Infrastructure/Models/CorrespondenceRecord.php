@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class CorrespondenceRecord extends Model
 {
@@ -15,6 +16,11 @@ class CorrespondenceRecord extends Model
     {
         static::saving(function (CorrespondenceRecord $record): void {
             $record->letter_year = $record->letter_date?->format('Y');
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                $record->outgoing_letter_number = $record->letter_type === 'outgoing'
+                    ? $record->letter_number
+                    : null;
+            }
         });
     }
 

@@ -33,15 +33,30 @@ return new class extends Migration
             );
         }
 
-        Schema::table('correspondence_records', function (Blueprint $table): void {
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
+        Schema::table('correspondence_records', function (Blueprint $table) use ($isSqlite): void {
             $table->timestamp('verification_expires_at')->nullable()->after('document_hash');
             $table->timestamp('verification_revoked_at')->nullable()->after('verification_expires_at');
-            $table->string('outgoing_letter_number', 100)
-                ->nullable()
-                ->storedAs("CASE WHEN letter_type = 'outgoing' THEN letter_number ELSE NULL END")
-                ->after('letter_number');
+            if ($isSqlite) {
+                // SQLite versions used by the deployment do not support adding
+                // a STORED generated column to an existing table.
+                $table->string('outgoing_letter_number', 100)->nullable()->after('letter_number');
+            } else {
+                $table->string('outgoing_letter_number', 100)
+                    ->nullable()
+                    ->storedAs("CASE WHEN letter_type = 'outgoing' THEN letter_number ELSE NULL END")
+                    ->after('letter_number');
+            }
             $table->unique(['school_id', 'outgoing_letter_number'], 'correspondence_school_outgoing_number_unique');
         });
+
+        if ($isSqlite) {
+            DB::table('correspondence_records')
+                ->where('letter_type', 'outgoing')
+                ->whereNotNull('letter_number')
+                ->update(['outgoing_letter_number' => DB::raw('letter_number')]);
+        }
 
         DB::table('correspondence_records')
             ->whereNotNull('verification_token')

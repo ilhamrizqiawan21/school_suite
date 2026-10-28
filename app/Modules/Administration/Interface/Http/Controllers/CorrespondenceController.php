@@ -37,7 +37,7 @@ class CorrespondenceController extends Controller
             ->when($filter === 'archived', fn ($query) => $query->where('status', 'archived'))
             ->latest('created_at')
             ->get([
-                'id', 'letter_type', 'agenda_number', 'letter_number', 'letter_date', 'received_at',
+                'id', 'school_id', 'letter_type', 'agenda_number', 'letter_number', 'letter_date', 'received_at',
                 'letter_template', 'classification', 'urgency', 'sender', 'recipient', 'subject', 'summary', 'disposition', 'status',
                 'approval_required', 'approval_status', 'approved_at', 'approval_note', 'signature_method', 'document_hash',
                 'attachment_name', 'attachment_path', 'archived_at', 'created_at',
