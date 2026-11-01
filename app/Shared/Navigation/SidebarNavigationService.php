@@ -10,6 +10,20 @@ use Illuminate\Support\Facades\DB;
 
 class SidebarNavigationService
 {
+    /** @var list<string> */
+    private const ADMISSIONS_NAV_KEYS = [
+        'admissions',
+        'admissions-periods',
+        'admissions-tracks',
+        'admissions-committee',
+        'admissions-applicants',
+        'admissions-documents',
+        'admissions-selection',
+        'admissions-announcement',
+        'admissions-re-registration',
+        'admissions-reports',
+    ];
+
     /** @return list<string> */
     public function visibleKeys(User $user): array
     {
@@ -18,7 +32,7 @@ class SidebarNavigationService
         foreach (config('navigation.roles', []) as $key => $roles) {
             if ($key === 'admissions') {
                 if ($this->canAccessAdmissions($user)) {
-                    $visibleKeys[] = $key;
+                    array_push($visibleKeys, ...self::ADMISSIONS_NAV_KEYS);
                 }
 
                 continue;

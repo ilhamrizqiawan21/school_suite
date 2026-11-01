@@ -153,6 +153,21 @@ class RoleMatrixAccessTest extends TestCase
         );
     }
 
+    public function test_spmb_submenus_are_visible_when_admissions_is_allowed(): void
+    {
+        $admin = $this->usersByRole[RoleEnum::ADMIN->value];
+
+        $this->actingAs($admin)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('admissions')
+                && $keys->contains('admissions-periods')
+                && $keys->contains('admissions-tracks')
+                && $keys->contains('admissions-applicants')
+                && $keys->contains('admissions-documents')
+                && $keys->contains('admissions-selection')
+                && $keys->contains('admissions-re-registration'))
+        );
+    }
+
     /**
      * Matriks Uji 2: Operator memiliki izin melihat dan mengelola pengguna serta profil sekolah.
      */
