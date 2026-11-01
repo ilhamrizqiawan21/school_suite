@@ -34,7 +34,7 @@ class SidebarNavigationService
 
     public function canAccessAdmissions(User $user): bool
     {
-        if ($user->hasRole('admin')) {
+        if ($user->hasRole(['admin', 'operator', 'principal'])) {
             return true;
         }
 

@@ -201,7 +201,11 @@ class AdmissionsWorkflowTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseCount('students', 1);
+        $this->assertDatabaseHas('students', [
+            'school_id' => $this->admin->school_id,
+            'nis' => '20270001',
+            'nisn' => '0987654321',
+        ]);
         $this->assertDatabaseHas('admission_re_registrations', [
             'applicant_id' => $applicant->id,
             'status' => 'confirmed',

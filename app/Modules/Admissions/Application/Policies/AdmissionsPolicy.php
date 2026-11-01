@@ -20,18 +20,19 @@ class AdmissionsPolicy
 
     public function viewAny(User $actor): bool
     {
-        return $actor->school_id !== null && ($actor->hasRole('admin') || $this->isCommitteeMember($actor));
+        return $actor->school_id !== null
+            && ($actor->hasRole(['admin', 'operator', 'principal']) || $this->isCommitteeMember($actor));
     }
 
     public function manageCommittee(User $actor): bool
     {
-        return $actor->hasRole('admin') && $actor->school_id !== null;
+        return $actor->hasRole(['admin', 'operator']) && $actor->school_id !== null;
     }
 
     public function manageApplicant(User $actor, AdmissionApplicant $applicant): bool
     {
         return (int) $actor->school_id === (int) $applicant->school_id
-            && ($actor->hasRole('admin') || $this->isCommitteeMember($actor));
+            && ($actor->hasRole(['admin', 'operator']) || $this->isCommitteeMember($actor));
     }
 
     public function isCommitteeMember(User $actor): bool
