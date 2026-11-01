@@ -9,6 +9,7 @@ use App\Modules\Core\Interface\Http\Controllers\ProfileController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolGalleryController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolNewsController;
+use App\Modules\Core\Interface\Http\Controllers\SchoolOrganizationController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolProfileController;
 use App\Modules\Core\Interface\Http\Controllers\SecurityOperationsController;
 use App\Modules\Core\Interface\Http\Controllers\UserController;
@@ -18,6 +19,7 @@ Route::get('/branding/sekolah/{school}/{kind}', [BrandMediaController::class, 's
 Route::get('/profil-sekolah', [SchoolProfileController::class, 'index'])->name('core.school.public');
 Route::get('/galeri', [SchoolGalleryController::class, 'publicIndex'])->name('core.gallery.public.index');
 Route::get('/galeri/foto/{photo}', [SchoolGalleryController::class, 'photo'])->whereNumber('photo')->name('core.gallery.photo');
+Route::get('/struktur-organisasi/foto/{member}', [SchoolOrganizationController::class, 'photo'])->whereNumber('member')->name('core.organization.photo');
 Route::get('/berita', [SchoolNewsController::class, 'publicIndex'])->name('core.news.public.index');
 Route::get('/berita/{slug}/foto/{photo}', [SchoolNewsController::class, 'photo'])->whereNumber('photo')->name('core.news.photo');
 Route::get('/berita/{slug}', [SchoolNewsController::class, 'publicShow'])->name('core.news.public.show');
@@ -49,12 +51,19 @@ Route::middleware('auth')->group(function (): void {
         Route::put('/sekolah', [SchoolController::class, 'update'])->name('school.update');
         Route::post('/sekolah', [SchoolController::class, 'update'])->middleware('throttle:uploads')->name('school.upload');
 
+        // School organization management
+        Route::get('/struktur-organisasi', [SchoolOrganizationController::class, 'index'])->middleware('role:admin,operator')->name('organization.index');
+        Route::get('/struktur-organisasi/{member}/file', [SchoolOrganizationController::class, 'adminPhoto'])->whereNumber('member')->middleware('role:admin,operator')->name('organization.admin-photo');
+        Route::post('/struktur-organisasi', [SchoolOrganizationController::class, 'store'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('organization.store');
+        Route::put('/struktur-organisasi/{member}', [SchoolOrganizationController::class, 'update'])->whereNumber('member')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('organization.update');
+        Route::delete('/struktur-organisasi/{member}', [SchoolOrganizationController::class, 'destroy'])->whereNumber('member')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('organization.destroy');
+
         // Public portfolio gallery management
         Route::get('/galeri', [SchoolGalleryController::class, 'index'])->middleware('role:admin,operator')->name('gallery.index');
         Route::get('/galeri/{photo}/file', [SchoolGalleryController::class, 'adminPhoto'])->whereNumber('photo')->middleware('role:admin,operator')->name('gallery.admin-photo');
         Route::post('/galeri', [SchoolGalleryController::class, 'store'])->middleware(['role:admin,operator', 'throttle:uploads'])->name('gallery.store');
-        Route::put('/galeri/{photo}', [SchoolGalleryController::class, 'update'])->whereNumber('photo')->middleware(['role:admin,operator', 'throttle:uploads'])->name('gallery.update');
-        Route::delete('/galeri/{photo}', [SchoolGalleryController::class, 'destroy'])->whereNumber('photo')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('gallery.destroy');
+        Route::put('/galeri/{album}', [SchoolGalleryController::class, 'update'])->whereNumber('album')->middleware(['role:admin,operator', 'throttle:uploads'])->name('gallery.update');
+        Route::delete('/galeri/{album}', [SchoolGalleryController::class, 'destroy'])->whereNumber('album')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('gallery.destroy');
 
         // Public school news management
         Route::get('/berita', [SchoolNewsController::class, 'index'])->middleware('role:admin,operator')->name('news.index');

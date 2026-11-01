@@ -50,6 +50,7 @@ return [
         'profile' => ['admin', 'operator', 'principal', 'teacher', 'homeroom', 'student'],
         'users' => ['admin', 'operator'],
         'school' => ['admin', 'operator', 'principal'],
+        'organization' => ['admin', 'operator'],
         'news' => ['admin', 'operator'],
         'gallery' => ['admin', 'operator'],
         'security' => ['admin'],

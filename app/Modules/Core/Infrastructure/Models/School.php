@@ -61,4 +61,16 @@ class School extends Model
     {
         return $this->hasMany(SchoolGalleryPhoto::class, 'school_id')->orderBy('sort_order')->orderByDesc('created_at');
     }
+
+    /** @return HasMany<SchoolGalleryAlbum, $this> */
+    public function galleryAlbums(): HasMany
+    {
+        return $this->hasMany(SchoolGalleryAlbum::class, 'school_id')->orderBy('sort_order')->orderByDesc('created_at');
+    }
+
+    /** @return HasMany<SchoolOrganizationMember, $this> */
+    public function organizationMembers(): HasMany
+    {
+        return $this->hasMany(SchoolOrganizationMember::class, 'school_id')->orderBy('sort_order')->orderBy('name');
+    }
 }

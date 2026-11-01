@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
-use App\Modules\Core\Infrastructure\Models\SchoolGalleryPhoto;
+use App\Modules\Core\Infrastructure\Models\SchoolGalleryAlbum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -41,75 +41,122 @@ class SchoolGalleryTest extends TestCase
         $this->teacher = $this->makeUser($teacherRole, 'teacher');
     }
 
-    public function test_operator_can_upload_and_manage_a_gallery_photo(): void
+    public function test_operator_can_upload_one_gallery_group_with_four_photos(): void
     {
         Storage::fake('local');
         $photoContent = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', true);
 
         $this->actingAs($this->operator)->post('/pengaturan/galeri', [
-            'photo' => UploadedFile::fake()->createWithContent('laboratorium.png', $photoContent),
-            'title' => 'Laboratorium sains',
-            'caption' => 'Ruang belajar untuk eksperimen siswa.',
+            'photos' => [
+                UploadedFile::fake()->createWithContent('kegiatan-1.png', $photoContent),
+                UploadedFile::fake()->createWithContent('kegiatan-2.png', $photoContent),
+                UploadedFile::fake()->createWithContent('kegiatan-3.png', $photoContent),
+                UploadedFile::fake()->createWithContent('kegiatan-4.png', $photoContent),
+            ],
+            'title' => 'Pekan kreativitas siswa',
+            'caption' => 'Momen karya dan kolaborasi siswa.',
             'is_published' => true,
         ])->assertRedirect('/pengaturan/galeri')->assertSessionHasNoErrors();
 
-        $photo = SchoolGalleryPhoto::query()->where('title', 'Laboratorium sains')->firstOrFail();
-        $this->assertTrue($photo->is_published);
-        Storage::disk('local')->assertExists($photo->path);
+        $album = SchoolGalleryAlbum::query()->where('title', 'Pekan kreativitas siswa')->with('photos')->firstOrFail();
+        $this->assertCount(4, $album->photos);
+        Storage::disk('local')->assertExists($album->photos->first()->path);
 
         $this->actingAs($this->operator)->get('/pengaturan/galeri')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Core/Gallery/Index')
-            ->has('photos', 1)
-            ->where('photos.0.title', 'Laboratorium sains'));
+            ->has('albums', 1)
+            ->where('albums.0.title', 'Pekan kreativitas siswa')
+            ->has('albums.0.photos', 4));
     }
 
-    public function test_only_published_gallery_photos_appear_on_public_pages(): void
+    public function test_gallery_rejects_more_than_four_photos(): void
     {
         Storage::fake('local');
-        $published = $this->createPhoto('Lapangan sekolah', true);
-        $hidden = $this->createPhoto('Foto internal', false);
+        $photoContent = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', true);
+        $photos = array_map(
+            fn (int $index) => UploadedFile::fake()->createWithContent("foto-$index.png", $photoContent),
+            range(1, 5),
+        );
+
+        $this->actingAs($this->operator)->post('/pengaturan/galeri', [
+            'photos' => $photos,
+            'title' => 'Terlalu banyak foto',
+            'is_published' => true,
+        ])->assertSessionHasErrors('photos');
+
+        $this->assertDatabaseCount('school_gallery_albums', 0);
+    }
+
+    public function test_gallery_rejects_a_group_over_five_mb_total(): void
+    {
+        Storage::fake('local');
+
+        $this->actingAs($this->operator)->post('/pengaturan/galeri', [
+            'photos' => [
+                UploadedFile::fake()->create('foto-1.png', 3000, 'image/png'),
+                UploadedFile::fake()->create('foto-2.png', 3000, 'image/png'),
+            ],
+            'title' => 'Ukuran terlalu besar',
+            'is_published' => true,
+        ])->assertSessionHasErrors(['photos' => 'Ukuran total semua foto maksimal 5 MB.']);
+
+        $this->assertDatabaseCount('school_gallery_albums', 0);
+    }
+
+    public function test_only_published_gallery_groups_appear_on_public_pages(): void
+    {
+        Storage::fake('local');
+        $published = $this->createAlbum('Lapangan sekolah', true, 2);
+        $hidden = $this->createAlbum('Foto internal', false);
 
         $this->get('/galeri')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Public/Gallery/Index')
-            ->has('photos', 1)
-            ->where('photos.0.title', $published->title));
+            ->has('albums', 1)
+            ->where('albums.0.title', $published->title)
+            ->has('albums.0.photos', 2));
         $this->get('/profil-sekolah')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Public/School/Profile')
             ->has('gallery', 1)
             ->where('gallery.0.title', $published->title));
-        $this->get('/galeri/foto/'.$published->id)->assertOk();
-        $this->get('/galeri/foto/'.$hidden->id)->assertNotFound();
+        $this->get('/galeri/foto/'.$published->photos->first()->id)->assertOk();
+        $this->get('/galeri/foto/'.$hidden->photos->first()->id)->assertNotFound();
     }
 
     public function test_gallery_management_is_scoped_and_role_protected(): void
     {
         Storage::fake('local');
-        $photo = $this->createPhoto('Foto sekolah lain', true);
+        $album = $this->createAlbum('Foto sekolah lain', true);
         $otherSchool = School::create(['name' => 'Sekolah Lain', 'npsn' => '88990011', 'level' => 'SMA']);
-        $photo->update(['school_id' => $otherSchool->id]);
+        $album->update(['school_id' => $otherSchool->id]);
 
         $this->actingAs($this->teacher)->get('/pengaturan/galeri')->assertForbidden();
-        $this->actingAs($this->admin)->put('/pengaturan/galeri/'.$photo->id, [
+        $this->actingAs($this->admin)->put('/pengaturan/galeri/'.$album->id, [
             'title' => 'Tidak boleh lintas sekolah',
-            'caption' => '',
             'is_published' => true,
         ])->assertNotFound();
     }
 
-    private function createPhoto(string $title, bool $isPublished): SchoolGalleryPhoto
+    private function createAlbum(string $title, bool $isPublished, int $photoCount = 1): SchoolGalleryAlbum
     {
-        $path = 'school-gallery/'.$this->school->id.'/'.str()->random(12).'.jpg';
-        Storage::disk('local')->put($path, 'fake image');
-
-        return SchoolGalleryPhoto::create([
+        $album = SchoolGalleryAlbum::create([
             'school_id' => $this->school->id,
-            'path' => $path,
-            'original_name' => str($title)->slug().'.jpg',
             'title' => $title,
             'caption' => null,
             'is_published' => $isPublished,
             'sort_order' => 0,
         ]);
+        for ($index = 0; $index < $photoCount; $index++) {
+            $path = 'school-gallery/'.$this->school->id.'/'.$album->id.'/'.$index.'.jpg';
+            Storage::disk('local')->put($path, 'fake image');
+            $album->photos()->create([
+                'school_id' => $this->school->id,
+                'path' => $path,
+                'original_name' => "foto-$index.jpg",
+                'sort_order' => $index,
+            ]);
+        }
+
+        return $album->load('photos');
     }
 
     private function makeUser(Role $role, string $name): User

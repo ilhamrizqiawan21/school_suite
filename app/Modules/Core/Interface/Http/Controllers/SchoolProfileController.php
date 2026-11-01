@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Application\Services\SchoolOrganizationTreeService;
 use App\Modules\Core\Infrastructure\Models\School;
-use App\Modules\Core\Infrastructure\Models\SchoolGalleryPhoto;
+use App\Modules\Core\Infrastructure\Models\SchoolGalleryAlbum;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SchoolProfileController extends Controller
 {
+    public function __construct(private readonly SchoolOrganizationTreeService $organizationTree) {}
+
     public function index(): Response
     {
         $school = School::query()->firstOrFail();
@@ -39,20 +42,29 @@ class SchoolProfileController extends Controller
                 ])->values()->all(),
             ])
             ->values();
-        $gallery = SchoolGalleryPhoto::query()
+        $gallery = SchoolGalleryAlbum::query()
+            ->with('photos')
             ->where('school_id', $school->id)
             ->where('is_published', true)
             ->orderBy('sort_order')
             ->orderByDesc('created_at')
             ->limit(6)
             ->get()
-            ->map(fn (SchoolGalleryPhoto $photo): array => [
-                'id' => $photo->id,
-                'title' => $photo->title,
-                'caption' => $photo->caption,
-                'url' => route('core.gallery.photo', [$photo->id]),
+            ->filter(fn (SchoolGalleryAlbum $album): bool => $album->photos->isNotEmpty())
+            ->map(fn (SchoolGalleryAlbum $album): array => [
+                'id' => $album->id,
+                'title' => $album->title,
+                'caption' => $album->caption,
+                'url' => route('core.gallery.photo', [$album->photos->first()->id]),
             ])
             ->values();
+        $organization = array_map(function (array $member): array {
+            $photoPath = $member['photo_path'] ?? null;
+            unset($member['photo_path']);
+            $member['photo_url'] = $photoPath ? route('core.organization.photo', [$member['id']]) : null;
+
+            return $member;
+        }, $this->organizationTree->rowsForSchool((int) $school->id, true));
 
         return Inertia::render('Public/School/Profile', [
             'school' => [
@@ -65,6 +77,7 @@ class SchoolProfileController extends Controller
             ],
             'news' => $news,
             'gallery' => $gallery,
+            'organization' => $organization,
         ]);
     }
 }

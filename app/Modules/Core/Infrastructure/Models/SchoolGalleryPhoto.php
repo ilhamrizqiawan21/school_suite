@@ -13,6 +13,7 @@ class SchoolGalleryPhoto extends Model
 
     protected $fillable = [
         'school_id',
+        'school_gallery_album_id',
         'path',
         'original_name',
         'title',
@@ -31,5 +32,10 @@ class SchoolGalleryPhoto extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function album(): BelongsTo
+    {
+        return $this->belongsTo(SchoolGalleryAlbum::class, 'school_gallery_album_id');
     }
 }
