@@ -129,6 +129,51 @@ class SchoolNewsTest extends TestCase
         $this->get('/berita/rancangan-berita-internal')->assertNotFound();
     }
 
+    public function test_public_school_profile_displays_profile_content_and_latest_published_news(): void
+    {
+        $this->school->update([
+            'legal_name' => 'Yayasan Nusantara Pendidikan',
+            'school_status' => 'Swasta',
+            'accreditation' => 'A',
+            'address' => 'Jl. Pendidikan No. 1, Kota Nusantara',
+            'phone' => '021-1234567',
+            'email' => 'info@berita.test',
+            'principal_name' => 'Dr. Kepala Sekolah',
+            'website' => 'https://berita.test',
+            'about' => 'Sekolah yang menumbuhkan prestasi dan karakter.',
+            'principal_message' => 'Selamat datang di sekolah kami.',
+            'vision' => 'Menjadi sekolah yang unggul dan berkarakter.',
+            'mission' => "Melayani peserta didik.\nMenguatkan kolaborasi.",
+        ]);
+        $published = SchoolNews::create([
+            'school_id' => $this->school->id,
+            'author_id' => $this->admin->id,
+            'title' => 'Kegiatan Sekolah Terbaru',
+            'slug' => 'kegiatan-sekolah-terbaru',
+            'excerpt' => 'Kabar terbaru sekolah.',
+            'body' => 'Isi berita terbaru sekolah.',
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+        SchoolNews::create([
+            'school_id' => $this->school->id,
+            'author_id' => $this->admin->id,
+            'title' => 'Berita Draf',
+            'slug' => 'berita-draf',
+            'body' => 'Tidak boleh tampil di halaman publik.',
+            'status' => 'draft',
+        ]);
+
+        $this->get('/profil-sekolah')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/School/Profile')
+            ->where('school.name', $this->school->name)
+            ->where('school.about', 'Sekolah yang menumbuhkan prestasi dan karakter.')
+            ->where('school.principal_message', 'Selamat datang di sekolah kami.')
+            ->where('school.vision', 'Menjadi sekolah yang unggul dan berkarakter.')
+            ->where('news.0.title', $published->title)
+            ->has('news', 1));
+    }
+
     public function test_news_is_scoped_to_the_current_school_for_management(): void
     {
         $otherSchool = School::create(['name' => 'Sekolah Lain', 'npsn' => '88990011', 'level' => 'SMA']);
