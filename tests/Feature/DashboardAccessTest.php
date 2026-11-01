@@ -113,10 +113,13 @@ class DashboardAccessTest extends TestCase
         ]);
     }
 
-    public function test_guest_is_redirected_to_login(): void
+    public function test_guest_sees_the_public_school_profile_at_application_root(): void
     {
         $this->get('/')
-            ->assertRedirect(route('login'));
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/School/Profile')
+                ->where('school.name', $this->school->name));
     }
 
     public function test_administrator_accesses_dashboard_with_admin_metrics(): void

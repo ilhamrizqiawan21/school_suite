@@ -2,18 +2,25 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Modules\Core\Infrastructure\Models\School;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic test example.
      */
-    public function test_guests_are_redirected_to_login_from_application_root(): void
+    public function test_guests_can_open_the_public_school_profile_from_application_root(): void
     {
-        $response = $this->get('/');
+        School::create([
+            'name' => 'Sekolah Uji',
+            'npsn' => '12345678',
+            'level' => 'SMA',
+        ]);
 
-        $response->assertRedirect(route('login'));
+        $this->get('/')->assertOk();
     }
 }
