@@ -28,7 +28,7 @@ const props = defineProps<{
 
 const page = usePage();
 const flashMessage = () => (page.props.flash as { message?: string })?.message;
-const periodForm = useForm({ name: '', academic_year: '', level: '', registration_start: '', registration_end: '' });
+const periodForm = useForm({ name: '', academic_year: '', level: '', registration_start: '', registration_end: '', guideline_file: null as File | null });
 const trackForm = useForm({ period_id: props.selected_period_id ? String(props.selected_period_id) : '', code: '', name: '', quota: 1 });
 const requirementForm = useForm({ track_id: '', code: '', label: '', is_required: true });
 const criterionForm = useForm({ track_id: '', code: '', label: '', weight: 1, max_score: 100 });
@@ -43,7 +43,7 @@ function documentForm(applicant: Applicant) { return documentForms[applicant.id]
 function scoreForm(applicant: Applicant, criterion: Criterion) { const key = `${applicant.id}-${criterion.id}`; return scoreForms[key] ??= useForm({ criterion_id: String(criterion.id), score: '', notes: '' }); }
 function decisionForm(applicant: Applicant) { return decisionForms[applicant.id] ??= useForm({ decision: applicant.selection_result?.decision ?? 'accepted', override_reason: '' }); }
 function reRegistrationForm(applicant: Applicant) { return reRegistrationForms[applicant.id] ??= useForm({ nis: '' }); }
-function addPeriod() { periodForm.post('/spmb/periode', { preserveScroll: true, onSuccess: () => periodForm.reset() }); }
+function addPeriod() { periodForm.post('/spmb/periode', { forceFormData: true, preserveScroll: true, onSuccess: () => periodForm.reset() }); }
 function addTrack() { trackForm.post('/spmb/jalur', { preserveScroll: true, onSuccess: () => trackForm.reset('code', 'name') }); }
 function addRequirement() { requirementForm.post('/spmb/persyaratan', { preserveScroll: true, onSuccess: () => requirementForm.reset('code', 'label') }); }
 function addCriterion() { criterionForm.post('/spmb/kriteria', { preserveScroll: true, onSuccess: () => criterionForm.reset('code', 'label') }); }
@@ -82,7 +82,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 
             <section v-if="section === 'periods' || section === 'dashboard'" class="panel admissions-panel">
                 <div class="table-title"><div><h2>Periode & Juknis</h2><p>Buat siklus SPMB yang dapat dikonfigurasi per tahun ajaran dan jenjang.</p></div></div>
-                <form v-if="can_manage_committee" class="admissions-form" @submit.prevent="addPeriod"><label>Nama periode<input v-model="periodForm.name" required placeholder="SPMB 2027/2028" /></label><label>Tahun ajaran<input v-model="periodForm.academic_year" required placeholder="2027/2028" /></label><label>Jenjang<input v-model="periodForm.level" placeholder="SMP" /></label><label>Mulai pendaftaran<input v-model="periodForm.registration_start" type="date" /></label><label>Akhir pendaftaran<input v-model="periodForm.registration_end" type="date" /></label><div class="admissions-form-actions"><button class="primary-button" type="submit" :disabled="periodForm.processing">Tambah periode</button></div></form>
+                <form v-if="can_manage_committee" class="admissions-form" @submit.prevent="addPeriod"><label>Nama periode<input v-model="periodForm.name" required placeholder="SPMB 2027/2028" /></label><label>Tahun ajaran<input v-model="periodForm.academic_year" required placeholder="2027/2028" /></label><label>Jenjang<input v-model="periodForm.level" placeholder="SMP" /></label><label>Mulai pendaftaran<input v-model="periodForm.registration_start" type="date" /></label><label>Akhir pendaftaran<input v-model="periodForm.registration_end" type="date" /></label><label>Juknis<input type="file" accept=".pdf,.doc,.docx" @change="periodForm.guideline_file = ($event.target as HTMLInputElement).files?.[0] || null" /></label><div class="admissions-form-actions"><button class="primary-button" type="submit" :disabled="periodForm.processing">Tambah periode</button></div></form>
                 <div v-for="period in periods" :key="period.id" class="period-row"><div><strong>{{ period.name }}</strong><span>{{ period.academic_year }} · {{ period.level || 'Semua jenjang' }} · {{ period.tracks.length }} jalur</span></div><button v-if="can_manage_committee && period.status === 'draft'" class="secondary-button" type="button" @click="openPeriod(period)">Buka pendaftaran</button><span class="status-pill">{{ period.status }}</span></div>
             </section>
 

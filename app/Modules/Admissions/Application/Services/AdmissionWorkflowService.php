@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Admissions\Application\Services;
 
 use App\Models\User;
-use App\Modules\Academic\Infrastructure\Models\Student;
+use App\Modules\Academic\Application\Services\StudentProvisioningService;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicant;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionPeriod;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionReRegistration;
@@ -16,7 +16,10 @@ use InvalidArgumentException;
 
 class AdmissionWorkflowService
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly StudentProvisioningService $studentProvisioning,
+    ) {}
 
     public function openPeriod(AdmissionPeriod $period, User $actor): AdmissionPeriod
     {
@@ -37,6 +40,13 @@ class AdmissionWorkflowService
     {
         DB::transaction(function () use ($period, $actor): void {
             $applicants = $period->applicants()->with(['scores.criterion'])->get();
+            foreach ($applicants as $applicant) {
+                $requiredIds = $applicant->track?->requirements()->where('is_required', true)->pluck('id') ?? collect();
+                $validIds = $applicant->documents()->where('status', 'valid')->whereIn('requirement_id', $requiredIds)->pluck('requirement_id');
+                if ($requiredIds->diff($validIds)->isNotEmpty()) {
+                    throw new InvalidArgumentException("Berkas wajib pendaftar {$applicant->registration_no} belum lengkap atau belum valid.");
+                }
+            }
             $ranked = $applicants->map(function (AdmissionApplicant $applicant): array {
                 $total = $applicant->scores->sum(function ($score): float {
                     $maxScore = max((float) $score->criterion->max_score, 1.0);
@@ -113,13 +123,10 @@ class AdmissionWorkflowService
                 throw new InvalidArgumentException('Hanya pendaftar yang diterima yang dapat melakukan daftar ulang.');
             }
 
-            $student = Student::query()
-                ->where('school_id', $applicant->school_id)
-                ->where('nis', $nis)
-                ->first();
+            $student = $this->studentProvisioning->findBySchoolAndNis((int) $applicant->school_id, $nis);
 
             if ($student === null) {
-                $student = Student::create([
+                $student = $this->studentProvisioning->createFromAdmission([
                     'school_id' => $applicant->school_id,
                     'nis' => $nis,
                     'nisn' => $applicant->nisn,
@@ -128,7 +135,6 @@ class AdmissionWorkflowService
                     'birth_date' => $applicant->birth_date,
                     'parent_phone' => $applicant->parent_phone,
                     'parent_name' => $applicant->parent_name,
-                    'status' => 'active',
                 ]);
             }
 

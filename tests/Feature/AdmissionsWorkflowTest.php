@@ -67,6 +67,27 @@ class AdmissionsWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_operator_can_manage_but_principal_is_read_only(): void
+    {
+        $operator = User::where('email', 'operator@pilot.sch.id')->firstOrFail();
+        $principal = User::where('email', 'kepsek@pilot.sch.id')->firstOrFail();
+        $operator->forceFill(['must_change_password' => false])->save();
+        $principal->forceFill(['must_change_password' => false])->save();
+
+        $this->actingAs($operator)->get(route('admissions.index'))->assertOk();
+        $this->actingAs($operator)->post(route('admissions.periods.store'), [
+            'name' => 'SPMB Operator',
+            'academic_year' => '2027/2028',
+            'level' => 'SMP',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->actingAs($principal)->get(route('admissions.index'))->assertOk();
+        $this->actingAs($principal)->post(route('admissions.periods.store'), [
+            'name' => 'SPMB Principal',
+            'academic_year' => '2028/2029',
+        ])->assertForbidden();
+    }
+
     public function test_period_cannot_be_opened_without_track_and_required_configuration(): void
     {
         $this->actingAs($this->admin)
@@ -149,6 +170,7 @@ class AdmissionsWorkflowTest extends TestCase
 
     public function test_ranking_and_finalization_are_audited_and_re_registration_creates_one_student(): void
     {
+        Storage::fake('local');
         [$period, $track] = $this->createConfiguredTrack();
         $this->actingAs($this->admin)->post(route('admissions.criteria.store'), [
             'track_id' => $track->id,
@@ -168,6 +190,13 @@ class AdmissionsWorkflowTest extends TestCase
             'gender' => 'L',
             'created_by' => $this->admin->id,
         ]);
+        $requirement = $track->requirements()->firstOrFail();
+        $this->actingAs($this->admin)->post(route('admissions.documents.store', $applicant), [
+            'requirement_id' => $requirement->id,
+            'file' => UploadedFile::fake()->create('kk.pdf', 120, 'application/pdf'),
+        ]);
+        $document = $applicant->documents()->firstOrFail();
+        $this->actingAs($this->admin)->put(route('admissions.documents.verify', $document), ['status' => 'valid']);
 
         $this->actingAs($this->admin)->post(route('admissions.scores.store', $applicant), [
             'criterion_id' => $criterion->id,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Admissions\Infrastructure\Models;
 
-use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,12 +21,6 @@ class AdmissionReRegistration extends Model
     public function applicant(): BelongsTo
     {
         return $this->belongsTo(AdmissionApplicant::class, 'applicant_id');
-    }
-
-    /** @return BelongsTo<Student, $this> */
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class, 'student_id');
     }
 
     /** @return BelongsTo<User, $this> */

@@ -61,8 +61,14 @@ class AdmissionsController extends Controller
             'announcement_at' => ['nullable', 'date'],
             're_registration_start' => ['nullable', 'date'],
             're_registration_end' => ['nullable', 'date', 'after_or_equal:re_registration_start'],
+            'guideline_file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
         ]);
 
+        $file = $validated['guideline_file'] ?? null;
+        unset($validated['guideline_file']);
+        if ($file !== null) {
+            $validated['guideline_path'] = $file->store('admissions/'.(int) $request->user()->school_id.'/guidelines', 'local');
+        }
         AdmissionPeriod::create([...$validated, 'school_id' => $request->user()->school_id]);
 
         return back()->with('message', 'Periode SPMB berhasil dibuat.');
@@ -76,6 +82,16 @@ class AdmissionsController extends Controller
 
         try {
             if ($validated['status'] === 'registration_open') {
+                $conflict = AdmissionPeriod::query()
+                    ->where('school_id', $period->school_id)
+                    ->where('academic_year', $period->academic_year)
+                    ->where('level', $period->level)
+                    ->where('id', '!=', $period->id)
+                    ->whereIn('status', ['registration_open', 'verification', 'selection', 'announcement', 're_registration'])
+                    ->exists();
+                if ($conflict) {
+                    throw new InvalidArgumentException('Sudah ada periode aktif untuk tahun ajaran dan jenjang ini.');
+                }
                 $this->workflow->openPeriod($period, $request->user());
             } else {
                 $period->update(['status' => $validated['status']]);
