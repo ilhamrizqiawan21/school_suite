@@ -50,7 +50,8 @@ class SchoolNewsController extends Controller
         $status = $validated['status'];
 
         $photos = $validated['photos'] ?? [];
-        unset($validated['status'], $validated['photos']);
+        $captions = $validated['photo_captions'] ?? [];
+        unset($validated['status'], $validated['photos'], $validated['photo_captions']);
         $news = SchoolNews::create([
             ...$validated,
             'school_id' => $request->user()->school_id,
@@ -59,7 +60,7 @@ class SchoolNewsController extends Controller
             'status' => $status,
             'published_at' => $status === 'published' ? ($validated['published_at'] ?? now()) : null,
         ]);
-        $this->storePhotos($photos, $news);
+        $this->storePhotos($photos, $news, $captions);
 
         $this->auditLogger->log('core.school_news.created', 'SchoolNews', (string) $news->id, [
             'title' => $news->title,
@@ -80,7 +81,8 @@ class SchoolNewsController extends Controller
         $oldValues = $item->only(['title', 'excerpt', 'body', 'status', 'published_at']);
 
         $photos = $validated['photos'] ?? [];
-        unset($validated['status'], $validated['photos']);
+        $captions = $validated['photo_captions'] ?? [];
+        unset($validated['status'], $validated['photos'], $validated['photo_captions']);
         if ($item->photos()->count() + count($photos) > 5) {
             throw ValidationException::withMessages(['photos' => 'Maksimal 5 foto per berita. Hapus foto lama terlebih dahulu.']);
         }
@@ -89,7 +91,7 @@ class SchoolNewsController extends Controller
             'status' => $status,
             'published_at' => $status === 'published' ? ($validated['published_at'] ?? $item->published_at ?? now()) : null,
         ]);
-        $this->storePhotos($photos, $item);
+        $this->storePhotos($photos, $item, $captions);
 
         $this->auditLogger->log('core.school_news.updated', 'SchoolNews', (string) $item->id, [
             'title' => $item->title,
@@ -173,6 +175,8 @@ class SchoolNewsController extends Controller
             'published_at' => ['nullable', 'date'],
             'photos' => ['nullable', 'array', 'max:5'],
             'photos.*' => [File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(2048)],
+            'photo_captions' => ['nullable', 'array', 'max:5'],
+            'photo_captions.*' => ['nullable', 'string', 'max:255'],
         ]);
     }
 
@@ -193,17 +197,21 @@ class SchoolNewsController extends Controller
         return $slug;
     }
 
-    /** @param array<int, mixed> $photos */
-    private function storePhotos(array $photos, SchoolNews $item): void
+    /**
+     * @param  array<int, mixed>  $photos
+     * @param  array<int, mixed>  $captions
+     */
+    private function storePhotos(array $photos, SchoolNews $item, array $captions = []): void
     {
         $nextOrder = (int) $item->photos()->max('sort_order') + 1;
-        foreach ($photos as $photo) {
+        foreach ($photos as $index => $photo) {
             if (! $photo instanceof UploadedFile) {
                 continue;
             }
             $item->photos()->create([
                 'path' => $photo->store('school-news/'.$item->school_id.'/'.$item->id, 'local'),
                 'original_name' => $photo->getClientOriginalName(),
+                'caption' => is_string($captions[$index] ?? null) ? trim($captions[$index]) : null,
                 'sort_order' => $nextOrder++,
             ]);
         }
