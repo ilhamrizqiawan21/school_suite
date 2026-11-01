@@ -51,6 +51,7 @@ return [
         'users' => ['admin', 'operator'],
         'school' => ['admin', 'operator', 'principal'],
         'news' => ['admin', 'operator'],
+        'gallery' => ['admin', 'operator'],
         'security' => ['admin'],
     ],
 ];

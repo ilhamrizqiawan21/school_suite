@@ -6,6 +6,7 @@ namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Core\Infrastructure\Models\School;
+use App\Modules\Core\Infrastructure\Models\SchoolGalleryPhoto;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,6 +39,20 @@ class SchoolProfileController extends Controller
                 ])->values()->all(),
             ])
             ->values();
+        $gallery = SchoolGalleryPhoto::query()
+            ->where('school_id', $school->id)
+            ->where('is_published', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get()
+            ->map(fn (SchoolGalleryPhoto $photo): array => [
+                'id' => $photo->id,
+                'title' => $photo->title,
+                'caption' => $photo->caption,
+                'url' => route('core.gallery.photo', [$photo->id]),
+            ])
+            ->values();
 
         return Inertia::render('Public/School/Profile', [
             'school' => [
@@ -49,6 +64,7 @@ class SchoolProfileController extends Controller
                 'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
             ],
             'news' => $news,
+            'gallery' => $gallery,
         ]);
     }
 }

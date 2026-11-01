@@ -53,4 +53,12 @@ class School extends Model
     {
         return $this->hasMany(User::class, 'school_id');
     }
+
+    /**
+     * @return HasMany<SchoolGalleryPhoto, $this>
+     */
+    public function galleryPhotos(): HasMany
+    {
+        return $this->hasMany(SchoolGalleryPhoto::class, 'school_id')->orderBy('sort_order')->orderByDesc('created_at');
+    }
 }
