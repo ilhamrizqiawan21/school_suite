@@ -63,7 +63,7 @@ Gunakan secret manager atau mekanisme environment sementara pada pipeline deploy
 - Login melalui `/login` menggunakan akun Admin pertama.
 - Lengkapi identitas, kontak, sekilas tentang sekolah, sambutan kepala sekolah, logo, favicon, dan warna sekolah pada Pengaturan Sekolah.
 - Kelola Berita Sekolah dari menu Pengaturan. Berita mendukung draf/terbit dan sampai lima foto per berita, masing-masing maksimal 2 MB.
-- Halaman profil publik sekolah tersedia di `/profil-sekolah`, sedangkan berita yang sudah terbit tersedia di `/berita`.
+- Halaman profil publik sekolah tersedia di `/` (alias `/profil-sekolah`), sedangkan berita yang sudah terbit tersedia di `/berita`.
 - Buat akun Operator/TU, Kepala Sekolah, Guru, Wali Kelas, dan Siswa sesuai kebutuhan.
 - Hubungkan akun guru yang merangkap TU dengan profil Guru aktif; jangan memberikan role Admin untuk kebutuhan administrasi harian.
 - Pastikan `/up` mengembalikan status kesehatan aplikasi.
