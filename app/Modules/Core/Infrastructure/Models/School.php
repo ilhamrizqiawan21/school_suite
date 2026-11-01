@@ -29,6 +29,8 @@ class School extends Model
         'website',
         'vision',
         'mission',
+        'about',
+        'principal_message',
         'logo_path',
         'favicon_path',
         'settings',

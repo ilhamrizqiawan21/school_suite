@@ -165,6 +165,22 @@ class RoleMatrixAccessTest extends TestCase
         $this->get('/pengaturan/sekolah')->assertStatus(200);
     }
 
+    public function test_operator_can_update_school_profile_content(): void
+    {
+        $operator = $this->usersByRole[RoleEnum::OPERATOR->value];
+
+        $this->actingAs($operator)->put('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => $this->school->level,
+            'about' => 'Profil singkat sekolah yang disusun oleh Operator/TU.',
+            'principal_message' => 'Sambutan kepala sekolah untuk halaman publik.',
+        ])->assertRedirect('/pengaturan/sekolah')->assertSessionHasNoErrors();
+
+        $this->assertSame('Profil singkat sekolah yang disusun oleh Operator/TU.', $this->school->fresh()->about);
+        $this->assertSame('Sambutan kepala sekolah untuk halaman publik.', $this->school->fresh()->principal_message);
+    }
+
     /**
      * Matriks Uji 3: Kepala Sekolah dapat melihat daftar pengguna dan profil sekolah (Read Only).
      */

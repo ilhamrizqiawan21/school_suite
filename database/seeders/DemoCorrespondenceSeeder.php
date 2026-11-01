@@ -26,8 +26,8 @@ class DemoCorrespondenceSeeder extends Seeder
 
         $service = app(CorrespondenceService::class);
         foreach ([
-            ['number' => 'DEMO/001/TU', 'subject' => '[DEMO] Undangan rapat koordinasi', 'issue' => false],
-            ['number' => 'DEMO/002/TU', 'subject' => '[DEMO] Pemberitahuan kegiatan sekolah', 'issue' => true],
+            ['number' => 'DEMO/001/TU', 'subject' => '[DEMO] Undangan rapat koordinasi'],
+            ['number' => 'DEMO/002/TU', 'subject' => '[DEMO] Pemberitahuan kegiatan sekolah'],
         ] as $example) {
             if (CorrespondenceRecord::query()->where('school_id', $school->id)->where('letter_type', 'outgoing')->where('letter_number', $example['number'])->exists()) {
                 continue;
@@ -46,9 +46,6 @@ class DemoCorrespondenceSeeder extends Seeder
                 'attachment_note' => null,
             ]);
 
-            if ($example['issue']) {
-                $service->updateStatus($actor, $record, 'issued', null);
-            }
         }
     }
 }

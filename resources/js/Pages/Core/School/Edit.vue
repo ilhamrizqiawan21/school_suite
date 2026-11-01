@@ -19,6 +19,8 @@ interface SchoolData {
     website?: string;
     vision?: string;
     mission?: string;
+    about?: string;
+    principal_message?: string;
     logo_path?: string;
     favicon_path?: string;
     settings?: {
@@ -48,6 +50,8 @@ const form = useForm({
     website: props.school.website ?? '',
     vision: props.school.vision ?? '',
     mission: props.school.mission ?? '',
+    about: props.school.about ?? '',
+    principal_message: props.school.principal_message ?? '',
     letterhead_parent_institution: props.school.settings?.letterhead?.parent_institution ?? '',
     letterhead_city: props.school.settings?.letterhead?.city ?? '',
     letterhead_postal_code: props.school.settings?.letterhead?.postal_code ?? '',
@@ -123,6 +127,11 @@ const submit = () => {
                             <label><span>Status sekolah</span><select v-model="form.school_status"><option value="">Belum diisi</option><option>Negeri</option><option>Swasta</option></select><em v-if="form.errors.school_status">{{ form.errors.school_status }}</em></label>
                             <label class="wide"><span>Alamat lengkap</span><textarea v-model="form.address" rows="3" placeholder="Jalan, kelurahan, kecamatan, kota/kabupaten, dan kode pos"></textarea><em v-if="form.errors.address">{{ form.errors.address }}</em></label>
                         </div>
+                    </section>
+                    <section class="panel settings-section">
+                        <div class="section-heading"><h2>Konten profil sekolah</h2><p>Konten ini menjadi bahan utama halaman profil publik sekolah dan dapat disempurnakan sebelum landing page diterbitkan.</p></div>
+                        <label><span>Sekilas tentang sekolah</span><textarea v-model="form.about" rows="5" maxlength="10000" placeholder="Ceritakan sejarah singkat, karakter, dan keunggulan sekolah."></textarea><small>Gunakan bahasa yang mudah dipahami calon siswa, orang tua, dan masyarakat.</small><em v-if="form.errors.about">{{ form.errors.about }}</em></label>
+                        <label><span>Sambutan kepala sekolah</span><textarea v-model="form.principal_message" rows="5" maxlength="10000" placeholder="Tuliskan sambutan singkat kepala sekolah."></textarea><em v-if="form.errors.principal_message">{{ form.errors.principal_message }}</em></label>
                     </section>
                     <section class="panel settings-section">
                         <div class="section-heading"><h2>Kop surat resmi</h2><p>Data ini dipakai pada PDF persuratan. Kosongkan instansi pembina bila tidak tercantum pada kop sekolah.</p></div>

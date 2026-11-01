@@ -62,6 +62,8 @@ class SchoolController extends Controller
             'website' => ['nullable', 'url:http,https', 'max:255'],
             'vision' => ['nullable', 'string', 'max:5000'],
             'mission' => ['nullable', 'string', 'max:10000'],
+            'about' => ['nullable', 'string', 'max:10000'],
+            'principal_message' => ['nullable', 'string', 'max:10000'],
             'letterhead_parent_institution' => ['nullable', 'string', 'max:255'],
             'letterhead_city' => ['nullable', 'string', 'max:100'],
             'letterhead_postal_code' => ['nullable', 'string', 'max:15'],
@@ -70,7 +72,7 @@ class SchoolController extends Controller
             'favicon' => ['nullable', File::image()->types(['png'])->max(512)->dimensions(Rule::dimensions()->maxWidth(512)->maxHeight(512)->ratio(1))],
         ]);
 
-        $oldValues = $school->only(['name', 'npsn', 'level', 'address', 'phone', 'email', 'legal_name', 'school_status', 'accreditation', 'principal_name', 'website', 'vision', 'mission', 'logo_path', 'favicon_path', 'settings']);
+        $oldValues = $school->only(['name', 'npsn', 'level', 'address', 'phone', 'email', 'legal_name', 'school_status', 'accreditation', 'principal_name', 'website', 'vision', 'mission', 'about', 'principal_message', 'logo_path', 'favicon_path', 'settings']);
         $settings = $school->settings ?? [];
         $settings['theme_primary'] = $validated['theme_primary'] ?? data_get($settings, 'theme_primary', '#3157a4');
         $settings['letterhead'] = [

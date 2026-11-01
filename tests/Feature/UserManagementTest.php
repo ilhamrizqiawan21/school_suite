@@ -248,6 +248,8 @@ class UserManagementTest extends TestCase
             'address' => 'Jl. Baru No. 99',
             'phone' => '021-9999999',
             'email' => 'info.baru@sman1testing.sch.id',
+            'about' => 'SMA Negeri 1 Testing Unggulan adalah sekolah yang mengembangkan potensi akademik dan karakter peserta didik.',
+            'principal_message' => 'Selamat datang di profil resmi SMA Negeri 1 Testing Unggulan.',
         ]);
 
         $updateResponse->assertRedirect('/pengaturan/sekolah');
@@ -256,6 +258,8 @@ class UserManagementTest extends TestCase
         $this->school->refresh();
         $this->assertSame('SMA Negeri 1 Testing Unggulan', $this->school->name);
         $this->assertSame('Jl. Baru No. 99', $this->school->address);
+        $this->assertSame('SMA Negeri 1 Testing Unggulan adalah sekolah yang mengembangkan potensi akademik dan karakter peserta didik.', $this->school->about);
+        $this->assertSame('Selamat datang di profil resmi SMA Negeri 1 Testing Unggulan.', $this->school->principal_message);
 
         // Verify audit event
         $this->assertDatabaseHas('audit_events', [

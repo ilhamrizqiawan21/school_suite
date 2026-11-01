@@ -19,6 +19,7 @@ School Suite adalah aplikasi web terpadu untuk manajemen akademik, pembelajaran,
 | Bagaimana AI bekerja di repo ini? | [AI Rules](AI_RULES.md), [Gemini](GEMINI.md), [Codex Review](CODEX_REVIEW.md) |
 | Bagaimana implementasi diserahkan untuk review? | [Handoff](HANDOFF.md) |
 | Bukti pengujian apa yang wajib? | [Tests](TESTS.md) dan [Regression](REGRESSION.md) |
+| Bagaimana satu instalasi sekolah dipasang dan diinisialisasi? | [Installation](INSTALLATION.md) dan [Deployment Checklist](DEPLOYMENT_CHECKLIST.md) |
 
 ## Batas produk
 
