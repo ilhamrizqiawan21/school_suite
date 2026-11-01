@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace App\Modules\Academic\Application\Policies;
 
 use App\Models\User;
+use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
 use App\Modules\Core\Domain\PermissionEnum;
 
 class AttendancePolicy
 {
-    public function before(User $actor, string $ability): ?bool
+    public function before(User $actor, string $ability, mixed $argument = null): ?bool
     {
         if (! $actor->is_active) {
             return false;
         }
 
-        if ($actor->hasRole('admin')) {
+        if ($actor->hasRole('admin') && ! is_object($argument)) {
             return true;
         }
 
@@ -34,6 +35,14 @@ class AttendancePolicy
 
     public function record(User $actor, mixed $target = null): bool
     {
+        if ($target instanceof LessonSession && (int) $target->school_id !== (int) $actor->school_id) {
+            return false;
+        }
+
+        if ($target instanceof AttendanceRecord && (int) $target->school_id !== (int) $actor->school_id) {
+            return false;
+        }
+
         if ($actor->hasRole('principal')) {
             return false;
         }

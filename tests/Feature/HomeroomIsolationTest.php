@@ -16,6 +16,7 @@ use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Homeroom\Application\Services\StudentObservationService;
 use App\Modules\Homeroom\Domain\Enums\NoteAccessLevelEnum;
 use App\Modules\Homeroom\Domain\Enums\NoteCategoryEnum;
+use App\Modules\Homeroom\Infrastructure\Models\StudentNote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -214,6 +215,36 @@ class HomeroomIsolationTest extends TestCase
         $studentNotes = $this->observationService->getNotesForStudent($this->student->id, $this->studentUser);
         $this->assertCount(1, $studentNotes);
         $this->assertEquals(NoteAccessLevelEnum::PUBLIC->value, $studentNotes->first()->access_level);
+    }
+
+    public function test_observation_notes_cannot_cross_school_boundaries(): void
+    {
+        $otherSchool = School::create([
+            'npsn' => '87654321',
+            'name' => 'Sekolah Lain',
+            'status' => 'active',
+        ]);
+        $otherStudent = Student::create([
+            'school_id' => $otherSchool->id,
+            'nis' => '9001',
+            'name' => 'Siswa Sekolah Lain',
+            'gender' => 'L',
+        ]);
+        $foreignNote = StudentNote::create([
+            'school_id' => $otherSchool->id,
+            'student_id' => $otherStudent->id,
+            'term_id' => $this->term->id,
+            'class_group_id' => $this->class7A->id,
+            'author_id' => $this->admin->id,
+            'title' => 'Catatan lintas sekolah',
+            'content' => 'Tidak boleh terlihat.',
+            'category' => NoteCategoryEnum::GENERAL->value,
+            'access_level' => NoteAccessLevelEnum::PUBLIC->value,
+        ]);
+
+        $this->assertCount(0, $this->observationService->getNotesForStudent($otherStudent->id, $this->homeroomTeacherUser));
+        $this->assertFalse($this->observationService->canViewConfidential($this->admin, $otherStudent->id));
+        $this->assertFalse($this->admin->can('delete', $foreignNote));
     }
 
     public function test_ss_f_006_report_export_strictly_excludes_confidential_and_internal_notes(): void

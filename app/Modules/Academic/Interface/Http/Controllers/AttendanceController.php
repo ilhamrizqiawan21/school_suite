@@ -10,6 +10,7 @@ use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\LessonSession;
+use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use Illuminate\Http\RedirectResponse;
@@ -136,16 +137,21 @@ class AttendanceController extends Controller
 
     public function record(Request $request): RedirectResponse
     {
+        $schoolId = (int) $request->user()->school_id;
         $validated = $request->validate([
-            'session_id' => ['nullable', 'exists:lesson_sessions,id'],
+            'session_id' => ['nullable', Rule::exists('lesson_sessions', 'id')->where('school_id', $schoolId)],
             'date' => ['required', 'date'],
             'records' => ['required', 'array', 'min:1'],
-            'records.*.enrollment_id' => ['required', 'exists:enrollments,id'],
+            'records.*.enrollment_id' => [
+                'required',
+                Rule::exists('enrollments', 'id')->where(fn ($query) => $query->whereIn(
+                    'student_id',
+                    Student::query()->where('school_id', $schoolId)->select('id')
+                )),
+            ],
             'records.*.status' => ['required', 'in:present,sick,permitted,absent'],
             'records.*.notes' => ['nullable', 'string', 'max:255'],
         ]);
-
-        $schoolId = (int) $request->user()->school_id;
 
         // Jika terdapat session_id, catat ke session
         if (! empty($validated['session_id'])) {

@@ -10,6 +10,7 @@ use App\Modules\Homeroom\Infrastructure\Models\StudentNote;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StudentObservationService
 {
@@ -22,6 +23,13 @@ class StudentObservationService
      */
     public function canViewConfidential(User $viewer, int $studentId): bool
     {
+        if (! DB::table('students')
+            ->where('id', $studentId)
+            ->where('school_id', $viewer->school_id)
+            ->exists()) {
+            return false;
+        }
+
         // Admin, Kepala Sekolah, dan Guru BK (counselor) selalu berhak
         if ($viewer->hasRole('admin') || $viewer->hasRole('principal') || $viewer->hasRole('counselor')) {
             return true;
@@ -33,6 +41,7 @@ class StudentObservationService
                 ->join('class_groups', 'enrollments.class_group_id', '=', 'class_groups.id')
                 ->join('teachers', 'class_groups.homeroom_teacher_id', '=', 'teachers.id')
                 ->where('enrollments.student_id', $studentId)
+                ->where('class_groups.school_id', $viewer->school_id)
                 ->where('teachers.user_id', $viewer->id)
                 ->exists();
 
@@ -51,6 +60,10 @@ class StudentObservationService
      */
     public function getNotesForStudent(int $studentId, User $viewer): Collection
     {
+        if (! DB::table('students')->where('id', $studentId)->where('school_id', $viewer->school_id)->exists()) {
+            return collect();
+        }
+
         $allowedLevels = [NoteAccessLevelEnum::PUBLIC->value];
 
         // Pengguna internal sekolah dapat melihat internal notes
@@ -65,6 +78,7 @@ class StudentObservationService
         }
 
         return StudentNote::where('student_id', $studentId)
+            ->where('school_id', $viewer->school_id)
             ->whereIn('access_level', $allowedLevels)
             ->with('author')
             ->latest('id')
@@ -93,7 +107,33 @@ class StudentObservationService
      */
     public function createNote(array $data, User $author): StudentNote
     {
-        $data['school_id'] = (int) $author->school_id;
+        $schoolId = (int) $author->school_id;
+        $termAcademicYearId = DB::table('terms')
+            ->join('academic_years', 'academic_years.id', '=', 'terms.academic_year_id')
+            ->where('terms.id', $data['term_id'] ?? 0)
+            ->where('academic_years.school_id', $schoolId)
+            ->value('terms.academic_year_id');
+        $studentInSchool = DB::table('students')->where('id', $data['student_id'] ?? 0)->where('school_id', $schoolId)->exists();
+        $classAcademicYearId = null;
+        if (! empty($data['class_group_id'])) {
+            $classAcademicYearId = DB::table('class_groups')
+                ->join('academic_years', 'academic_years.id', '=', 'class_groups.academic_year_id')
+                ->where('class_groups.id', $data['class_group_id'])
+                ->where('class_groups.school_id', $schoolId)
+                ->value('class_groups.academic_year_id');
+        }
+
+        if (! $studentInSchool) {
+            throw ValidationException::withMessages(['student_id' => 'Siswa tidak berada di sekolah akun Anda.']);
+        }
+        if ($termAcademicYearId === null) {
+            throw ValidationException::withMessages(['term_id' => 'Semester tidak berada di sekolah akun Anda.']);
+        }
+        if (! empty($data['class_group_id']) && ($classAcademicYearId === null || (int) $classAcademicYearId !== (int) $termAcademicYearId)) {
+            throw ValidationException::withMessages(['class_group_id' => 'Kelas tidak sesuai dengan semester sekolah Anda.']);
+        }
+
+        $data['school_id'] = $schoolId;
         $data['author_id'] = $author->id;
         $data['access_level'] = $data['access_level'] ?? NoteAccessLevelEnum::INTERNAL->value;
 

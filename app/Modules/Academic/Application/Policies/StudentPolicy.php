@@ -10,13 +10,13 @@ use App\Modules\Core\Domain\PermissionEnum;
 
 class StudentPolicy
 {
-    public function before(User $actor, string $ability): ?bool
+    public function before(User $actor, string $ability, mixed $argument = null): ?bool
     {
         if (! $actor->is_active) {
             return false;
         }
 
-        if ($actor->hasRole('admin')) {
+        if ($actor->hasRole('admin') && ! is_object($argument)) {
             return true;
         }
 

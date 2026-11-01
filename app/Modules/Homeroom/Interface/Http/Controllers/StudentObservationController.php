@@ -11,6 +11,7 @@ use App\Modules\Homeroom\Infrastructure\Models\StudentNote;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -28,6 +29,11 @@ class StudentObservationController extends Controller
         $schoolId = (int) $request->user()->school_id;
         $classGroupId = $request->query('class_group_id');
         $studentId = $request->query('student_id');
+
+        $request->validate([
+            'class_group_id' => ['nullable', 'integer', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)],
+            'student_id' => ['nullable', 'integer', Rule::exists('students', 'id')->where('school_id', $schoolId)],
+        ]);
 
         $activeTerm = $this->academicQueryService->getActiveTerm($schoolId);
 
@@ -47,6 +53,7 @@ class StudentObservationController extends Controller
             $notes = $this->observationService->getNotesForStudent((int) $studentId, $request->user());
         } elseif ($classGroupId && $activeTerm) {
             $notes = StudentNote::where('class_group_id', $classGroupId)
+                ->where('school_id', $schoolId)
                 ->where('term_id', $activeTerm->id)
                 ->when(! $request->user()->hasRole('admin') && ! $request->user()->hasRole('principal'), function ($q) {
                     $q->where('access_level', '!=', 'confidential');

@@ -30,6 +30,7 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
   - `DB_CONNECTION=mysql` dengan database `school_suite` dan kredensial terisolasi.
   - `SESSION_SECURE_COOKIE=true` (untuk enkripsi cookie via HTTPS).
   - Hak akses file `.env` dikunci ketat (`chmod 600 .env` milik `www-data:www-data`).
+  - Shared storage dan direktori backup dimiliki user/group runtime yang sama dengan PHP-FPM, worker, dan scheduler (`RUNTIME_USER`/`RUNTIME_GROUP`, default `www-data`); deployment script menormalkan permission direktori ke `0770` dan file ke `0660`.
 
 ---
 

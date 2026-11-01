@@ -17,6 +17,8 @@ RELEASE_DIR="${RELEASES_DIR}/${TIMESTAMP}"
 HEALTH_CHECK_URL="${HEALTH_CHECK_URL:-}"
 PHP_FPM_SERVICE="${PHP_FPM_SERVICE:-php8.3-fpm}"
 SCHEDULER_TIMER_SERVICE="${SCHEDULER_TIMER_SERVICE:-school-suite-scheduler.timer}"
+RUNTIME_USER="${RUNTIME_USER:-www-data}"
+RUNTIME_GROUP="${RUNTIME_GROUP:-www-data}"
 DEPLOY_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "${HEALTH_CHECK_URL}" ]; then
@@ -43,6 +45,13 @@ echo "=== Memulai Deployment School Suite [${TIMESTAMP}] ==="
 
 # 1. Pastikan direktori dasar ada
 mkdir -p "${SHARED_DIR}/storage/app/private" "${SHARED_DIR}/storage/framework/cache/data" "${SHARED_DIR}/storage/framework/sessions" "${SHARED_DIR}/storage/framework/views" "${SHARED_DIR}/storage/logs" "${SHARED_DIR}/backups" "${RELEASES_DIR}"
+
+# PHP-FPM, queue worker, scheduler, and the backup command must share one
+# owner. Without this repair, a worker-created 0700 directory can make the
+# scheduled backup fail with a permission error on the next deploy.
+sudo chown -R --no-dereference "${RUNTIME_USER}:${RUNTIME_GROUP}" "${SHARED_DIR}/storage" "${SHARED_DIR}/backups"
+sudo find "${SHARED_DIR}/storage" "${SHARED_DIR}/backups" -type d -exec chmod 0770 {} +
+sudo find "${SHARED_DIR}/storage" "${SHARED_DIR}/backups" -type f -exec chmod 0660 {} +
 
 # 2. Clone/Salin release baru
 echo "1/7 Menyiapkan rilis baru di ${RELEASE_DIR}..."
