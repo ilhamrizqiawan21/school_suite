@@ -21,6 +21,7 @@ use App\Modules\Assessment\Infrastructure\Models\ExamAttempt;
 use App\Modules\Assessment\Infrastructure\Models\ExamQuestion;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Modules\Core\Infrastructure\Models\LoginAttemptLog;
+use App\Modules\Core\Interface\Http\Controllers\SchoolProfileController;
 use App\Modules\Learning\Infrastructure\Models\AssignmentSubmission;
 use App\Modules\Learning\Infrastructure\Models\LearningAssignment;
 use App\Shared\Http\Controllers\PrivateFileController;
@@ -28,8 +29,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function (PrincipalDashboardService $principalDashboard) {
+Route::get('/', function (PrincipalDashboardService $principalDashboard, SchoolProfileController $schoolProfile) {
     $user = request()->user();
+    if ($user === null) {
+        return $schoolProfile->index();
+    }
+
     $schoolId = (int) $user->school_id;
 
     $activeTerm = Term::query()
@@ -242,7 +247,7 @@ Route::get('/', function (PrincipalDashboardService $principalDashboard) {
     return Inertia::render('Dashboard', [
         'stats' => $stats,
     ]);
-})->middleware('auth')->name('dashboard');
+})->name('dashboard');
 
 // Observability & Health Check Subsystem (SS-F-009)
 Route::get('/up', HealthCheckController::class)->name('health.up');
