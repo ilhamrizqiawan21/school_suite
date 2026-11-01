@@ -239,6 +239,8 @@ class UserManagementTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->component('Core/School/Edit')
             ->where('school.name', 'SMA Negeri 1 Testing')
+            ->where('accreditationOptions.0', 'Unggul')
+            ->where('accreditationOptions.6', 'Belum Terakreditasi')
         );
 
         $updateResponse = $this->put('/pengaturan/sekolah', [
@@ -267,5 +269,24 @@ class UserManagementTest extends TestCase
             'target_type' => 'School',
             'target_id' => (string) $this->school->id,
         ]);
+    }
+
+    public function test_school_accreditation_accepts_only_supported_options(): void
+    {
+        $this->actingAs($this->admin);
+
+        $payload = [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => $this->school->level,
+        ];
+
+        $this->put('/pengaturan/sekolah', [...$payload, 'accreditation' => 'Unggul'])
+            ->assertRedirect('/pengaturan/sekolah')
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Unggul', $this->school->fresh()->accreditation);
+
+        $this->put('/pengaturan/sekolah', [...$payload, 'accreditation' => 'AA'])
+            ->assertSessionHasErrors('accreditation');
     }
 }

@@ -32,6 +32,7 @@ interface SchoolData {
 const props = defineProps<{
     school: SchoolData;
     canUpdate: boolean;
+    accreditationOptions: string[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -85,7 +86,6 @@ const fields = [
     { key: 'npsn', label: 'NPSN', required: true, max: 20 },
     { key: 'legal_name', label: 'Nama badan hukum / yayasan', max: 255 },
     { key: 'principal_name', label: 'Nama kepala sekolah', max: 255 },
-    { key: 'accreditation', label: 'Akreditasi', max: 10 },
     { key: 'phone', label: 'Nomor telepon', type: 'tel', max: 30 },
     { key: 'email', label: 'Email resmi', type: 'email', max: 255 },
     { key: 'website', label: 'Website', type: 'url', max: 255, placeholder: 'https://sekolah.sch.id' },
@@ -125,6 +125,7 @@ const submit = () => {
                             </label>
                             <label><span>Jenjang sekolah *</span><select v-model="form.level" required><option v-for="level in ['SD', 'SMP', 'SMA', 'SMK', 'MI', 'MTs', 'MA']" :key="level" :value="level">{{ level }}</option></select><em v-if="form.errors.level">{{ form.errors.level }}</em></label>
                             <label><span>Status sekolah</span><select v-model="form.school_status"><option value="">Belum diisi</option><option>Negeri</option><option>Swasta</option></select><em v-if="form.errors.school_status">{{ form.errors.school_status }}</em></label>
+                            <label><span>Akreditasi</span><select v-model="form.accreditation" :aria-invalid="!!form.errors.accreditation"><option value="">Belum diisi</option><option v-for="option in accreditationOptions" :key="option" :value="option">{{ option }}</option></select><em v-if="form.errors.accreditation">{{ form.errors.accreditation }}</em></label>
                             <label class="wide"><span>Alamat lengkap</span><textarea v-model="form.address" rows="3" placeholder="Jalan, kelurahan, kecamatan, kota/kabupaten, dan kode pos"></textarea><em v-if="form.errors.address">{{ form.errors.address }}</em></label>
                         </div>
                     </section>

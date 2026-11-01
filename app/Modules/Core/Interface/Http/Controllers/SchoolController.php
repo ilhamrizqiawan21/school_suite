@@ -18,6 +18,8 @@ use Inertia\Response;
 
 class SchoolController extends Controller
 {
+    private const ACCREDITATION_OPTIONS = ['Unggul', 'Baik Sekali', 'Baik', 'A', 'B', 'C', 'Belum Terakreditasi'];
+
     public function __construct(
         protected AuditLogger $auditLogger
     ) {}
@@ -35,6 +37,7 @@ class SchoolController extends Controller
         return Inertia::render('Core/School/Edit', [
             'school' => $school,
             'canUpdate' => Gate::allows('update', $school),
+            'accreditationOptions' => self::ACCREDITATION_OPTIONS,
         ]);
     }
 
@@ -57,7 +60,7 @@ class SchoolController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'legal_name' => ['nullable', 'string', 'max:255'],
             'school_status' => ['nullable', 'string', 'in:Negeri,Swasta'],
-            'accreditation' => ['nullable', 'string', 'max:10'],
+            'accreditation' => ['nullable', Rule::in(self::ACCREDITATION_OPTIONS)],
             'principal_name' => ['nullable', 'string', 'max:255'],
             'website' => ['nullable', 'url:http,https', 'max:255'],
             'vision' => ['nullable', 'string', 'max:5000'],
