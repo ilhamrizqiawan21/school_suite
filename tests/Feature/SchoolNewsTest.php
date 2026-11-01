@@ -99,6 +99,23 @@ class SchoolNewsTest extends TestCase
         Storage::disk('local')->assertExists($news->photos->first()->path);
     }
 
+    public function test_news_saves_captions_for_uploaded_photos(): void
+    {
+        Storage::fake('local');
+        $photoContent = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', true);
+
+        $this->actingAs($this->operator)->post('/pengaturan/berita', [
+            'title' => 'Dokumentasi Upacara Sekolah',
+            'body' => 'Dokumentasi upacara bendera sekolah.',
+            'status' => 'draft',
+            'photos' => [UploadedFile::fake()->createWithContent('upacara.png', $photoContent)],
+            'photo_captions' => ['Upacara bendera memperingati hari pendidikan.'],
+        ])->assertRedirect('/pengaturan/berita')->assertSessionHasNoErrors();
+
+        $news = SchoolNews::query()->where('title', 'Dokumentasi Upacara Sekolah')->firstOrFail();
+        $this->assertSame('Upacara bendera memperingati hari pendidikan.', $news->photos->first()->caption);
+    }
+
     public function test_public_pages_show_published_news_but_hide_drafts(): void
     {
         $published = SchoolNews::create([
