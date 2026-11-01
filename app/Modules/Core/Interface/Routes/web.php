@@ -8,11 +8,13 @@ use App\Modules\Core\Interface\Http\Controllers\PasswordController;
 use App\Modules\Core\Interface\Http\Controllers\ProfileController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolNewsController;
+use App\Modules\Core\Interface\Http\Controllers\SchoolProfileController;
 use App\Modules\Core\Interface\Http\Controllers\SecurityOperationsController;
 use App\Modules\Core\Interface\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/branding/sekolah/{school}/{kind}', [BrandMediaController::class, 'school'])->where('kind', 'logo|favicon')->name('branding.school');
+Route::get('/profil-sekolah', [SchoolProfileController::class, 'index'])->name('core.school.public');
 Route::get('/berita', [SchoolNewsController::class, 'publicIndex'])->name('core.news.public.index');
 Route::get('/berita/{slug}/foto/{photo}', [SchoolNewsController::class, 'photo'])->whereNumber('photo')->name('core.news.photo');
 Route::get('/berita/{slug}', [SchoolNewsController::class, 'publicShow'])->name('core.news.public.show');
