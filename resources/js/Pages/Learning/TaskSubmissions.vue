@@ -97,9 +97,9 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                     <div><p class="eyebrow">Daftar pengumpulan</p><h2>Jawaban siswa</h2></div>
                     <div class="submission-tools"><label class="table-search"><span>⌕</span><input v-model="search" placeholder="Cari siswa" /></label><select v-model="statusFilter"><option value="all">Semua status</option><option value="submitted">Terkirim</option><option value="graded">Dinilai</option><option value="needs_revision">Perlu perbaikan</option><option value="not_submitted">Belum mengumpulkan</option></select><button class="secondary-button compact" type="button" @click="exportCsv">Excel</button><button class="secondary-button compact" type="button" @click="printPage">PDF</button></div>
                 </div>
-                <div class="table-scroll">
-                    <table class="submission-table">
-                        <thead><tr><th>Siswa</th><th>Status</th><th>Waktu</th><th>File / jawaban</th><th>Nilai</th><th>Aksi</th></tr></thead>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table submission-table">
+                        <thead><tr><th scope="col">Siswa</th><th scope="col">Status</th><th scope="col">Waktu</th><th scope="col">File / jawaban</th><th scope="col">Nilai</th><th scope="col">Aksi</th></tr></thead>
                         <tbody>
                             <tr v-for="row in filteredSubmissions" :key="row.id ?? row.student.nis ?? row.student.name ?? 'row'">
                                 <td><strong>{{ row.student.name || '-' }}</strong><small>{{ row.student.nis || '-' }}</small></td>
@@ -122,7 +122,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 
         <div v-if="selected" class="modal-backdrop" @click.self="selected = null">
             <form class="modal-card" @submit.prevent="submitGrade">
-                <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2>{{ selected.student.name }}</h2></div><button type="button" @click="selected = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2>{{ selected.student.name }}</h2></div><button type="button" aria-label="Tutup detail pengumpulan" @click="selected = null">×</button></div>
                 <div class="submission-detail-meta"><span>Status: <strong>{{ statusLabel(selected) }}</strong></span><span>Tanggal kumpul: <strong>{{ formatDate(selected.submitted_at) }}</strong></span></div>
                 <div v-if="selected.content" class="answer-box"><strong>Jawaban teks</strong><p>{{ selected.content }}</p></div>
                 <div v-if="selected.files.length" class="file-list"><strong>Berkas jawaban</strong><a v-for="file in selected.files" :key="file.id" :href="file.url">{{ file.name }}</a></div>
@@ -130,7 +130,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                 <label>Keputusan<select v-model="gradeForm.review_status"><option value="approved">Setujui & beri nilai</option><option value="needs_revision">Minta perbaikan</option></select></label>
                 <label v-if="gradeForm.review_status === 'approved'">Nilai<input v-model.number="gradeForm.score" type="number" min="0" :max="assignment.max_score" required /></label>
                 <label>Umpan balik<textarea v-model="gradeForm.feedback" rows="5" /></label>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="selected = null">Batal</button><button class="primary-button" :disabled="gradeForm.processing">Simpan</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" @click="selected = null">Batal</button><button type="submit" class="primary-button" :disabled="gradeForm.processing">Simpan</button></div>
             </form>
         </div>
     </AppLayout>

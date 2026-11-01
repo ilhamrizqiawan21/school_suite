@@ -340,7 +340,7 @@ class CoreAuthorizationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($admin)->get('/')->assertOk();
+        $this->actingAs($admin)->get('/dashboard')->assertOk();
         $admin->update(['is_active' => false]);
 
         $this->get('/pengaturan/pengguna')->assertRedirect(route('login'));

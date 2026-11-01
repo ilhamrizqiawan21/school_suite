@@ -80,15 +80,15 @@ function applyFilters() {
                     <button class="primary-button min-h-10" type="submit">Terapkan</button>
                 </form>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-[760px] w-full border-collapse text-left text-sm">
+                <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table min-w-[760px] w-full border-collapse text-left text-sm">
                         <thead class="bg-slate-800 text-white">
                             <tr>
-                                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">Nama siswa</th>
-                                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">NIS / NISN</th>
-                                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">Rombel aktif</th>
-                                <th class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">Status</th>
-                                <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide">Buku induk</th>
+                                <th scope="col" class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">Nama siswa</th>
+                                <th scope="col" class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">NIS / NISN</th>
+                                <th scope="col" class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">Rombel aktif</th>
+                                <th scope="col" class="px-5 py-3 text-xs font-semibold uppercase tracking-wide">Status</th>
+                                <th scope="col" class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide">Buku induk</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">

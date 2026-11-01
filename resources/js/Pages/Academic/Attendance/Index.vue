@@ -177,7 +177,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                     <p class="mt-1 text-sm text-slate-500">Pilih kelas, mata pelajaran, dan bulan. Buka sesi untuk mencatat presensi.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <Link href="/" class="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">← Kembali</Link>
+                    <Link href="/dashboard" class="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">← Kembali</Link>
                     <button type="button" class="inline-flex min-h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!selectedSession || !studentList.length" @click="exportSessionCsv">Ekspor CSV</button>
                     <a href="/akademik/presensi/rekap" class="inline-flex min-h-10 items-center rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Rekap Absensi</a>
                 </div>
@@ -241,9 +241,9 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                             <div><h3 class="font-bold text-slate-900">Daftar siswa</h3><p class="text-xs text-slate-500">{{ studentList.length }} siswa · {{ selected_subject?.name }}</p></div>
                             <span v-if="selectedSession.attendance_count" class="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">{{ selectedSession.attendance_count }}/{{ selectedSession.student_count }} tercatat</span>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[720px] border-collapse text-left text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th class="w-24 px-4 py-3">No / NIS</th><th class="min-w-44 px-4 py-3">Nama siswa</th><th class="min-w-64 px-4 py-3">Status</th><th class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
+                        <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                            <table class="app-table w-full min-w-[720px] border-collapse text-left text-sm">
+                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th scope="col" class="w-24 px-4 py-3">No / NIS</th><th scope="col" class="min-w-44 px-4 py-3">Nama siswa</th><th scope="col" class="min-w-64 px-4 py-3">Status</th><th scope="col" class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
                                 <tbody class="divide-y divide-slate-100 text-slate-700">
                                     <tr v-for="(student, index) in studentList" :key="student.enrollment_id" class="hover:bg-slate-50">
                                         <td class="whitespace-nowrap px-4 py-3 text-xs"><span class="block font-semibold text-slate-700">{{ student.roll_number || index + 1 }}</span><span class="text-slate-500">{{ student.nis }}</span></td>

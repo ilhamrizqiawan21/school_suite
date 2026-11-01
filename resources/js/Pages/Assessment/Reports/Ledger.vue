@@ -101,21 +101,21 @@ const printLedger = () => {
                     </span>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-700 border-collapse border border-slate-200">
+                <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table w-full text-left text-xs text-slate-700 border-collapse border border-slate-200">
                         <thead class="bg-slate-50 text-slate-800 font-bold uppercase text-[11px]">
                             <tr>
-                                <th class="border border-slate-200 py-2.5 px-2 w-10 text-center" rowspan="2">No</th>
-                                <th class="border border-slate-200 py-2.5 px-3 w-24" rowspan="2">NIS</th>
-                                <th class="border border-slate-200 py-2.5 px-4 min-w-[160px]" rowspan="2">Nama Siswa</th>
+                                <th scope="col" class="border border-slate-200 py-2.5 px-2 w-10 text-center" rowspan="2">No</th>
+                                <th scope="col" class="border border-slate-200 py-2.5 px-3 w-24" rowspan="2">NIS</th>
+                                <th scope="col" class="border border-slate-200 py-2.5 px-4 min-w-[160px]" rowspan="2">Nama Siswa</th>
                                 <th
                                     :colspan="props.ledger.subjects.length"
                                     class="border border-slate-200 py-2 px-2 text-center bg-indigo-50/60 text-indigo-900"
                                 >
                                     Mata Pelajaran
                                 </th>
-                                <th class="border border-slate-200 py-2.5 px-3 w-16 text-center bg-slate-100" rowspan="2">Rerata</th>
-                                <th colspan="3" class="border border-slate-200 py-2 px-2 text-center bg-amber-50/60 text-amber-900">
+                                <th scope="col" class="border border-slate-200 py-2.5 px-3 w-16 text-center bg-slate-100" rowspan="2">Rerata</th>
+                                <th scope="colgroup" colspan="3" class="border border-slate-200 py-2 px-2 text-center bg-amber-50/60 text-amber-900">
                                     Presensi
                                 </th>
                             </tr>
@@ -128,9 +128,9 @@ const printLedger = () => {
                                 >
                                     {{ sub.code }}
                                 </th>
-                                <th class="border border-slate-200 py-1.5 px-1.5 text-center w-8 text-amber-700">S</th>
-                                <th class="border border-slate-200 py-1.5 px-1.5 text-center w-8 text-blue-700">I</th>
-                                <th class="border border-slate-200 py-1.5 px-1.5 text-center w-8 text-rose-700">A</th>
+                                <th scope="col" class="border border-slate-200 py-1.5 px-1.5 text-center w-8 text-amber-700">S</th>
+                                <th scope="col" class="border border-slate-200 py-1.5 px-1.5 text-center w-8 text-blue-700">I</th>
+                                <th scope="col" class="border border-slate-200 py-1.5 px-1.5 text-center w-8 text-rose-700">A</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">

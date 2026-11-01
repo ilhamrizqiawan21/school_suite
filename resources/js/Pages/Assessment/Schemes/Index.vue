@@ -203,16 +203,16 @@ const weightTotals = (components: ComponentItem[]) => {
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-slate-600">
+                        <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                            <table class="app-table w-full text-left text-sm text-slate-600">
                                 <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-semibold">
                                     <tr>
-                                        <th class="py-2.5 px-3 w-12 text-center">Urutan</th>
-                                        <th class="py-2.5 px-3 w-28">Kode</th>
-                                        <th class="py-2.5 px-4">Nama Komponen</th>
-                                        <th class="py-2.5 px-4">Kelas & Mata Pelajaran</th>
-                                        <th class="py-2.5 px-3 text-center w-32">Bobot (%)</th>
-                                        <th class="py-2.5 px-3 text-center w-32">KKTP / Batas</th>
+                                        <th scope="col" class="py-2.5 px-3 w-12 text-center">Urutan</th>
+                                        <th scope="col" class="py-2.5 px-3 w-28">Kode</th>
+                                        <th scope="col" class="py-2.5 px-4">Nama Komponen</th>
+                                        <th scope="col" class="py-2.5 px-4">Kelas & Mata Pelajaran</th>
+                                        <th scope="col" class="py-2.5 px-3 text-center w-32">Bobot (%)</th>
+                                        <th scope="col" class="py-2.5 px-3 text-center w-32">KKTP / Batas</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">

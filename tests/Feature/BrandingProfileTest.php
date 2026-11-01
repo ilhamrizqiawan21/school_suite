@@ -110,7 +110,7 @@ class BrandingProfileTest extends TestCase
             'password_confirmation' => 'PasswordBaru123',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
         $this->assertTrue(Hash::check('PasswordBaru123', $this->admin->fresh()->password));
         $this->assertDatabaseMissing('sessions', ['id' => 'other-device-session']);
         $this->assertDatabaseHas('audit_events', ['event_type' => 'core.password.changed', 'actor_id' => $this->admin->id]);

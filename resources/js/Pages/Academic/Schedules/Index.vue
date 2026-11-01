@@ -388,7 +388,7 @@ const deleteSchedule = (id: number) => {
 @media (max-width: 1200px) { .schedule-page .page-heading { grid-template-columns: minmax(0, 1fr); }.schedule-page .page-heading > :last-child { justify-content: flex-start; }.schedule-controls { grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(0, 1fr)); }.schedule-term-control { grid-column: auto; }.schedule-reset { grid-column: 1 / -1; justify-self: end; }.schedule-scroll-hint { display: block; } }
 @media (max-width: 640px) { .schedule-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.schedule-page .page-heading > :last-child { width: 100%; flex-direction: column; align-items: stretch; }.schedule-page .page-heading > :last-child button { justify-content: center; }.schedule-controls, .schedule-metrics, .schedule-metrics-manager { grid-template-columns: minmax(0, 1fr); }.schedule-term-control { grid-column: auto; }.schedule-reset { width: 100%; } }
 
-.schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 650; }
+.schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 600; }
 .schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
 </style>
 

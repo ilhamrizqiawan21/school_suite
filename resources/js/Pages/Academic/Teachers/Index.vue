@@ -239,18 +239,18 @@ const submitImport = () => {
 
             <!-- Table -->
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
+                <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table w-full text-left border-collapse text-sm">
                         <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
                             <tr>
-                                <th class="px-5 py-3.5">Nama & NIP</th>
-                                <th class="px-5 py-3.5">L/P</th>
-                                <th class="px-5 py-3.5">Masa Pensiun</th>
-                                <th class="px-5 py-3.5">Kontak</th>
-                                <th class="px-5 py-3.5">Status Pegawai</th>
-                                <th class="px-5 py-3.5">Wali Kelas</th>
-                                <th class="px-5 py-3.5">Status</th>
-                                <th v-if="can_manage" class="px-5 py-3.5">Status sandi / Aksi</th>
+                                <th scope="col" class="px-5 py-3.5">Nama & NIP</th>
+                                <th scope="col" class="px-5 py-3.5">L/P</th>
+                                <th scope="col" class="px-5 py-3.5">Masa Pensiun</th>
+                                <th scope="col" class="px-5 py-3.5">Kontak</th>
+                                <th scope="col" class="px-5 py-3.5">Status Pegawai</th>
+                                <th scope="col" class="px-5 py-3.5">Wali Kelas</th>
+                                <th scope="col" class="px-5 py-3.5">Status</th>
+                                <th scope="col" v-if="can_manage" class="px-5 py-3.5">Status sandi / Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">

@@ -260,7 +260,7 @@ const removeResource = (url: string) => {
     <AppLayout title="Pembelajaran">
         <Head title="Pembelajaran" />
 
-        <main class="view space-y-6 learning-page">
+        <div class="view space-y-6 learning-page">
             <section class="hero-card compact-hero">
                 <div>
                     <p class="eyebrow">{{ capabilities.submit ? 'Pembelajaran siswa' : (isMaterialSection && selectedMaterialClass ? 'Kelas & mapel' : 'Ruang pembelajaran') }} · {{ active_term?.name ?? 'Belum ada semester aktif' }}</p>
@@ -369,7 +369,7 @@ const removeResource = (url: string) => {
                 <section class="task-list-panel panel">
                     <div class="task-panel-heading"><div><p class="eyebrow">Daftar tugas</p><h2>Tugas yang diterbitkan</h2><p>Kelola deadline, progres pengumpulan, dan penilaian dari satu tempat.</p></div><label class="task-search task-search-wide"><span>⌕</span><input v-model="taskSearch" placeholder="Cari tugas" /></label></div>
                     <div class="task-table-wrap">
-                        <table class="task-table"><thead><tr><th>Judul</th><th>Kelas</th><th>Deadline</th><th>Pengumpulan</th><th>Aksi</th></tr></thead><tbody>
+                        <table class="app-table task-table"><thead><tr><th scope="col">Judul</th><th scope="col">Kelas</th><th scope="col">Deadline</th><th scope="col">Pengumpulan</th><th scope="col">Aksi</th></tr></thead><tbody>
                             <tr v-for="assignment in filteredAssignments" :key="assignment.id">
                                 <td><strong>{{ assignment.title }}</strong><small>{{ assignment.instructions || 'Tanpa deskripsi tambahan.' }}</small></td>
                                 <td><span class="task-subject-chip">{{ assignment.teaching_assignment.class_group.name }}</span><small>{{ assignment.teaching_assignment.subject.name }}</small></td>
@@ -529,51 +529,51 @@ const removeResource = (url: string) => {
                     </div>
                 </div>
             </section>
-        </main>
+        </div>
 
         <div v-if="showMaterialForm" class="modal-backdrop" @click.self="showMaterialForm = false">
             <form class="modal-card" @submit.prevent="submitMaterial">
-                <div class="modal-heading"><div><p class="eyebrow">Materi baru</p><h2>Terbitkan bahan ajar</h2></div><button type="button" @click="showMaterialForm = false">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Materi baru</p><h2>Terbitkan bahan ajar</h2></div><button type="button" aria-label="Tutup formulir materi" @click="showMaterialForm = false">×</button></div>
                 <label>Kelas dan mata pelajaran<select v-model="materialForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option></select></label>
                 <label>Judul<input v-model="materialForm.title" required maxlength="180" /></label>
                 <label>Deskripsi<textarea v-model="materialForm.description" rows="4" /></label>
                 <label>Berkas materi *<input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" required @change="handleMaterialFile" /></label>
                 <p class="form-hint">Format: PDF, DOCX, JPG, JPEG, PNG. Maksimal 10 MB. File disimpan privat dan hanya dapat diunduh pengguna yang berwenang.</p>
                 <p v-if="materialForm.hasErrors" class="form-error">Periksa kembali data materi yang diisi.</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="showMaterialForm = false">Batal</button><button class="primary-button" :disabled="materialForm.processing">Terbitkan</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" @click="showMaterialForm = false">Batal</button><button type="submit" class="primary-button" :disabled="materialForm.processing">Terbitkan</button></div>
             </form>
         </div>
 
         <div v-if="showAssignmentForm" class="modal-backdrop" @click.self="showAssignmentForm = false">
             <form class="modal-card" @submit.prevent="submitAssignment">
-                <div class="modal-heading"><div><p class="eyebrow">Tugas baru</p><h2>Buat aktivitas siswa</h2></div><button type="button" @click="showAssignmentForm = false">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Tugas baru</p><h2>Buat aktivitas siswa</h2></div><button type="button" aria-label="Tutup formulir tugas" @click="showAssignmentForm = false">×</button></div>
                 <label>Kelas dan mata pelajaran<select v-model="assignmentForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option></select></label>
                 <label>Judul<input v-model="assignmentForm.title" required maxlength="180" /></label>
                 <label>Instruksi<textarea v-model="assignmentForm.instructions" rows="5" /></label>
                 <div class="form-grid"><label>Tenggat<input v-model="assignmentForm.due_at" type="datetime-local" /></label><label>Nilai maksimal<input v-model.number="assignmentForm.max_score" type="number" min="1" max="1000" /></label></div>
                 <label>Batas revisi<input v-model.number="assignmentForm.revision_limit" type="number" min="0" max="10" /></label>
                 <label class="check-row"><input v-model="assignmentForm.allow_late" type="checkbox" /> Izinkan pengumpulan setelah tenggat</label>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="showAssignmentForm = false">Batal</button><button class="primary-button" :disabled="assignmentForm.processing">Terbitkan tugas</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" @click="showAssignmentForm = false">Batal</button><button type="submit" class="primary-button" :disabled="assignmentForm.processing">Terbitkan tugas</button></div>
             </form>
         </div>
 
         <div v-if="selectedAssignment" class="modal-backdrop" @click.self="selectedAssignment = null">
             <form class="modal-card" @submit.prevent="submitWork">
-                <div class="modal-heading"><div><p class="eyebrow">Pengumpulan tugas</p><h2>{{ selectedAssignment.title }}</h2></div><button type="button" @click="selectedAssignment = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Pengumpulan tugas</p><h2>{{ selectedAssignment.title }}</h2></div><button type="button" aria-label="Tutup pengumpulan tugas" @click="selectedAssignment = null">×</button></div>
                 <label>Jawaban teks<textarea v-model="submissionForm.content" rows="7" placeholder="Tulis jawaban atau catatan untuk guru" /></label>
                 <label>Lampiran (maksimal 5)<input type="file" multiple @change="handleSubmissionFiles" /></label>
                 <p v-if="submissionForm.hasErrors" class="form-error">Isi jawaban teks atau pilih minimal satu berkas.</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="selectedAssignment = null">Batal</button><button class="primary-button" :disabled="submissionForm.processing">Kirim tugas</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" @click="selectedAssignment = null">Batal</button><button type="submit" class="primary-button" :disabled="submissionForm.processing">Kirim tugas</button></div>
             </form>
         </div>
 
         <div v-if="selectedSubmission" class="modal-backdrop" @click.self="selectedSubmission = null">
             <form class="modal-card" @submit.prevent="submitGrade">
-                <div class="modal-heading"><div><p class="eyebrow">Penilaian tugas</p><h2>{{ selectedSubmission.enrollment?.student?.name }}</h2></div><button type="button" @click="selectedSubmission = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Penilaian tugas</p><h2>{{ selectedSubmission.enrollment?.student?.name }}</h2></div><button type="button" aria-label="Tutup penilaian tugas" @click="selectedSubmission = null">×</button></div>
                 <label>Keputusan<select v-model="gradeForm.review_status"><option value="approved">Setujui & beri nilai</option><option value="needs_revision">Minta perbaikan</option></select></label>
                 <label v-if="gradeForm.review_status === 'approved'">Nilai<input v-model.number="gradeForm.score" type="number" min="0" required /></label>
                 <label>Umpan balik<textarea v-model="gradeForm.feedback" rows="5" /></label>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="selectedSubmission = null">Batal</button><button class="primary-button" :disabled="gradeForm.processing">Simpan nilai</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" @click="selectedSubmission = null">Batal</button><button type="submit" class="primary-button" :disabled="gradeForm.processing">Simpan nilai</button></div>
             </form>
         </div>
     </AppLayout>
@@ -637,7 +637,7 @@ const removeResource = (url: string) => {
 .task-panel-icon { width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: .65rem; color: var(--green); background: var(--green-soft); font-size: 1.3rem; }
 .task-create-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(290px, .95fr); gap: 1.15rem; }
 .task-form-main, .task-class-picker { display: grid; gap: .8rem; }
-.task-create-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .78rem; font-weight: 750; }
+.task-create-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
 .task-create-form input:not([type='checkbox']), .task-create-form textarea { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .7rem .8rem; font: inherit; font-weight: 500; }
 .task-create-form input::placeholder, .task-create-form textarea::placeholder { color: var(--ink-faint); }
 .task-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
@@ -663,7 +663,7 @@ const removeResource = (url: string) => {
 .task-class-card { padding: .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
 .task-class-card.is-highlighted { border-color: color-mix(in srgb, var(--primary) 55%, var(--line)); }
 .task-class-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
-.task-class-card-top small { color: var(--green); font-size: .62rem; font-weight: 850; letter-spacing: .07em; }
+.task-class-card-top small { color: var(--green); font-size: .62rem; font-weight: 800; letter-spacing: .07em; }
 .task-class-card h3 { margin: .15rem 0 0; color: var(--ink); font-size: 1.12rem; }
 .task-class-card p { margin: .15rem 0 0; color: var(--ink-soft); font-size: .75rem; }
 .task-class-bookmark { color: var(--primary); font-size: 1.05rem; }
@@ -679,7 +679,7 @@ const removeResource = (url: string) => {
 .task-table td strong, .task-table td small { display: block; }
 .task-table td strong { color: var(--ink); font-size: .82rem; }
 .task-table td small { margin-top: .18rem; color: var(--ink-soft); font-size: .69rem; }
-.task-subject-chip, .task-deadline { display: inline-flex; padding: .28rem .5rem; border-radius: .5rem; color: var(--ink-soft); background: var(--surface-subtle); font-size: .7rem; font-weight: 750; white-space: nowrap; }
+.task-subject-chip, .task-deadline { display: inline-flex; padding: .28rem .5rem; border-radius: .5rem; color: var(--ink-soft); background: var(--surface-subtle); font-size: .7rem; font-weight: 700; white-space: nowrap; }
 .task-deadline.is-overdue { color: var(--red); background: var(--red-soft); }
 .task-progress-label { display: flex; align-items: center; justify-content: space-between; gap: .7rem; color: var(--ink-soft); font-size: .68rem; }
 .task-progress-label strong { color: var(--ink) !important; font-size: .7rem !important; }
@@ -693,7 +693,7 @@ const removeResource = (url: string) => {
 .material-upload-panel, .material-list-panel { padding: 1.25rem; }
 .material-panel-icon { color: var(--blue); background: var(--blue-soft); }
 .material-inline-form { display: grid; gap: .85rem; }
-.material-inline-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .78rem; font-weight: 750; }
+.material-inline-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
 .material-inline-form input:not([type='file']), .material-inline-form select, .material-inline-form textarea { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .7rem .8rem; font: inherit; }
 .material-inline-form input[type='file'] { width: 100%; min-height: 42px; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .55rem .7rem; font: inherit; }
 .material-inline-form small { color: var(--ink-faint); font-size: .7rem; font-weight: 500; }
@@ -725,7 +725,7 @@ const removeResource = (url: string) => {
 .student-course-chip { flex: 0 0 auto; padding: .42rem .65rem; border-radius: 999px; color: var(--primary); background: var(--primary-soft); font-size: .7rem; font-weight: 800; }
 .student-material-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .85rem; margin-top: 1.1rem; }
 .student-material-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8rem; padding: 1rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface-subtle); }
-.student-material-icon { width: 2.55rem; height: 2.55rem; display: grid; place-items: center; border-radius: .7rem; color: var(--blue); background: var(--blue-soft); font-size: .85rem; font-weight: 850; }
+.student-material-icon { width: 2.55rem; height: 2.55rem; display: grid; place-items: center; border-radius: .7rem; color: var(--blue); background: var(--blue-soft); font-size: .85rem; font-weight: 800; }
 .student-material-body { min-width: 0; }
 .student-material-meta { display: flex; flex-wrap: wrap; gap: .5rem; color: var(--ink-faint); font-size: .65rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .student-material-body h3 { margin: .35rem 0 .3rem; color: var(--ink); font-size: .94rem; line-height: 1.35; }

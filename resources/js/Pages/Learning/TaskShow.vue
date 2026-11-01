@@ -100,7 +100,7 @@ const formatDate = (value?: string | null) => value
                     <label>Lampiran (maksimal 5 file)<input :key="fileInputKey" type="file" multiple accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" @change="handleFiles" /></label>
                     <p class="form-hint">Format pengumpulan: PDF, JPG, JPEG. Maksimal 5 MB per file dan 20 MB total.</p>
                     <p v-if="form.hasErrors" class="form-error">Isi jawaban teks atau pilih minimal satu berkas.</p>
-                    <div class="form-actions"><button class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim...' : 'Kirim tugas' }}</button></div>
+                    <div class="form-actions"><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim...' : 'Kirim tugas' }}</button></div>
                 </form>
             </section>
             <section v-else-if="!can_manage" class="panel empty-state"><strong>Pengumpulan terkunci</strong><p>Jawaban sudah dikirim dan menunggu pemeriksaan guru.</p></section>

@@ -101,7 +101,7 @@ function setStartDate() {
                         <input v-model="form.end_date" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm" type="date" :min="form.start_date" :max="maxEnd" required />
                         <small v-if="form.errors.end_date" class="text-red-700">{{ form.errors.end_date }}</small>
                     </label>
-                    <p class="text-sm text-slate-500 md:col-span-2">Durasi {{ duration }} hari kalender. Minggu dilewati pada pengisian absensi; catatan absensi yang sudah ada dipertahankan.</p><div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="secondary-button" :disabled="form.processing" @click="closeForm">Batal</button><button class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim…' : 'Kirim pengajuan' }}</button></div>
+                    <p class="text-sm text-slate-500 md:col-span-2">Durasi {{ duration }} hari kalender. Minggu dilewati pada pengisian absensi; catatan absensi yang sudah ada dipertahankan.</p><div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="secondary-button" :disabled="form.processing" @click="closeForm">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim…' : 'Kirim pengajuan' }}</button></div>
                 </form>
             </section>
 

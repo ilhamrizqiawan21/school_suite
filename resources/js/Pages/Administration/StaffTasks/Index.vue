@@ -80,7 +80,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <h1>Tugas staf</h1>
                     <p>Pantau penanggung jawab, tenggat, progres, dan riwayat tugas sekolah.</p>
                 </div>
-                <button v-if="can_manage" class="primary-button" @click="openCreate">Tambah tugas</button>
+                <button v-if="can_manage" type="button" class="primary-button" @click="openCreate">Tambah tugas</button>
             </section>
 
             <section class="grid gap-3 sm:grid-cols-3" aria-label="Ringkasan tugas">
@@ -90,7 +90,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
             </section>
             <p class="text-sm leading-6 text-slate-500">{{ can_manage ? '1. Buat tugas dan pilih penanggung jawab → 2. Staf memperbarui progres → 3. Pantau penyelesaian dan riwayat.' : 'Baca tugas Anda, unduh lampiran bila tersedia, lalu perbarui progres sampai 100% setelah pekerjaan selesai.' }}</p>
             <section v-if="showForm && can_manage" id="staff-task-form" class="panel scroll-mt-24 space-y-4 p-5">
-                <div class="flex items-center justify-between gap-4"><h2 class="text-lg font-semibold">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><button class="secondary-button" @click="showForm = false">Tutup</button></div>
+                <div class="flex items-center justify-between gap-4"><h2 class="text-lg font-semibold">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><button type="button" class="secondary-button" @click="showForm = false">Tutup</button></div>
                 <ul v-if="Object.keys(form.errors).length" class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                 <form class="grid gap-4 md:grid-cols-2" @submit.prevent="save">
                     <label class="field md:col-span-2">Judul<input v-model="form.title" required maxlength="180" /><small v-if="form.errors.title">{{ form.errors.title }}</small></label>
@@ -101,7 +101,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <label class="field">Tenggat<input v-model="form.due_at" type="datetime-local" /></label>
                     <label class="field md:col-span-2">Lampiran<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="selectAttachment" /><small v-if="form.errors.attachment">{{ form.errors.attachment }}</small><small>Maksimal 10 MB; file hanya dapat diunduh oleh admin/operator atau penanggung jawab.</small></label>
                     <label v-if="editingId" class="field">Status<select v-model="form.status"><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
-                    <div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button class="primary-button" :disabled="form.processing">Simpan tugas</button></div>
+                    <div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</button></div>
                 </form>
             </section>
 
@@ -112,7 +112,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <label class="field">Status<select v-model="filters.status"><option value="">Semua status</option><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
                     <label class="field">Prioritas<select v-model="filters.priority"><option value="">Semua prioritas</option><option value="low">Rendah</option><option value="normal">Normal</option><option value="high">Tinggi</option><option value="urgent">Mendesak</option></select></label>
                     <label v-if="can_manage" class="field">Penanggung jawab<select v-model="filters.assignee_id"><option value="">Semua staf</option><option v-for="person in assignees" :key="person.id" :value="String(person.id)">{{ person.name }}</option></select></label>
-                    <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-4"><button class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
+                    <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-4"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
                 </form>
             </section>
             <section class="panel overflow-hidden">
@@ -127,7 +127,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <p class="mt-1 max-w-md text-sm leading-6 text-slate-500">
                         {{ can_manage ? 'Buat tugas untuk membagikan pekerjaan dan tenggat kepada staf sekolah.' : 'Tugas yang diberikan kepada Anda akan muncul di sini.' }}
                     </p>
-                    <button v-if="can_manage" class="primary-button mt-5" @click="openCreate">Buat tugas pertama</button>
+                    <button v-if="can_manage" type="button" class="primary-button mt-5" @click="openCreate">Buat tugas pertama</button>
                 </div>
                 <div v-else class="divide-y divide-slate-200">
                     <article v-for="task in tasks" :key="task.id" class="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_220px]">
@@ -151,7 +151,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
             </section>
             <nav v-if="pagination.total" class="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500" aria-label="Halaman tugas">
                 <p>{{ pagination.from }}–{{ pagination.to }} dari {{ pagination.total }} tugas · Halaman {{ pagination.current_page }} / {{ pagination.last_page }}</p>
-                <div class="flex gap-2"><button class="secondary-button" :disabled="!pagination.prev_page_url" @click="pagination.prev_page_url && router.get(pagination.prev_page_url, {}, { preserveState: true, preserveScroll: true })">Sebelumnya</button><button class="secondary-button" :disabled="!pagination.next_page_url" @click="pagination.next_page_url && router.get(pagination.next_page_url, {}, { preserveState: true, preserveScroll: true })">Berikutnya</button></div>
+                <div class="flex gap-2"><button type="button" class="secondary-button" :disabled="!pagination.prev_page_url" @click="pagination.prev_page_url && router.get(pagination.prev_page_url, {}, { preserveState: true, preserveScroll: true })">Sebelumnya</button><button type="button" class="secondary-button" :disabled="!pagination.next_page_url" @click="pagination.next_page_url && router.get(pagination.next_page_url, {}, { preserveState: true, preserveScroll: true })">Berikutnya</button></div>
             </nav>
         </main>
     </AppLayout>

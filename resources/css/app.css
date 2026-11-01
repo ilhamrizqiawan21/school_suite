@@ -3,13 +3,16 @@
 @import './settings.css';
 @import './learning.css';
 @import './teacher.css';
+@import './modern-ui.css';
+@import './public-portfolio.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: var(--font-ui);
+    --font-serif: var(--font-display);
+    --font-mono: var(--font-code);
     --text-xs: .8125rem;
     --text-xs--line-height: 1.4;
     --text-sm: .9rem;
@@ -96,7 +99,7 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
     border-radius: .6rem;
     font: inherit;
     font-size: .75rem;
-    font-weight: 750;
+    font-weight: 700;
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
@@ -113,6 +116,8 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
 .row-action-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgb(24 48 78 / 12%); }
 .row-action-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 38%, transparent); outline-offset: 2px; }
 .row-action-button:disabled { cursor: not-allowed; opacity: .48; }
+.row-action-icon { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+.action-button { min-height: 38px; }
 
 html[data-theme='dark'] .text-slate-950,
 html[data-theme='dark'] .text-slate-900,
@@ -487,5 +492,73 @@ button.bg-slate-900 {
         right: 0;
         display: block;
         background: linear-gradient(to left, var(--surface), transparent);
+    }
+}
+
+/* Public pages carry the school's identity as a quiet, non-interactive watermark. */
+.public-site {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: #f4f0e7 !important;
+}
+
+body:has(.public-site) {
+    background: #f4f0e7 !important;
+}
+
+.public-site > .identity-watermark {
+    display: none;
+    position: fixed;
+    z-index: 0;
+    top: 7vh;
+    right: -4vw;
+    display: grid;
+    place-items: center;
+    width: min(44vw, 560px);
+    aspect-ratio: 1;
+    color: #173044;
+    opacity: .10;
+    pointer-events: none;
+    transform: rotate(-12deg);
+}
+
+.identity-watermark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(.15) saturate(.8);
+}
+
+.identity-watermark span {
+    font-family: var(--font-display);
+    font-size: clamp(12rem, 24vw, 22rem);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.public-site > :not(.identity-watermark) {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 600px) {
+    .public-site > .identity-watermark {
+        top: 20vh;
+        right: -12vw;
+        width: 78vw;
+        opacity: .07;
+    }
+}
+
+.public-site > .identity-watermark {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .public-home .public-header nav a:nth-child(-n+2),
+    .public-organization .public-header nav a:nth-child(-n+2),
+    .school-profile .site-nav a:nth-child(-n+3) {
+        display: inline-flex !important;
     }
 }

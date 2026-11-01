@@ -123,12 +123,12 @@ function submit() {
                     </div>
 
                     <div class="attitude-table-wrap">
-                        <table class="attitude-table">
+                        <table class="app-table attitude-table">
                             <thead>
                                 <tr>
-                                    <th class="student-column">Siswa</th>
-                                    <th v-for="indicator in group.indicators" :key="indicator.key" class="indicator-column">{{ indicator.label }}</th>
-                                    <th class="average-column">Rata-rata</th>
+                                    <th scope="col" class="student-column">Siswa</th>
+                                    <th scope="col" v-for="indicator in group.indicators" :key="indicator.key" class="indicator-column">{{ indicator.label }}</th>
+                                    <th scope="col" class="average-column">Rata-rata</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -179,9 +179,9 @@ function submit() {
 <style scoped>
 .attitude-page { --att-surface: var(--surface, #fff); --att-subtle: var(--surface-subtle, #f6f8fb); --att-ink: var(--ink, #17243a); --att-muted: var(--ink-soft, #607087); --att-line: var(--line, #dce3ed); --att-primary: var(--primary, #355ea8); display: grid; gap: 1rem; max-width: 1480px; margin: 0 auto; padding: clamp(1rem, 2.4vw, 2rem); padding-bottom: 6rem; color: var(--att-ink); }
 .attitude-header { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; padding: clamp(1.2rem, 2.5vw, 2rem); border: 1px solid var(--att-line); border-radius: 1rem; background: linear-gradient(115deg, var(--att-surface), color-mix(in srgb, var(--att-primary) 8%, var(--att-surface))); }
-.attitude-header h1 { margin: .25rem 0 .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 820; letter-spacing: -.04em; }
+.attitude-header h1 { margin: .25rem 0 .4rem; font-size: clamp(1.55rem, 3vw, 2.15rem); font-weight: 800; letter-spacing: -.04em; }
 .attitude-header p { margin: 0; color: var(--att-muted); line-height: 1.5; }
-.attitude-header .attitude-eyebrow { color: var(--att-primary); font-size: .76rem; font-weight: 760; }
+.attitude-header .attitude-eyebrow { color: var(--att-primary); font-size: .76rem; font-weight: 700; }
 .class-picker { display: grid; flex: 0 0 min(260px, 32%); gap: .4rem; color: var(--att-muted); font-size: .76rem; font-weight: 700; }
 .class-picker select, .attitude-table select { min-height: 40px; border: 1px solid var(--att-line); border-radius: .55rem; background: var(--att-surface); color: var(--att-ink); font: inherit; }
 .class-picker select { padding: .55rem .7rem; }
@@ -192,12 +192,12 @@ function submit() {
 .attitude-section { min-width: 0; overflow: hidden; border: 1px solid var(--att-line); border-radius: .9rem; background: var(--att-surface); box-shadow: var(--shadow-sm, 0 4px 16px rgb(24 48 78 / 5%)); }
 .section-heading { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--att-line); }
 .section-mark { display: grid; flex: 0 0 2.5rem; height: 2.5rem; place-items: center; border-radius: .7rem; background: color-mix(in srgb, var(--att-primary) 11%, var(--att-surface)); color: var(--att-primary); font-size: 1.15rem; }
-.section-heading h2 { margin: 0; font-size: 1rem; font-weight: 800; }.section-heading h2 span { margin-left: .35rem; color: var(--att-muted); font-size: .75rem; font-weight: 650; }
+.section-heading h2 { margin: 0; font-size: 1rem; font-weight: 800; }.section-heading h2 span { margin-left: .35rem; color: var(--att-muted); font-size: .75rem; font-weight: 600; }
 .section-heading p { margin: .2rem 0 0; color: var(--att-muted); font-size: .77rem; }.student-count { margin-left: auto; color: var(--att-muted); font-size: .75rem; white-space: nowrap; }
 .attitude-table-wrap { overflow: auto; scrollbar-width: thin; }
 .attitude-table { width: 100%; min-width: 850px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
 .attitude-table th, .attitude-table td { padding: .58rem .5rem; border-bottom: 1px solid var(--att-line); text-align: center; }
-.attitude-table thead th { position: sticky; top: 0; z-index: 2; background: var(--att-subtle); color: var(--att-muted); font-size: .7rem; font-weight: 760; }
+.attitude-table thead th { position: sticky; top: 0; z-index: 2; background: var(--att-subtle); color: var(--att-muted); font-size: .7rem; font-weight: 700; }
 .attitude-table .student-column, .student-cell { position: sticky; left: 0; z-index: 1; width: 230px; text-align: left; }
 .attitude-table .student-column { z-index: 3; }.student-cell { background: var(--att-surface); }
 .student-cell strong, .student-cell small, .legacy-predicate { display: block; }.student-cell strong { font-size: .8rem; }.student-cell small { margin-top: .1rem; color: var(--att-muted); font-size: .7rem; font-weight: 500; }
@@ -211,7 +211,7 @@ function submit() {
 .attitude-savebar { position: sticky; bottom: .7rem; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem .85rem; border: 1px solid var(--att-line); border-radius: .8rem; background: color-mix(in srgb, var(--att-surface) 94%, transparent); box-shadow: var(--shadow-md, 0 8px 25px rgb(24 48 78 / 12%)); backdrop-filter: blur(12px); }
 .save-status { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 720; }.save-status small { flex-basis: 100%; padding-left: 1rem; color: var(--att-muted); font-size: .7rem; font-weight: 500; }
 .status-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #178357; }.status-dot.dirty { background: #bd7912; box-shadow: 0 0 0 3px color-mix(in srgb, #bd7912 17%, transparent); }.status-dot.saved { background: #178357; }
-.save-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border: 1px solid var(--att-primary); border-radius: .6rem; background: var(--att-primary); color: #fff; font: inherit; font-size: .8rem; font-weight: 760; cursor: pointer; }.save-button:disabled { opacity: .55; cursor: not-allowed; }
+.save-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border: 1px solid var(--att-primary); border-radius: .6rem; background: var(--att-primary); color: #fff; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }.save-button:disabled { opacity: .55; cursor: not-allowed; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 @media (max-width: 700px) { .attitude-page { padding: .75rem; padding-bottom: 6rem; }.attitude-header { align-items: stretch; flex-direction: column; }.class-picker { flex-basis: auto; }.scale-note { align-items: flex-start; flex-direction: column; }.section-heading { padding: .8rem; }.section-heading p { max-width: 42ch; }.attitude-table { min-width: 760px; }.attitude-table .student-column, .student-cell { width: 170px; }.attitude-table th, .attitude-table td { padding: .5rem .35rem; }.indicator-column { width: 72px; }.average-column { width: 82px; }.attitude-savebar { bottom: .35rem; }.save-status small { display: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }

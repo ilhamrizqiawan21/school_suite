@@ -277,16 +277,16 @@ const submitDispensation = () => {
             </div>
 
             <!-- Content Tab 1: Insiden & Pelanggaran -->
-            <div v-if="activeTab === 'incidents'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-                <table class="w-full text-left text-sm border-collapse">
+            <div v-if="activeTab === 'incidents'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
+                <table class="app-table w-full text-left text-sm border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
                         <tr>
-                            <th class="px-4 py-3">Tanggal</th>
-                            <th class="px-4 py-3">Nama Siswa</th>
-                            <th class="px-4 py-3">Bentuk Pelanggaran</th>
-                            <th class="px-4 py-3">Kategori</th>
-                            <th class="px-4 py-3 text-center">Poin</th>
-                            <th class="px-4 py-3">Tindak Lanjut</th>
+                            <th scope="col" class="px-4 py-3">Tanggal</th>
+                            <th scope="col" class="px-4 py-3">Nama Siswa</th>
+                            <th scope="col" class="px-4 py-3">Bentuk Pelanggaran</th>
+                            <th scope="col" class="px-4 py-3">Kategori</th>
+                            <th scope="col" class="px-4 py-3 text-center">Poin</th>
+                            <th scope="col" class="px-4 py-3">Tindak Lanjut</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -315,16 +315,16 @@ const submitDispensation = () => {
             </div>
 
             <!-- Content Tab 2: Prestasi Siswa -->
-            <div v-if="activeTab === 'achievements'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-                <table class="w-full text-left text-sm border-collapse">
+            <div v-if="activeTab === 'achievements'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
+                <table class="app-table w-full text-left text-sm border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
                         <tr>
-                            <th class="px-4 py-3">Tanggal</th>
-                            <th class="px-4 py-3">Nama Siswa</th>
-                            <th class="px-4 py-3">Nama Prestasi / Kejuaraan</th>
-                            <th class="px-4 py-3">Bidang</th>
-                            <th class="px-4 py-3">Tingkat</th>
-                            <th class="px-4 py-3">Capaian / Peringkat</th>
+                            <th scope="col" class="px-4 py-3">Tanggal</th>
+                            <th scope="col" class="px-4 py-3">Nama Siswa</th>
+                            <th scope="col" class="px-4 py-3">Nama Prestasi / Kejuaraan</th>
+                            <th scope="col" class="px-4 py-3">Bidang</th>
+                            <th scope="col" class="px-4 py-3">Tingkat</th>
+                            <th scope="col" class="px-4 py-3">Capaian / Peringkat</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -350,16 +350,16 @@ const submitDispensation = () => {
             </div>
 
             <!-- Content Tab 3: Tindak Lanjut & Konseling -->
-            <div v-if="activeTab === 'assistances'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-                <table class="w-full text-left text-sm border-collapse">
+            <div v-if="activeTab === 'assistances'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
+                <table class="app-table w-full text-left text-sm border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
                         <tr>
-                            <th class="px-4 py-3">Tanggal</th>
-                            <th class="px-4 py-3">Nama Siswa</th>
-                            <th class="px-4 py-3">Bentuk Layanan</th>
-                            <th class="px-4 py-3">Ringkasan Pembahasan</th>
-                            <th class="px-4 py-3">Solusi / Kesepakatan</th>
-                            <th class="px-4 py-3">Fasilitator</th>
+                            <th scope="col" class="px-4 py-3">Tanggal</th>
+                            <th scope="col" class="px-4 py-3">Nama Siswa</th>
+                            <th scope="col" class="px-4 py-3">Bentuk Layanan</th>
+                            <th scope="col" class="px-4 py-3">Ringkasan Pembahasan</th>
+                            <th scope="col" class="px-4 py-3">Solusi / Kesepakatan</th>
+                            <th scope="col" class="px-4 py-3">Fasilitator</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -381,16 +381,16 @@ const submitDispensation = () => {
             </div>
 
             <!-- Content Tab 4: Dispensasi & Surat Izin -->
-            <div v-if="activeTab === 'dispensations'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-                <table class="w-full text-left text-sm border-collapse">
+            <div v-if="activeTab === 'dispensations'" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
+                <table class="app-table w-full text-left text-sm border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
                         <tr>
-                            <th class="px-4 py-3">Periode Tanggal</th>
-                            <th class="px-4 py-3">Nama Siswa</th>
-                            <th class="px-4 py-3">Jenis Dispensasi</th>
-                            <th class="px-4 py-3">Keterangan / Alasan</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3">Dicatat Oleh</th>
+                            <th scope="col" class="px-4 py-3">Periode Tanggal</th>
+                            <th scope="col" class="px-4 py-3">Nama Siswa</th>
+                            <th scope="col" class="px-4 py-3">Jenis Dispensasi</th>
+                            <th scope="col" class="px-4 py-3">Keterangan / Alasan</th>
+                            <th scope="col" class="px-4 py-3">Status</th>
+                            <th scope="col" class="px-4 py-3">Dicatat Oleh</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">

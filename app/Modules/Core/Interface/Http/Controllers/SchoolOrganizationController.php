@@ -6,6 +6,7 @@ namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Core\Application\Services\SchoolOrganizationTreeService;
+use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolOrganizationMember;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +31,19 @@ class SchoolOrganizationController extends Controller
 
         return Inertia::render('Core/Organization/Index', [
             'members' => $this->presentMembers((int) $request->user()->school_id, true),
+        ]);
+    }
+
+    public function publicIndex(): Response
+    {
+        $school = School::query()->firstOrFail();
+
+        return Inertia::render('Public/Organization/Index', [
+            'school' => [
+                'name' => $school->name,
+                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+            ],
+            'organization' => $this->presentMembers((int) $school->id, false),
         ]);
     }
 

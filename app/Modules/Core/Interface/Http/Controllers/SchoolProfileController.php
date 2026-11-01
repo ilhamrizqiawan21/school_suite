@@ -18,6 +18,23 @@ class SchoolProfileController extends Controller
 
     public function index(): Response
     {
+        return Inertia::render('Public/School/Profile', $this->publicData());
+    }
+
+    public function home(): Response
+    {
+        $data = $this->publicData();
+
+        return Inertia::render('Public/School/Home', [
+            'school' => $data['school'],
+            'news' => $data['news'],
+            'gallery' => $data['gallery'],
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function publicData(): array
+    {
         $school = School::query()->firstOrFail();
         $news = SchoolNews::query()
             ->with('photos')
@@ -66,7 +83,7 @@ class SchoolProfileController extends Controller
             return $member;
         }, $this->organizationTree->rowsForSchool((int) $school->id, true));
 
-        return Inertia::render('Public/School/Profile', [
+        return [
             'school' => [
                 ...$school->only([
                     'name', 'legal_name', 'level', 'school_status', 'accreditation',
@@ -78,6 +95,6 @@ class SchoolProfileController extends Controller
             'news' => $news,
             'gallery' => $gallery,
             'organization' => $organization,
-        ]);
+        ];
     }
 }

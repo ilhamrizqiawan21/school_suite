@@ -62,7 +62,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($this->user);
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
 
         // Verify audit event
         $this->assertDatabaseHas('audit_events', [
@@ -79,7 +79,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($this->user);
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 
     public function test_user_cannot_authenticate_with_invalid_password(): void

@@ -38,9 +38,9 @@ const confirmImport = () => {
             </section>
 
             <section class="panel preview-table">
-                <div class="table-scroll">
-                    <table>
-                        <thead><tr><th>Baris</th><th>{{ entity === 'siswa' ? 'NIS' : 'NIP' }}</th><th>Nama</th><th>Gender</th><th v-if="entity === 'siswa'">Status</th><th>Status / masalah</th></tr></thead>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table">
+                        <thead><tr><th scope="col">Baris</th><th scope="col">{{ entity === 'siswa' ? 'NIS' : 'NIP' }}</th><th scope="col">Nama</th><th scope="col">Gender</th><th scope="col" v-if="entity === 'siswa'">Status</th><th scope="col">Status / masalah</th></tr></thead>
                         <tbody>
                             <tr v-for="row in rows" :key="row.row" :class="row.valid ? 'row-valid' : 'row-invalid'">
                                 <td>{{ row.row }}</td><td>{{ row.identifier || '—' }}</td><td>{{ row.name || '—' }}</td><td>{{ row.gender || '—' }}</td><td v-if="entity === 'siswa'">{{ row.status || '—' }}</td>
@@ -53,7 +53,7 @@ const confirmImport = () => {
 
             <footer class="actions">
                 <Link :href="index_url" class="secondary-button">Batal dan kembali</Link>
-                <button class="primary-button" :disabled="form.processing || invalid_count > 0 || valid_count === 0" @click="confirmImport">
+                <button type="button" class="primary-button" :disabled="form.processing || invalid_count > 0 || valid_count === 0" @click="confirmImport">
                     {{ form.processing ? 'Mengimpor…' : `Konfirmasi impor ${valid_count} ${entity}` }}
                 </button>
             </footer>

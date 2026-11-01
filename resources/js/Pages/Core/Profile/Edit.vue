@@ -203,7 +203,7 @@ const submit = () => form.post('/profil', {
     margin: 0;
     color: var(--ink);
     font-size: 1rem;
-    font-weight: 850;
+    font-weight: 800;
 }
 
 .identity-copy p,

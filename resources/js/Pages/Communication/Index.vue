@@ -137,8 +137,8 @@ const markRead = (notification: NotificationItem) => {
 
                 <div v-else class="comm-list">
                     <div class="list-heading"><div><h2>Notifikasi Anda</h2><p>Pilih notifikasi untuk menandainya telah dibaca.</p></div></div>
-                    <div class="notification-toolbar"><span>{{ unreadCount }} belum dibaca</span><button v-if="unreadCount" class="text-button" @click="router.post('/komunikasi/notifikasi/baca-semua')">Tandai semua dibaca</button></div>
-                    <button v-for="item in notifications" :key="item.id" class="notification-item" :class="{ unread: !item.read_at }" @click="markRead(item)">
+                    <div class="notification-toolbar"><span>{{ unreadCount }} belum dibaca</span><button v-if="unreadCount" type="button" class="text-button" @click="router.post('/komunikasi/notifikasi/baca-semua')">Tandai semua dibaca</button></div>
+                    <button v-for="item in notifications" :key="item.id" type="button" class="notification-item" :class="{ unread: !item.read_at }" @click="markRead(item)">
                         <span class="notification-dot"></span><span><strong>{{ item.title }}</strong><small>{{ item.body }} · {{ formatDate(item.created_at) }}</small></span>
                     </button>
                     <div v-if="!notifications.length" class="empty-state"><strong>Belum ada notifikasi</strong><p>Pemberitahuan pribadi akan tampil di sini.</p></div>
@@ -155,7 +155,7 @@ const markRead = (notification: NotificationItem) => {
                 <p class="form-hint">Jika memilih rombel, penerima dibatasi pada siswa terdaftar dan guru yang memiliki penugasan mengajar di rombel tersebut. Sasaran orang tua dan kepala sekolah berlaku untuk seluruh sekolah.</p>
                 <div class="form-grid"><label>Berlaku sampai (opsional)<input v-model="announcementForm.expires_at" type="datetime-local" /><small v-if="announcementForm.errors.expires_at" class="form-error">{{ announcementForm.errors.expires_at }}</small></label><label>Lampiran (opsional)<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="handleAttachment" /><small>PDF, Word, Excel, atau gambar · maks. 10 MB</small><small v-if="announcementForm.errors.attachment" class="form-error">{{ announcementForm.errors.attachment }}</small></label></div>
                 <p v-if="announcementForm.hasErrors" class="form-error" role="alert">Periksa kolom yang ditandai sebelum menerbitkan.</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" :disabled="announcementForm.processing" @click="showAnnouncementForm = false">Batal</button><button class="primary-button" :disabled="announcementForm.processing">{{ announcementForm.processing ? 'Menerbitkan…' : 'Terbitkan pengumuman' }}</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" :disabled="announcementForm.processing" @click="showAnnouncementForm = false">Batal</button><button type="submit" class="primary-button" :disabled="announcementForm.processing">{{ announcementForm.processing ? 'Menerbitkan…' : 'Terbitkan pengumuman' }}</button></div>
             </form>
         </div>
 
@@ -169,7 +169,7 @@ const markRead = (notification: NotificationItem) => {
                 <label>Rombel (opsional)<select v-model="eventForm.class_group_id" :disabled="!classAllowed(eventForm.audience_role)"><option value="">Semua rombel</option><option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option></select><small v-if="eventForm.errors.class_group_id" class="form-error">{{ eventForm.errors.class_group_id }}</small></label>
                 <p class="form-hint">Sasaran orang tua dan kepala sekolah berlaku untuk seluruh sekolah.</p>
                 <p v-if="eventForm.hasErrors" class="form-error" role="alert">Periksa kolom yang ditandai sebelum menyimpan.</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" :disabled="eventForm.processing" @click="showEventForm = false">Batal</button><button class="primary-button" :disabled="eventForm.processing">{{ eventForm.processing ? 'Menyimpan…' : 'Simpan agenda' }}</button></div>
+                <div class="modal-actions"><button type="button" class="secondary-button" :disabled="eventForm.processing" @click="showEventForm = false">Batal</button><button type="submit" class="primary-button" :disabled="eventForm.processing">{{ eventForm.processing ? 'Menyimpan…' : 'Simpan agenda' }}</button></div>
             </form>
         </div>
     </AppLayout>

@@ -65,7 +65,7 @@ const changeClass = () => {
     <AppLayout title="Ruang Kerja Wali Kelas">
         <Head title="Ruang Kerja Wali Kelas — School Suite" />
 
-        <div class="space-y-6">
+        <div class="view space-y-6 homeroom-page">
             <!-- Header bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -108,26 +108,26 @@ const changeClass = () => {
             </div>
 
             <!-- Metric Stats Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+            <div class="homeroom-metrics">
+                <div class="homeroom-metric">
                     <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Peserta Didik</div>
                     <div class="text-2xl font-bold text-slate-900 mt-2">{{ summary?.total_students || 0 }} Siswa</div>
                     <div class="text-xs text-slate-400 mt-1">Terdaftar pada rombel aktif</div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+                <div class="homeroom-metric">
                     <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rata-rata Kehadiran</div>
                     <div class="text-2xl font-bold text-emerald-600 mt-2">{{ summary?.average_attendance_percentage || 100 }}%</div>
                     <div class="text-xs text-slate-400 mt-1">Presensi semester berjalan</div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+                <div class="homeroom-metric">
                     <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Perlu Perhatian (Early Warning)</div>
                     <div class="text-2xl font-bold text-rose-600 mt-2">{{ summary?.students_needing_attention_count || 0 }} Siswa</div>
                     <div class="text-xs text-slate-400 mt-1">Alpa ≥ 3 hari / kehadiran &lt; 85%</div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+                <div class="homeroom-metric">
                     <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Prestasi & Insiden</div>
                     <div class="text-2xl font-bold text-indigo-600 mt-2">{{ stats.achievements_count }} / {{ stats.incidents_count }}</div>
                     <div class="text-xs text-slate-400 mt-1">{{ stats.achievements_count }} Prestasi, {{ stats.incidents_count }} Pelanggaran</div>
@@ -158,25 +158,25 @@ const changeClass = () => {
             </div>
 
             <!-- Student Attendance Summary Table -->
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+            <div class="homeroom-table-card bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
                 <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                     <h3 class="font-bold text-slate-900 text-sm">Rekapitulasi Kehadiran & Status Siswa</h3>
                     <span class="text-xs text-slate-500">Semester {{ active_term?.name || 'Aktif' }}</span>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
+                <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table w-full text-left border-collapse text-sm">
                         <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
                             <tr>
-                                <th class="px-5 py-3.5 w-16">Absen</th>
-                                <th class="px-5 py-3.5">NIS</th>
-                                <th class="px-5 py-3.5">Nama Peserta Didik</th>
-                                <th class="px-5 py-3.5 text-center">Hadir</th>
-                                <th class="px-5 py-3.5 text-center">Sakit</th>
-                                <th class="px-5 py-3.5 text-center">Izin</th>
-                                <th class="px-5 py-3.5 text-center">Alpa</th>
-                                <th class="px-5 py-3.5 text-center">% Hadir</th>
-                                <th class="px-5 py-3.5">Status Peringatan</th>
+                                <th scope="col" class="px-5 py-3.5 w-16">Absen</th>
+                                <th scope="col" class="px-5 py-3.5">NIS</th>
+                                <th scope="col" class="px-5 py-3.5">Nama Peserta Didik</th>
+                                <th scope="col" class="px-5 py-3.5 text-center">Hadir</th>
+                                <th scope="col" class="px-5 py-3.5 text-center">Sakit</th>
+                                <th scope="col" class="px-5 py-3.5 text-center">Izin</th>
+                                <th scope="col" class="px-5 py-3.5 text-center">Alpa</th>
+                                <th scope="col" class="px-5 py-3.5 text-center">% Hadir</th>
+                                <th scope="col" class="px-5 py-3.5">Status Peringatan</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">

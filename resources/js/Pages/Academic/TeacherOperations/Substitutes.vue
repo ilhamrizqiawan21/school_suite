@@ -39,7 +39,7 @@ function assign(slot: Slot) {
                         <form v-if="!slot.substitute" class="flex flex-col justify-center gap-2" @submit.prevent="assign(slot)">
                             <select v-model="choices[slot.id]" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm" required :disabled="!slot.candidates.length" :aria-label="`Guru pengganti untuk ${slot.subject}`"><option value="">{{ slot.candidates.length ? 'Pilih guru pengganti' : 'Tidak ada guru yang tersedia' }}</option><option v-for="candidate in slot.candidates" :key="candidate.id" :value="String(candidate.id)">{{ candidate.name }}<template v-if="candidate.nip"> · {{ candidate.nip }}</template></option></select>
                             <input v-model="notes[slot.id]" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm" maxlength="255" placeholder="Catatan opsional" />
-                            <div class="flex justify-end"><button class="primary-button" :disabled="!slot.candidates.length">Tetapkan pengganti</button></div>
+                            <div class="flex justify-end"><button type="submit" class="primary-button" :disabled="!slot.candidates.length">Tetapkan pengganti</button></div>
                         </form>
                     </article>
                 </div>

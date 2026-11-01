@@ -26,7 +26,7 @@ interface NavSection {
 
 const homeItem: NavItem = {
     name: 'Beranda',
-    href: '/',
+    href: '/dashboard',
     principalHref: '/kepsek/dashboard',
     principalActivePrefix: '/kepsek/dashboard',
     key: 'home',
@@ -421,7 +421,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 .nav-section-trigger:hover { color: #fff; background: rgba(255,255,255,.07); }
 .nav-section-trigger:focus-visible { outline: 2px solid #f2bc55; outline-offset: 2px; }
 .nav-section-trigger > svg:first-child { width: 18px; height: 18px; flex: 0 0 18px; }
-.nav-section-trigger .nav-label { flex: 1; margin: 0; color: inherit; font-size: 12px; font-weight: 750; letter-spacing: .025em; }
+.nav-section-trigger .nav-label { flex: 1; margin: 0; color: inherit; font-size: 12px; font-weight: 700; letter-spacing: .025em; }
 .nav-section-trigger .nav-label,
 .nav-group-trigger > span,
 .nav-subitem > span { min-width: 0; }

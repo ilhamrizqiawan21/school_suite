@@ -146,7 +146,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                     <label class="grid gap-1 text-sm font-medium">Tanggal<input v-model="selectedDate" type="date" :max="today" required :disabled="busy" class="min-h-10 rounded-lg border px-3" /></label>
                     <button class="secondary-button" :disabled="busy" type="submit">{{ loadingDate ? 'Memuat…' : 'Tampilkan' }}</button>
                     <button class="secondary-button" :disabled="busy" type="button" @click="shiftDate(-1)">Hari sebelumnya</button>
-                    <button class="secondary-button" :disabled="busy || date >= today" type="button" @click="shiftDate(1)">Hari berikutnya</button>
+                    <button type="button" class="secondary-button" :disabled="busy || date >= today" @click="shiftDate(1)">Hari berikutnya</button>
                     <button class="secondary-button" :disabled="busy || date === today" type="button" @click="showDate(today)">Hari ini</button>
                 </form>
                 <p class="mt-3 text-sm text-slate-500">{{ can_manage_all ? 'Kelola seluruh guru aktif di sekolah.' : 'Anda hanya dapat mengisi absensi sendiri.' }}</p>
@@ -174,9 +174,9 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                     <p v-if="bulkMessage" class="px-5 py-3 text-sm text-blue-700" role="status">{{ bulkMessage }}</p>
                     <ul v-if="Object.keys(form.errors).length" class="px-5 py-3 text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                     <div class="flex flex-wrap gap-4 border-b px-5 py-3 text-xs text-slate-500" aria-label="Ringkasan status isian"><span v-for="status in statuses" :key="status.value">{{ status.label }}: {{ attendanceSummary[status.value] }}</span><span>Termasuk usulan yang belum disimpan</span></div>
-                    <div class="overflow-x-auto">
-                        <table class="attendance-table w-full text-left text-sm">
-                            <thead><tr><th v-if="can_manage_all"><input type="checkbox" :checked="allVisibleSelected" :indeterminate="someVisibleSelected && !allVisibleSelected" :disabled="busy || !visibleRows.length" aria-label="Pilih semua guru hasil filter" @change="toggleVisible(($event.target as HTMLInputElement).checked)" /></th><th>Guru</th><th>Status</th><th>Keterangan</th><th>Pencatatan &amp; pengganti</th></tr></thead>
+                    <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                        <table class="app-table attendance-table w-full text-left text-sm">
+                            <thead><tr><th scope="col" v-if="can_manage_all"><input type="checkbox" :checked="allVisibleSelected" :indeterminate="someVisibleSelected && !allVisibleSelected" :disabled="busy || !visibleRows.length" aria-label="Pilih semua guru hasil filter" @change="toggleVisible(($event.target as HTMLInputElement).checked)" /></th><th scope="col">Guru</th><th scope="col">Status</th><th scope="col">Keterangan</th><th scope="col">Pencatatan &amp; pengganti</th></tr></thead>
                             <tbody>
                                 <tr v-for="{ row, index } in visibleRows" :key="row.teacher_id">
                                     <td v-if="can_manage_all" data-label="Pilih"><input v-model="selectedIds" type="checkbox" :value="row.teacher_id" :disabled="busy" :aria-label="`Pilih ${row.name}`" /></td>
@@ -191,7 +191,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                     </div>
                     <footer class="attendance-save-bar">
                         <div><strong>{{ pendingIndices.length }} catatan perlu disimpan</strong><p class="mt-1 text-xs text-slate-500">Mencakup guru baru dan perubahan, termasuk yang tidak terlihat karena filter.</p></div>
-                        <div class="flex flex-wrap gap-2"><button type="button" class="secondary-button" :disabled="busy || !changedCount" @click="resetChanges">Batalkan perubahan</button><button class="primary-button" :disabled="busy || !pendingIndices.length">{{ form.processing ? 'Menyimpan…' : 'Simpan absensi' }}</button></div>
+                        <div class="flex flex-wrap gap-2"><button type="button" class="secondary-button" :disabled="busy || !changedCount" @click="resetChanges">Batalkan perubahan</button><button type="submit" class="primary-button" :disabled="busy || !pendingIndices.length">{{ form.processing ? 'Menyimpan…' : 'Simpan absensi' }}</button></div>
                     </footer>
                 </form>
             </section>
@@ -208,7 +208,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 .attendance-table th { padding: .75rem 1rem; background: var(--surface-subtle); color: var(--ink-soft); font-size: .75rem; }
 .attendance-table td { padding: 1rem; border-top: 1px solid var(--line); vertical-align: top; }
 .attendance-table input[type='checkbox'] { width: 1.1rem; height: 1.1rem; }
-.attendance-badge { display: inline-block; padding: .25rem .5rem; border-radius: .5rem; font-size: .7rem; font-weight: 650; }
+.attendance-badge { display: inline-block; padding: .25rem .5rem; border-radius: .5rem; font-size: .7rem; font-weight: 600; }
 .is-pending { color: var(--gold); background: var(--gold-soft); }
 .is-saved { color: var(--green); background: var(--green-soft); }
 .attendance-save-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-top: 1px solid var(--line); background: var(--surface); }

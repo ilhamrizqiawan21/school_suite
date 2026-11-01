@@ -1,0 +1,642 @@
+/*
+ * School Suite UI refinement
+ *
+ * This layer keeps the existing page-specific styles intact while aligning
+ * the first production surfaces to the Calm Academic OS direction: quiet
+ * chrome, predictable spacing, and clear information hierarchy.
+ */
+
+:root {
+    --content-gutter: clamp(1rem, 3vw, 2rem);
+    --content-max: 1440px;
+    --control-height: 40px;
+}
+
+body {
+    background: var(--canvas);
+}
+
+::selection {
+    color: var(--primary-strong);
+    background: var(--primary-soft);
+}
+
+.sidebar {
+    box-shadow: 8px 0 28px rgba(10, 29, 55, .08);
+}
+
+.brand {
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.nav-stack {
+    gap: 4px;
+}
+
+.nav-section + .nav-section {
+    margin-top: 7px;
+}
+
+.nav-section-trigger {
+    min-height: 34px;
+    color: #aebfda;
+    font-size: .72rem;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+
+.nav-section-trigger:hover {
+    background: rgba(255, 255, 255, .055);
+}
+
+.nav-item {
+    min-height: 40px;
+    border-radius: 9px;
+    font-size: .8125rem;
+}
+
+.nav-item.is-active {
+    box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.topbar {
+    box-shadow: 0 1px 0 rgba(23, 32, 51, .025);
+}
+
+.global-search {
+    height: var(--control-height);
+    background: var(--surface);
+}
+
+main {
+    width: min(100%, var(--content-max));
+    padding-right: var(--content-gutter);
+    padding-left: var(--content-gutter);
+}
+
+.panel {
+    border-radius: 14px;
+}
+
+.page-heading h1 {
+    font-weight: 800;
+}
+
+.primary-button,
+.secondary-button,
+.student-action-button {
+    min-height: var(--control-height);
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']),
+select,
+textarea {
+    border-radius: 9px;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+select:focus,
+textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+/* Dashboard: preserve the role-specific compositions while reducing visual noise. */
+.dashboard-view {
+    max-width: 1370px;
+}
+
+.dashboard-intro {
+    padding-top: 4px;
+}
+
+.intro-kicker {
+    color: var(--primary);
+    font-size: .72rem;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+
+.focus-panel {
+    border-radius: 18px;
+    box-shadow: 0 16px 34px rgba(24, 48, 78, .13);
+}
+
+.insight-panel {
+    border-radius: 18px;
+    background: var(--surface);
+}
+
+.metric-item,
+.principal-chart-panel,
+.principal-grade-panel,
+.principal-news,
+.principal-activity-grid,
+.student-overview-card,
+.admin-overview-card,
+.attendance-chart-card {
+    border-radius: 14px;
+}
+
+.metric-item {
+    min-height: 112px;
+}
+
+/* Assessment workbench: keep the scoring grid dense, but make its context and
+ * save action easier to scan before the user edits any cell. */
+.score-page {
+    max-width: 1370px;
+}
+
+.score-page .score-hero-context,
+.score-page .workspace-tabs,
+.score-page .course-dashboard,
+.score-page .score-table-card {
+    border-radius: 14px;
+}
+
+.score-page .score-hero-context {
+    background: color-mix(in srgb, var(--primary-soft) 72%, var(--surface));
+}
+
+.score-page .course-card {
+    min-height: 64px;
+    border-radius: 10px;
+}
+
+.score-page .score-summary-card,
+.score-page .grade-toolbar {
+    border-radius: 12px;
+}
+
+.score-page .score-input-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Schedule: the week grid is the primary object, so each day gets a quiet
+ * container and the session cards carry the status contrast. */
+.schedule-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.schedule-page .schedule-controls,
+.schedule-page .schedule-day-card,
+.schedule-page .schedule-student-context,
+.schedule-page .schedule-no-results {
+    border-radius: 14px;
+}
+
+.schedule-page .schedule-day-card {
+    border-color: var(--line) !important;
+    background: var(--surface) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.schedule-page .schedule-day-header {
+    color: var(--ink);
+    background: var(--surface-subtle) !important;
+    border-color: var(--line) !important;
+}
+
+.schedule-page .schedule-session {
+    border-color: var(--line) !important;
+    background: var(--surface-subtle) !important;
+}
+
+/* Attendance: make the selected session, status legend, and save bar read as
+ * one focused work area instead of a collection of utility cards. */
+.attendance-page {
+    max-width: 1370px;
+}
+
+.attendance-page [aria-label='Filter presensi'],
+.attendance-page [aria-label='Legenda status'],
+.attendance-page form,
+.attendance-page aside,
+.attendance-page section > div > div {
+    border-color: var(--line) !important;
+    border-radius: 14px !important;
+    background: var(--surface) !important;
+}
+
+.attendance-page table thead {
+    color: var(--ink-faint) !important;
+    background: var(--surface-subtle) !important;
+}
+
+.attendance-page table tbody tr:hover {
+    background: color-mix(in srgb, var(--primary-soft) 42%, transparent) !important;
+}
+
+/* SPMB: preserve the workflow, but give every step the same surface and
+ * make the period context the visual anchor of the page. */
+.spmb-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.spmb-page .hero-card {
+    border-radius: 18px;
+}
+
+.spmb-page .admissions-panel,
+.spmb-page .period-row,
+.spmb-page .track-card,
+.spmb-page .committee-list li,
+.spmb-page .document-row,
+.spmb-page .admissions-applicant {
+    border-radius: 12px;
+}
+
+.spmb-page .period-context {
+    position: sticky;
+    top: calc(var(--topbar) + 12px);
+    z-index: 10;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.spmb-page .spmb-quick-links a {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    padding: 0 .7rem;
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line));
+    border-radius: 8px;
+    background: var(--primary-soft);
+    text-decoration: none;
+}
+
+.spmb-page .workflow-grid div {
+    min-height: 96px;
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.spmb-page .admissions-applicant:hover,
+.spmb-page .period-row:hover,
+.spmb-page .track-card:hover {
+    border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
+    box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 720px) {
+    .spmb-page .period-context {
+        position: static;
+    }
+
+    .spmb-page .workflow-grid div {
+        min-height: 0;
+    }
+}
+
+/* Learning workspace: make the selected class and the teacher/student mode
+ * obvious before the user reaches the resource list. */
+.learning-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.learning-page .hero-card,
+.learning-page .panel,
+.learning-page .class-workspace-nav {
+    border-radius: 14px;
+}
+
+.learning-page .class-workspace-nav {
+    position: sticky;
+    top: calc(var(--topbar) + 12px);
+    z-index: 8;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+.learning-page .task-stat,
+.learning-page .grade-summary > div {
+    border-radius: 12px;
+}
+
+.learning-page .task-search input,
+.learning-page .material-list-tools select,
+.learning-page .student-course-select select {
+    background: var(--surface);
+    border-color: var(--line-strong);
+    color: var(--ink);
+}
+
+.learning-page .material-resource-card,
+.learning-page .task-class-card,
+.learning-page .student-material-card,
+.learning-page .student-task-row {
+    border-color: var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+}
+
+.learning-page .material-resource-card:hover,
+.learning-page .task-class-card:hover,
+.learning-page .student-material-card:hover,
+.learning-page .student-task-row:hover {
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+    box-shadow: var(--shadow-sm);
+}
+
+/* Homeroom workspace: role-specific cards use a restrained metric strip and
+ * keep the student table as the dominant object. */
+.homeroom-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.homeroom-page .homeroom-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.homeroom-page .homeroom-metric {
+    min-height: 112px;
+    padding: 17px;
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--primary);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.homeroom-page .homeroom-metric:nth-child(2) { border-top-color: var(--green); }
+.homeroom-page .homeroom-metric:nth-child(3) { border-top-color: var(--red); }
+.homeroom-page .homeroom-metric:nth-child(4) { border-top-color: var(--violet); }
+
+.homeroom-page .homeroom-table-card {
+    border-color: var(--line) !important;
+    border-radius: 14px !important;
+    background: var(--surface) !important;
+}
+
+.homeroom-page table thead {
+    color: var(--ink-faint) !important;
+    background: var(--surface-subtle) !important;
+}
+
+.homeroom-page table tbody tr:hover {
+    background: color-mix(in srgb, var(--primary-soft) 42%, transparent) !important;
+}
+
+/* Reporting: turn a compact legacy page into a clear decision surface with
+ * metrics, exports, trend, and operational detail in that order. */
+.reporting-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.reporting-page .reporting-hero,
+.reporting-page .export-panel,
+.reporting-page .chart,
+.reporting-page .coverage,
+.reporting-page .table-wrap {
+    border-radius: 14px;
+}
+
+.reporting-page .reporting-hero {
+    min-height: 160px;
+    padding: 1.4rem;
+}
+
+.reporting-page .reporting-hero h1 {
+    color: var(--ink);
+    font-size: clamp(1.7rem, 3vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -.04em;
+}
+
+.reporting-page .reporting-hero p:not(.eyebrow),
+.reporting-page .table-title p,
+.reporting-page .coverage p {
+    color: var(--ink-soft);
+}
+
+.reporting-page .reporting-hero select {
+    border-color: var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+}
+
+.reporting-page .exports a {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line));
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+    text-decoration: none;
+}
+
+.reporting-page .bar i {
+    background: var(--surface-strong);
+}
+
+.reporting-page .bar b {
+    background: var(--primary);
+}
+
+.reporting-page .coverage > strong {
+    color: var(--primary);
+}
+
+.reporting-page .data-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    color: var(--ink);
+}
+
+.reporting-page .data-table th {
+    color: var(--ink-faint);
+    background: var(--surface-subtle);
+    border-color: var(--line);
+}
+
+.reporting-page .data-table td {
+    color: var(--ink-soft);
+    border-color: var(--line);
+}
+
+.reporting-page .data-table td strong {
+    color: var(--ink);
+}
+
+/* Reports register: keep the register readable on a wide desktop and usable
+ * as a scrollable document list on mobile. */
+.reports-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.reports-page .report-register,
+.reports-page .student-report-card {
+    border-radius: 14px;
+}
+
+@media (max-width: 960px) {
+    .homeroom-page .homeroom-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .learning-page .class-workspace-nav {
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .homeroom-page .homeroom-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Data Siswa: compact operational list with the same visual grammar as the mockup. */
+.student-page {
+    max-width: 1370px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.student-page-title {
+    color: var(--ink);
+    font-size: clamp(1.65rem, 2.3vw, 2.1rem);
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1.12;
+}
+
+.student-page-summary {
+    margin-top: .35rem;
+    color: var(--ink-soft);
+    font-size: .8125rem;
+    line-height: 1.55;
+}
+
+.student-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.student-stat {
+    position: relative;
+    min-height: 92px;
+    padding: 15px 17px;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.student-stat::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    content: '';
+    background: var(--primary);
+}
+
+.student-stat:nth-child(2)::before { background: var(--green); }
+.student-stat:nth-child(3)::before { background: var(--gold); }
+
+.student-stat span {
+    font-size: .75rem;
+}
+
+.student-stat strong {
+    margin-top: .45rem;
+    font-size: 1.7rem;
+    letter-spacing: -.045em;
+}
+
+.student-filterbar {
+    align-items: center;
+    min-height: 62px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+}
+
+.student-filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.student-filter-select {
+    min-height: var(--control-height);
+    padding: 0 2.1rem 0 .75rem;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    font-size: .8125rem;
+}
+
+.student-table-card {
+    overflow: hidden;
+}
+
+.student-table thead,
+.student-table thead th {
+    color: var(--ink-faint);
+    background: var(--surface-subtle);
+}
+
+.student-table thead th {
+    height: 45px;
+    font-size: .72rem;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+}
+
+.student-table tbody tr:hover {
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.student-actions-heading {
+    background: var(--surface-subtle);
+}
+
+.student-actions-cell {
+    background: var(--surface);
+}
+
+.student-table .student-row-action {
+    width: 36px;
+    height: 36px;
+}
+
+@media (max-width: 720px) {
+    .student-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .student-filterbar {
+        align-items: stretch;
+    }
+
+    .student-filter-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .student-filter-controls > * {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .view {
+        animation: none;
+    }
+}

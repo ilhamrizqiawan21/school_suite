@@ -241,7 +241,8 @@ class SchoolGalleryController extends Controller
             'photos' => $album->photos->map(fn (SchoolGalleryPhoto $photo): array => [
                 'id' => $photo->id,
                 'name' => $photo->original_name,
-                'url' => route($admin ? 'core.gallery.admin-photo' : 'core.gallery.photo', [$photo->id]),
+                'url' => route($admin ? 'core.gallery.admin-photo' : 'core.gallery.photo', [$photo->id])
+                    .'?v='.($photo->updated_at?->timestamp ?? $photo->id),
             ])->values()->all(),
         ];
     }

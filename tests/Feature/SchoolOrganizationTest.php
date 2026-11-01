@@ -81,6 +81,13 @@ class SchoolOrganizationTest extends TestCase
             ->where('organization.1.depth', 1)
             ->where('organization.0.photo_url', fn ($url) => is_string($url) && $url !== '')
         );
+
+        $this->get('/struktur-organisasi')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Organization/Index')
+            ->has('organization', 2)
+            ->where('organization.0.position', 'Kepala Sekolah')
+            ->where('organization.1.depth', 1)
+        );
     }
 
     public function test_organization_is_school_scoped_and_hidden_members_are_not_public(): void

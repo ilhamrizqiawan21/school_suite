@@ -111,7 +111,7 @@ const normalizedPath = computed(() => {
 });
 
 const pathSegments = computed(() => normalizedPath.value.split('/').filter(Boolean));
-const isDashboard = computed(() => normalizedPath.value === '/' || normalizedPath.value === '/kepsek/dashboard');
+const isDashboard = computed(() => normalizedPath.value === '/dashboard' || normalizedPath.value === '/kepsek/dashboard');
 
 const isDynamicSegment = (segment: string) => /^\d+$/.test(segment)
     || /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(segment);
@@ -176,7 +176,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
     const visibleSegments = segments
         .map((segment, index) => ({ segment, index }))
         .filter(({ segment }) => !isDynamicSegment(segment));
-    const items: BreadcrumbItem[] = [{ label: 'Beranda', href: '/', current: false }];
+    const items: BreadcrumbItem[] = [{ label: 'Beranda', href: '/dashboard', current: false }];
     let prefix = '';
 
     visibleSegments.forEach(({ segment, index }) => {

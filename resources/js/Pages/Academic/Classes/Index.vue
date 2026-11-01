@@ -298,7 +298,7 @@ const submitAssignHomeroom = () => {
 .class-page .page-heading h1 { max-width: 23ch; }
 .class-heading-controls { justify-content: flex-end; }
 .class-stat { display: grid; gap: .35rem; min-width: 0; border-top: 3px solid transparent; }
-.class-stat p { margin: 0; color: var(--ink-soft); font-size: .8rem; font-weight: 650; }
+.class-stat p { margin: 0; color: var(--ink-soft); font-size: .8rem; font-weight: 600; }
 .class-stat strong { color: var(--ink); line-height: 1.1; }
 .class-stat span { color: var(--ink-faint); font-size: .72rem; line-height: 1.4; }
 .class-stat-classes { border-top-color: #3269bc; background: color-mix(in srgb, #3269bc 7%, var(--surface)); }

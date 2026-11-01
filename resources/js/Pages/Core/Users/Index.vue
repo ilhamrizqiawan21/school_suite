@@ -166,7 +166,7 @@ const deleteUser = (user: UserItem) => {
                 <label class="user-field">Cari pengguna<input v-model="search" type="search" maxlength="255" placeholder="Nama, email, atau username" /></label>
                 <label class="user-field">Peran<select v-model="selectedRole"><option value="">Semua peran</option><option v-for="r in filter_roles" :key="r.id" :value="r.name">{{ r.label }}</option></select></label>
                 <label class="user-field">Status akun<select v-model="selectedStatus"><option value="">Semua status</option><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></label>
-                <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3"><button class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
+                <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
             </form>
 
             <section v-if="can_create && showCreate" class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
@@ -192,14 +192,14 @@ const deleteUser = (user: UserItem) => {
             <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                 <p class="px-4 py-3 text-xs text-slate-500">Geser tabel ke samping pada layar kecil untuk melihat semua kolom dan tindakan.</p>
                 <div class="overflow-x-auto" tabindex="0" aria-label="Daftar pengguna">
-                    <table class="min-w-[680px] w-full text-left border-collapse text-xs">
+                    <table class="app-table min-w-[680px] w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
-                                <th class="py-3 px-4">Nama Lengkap</th>
-                                <th class="py-3 px-4">Akun</th>
-                                <th class="py-3 px-4">Peran</th>
-                                <th class="py-3 px-4">Status</th>
-                                <th v-if="can_update || can_delete" class="py-3 px-4 text-right">Aksi</th>
+                                <th scope="col" class="py-3 px-4">Nama Lengkap</th>
+                                <th scope="col" class="py-3 px-4">Akun</th>
+                                <th scope="col" class="py-3 px-4">Peran</th>
+                                <th scope="col" class="py-3 px-4">Status</th>
+                                <th scope="col" v-if="can_update || can_delete" class="py-3 px-4 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">

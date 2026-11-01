@@ -112,8 +112,8 @@ const clearFilters = () => {
                     </div>
 
                     <div v-else class="table-wrap progress-desktop-table">
-                        <table class="data-table">
-                            <thead><tr><th>{{ is_student ? 'Mata pelajaran' : 'Siswa' }}</th><th v-if="!is_student">Kelas / Mapel</th><th>Materi dibaca</th><th>Tugas dikumpulkan</th><th v-if="!is_student">Terlambat</th><th v-if="!is_student">Revisi</th><th>Rerata nilai</th></tr></thead>
+                        <table class="app-table data-table">
+                            <thead><tr><th scope="col">{{ is_student ? 'Mata pelajaran' : 'Siswa' }}</th><th scope="col" v-if="!is_student">Kelas / Mapel</th><th scope="col">Materi dibaca</th><th scope="col">Tugas dikumpulkan</th><th scope="col" v-if="!is_student">Terlambat</th><th scope="col" v-if="!is_student">Revisi</th><th scope="col">Rerata nilai</th></tr></thead>
                             <tbody>
                                 <tr v-for="row in rows" :key="row.row_key">
                                     <td><template v-if="is_student"><strong>{{ row.subject_name }}</strong><small>{{ row.class_name }}</small></template><template v-else><strong>{{ row.student_name }}</strong><small>{{ row.nis }}</small></template></td>

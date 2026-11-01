@@ -205,8 +205,8 @@ const deleteStudent = (student: Student) => {
             <!-- Header bar -->
             <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Manajemen Data Siswa</h1>
-                    <p class="text-sm text-slate-500 mt-1">
+                    <h1 class="student-page-title">Manajemen Data Siswa</h1>
+                    <p class="student-page-summary">
                         {{ can_manage ? 'Kelola data induk siswa, penempatan rombel semester aktif, dan impor massal.' : 'Lihat data induk siswa dan penempatan rombel semester aktif.' }}
                     </p>
                 </div>
@@ -242,14 +242,14 @@ const deleteStudent = (student: Student) => {
             <div v-if="page.props.flash?.message" class="student-notice student-notice-success" role="status">{{ page.props.flash.message }}</div>
             <div v-if="page.props.errors?.student" class="student-notice student-notice-error" role="alert">{{ page.props.errors.student }}</div>
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Ringkasan siswa seluruh sekolah">
+            <div class="student-summary-grid" aria-label="Ringkasan siswa seluruh sekolah">
                 <div class="panel student-stat"><span>Siswa aktif</span><strong>{{ stats.active }}</strong></div>
                 <div class="panel student-stat"><span>Lulus</span><strong>{{ stats.graduated }}</strong></div>
                 <div class="panel student-stat"><span>Keluar / pindah</span><strong>{{ stats.exited }}</strong></div>
             </div>
 
             <!-- Filters -->
-            <div class="toolbar panel">
+            <div class="toolbar panel student-filterbar">
                 <label class="table-search">
                     <input
                         v-model="search"
@@ -264,12 +264,12 @@ const deleteStudent = (student: Student) => {
                     </svg>
                 </label>
 
-                <div class="flex flex-wrap gap-2">
+                <div class="student-filter-controls">
                     <select
                         aria-label="Filter rombel"
                         v-model="selectedClass"
                         @change="applyFilters"
-                        class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                        class="student-filter-select"
                     >
                         <option value="">Semua Rombel</option>
                         <option v-for="cls in classes" :key="cls.id" :value="String(cls.id)">
@@ -281,7 +281,7 @@ const deleteStudent = (student: Student) => {
                         aria-label="Filter status siswa"
                         v-model="selectedStatus"
                         @change="applyFilters"
-                        class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                        class="student-filter-select"
                     >
                         <option value="">Semua Status</option>
                         <option value="active">Aktif</option>
@@ -302,19 +302,19 @@ const deleteStudent = (student: Student) => {
             </div>
 
             <!-- Table -->
-            <div class="table-card panel">
-                <div class="table-scroll">
-                    <table class="student-table w-full text-left border-collapse text-sm">
+            <div class="table-card panel student-table-card">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table student-table w-full text-left border-collapse text-sm">
                         <thead>
                             <tr>
-                                <th class="px-5 py-3.5">NIS / NISN</th>
-                                <th class="px-5 py-3.5">Nama Lengkap</th>
-                                <th class="px-5 py-3.5">L/P</th>
-                                <th class="px-5 py-3.5">Rombel Aktif</th>
-                                <th class="px-5 py-3.5">Kontak Ortu</th>
-                                <th class="px-5 py-3.5">Status</th>
-                                <th v-if="can_manage" class="px-5 py-3.5">Status sandi</th>
-                                <th v-if="can_manage" class="student-actions-heading px-5 py-3.5 text-center">Aksi</th>
+                                <th scope="col" class="px-5 py-3.5">NIS / NISN</th>
+                                <th scope="col" class="px-5 py-3.5">Nama Lengkap</th>
+                                <th scope="col" class="px-5 py-3.5">L/P</th>
+                                <th scope="col" class="px-5 py-3.5">Rombel Aktif</th>
+                                <th scope="col" class="px-5 py-3.5">Kontak Ortu</th>
+                                <th scope="col" class="px-5 py-3.5">Status</th>
+                                <th scope="col" v-if="can_manage" class="px-5 py-3.5">Status sandi</th>
+                                <th scope="col" v-if="can_manage" class="student-actions-heading px-5 py-3.5 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -622,8 +622,8 @@ const deleteStudent = (student: Student) => {
 .student-page :deep(.toolbar) { gap: .75rem; }
 .modal-close-button { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; border-radius: .65rem; }
 .student-table { min-width: 920px; }
-.student-table thead { background: #172d4c; color: #fff; }
-.student-table thead th { border-bottom: 0; font-size: .75rem; font-weight: 750; letter-spacing: .025em; line-height: 1.3; white-space: nowrap; }
+.student-table thead { background: var(--surface-subtle); color: var(--ink-faint); }
+.student-table thead th { border-bottom: 1px solid var(--line); font-size: .75rem; font-weight: 700; letter-spacing: .025em; line-height: 1.3; white-space: nowrap; }
 .student-table tbody tr { background: var(--surface); border-bottom: 1px solid var(--line); transition: background-color .18s ease, box-shadow .18s ease; }.student-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface)); box-shadow: inset 3px 0 0 var(--primary); }.student-table td { vertical-align: middle; }
 .student-data-row:hover .student-gender-badge, .student-data-row:hover .student-enrollment-badge { box-shadow: 0 0 0 2px color-mix(in srgb, var(--surface) 72%, transparent); }
 .student-actions-heading, .student-actions-cell { position: sticky; right: 0; width: 150px; min-width: 150px; }
@@ -647,14 +647,14 @@ const deleteStudent = (student: Student) => {
     .student-mobile-list { display: grid; gap: 0; }
     .student-mobile-card { padding: 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
     .student-mobile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .student-mobile-top h2 { margin: 0; color: var(--ink); font-size: 15px; font-weight: 750; line-height: 1.35; }
+    .student-mobile-top h2 { margin: 0; color: var(--ink); font-size: 15px; font-weight: 700; line-height: 1.35; }
     .student-mobile-top p { margin: 4px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
     .student-mobile-status { flex: 0 0 auto; padding: 4px 8px; color: var(--ink-soft); background: var(--surface-strong); border-radius: 999px; font-size: 11px; font-weight: 700; }
     .student-mobile-status.is-active { color: var(--green); background: var(--green-soft); }
     .student-mobile-details { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 12px; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
     .student-mobile-details > span:nth-child(3) { flex-basis: 100%; }
     .student-mobile-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .student-mobile-actions button { min-height: 44px; padding: 0 10px; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-weight: 750; }
+    .student-mobile-actions button { min-height: 44px; padding: 0 10px; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-weight: 700; }
     .student-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
     .student-mobile-actions button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
     .student-mobile-actions .student-mobile-delete { margin-left: auto; color: var(--red); background: var(--red-soft); }

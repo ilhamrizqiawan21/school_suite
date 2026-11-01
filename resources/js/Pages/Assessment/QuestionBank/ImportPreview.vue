@@ -47,13 +47,13 @@ function confirmImport() {
             </section>
             <footer class="actions">
                 <Link href="/penilaian/bank-soal" class="secondary-button">Batal</Link>
-                <button class="primary-button" :disabled="invalid_count > 0 || valid_count === 0" @click="confirmImport">Konfirmasi impor {{ valid_count }} soal</button>
+                <button type="button" class="primary-button" :disabled="invalid_count > 0 || valid_count === 0" @click="confirmImport">Konfirmasi impor {{ valid_count }} soal</button>
             </footer>
         </main>
     </AppLayout>
 </template>
 
 <style scoped>
-.import-page{display:grid;gap:1rem}.preview-list{display:grid;gap:.75rem;padding:1rem}.preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.25rem 0 .75rem;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:.82rem}.preview-toolbar label{display:flex;align-items:center;gap:.4rem;color:#334155;font-weight:650}.preview-list article{padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem}.preview-list .valid-row{border-left:4px solid #16a34a}.preview-list .invalid-row{border-left:4px solid #dc2626}.row-head,.actions{display:flex;align-items:center;justify-content:space-between;gap:.75rem}.row-head span{font-size:.78rem;font-weight:750}.preview-list h2{margin-top:.4rem;font-weight:750;overflow-wrap:anywhere}.preview-list p{color:#64748b;font-size:.82rem}.preview-list ul{margin:.5rem 0 0 1.1rem;color:#b91c1c;font-size:.82rem;list-style:disc}.actions{justify-content:flex-end}.pagination{display:flex;align-items:center;justify-content:center;gap:.7rem;padding-top:.5rem;color:#64748b;font-size:.8rem}.pagination button{border:1px solid #cbd5e1;border-radius:.5rem;background:#fff;padding:.45rem .7rem;color:#334155}.pagination button:disabled{opacity:.45}
+.import-page{display:grid;gap:1rem}.preview-list{display:grid;gap:.75rem;padding:1rem}.preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.25rem 0 .75rem;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:.82rem}.preview-toolbar label{display:flex;align-items:center;gap:.4rem;color:#334155;font-weight: 600}.preview-list article{padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem}.preview-list .valid-row{border-left:4px solid #16a34a}.preview-list .invalid-row{border-left:4px solid #dc2626}.row-head,.actions{display:flex;align-items:center;justify-content:space-between;gap:.75rem}.row-head span{font-size:.78rem;font-weight: 700}.preview-list h2{margin-top:.4rem;font-weight: 700;overflow-wrap:anywhere}.preview-list p{color:#64748b;font-size:.82rem}.preview-list ul{margin:.5rem 0 0 1.1rem;color:#b91c1c;font-size:.82rem;list-style:disc}.actions{justify-content:flex-end}.pagination{display:flex;align-items:center;justify-content:center;gap:.7rem;padding-top:.5rem;color:#64748b;font-size:.8rem}.pagination button{border:1px solid #cbd5e1;border-radius:.5rem;background:#fff;padding:.45rem .7rem;color:#334155}.pagination button:disabled{opacity:.45}
 @media(max-width:560px){.preview-toolbar{align-items:flex-start;flex-direction:column}}
 </style>

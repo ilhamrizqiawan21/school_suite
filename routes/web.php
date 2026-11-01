@@ -29,12 +29,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function (PrincipalDashboardService $principalDashboard, SchoolProfileController $schoolProfile) {
-    $user = request()->user();
-    if ($user === null) {
-        return $schoolProfile->index();
-    }
+Route::get('/', [SchoolProfileController::class, 'home'])->name('public.home');
 
+Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard) {
+    $user = request()->user();
     $schoolId = (int) $user->school_id;
 
     $activeTerm = Term::query()
@@ -247,13 +245,13 @@ Route::get('/', function (PrincipalDashboardService $principalDashboard, SchoolP
     return Inertia::render('Dashboard', [
         'stats' => $stats,
     ]);
-})->name('dashboard');
+})->middleware('auth')->name('dashboard');
 
 // Observability & Health Check Subsystem (SS-F-009)
 Route::get('/up', HealthCheckController::class)->name('health.up');
 Route::get('/health', HealthCheckController::class)->name('health.index');
 
-Route::get('/kepsek/dashboard', fn () => redirect('/'))
+Route::get('/kepsek/dashboard', fn () => redirect('/dashboard'))
     ->middleware(['auth', 'role:principal'])
     ->name('principal.dashboard');
 

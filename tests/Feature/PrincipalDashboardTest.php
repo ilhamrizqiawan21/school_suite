@@ -31,7 +31,7 @@ class PrincipalDashboardTest extends TestCase
         $this->travelTo(now()->setDate(2026, 10, 26)->startOfDay()->addHours(12));
         [$principal] = $this->principalFixture();
 
-        $this->actingAs($principal)->get('/?period=30d')->assertOk()->assertInertia(fn (Assert $page) => $page
+        $this->actingAs($principal)->get('/dashboard?period=30d')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
             ->where('stats.principal_overview.period', '30d')
             ->where('stats.principal_overview.summary.attendance_rate', null)
@@ -80,7 +80,7 @@ class PrincipalDashboardTest extends TestCase
             Announcement::create(['school_id' => $announcementSchoolId, 'author_id' => $principal->id, 'title' => $title, 'body' => 'Informasi sekolah.', 'published_at' => $publishedAt, 'expires_at' => $expiresAt]);
         }
 
-        $this->actingAs($principal)->get('/?period=30d')->assertOk()->assertInertia(fn (Assert $page) => $page
+        $this->actingAs($principal)->get('/dashboard?period=30d')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
             ->where('stats.principal_overview.summary.students', 1)
             ->where('stats.principal_overview.summary.teachers', 1)
@@ -105,7 +105,7 @@ class PrincipalDashboardTest extends TestCase
             ->where('stats.latest_announcements.0.title', 'Berlaku')
         );
 
-        $this->actingAs($principal)->get('/?period=term')->assertOk()->assertInertia(fn (Assert $page) => $page
+        $this->actingAs($principal)->get('/dashboard?period=term')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->where('stats.principal_overview.summary.attendance_total', 3)
             ->where('stats.principal_overview.summary.tasks_total', 2)
             ->has('stats.principal_overview.attendance_trend', 4)

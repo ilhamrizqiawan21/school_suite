@@ -216,10 +216,10 @@ function sizeLabel(bytes: number) {
                     <h2 class="text-base font-bold text-slate-900">Riwayat kelas</h2>
                     <p class="mt-1 text-sm text-slate-500">Penempatan rombel tercatat per semester, termasuk riwayat terdahulu.</p>
                 </header>
-                <div class="overflow-x-auto">
-                    <table class="min-w-[680px] w-full border-collapse text-left text-sm">
+                <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table min-w-[680px] w-full border-collapse text-left text-sm">
                         <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                            <tr><th class="px-5 py-3">Tahun ajaran</th><th class="px-5 py-3">Semester</th><th class="px-5 py-3">Kelas</th><th class="px-5 py-3">No. absen</th><th class="px-5 py-3">Status penempatan</th></tr>
+                            <tr><th scope="col" class="px-5 py-3">Tahun ajaran</th><th scope="col" class="px-5 py-3">Semester</th><th scope="col" class="px-5 py-3">Kelas</th><th scope="col" class="px-5 py-3">No. absen</th><th scope="col" class="px-5 py-3">Status penempatan</th></tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="item in class_history" :key="item.id">

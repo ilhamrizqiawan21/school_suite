@@ -63,7 +63,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 <template>
     <Head title="SPMB" />
     <AppLayout title="SPMB">
-        <main class="view space-y-6">
+        <div class="view space-y-6 spmb-page">
             <section class="hero-card">
                 <div><p class="eyebrow">Sistem Penerimaan Murid Baru</p><h1>{{ section === 'dashboard' ? 'Dashboard SPMB' : 'Manajemen SPMB' }}</h1><p>Kelola periode, jalur, verifikasi, seleksi, pengumuman, dan daftar ulang dalam satu alur.</p></div>
                 <div class="grade-summary admissions-summary"><div><span>Periode</span><strong>{{ summary.periods }}</strong></div><div><span>Pendaftar</span><strong>{{ summary.applicants }}</strong></div><div><span>Diterima</span><strong>{{ summary.accepted }}</strong></div><div><span>Daftar ulang</span><strong>{{ summary.re_registered }}</strong></div></div>
@@ -97,40 +97,40 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
             <section v-if="section === 'selection' || section === 'announcement'" class="panel admissions-panel"><div class="table-title"><div><h2>{{ section === 'selection' ? 'Seleksi & ranking' : 'Pengumuman' }}</h2><p>Hasil dihitung dari kriteria periode dan keputusan akhir memiliki jejak audit.</p></div><button v-if="section === 'selection' && can_manage_committee" class="primary-button" type="button" @click="rankPeriod">Hitung ranking</button></div><article v-for="applicant in applicants" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill">{{ applicant.selection_result?.decision || 'Belum diputuskan' }} · #{{ applicant.selection_result?.rank || '—' }}</span></div><p class="score-line">Total skor: {{ applicant.selection_result?.total_score || 0 }}</p><div v-if="section === 'selection' && can_manage_applicants" v-for="criterion in applicant.track?.criteria || []" :key="criterion.id" class="score-row"><span>{{ criterion.label }}</span><input v-model="scoreForm(applicant, criterion).score" type="number" min="0" :max="criterion.max_score" /><button class="secondary-button" type="button" @click="saveScore(applicant, criterion)">Simpan nilai</button></div><form v-if="section === 'selection' && can_manage_applicants" class="decision-form" @submit.prevent="finalizeApplicant(applicant)"><select v-model="decisionForm(applicant).decision"><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select><input v-model="decisionForm(applicant).override_reason" placeholder="Alasan keputusan / override" required /><button class="secondary-button" type="submit">Finalisasi</button></form></article><p v-if="!applicants.length" class="empty-state">Belum ada data seleksi.</p></section>
 
             <section v-if="section === 're-registration'" class="panel admissions-panel"><div class="table-title"><div><h2>Daftar ulang</h2><p>Pendaftar diterima dibuat menjadi data siswa setelah NIS dikonfirmasi.</p></div></div><article v-for="applicant in applicants.filter((item) => item.status === 'accepted' || item.status === 're_registered')" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill">{{ applicant.re_registration?.status || 'pending' }}</span></div><form v-if="can_manage_applicants && !applicant.re_registration?.student_id" class="upload-form" @submit.prevent="confirmReRegistration(applicant)"><input v-model="reRegistrationForm(applicant).nis" placeholder="NIS siswa" required /><button class="primary-button" type="submit">Konfirmasi daftar ulang</button></form><p v-else class="score-line">Terhubung ke data siswa #{{ applicant.re_registration?.student_id }}</p></article></section>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
 <style scoped>
 .admissions-summary { margin: 0; min-width: min(100%, 32rem); }
-.admissions-panel { padding: 1.25rem; }
+.admissions-panel { padding: 1.25rem; color: var(--ink); background: var(--surface); border-color: var(--line); }
 .period-context { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.period-context label, .admissions-form label, .admissions-status-form label { display: grid; gap: .4rem; color: #42526b; font-size: .85rem; font-weight: 600; }
-.period-context select, .admissions-form input, .admissions-form select, .admissions-form textarea, .admissions-status-form select, .admissions-status-form textarea, .upload-form input, .upload-form select, .decision-form input, .decision-form select, .score-row input { width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .65rem .75rem; color: #172b4d; }
+.period-context label, .admissions-form label, .admissions-status-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .85rem; font-weight: 600; }
+.period-context select, .admissions-form input, .admissions-form select, .admissions-form textarea, .admissions-status-form select, .admissions-status-form textarea, .upload-form input, .upload-form select, .decision-form input, .decision-form select, .score-row input { width: 100%; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); padding: .65rem .75rem; color: var(--ink); }
 .spmb-quick-links { display: flex; flex-wrap: wrap; gap: .5rem; }
-.spmb-quick-links a { color: #3157a4; font-size: .85rem; font-weight: 700; }
+.spmb-quick-links a { color: var(--primary); font-size: .85rem; font-weight: 700; }
 .admissions-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 .compact-form { grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid #e2e8f0; padding-top: 1rem; }
 .admissions-form-wide { grid-column: 1 / -1; }
 .admissions-form-actions { display: flex; align-items: end; justify-content: end; gap: .75rem; }
-.primary-button, .secondary-button { border: 1px solid #3157a4; border-radius: .65rem; background: #3157a4; padding: .65rem 1rem; color: white; font-weight: 700; white-space: nowrap; }
-.secondary-button { background: white; color: #3157a4; }
-.notice-success { border: 1px solid #bbf7d0; border-radius: .65rem; background: #f0fdf4; padding: .75rem 1rem; color: #166534; font-size: .9rem; }
+.primary-button, .secondary-button { border: 1px solid var(--primary); border-radius: .65rem; background: var(--primary); padding: .65rem 1rem; color: #fff; font-weight: 700; white-space: nowrap; }
+.secondary-button { background: var(--surface); color: var(--primary); }
+.notice-success { border: 1px solid color-mix(in srgb, var(--green) 25%, var(--line)); border-radius: .65rem; background: var(--green-soft); padding: .75rem 1rem; color: var(--green); font-size: .9rem; }
 .workflow-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
-.workflow-grid div, .period-row, .track-card, .committee-list li, .document-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid #dbe3ef; border-radius: .75rem; padding: .85rem 1rem; }
-.workflow-grid strong { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: #eef3ff; color: #3157a4; }
-.workflow-grid span, .period-row span, .track-card small, .committee-list li span, .score-line { color: #64748b; font-size: .82rem; }
+.workflow-grid div, .period-row, .track-card, .committee-list li, .document-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--line); border-radius: .75rem; padding: .85rem 1rem; }
+.workflow-grid strong { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
+.workflow-grid span, .period-row span, .track-card small, .committee-list li span, .score-line { color: var(--ink-soft); font-size: .82rem; }
 .period-row, .track-card, .committee-list { margin-top: .65rem; }
 .period-row div, .track-card div, .committee-list li div { display: grid; gap: .15rem; }
-.status-pill { border-radius: 999px; background: #eef3ff; padding: .25rem .55rem; color: #3157a4; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.status-pill { border-radius: 999px; background: var(--primary-soft); padding: .25rem .55rem; color: var(--primary); font-size: .75rem; font-weight: 700; white-space: nowrap; }
 .committee-list { display: grid; padding: 0; list-style: none; }
 .admissions-applicants { display: grid; gap: .85rem; }
-.admissions-applicant { border: 1px solid #dbe3ef; border-radius: .85rem; padding: 1rem; }
+.admissions-applicant { border: 1px solid var(--line); border-radius: .85rem; padding: 1rem; background: var(--surface); }
 .admissions-applicant-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
-.admissions-registration { color: #3157a4; font-size: .75rem; font-weight: 700; letter-spacing: .04em; }
-.admissions-applicant h3 { margin: .2rem 0 0; color: #172b4d; font-size: 1.05rem; font-weight: 700; }
-.admissions-applicant-details { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: .75rem 0; color: #64748b; font-size: .82rem; }
-.admissions-status-form, .decision-form, .upload-form { display: flex; align-items: end; gap: .75rem; border-top: 1px solid #e2e8f0; padding-top: .75rem; }
+.admissions-registration { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .04em; }
+.admissions-applicant h3 { margin: .2rem 0 0; color: var(--ink); font-size: 1.05rem; font-weight: 700; }
+.admissions-applicant-details { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: .75rem 0; color: var(--ink-soft); font-size: .82rem; }
+.admissions-status-form, .decision-form, .upload-form { display: flex; align-items: end; gap: .75rem; border-top: 1px solid var(--line); padding-top: .75rem; }
 .admissions-status-form label { flex: 1; }
 .document-list { display: grid; gap: .5rem; margin: .75rem 0; }
 .document-row { padding: .6rem .75rem; font-size: .85rem; }
@@ -139,6 +139,6 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .score-row { display: grid; grid-template-columns: 1fr 8rem auto; align-items: center; gap: .75rem; margin-top: .5rem; color: #42526b; font-size: .85rem; }
 .decision-form { margin-top: .75rem; }
 .decision-form select { max-width: 12rem; }
-.empty-state { padding: 1.25rem 0; color: #64748b; }
+.empty-state { padding: 1.25rem 0; color: var(--ink-soft); }
 @media (max-width: 820px) { .workflow-grid, .admissions-form, .compact-form { grid-template-columns: 1fr; } .admissions-form-wide { grid-column: auto; } .admissions-status-form, .decision-form, .upload-form, .score-row { display: grid; grid-template-columns: 1fr; align-items: stretch; } .admissions-applicant-heading { display: grid; } }
 </style>

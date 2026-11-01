@@ -16,6 +16,7 @@ use App\Modules\Admissions\Infrastructure\Models\AdmissionDocumentRequirement;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionPeriod;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionSelectionCriterion;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionTrack;
+use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,56 @@ class AdmissionsController extends Controller
     public function index(Request $request, AdmissionsPolicy $policy): Response
     {
         return $this->render($request, $policy, 'dashboard');
+    }
+
+    public function publicIndex(): Response
+    {
+        $school = School::query()->firstOrFail();
+        $periods = AdmissionPeriod::query()
+            ->where('school_id', $school->id)
+            ->whereIn('status', ['registration_open', 'verification', 'selection', 'announcement', 're_registration'])
+            ->with(['tracks' => fn ($query) => $query->where('is_active', true)->with('requirements')])
+            ->orderByDesc('registration_start')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (AdmissionPeriod $period): array => [
+                'id' => $period->id,
+                'name' => $period->name,
+                'academic_year' => $period->academic_year,
+                'level' => $period->level,
+                'status' => $period->status,
+                'registration_start' => $period->registration_start?->toDateString(),
+                'registration_end' => $period->registration_end?->toDateString(),
+                'verification_start' => $period->verification_start?->toDateString(),
+                'verification_end' => $period->verification_end?->toDateString(),
+                'selection_start' => $period->selection_start?->toDateString(),
+                'selection_end' => $period->selection_end?->toDateString(),
+                'announcement_at' => $period->announcement_at?->toDateString(),
+                're_registration_start' => $period->re_registration_start?->toDateString(),
+                're_registration_end' => $period->re_registration_end?->toDateString(),
+                'tracks' => $period->tracks->map(fn (AdmissionTrack $track): array => [
+                    'id' => $track->id,
+                    'name' => $track->name,
+                    'code' => $track->code,
+                    'quota' => $track->quota,
+                    'requirements' => $track->requirements->map(fn (AdmissionDocumentRequirement $requirement): array => [
+                        'label' => $requirement->label,
+                        'is_required' => $requirement->is_required,
+                    ])->values()->all(),
+                ])->values()->all(),
+            ])->values()->all();
+
+        return Inertia::render('Public/Admissions/Index', [
+            'school' => [
+                'name' => $school->name,
+                'level' => $school->level,
+                'address' => $school->address,
+                'phone' => $school->phone,
+                'email' => $school->email,
+                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+            ],
+            'periods' => $periods,
+        ]);
     }
 
     public function section(Request $request, AdmissionsPolicy $policy, string $section): Response

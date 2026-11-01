@@ -494,9 +494,9 @@ const chart = computed(() => {
             </header>
 
             <nav class="journal-tabs" aria-label="Bagian jurnal">
-                <button :class="{ active: activeTab === 'agenda' }" @click="activeTab = 'agenda'">Agenda hari ini</button>
-                <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">Riwayat jurnal</button>
-                <button :class="{ active: activeTab === 'recap' }" @click="activeTab = 'recap'">Rekap aktivitas</button>
+                <button type="button" :class="{ active: activeTab === 'agenda' }" @click="activeTab = 'agenda'">Agenda hari ini</button>
+                <button type="button" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">Riwayat jurnal</button>
+                <button type="button" :class="{ active: activeTab === 'recap' }" @click="activeTab = 'recap'">Rekap aktivitas</button>
             </nav>
 
             <section v-if="activeTab === 'agenda'" class="journal-section">
@@ -506,10 +506,10 @@ const chart = computed(() => {
                         <h2>{{ formatDate(agendaDate) }}</h2>
                     </div>
                     <div class="date-controls">
-                        <button class="icon-button" aria-label="Hari sebelumnya" @click="shiftDate(-1)">‹</button>
-                        <button class="secondary-button" @click="goToToday">Hari ini</button>
+                        <button type="button" class="icon-button" aria-label="Hari sebelumnya" @click="shiftDate(-1)">‹</button>
+                        <button type="button" class="secondary-button" @click="goToToday">Hari ini</button>
                         <input v-model="agendaDate" type="date" aria-label="Pilih tanggal" @change="navigateAgenda()" />
-                        <button class="icon-button" aria-label="Hari berikutnya" @click="shiftDate(1)">›</button>
+                        <button type="button" class="icon-button" aria-label="Hari berikutnya" @click="shiftDate(1)">›</button>
                     </div>
                 </div>
 
@@ -536,7 +536,7 @@ const chart = computed(() => {
                         </div>
                         <div class="session-actions">
                             <Link class="secondary-button" :href="'/akademik/presensi?session_id=' + session.id + '&date=' + session.date">Presensi sesi</Link>
-                            <button class="primary-button" @click="toggleJournal(session)">
+                            <button type="button" class="primary-button" @click="toggleJournal(session)">
                                 {{ session.journal_status === 'completed' ? 'Edit jurnal' : 'Isi jurnal' }}
                             </button>
                         </div>
@@ -631,7 +631,7 @@ const chart = computed(() => {
                     <label>Mata pelajaran<select v-model="selectedSubject"><option value="">Semua mata pelajaran</option><option v-for="item in subjects" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
                     <label>Status<select v-model="journalStatus"><option value="all">Semua status</option><option value="completed">Selesai</option><option value="pending">Belum diisi</option></select></label>
                     <label>Urutan<select v-model="historySort"><option value="latest">Terbaru</option><option value="oldest">Terlama</option></select></label>
-                    <div class="filter-actions"><button class="secondary-button" @click="resetHistoryFilters">Reset</button><button class="primary-button" @click="applyHistoryFilters">Terapkan</button></div>
+                    <div class="filter-actions"><button type="button" class="secondary-button" @click="resetHistoryFilters">Reset</button><button type="button" class="primary-button" @click="applyHistoryFilters">Terapkan</button></div>
                 </div>
                 <div v-if="journal_sessions.data.length" class="history-list">
                     <article v-for="session in journal_sessions.data" :key="session.id" class="history-row">
@@ -639,8 +639,8 @@ const chart = computed(() => {
                         <div class="history-main"><h3>{{ session.subject.name }}</h3><p>{{ session.class_group.name }} · {{ session.subject.code }} · Pertemuan {{ session.meeting_number ?? '—' }}</p><p v-if="session.journal" class="topic">{{ session.journal.topic }}</p><p v-else class="muted">Jurnal belum diisi</p></div>
                         <span class="status-badge" :class="statusClass(session)">{{ session.journal_status === 'completed' ? 'Selesai' : 'Belum diisi' }}</span>
                         <div class="history-actions">
-                            <button class="secondary-button" @click="openHistorySession(session)">{{ session.journal ? 'Buka / edit' : 'Isi jurnal' }}</button>
-                            <button v-if="session.journal" class="secondary-button" @click="openNewSession(session)">Duplikat</button>
+                            <button type="button" class="secondary-button" @click="openHistorySession(session)">{{ session.journal ? 'Buka / edit' : 'Isi jurnal' }}</button>
+                            <button v-if="session.journal" type="button" class="secondary-button" @click="openNewSession(session)">Duplikat</button>
                             <a v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/word`" :download="`Jurnal_${session.id}.docx`">Unduh Word</a>
                             <a v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/pdf`" :download="`Jurnal_${session.id}.pdf`">Unduh PDF</a>
                             <button v-if="session.journal" class="secondary-button danger-action" type="button" @click="deleteJournal(session)">Hapus</button>
@@ -675,8 +675,8 @@ const chart = computed(() => {
                     </div>
                     <div v-else class="empty-state compact"><h3>Belum ada data rekap</h3><p>Data akan muncul setelah ada sesi mengajar dan jurnal.</p></div>
                 </div>
-                <div class="recap-table-wrap">
-                    <table><thead><tr><th>Bulan</th><th>Sesi</th><th>Selesai</th><th>Belum diisi</th><th>Kelengkapan</th><th>Hadir</th></tr></thead><tbody><tr v-for="month in recap.months" :key="month.month_key"><td><strong>{{ month.label }}</strong></td><td>{{ month.total_sessions }}</td><td>{{ month.completed_journals }}</td><td>{{ month.pending_journals }}</td><td><span class="progress-value">{{ month.completion_rate }}%</span></td><td>{{ month.present }}</td></tr></tbody></table>
+                <div class="recap-table-wrap table-scroll" tabindex="0" role="region" aria-label="Rekap jurnal">
+                    <table class="app-table"><thead><tr><th scope="col">Bulan</th><th scope="col">Sesi</th><th scope="col">Selesai</th><th scope="col">Belum diisi</th><th scope="col">Kelengkapan</th><th scope="col">Hadir</th></tr></thead><tbody><tr v-for="month in recap.months" :key="month.month_key"><td><strong>{{ month.label }}</strong></td><td>{{ month.total_sessions }}</td><td>{{ month.completed_journals }}</td><td>{{ month.pending_journals }}</td><td><span class="progress-value">{{ month.completion_rate }}%</span></td><td>{{ month.present }}</td></tr></tbody></table>
                 </div>
             </section>
 

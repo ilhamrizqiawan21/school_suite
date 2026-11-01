@@ -118,8 +118,32 @@ class DashboardAccessTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Public/School/Profile')
+                ->component('Public/School/Home')
                 ->where('school.name', $this->school->name));
+    }
+
+    public function test_authenticated_user_also_sees_the_public_school_profile_at_application_root(): void
+    {
+        $user = User::create([
+            'school_id' => $this->school->id,
+            'role_id' => $this->adminRole->id,
+            'name' => 'Admin Public Home',
+            'username' => 'admin.public.home',
+            'email' => 'admin.public.home@school.test',
+            'password' => 'secret123',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->get('/')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/School/Home')
+                ->where('school.name', $this->school->name));
+    }
+
+    public function test_internal_dashboard_requires_authentication(): void
+    {
+        $this->get('/dashboard')->assertRedirect('/login');
     }
 
     public function test_administrator_accesses_dashboard_with_admin_metrics(): void
@@ -161,7 +185,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get('/')
+            ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
@@ -248,7 +272,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($teacherUser)
-            ->get('/')
+            ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
@@ -272,7 +296,7 @@ class DashboardAccessTest extends TestCase
             ->where('teacher_id', $teacher->id)
             ->whereDate('date', '2026-10-27')
             ->value('status'));
-        $this->get('/')->assertInertia(fn (Assert $page) => $page
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page
             ->where('stats.teacher_overview.attendance_status', 'present')
         );
     }
@@ -313,7 +337,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($studentUser)
-            ->get('/')
+            ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
@@ -350,7 +374,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($operator)
-            ->get('/')
+            ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
@@ -392,7 +416,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($principal)
-            ->get('/')
+            ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
@@ -452,7 +476,7 @@ class DashboardAccessTest extends TestCase
         ]);
 
         $this->actingAs($homeroomUser)
-            ->get('/')
+            ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')

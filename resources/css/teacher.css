@@ -91,8 +91,8 @@
     padding: .8rem 1rem;
     color: var(--ink-soft) !important;
     background: var(--surface-subtle) !important;
-    font-size: .68rem;
-    font-weight: 850;
+    font-size: .72rem;
+    font-weight: 800;
     letter-spacing: .06em;
     text-align: left;
     text-transform: uppercase;
@@ -130,7 +130,7 @@
 .role-guru-shell .filters-grid label {
     color: var(--ink-soft) !important;
     font-size: .78rem;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 .role-guru-shell .form-grid input,

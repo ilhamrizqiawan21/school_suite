@@ -156,7 +156,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 .status-badge {
     padding: .2rem .55rem;
     border-radius: 999px;
-    font-weight: 750;
+    font-weight: 700;
 }
 
 .status-draft {
@@ -288,7 +288,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 }
 
 .question-picker b {
-    font-weight: 650;
+    font-weight: 600;
     line-height: 1.35;
 }
 

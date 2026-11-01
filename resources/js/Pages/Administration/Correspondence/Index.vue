@@ -336,8 +336,8 @@ function submitApproval(record: CorrespondenceRecord) {
                     <input v-model="search" type="search" placeholder="Perihal, nomor, asal, atau tujuan" />
                 </label>
                 <div v-if="visibleRecords.length" class="table-scroll">
-                    <table class="correspondence-table">
-                        <thead><tr><th>Nomor & tanggal</th><th>Pihak terkait</th><th>Perihal</th><th>Status</th><th>Tindakan berikutnya</th></tr></thead>
+                    <table class="app-table correspondence-table">
+                        <thead><tr><th scope="col">Nomor & tanggal</th><th scope="col">Pihak terkait</th><th scope="col">Perihal</th><th scope="col">Status</th><th scope="col">Tindakan berikutnya</th></tr></thead>
                         <tbody>
                         <tr v-for="record in visibleRecords" :key="record.id">
                             <td data-label="Nomor & tanggal"><strong>{{ record.letter_number || record.agenda_number || '—' }}</strong><small>{{ record.letter_date || record.received_at || 'Tanggal belum diisi' }}</small></td>

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Modules\Admissions\Interface\Http\Controllers\AdmissionsController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/ppdb', [AdmissionsController::class, 'publicIndex'])->name('public.admissions');
+
 Route::middleware(['auth', 'role:admin,operator,principal,teacher', 'throttle:sensitive'])
     ->prefix('spmb')
     ->name('admissions.')

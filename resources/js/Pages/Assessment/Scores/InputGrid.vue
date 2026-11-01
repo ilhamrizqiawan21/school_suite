@@ -422,23 +422,23 @@ const printScores = () => window.print();
                     </div>
                 </div>
 
-                <div class="table-scroll">
-                        <table class="grade-table score-input-table">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                        <table class="app-table grade-table score-input-table">
                         <thead>
                             <tr>
-                                <th rowspan="2" class="score-index-col">No</th>
-                                <th rowspan="2" class="score-nis-col">NIS</th>
-                                <th rowspan="2" class="score-name-col">Nama siswa</th>
-                                <th :colspan="Math.max(components.length, 1)" class="score-group-heading">Komponen penilaian</th>
-                                <th rowspan="2" class="score-average-col">Rata-rata akhir</th>
-                                <th rowspan="2" class="score-notes-col">Catatan guru</th>
+                                <th scope="col" rowspan="2" class="score-index-col">No</th>
+                                <th scope="col" rowspan="2" class="score-nis-col">NIS</th>
+                                <th scope="col" rowspan="2" class="score-name-col">Nama siswa</th>
+                                <th scope="colgroup" :colspan="Math.max(components.length, 1)" class="score-group-heading">Komponen penilaian</th>
+                                <th scope="col" rowspan="2" class="score-average-col">Rata-rata akhir</th>
+                                <th scope="col" rowspan="2" class="score-notes-col">Catatan guru</th>
                             </tr>
                             <tr>
-                                <th v-for="component in components" :key="component.id" class="score-component-heading" :title="`${component.name} · bobot ${component.weight_percentage}%`">
+                                <th scope="col" v-for="component in components" :key="component.id" class="score-component-heading" :title="`${component.name} · bobot ${component.weight_percentage}%`">
                                     {{ component.code || component.name }}
                                     <small>{{ component.weight_percentage }}%</small>
                                 </th>
-                                <th v-if="components.length === 0" class="score-component-heading">Nilai</th>
+                                <th scope="col" v-if="components.length === 0" class="score-component-heading">Nilai</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 font-normal">
@@ -534,7 +534,7 @@ const printScores = () => window.print();
 .rule-value { font-size: 1.15rem !important; }
 .grade-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) auto; align-items: end; gap: .85rem; padding: 1rem; }
 .score-filter-field { display: grid; gap: .35rem; min-width: 0; }
-.score-filter-field label { color: var(--ink-soft); font-size: .72rem; font-weight: 750; }
+.score-filter-field label { color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
 .score-select { width: 100%; min-width: 0; min-height: 40px; padding: .55rem .7rem; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .6rem; font-size: .8rem; }
 .score-toolbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: .65rem; flex-wrap: wrap; }
 .score-filter-context { color: var(--ink-faint); font-size: .72rem; white-space: nowrap; }
@@ -559,7 +559,7 @@ const printScores = () => window.print();
 .score-average-col { width: 112px; }
 .score-notes-col { width: 180px; }
 .score-index-cell { color: var(--ink-faint) !important; font-size: .72rem !important; }
-.score-nis-cell { color: var(--ink-faint) !important; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem !important; }
+.score-nis-cell { color: var(--ink-faint) !important; font-family: var(--font-code); font-size: .72rem !important; }
 .score-name-cell { overflow: hidden; color: var(--ink) !important; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .score-input-table .score-input, .score-input-table .note-input { width: 100%; min-width: 0; min-height: 35px; padding: .45rem .35rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: .5rem; font-size: .8rem; text-align: center; }
 .score-input-table .note-input { padding-inline: .55rem; text-align: left; }
@@ -569,7 +569,7 @@ const printScores = () => window.print();
 .score-remedial { display: block; margin-top: .2rem; color: var(--ink-faint); font-size: .62rem; }
 .is-passed { color: var(--green) !important; }
 .is-below { color: var(--red) !important; }
-.score-final-cell { color: var(--ink) !important; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem !important; font-weight: 800; text-align: center; }
+.score-final-cell { color: var(--ink) !important; font-family: var(--font-code); font-size: .85rem !important; font-weight: 800; text-align: center; }
 .score-status-cell { text-align: center; }
 @media print {
     .score-page { max-width: none; }

@@ -70,9 +70,9 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
             </section>
 
             <section v-else class="panel online-table-wrap">
-                <div class="table-scroll">
-                    <table class="data-table">
-                        <thead><tr><th>Pertemuan</th><th>Kelas</th><th>Waktu</th><th>Status</th><th>Presensi</th><th>Aksi</th></tr></thead>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                    <table class="app-table data-table">
+                        <thead><tr><th scope="col">Pertemuan</th><th scope="col">Kelas</th><th scope="col">Waktu</th><th scope="col">Status</th><th scope="col">Presensi</th><th scope="col">Aksi</th></tr></thead>
                         <tbody>
                             <tr v-for="item in sessions" :key="item.id">
                                 <td><strong>{{ item.title }}</strong><br><a :href="item.meeting_url" target="_blank" rel="noopener noreferrer">Buka tautan</a></td>
@@ -101,7 +101,7 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
                         <label class="field">Selesai<input v-model="form.ends_at" type="datetime-local"></label>
                     </div>
                     <p v-if="Object.keys(form.errors).length" class="form-error">Periksa kembali data pertemuan.</p>
-                    <div class="modal-actions"><button type="button" class="secondary-button" @click="open = false">Batal</button><button class="primary-button" :disabled="form.processing">Simpan jadwal</button></div>
+                    <div class="modal-actions"><button type="button" class="secondary-button" @click="open = false">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">Simpan jadwal</button></div>
                 </form>
             </div>
         </main>
