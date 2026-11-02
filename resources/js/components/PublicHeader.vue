@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import type { SharedProps } from '@/types';
 
 interface SchoolBrand {
     name: string;
@@ -16,26 +17,33 @@ const props = withDefaults(defineProps<{
     active: undefined,
 });
 
+const page = usePage<SharedProps>();
 const initial = props.school.name.trim().charAt(0).toUpperCase() || 'S';
 const menus: { label: string; href: string; key: ActiveMenu }[] = [
     { label: 'Beranda', href: '/', key: 'home' },
-    { label: 'Profil', href: '/profil-sekolah', key: 'profile' },
-    { label: 'Organisasi', href: '/struktur-organisasi', key: 'organization' },
     { label: 'Akademik', href: '/akademik-fasilitas', key: 'programs' },
     { label: 'Kesiswaan', href: '/kesiswaan-prestasi', key: 'student-life' },
     { label: 'Berita', href: '/berita', key: 'news' },
     { label: 'Galeri', href: '/galeri', key: 'gallery' },
-    { label: 'PPDB', href: '/ppdb', key: 'admissions' },
     { label: 'Kontak', href: '/kontak', key: 'contact' },
 ];
-const primaryMenus = menus.filter((menu) => menu.key !== 'contact');
 const menuOpen = ref(false);
-const closeMenu = () => { menuOpen.value = false; };
+const profileMenuOpen = ref(false);
+const profileActive = computed(() => props.active === 'profile' || props.active === 'organization');
+const portalHref = computed(() => page.props.auth?.user ? '/dashboard' : '/login');
+const portalLabel = computed(() => page.props.auth?.user ? 'Dashboard' : 'Portal sekolah');
+const closeMenu = () => {
+    menuOpen.value = false;
+    profileMenuOpen.value = false;
+};
+const toggleProfileMenu = () => {
+    profileMenuOpen.value = !profileMenuOpen.value;
+};
 </script>
 
 <template>
-    <header class="public-header">
-        <div class="public-header-top">
+    <header class="public-site-header" @keydown.esc="closeMenu">
+        <div class="public-site-header-top">
             <Link href="/" class="brand" aria-label="Beranda sekolah">
                 <span class="brand-mark">
                     <img v-if="school.logo_url" :src="school.logo_url" :alt="`Logo ${school.name}`" />
@@ -44,32 +52,70 @@ const closeMenu = () => { menuOpen.value = false; };
                 <span class="brand-name">{{ school.name }}</span>
             </Link>
 
-            <div class="public-header-actions" aria-label="Aksi sekolah">
+            <div class="public-site-header-actions" aria-label="Aksi sekolah">
+                <Link :href="portalHref" class="portal-link">{{ portalLabel }}</Link>
                 <Link
-                    href="/kontak"
-                    class="header-utility-link"
-                    :aria-current="props.active === 'contact' ? 'page' : undefined"
+                    href="/ppdb"
+                    class="admissions-action"
+                    :aria-current="props.active === 'admissions' ? 'page' : undefined"
                 >
-                    Kontak
+                    PPDB
                 </Link>
-                <Link href="/login" class="header-action">Masuk</Link>
+                <button
+                    type="button"
+                    class="nav-toggle"
+                    aria-controls="public-navigation"
+                    :aria-expanded="menuOpen"
+                    @click="menuOpen = !menuOpen"
+                >
+                    <span>{{ menuOpen ? 'Tutup' : 'Menu' }}</span>
+                    <i aria-hidden="true"></i>
+                </button>
             </div>
         </div>
 
-        <div class="public-header-nav-row">
-            <button
-                type="button"
-                class="nav-toggle"
-                aria-controls="public-navigation"
-                :aria-expanded="menuOpen"
-                @click="menuOpen = !menuOpen"
-            >
-                <span>{{ menuOpen ? 'Tutup menu' : 'Menu' }}</span>
-                <i aria-hidden="true"></i>
-            </button>
+        <div class="public-site-header-nav-row">
             <nav id="public-navigation" class="public-nav" :class="{ 'is-open': menuOpen }" aria-label="Navigasi publik">
                 <Link
-                    v-for="menu in primaryMenus"
+                    :href="menus[0].href"
+                    :aria-current="props.active === menus[0].key ? 'page' : undefined"
+                    @click="closeMenu"
+                >
+                    {{ menus[0].label }}
+                </Link>
+
+                <div class="profile-menu" :class="{ 'is-active': profileActive }">
+                    <button
+                        type="button"
+                        class="nav-menu-trigger"
+                        :aria-expanded="profileMenuOpen"
+                        aria-controls="profile-navigation"
+                        :aria-current="profileActive ? 'page' : undefined"
+                        @click.stop="toggleProfileMenu"
+                    >
+                        Profil
+                        <span class="nav-chevron" aria-hidden="true"></span>
+                    </button>
+                    <div v-if="profileMenuOpen" id="profile-navigation" class="profile-dropdown">
+                        <Link
+                            href="/profil-sekolah"
+                            :aria-current="props.active === 'profile' ? 'page' : undefined"
+                            @click="closeMenu"
+                        >
+                            Profil sekolah
+                        </Link>
+                        <Link
+                            href="/struktur-organisasi"
+                            :aria-current="props.active === 'organization' ? 'page' : undefined"
+                            @click="closeMenu"
+                        >
+                            Struktur organisasi
+                        </Link>
+                    </div>
+                </div>
+
+                <Link
+                    v-for="menu in menus.slice(1)"
                     :key="menu.key"
                     :href="menu.href"
                     :aria-current="props.active === menu.key ? 'page' : undefined"
@@ -77,28 +123,32 @@ const closeMenu = () => { menuOpen.value = false; };
                 >
                     {{ menu.label }}
                 </Link>
+
+                <Link :href="portalHref" class="mobile-portal-link" @click="closeMenu">{{ portalLabel }}</Link>
             </nav>
         </div>
     </header>
 </template>
 
 <style scoped>
-.public-header {
-    display: grid;
-    gap: 0;
+.public-site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     width: min(1180px, calc(100% - 3rem));
     margin-inline: auto;
     padding: 1rem 0 0;
+    background: transparent;
 }
 
-.public-header-top {
+.public-site-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
     min-width: 0;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--public-ink, #173044) 12%, transparent);
+    padding: .1rem 0 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--public-ink, #173044) 13%, transparent);
 }
 
 .brand {
@@ -114,7 +164,7 @@ const closeMenu = () => { menuOpen.value = false; };
 }
 
 .brand-name {
-    max-width: 17rem;
+    max-width: 15rem;
 }
 
 .brand-mark {
@@ -141,58 +191,177 @@ const closeMenu = () => { menuOpen.value = false; };
     background: transparent;
 }
 
-.public-header-actions {
+.public-site-header-actions {
     display: flex;
     align-items: center;
     flex: 0 0 auto;
-    gap: .5rem;
+    gap: .35rem;
 }
 
-.header-utility-link {
+.portal-link {
     display: inline-flex;
     min-height: 40px;
     align-items: center;
-    padding: .55rem .7rem;
+    padding: .55rem .65rem;
     color: var(--public-muted-strong, #405762);
     font-size: .82rem;
     font-weight: 700;
     text-decoration: none;
 }
 
-.header-utility-link:hover,
-.header-utility-link:focus-visible,
-.header-utility-link[aria-current='page'] {
+.portal-link:hover,
+.portal-link:focus-visible {
     color: var(--public-ink, #173044);
 }
 
-.public-header-actions .header-action {
+.admissions-action {
     display: inline-flex;
-    min-height: 40px;
+    min-height: 42px;
     align-items: center;
     justify-content: center;
-    padding: .6rem .85rem;
+    padding: .62rem 1rem;
     color: #fff !important;
-    background: var(--public-deep, #123247) !important;
-    border: 1px solid var(--public-deep, #123247);
-    border-radius: .55rem;
-    font-size: .8rem;
+    background: var(--public-primary, #3157a4) !important;
+    border: 1px solid var(--public-primary, #3157a4);
+    border-radius: .5rem;
+    font-size: .82rem;
     font-weight: 800;
     line-height: 1;
     text-decoration: none;
     transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease;
 }
 
-.public-header-actions .header-action:hover,
-.public-header-actions .header-action:focus-visible {
+.admissions-action:hover,
+.admissions-action:focus-visible,
+.admissions-action[aria-current='page'] {
+    color: #fff !important;
+    background: var(--public-deep-hover, #23447f) !important;
+    border-color: var(--public-deep-hover, #23447f);
     transform: translateY(-1px);
 }
 
-.public-header-nav-row {
+.public-nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: .15rem;
+    width: 100%;
     min-width: 0;
-    padding: .65rem 0 .75rem;
+}
+
+.public-nav > a,
+.nav-menu-trigger {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    padding: .7rem .7rem .65rem;
+    color: var(--public-muted-strong, #405762);
+    border-radius: 0;
+    font-size: .78rem;
+    font-weight: 650;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color .16s ease, background-color .16s ease;
+}
+
+.public-nav > a:hover,
+.public-nav > a:focus-visible,
+.nav-menu-trigger:hover,
+.nav-menu-trigger:focus-visible {
+    color: var(--public-ink, #173044);
+}
+
+.public-nav > a[aria-current='page'],
+.profile-menu.is-active .nav-menu-trigger,
+.nav-menu-trigger[aria-expanded='true'] {
+    color: var(--public-ink, #173044);
+    font-weight: 800;
+}
+
+.public-nav > a[aria-current='page']::after,
+.profile-menu.is-active .nav-menu-trigger::after {
+    position: absolute;
+    right: .7rem;
+    bottom: 0;
+    left: .7rem;
+    height: 2px;
+    background: var(--public-primary, #3157a4);
+    border-radius: 999px;
+    content: '';
+}
+
+.profile-menu {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.nav-menu-trigger {
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 650;
+    line-height: inherit;
+}
+
+.nav-chevron {
+    width: .42rem;
+    height: .42rem;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-.1rem) rotate(45deg);
+    transition: transform .16s ease;
+}
+
+.nav-menu-trigger[aria-expanded='true'] .nav-chevron {
+    transform: translateY(.1rem) rotate(225deg);
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + .55rem);
+    left: -.35rem;
+    display: grid;
+    min-width: 13rem;
+    gap: .15rem;
+    padding: .35rem;
+    background: var(--public-surface, #fffdf8);
+    border: 1px solid color-mix(in srgb, var(--public-ink, #173044) 14%, transparent);
+    border-radius: .7rem;
+    box-shadow: 0 14px 30px rgb(18 50 71 / 12%);
+}
+
+.profile-dropdown a {
+    padding: .65rem .7rem;
+    color: var(--public-muted-strong, #405762);
+    border-radius: .45rem;
+    font-size: .8rem;
+    font-weight: 650;
+    line-height: 1.3;
+    text-decoration: none;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown a:focus-visible,
+.profile-dropdown a[aria-current='page'] {
+    color: var(--public-ink, #173044);
+    background: color-mix(in srgb, var(--public-primary, #3157a4) 10%, transparent);
+}
+
+.public-site-header-nav-row {
+    display: flex;
+    align-items: center;
+    min-height: 3.65rem;
+}
+
+.mobile-portal-link {
+    display: none !important;
 }
 
 .nav-toggle {
@@ -226,55 +395,79 @@ const closeMenu = () => { menuOpen.value = false; };
 .nav-toggle i::before { position: absolute; top: -.32rem; }
 .nav-toggle i::after { position: absolute; top: .32rem; }
 
-.public-nav {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    gap: .2rem;
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
+@media (max-width: 1040px) {
+    .public-site-header-nav-row {
+        align-items: flex-start;
+        min-height: 0;
+        padding-top: 0;
+    }
 
-.public-nav::-webkit-scrollbar {
-    display: none;
-}
+    .public-nav {
+        display: none;
+        order: 3;
+        flex-basis: 100%;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: .35rem;
+        background: var(--public-surface-alt, #fff);
+        border: 1px solid var(--public-line, #d8dee8);
+        border-radius: .7rem;
+    }
 
-.public-nav a {
-    flex: 0 0 auto;
-    padding: .45rem .7rem;
-    border-radius: .55rem;
-    color: var(--public-muted-strong, #405762);
-    font-size: .82rem;
-    font-weight: 600;
-    white-space: nowrap;
-    text-decoration: none;
-    transition: color .16s ease, background-color .16s ease;
-}
+    .public-nav.is-open {
+        display: grid;
+        margin-top: .7rem;
+    }
 
-.public-nav a:hover,
-.public-nav a:focus-visible,
-.public-nav a[aria-current='page'] {
-    color: var(--public-ink, #173044);
-}
+    .public-nav > a,
+    .nav-menu-trigger {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        padding: .7rem;
+        text-align: left;
+    }
 
-.public-nav a[aria-current='page'] {
-    color: var(--public-ink, #173044);
-    background: color-mix(in srgb, var(--public-primary, #3157a4) 10%, transparent);
-    font-weight: 800;
+    .public-nav > a[aria-current='page']::after,
+    .profile-menu.is-active .nav-menu-trigger::after {
+        display: none;
+    }
+
+    .profile-dropdown {
+        position: static;
+        min-width: 0;
+        margin: .15rem 0 .25rem;
+        padding: 0 0 0 .65rem;
+        background: transparent;
+        border: 0;
+        border-left: 1px solid var(--public-line-strong, #d8dee8);
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .profile-dropdown a {
+        display: block;
+        padding: .55rem .7rem;
+    }
+
+    .mobile-portal-link {
+        display: inline-flex !important;
+        margin-top: .25rem;
+        color: var(--public-ink, #173044) !important;
+        border-top: 1px solid var(--public-line, #d8dee8);
+        border-radius: 0 !important;
+        font-weight: 800 !important;
+    }
+
+    .nav-toggle {
+        display: inline-flex;
+    }
 }
 
 @media (max-width: 640px) {
-    .public-header {
-        display: grid;
+    .public-site-header {
         width: calc(100% - 2rem);
         padding-top: .8rem;
-    }
-
-    .public-header-top {
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: .75rem;
     }
 
     .brand {
@@ -282,42 +475,39 @@ const closeMenu = () => { menuOpen.value = false; };
     }
 
     .brand-name {
-        max-width: 10.5rem;
+        max-width: 12rem;
     }
 
-    .public-header-actions {
-        flex-basis: 100%;
-        justify-content: flex-start;
-        gap: .25rem;
-        padding-top: .1rem;
+    .public-site-header-actions {
+        margin-left: auto;
     }
 
-    .header-utility-link,
-    .public-header-actions .header-action {
+    .portal-link {
+        display: none;
+    }
+
+    .admissions-action,
+    .nav-toggle {
         min-height: 38px;
-        padding-inline: .55rem;
+        padding-inline: .65rem;
         font-size: .75rem;
     }
 
-    .public-header-nav-row {
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: .65rem;
-        padding-top: .6rem;
+    .public-nav { width: 100%; }
+}
+
+@media (max-width: 420px) {
+    .brand-name { max-width: 8.5rem; }
+    .admissions-action { padding-inline: .55rem; }
+    .nav-toggle { padding-inline: .55rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .public-site-header *,
+    .public-site-header *::before,
+    .public-site-header *::after {
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
     }
-
-    .nav-toggle { display: inline-flex; }
-
-    .public-nav {
-        display: none;
-        width: 100%;
-        padding: .25rem;
-        background: var(--public-surface-alt, #fff);
-        border: 1px solid var(--public-line, #d8dee8);
-        border-radius: .7rem;
-    }
-
-    .public-nav.is-open { display: grid; }
-    .public-nav a { width: 100%; padding: .65rem .7rem; }
 }
 </style>

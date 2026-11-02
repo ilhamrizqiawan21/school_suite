@@ -2,8 +2,8 @@
 .public-site {
     --public-primary: #3157a4;
     --public-accent: #8a661f;
-    --public-paper: color-mix(in srgb, var(--public-primary) 3%, var(--public-surface));
-    --public-surface: #fffdf8;
+    --public-paper: color-mix(in srgb, var(--public-primary) 2.5%, var(--public-surface));
+    --public-surface: #ffffff;
     --public-ink: #173044;
     --public-muted: #526673;
     --public-muted-strong: #405762;
@@ -202,10 +202,10 @@
 
 /* Public pages inherit each school's configured identity color. */
 .public-site {
-    --paper: var(--public-paper, #fffdf8) !important;
+    --paper: var(--public-paper, #f2f6f9) !important;
     --deep: var(--public-deep, #123247) !important;
     --gold: var(--public-gold, #9a7329) !important;
     --ink: var(--public-ink, #173044) !important;
     --muted: var(--public-muted, #526673) !important;
-    background: var(--public-paper, #fffdf8) !important;
+    background: var(--public-paper, #f2f6f9) !important;
 }

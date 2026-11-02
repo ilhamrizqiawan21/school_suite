@@ -38,8 +38,11 @@ const searchFocused = ref(false);
 const activeSearchIndex = ref(0);
 const menuEntries = ref<Array<{ label: string; href: string; section: string }>>([]);
 let removeNavigateListener: VoidFunction | null = null;
+let removeBeforeNavigateListener: VoidFunction | null = null;
 let sidebarViewportQuery: MediaQueryList | null = null;
 let syncSidebarViewport: (() => void) | null = null;
+const sidebarScrollStorageKey = 'school-suite-sidebar-scroll-top';
+const sidebarNavScroll = ref<HTMLElement | null>(null);
 
 const searchResults = computed(() => {
     const query = searchQuery.value.trim().toLocaleLowerCase('id-ID');
@@ -166,6 +169,32 @@ const closeOnEscape = (event: KeyboardEvent) => {
     }
 };
 
+const saveSidebarScroll = () => {
+    const scrollTop = sidebarNavScroll.value?.scrollTop;
+    if (typeof scrollTop !== 'number') return;
+
+    try {
+        sessionStorage.setItem(sidebarScrollStorageKey, String(scrollTop));
+    } catch { /* Storage may be unavailable in private browsing. */ }
+};
+
+const restoreSidebarScroll = () => {
+    let savedScrollTop: number;
+    try {
+        savedScrollTop = Number(sessionStorage.getItem(sidebarScrollStorageKey));
+    } catch {
+        return;
+    }
+
+    if (!Number.isFinite(savedScrollTop) || savedScrollTop <= 0) return;
+
+    nextTick(() => {
+        window.requestAnimationFrame(() => {
+            if (sidebarNavScroll.value) sidebarNavScroll.value.scrollTop = savedScrollTop;
+        });
+    });
+};
+
 onMounted(() => {
     sidebarViewportQuery = window.matchMedia('(max-width: 960px)');
     syncSidebarViewport = () => {
@@ -192,10 +221,12 @@ onMounted(() => {
     document.addEventListener('keydown', closeOnEscape);
     document.addEventListener('pointerdown', handleDocumentPointerdown);
     nextTick(collectMenuEntries);
+    removeBeforeNavigateListener = router.on('before', saveSidebarScroll);
     removeNavigateListener = router.on('navigate', () => {
         sidebarOpen.value = false;
         closeMenuSearch();
     });
+    restoreSidebarScroll();
 });
 
 watch(() => page.props.school?.theme_primary, applySchoolTheme);
@@ -206,6 +237,8 @@ onBeforeUnmount(() => {
     }
     document.removeEventListener('keydown', closeOnEscape);
     document.removeEventListener('pointerdown', handleDocumentPointerdown);
+    saveSidebarScroll();
+    removeBeforeNavigateListener?.();
     removeNavigateListener?.();
 });
 </script>
@@ -232,7 +265,7 @@ onBeforeUnmount(() => {
                     <small>{{ page.props.school?.name ?? 'Ruang kerja sekolah' }}</small>
                 </div>
             </div>
-            <div class="sidebar-nav-scroll flex-1 overflow-y-auto">
+            <div ref="sidebarNavScroll" class="sidebar-nav-scroll flex-1 overflow-y-auto">
                 <SidebarNavigation />
             </div>
         </aside>

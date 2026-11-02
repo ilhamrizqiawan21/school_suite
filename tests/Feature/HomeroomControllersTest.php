@@ -377,4 +377,75 @@ class HomeroomControllersTest extends TestCase
             'status' => 'approved',
         ]);
     }
+
+    public function test_homeroom_discipline_records_cannot_use_a_student_from_another_school(): void
+    {
+        $otherSchool = School::create([
+            'npsn' => '87654321',
+            'name' => 'Sekolah Lain',
+            'status' => 'active',
+        ]);
+        $foreignStudent = Student::create([
+            'school_id' => $otherSchool->id,
+            'nis' => '9001',
+            'name' => 'Siswa Sekolah Lain',
+            'gender' => 'L',
+        ]);
+
+        $response = $this->actingAs($this->homeroomTeacherUser)->post('/wali-kelas/kedisiplinan/insiden', [
+            'student_id' => $foreignStudent->id,
+            'term_id' => $this->term->id,
+            'class_group_id' => $this->class7A->id,
+            'incident_date' => '2026-10-25',
+            'title' => 'Insiden lintas sekolah',
+            'description' => 'Tidak boleh tersimpan.',
+            'category' => 'Kedisiplinan',
+            'penalty_points' => 1,
+        ]);
+
+        $response->assertRedirect()->assertSessionHasErrors('student_id');
+        $this->assertDatabaseMissing('student_incidents', [
+            'student_id' => $foreignStudent->id,
+        ]);
+    }
+
+    public function test_homeroom_discipline_records_cannot_use_a_term_from_another_school(): void
+    {
+        $otherSchool = School::create([
+            'npsn' => '87654321',
+            'name' => 'Sekolah Lain',
+            'status' => 'active',
+        ]);
+        $otherYear = AcademicYear::create([
+            'school_id' => $otherSchool->id,
+            'name' => '2026/2027',
+            'start_date' => '2026-07-01',
+            'end_date' => '2027-06-30',
+            'is_active' => true,
+        ]);
+        $foreignTerm = Term::create([
+            'academic_year_id' => $otherYear->id,
+            'name' => 'Semester Ganjil',
+            'semester_type' => 'odd',
+            'start_date' => '2026-07-01',
+            'end_date' => '2026-12-31',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->homeroomTeacherUser)->post('/wali-kelas/kedisiplinan/prestasi', [
+            'student_id' => $this->student->id,
+            'term_id' => $foreignTerm->id,
+            'title' => 'Prestasi lintas sekolah',
+            'achievement_type' => 'academic',
+            'level' => 'school',
+            'rank' => 'Juara 1',
+            'event_date' => '2026-10-20',
+        ]);
+
+        $response->assertRedirect()->assertSessionHasErrors('term_id');
+        $this->assertDatabaseMissing('student_achievements', [
+            'student_id' => $this->student->id,
+            'term_id' => $foreignTerm->id,
+        ]);
+    }
 }

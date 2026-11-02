@@ -133,9 +133,9 @@ const formatDate = (value?: string | null) => value
 </template>
 
 <style scoped>
-:global(body) { margin: 0; background: #fffdf8; }
-:global(html[data-theme='dark']) .public-site { color: #173044 !important; background: #fffdf8 !important; }
-.public-site { --ink: var(--public-ink, #173044); --muted: var(--public-muted, #526673); --paper: var(--public-surface, #fffdf8); --deep: var(--public-primary, #3157a4); --gold: var(--public-accent, #8a661f); min-height: 100vh; color: var(--ink); background: var(--paper); font-family: var(--font-ui); }
+:global(body) { margin: 0; background: #f2f6f9; }
+:global(html[data-theme='dark']) .public-site { color: #173044 !important; background: #f2f6f9 !important; }
+.public-site { --ink: var(--public-ink, #173044); --muted: var(--public-muted, #526673); --paper: var(--public-surface, #f5f8fb); --deep: var(--public-primary, #3157a4); --gold: var(--public-accent, #8a661f); min-height: 100vh; color: var(--ink); background: var(--paper); font-family: var(--font-ui); }
 .skip-link { position: fixed; top: -4rem; left: 1rem; z-index: 10; padding: .7rem 1rem; color: var(--paper); background: var(--deep); border-radius: .4rem; font-size: .8rem; font-weight: 700; text-decoration: none; }
 .skip-link:focus { top: 1rem; }
 .home-hero, .explore-section, .content-section, .public-footer { width: min(1120px, calc(100% - 3rem)); margin-inline: auto; }

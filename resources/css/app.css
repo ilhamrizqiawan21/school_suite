@@ -574,11 +574,11 @@ button.bg-slate-900 {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    background: #f4f0e7 !important;
+    background: var(--public-paper, #f2f6f9) !important;
 }
 
 body:has(.public-site) {
-    background: #f4f0e7 !important;
+    background: #f2f6f9 !important;
 }
 
 .public-site > .identity-watermark {

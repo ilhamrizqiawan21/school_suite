@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\DB;
 class DispensationService
 {
     public function __construct(
-        protected AuditLogger $auditLogger
+        protected AuditLogger $auditLogger,
+        protected HomeroomReferenceValidator $referenceValidator
     ) {}
 
     /**
@@ -37,6 +38,12 @@ class DispensationService
      */
     public function recordDispensation(array $data, User $actor): AttendanceDispensation
     {
+        $this->referenceValidator->validateStudentAndTerm(
+            (int) $actor->school_id,
+            (int) $data['student_id'],
+            (int) $data['term_id']
+        );
+
         return DB::transaction(function () use ($data, $actor) {
             $dispensation = AttendanceDispensation::create([
                 'school_id' => (int) $actor->school_id,

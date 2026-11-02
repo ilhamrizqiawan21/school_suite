@@ -90,18 +90,32 @@ class SchoolController extends Controller
         $settings = $school->settings ?? [];
         $settings['theme_primary'] = $validated['theme_primary'] ?? data_get($settings, 'theme_primary', '#3157a4');
         $settings['letterhead'] = [
-            'parent_institution' => $validated['letterhead_parent_institution'] ?? null,
-            'city' => $validated['letterhead_city'] ?? null,
-            'postal_code' => $validated['letterhead_postal_code'] ?? null,
+            'parent_institution' => array_key_exists('letterhead_parent_institution', $validated)
+                ? $validated['letterhead_parent_institution']
+                : data_get($settings, 'letterhead.parent_institution'),
+            'city' => array_key_exists('letterhead_city', $validated)
+                ? $validated['letterhead_city']
+                : data_get($settings, 'letterhead.city'),
+            'postal_code' => array_key_exists('letterhead_postal_code', $validated)
+                ? $validated['letterhead_postal_code']
+                : data_get($settings, 'letterhead.postal_code'),
         ];
         $publicTheme = data_get($settings, 'public_theme', []);
         $publicTheme = is_array($publicTheme) ? $publicTheme : [];
         $publicTheme['preset'] = $validated['public_theme_preset'] ?? data_get($publicTheme, 'preset', 'editorial');
         $publicTheme['hero_variant'] = $validated['public_hero_variant'] ?? data_get($publicTheme, 'hero_variant', 'collage');
-        $publicTheme['hero_title'] = $validated['public_hero_title'] ?? null;
-        $publicTheme['hero_accent'] = $validated['public_hero_accent'] ?? null;
-        $publicTheme['hero_primary_label'] = $validated['public_hero_primary_label'] ?? null;
-        $publicTheme['hero_secondary_label'] = $validated['public_hero_secondary_label'] ?? null;
+        $publicTheme['hero_title'] = array_key_exists('public_hero_title', $validated)
+            ? $validated['public_hero_title']
+            : data_get($publicTheme, 'hero_title');
+        $publicTheme['hero_accent'] = array_key_exists('public_hero_accent', $validated)
+            ? $validated['public_hero_accent']
+            : data_get($publicTheme, 'hero_accent');
+        $publicTheme['hero_primary_label'] = array_key_exists('public_hero_primary_label', $validated)
+            ? $validated['public_hero_primary_label']
+            : data_get($publicTheme, 'hero_primary_label');
+        $publicTheme['hero_secondary_label'] = array_key_exists('public_hero_secondary_label', $validated)
+            ? $validated['public_hero_secondary_label']
+            : data_get($publicTheme, 'hero_secondary_label');
         $publicTheme['show_explore'] = $validated['public_show_explore'] ?? data_get($publicTheme, 'show_explore', true);
         $publicTheme['show_news'] = $validated['public_show_news'] ?? data_get($publicTheme, 'show_news', true);
         $publicTheme['show_gallery'] = $validated['public_show_gallery'] ?? data_get($publicTheme, 'show_gallery', true);

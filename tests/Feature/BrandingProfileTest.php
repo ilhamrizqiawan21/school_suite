@@ -45,6 +45,42 @@ class BrandingProfileTest extends TestCase
         Storage::disk('local')->assertExists($this->school->favicon_path);
     }
 
+    public function test_partial_school_update_preserves_existing_public_theme_copy(): void
+    {
+        $this->school->update([
+            'settings' => [
+                'letterhead' => [
+                    'parent_institution' => 'Yayasan Pendidikan',
+                    'city' => 'Bandung',
+                    'postal_code' => '40123',
+                ],
+                'public_theme' => [
+                    'hero_title' => 'Belajar dengan Berani',
+                    'hero_accent' => 'Tumbuh bersama',
+                    'hero_primary_label' => 'Lihat program',
+                    'hero_secondary_label' => 'Hubungi kami',
+                ],
+            ],
+        ]);
+
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => 'SMP',
+            'theme_primary' => '#277450',
+        ])->assertRedirect('/pengaturan/sekolah');
+
+        $theme = $this->school->fresh()->settings['public_theme'];
+        $letterhead = $this->school->fresh()->settings['letterhead'];
+        $this->assertSame('Yayasan Pendidikan', $letterhead['parent_institution']);
+        $this->assertSame('Bandung', $letterhead['city']);
+        $this->assertSame('40123', $letterhead['postal_code']);
+        $this->assertSame('Belajar dengan Berani', $theme['hero_title']);
+        $this->assertSame('Tumbuh bersama', $theme['hero_accent']);
+        $this->assertSame('Lihat program', $theme['hero_primary_label']);
+        $this->assertSame('Hubungi kami', $theme['hero_secondary_label']);
+    }
+
     public function test_user_can_update_own_profile_and_avatar(): void
     {
         Storage::fake('local');

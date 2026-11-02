@@ -13,7 +13,8 @@ use App\Shared\Audit\AuditLogger;
 class StudentDisciplineService
 {
     public function __construct(
-        protected AuditLogger $auditLogger
+        protected AuditLogger $auditLogger,
+        protected HomeroomReferenceValidator $referenceValidator
     ) {}
 
     /**
@@ -23,6 +24,13 @@ class StudentDisciplineService
      */
     public function recordIncident(array $data, User $actor): StudentIncident
     {
+        $this->referenceValidator->validateStudentTermAndClass(
+            (int) $actor->school_id,
+            (int) $data['student_id'],
+            (int) $data['term_id'],
+            isset($data['class_group_id']) ? (int) $data['class_group_id'] : null
+        );
+
         $data['school_id'] = (int) $actor->school_id;
         $data['recorded_by_user_id'] = $actor->id;
 
@@ -52,6 +60,12 @@ class StudentDisciplineService
      */
     public function recordAchievement(array $data, User $actor): StudentAchievement
     {
+        $this->referenceValidator->validateStudentAndTerm(
+            (int) $actor->school_id,
+            (int) $data['student_id'],
+            (int) $data['term_id']
+        );
+
         $data['school_id'] = (int) $actor->school_id;
 
         $achievement = StudentAchievement::create($data);
@@ -81,6 +95,12 @@ class StudentDisciplineService
      */
     public function recordAssistance(array $data, User $actor): AssistanceRecord
     {
+        $this->referenceValidator->validateStudentAndTerm(
+            (int) $actor->school_id,
+            (int) $data['student_id'],
+            (int) $data['term_id']
+        );
+
         $data['school_id'] = (int) $actor->school_id;
         $data['facilitator_id'] = $actor->id;
 

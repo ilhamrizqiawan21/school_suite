@@ -40,13 +40,13 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 <style scoped>
 :global(body) {
     margin: 0;
-    background: #f4f0e7;
+    background: #f2f6f9;
 }
 
 .public-section-page {
     --ink: var(--public-ink, #173044);
     --muted: var(--public-muted, #526673);
-    --paper: var(--public-paper, #fffdf8);
+    --paper: var(--public-paper, #f5f8fb);
     --deep: var(--public-primary, #3157a4);
     --gold: var(--public-accent, #8a661f);
     min-height: 100vh;
