@@ -50,6 +50,19 @@ Dokumen pendukung:
 - [Panduan instalasi](INSTALLATION.md)
 - [Checklist pemasangan server resmi](DEPLOYMENT_CHECKLIST.md)
 
+## Fitur yang telah diperbarui
+
+Selain perbaikan keamanan, beberapa bagian yang paling sering digunakan sudah dirapikan agar lebih mudah dipahami dan lebih nyaman digunakan:
+
+- **Login:** warna halaman sekarang mengikuti identitas sekolah dan tidak lagi menampilkan perbedaan warna pada sisi luar halaman.
+- **Halaman publik sekolah:** warna dasar, tombol, menu, dan tampilan utama dapat mengikuti identitas sekolah.
+- **Sidebar dan topbar:** navigasi lebih konsisten, pencarian menu lebih mudah, dan tampilan dapat menyesuaikan mode terang atau gelap.
+- **SPMB:** menu panitia, pendaftar, verifikasi berkas, seleksi dan ranking, pengumuman, serta daftar ulang dibuat lebih rapi.
+- **Verifikasi berkas:** informasi dokumen, status, unduh, validasi, permintaan perbaikan, dan unggah dokumen ditata agar sejajar dan mudah dipindai.
+- **Menu akademik:** data guru dan menu akademik lain diseragamkan supaya pola penggunaan antar halaman terasa sama.
+- **Surat keluar:** alur surat dan persiapan tanda tangan elektronik dibuat lebih jelas untuk mendukung proses persetujuan dan penerbitan surat.
+- **Dokumentasi:** cara instalasi, pengaturan akun, backup, pemulihan, dan persiapan server resmi sudah dirangkum dalam bahasa yang lebih mudah diikuti.
+
 ## Hasil pemeriksaan
 
 - Pemeriksaan keamanan utama: **lulus**
@@ -60,6 +73,19 @@ Dokumen pendukung:
 - Pembuatan versi siap digunakan di server resmi: **lulus**
 
 Dengan hasil tersebut, tidak ada temuan utama yang menghalangi proses pemasangan. Pengaturan khusus sekolah, seperti nama sekolah, logo, warna identitas, akun Admin, dan domain, tetap perlu diisi saat proses pemasangan.
+
+## Akun demo baru
+
+Satu akun khusus untuk presentasi client sudah dibuat pada instalasi lokal:
+
+- **Nama:** Akun Demo Client
+- **Email:** `demo.client@pilot.sch.id`
+- **Username:** `demo_client`
+- **Peran:** Operator Sekolah
+- **Password sementara:** diberikan bersama handoff ini melalui jalur pribadi
+- **Keamanan:** wajib mengganti password saat login pertama
+
+Akun ini sengaja menggunakan peran Operator agar client dapat mencoba alur kerja utama tanpa memiliki akses penuh seperti Administrator.
 
 ## Yang perlu disiapkan saat pemasangan
 

@@ -16,6 +16,7 @@ Seeder pilot tidak lagi memiliki password bawaan di source code. Sebelum menjala
 | **Wali Kelas VII-A**| `budi@pilot.sch.id` | Password dari environment | Ruang kerja wali kelas, generate rapor, ledger nilai kelas |
 | **Guru Bahasa Ind.**| `siti@pilot.sch.id` | Password dari environment | Input nilai mata pelajaran, presensi harian, jurnal kelas |
 | **Siswa (Ahmad F.)**| `siswa26001@pilot.sch.id` | Password dari environment | Akses rapor pribadi dan jadwal pelajaran |
+| **Demo Client** | `demo.client@pilot.sch.id` | Password dari handoff privat | Presentasi alur kerja Operator Sekolah |
 
 Semua akun pilot dengan kata sandi awal tersebut diwajibkan menggantinya saat pertama kali masuk.
 
