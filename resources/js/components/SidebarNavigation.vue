@@ -27,8 +27,8 @@ interface NavSection {
 const homeItem: NavItem = {
     name: 'Beranda',
     href: '/dashboard',
-    principalHref: '/kepsek/dashboard',
-    principalActivePrefix: '/kepsek/dashboard',
+    principalHref: '/dashboard',
+    principalActivePrefix: '/dashboard',
     key: 'home',
     exact: true,
     icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
@@ -39,7 +39,7 @@ const sections: NavSection[] = [
         title: 'SPMB',
         icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12zm4-6h2m-2 3h4',
         items: [
-            { name: 'Dashboard SPMB', href: '/spmb', key: 'admissions', activePrefix: '/spmb', icon: 'M3 13h4V3H3v10zm7 8h4V3h-4v18zm7-5h4V3h-4v13z' },
+            { name: 'Dashboard SPMB', href: '/spmb', key: 'admissions', exact: true, activePrefix: '/spmb', icon: 'M3 13h4V3H3v10zm7 8h4V3h-4v18zm7-5h4V3h-4v13z' },
             { name: 'Periode & Juknis', href: '/spmb/periode', key: 'admissions-periods', activePrefix: '/spmb/periode', icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12' },
             { name: 'Jalur & Kuota', href: '/spmb/jalur', key: 'admissions-tracks', activePrefix: '/spmb/jalur', icon: 'M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-5 2v4' },
             { name: 'Panitia & Jadwal', href: '/spmb/panitia', key: 'admissions-committee', activePrefix: '/spmb/panitia', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.857-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2a5 5 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
@@ -245,14 +245,14 @@ const openActiveGroups = () => {
     if (!groupsLoaded.value) return;
 
     const nextGroups = { ...expandedGroups.value };
-    if (activeSectionKey.value && !Object.hasOwn(expandedGroups.value, activeSectionKey.value)) {
+    if (activeSectionKey.value) {
         nextGroups[activeSectionKey.value] = true;
     }
     const activeNested = visibleSections.value.flatMap((section) => section.items).find((item) => isNestedGroupActive(item));
-    if (activeNested && !Object.hasOwn(expandedGroups.value, activeNested.key)) {
+    if (activeNested) {
         nextGroups[activeNested.key] = true;
     }
-    if (Object.keys(nextGroups).length !== Object.keys(expandedGroups.value).length) {
+    if (JSON.stringify(nextGroups) !== JSON.stringify(expandedGroups.value)) {
         expandedGroups.value = nextGroups;
     }
 };
