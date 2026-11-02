@@ -32,6 +32,35 @@ class SchoolProfileController extends Controller
         ]);
     }
 
+    public function programs(): Response
+    {
+        $data = $this->publicData();
+
+        return Inertia::render('Public/School/Programs', [
+            'school' => $data['school'],
+            'news' => $data['news'],
+            'gallery' => $data['gallery'],
+        ]);
+    }
+
+    public function studentLife(): Response
+    {
+        $data = $this->publicData();
+
+        return Inertia::render('Public/School/StudentLife', [
+            'school' => $data['school'],
+            'news' => $data['news'],
+            'gallery' => $data['gallery'],
+        ]);
+    }
+
+    public function contact(): Response
+    {
+        return Inertia::render('Public/School/Contact', [
+            'school' => $this->publicData()['school'],
+        ]);
+    }
+
     /** @return array<string, mixed> */
     private function publicData(): array
     {
@@ -91,6 +120,7 @@ class SchoolProfileController extends Controller
                     'about', 'principal_message', 'vision', 'mission',
                 ]),
                 'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'theme' => $school->publicTheme(),
             ],
             'news' => $news,
             'gallery' => $gallery,

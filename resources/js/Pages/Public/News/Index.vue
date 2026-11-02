@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import PublicHeader from '@/components/PublicHeader.vue';
+import { computed } from 'vue';
 
 interface Photo { id: number; url: string; name?: string | null }
 interface NewsItem { id: number; title: string; slug: string; excerpt?: string | null; published_at?: string | null; photos: Photo[] }
-defineProps<{ school: { name: string; about?: string | null }; news: NewsItem[] }>();
+const props = defineProps<{ school: { name: string; about?: string | null; logo_url?: string | null; theme?: { primary?: string | null } }; news: NewsItem[] }>();
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value)) : '';
 </script>
 
 <template>
     <Head :title="`Berita — ${school.name}`" />
-    <main class="public-site public-news"><div class="identity-watermark" aria-hidden="true"><span>{{ school.name.slice(0, 1) }}</span></div><header><Link href="/" class="brand">{{ school.name }}</Link><nav><Link href="/" >Beranda</Link><Link href="/profil-sekolah">Profil sekolah</Link><Link href="/struktur-organisasi">Organisasi</Link><Link href="/berita" aria-current="page">Berita</Link><Link href="/galeri">Galeri</Link><Link href="/ppdb" class="login-link">PPDB</Link><Link href="/login" class="login-link">Masuk</Link></nav></header><section class="intro"><p>Informasi terbaru sekolah</p><h1>Berita & kegiatan</h1><span>{{ school.about || 'Ikuti kabar terbaru dan kegiatan sekolah.' }}</span></section><section class="news-grid"><Link v-for="item in news" :key="item.id" :href="`/berita/${item.slug}`" class="news-card"><div class="card-image"><img v-if="item.photos[0]" :src="item.photos[0].url" :alt="item.title" /><span v-else>Berita sekolah</span></div><div class="card-body"><small>{{ formatDate(item.published_at) }}</small><h2>{{ item.title }}</h2><p>{{ item.excerpt || 'Baca informasi lengkap dari sekolah.' }}</p><span class="read-more">Baca berita →</span></div></Link><div v-if="!news.length" class="empty"><strong>Belum ada berita terbit.</strong><p>Informasi sekolah akan tampil di halaman ini.</p></div></section></main>
+    <main class="public-site public-news" :style="themeStyle"><div class="identity-watermark" aria-hidden="true"><span>{{ school.name.slice(0, 1) }}</span></div><PublicHeader :school="school" active="news" /><section class="intro"><p>Informasi terbaru sekolah</p><h1>Berita & kegiatan</h1><span>{{ school.about || 'Ikuti kabar terbaru dan kegiatan sekolah.' }}</span></section><section class="news-grid"><Link v-for="item in news" :key="item.id" :href="`/berita/${item.slug}`" class="news-card"><div class="card-image"><img v-if="item.photos[0]" :src="item.photos[0].url" :alt="item.title" /><span v-else>Berita sekolah</span></div><div class="card-body"><small>{{ formatDate(item.published_at) }}</small><h2>{{ item.title }}</h2><p>{{ item.excerpt || 'Baca informasi lengkap dari sekolah.' }}</p><span class="read-more">Baca berita →</span></div></Link><div v-if="!news.length" class="empty"><strong>Belum ada berita terbit.</strong><p>Informasi sekolah akan tampil di halaman ini.</p></div></section></main>
 </template>
 
 <style scoped>

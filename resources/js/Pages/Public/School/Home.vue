@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import PublicHeader from '@/components/PublicHeader.vue';
 
 interface School {
     name: string;
+    theme?: { primary?: string | null };
     level?: string | null;
     school_status?: string | null;
     accreditation?: string | null;
@@ -33,6 +35,7 @@ interface GalleryItem {
 const props = defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
 const galleryPreview = computed(() => props.gallery.slice(0, 4));
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value))
     : '';
@@ -41,23 +44,9 @@ const formatDate = (value?: string | null) => value
 <template>
     <Head :title="school.name" />
     <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
-    <main id="main-content" class="public-site public-home">
+    <main id="main-content" class="public-site public-home" :style="themeStyle">
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
-        <header class="public-header">
-            <Link href="/" class="brand" aria-label="Beranda sekolah">
-                <span class="brand-mark"><img v-if="school.logo_url" :src="school.logo_url" :alt="'Logo ' + school.name" /><span v-else>{{ initial }}</span></span>
-                <span>{{ school.name }}</span>
-            </Link>
-            <nav aria-label="Navigasi publik">
-                <Link href="/" aria-current="page">Beranda</Link>
-                <Link href="/profil-sekolah">Profil sekolah</Link>
-                <Link href="/struktur-organisasi">Organisasi</Link>
-                <Link href="/berita">Berita</Link>
-                <Link href="/galeri">Galeri</Link>
-                <Link href="/ppdb" class="header-action">PPDB</Link>
-                <Link href="/login" class="header-action">Masuk</Link>
-            </nav>
-        </header>
+        <PublicHeader :school="school" active="home" />
 
         <section class="home-hero" aria-labelledby="home-title">
             <div class="hero-copy">

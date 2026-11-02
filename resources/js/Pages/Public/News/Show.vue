@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import PublicHeader from '@/components/PublicHeader.vue';
+import { computed } from 'vue';
 interface Photo { id: number; url: string; name?: string | null; caption?: string | null }
-defineProps<{ school: { name: string }; news: { title: string; body: string; published_at?: string | null; photos: Photo[] } }>();
+const props = defineProps<{ school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } }; news: { title: string; body: string; published_at?: string | null; photos: Photo[] } }>();
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value)) : '';
 </script>
 
 <template>
     <Head :title="`${news.title} — ${school.name}`" />
-    <main class="public-site article-page"><div class="identity-watermark" aria-hidden="true"><span>{{ school.name.slice(0, 1) }}</span></div><header><Link href="/" class="brand">{{ school.name }}</Link><nav><Link href="/">Beranda</Link><Link href="/profil-sekolah">Profil sekolah</Link><Link href="/struktur-organisasi">Organisasi</Link><Link href="/berita" aria-current="page">Berita</Link><Link href="/galeri">Galeri</Link><Link href="/ppdb" class="login-link">PPDB</Link><Link href="/login" class="login-link">Masuk</Link></nav></header><article><Link href="/berita" class="back">← Kembali ke berita</Link><small>{{ formatDate(news.published_at) }}</small><h1>{{ news.title }}</h1><div class="article-body">{{ news.body }}</div><div v-if="news.photos.length" class="article-gallery"><figure v-for="photo in news.photos" :key="photo.id"><img :src="photo.url" :alt="photo.caption || photo.name || news.title" /><figcaption v-if="photo.caption">{{ photo.caption }}</figcaption></figure></div></article></main>
+    <main class="public-site article-page" :style="themeStyle"><div class="identity-watermark" aria-hidden="true"><span>{{ school.name.slice(0, 1) }}</span></div><PublicHeader :school="school" active="news" /><article><Link href="/berita" class="back">← Kembali ke berita</Link><small>{{ formatDate(news.published_at) }}</small><h1>{{ news.title }}</h1><div class="article-body">{{ news.body }}</div><div v-if="news.photos.length" class="article-gallery"><figure v-for="photo in news.photos" :key="photo.id"><img :src="photo.url" :alt="photo.caption || photo.name || news.title" /><figcaption v-if="photo.caption">{{ photo.caption }}</figcaption></figure></div></article></main>
 </template>
 
 <style scoped>

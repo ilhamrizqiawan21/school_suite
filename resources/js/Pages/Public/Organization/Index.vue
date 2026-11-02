@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PublicOrganizationTreeNode from '@/components/PublicOrganizationTreeNode.vue';
+import PublicHeader from '@/components/PublicHeader.vue';
 
 interface Member {
     id: number;
@@ -18,10 +19,11 @@ interface TreeMember extends Member {
 }
 
 const props = defineProps<{
-    school: { name: string; logo_url?: string | null };
+    school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
     organization: Member[];
 }>();
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 const organizationTree = computed<TreeMember[]>(() => {
     const nodes = new Map<number, TreeMember>(
         props.organization.map((member) => [member.id, { ...member, children: [] }]),
@@ -45,23 +47,9 @@ const organizationTree = computed<TreeMember[]>(() => {
 
 <template>
     <Head :title="'Struktur organisasi — ' + school.name" />
-    <main class="public-site public-organization">
+    <main class="public-site public-organization" :style="themeStyle">
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
-        <header class="public-header">
-            <Link href="/" class="brand" aria-label="Beranda sekolah">
-                <span class="brand-mark"><img v-if="school.logo_url" :src="school.logo_url" :alt="'Logo ' + school.name" /><span v-else>{{ initial }}</span></span>
-                <span>{{ school.name }}</span>
-            </Link>
-            <nav aria-label="Navigasi publik">
-                <Link href="/">Beranda</Link>
-                <Link href="/profil-sekolah">Profil sekolah</Link>
-                <Link href="/struktur-organisasi" aria-current="page">Organisasi</Link>
-                <Link href="/berita">Berita</Link>
-                <Link href="/galeri">Galeri</Link>
-                <Link href="/ppdb" class="header-action">PPDB</Link>
-                <Link href="/login" class="header-action">Masuk</Link>
-            </nav>
-        </header>
+        <PublicHeader :school="school" active="organization" />
 
         <section class="page-intro" aria-labelledby="organization-title">
             <p class="eyebrow">Struktur organisasi</p>

@@ -140,7 +140,14 @@ class SchoolNewsController extends Controller
         $school = School::query()->firstOrFail();
         $news = $this->publishedQuery($school)->with('photos')->get()->map(fn (SchoolNews $item): array => $this->present($item))->values();
 
-        return Inertia::render('Public/News/Index', ['school' => $school->only(['name', 'about', 'logo_path']), 'news' => $news]);
+        return Inertia::render('Public/News/Index', [
+            'school' => [
+                ...$school->only(['name', 'about']),
+                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'theme' => $school->publicTheme(),
+            ],
+            'news' => $news,
+        ]);
     }
 
     public function publicShow(string $slug): Response
@@ -149,7 +156,11 @@ class SchoolNewsController extends Controller
         $item = $this->publishedQuery($school)->with('photos')->where('slug', $slug)->firstOrFail();
 
         return Inertia::render('Public/News/Show', [
-            'school' => $school->only(['name', 'about', 'logo_path']),
+            'school' => [
+                ...$school->only(['name', 'about']),
+                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'theme' => $school->publicTheme(),
+            ],
             'news' => $this->present($item, true),
         ]);
     }

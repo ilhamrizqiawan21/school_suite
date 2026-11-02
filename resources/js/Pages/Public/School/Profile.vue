@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import PublicHeader from '@/components/PublicHeader.vue';
 
 interface SchoolProfile {
     name: string;
+    theme?: { primary?: string | null };
     legal_name?: string | null;
     level?: string | null;
     school_status?: string | null;
@@ -52,28 +54,15 @@ const missionPoints = computed(() => (props.school.mission ?? '')
     .map((item) => item.trim())
     .filter(Boolean));
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 </script>
 
 <template>
     <Head :title="school.name" />
     <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
-    <main id="main-content" class="public-site school-profile">
+    <main id="main-content" class="public-site school-profile" :style="themeStyle">
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
-        <header class="site-header">
-            <Link href="/" class="brand" aria-label="Beranda sekolah">
-                <span class="brand-mark"><img v-if="school.logo_url" :src="school.logo_url" :alt="'Logo ' + school.name" /><span v-else>{{ initial }}</span></span>
-                <span>{{ school.name }}</span>
-            </Link>
-            <nav class="site-nav" aria-label="Navigasi publik">
-                <Link href="/">Beranda</Link>
-                <Link href="/profil-sekolah" aria-current="page">Profil sekolah</Link>
-                <Link href="/struktur-organisasi">Organisasi</Link>
-                <Link href="/berita">Berita</Link>
-                <Link href="/galeri">Galeri</Link>
-                <Link href="/ppdb" class="header-action">PPDB</Link>
-                <Link href="/login" class="login-link">Masuk</Link>
-            </nav>
-        </header>
+        <PublicHeader :school="school" active="profile" />
 
         <section class="hero" aria-labelledby="hero-title">
             <div class="hero-copy">

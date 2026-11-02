@@ -191,6 +191,21 @@ class SchoolNewsTest extends TestCase
             ->has('news', 1));
     }
 
+    public function test_public_information_menu_has_dedicated_pages(): void
+    {
+        $this->get('/akademik-fasilitas')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/School/Programs')
+            ->where('school.name', $this->school->name));
+
+        $this->get('/kesiswaan-prestasi')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/School/StudentLife')
+            ->where('school.name', $this->school->name));
+
+        $this->get('/kontak')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/School/Contact')
+            ->where('school.name', $this->school->name));
+    }
+
     public function test_news_is_scoped_to_the_current_school_for_management(): void
     {
         $otherSchool = School::create(['name' => 'Sekolah Lain', 'npsn' => '88990011', 'level' => 'SMA']);

@@ -86,6 +86,7 @@ class AdmissionsController extends Controller
                 'phone' => $school->phone,
                 'email' => $school->email,
                 'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'theme' => $school->publicTheme(),
             ],
             'periods' => $periods,
         ]);

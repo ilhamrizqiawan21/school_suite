@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import PublicHeader from '@/components/PublicHeader.vue';
 
 interface GalleryPhoto {
     id: number;
@@ -14,20 +16,18 @@ interface GalleryAlbum {
     photos: GalleryPhoto[];
 }
 
-defineProps<{
-    school: { name: string; logo_url?: string | null };
+const props = defineProps<{
+    school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
     albums: GalleryAlbum[];
 }>();
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 </script>
 
 <template>
     <Head :title="`Galeri — ${school.name}`" />
-    <main class="public-site public-gallery">
+    <main class="public-site public-gallery" :style="themeStyle">
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ school.name.slice(0, 1) }}</span></div>
-        <header class="site-header">
-            <Link href="/" class="brand" aria-label="Kembali ke beranda"><span class="brand-mark"><img v-if="school.logo_url" :src="school.logo_url" :alt="'Logo ' + school.name" /><span v-else>{{ school.name.slice(0, 1) }}</span></span><span>{{ school.name }}</span></Link>
-            <nav aria-label="Navigasi publik"><Link href="/">Beranda</Link><Link href="/profil-sekolah">Profil sekolah</Link><Link href="/struktur-organisasi">Organisasi</Link><Link href="/berita">Berita</Link><Link href="/galeri" aria-current="page">Galeri</Link><Link href="/ppdb" class="login-link">PPDB</Link><Link href="/login" class="login-link">Masuk</Link></nav>
-        </header>
+        <PublicHeader :school="school" active="gallery" />
 
         <section class="gallery-intro"><p class="kicker">Portofolio sekolah</p><h1>Ruang untuk momen yang berarti.</h1><p>Lihat kegiatan, ruang belajar, dan cerita kecil yang membentuk keseharian {{ school.name }}.</p></section>
 

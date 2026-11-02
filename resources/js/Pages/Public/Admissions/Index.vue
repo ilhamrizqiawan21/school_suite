@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import PublicHeader from '@/components/PublicHeader.vue';
 
 interface Requirement {
     label: string;
@@ -34,7 +35,7 @@ interface Period {
 }
 
 const props = defineProps<{
-    school: { name: string; level?: string | null; address?: string | null; phone?: string | null; email?: string | null; logo_url?: string | null };
+    school: { name: string; level?: string | null; address?: string | null; phone?: string | null; email?: string | null; logo_url?: string | null; theme?: { primary?: string | null } };
     periods: Period[];
 }>();
 
@@ -58,26 +59,13 @@ const statusAnnouncement = computed(() => registrationOpen.value
     : currentPeriod.value
         ? 'Periode ' + currentPeriod.value.academic_year + ' sedang berada pada tahap ' + statusLabel(currentPeriod.value.status).toLowerCase() + '.'
         : 'Saat ini sekolah belum membuka periode penerimaan siswa baru.');
+const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
 </script>
 
 <template>
     <Head :title="`PPDB — ${school.name}`" />
-    <main class="public-site public-admissions">
-        <header class="public-header">
-            <Link href="/" class="brand" aria-label="Beranda sekolah">
-                <span class="brand-mark"><img v-if="school.logo_url" :src="school.logo_url" :alt="`Logo ${school.name}`" /><span v-else>{{ initial }}</span></span>
-                <span>{{ school.name }}</span>
-            </Link>
-            <nav aria-label="Navigasi publik">
-                <Link href="/">Beranda</Link>
-                <Link href="/profil-sekolah">Profil sekolah</Link>
-                <Link href="/struktur-organisasi">Organisasi</Link>
-                <Link href="/berita">Berita</Link>
-                <Link href="/galeri">Galeri</Link>
-                <Link href="/ppdb" aria-current="page" class="header-action">PPDB</Link>
-                <Link href="/login" class="header-action">Masuk</Link>
-            </nav>
-        </header>
+    <main class="public-site public-admissions" :style="themeStyle">
+        <PublicHeader :school="school" active="admissions" />
 
         <section class="admissions-status" aria-labelledby="admissions-title">
             <div class="status-copy">
@@ -274,6 +262,9 @@ const statusAnnouncement = computed(() => registrationOpen.value
     gap: 4rem;
     align-items: end;
     min-height: 470px;
+    width: min(1120px, 100%);
+    margin-inline: auto;
+    margin-top: 1rem;
     overflow: hidden;
     padding: clamp(4.5rem, 10vw, 7.5rem) 0 4rem;
     isolation: isolate;

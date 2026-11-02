@@ -1,12 +1,16 @@
 /* Public portfolio: stronger contrast, readable type, and explicit CTA states. */
 .public-site {
+    --public-primary: #3157a4;
+    --public-paper: color-mix(in srgb, var(--public-primary) 3%, #fffdf8);
+    --public-surface: #fffdf8;
     --public-ink: #173044;
     --public-muted: #526673;
     --public-muted-strong: #405762;
-    --public-deep: #123247;
-    --public-deep-hover: #1b4d6b;
-    --public-gold: #9a7329;
+    --public-deep: var(--public-primary);
+    --public-deep-hover: color-mix(in srgb, var(--public-primary) 78%, #173044);
+    --public-gold: color-mix(in srgb, var(--public-primary) 68%, #9a7329);
     color: var(--public-ink);
+    background-color: var(--public-paper);
     font-size: 16px;
     line-height: 1.6;
     text-rendering: optimizeLegibility;
@@ -96,6 +100,22 @@
     transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease;
 }
 
+.public-site .brand-mark {
+    background: color-mix(in srgb, var(--public-primary) 18%, #d4a74b);
+}
+
+.public-site .hero-visual,
+.public-site .hero-note,
+.public-site .message-section,
+.public-site .news-image,
+.public-site .card-image,
+.public-site .gallery-preview-item,
+.public-site .status-panel,
+.public-site .life-card-feature,
+.public-site .contact-card-main {
+    background: var(--public-deep) !important;
+}
+
 .public-site .primary-button:hover,
 .public-site .primary-button:focus-visible,
 .public-site .primary-button:active {
@@ -173,4 +193,12 @@
     .public-site .primary-button {
         min-height: 46px;
     }
+}
+
+/* Public pages inherit each school's configured identity color. */
+.public-site {
+    --paper: var(--public-paper, #fffdf8) !important;
+    --deep: var(--public-deep, #123247) !important;
+    --gold: var(--public-gold, #9a7329) !important;
+    background: var(--public-paper, #fffdf8) !important;
 }

@@ -13,6 +13,8 @@ class School extends Model
 {
     use HasFactory;
 
+    private const PUBLIC_THEME_COLORS = ['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'];
+
     protected $table = 'schools';
 
     protected $fillable = [
@@ -43,6 +45,16 @@ class School extends Model
     {
         return [
             'settings' => 'array',
+        ];
+    }
+
+    /** @return array{primary: string} */
+    public function publicTheme(): array
+    {
+        $primary = data_get($this->settings ?? [], 'theme_primary');
+
+        return [
+            'primary' => in_array($primary, self::PUBLIC_THEME_COLORS, true) ? $primary : '#3157a4',
         ];
     }
 

@@ -142,6 +142,7 @@ class SchoolGalleryController extends Controller
             'school' => [
                 'name' => $school->name,
                 'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'theme' => $school->publicTheme(),
             ],
             'albums' => $albums,
         ]);

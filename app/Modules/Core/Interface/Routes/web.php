@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/branding/sekolah/{school}/{kind}', [BrandMediaController::class, 'school'])->where('kind', 'logo|favicon')->name('branding.school');
 Route::get('/profil-sekolah', [SchoolProfileController::class, 'index'])->name('core.school.public');
+Route::get('/akademik-fasilitas', [SchoolProfileController::class, 'programs'])->name('core.school.public.programs');
+Route::get('/kesiswaan-prestasi', [SchoolProfileController::class, 'studentLife'])->name('core.school.public.student-life');
+Route::get('/kontak', [SchoolProfileController::class, 'contact'])->name('core.school.public.contact');
 Route::get('/struktur-organisasi', [SchoolOrganizationController::class, 'publicIndex'])->name('core.organization.public');
 Route::get('/galeri', [SchoolGalleryController::class, 'publicIndex'])->name('core.gallery.public.index');
 Route::get('/galeri/foto/{photo}', [SchoolGalleryController::class, 'photo'])->whereNumber('photo')->name('core.gallery.photo');
