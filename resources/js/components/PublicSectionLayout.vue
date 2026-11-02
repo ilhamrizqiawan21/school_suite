@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
+import { publicThemeStyle } from '@/composables/publicTheme';
 
 interface SchoolBrand {
     name: string;
@@ -16,7 +17,7 @@ const props = defineProps<{
     description: string;
     active: 'programs' | 'student-life' | 'contact';
 }>();
-const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
+const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 </script>
 
 <template>

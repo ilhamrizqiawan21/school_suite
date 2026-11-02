@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Mockup interaktif School Suite — Calm Academic OS">
-  <title>School Suite — Calm Academic OS</title>
+  <meta name="description" content="Mockup interaktif School Suite 2026 — Academic Command Center">
+  <title>School Suite 2026 — Academic Command Center</title>
+  <link rel="icon" href="../../public/favicon.ico">
   <link rel="stylesheet" href="../../resources/css/shell.css">
+  <link rel="stylesheet" href="mockup.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
@@ -34,20 +36,32 @@
     <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"><span>S</span></div>
-        <div><strong>School Suite</strong><small>SMPN 1 Percontohan</small></div>
+        <div><strong>School Suite <em>26</em></strong><small>SMPN 1 Percontohan · TP 2026/2027</small></div>
       </div>
 
-      <nav class="nav-stack">
-        <p class="nav-label">Ruang kerja</p>
-        <button class="nav-item is-active" data-view-target="dashboard"><svg><use href="#i-grid"/></svg><span>Beranda</span></button>
-        <button class="nav-item" data-view-target="roster"><svg><use href="#i-users"/></svg><span>Data siswa</span><em>30</em></button>
-        <button class="nav-item" data-view-target="grades"><svg><use href="#i-chart"/></svg><span>Input nilai</span><em class="accent">27</em></button>
-        <button class="nav-item"><svg><use href="#i-calendar"/></svg><span>Jadwal pelajaran</span></button>
-        <button class="nav-item"><svg><use href="#i-book"/></svg><span>Presensi & jurnal</span></button>
-        <button class="nav-item"><svg><use href="#i-file"/></svg><span>Rapor siswa</span></button>
-        <p class="nav-label nav-label-spaced">Sistem</p>
-        <button class="nav-item"><svg><use href="#i-settings"/></svg><span>Pengaturan</span></button>
-      </nav>
+      <div class="sidebar-nav-scroll">
+        <nav class="nav-stack" aria-label="Peta ruang kerja School Suite">
+          <p class="nav-label">Ruang kerja</p>
+          <button type="button" class="nav-item is-active" data-view-target="dashboard"><svg><use href="#i-grid"/></svg><span>Beranda</span></button>
+
+          <p class="nav-label nav-label-spaced">Operasional utama</p>
+          <button type="button" class="nav-item"><svg><use href="#i-calendar"/></svg><span>SPMB</span><em>10</em></button>
+          <button type="button" class="nav-item" data-view-target="roster"><svg><use href="#i-users"/></svg><span>Akademik</span><em>13</em></button>
+          <button type="button" class="nav-item"><svg><use href="#i-book"/></svg><span>Pembelajaran LMS</span><em>3</em></button>
+
+          <p class="nav-label nav-label-spaced">Evaluasi & pendampingan</p>
+          <button type="button" class="nav-item" data-view-target="grades"><svg><use href="#i-chart"/></svg><span>Asesmen & CBT</span><em class="accent">4</em></button>
+          <button type="button" class="nav-item"><svg><use href="#i-file"/></svg><span>Penilaian & Rapor</span><em>7</em></button>
+          <button type="button" class="nav-item"><svg><use href="#i-users"/></svg><span>Perwalian</span><em>3</em></button>
+
+          <p class="nav-label nav-label-spaced">Warga sekolah</p>
+          <button type="button" class="nav-item"><svg><use href="#i-bell"/></svg><span>Komunikasi</span><em>2</em></button>
+          <button type="button" class="nav-item"><svg><use href="#i-file"/></svg><span>Tata Usaha</span><em>3</em></button>
+
+          <p class="nav-label nav-label-spaced">Sistem</p>
+          <button type="button" class="nav-item"><svg><use href="#i-settings"/></svg><span>Pengaturan</span></button>
+        </nav>
+      </div>
 
       <div class="sidebar-foot">
         <div class="completion-ring" aria-label="Kelengkapan data 84 persen"><span>84</span></div>
@@ -57,7 +71,7 @@
 
     <div class="workspace">
       <header class="topbar">
-        <button class="icon-button mobile-menu" id="menuButton" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar"><svg><use href="#i-menu"/></svg></button>
+        <button class="icon-button sidebar-toggle mobile-menu" id="menuButton" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar"><svg><use href="#i-menu"/></svg></button>
         <label class="global-search">
           <svg><use href="#i-search"/></svg>
           <span class="sr-only">Cari di School Suite</span>

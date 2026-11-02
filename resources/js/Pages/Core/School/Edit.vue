@@ -25,6 +25,17 @@ interface SchoolData {
     favicon_path?: string;
     settings?: {
         theme_primary?: string;
+        public_theme?: {
+            preset?: string;
+            hero_variant?: string;
+            hero_title?: string | null;
+            hero_accent?: string | null;
+            hero_primary_label?: string | null;
+            hero_secondary_label?: string | null;
+            show_explore?: boolean;
+            show_news?: boolean;
+            show_gallery?: boolean;
+        };
         letterhead?: { parent_institution?: string; city?: string; postal_code?: string };
     };
 }
@@ -33,6 +44,8 @@ const props = defineProps<{
     school: SchoolData;
     canUpdate: boolean;
     accreditationOptions: string[];
+    publicThemePresets: { value: string; label: string; description: string }[];
+    publicHeroVariants: { value: string; label: string }[];
 }>();
 
 const page = usePage<SharedProps>();
@@ -57,6 +70,15 @@ const form = useForm({
     letterhead_city: props.school.settings?.letterhead?.city ?? '',
     letterhead_postal_code: props.school.settings?.letterhead?.postal_code ?? '',
     theme_primary: props.school.settings?.theme_primary ?? '#3157a4',
+    public_theme_preset: props.school.settings?.public_theme?.preset ?? 'editorial',
+    public_hero_variant: props.school.settings?.public_theme?.hero_variant ?? 'collage',
+    public_hero_title: props.school.settings?.public_theme?.hero_title ?? '',
+    public_hero_accent: props.school.settings?.public_theme?.hero_accent ?? '',
+    public_hero_primary_label: props.school.settings?.public_theme?.hero_primary_label ?? '',
+    public_hero_secondary_label: props.school.settings?.public_theme?.hero_secondary_label ?? '',
+    public_show_explore: props.school.settings?.public_theme?.show_explore ?? true,
+    public_show_news: props.school.settings?.public_theme?.show_news ?? true,
+    public_show_gallery: props.school.settings?.public_theme?.show_gallery ?? true,
     logo: null as File | null,
     favicon: null as File | null,
 });
@@ -157,6 +179,23 @@ const submit = () => {
                         <div class="color-picker"><span>Warna utama aplikasi</span><div class="theme-options"><label v-for="color in ['#3157a4','#277450','#7255ae','#b87818','#b64a42']" :key="color" class="theme-choice"><input v-model="form.theme_primary" type="radio" :value="color"><i :style="{background: color}"></i><span>{{ color }}</span></label></div><em v-if="form.errors.theme_primary">{{ form.errors.theme_primary }}</em></div>
                     </section>
                     <section class="panel settings-section">
+                        <div class="section-heading"><h2>Tampilan situs publik</h2><p>Sesuaikan karakter halaman depan. Kosongkan copy hero untuk memakai teks bawaan template.</p></div>
+                        <div class="fields">
+                            <label><span>Preset warna</span><select v-model="form.public_theme_preset"><option v-for="preset in publicThemePresets" :key="preset.value" :value="preset.value">{{ preset.label }}</option></select><small>{{ publicThemePresets.find((item) => item.value === form.public_theme_preset)?.description }}</small><em v-if="form.errors.public_theme_preset">{{ form.errors.public_theme_preset }}</em></label>
+                            <label><span>Gaya foto hero</span><select v-model="form.public_hero_variant"><option v-for="variant in publicHeroVariants" :key="variant.value" :value="variant.value">{{ variant.label }}</option></select><em v-if="form.errors.public_hero_variant">{{ form.errors.public_hero_variant }}</em></label>
+                            <label class="wide"><span>Judul utama</span><input v-model="form.public_hero_title" maxlength="120" placeholder="Tempat belajar yang memberi ruang untuk" /><small>Bagian aksen diatur terpisah agar judul tetap mudah ditata.</small><em v-if="form.errors.public_hero_title">{{ form.errors.public_hero_title }}</em></label>
+                            <label><span>Frasa aksen</span><input v-model="form.public_hero_accent" maxlength="80" placeholder="tumbuh bersama." /><em v-if="form.errors.public_hero_accent">{{ form.errors.public_hero_accent }}</em></label>
+                            <label><span>Tombol utama</span><input v-model="form.public_hero_primary_label" maxlength="40" placeholder="Kenali sekolah" /><em v-if="form.errors.public_hero_primary_label">{{ form.errors.public_hero_primary_label }}</em></label>
+                            <label><span>Tautan kedua</span><input v-model="form.public_hero_secondary_label" maxlength="40" placeholder="Baca kabar terbaru" /><em v-if="form.errors.public_hero_secondary_label">{{ form.errors.public_hero_secondary_label }}</em></label>
+                        </div>
+                        <div class="section-toggles" aria-label="Bagian halaman depan">
+                            <label><input v-model="form.public_show_explore" type="checkbox" /> Jelajahi sekolah</label>
+                            <label><input v-model="form.public_show_news" type="checkbox" /> Kabar terbaru</label>
+                            <label><input v-model="form.public_show_gallery" type="checkbox" /> Galeri pilihan</label>
+                        </div>
+                        <em v-for="key in ['public_show_explore', 'public_show_news', 'public_show_gallery'] as const" :key="key">{{ form.errors[key] }}</em>
+                    </section>
+                    <section class="panel settings-section">
                         <div class="section-heading"><h2>Visi & misi</h2><p>Jelaskan arah dan tujuan pendidikan sekolah.</p></div>
                         <label><span>Visi</span><textarea v-model="form.vision" rows="3" maxlength="5000"></textarea><em v-if="form.errors.vision">{{ form.errors.vision }}</em></label>
                         <label><span>Misi</span><textarea v-model="form.mission" rows="5" maxlength="10000" placeholder="Tuliskan setiap butir misi pada baris terpisah"></textarea><em v-if="form.errors.mission">{{ form.errors.mission }}</em></label>
@@ -171,4 +210,5 @@ const submit = () => {
 <style scoped>
 .settings-section,.save-bar{padding:1.25rem}.section-heading h2{font-weight: 700}.hero-card>div{min-width:0}.notice{padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.85rem;line-height:1.6}.notice.success{background:#ecfdf5;color:#166534}
 .school-page,.school-form,fieldset{display:grid;gap:1.25rem;min-width:0}.school-page{max-width:1100px;margin:auto}fieldset{border:0;padding:0;margin:0}.settings-section{display:grid;gap:1.25rem;min-width:0}.section-heading h2{margin:0;font-size:1rem}.section-heading p{margin:.4rem 0 0;color:var(--ink-soft);font-size:.8rem;line-height:1.6}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.settings-section label{display:grid;align-content:start;gap:.45rem;min-width:0;font-size:.8rem;font-weight:700}.settings-section input:not([type=radio]),.settings-section select,.settings-section textarea{width:100%;min-width:0;min-height:44px;padding:.7rem .8rem;border:1px solid var(--line);border-radius:.7rem;background:var(--surface);color:var(--ink);font:inherit;font-weight:400}.settings-section textarea{resize:vertical;line-height:1.6}.settings-section :is(input,select,textarea):focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 30%,transparent);outline-offset:2px}.wide{grid-column:1/-1}.settings-section small{font-size:.72rem;font-weight:400;color:var(--ink-soft);line-height:1.6;overflow-wrap:anywhere}.settings-section em{font-size:.75rem;font-style:normal;color:var(--red)}.image-preview{display:grid;place-items:center;height:110px;border:1px dashed var(--line);border-radius:.7rem;background:var(--surface-subtle)}.image-preview img{max-width:100%;max-height:90px;object-fit:contain}.color-picker{display:grid;gap:.6rem;font-size:.8rem;font-weight:700}.theme-options{display:flex;flex-wrap:wrap;gap:.6rem}.settings-section .theme-choice{display:flex;align-items:center;gap:.4rem;padding:.65rem;border:1px solid var(--line);border-radius:.65rem;font-size:.75rem}.theme-choice i{width:1.1rem;height:1.1rem;border-radius:50%}.save-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}.save-bar span{font-size:.8rem;color:var(--ink-soft)}button{min-height:44px}.upload-field button{width:fit-content}fieldset:disabled input,fieldset:disabled select,fieldset:disabled textarea{opacity:.7}@media(max-width:640px){.fields{grid-template-columns:1fr}.save-bar{flex-direction:column;align-items:stretch}.save-bar button{width:100%}}
+.section-toggles{display:flex;flex-wrap:wrap;gap:.65rem}.settings-section .section-toggles label{display:flex;align-items:center;gap:.55rem;min-height:44px;padding:.55rem .75rem;border:1px solid var(--line);border-radius:.65rem;font-weight:600}.section-toggles input{width:1.1rem;height:1.1rem;accent-color:var(--primary)}
 </style>

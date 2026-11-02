@@ -1,0 +1,80 @@
+/* Prototype-only direction: Academic Command Center 2026.
+ * Production tokens remain untouched; this stylesheet gives the mockup its own
+ * visual language while it is being reviewed with stakeholders. */
+:root {
+  --canvas: #eef4f3;
+  --surface: #ffffff;
+  --surface-subtle: #f5faf9;
+  --surface-strong: #e3eeec;
+  --ink: #102b35;
+  --ink-soft: #557078;
+  --ink-faint: #789096;
+  --line: #d6e4e1;
+  --line-strong: #b8ceca;
+  --primary: #0d9488;
+  --primary-strong: #0f766e;
+  --primary-soft: #dff5f0;
+  --blue: #4867d9;
+  --blue-soft: #e9edff;
+  --gold: #b7791f;
+  --gold-soft: #fff2d7;
+  --green: #23835f;
+  --green-soft: #def4e9;
+  --violet: #7354b7;
+  --violet-soft: #eee9ff;
+  --sidebar: 268px;
+  --shadow-sm: 0 1px 2px rgb(16 43 53 / 6%), 0 12px 26px rgb(16 43 53 / 4%);
+  --shadow-md: 0 18px 42px rgb(16 43 53 / 11%);
+}
+
+.sidebar {
+  --sidebar-bg: #0b2633;
+  --sidebar-ink: #eaf7f4;
+  --sidebar-muted: #9ab8b9;
+  --sidebar-active-bg: #dff5f0;
+  --sidebar-active-ink: #0b5c57;
+  background: linear-gradient(180deg, #0b2633 0%, #0d303b 100%);
+}
+
+.brand strong { letter-spacing: -.035em; }
+.brand strong em { margin-left: 3px; padding: 2px 5px; color: #092d35; background: #57dfbd; border-radius: 5px; font: 800 9px var(--font-ui); letter-spacing: .04em; vertical-align: 2px; }
+.brand small { color: #a9c2c2; }
+.nav-label { color: #7ea4a6; font-size: 10px; letter-spacing: .105em; text-transform: uppercase; }
+.nav-item { min-height: 39px; border-radius: 9px; color: #c9dfde; }
+.nav-item:hover { color: #f4fffc; background: rgb(105 218 193 / 11%); }
+.nav-item.is-active { color: var(--sidebar-active-ink); box-shadow: inset 3px 0 0 #30c7a3, 0 8px 16px rgb(4 24 31 / 12%); }
+.nav-item em { color: #a7d4cf; background: rgb(124 213 194 / 12%); }
+.nav-item.is-active em { color: #0f766e; background: #c7ece3; }
+.nav-item em.accent { color: #4b3510; background: #f5c66f; }
+.sidebar-nav-scroll { scrollbar-color: rgb(151 207 198 / 35%) transparent; }
+.topbar { padding-right: 32px; border-bottom-color: #d2e2df; }
+.global-search { background: #f7fbfa; border-color: #cfe0dd; }
+.context-dot { background: #31b997; box-shadow: 0 0 0 4px #d5f4ec; }
+.metric-primary { background: linear-gradient(135deg, #116d6b, #0d3f50); }
+.metric-primary .metric-icon { background: rgb(117 231 202 / 16%); }
+.focus-panel { background: linear-gradient(135deg, #0f5f68 0%, #103b50 100%); }
+.focus-panel.student-focus { background: linear-gradient(135deg, #25645d 0%, #1b4b49 100%); }
+.focus-panel.operator-focus { background: linear-gradient(135deg, #165d69 0%, #13384b 100%); }
+.dashboard-view .eyebrow, .page-heading .eyebrow { color: #0b827b; }
+.dashboard-view .attention-strip { border-color: #f0d293; background: #fff6e4; }
+.dashboard-view .attention-strip .pulse-dot { background: #e0a634; }
+.panel, .metric-card, .admin-action-group, .attendance-chart-card { box-shadow: var(--shadow-sm); }
+.primary-button { background: #0d9488; border-color: #0d9488; box-shadow: 0 7px 18px rgb(13 148 136 / 22%); }
+.primary-button:hover { background: #0f766e; }
+.secondary-button:hover { color: #0d766d; border-color: #56bdb1; background: #e2f6f1; }
+.sidebar-foot { border-color: rgb(173 220 212 / 18%); }
+.sidebar-foot { display: flex; align-items: center; gap: 10px; margin: 0 8px; padding: 13px 0 0; border-top: 1px solid rgb(173 220 212 / 18%); }
+.completion-ring { position: relative; width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; color: #c8f7e9; background: conic-gradient(#55dcb9 84%, rgb(143 194 187 / 20%) 0); border-radius: 50%; font-size: 10px; font-weight: 800; }
+.completion-ring::before { content: ''; position: absolute; width: 28px; height: 28px; background: #0b2633; border-radius: 50%; }
+.completion-ring span { position: relative; z-index: 1; }
+.sidebar-foot > div:last-child { min-width: 0; display: grid; gap: 1px; }
+.sidebar-foot strong, .sidebar-foot small { display: block; white-space: nowrap; }
+.sidebar-foot strong { color: #e6f5f2; font-size: 10px; }
+.sidebar-foot small { color: #9ab8b9; font-size: 9px; }
+.mobile-menu { display: none; }
+
+@media (max-width: 960px) {
+  :root { --sidebar: 268px; }
+  .topbar { padding-right: 18px; }
+  .mobile-menu { display: grid; }
+}

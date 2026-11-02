@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
+import { publicThemeStyle } from '@/composables/publicTheme';
 
 interface Requirement {
     label: string;
@@ -59,7 +60,7 @@ const statusAnnouncement = computed(() => registrationOpen.value
     : currentPeriod.value
         ? 'Periode ' + currentPeriod.value.academic_year + ' sedang berada pada tahap ' + statusLabel(currentPeriod.value.status).toLowerCase() + '.'
         : 'Saat ini sekolah belum membuka periode penerimaan siswa baru.');
-const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
+const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 </script>
 
 <template>

@@ -38,6 +38,8 @@ class SchoolController extends Controller
             'school' => $school,
             'canUpdate' => Gate::allows('update', $school),
             'accreditationOptions' => self::ACCREDITATION_OPTIONS,
+            'publicThemePresets' => School::publicThemePresetOptions(),
+            'publicHeroVariants' => School::publicHeroVariantOptions(),
         ]);
     }
 
@@ -71,6 +73,15 @@ class SchoolController extends Controller
             'letterhead_city' => ['nullable', 'string', 'max:100'],
             'letterhead_postal_code' => ['nullable', 'string', 'max:15'],
             'theme_primary' => ['sometimes', Rule::in(['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'])],
+            'public_theme_preset' => ['sometimes', Rule::in(['editorial', 'institutional', 'campus'])],
+            'public_hero_variant' => ['sometimes', Rule::in(['collage', 'single', 'minimal'])],
+            'public_hero_title' => ['nullable', 'string', 'max:120'],
+            'public_hero_accent' => ['nullable', 'string', 'max:80'],
+            'public_hero_primary_label' => ['nullable', 'string', 'max:40'],
+            'public_hero_secondary_label' => ['nullable', 'string', 'max:40'],
+            'public_show_explore' => ['sometimes', 'boolean'],
+            'public_show_news' => ['sometimes', 'boolean'],
+            'public_show_gallery' => ['sometimes', 'boolean'],
             'logo' => ['nullable', File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(2048)],
             'favicon' => ['nullable', File::image()->types(['png'])->max(512)->dimensions(Rule::dimensions()->maxWidth(512)->maxHeight(512)->ratio(1))],
         ]);
@@ -83,8 +94,34 @@ class SchoolController extends Controller
             'city' => $validated['letterhead_city'] ?? null,
             'postal_code' => $validated['letterhead_postal_code'] ?? null,
         ];
+        $publicTheme = data_get($settings, 'public_theme', []);
+        $publicTheme = is_array($publicTheme) ? $publicTheme : [];
+        $publicTheme['preset'] = $validated['public_theme_preset'] ?? data_get($publicTheme, 'preset', 'editorial');
+        $publicTheme['hero_variant'] = $validated['public_hero_variant'] ?? data_get($publicTheme, 'hero_variant', 'collage');
+        $publicTheme['hero_title'] = $validated['public_hero_title'] ?? null;
+        $publicTheme['hero_accent'] = $validated['public_hero_accent'] ?? null;
+        $publicTheme['hero_primary_label'] = $validated['public_hero_primary_label'] ?? null;
+        $publicTheme['hero_secondary_label'] = $validated['public_hero_secondary_label'] ?? null;
+        $publicTheme['show_explore'] = $validated['public_show_explore'] ?? data_get($publicTheme, 'show_explore', true);
+        $publicTheme['show_news'] = $validated['public_show_news'] ?? data_get($publicTheme, 'show_news', true);
+        $publicTheme['show_gallery'] = $validated['public_show_gallery'] ?? data_get($publicTheme, 'show_gallery', true);
+        $settings['public_theme'] = $publicTheme;
         $validated['settings'] = $settings;
-        unset($validated['theme_primary'], $validated['letterhead_parent_institution'], $validated['letterhead_city'], $validated['letterhead_postal_code']);
+        unset(
+            $validated['theme_primary'],
+            $validated['letterhead_parent_institution'],
+            $validated['letterhead_city'],
+            $validated['letterhead_postal_code'],
+            $validated['public_theme_preset'],
+            $validated['public_hero_variant'],
+            $validated['public_hero_title'],
+            $validated['public_hero_accent'],
+            $validated['public_hero_primary_label'],
+            $validated['public_hero_secondary_label'],
+            $validated['public_show_explore'],
+            $validated['public_show_news'],
+            $validated['public_show_gallery']
+        );
         foreach (['logo', 'favicon'] as $kind) {
             if (! $request->hasFile($kind)) {
                 continue;

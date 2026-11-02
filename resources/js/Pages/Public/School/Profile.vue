@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { publicThemeStyle } from '@/composables/publicTheme';
 import PublicHeader from '@/components/PublicHeader.vue';
 
 interface SchoolProfile {
@@ -54,7 +55,7 @@ const missionPoints = computed(() => (props.school.mission ?? '')
     .map((item) => item.trim())
     .filter(Boolean));
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
-const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
+const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 </script>
 
 <template>

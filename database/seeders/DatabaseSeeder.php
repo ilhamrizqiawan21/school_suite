@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             DemoCorrespondenceSeeder::class,
             DemoStaffFacilitiesSeeder::class,
             DemoReportSeeder::class,
+            DemoAdmissionsSeeder::class,
         ]);
     }
 }

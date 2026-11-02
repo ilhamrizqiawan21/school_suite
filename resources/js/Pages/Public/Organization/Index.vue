@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PublicOrganizationTreeNode from '@/components/PublicOrganizationTreeNode.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
+import { publicThemeStyle } from '@/composables/publicTheme';
 
 interface Member {
     id: number;
@@ -23,7 +24,7 @@ const props = defineProps<{
     organization: Member[];
 }>();
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
-const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
+const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const organizationTree = computed<TreeMember[]>(() => {
     const nodes = new Map<number, TreeMember>(
         props.organization.map((member) => [member.id, { ...member, children: [] }]),

@@ -1,14 +1,15 @@
 /* Public portfolio: stronger contrast, readable type, and explicit CTA states. */
 .public-site {
     --public-primary: #3157a4;
-    --public-paper: color-mix(in srgb, var(--public-primary) 3%, #fffdf8);
+    --public-accent: #8a661f;
+    --public-paper: color-mix(in srgb, var(--public-primary) 3%, var(--public-surface));
     --public-surface: #fffdf8;
     --public-ink: #173044;
     --public-muted: #526673;
     --public-muted-strong: #405762;
     --public-deep: var(--public-primary);
     --public-deep-hover: color-mix(in srgb, var(--public-primary) 78%, #173044);
-    --public-gold: color-mix(in srgb, var(--public-primary) 68%, #9a7329);
+    --public-gold: var(--public-accent);
     color: var(--public-ink);
     background-color: var(--public-paper);
     font-size: 16px;

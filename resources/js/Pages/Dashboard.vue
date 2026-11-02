@@ -141,6 +141,23 @@ const adminActions = [
     { title: 'Log login', description: 'Pantau percobaan login dan aktivitas keamanan akun.', href: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
     { title: 'Pengaturan sekolah', description: 'Periksa identitas dan konfigurasi sekolah.', href: '/pengaturan/sekolah', icon: 'M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM19.4 15a1.7 1.7 0 00.34 1.88l.06.06-1.9 1.9-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.03 1.56V20h-2.68v-.09a1.7 1.7 0 00-1.03-1.56 1.7 1.7 0 00-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 007.8 15a1.7 1.7 0 00-1.56-1.03H6v-2.68h.24A1.7 1.7 0 007.8 10a1.7 1.7 0 00-.34-1.88L7.4 8.06l1.9-1.9.06.06a1.7 1.7 0 001.88.34 1.7 1.7 0 001.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0019.4 15z' },
 ];
+const adminActionGroups = [
+    {
+        title: 'Data & akun',
+        description: 'Kelola warga sekolah dan hak aksesnya.',
+        actions: [adminActions[0], adminActions[1], adminActions[2], adminActions[3]],
+    },
+    {
+        title: 'Operasional sekolah',
+        description: 'Jadwal, kehadiran guru, dan komunikasi.',
+        actions: [adminActions[4], adminActions[5], adminActions[7]],
+    },
+    {
+        title: 'Pemantauan & pengaturan',
+        description: 'Laporan, keamanan akun, dan identitas sekolah.',
+        actions: [adminActions[6], adminActions[8], adminActions[9]],
+    },
+];
 const operatorActions = [
     { title: 'Data siswa & rombel', description: 'Kelola data pokok siswa, import, dan penempatan kelas.', href: '/akademik/siswa', icon: 'M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v13a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 18.5v-13zM8 7h8M8 11h8M8 15h5' },
     { title: 'Penugasan guru', description: 'Atur data guru aktif dan penugasan mengajar semester.', href: '/akademik/guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857' },
@@ -415,6 +432,27 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </article>
             </section>
 
+            <section v-if="isAdmin" class="admin-actions-section" aria-labelledby="admin-actions-title">
+                <div class="section-heading">
+                    <div><span class="eyebrow">Administrasi sekolah</span><h2 id="admin-actions-title">Akses cepat</h2></div>
+                    <span class="workflow-count">{{ adminActions.length }} menu</span>
+                </div>
+                <div class="admin-action-groups">
+                    <article v-for="group in adminActionGroups" :key="group.title" class="admin-action-group">
+                        <header><h3>{{ group.title }}</h3><p>{{ group.description }}</p></header>
+                        <ul class="admin-action-list">
+                            <li v-for="action in group.actions" :key="action.href">
+                                <Link :href="action.href" class="admin-action-link">
+                                    <span class="admin-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span>
+                                    <span class="admin-action-copy"><strong>{{ action.title }}</strong><small>{{ action.description }}</small></span>
+                                    <span class="admin-action-arrow" aria-hidden="true">↗</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+
             <section v-if="isTeacher && teacherOverview" class="teacher-overview" aria-label="Kegiatan mengajar hari ini">
                 <div v-if="!teacherOverview.has_teacher_profile || !teacherOverview.has_active_term" class="teacher-notice">{{ !teacherOverview.has_teacher_profile ? 'Akun Anda belum terhubung dengan data guru. Hubungi operator sekolah untuk menghubungkannya.' : 'Belum ada semester aktif. Hubungi operator sekolah untuk menetapkan periode mengajar.' }}</div>
                 <article class="teacher-day">
@@ -434,10 +472,10 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 <aside class="teacher-attention"><h2>Perlu ditindaklanjuti</h2><Link href="/akademik/jurnal?journal_status=pending"><strong>{{ teacherOverview.pending_journals }}</strong><span>Sesi belum berjurnal<small>Pertemuan tercatat sampai hari ini pada semester aktif.</small></span><b aria-hidden="true">↗</b></Link><Link href="/pembelajaran"><strong>{{ teacherOverview.pending_reviews }}</strong><span>Kiriman tugas menunggu penilaian<small>Tugas siswa dari kelas dan mapel yang Anda ampu.</small></span><b aria-hidden="true">↗</b></Link></aside>
             </section>
 
-            <div v-if="!isPrincipal && !isTeacher" class="command-layout" :class="{ 'admin-command': isAdmin }">
+            <div v-if="!isPrincipal && !isTeacher && !isAdmin" class="command-layout">
                 <article class="focus-panel" :class="{ 'teacher-focus': isTeacher || isHomeroom, 'principal-focus': isPrincipal, 'student-focus': isStudent, 'operator-focus': isOperator }">
                     <div class="focus-meta"><span>{{ focusLabel }}</span><span class="focus-status"><i /> Sistem aktif</span></div>
-                    <div class="focus-content" :class="{ 'admin-focus-content': isAdmin }"><template v-if="!isAdmin"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span></template><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
+                    <div class="focus-content"><template v-if="!isAdmin"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span></template><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
                     <div class="focus-orbit orbit-one" /><div class="focus-orbit orbit-two" />
                 </article>
                 <aside class="insight-panel">
@@ -507,7 +545,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
             </section>
 
             <section v-if="!isTeacher && !isHomeroom && !isPrincipal" class="workflow-section">
-                <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Pantauan harian</span><h2>Pengumuman dan log login</h2></div><Link href="/akademik/absensi-guru" class="admin-card-link">Buka absensi guru ↗</Link><span class="workflow-count">2 area penting</span></div>
+                <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Aktivitas terbaru</span><h2>Komunikasi & keamanan akun</h2></div></div>
                 <div v-if="isAdmin" class="admin-overview-grid">
                     <section class="admin-overview-card announcement-card">
                         <header class="admin-card-header"><div class="admin-card-title"><span class="admin-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5zm4 4h8m-8 3h5" /></svg></span><span class="admin-card-copy"><strong>Pengumuman</strong><span>5 pengumuman terakhir</span></span></div><Link href="/komunikasi" class="admin-card-link">Lihat semua ↗</Link></header>
@@ -619,6 +657,22 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: 20px; letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: 10px; }.workflow-list { border-top: 1px solid var(--line); }.workflow-row { display: flex; align-items: center; gap: 16px; min-height: 76px; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); transition: padding .18s ease, background .18s ease; }.workflow-row:hover { padding-left: 12px; padding-right: 12px; background: var(--surface-subtle); }.workflow-index { width: 23px; color: var(--ink-faint); font: 700 11px var(--font-display); }.workflow-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 auto; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }.workflow-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.workflow-copy { display: grid; gap: 4px; flex: 1; }.workflow-copy strong { color: var(--ink); font-size: 12px; }.workflow-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.4; }.workflow-arrow { color: var(--ink-faint); font-size: 18px; }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: 10px; }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: 800 12px var(--font-display); }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
 .attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: 14px; }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 10px; white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-data-summary { margin: 10px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: 10px; }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: 10px; }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: 11px; text-align: center; }
 .admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.admin-actions-section { margin-top: 18px; }
+.admin-action-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.admin-action-group { min-width: 0; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }
+.admin-action-group > header { min-height: 70px; margin-bottom: 8px; }
+.admin-action-group h3 { margin: 0; color: var(--ink); font-size: 15px; letter-spacing: -.02em; }
+.admin-action-group > header p { margin: 5px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.admin-action-list { margin: 0; padding: 0; list-style: none; }
+.admin-action-list li { border-top: 1px solid var(--line); }
+.admin-action-link { display: grid; grid-template-columns: 36px minmax(0, 1fr) 14px; align-items: center; gap: 10px; min-height: 66px; padding: 9px 2px; color: inherit; text-decoration: none; border-radius: 8px; }
+.admin-action-link:hover { background: var(--surface-subtle); }
+.admin-action-icon { display: grid; place-items: center; width: 34px; height: 34px; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }
+.admin-action-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.admin-action-copy { display: grid; gap: 3px; min-width: 0; }
+.admin-action-copy strong { color: var(--ink); font-size: 11px; }
+.admin-action-copy small { color: var(--ink-soft); font-size: 10px; line-height: 1.35; }
+.admin-action-arrow { color: var(--ink-faint); font-size: 16px; }
 .student-overview { margin-top: 34px; }
 .student-section-heading { align-items: end; margin-bottom: 12px; }
 .student-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
@@ -650,7 +704,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .announcement-card { background: var(--gold-soft); border-color: var(--line); }.login-card { background: var(--blue-soft); border-color: var(--line); }
 .admin-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }.admin-card-title { display: flex; align-items: center; gap: 12px; min-width: 0; }.admin-card-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 12px 12px 12px 4px; }.announcement-card .admin-card-icon { color: var(--gold); background: color-mix(in srgb, var(--gold) 18%, var(--surface)); }.login-card .admin-card-icon { color: var(--blue); background: color-mix(in srgb, var(--blue) 18%, var(--surface)); }
 .admin-card-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }.admin-card-copy { display: grid; gap: 4px; min-width: 0; }.admin-card-copy strong { color: var(--ink); font-size: 14px; }.admin-card-copy span { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }.admin-card-link { color: var(--blue); font-size: 10px; font-weight: 800; text-decoration: none; white-space: nowrap; }.admin-card-link:hover { text-decoration: underline; }
-.admin-focus-content { display: flex; min-height: 205px; margin-top: 38px; flex-direction: column; justify-content: center; }.admin-list { display: grid; gap: 0; margin: 16px 0 0; padding: 0 4px 0 0; list-style: none; border-top: 1px solid var(--line); }.admin-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }.admin-list li > span { display: grid; gap: 3px; min-width: 0; }.admin-list strong { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }.admin-list small, .admin-list time { color: var(--ink-faint); font-size: 9px; }.admin-list time { flex: 0 0 auto; text-align: right; }.login-success { color: var(--green) !important; }.login-failed { color: var(--red) !important; }.admin-empty { color: var(--ink-faint); font-size: 11px; }
+.admin-list { display: grid; gap: 0; margin: 16px 0 0; padding: 0 4px 0 0; list-style: none; border-top: 1px solid var(--line); }.admin-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }.admin-list li > span { display: grid; gap: 3px; min-width: 0; }.admin-list strong { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }.admin-list small, .admin-list time { color: var(--ink-faint); font-size: 9px; }.admin-list time { flex: 0 0 auto; text-align: right; }.login-success { color: var(--green) !important; }.login-failed { color: var(--red) !important; }.admin-empty { color: var(--ink-faint); font-size: 11px; }
 .focus-panel.principal-focus { background: #3d3158; }
 .focus-panel.student-focus { background: #375342; }
 .focus-panel.operator-focus { background: #1c3d5a; }
@@ -724,9 +778,6 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .principal-news li span, .principal-news li time { color: var(--ink-soft); font-size: 11px; }
 .dashboard-view a:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 .metrics-first { margin: 0 0 18px; }
-.admin-command .focus-panel, .admin-command .insight-panel { min-height: 220px; }
-.admin-command .admin-focus-content { min-height: 0; margin-top: 20px; justify-content: flex-start; }
-.admin-command .focus-content h2 { margin-top: 0; }
 .insight-panel .signal-line { align-items: center; margin-top: 20px; padding: 12px; color: inherit; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .insight-panel .signal-line:hover { border-color: var(--primary); }
 .signal-line > span:nth-child(2) { display: grid; gap: 4px; min-width: 0; flex: 1; }
@@ -734,16 +785,12 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .signal-arrow { color: var(--blue); font-size: 18px; }
 @media (max-width: 560px) {
     .dashboard-intro { padding-bottom: 17px; }
-    .admin-command .focus-panel { min-height: 245px; }
-    .admin-command .insight-panel { min-height: 175px; }
-    .admin-command .focus-content { margin-top: 20px; }
-    .admin-command .focus-content h2 { font-size: 24px; }
-    .admin-command .focus-action { min-height: 44px; }
     .insight-panel .signal-line { margin-top: 14px; }
 }
 @media (max-width: 1080px) { .principal-charts { grid-template-columns: 1fr; }.principal-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.principal-activity-item:nth-child(2) { border-right: 0; }.principal-activity-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
 @media (max-width: 1000px) { .student-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.student-announcements-card { grid-column: 1 / -1; } }
-@media (max-width: 800px) { .command-layout, .principal-command { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
+@media (max-width: 980px) { .admin-action-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-action-group:last-child { grid-column: 1 / -1; }.admin-action-group:last-child .admin-action-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 14px; } }
+@media (max-width: 800px) { .command-layout, .principal-command { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid, .admin-action-groups { grid-template-columns: 1fr; }.admin-action-group:last-child { grid-column: auto; }.admin-action-group:last-child .admin-action-list { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
 @media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; }.principal-toolbar { align-items: start; flex-direction: column; }.principal-lead, .principal-attention, .principal-chart-panel, .principal-grade-panel, .principal-news { padding: 19px; }.principal-lead { min-height: 300px; }.principal-panel-heading { align-items: start; flex-direction: column; gap: 6px; }.principal-grade-meta { grid-template-columns: minmax(0, 1fr) auto; }.principal-grade-meta span { grid-column: 1; grid-row: 2; }.principal-grade-meta b { grid-column: 2; grid-row: 1 / 3; }.principal-activity-grid { grid-template-columns: 1fr; }.principal-activity-item { min-height: 182px; border-right: 0; border-bottom: 1px solid var(--line); }.principal-activity-item:last-child { border-bottom: 0; }.principal-news li { grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; }.principal-news li strong { grid-column: 1 / -1; white-space: normal; }.principal-news li time { text-align: right; } }
 @media (prefers-reduced-motion: reduce) { .workflow-row { transition: none; } }
 </style>

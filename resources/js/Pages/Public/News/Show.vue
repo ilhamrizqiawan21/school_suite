@@ -2,9 +2,10 @@
 import { Head, Link } from '@inertiajs/vue3';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { computed } from 'vue';
+import { publicThemeStyle } from '@/composables/publicTheme';
 interface Photo { id: number; url: string; name?: string | null; caption?: string | null }
 const props = defineProps<{ school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } }; news: { title: string; body: string; published_at?: string | null; photos: Photo[] } }>();
-const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
+const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value)) : '';
 </script>
 

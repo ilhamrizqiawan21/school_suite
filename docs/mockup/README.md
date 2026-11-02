@@ -1,16 +1,20 @@
-# Mockup School Suite — Calm Academic OS
+# Mockup School Suite 2026 — Academic Command Center
 
-Prototype statis interaktif untuk memvalidasi arah UI sebelum desain diterapkan ke aplikasi Laravel 13, Inertia 3, Vue 3, dan Tailwind CSS 4 yang sudah ada.
+Prototype statis interaktif untuk memvalidasi arah UI dan arsitektur menu sebelum desain diterapkan ke aplikasi Laravel 13, Inertia 3, Vue 3, dan Tailwind CSS 4 yang sudah ada.
 
 Mockup ini sengaja terisolasi dari kode produksi. Istilah, pengguna, rombel, siswa, skema penilaian, dan aturan remedial telah diselaraskan dengan implementasi serta `PilotSchoolSeeder` per 25 Oktober 2026. Lihat [pemetaan repo](REPO_ALIGNMENT.md) untuk batas dan target implementasinya.
 
-Palet bawaan menggunakan **Academic Blue** sebagai identitas universal School Suite. Hijau tetap tersedia sebagai warna status berhasil dan kelak sebagai preset branding khusus madrasah.
+Palet mockup memakai **deep navy**, **signal mint**, dan **amber** untuk membentuk Academic Command Center yang terasa lebih kontemporer pada 2026. Token produksi tidak diubah; arah ini hanya berlaku di prototype.
+
+Peta menu lengkap ada di [MENU_MAP.md](MENU_MAP.md).
 
 ## Layar
 
 1. **Beranda guru/wali kelas** — agenda, prioritas, kelengkapan, dan detak kelas.
 2. **Data siswa/operator** — pencarian, filter, bulk selection, density, dan kualitas data.
 3. **Input nilai** — nilai mentah, remedial, catatan, preview nilai akhir, status ketuntasan, dan simpan.
+
+Navigasi kiri sudah memetakan seluruh kelompok menu aplikasi: SPMB, Akademik, Pembelajaran LMS, Asesmen & CBT, Penilaian & Rapor, Perwalian, Komunikasi, Tata Usaha, dan Pengaturan. Tiga layar prototype tetap menjadi layar validasi utama; menu lain ditampilkan sebagai struktur informasi tanpa membuat layar palsu yang belum terhubung ke alur produksi.
 
 Gunakan navigasi kiri untuk berpindah layar. Pilihan `State` di topbar mensimulasikan loading, empty, error, partial, dan permission. Theme toggle, mobile drawer, pencarian siswa, pilihan tabel, density, task checklist, input nilai, dan toast juga interaktif.
 

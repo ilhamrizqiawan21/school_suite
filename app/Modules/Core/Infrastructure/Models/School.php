@@ -15,6 +15,43 @@ class School extends Model
 
     private const PUBLIC_THEME_COLORS = ['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'];
 
+    /** @var array<string, array{label: string, description: string, primary: string, accent: string, surface: string, ink: string, muted: string}> */
+    private const PUBLIC_THEME_PRESETS = [
+        'editorial' => [
+            'label' => 'Editorial',
+            'description' => 'Hangat, berkarakter, dan cocok untuk cerita sekolah.',
+            'primary' => '#3157a4',
+            'accent' => '#8a661f',
+            'surface' => '#fffdf8',
+            'ink' => '#173044',
+            'muted' => '#526673',
+        ],
+        'institutional' => [
+            'label' => 'Institutional',
+            'description' => 'Tenang, tepercaya, dan terasa lebih formal.',
+            'primary' => '#277450',
+            'accent' => '#765716',
+            'surface' => '#fbfdf9',
+            'ink' => '#18352b',
+            'muted' => '#557067',
+        ],
+        'campus' => [
+            'label' => 'Campus',
+            'description' => 'Segar, kreatif, dan lebih ekspresif untuk komunitas belajar.',
+            'primary' => '#7255ae',
+            'accent' => '#795725',
+            'surface' => '#fcfaff',
+            'ink' => '#281d3f',
+            'muted' => '#655b72',
+        ],
+    ];
+
+    private const PUBLIC_HERO_VARIANTS = [
+        'collage' => 'Kolase foto',
+        'single' => 'Satu foto fokus',
+        'minimal' => 'Minimal dengan overlay',
+    ];
+
     protected $table = 'schools';
 
     protected $fillable = [
@@ -48,13 +85,74 @@ class School extends Model
         ];
     }
 
-    /** @return array{primary: string} */
+    /** @return list<array{value: string, label: string, description: string}> */
+    public static function publicThemePresetOptions(): array
+    {
+        $options = [];
+
+        foreach (self::PUBLIC_THEME_PRESETS as $value => $preset) {
+            $options[] = [
+                'value' => $value,
+                'label' => $preset['label'],
+                'description' => $preset['description'],
+            ];
+        }
+
+        return $options;
+    }
+
+    /** @return list<array{value: string, label: string}> */
+    public static function publicHeroVariantOptions(): array
+    {
+        return array_map(
+            static fn (string $value, string $label): array => ['value' => $value, 'label' => $label],
+            array_keys(self::PUBLIC_HERO_VARIANTS),
+            self::PUBLIC_HERO_VARIANTS
+        );
+    }
+
+    /** @return array<string, mixed> */
     public function publicTheme(): array
     {
-        $primary = data_get($this->settings ?? [], 'theme_primary');
+        $settings = $this->settings ?? [];
+        $publicTheme = data_get($settings, 'public_theme', []);
+        $selectedPreset = data_get($publicTheme, 'preset');
+        $preset = is_string($selectedPreset) && array_key_exists($selectedPreset, self::PUBLIC_THEME_PRESETS)
+            ? $selectedPreset
+            : 'editorial';
+        $theme = self::PUBLIC_THEME_PRESETS[$preset];
+        $legacyPrimary = data_get($settings, 'theme_primary');
+
+        if (! is_string($selectedPreset) && in_array($legacyPrimary, self::PUBLIC_THEME_COLORS, true)) {
+            $theme['primary'] = $legacyPrimary;
+        }
+
+        $heroVariant = data_get($publicTheme, 'hero_variant');
+        $hero = static fn (string $key): ?string => is_string(data_get($publicTheme, $key)) && trim((string) data_get($publicTheme, $key)) !== ''
+            ? trim((string) data_get($publicTheme, $key))
+            : null;
 
         return [
-            'primary' => in_array($primary, self::PUBLIC_THEME_COLORS, true) ? $primary : '#3157a4',
+            'preset' => $preset,
+            'primary' => $theme['primary'],
+            'accent' => $theme['accent'],
+            'surface' => $theme['surface'],
+            'ink' => $theme['ink'],
+            'muted' => $theme['muted'],
+            'hero_variant' => is_string($heroVariant) && array_key_exists($heroVariant, self::PUBLIC_HERO_VARIANTS)
+                ? $heroVariant
+                : 'collage',
+            'sections' => [
+                'explore' => data_get($publicTheme, 'show_explore', true) !== false,
+                'news' => data_get($publicTheme, 'show_news', true) !== false,
+                'gallery' => data_get($publicTheme, 'show_gallery', true) !== false,
+            ],
+            'hero' => [
+                'title' => $hero('hero_title'),
+                'accent' => $hero('hero_accent'),
+                'primary_label' => $hero('hero_primary_label'),
+                'secondary_label' => $hero('hero_secondary_label'),
+            ],
         ];
     }
 

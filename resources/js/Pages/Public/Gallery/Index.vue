@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
+import { publicThemeStyle } from '@/composables/publicTheme';
 
 interface GalleryPhoto {
     id: number;
@@ -20,7 +21,7 @@ const props = defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
     albums: GalleryAlbum[];
 }>();
-const themeStyle = computed(() => ({ '--public-primary': props.school.theme?.primary || '#3157a4' }));
+const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 </script>
 
 <template>
