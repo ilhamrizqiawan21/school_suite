@@ -67,32 +67,34 @@ const remove = (task: StaffTask) => {
 };
 const statusLabel = (status: string) => ({ assigned: 'Ditugaskan', in_progress: 'Berjalan', completed: 'Selesai', cancelled: 'Dibatalkan' }[status] ?? status);
 const priorityLabel = (priority: string) => ({ low: 'Rendah', normal: 'Normal', high: 'Tinggi', urgent: 'Mendesak' }[priority] ?? priority);
+const statusClass = (status: string) => `task-status-${status}`;
+const priorityClass = (priority: string) => `task-priority-${priority}`;
 const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Tanpa tenggat';
 </script>
 
 <template>
     <AppLayout title="Tugas Staf">
         <Head title="Tugas Staf" />
-        <main class="view space-y-6">
-            <section class="hero-card">
+        <main class="view space-y-6 staff-tasks-page">
+            <section class="hero-card staff-task-hero">
                 <div>
                     <p class="eyebrow">Tata usaha</p>
                     <h1>Tugas staf</h1>
                     <p>Pantau penanggung jawab, tenggat, progres, dan riwayat tugas sekolah.</p>
                 </div>
-                <button v-if="can_manage" type="button" class="primary-button" @click="openCreate">Tambah tugas</button>
+                <div v-if="can_manage" class="staff-task-hero-actions"><button type="button" class="primary-button" @click="openCreate">Tambah tugas</button></div>
             </section>
 
-            <section class="grid gap-3 sm:grid-cols-3" aria-label="Ringkasan tugas">
-                <div class="panel p-4"><p class="text-sm text-slate-500">Tugas aktif</p><strong class="text-2xl">{{ summary.active }}</strong></div>
-                <div class="panel p-4"><p class="text-sm text-slate-500">Melewati tenggat</p><strong class="text-2xl text-red-700">{{ summary.overdue }}</strong></div>
-                <div class="panel p-4"><p class="text-sm text-slate-500">Selesai</p><strong class="text-2xl text-emerald-700">{{ summary.completed }}</strong></div>
+            <section class="task-summary-grid" aria-label="Ringkasan tugas">
+                <div class="task-summary-card task-summary-active"><span>Tugas aktif</span><strong>{{ summary.active }}</strong><small>Menunggu atau sedang dikerjakan</small></div>
+                <div class="task-summary-card task-summary-overdue"><span>Melewati tenggat</span><strong>{{ summary.overdue }}</strong><small>Perlu ditindaklanjuti</small></div>
+                <div class="task-summary-card task-summary-completed"><span>Selesai</span><strong>{{ summary.completed }}</strong><small>Tugas yang sudah ditutup</small></div>
             </section>
-            <p class="text-sm leading-6 text-slate-500">{{ can_manage ? '1. Buat tugas dan pilih penanggung jawab → 2. Staf memperbarui progres → 3. Pantau penyelesaian dan riwayat.' : 'Baca tugas Anda, unduh lampiran bila tersedia, lalu perbarui progres sampai 100% setelah pekerjaan selesai.' }}</p>
-            <section v-if="showForm && can_manage" id="staff-task-form" class="panel scroll-mt-24 space-y-4 p-5">
-                <div class="flex items-center justify-between gap-4"><h2 class="text-lg font-semibold">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><button type="button" class="secondary-button" @click="showForm = false">Tutup</button></div>
+            <div class="task-guidance"><strong>{{ can_manage ? 'Cara kerja tugas' : 'Perbarui tugas' }}</strong><span>{{ can_manage ? 'Buat tugas, pilih penanggung jawab, lalu pantau sampai selesai.' : 'Buka lampiran bila ada, lalu perbarui progres saat pekerjaan berjalan.' }}</span></div>
+            <section v-if="showForm && can_manage" id="staff-task-form" class="panel task-form-panel scroll-mt-24">
+                <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2>{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><button type="button" class="secondary-button" @click="showForm = false">Tutup</button></div>
                 <ul v-if="Object.keys(form.errors).length" class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
-                <form class="grid gap-4 md:grid-cols-2" @submit.prevent="save">
+                <form class="task-form-grid" @submit.prevent="save">
                     <label class="field md:col-span-2">Judul<input v-model="form.title" required maxlength="180" /><small v-if="form.errors.title">{{ form.errors.title }}</small></label>
                     <label class="field md:col-span-2">Uraian<textarea v-model="form.description" rows="3" maxlength="5000" /></label>
                     <label class="field">Kategori<input v-model="form.category" maxlength="60" placeholder="Contoh: administrasi" /></label>
@@ -101,21 +103,21 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <label class="field">Tenggat<input v-model="form.due_at" type="datetime-local" /></label>
                     <label class="field md:col-span-2">Lampiran<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="selectAttachment" /><small v-if="form.errors.attachment">{{ form.errors.attachment }}</small><small>Maksimal 10 MB; file hanya dapat diunduh oleh admin/operator atau penanggung jawab.</small></label>
                     <label v-if="editingId" class="field">Status<select v-model="form.status"><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
-                    <div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</button></div>
+                    <div class="task-form-actions"><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</button></div>
                 </form>
             </section>
 
-            <section class="panel p-5">
-                <h2 class="mb-3 font-semibold">Daftar tugas</h2>
-                <form class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" @submit.prevent="applyFilters">
+            <section class="panel task-filter-panel">
+                <div class="task-panel-heading compact"><div><p class="eyebrow">Penyaringan</p><h2>Daftar tugas</h2><p>Temukan tugas berdasarkan kata kunci, status, prioritas, atau penanggung jawab.</p></div></div>
+                <form class="task-filter-grid" @submit.prevent="applyFilters">
                     <label class="field">Cari tugas<input v-model="filters.search" maxlength="180" placeholder="Judul atau kategori" /></label>
                     <label class="field">Status<select v-model="filters.status"><option value="">Semua status</option><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
                     <label class="field">Prioritas<select v-model="filters.priority"><option value="">Semua prioritas</option><option value="low">Rendah</option><option value="normal">Normal</option><option value="high">Tinggi</option><option value="urgent">Mendesak</option></select></label>
                     <label v-if="can_manage" class="field">Penanggung jawab<select v-model="filters.assignee_id"><option value="">Semua staf</option><option v-for="person in assignees" :key="person.id" :value="String(person.id)">{{ person.name }}</option></select></label>
-                    <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-4"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
+                    <div class="task-filter-actions"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
                 </form>
             </section>
-            <section class="panel overflow-hidden">
+            <section class="panel task-list-panel">
                 <div v-if="!tasks.length" class="flex min-h-64 flex-col items-center justify-center px-6 py-12 text-center">
                     <div class="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-700" aria-hidden="true">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
@@ -129,22 +131,22 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     </p>
                     <button v-if="can_manage" type="button" class="primary-button mt-5" @click="openCreate">Buat tugas pertama</button>
                 </div>
-                <div v-else class="divide-y divide-slate-200">
-                    <article v-for="task in tasks" :key="task.id" class="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_220px]">
-                        <div class="min-w-0 space-y-3">
-                            <div class="flex flex-wrap items-center gap-2"><h2 class="min-w-0 max-w-full break-words text-base font-semibold text-slate-900">{{ task.title }}</h2><span class="status-pill">{{ statusLabel(task.status) }}</span><span class="text-xs text-slate-500">Prioritas {{ priorityLabel(task.priority) }}</span></div>
-                            <p v-if="task.description" class="break-words whitespace-pre-wrap text-sm text-slate-600">{{ task.description }}</p>
+                <div v-else class="task-list">
+                    <article v-for="task in tasks" :key="task.id" class="task-item">
+                        <div class="task-main">
+                            <div class="task-heading"><div class="task-title-block"><span class="task-category">{{ task.category || 'Umum' }}</span><h2>{{ task.title }}</h2></div><div class="task-badges"><span class="task-status-pill" :class="statusClass(task.status)">{{ statusLabel(task.status) }}</span><span class="task-priority-pill" :class="priorityClass(task.priority)">{{ priorityLabel(task.priority) }}</span></div></div>
+                            <p v-if="task.description" class="task-description">{{ task.description }}</p>
                             <a v-if="task.attachment_name" class="block max-w-full break-all text-sm font-medium text-blue-700 hover:underline" :href="`/administrasi/tugas/${task.id}/lampiran`">Unduh lampiran: {{ task.attachment_name }}</a>
-                            <p class="break-words text-sm text-slate-500">{{ task.category || 'Umum' }} · Penanggung jawab: {{ task.assignee?.name || 'Belum ditentukan' }} · Tenggat: {{ dateLabel(task.due_at) }}</p>
-                            <p v-if="overdue(task)" class="text-xs font-semibold text-red-700">Melewati tenggat</p>
-                            <details v-if="task.activities?.length" class="text-xs text-slate-500"><summary class="cursor-pointer font-medium">Riwayat ({{ task.activities_count }}) · 5 terbaru</summary><ul class="mt-2 space-y-1"><li v-for="activity in task.activities" :key="activity.id">{{ activity.actor?.name || 'Pengguna' }} · {{ ({ created: 'Tugas dibuat', updated: 'Tugas diubah', progress_updated: 'Progres diperbarui' } as Record<string, string>)[activity.action] ?? activity.action }} · {{ dateLabel(activity.created_at) }}</li></ul></details>
+                            <div class="task-meta"><span><b>Penanggung jawab</b>{{ task.assignee?.name || 'Belum ditentukan' }}</span><span><b>Tenggat</b>{{ dateLabel(task.due_at) }}</span></div>
+                            <p v-if="overdue(task)" class="task-overdue">Melewati tenggat</p>
+                            <details v-if="task.activities?.length" class="task-history"><summary>Riwayat ({{ task.activities_count }}) · 5 terbaru</summary><ul><li v-for="activity in task.activities" :key="activity.id">{{ activity.actor?.name || 'Pengguna' }} · {{ ({ created: 'Tugas dibuat', updated: 'Tugas diubah', progress_updated: 'Progres diperbarui' } as Record<string, string>)[activity.action] ?? activity.action }} · {{ dateLabel(activity.created_at) }}</li></ul></details>
                         </div>
-                        <div class="flex min-w-0 flex-col justify-center gap-3">
-                            <div><p class="mb-2 text-sm font-medium text-slate-700">Progres {{ task.progress }}%</p><progress class="h-2 w-full accent-blue-700" max="100" :value="task.progress" :aria-label="`Progres tugas ${task.title}`" /></div>
-                            <label v-if="!can_manage && task.assignee?.id === current_user_id && task.status !== 'cancelled'" class="text-sm font-medium text-slate-700">Perbarui progres<input class="mt-2 w-full accent-blue-700" type="range" min="0" max="100" :disabled="savingProgress[task.id]" step="10" :value="task.progress" @change="updateProgress(task, $event)" /></label>
+                        <div class="task-side">
+                            <div class="task-progress"><div class="task-progress-heading"><span>Progres</span><strong>{{ task.progress }}%</strong></div><progress max="100" :value="task.progress" :aria-label="`Progres tugas ${task.title}`" /></div>
+                            <label v-if="!can_manage && task.assignee?.id === current_user_id && task.status !== 'cancelled'" class="task-progress-editor">Perbarui progres<input type="range" min="0" max="100" :disabled="savingProgress[task.id]" step="10" :value="task.progress" @change="updateProgress(task, $event)" /></label>
                             <p v-if="progressErrors[task.id]" class="text-sm text-red-700" role="alert">{{ progressErrors[task.id] }}</p>
-                            <div v-if="can_manage" class="flex flex-wrap justify-end gap-2"><RowActionButton action="edit" label="Ubah" :aria-label="`Ubah tugas ${task.title}`" @click="openEdit(task)" /><RowActionButton action="delete" label="Hapus" :aria-label="`Hapus tugas ${task.title}`" @click="remove(task)" /></div>
-                            <small class="text-right text-slate-500">Dibuat oleh {{ task.creator?.name || 'staf' }}</small>
+                            <div v-if="can_manage" class="task-actions"><RowActionButton action="edit" label="Ubah" :aria-label="`Ubah tugas ${task.title}`" @click="openEdit(task)" /><RowActionButton action="delete" label="Hapus" :aria-label="`Hapus tugas ${task.title}`" @click="remove(task)" /></div>
+                            <small class="task-creator">Dibuat oleh {{ task.creator?.name || 'staf' }}</small>
                         </div>
                     </article>
                 </div>
@@ -158,6 +160,67 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
 </template>
 
 <style scoped>
+.staff-tasks-page { --task-ink: #172b4d; --task-muted: #64748b; --task-line: #dbe3ef; }
+.staff-task-hero { align-items: center; }
+.staff-task-hero-actions { display: flex; align-items: center; gap: .6rem; }
+.task-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+.task-summary-card { display: grid; gap: .25rem; min-height: 7.25rem; border: 1px solid var(--task-line); border-radius: 1rem; background: #fff; padding: 1rem 1.1rem; }
+.task-summary-card span { color: var(--task-muted); font-size: .76rem; font-weight: 800; }
+.task-summary-card strong { color: var(--task-ink); font-size: 2rem; line-height: 1; }
+.task-summary-card small { color: var(--task-muted); font-size: .74rem; line-height: 1.35; }
+.task-summary-active { border-color: #c9d7f3; background: #f4f7ff; }
+.task-summary-overdue { border-color: #f2c9c5; background: #fff8f7; }
+.task-summary-overdue strong { color: #b42318; }
+.task-summary-completed { border-color: #b9dec8; background: #f2fcf6; }
+.task-summary-completed strong { color: #067647; }
+.task-guidance { display: flex; align-items: center; gap: .65rem; border: 1px solid #d7e1f2; border-radius: .8rem; background: #f7faff; padding: .8rem 1rem; color: #52637c; font-size: .83rem; line-height: 1.45; }
+.task-guidance strong { color: #3157a4; white-space: nowrap; }
+.task-form-panel, .task-filter-panel { display: grid; gap: 1.25rem; padding: 1.25rem; }
+.task-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.task-panel-heading h2 { margin: .15rem 0 .25rem; color: var(--task-ink); font-size: 1.1rem; }
+.task-panel-heading p:not(.eyebrow) { margin: 0; color: var(--task-muted); font-size: .82rem; line-height: 1.5; }
+.task-panel-heading.compact { margin-bottom: -.15rem; }
+.task-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.task-form-grid .md\:col-span-2 { grid-column: 1 / -1; }
+.task-form-actions { display: flex; justify-content: flex-end; gap: .5rem; grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
+.task-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+.task-filter-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: .9rem; }
+.task-list-panel { overflow: hidden; padding: 0; }
+.task-list { display: grid; }
+.task-item { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 1.5rem; padding: 1.35rem 1.5rem; border-bottom: 1px solid #e2e8f0; }
+.task-item:last-child { border-bottom: 0; }
+.task-main, .task-side { min-width: 0; }
+.task-main { display: grid; align-content: start; gap: .75rem; }
+.task-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.task-title-block { min-width: 0; }
+.task-category { display: block; margin-bottom: .25rem; color: #64748b; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.task-title-block h2 { margin: 0; color: var(--task-ink); font-size: 1rem; line-height: 1.35; overflow-wrap: anywhere; }
+.task-badges { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .4rem; flex: 0 0 auto; }
+.task-status-pill, .task-priority-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .3rem .6rem; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+.task-status-assigned { background: #eef4ff; color: #3157a4; }
+.task-status-in_progress { background: #fff7e6; color: #a15c00; }
+.task-status-completed { background: #ecfdf3; color: #067647; }
+.task-status-cancelled { background: #f1f5f9; color: #64748b; }
+.task-priority-low, .task-priority-normal { background: #f1f5f9; color: #475569; }
+.task-priority-high { background: #fff7e6; color: #a15c00; }
+.task-priority-urgent { background: #fef3f2; color: #b42318; }
+.task-description { margin: 0; color: #475569; font-size: .84rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.task-meta { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; color: var(--task-muted); font-size: .78rem; }
+.task-meta span { display: grid; gap: .15rem; min-width: min(12rem, 100%); }
+.task-meta b { color: #94a3b8; font-size: .68rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.task-overdue { margin: 0; color: #b42318; font-size: .76rem; font-weight: 800; }
+.task-history { color: var(--task-muted); font-size: .75rem; }
+.task-history summary { cursor: pointer; font-weight: 700; }
+.task-history ul { display: grid; gap: .3rem; margin: .5rem 0 0; padding-left: 1rem; line-height: 1.4; }
+.task-side { display: grid; align-content: center; gap: .85rem; border-left: 1px solid #e2e8f0; padding-left: 1.25rem; }
+.task-progress { display: grid; gap: .45rem; }
+.task-progress-heading { display: flex; align-items: center; justify-content: space-between; color: #52637c; font-size: .76rem; font-weight: 700; }
+.task-progress-heading strong { color: var(--task-ink); font-size: .9rem; }
+.task-progress progress { width: 100%; height: .5rem; }
+.task-progress-editor { display: grid; gap: .35rem; color: #52637c; font-size: .76rem; font-weight: 700; }
+.task-progress-editor input { width: 100%; accent-color: #315db3; }
+.task-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .4rem; }
+.task-creator { color: var(--task-muted); font-size: .72rem; text-align: right; }
 .field { display: grid; min-width: 0; gap: .4rem; color: #42526b; font-size: .84rem; font-weight: 600; }
 .field input, .field select, .field textarea { width: 100%; min-width: 0; min-height: 2.65rem; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .6rem .75rem; background: white; color: #172b4d; font-weight: 400; }
 .field small { font-weight: 400; line-height: 1.5; }
@@ -167,4 +230,59 @@ progress { overflow: hidden; border-radius: 999px; background: #e2e8f0; }
 progress::-webkit-progress-bar { background: #e2e8f0; }
 progress::-webkit-progress-value { background: #315db3; border-radius: 999px; }
 progress::-moz-progress-bar { background: #315db3; }
+@media (max-width: 900px) {
+    .task-item { grid-template-columns: minmax(0, 1fr) 180px; gap: 1rem; }
+    .task-side { padding-left: 1rem; }
+    .task-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+    .task-summary-grid, .task-form-grid, .task-filter-grid { grid-template-columns: 1fr; }
+    .task-form-grid .md\:col-span-2, .task-filter-actions, .task-form-actions { grid-column: auto; }
+    .task-guidance { align-items: flex-start; flex-direction: column; gap: .2rem; }
+    .task-panel-heading, .task-heading { align-items: stretch; flex-direction: column; }
+    .task-panel-heading .secondary-button { align-self: flex-start; }
+    .task-item { grid-template-columns: 1fr; gap: 1rem; padding: 1.1rem; }
+    .task-side { border-top: 1px solid #e2e8f0; border-left: 0; padding-top: 1rem; padding-left: 0; }
+    .task-badges { justify-content: flex-start; }
+    .task-actions, .task-creator { justify-content: flex-start; text-align: left; }
+}
+/* Shared card rhythm: task summaries stay neutral, accents carry the meaning. */
+.task-summary-card { border-radius: var(--card-radius-compact); background: var(--surface) !important; }
+.task-summary-active { border-top: 3px solid var(--primary) !important; }
+.task-summary-overdue { border-top: 3px solid var(--red) !important; }
+.task-summary-completed { border-top: 3px solid var(--green) !important; }
+.task-form-panel, .task-filter-panel, .task-list-panel { border-radius: var(--card-radius); }
+:global(html[data-theme='dark']) .staff-tasks-page { --task-ink: var(--ink); --task-muted: var(--ink-soft); --task-line: var(--line); }
+:global(html[data-theme='dark']) .staff-tasks-page .task-summary-card,
+:global(html[data-theme='dark']) .staff-tasks-page .task-guidance,
+:global(html[data-theme='dark']) .staff-tasks-page .task-form-panel,
+:global(html[data-theme='dark']) .staff-tasks-page .task-filter-panel,
+:global(html[data-theme='dark']) .staff-tasks-page .task-list-panel { border-color: var(--line) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-summary-card { background: var(--surface) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-guidance { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-guidance strong { color: var(--primary); }
+:global(html[data-theme='dark']) .staff-tasks-page .task-status-assigned,
+:global(html[data-theme='dark']) .staff-tasks-page .task-priority-high { background: var(--primary-soft) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-status-in_progress { background: var(--gold-soft) !important; color: var(--gold) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-status-completed { background: var(--green-soft) !important; color: var(--green) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-status-cancelled,
+:global(html[data-theme='dark']) .staff-tasks-page .task-priority-low,
+:global(html[data-theme='dark']) .staff-tasks-page .task-priority-normal { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-priority-urgent { background: var(--red-soft) !important; color: var(--red) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-description,
+:global(html[data-theme='dark']) .staff-tasks-page .task-category,
+:global(html[data-theme='dark']) .staff-tasks-page .task-progress-heading,
+:global(html[data-theme='dark']) .staff-tasks-page .task-progress-editor,
+:global(html[data-theme='dark']) .staff-tasks-page .field { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .task-side,
+:global(html[data-theme='dark']) .staff-tasks-page .task-item,
+:global(html[data-theme='dark']) .staff-tasks-page .task-form-actions,
+:global(html[data-theme='dark']) .staff-tasks-page .task-filter-actions { border-color: var(--line) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page .field input,
+:global(html[data-theme='dark']) .staff-tasks-page .field select,
+:global(html[data-theme='dark']) .staff-tasks-page .field textarea { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark']) .staff-tasks-page progress,
+:global(html[data-theme='dark']) .staff-tasks-page progress::-webkit-progress-bar { background: var(--surface-strong); }
+:global(html[data-theme='dark']) .staff-tasks-page progress::-webkit-progress-value,
+:global(html[data-theme='dark']) .staff-tasks-page progress::-moz-progress-bar { background: var(--primary); }
 </style>

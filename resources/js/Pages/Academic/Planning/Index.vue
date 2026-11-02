@@ -313,6 +313,10 @@ function deletePlan() {
 @media(max-width:740px){.reference-actions{width:100%;justify-content:flex-start}}
 .cp-list{display:grid;gap:.65rem}.cp-card{padding:.85rem;border:1px solid var(--plan-line);border-radius:.75rem;background:var(--plan-canvas)}.cp-card-heading{display:flex;align-items:center;gap:.55rem;margin-bottom:.65rem}.cp-card-heading strong{flex:1;color:var(--plan-ink);font-size:.84rem}.cp-card-heading .row-index{padding:0}.cp-fields{display:grid;grid-template-columns:120px minmax(170px,.7fr) minmax(0,1.6fr);gap:.65rem}.cp-content textarea{min-height:112px;resize:vertical}
 .planning-page{container-type:inline-size}
+:global(html[data-theme='dark']) .success-notice { background: var(--green-soft); color: var(--green); }
+:global(html[data-theme='dark']) .error-notice { background: var(--red-soft); color: var(--red); }
+:global(html[data-theme='dark']) .field-error { color: var(--red); }
+:global(html[data-theme='dark']) .radio-indicator { border-color: var(--ink-faint); }
 .page-intro .action-primary{white-space:nowrap}
 .save-state.unsaved .state-dot{background:#cf8a21}
 @container (max-width: 950px){.planning-layout{grid-template-columns:minmax(0,1fr)}.plan-rail{position:static}.plan-list{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));max-height:none;overflow:visible}.plan-item{min-width:0}.package-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

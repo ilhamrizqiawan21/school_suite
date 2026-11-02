@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CorrespondenceSignatureRequest extends Model
 {
-    protected $fillable = ['school_id', 'correspondence_record_id', 'document_version_id', 'signatory_id', 'provider', 'idempotency_key', 'provider_request_id', 'status', 'attempts', 'error_code', 'certificate_metadata', 'signed_at', 'last_attempted_at'];
+    protected $fillable = ['school_id', 'correspondence_record_id', 'document_version_id', 'signatory_id', 'provider', 'idempotency_key', 'provider_request_id', 'status', 'attempts', 'error_code', 'error_message', 'certificate_metadata', 'signed_at', 'last_attempted_at'];
 
     protected function casts(): array
     {

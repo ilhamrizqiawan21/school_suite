@@ -6,18 +6,18 @@ Selamat datang di sistem manajemen sekolah terpadu **School Suite**. Dokumen ini
 
 ## 1. Akses Masuk & Kredensial Uji Coba
 
-Gunakan kredensial bawaan berikut untuk mencoba peran yang berbeda pada lingkungan percontohan (pilot):
+Seeder pilot tidak lagi memiliki password bawaan di source code. Sebelum menjalankan `php artisan db:seed` pada lingkungan local/testing, set `PILOT_DEFAULT_PASSWORD` melalui environment dengan password sementara minimal 12 karakter. Jangan menjalankan seeder pilot di production dan jangan menyimpan password tersebut di Git.
 
 | Peran | Email Masuk | Kata Sandi | Deskripsi Akses |
 |---|---|---|---|
-| **Administrator** | `admin@pilot.sch.id` | `password` | Kendali penuh sistem, pengguna, profil sekolah, dan backup |
-| **Kepala Sekolah** | `kepsek@pilot.sch.id` | `password` | Monitoring sekolah, pengesahan rapor, dan rekapitulasi |
-| **Operator Sekolah**| `operator@pilot.sch.id` | `password` | Manajemen rombel, data induk siswa/guru, dan skema nilai |
-| **Wali Kelas VII-A**| `budi@pilot.sch.id` | `password` | Ruang kerja wali kelas, generate rapor, ledger nilai kelas |
-| **Guru Bahasa Ind.**| `siti@pilot.sch.id` | `password` | Input nilai mata pelajaran, presensi harian, jurnal kelas |
-| **Siswa (Ahmad F.)**| `siswa26001@pilot.sch.id` | `password` | Akses rapor pribadi dan jadwal pelajaran |
+| **Administrator** | `admin@pilot.sch.id` | Password dari environment | Kendali penuh sistem, pengguna, profil sekolah, dan backup |
+| **Kepala Sekolah** | `kepsek@pilot.sch.id` | Password dari environment | Monitoring sekolah, pengesahan rapor, dan rekapitulasi |
+| **Operator Sekolah**| `operator@pilot.sch.id` | Password dari environment | Manajemen rombel, data induk siswa/guru, dan skema nilai |
+| **Wali Kelas VII-A**| `budi@pilot.sch.id` | Password dari environment | Ruang kerja wali kelas, generate rapor, ledger nilai kelas |
+| **Guru Bahasa Ind.**| `siti@pilot.sch.id` | Password dari environment | Input nilai mata pelajaran, presensi harian, jurnal kelas |
+| **Siswa (Ahmad F.)**| `siswa26001@pilot.sch.id` | Password dari environment | Akses rapor pribadi dan jadwal pelajaran |
 
-Semua akun pilot dengan kata sandi awal di atas diwajibkan menggantinya saat pertama kali masuk.
+Semua akun pilot dengan kata sandi awal tersebut diwajibkan menggantinya saat pertama kali masuk.
 
 ---
 

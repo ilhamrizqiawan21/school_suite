@@ -249,7 +249,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     color: #f4f0e7;
     background: #123247;
     border-radius: .45rem;
-    font-weight: 750;
+    font-weight: var(--weight-bold);
 }
 
 .public-site nav a.header-action[aria-current='page'] {

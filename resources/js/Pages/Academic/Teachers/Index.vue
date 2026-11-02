@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { Teacher, SharedProps } from '../../../types';
 
@@ -32,6 +32,8 @@ const props = defineProps<{
 }>();
 
 const page = usePage<SharedProps>();
+const temporaryCredential = computed(() => page.props.temporary_credential);
+const hideTemporaryCredential = ref(false);
 const activeFilter = ref(props.filters.is_active ?? '');
 const editingId = ref<number | null>(null);
 const accountLabels = { no_account: 'Belum ada akun', default: 'Wajib ganti sandi', changed: 'Sudah diubah', unavailable: 'Akun tidak tersedia' };
@@ -150,98 +152,93 @@ const submitImport = () => {
     <AppLayout title="Data Guru & Tenaga Kependidikan">
         <Head title="Data Guru — School Suite" />
 
-        <div class="view teacher-page space-y-6">
-            <!-- Header bar -->
+        <div class="view teacher-page space-y-5">
             <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Pendidik & Tenaga Kependidikan</h1>
-                    <p class="text-sm text-slate-500 mt-1">
-                        Kelola data guru, status kepegawaian, dan penugasan wali kelas.
-                    </p>
-                    <p class="mt-2 max-w-3xl text-xs text-slate-500">
-                        Satu akun dapat merangkap: peran utama tetap Operator/TU untuk pekerjaan administrasi, lalu admin menautkan profil guru agar akun tersebut juga menerima akses mengajar.
+                    <p class="teacher-page-kicker">Akademik · Sumber daya sekolah</p>
+                    <h1 class="teacher-page-title">Manajemen Data Guru</h1>
+                    <p class="teacher-page-summary">
+                        Kelola profil pendidik, status kepegawaian, akun login, dan penugasan wali kelas.
                     </p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3">
-                    <button v-if="can_manage" type="button" class="primary-button" @click="openAdd">Tambah guru</button>
-                    <a :href="exportUrl()" class="secondary-button">Ekspor Excel</a>
-                    <button
-                        type="button"
-                        v-if="can_manage" @click="showImportModal = true"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs"
-                    >
+                <div class="teacher-header-actions">
+                    <button v-if="can_manage" type="button" class="teacher-action-button teacher-action-add" @click="openAdd">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" /></svg>
+                        Tambah guru
+                    </button>
+                    <button v-if="can_manage" type="button" @click="showImportModal = true" class="teacher-action-button teacher-action-import">
                         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Impor Excel / CSV
+                        Impor data
                     </button>
-                    <a v-if="can_manage" href="/akademik/guru/template?format=xlsx" class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs">
-                        Unduh template
-                    </a>
+                    <a :href="exportUrl()" class="teacher-action-button">Ekspor Excel</a>
+                    <a v-if="can_manage" href="/akademik/guru/template?format=xlsx" class="teacher-action-button">Unduh template</a>
                 </div>
             </div>
 
             <div v-if="page.props.flash?.message" class="panel p-4" role="status">{{ page.props.flash.message }}</div>
-            <div v-if="page.props.errors?.teacher" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.teacher }}</div>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div class="panel p-4"><p>Total guru / tenaga kependidikan</p><strong class="text-2xl">{{ stats.total }}</strong></div>
-                <div class="panel p-4"><p>Aktif</p><strong class="text-2xl">{{ stats.active }}</strong></div>
-                <div class="panel p-4"><p>Nonaktif</p><strong class="text-2xl">{{ stats.inactive }}</strong></div>
+            <div v-if="temporaryCredential && !hideTemporaryCredential" class="panel border-amber-200 bg-amber-50 p-4 text-amber-950" role="alert">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <strong>Sandi sementara untuk {{ temporaryCredential.subject }}</strong>
+                        <p class="mt-1 text-sm">Tampilan ini hanya muncul sekali selama 5 menit. Sampaikan melalui kanal aman, lalu tutup panel ini.</p>
+                        <code class="mt-3 inline-block rounded bg-white px-3 py-2 text-base font-semibold tracking-wide">{{ temporaryCredential.password }}</code>
+                    </div>
+                    <button type="button" class="text-sm font-semibold underline" @click="hideTemporaryCredential = true">Tutup</button>
+                </div>
             </div>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div class="panel p-4"><p>Akan pensiun dalam 1 tahun</p><strong class="text-2xl text-amber-700">{{ retirement_stats.upcoming }}</strong></div>
-                <div class="panel p-4"><p>Sudah mencapai usia 60</p><strong class="text-2xl text-rose-700">{{ retirement_stats.reached }}</strong></div>
-                <div class="panel p-4"><p>Tanggal lahir belum diisi</p><strong class="text-2xl text-slate-600">{{ retirement_stats.missing }}</strong></div>
+            <div v-if="page.props.errors?.teacher" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.teacher }}</div>
+            <div class="teacher-summary-grid" aria-label="Ringkasan data guru">
+                <div class="panel teacher-stat teacher-stat-total"><span>Total guru & tenaga kependidikan</span><strong>{{ stats.total }}</strong><small>seluruh data sekolah</small></div>
+                <div class="panel teacher-stat teacher-stat-active"><span>Guru aktif</span><strong>{{ stats.active }}</strong><small>siap menerima penugasan</small></div>
+                <div class="panel teacher-stat teacher-stat-inactive"><span>Nonaktif</span><strong>{{ stats.inactive }}</strong><small>perlu ditinjau bila diperlukan</small></div>
+            </div>
+            <div class="teacher-retirement-summary" aria-label="Ringkasan masa pensiun">
+                <div><span>Perlu perhatian masa pensiun</span><strong>{{ retirement_stats.upcoming + retirement_stats.reached + retirement_stats.missing }}</strong></div>
+                <div><span>Pensiun dalam 1 tahun</span><strong class="is-warning">{{ retirement_stats.upcoming }}</strong></div>
+                <div><span>Tanggal lahir belum diisi</span><strong>{{ retirement_stats.missing }}</strong></div>
             </div>
 
-            <!-- Filters -->
-            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-3">
-                <div class="flex-1 relative">
+            <div class="toolbar panel teacher-filterbar">
+                <label class="table-search">
                     <input
                         aria-label="Cari nama, NIP, atau email" v-model="search"
                         @keyup.enter="applyFilters"
-                        type="text"
-                        placeholder="Cari nama, NIP, atau email... (tekan enter)"
-                        class="w-full px-3.5 py-2 pl-10 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                        type="search"
+                        placeholder="Cari nama, NIP, atau email..."
+                        class="w-full"
                     />
-                    <svg class="w-5 h-5 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
+                </label>
+                <div class="teacher-filter-controls">
                     <select
                         aria-label="Status kepegawaian" v-model="selectedStatus"
                         @change="applyFilters"
-                        class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                        class="teacher-filter-select"
                     >
-                        <option value="">Semua Status Kepegawaian</option>
+                        <option value="">Semua status kepegawaian</option>
                         <option v-for="status in employmentOptions" :key="status" :value="status">{{ status }}</option>
                     </select>
 
-                    <select v-model="activeFilter" aria-label="Status aktif" class="rounded-lg border px-3 py-2 text-sm" @change="applyFilters"><option value="">Semua status aktif</option><option value="1">Aktif</option><option value="0">Nonaktif</option></select>
-                    <select v-model="selectedRetirement" aria-label="Status masa pensiun" class="rounded-lg border px-3 py-2 text-sm" @change="applyFilters">
+                    <select v-model="activeFilter" aria-label="Status aktif" class="teacher-filter-select" @change="applyFilters"><option value="">Semua status aktif</option><option value="1">Aktif</option><option value="0">Nonaktif</option></select>
+                    <select v-model="selectedRetirement" aria-label="Status masa pensiun" class="teacher-filter-select" @change="applyFilters">
                         <option value="">Semua status masa pensiun</option>
                         <option value="upcoming">Pensiun dalam 1 tahun</option>
                         <option value="reached">Sudah mencapai 60 tahun</option>
                         <option value="missing">Tanggal lahir belum diisi</option>
                     </select>
                     <button type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
-                    <button
-                        type="button"
-                        @click="applyFilters"
-                        class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
-                    >
-                        Filter
-                    </button>
+                    <button type="button" class="secondary-button teacher-filter-submit" @click="applyFilters">Terapkan</button>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+            <div class="table-card panel teacher-table-card">
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
-                    <table class="app-table w-full text-left border-collapse text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    <table class="app-table teacher-table w-full text-left border-collapse text-sm">
+                        <thead>
                             <tr>
                                 <th scope="col" class="px-5 py-3.5">Nama & NIP</th>
                                 <th scope="col" class="px-5 py-3.5">L/P</th>
@@ -250,11 +247,11 @@ const submitImport = () => {
                                 <th scope="col" class="px-5 py-3.5">Status Pegawai</th>
                                 <th scope="col" class="px-5 py-3.5">Wali Kelas</th>
                                 <th scope="col" class="px-5 py-3.5">Status</th>
-                                <th scope="col" v-if="can_manage" class="px-5 py-3.5">Status sandi / Aksi</th>
+                                <th scope="col" v-if="can_manage" class="teacher-actions-heading px-5 py-3.5">Akun & aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
-                            <tr v-for="t in teachers.data" :key="t.id" class="hover:bg-slate-50/80 transition-colors">
+                            <tr v-for="t in teachers.data" :key="t.id" class="teacher-data-row">
                                 <td class="px-5 py-3.5 font-medium text-slate-900">
                                     <div>{{ t.name }}</div>
                                     <div class="text-xs text-slate-400 font-normal">{{ t.nip || '-' }}</div>
@@ -292,12 +289,18 @@ const submitImport = () => {
                                         {{ t.is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td v-if="can_manage" class="px-5 py-3.5">
-                                    <p class="mb-2 text-xs">{{ accountLabels[t.account_status ?? 'unavailable'] }}</p>
-                                    <div class="flex gap-2">
-                                        <button type="button" class="secondary-button" :aria-label="`Ubah ${t.name}`" @click="openEdit(t)">Ubah</button>
-                                        <button type="button" class="secondary-button disabled:opacity-50" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" @click="resetPassword(t)">Reset sandi</button>
-                                        <button type="button" class="secondary-button text-red-700" :aria-label="`Hapus ${t.name}`" @click="deleteTeacher(t)">Hapus</button>
+                                <td v-if="can_manage" class="teacher-actions-cell px-5 py-3.5">
+                                    <span class="teacher-account-status" :class="`is-${t.account_status ?? 'unavailable'}`">{{ accountLabels[t.account_status ?? 'unavailable'] }}</span>
+                                    <div class="teacher-row-actions">
+                                        <button type="button" class="teacher-row-action teacher-row-action-edit" :aria-label="`Ubah ${t.name}`" title="Ubah data guru" @click="openEdit(t)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></svg><span class="sr-only">Ubah</span>
+                                        </button>
+                                        <button type="button" class="teacher-row-action teacher-row-action-reset" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" title="Reset sandi" @click="resetPassword(t)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10V7a4 4 0 118 0v3" /></svg><span class="sr-only">Reset sandi</span>
+                                        </button>
+                                        <button type="button" class="teacher-row-action teacher-row-action-delete" :aria-label="`Hapus ${t.name}`" title="Hapus data guru" @click="deleteTeacher(t)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg><span class="sr-only">Hapus</span>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -308,6 +311,27 @@ const submitImport = () => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="teacher-mobile-list" aria-label="Daftar guru">
+                    <article v-for="t in teachers.data" :key="t.id" class="teacher-mobile-card">
+                        <div class="teacher-mobile-top">
+                            <div><h2>{{ t.name }}</h2><p>{{ t.nip || 'NIP belum diisi' }} · {{ t.employment_status || 'Status belum diisi' }}</p></div>
+                            <span class="teacher-mobile-status" :class="t.is_active ? 'is-active' : ''">{{ t.is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                        </div>
+                        <div class="teacher-mobile-details">
+                            <span>{{ t.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
+                            <span>{{ t.homeroom_class_groups?.length ? `Wali ${t.homeroom_class_groups.map(group => group.name).join(', ')}` : 'Belum menjadi wali kelas' }}</span>
+                            <span>{{ t.email || t.phone || 'Kontak belum diisi' }}</span>
+                        </div>
+                        <p v-if="can_manage" class="teacher-mobile-password">Status akun: <span class="teacher-account-status" :class="`is-${t.account_status ?? 'unavailable'}`">{{ accountLabels[t.account_status ?? 'unavailable'] }}</span></p>
+                        <div v-if="can_manage" class="teacher-mobile-actions">
+                            <button type="button" @click="openEdit(t)">Ubah</button>
+                            <button type="button" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" @click="resetPassword(t)">Reset sandi</button>
+                            <button type="button" class="teacher-mobile-delete" @click="deleteTeacher(t)">Hapus</button>
+                        </div>
+                    </article>
+                    <p v-if="teachers.data.length === 0" class="teacher-mobile-empty">Tidak ada data guru yang cocok dengan filter.</p>
                 </div>
 
                 <div class="px-5 py-3.5 border-t border-slate-100 flex flex-wrap gap-3 items-center justify-between text-xs text-slate-500">
@@ -458,9 +482,95 @@ const submitImport = () => {
 
 <style scoped>
 .teacher-page { min-width: 0; }
-.teacher-page .secondary-button { white-space: nowrap; }
+.teacher-page :deep(.page-heading) { margin-bottom: 0; }
+.teacher-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.teacher-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
+.teacher-page-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.55; }
+.teacher-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
+.teacher-action-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .45rem; padding: .65rem .9rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: .65rem; font-size: .8rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, border-color .16s ease, color .16s ease; }
+.teacher-action-button:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }
+.teacher-action-add { color: #fff; background: var(--primary); border-color: var(--primary); box-shadow: 0 5px 12px rgb(50 105 188 / 16%); }
+.teacher-action-add:hover { color: #fff; background: var(--primary-strong); }
+.teacher-action-import { color: var(--primary); border-color: var(--primary); }
+.teacher-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.teacher-stat { display: grid; gap: .3rem; min-width: 0; padding: 1rem 1.2rem; border-top: 3px solid transparent; }
+.teacher-stat span { color: var(--ink-soft); font-size: .82rem; font-weight: 600; }
+.teacher-stat strong { color: var(--ink); font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+.teacher-stat small { color: var(--ink-faint); font-size: .72rem; line-height: 1.4; }
+.teacher-stat-total { border-top-color: #3269bc; background: color-mix(in srgb, #3269bc 7%, var(--surface)); }
+.teacher-stat-active { border-top-color: #3d9b78; background: color-mix(in srgb, #3d9b78 7%, var(--surface)); }
+.teacher-stat-inactive { border-top-color: #ad7c2b; background: color-mix(in srgb, #ad7c2b 7%, var(--surface)); }
+.teacher-retirement-summary { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }
+.teacher-retirement-summary > div { display: grid; gap: .2rem; padding: .78rem 1rem; background: var(--surface); }
+.teacher-retirement-summary span { color: var(--ink-soft); font-size: .76rem; }
+.teacher-retirement-summary strong { color: var(--ink); font-size: 1.15rem; line-height: 1.1; }
+.teacher-retirement-summary strong.is-warning { color: #9a6508; }
+.teacher-filterbar { gap: .75rem; }
+.teacher-filterbar :deep(.table-search) { flex: 1 1 280px; min-width: 230px; }
+.teacher-filter-controls { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: .5rem; }
+.teacher-filter-select { min-height: 44px; flex: 1 1 160px; min-width: 150px; padding: .65rem .75rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); color: var(--ink); font-size: .8rem; }
+.teacher-filter-submit { color: #fff; background: var(--primary); border-color: var(--primary); }
+.teacher-filter-submit:hover { color: #fff; background: var(--primary-strong); }
+.teacher-table { min-width: 1160px; }
+.teacher-table thead { background: var(--surface-subtle); color: var(--ink-faint); }
+.teacher-table thead th { border-bottom: 1px solid var(--line); font-size: .72rem; font-weight: 800; letter-spacing: .04em; line-height: 1.3; white-space: nowrap; }
+.teacher-table tbody tr { background: var(--surface); border-bottom: 1px solid var(--line); transition: background-color .18s ease, box-shadow .18s ease; }
+.teacher-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface)); box-shadow: inset 3px 0 0 var(--primary); }
+.teacher-table td { vertical-align: middle; }
+.teacher-actions-heading, .teacher-actions-cell { position: sticky; right: 0; width: 174px; min-width: 174px; }
+.teacher-actions-heading { z-index: 3; background: var(--surface-subtle); box-shadow: -8px 0 14px rgb(17 38 64 / 12%); }
+.teacher-actions-cell { z-index: 2; background: var(--surface); box-shadow: -8px 0 14px rgb(24 48 78 / 8%); }
+.teacher-table tbody tr:hover .teacher-actions-cell { background: var(--surface-subtle) !important; }
+.teacher-account-status { display: inline-block; padding: .25rem .55rem; border-radius: 999px; color: var(--ink-soft); background: var(--surface-strong); font-size: .72rem; line-height: 1.25; white-space: nowrap; }
+.teacher-account-status.is-changed { color: var(--green); background: var(--green-soft); }
+.teacher-account-status.is-default { color: #9a6508; background: #fff7dc; }
+.teacher-account-status.is-no_account, .teacher-account-status.is-unavailable { color: var(--ink-soft); background: var(--surface-strong); }
+.teacher-row-actions { display: flex; align-items: center; gap: .4rem; margin-top: .55rem; white-space: nowrap; }
+.teacher-row-action { display: inline-grid; width: 36px; height: 36px; place-items: center; border: 1px solid transparent; border-radius: .55rem; transition: background .16s ease, box-shadow .16s ease, transform .16s ease; }
+.teacher-row-action svg { width: 15px; height: 15px; stroke-width: 2; }
+.teacher-row-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 10px rgb(24 48 78 / 12%); }
+.teacher-row-action:disabled { cursor: not-allowed; opacity: .42; }
+.teacher-row-action:focus-visible, .teacher-action-button:focus-visible { outline: 3px solid rgb(50 105 188 / 28%); outline-offset: 2px; }
+.teacher-row-action-edit { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }.teacher-row-action-edit svg { color: var(--edit); }
+.teacher-row-action-reset { color: #9a6508; background: #fff7dc; border-color: #ecd594; }
+.teacher-row-action-delete { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
+.teacher-mobile-list { display: none; }
+@media (max-width: 1100px) { .teacher-table { min-width: 1040px; } .teacher-filter-controls { flex-basis: 100%; } }
+@media (max-width: 720px) {
+    .teacher-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+    .teacher-action-add { grid-column: 1 / -1; }
+    .teacher-action-button { width: 100%; }
+    .teacher-retirement-summary { grid-template-columns: 1fr 1fr; }
+    .teacher-retirement-summary > div:first-child { grid-column: 1 / -1; }
+    .teacher-filterbar { align-items: stretch; }
+    .teacher-filterbar :deep(.table-search) { min-width: 0; }
+    .teacher-filter-controls { display: grid; grid-template-columns: 1fr 1fr; }
+    .teacher-filter-select, .teacher-filter-controls .secondary-button { width: 100%; min-width: 0; }
+    .teacher-filter-controls .teacher-filter-select:last-of-type, .teacher-filter-submit { grid-column: 1 / -1; }
+    .teacher-filter-controls .secondary-button { justify-content: center; }
+    .teacher-filter-controls .secondary-button:first-of-type { grid-column: 1; }
+    .teacher-filter-controls .teacher-filter-submit { grid-column: 2; }
+    .teacher-table-card :deep(.table-scroll) { display: none; }
+    .teacher-mobile-list { display: grid; }
+    .teacher-mobile-card { padding: 1rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .teacher-mobile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .7rem; }
+    .teacher-mobile-top h2 { margin: 0; color: var(--ink); font-size: .92rem; font-weight: 800; line-height: 1.35; }
+    .teacher-mobile-top p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .72rem; line-height: 1.45; }
+    .teacher-mobile-status { flex: 0 0 auto; padding: .25rem .5rem; color: var(--ink-soft); background: var(--surface-strong); border-radius: 999px; font-size: .68rem; font-weight: 700; }
+    .teacher-mobile-status.is-active { color: var(--green); background: var(--green-soft); }
+    .teacher-mobile-details { display: flex; flex-wrap: wrap; gap: .3rem .75rem; margin-top: .75rem; color: var(--ink-soft); font-size: .72rem; line-height: 1.45; }
+    .teacher-mobile-details > span:last-child { flex-basis: 100%; }
+    .teacher-mobile-password { margin: .7rem 0 0; color: var(--ink-soft); font-size: .72rem; }
+    .teacher-mobile-actions { display: flex; gap: .5rem; margin-top: .8rem; }
+    .teacher-mobile-actions button { min-height: 40px; padding: 0 .7rem; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: .55rem; font-size: .72rem; font-weight: 700; }
+    .teacher-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
+    .teacher-mobile-actions .teacher-mobile-delete { margin-left: auto; color: var(--delete); background: var(--delete-soft); }
+    .teacher-mobile-empty { padding: 1.5rem 1rem; color: var(--ink-soft); font-size: .8rem; text-align: center; }
+}
 @media (max-width: 640px) {
-    .teacher-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }
-    .teacher-page select { max-width: 100%; }
+    .teacher-page :deep(.page-heading) { align-items: stretch; flex-direction: column; gap: 1rem; }
+    .teacher-summary-grid { grid-template-columns: 1fr 1fr; }
+    .teacher-filter-controls { grid-template-columns: 1fr; }
+    .teacher-filter-controls .teacher-filter-select:last-of-type, .teacher-filter-controls .secondary-button:first-of-type, .teacher-filter-submit { grid-column: 1; }
 }
 </style>

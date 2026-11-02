@@ -100,14 +100,12 @@ const submitAssignHomeroom = () => {
     <AppLayout title="Rombongan Belajar & Penugasan Wali Kelas">
         <Head title="Rombongan Belajar — School Suite" />
 
-        <div class="view class-page space-y-6">
-            <!-- Header bar -->
+        <div class="view class-page space-y-5">
             <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Rombongan Belajar (Kelas)</h1>
-                    <p class="text-sm text-slate-500 mt-1">
-                        Struktur kelas per tahun ajaran, kapasitas, dan penetapan wali kelas.
-                    </p>
+                    <p class="class-page-kicker">Akademik · Struktur kelas</p>
+                    <h1 class="class-page-title">Rombongan Belajar</h1>
+                    <p class="class-page-summary">Atur rombel, kapasitas siswa, dan penetapan wali kelas untuk setiap tahun ajaran.</p>
                 </div>
 
                 <div class="class-heading-controls flex flex-wrap items-center gap-3">
@@ -124,7 +122,7 @@ const submitAssignHomeroom = () => {
                         </select>
                     </div>
                     <select v-if="terms.length" v-model="selectedTerm" aria-label="Semester" class="rounded-lg border px-3 py-2 text-sm" @change="changeTerm"><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.name }}{{ term.is_active ? ' (Aktif)' : '' }}</option></select>
-                    <button v-if="can_manage" type="button" class="primary-button" :disabled="!selectedYear" @click="openAdd">Tambah rombel</button>
+                    <button v-if="can_manage" type="button" class="class-action-button class-action-add" :disabled="!selectedYear" @click="openAdd">Tambah rombel</button>
                 </div>
             </div>
 
@@ -137,9 +135,9 @@ const submitAssignHomeroom = () => {
             </div>
             <p v-if="!active_year" class="panel p-4">Belum ada tahun ajaran. Atur tahun ajaran melalui Pengaturan Akademik terlebih dahulu.</p>
             <p v-else-if="!active_term" class="panel p-4">Tahun ajaran ini belum memiliki semester. Jumlah siswa ditampilkan nol sampai semester tersedia.</p>
-            <div class="panel p-4 flex flex-wrap gap-3">
-                <input v-model="search" aria-label="Cari nama rombel" placeholder="Cari nama rombel..." type="search" class="min-w-0 flex-1 rounded-lg border px-3 py-2" />
-                <select v-model="grade" aria-label="Filter tingkat" class="rounded-lg border px-3 py-2"><option value="">Semua tingkat</option><option v-for="level in 12" :key="level" :value="String(level)">Kelas {{ level }}</option></select>
+            <div class="panel class-filterbar">
+                <label class="class-search-field"><span class="sr-only">Cari nama rombel</span><input v-model="search" aria-label="Cari nama rombel" placeholder="Cari nama rombel..." type="search" /></label>
+                <select v-model="grade" aria-label="Filter tingkat" class="class-filter-select"><option value="">Semua tingkat</option><option v-for="level in 12" :key="level" :value="String(level)">Kelas {{ level }}</option></select>
                 <button type="button" class="secondary-button" @click="search = ''; grade = ''">Reset filter</button>
                 <p class="class-filter-count" role="status">Menampilkan {{ visibleClasses.length }} dari {{ classes.length }} rombel</p>
             </div>
@@ -193,12 +191,12 @@ const submitAssignHomeroom = () => {
                             v-if="can_manage"
                             type="button"
                             @click="openHomeroomModal(cls)"
-                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+                            class="class-link-action"
                         >
                             {{ cls.homeroom_teacher ? 'Ubah Wali Kelas' : 'Tetapkan Wali Kelas' }}
                         </button>
-                        <button v-if="can_manage" type="button" class="secondary-button" :aria-label="`Ubah rombel ${cls.name}`" @click="openEdit(cls)">Ubah</button>
-                        <button v-if="can_manage" type="button" class="secondary-button text-red-700" :aria-label="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)">Hapus</button>
+                        <button v-if="can_manage" type="button" class="class-card-action" :aria-label="`Ubah rombel ${cls.name}`" @click="openEdit(cls)">Ubah</button>
+                        <button v-if="can_manage" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)">Hapus</button>
                     </div>
                 </article>
 
@@ -293,10 +291,23 @@ const submitAssignHomeroom = () => {
 <style scoped>
 .class-page { min-width: 0; }
 .class-page select { max-width: 100%; }
+.class-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.class-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
+.class-page-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.55; }
 .class-page .page-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; }
 .class-page .page-heading > div:first-child { min-width: 0; }
 .class-page .page-heading h1 { max-width: 23ch; }
 .class-heading-controls { justify-content: flex-end; }
+.class-action-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: .65rem .9rem; border: 1px solid var(--primary); border-radius: .65rem; background: var(--primary); color: #fff; font-size: .8rem; font-weight: 700; white-space: nowrap; box-shadow: 0 5px 12px rgb(50 105 188 / 16%); }
+.class-action-button:hover { background: var(--primary-strong); }
+.class-action-button:disabled { cursor: not-allowed; opacity: .55; }
+.class-filterbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(160px, .4fr) auto; align-items: center; gap: .65rem; padding: .8rem 1rem; }
+.class-search-field input, .class-filter-select { width: 100%; min-height: 42px; padding: .62rem .72rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: .82rem; }
+.class-search-field input:focus, .class-filter-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+.class-link-action { min-height: 38px; padding: .45rem .65rem; border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line)); border-radius: .6rem; background: var(--primary-soft); color: var(--primary); font-size: .72rem; font-weight: 800; }
+.class-card-action { min-height: 38px; padding: .45rem .75rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink-soft); font-size: .72rem; font-weight: 800; }
+.class-card-action:hover, .class-link-action:hover { border-color: var(--primary); color: var(--primary-strong); }
+.class-card-action-danger { color: var(--red); }
 .class-stat { display: grid; gap: .35rem; min-width: 0; border-top: 3px solid transparent; }
 .class-stat p { margin: 0; color: var(--ink-soft); font-size: .8rem; font-weight: 600; }
 .class-stat strong { color: var(--ink); line-height: 1.1; }
@@ -317,5 +328,6 @@ const submitAssignHomeroom = () => {
 @media (max-width: 1200px) { .class-page .page-heading { grid-template-columns: minmax(0, 1fr); }.class-heading-controls { justify-content: flex-start; } }
 @media (max-width: 1200px) { .class-page .class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 820px) { .class-page .class-grid { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.class-heading-controls { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }.class-heading-controls > div { flex-wrap: wrap; }.class-heading-controls select,.class-heading-controls .primary-button { width: 100%; }.class-filter-count { flex-basis: 100%; } }
+@media (max-width: 760px) { .class-filterbar { grid-template-columns: minmax(0, 1fr) minmax(150px, .55fr); }.class-filterbar > .secondary-button { grid-column: 1 / -1; justify-self: start; }.class-filter-count { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.class-heading-controls { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }.class-heading-controls > div { flex-wrap: wrap; }.class-heading-controls select,.class-heading-controls .class-action-button { width: 100%; }.class-filterbar { grid-template-columns: minmax(0, 1fr); }.class-filterbar > .secondary-button { grid-column: auto; width: 100%; }.class-filter-count { grid-column: auto; } }
 </style>

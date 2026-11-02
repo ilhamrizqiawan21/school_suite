@@ -12,11 +12,25 @@ use App\Modules\Core\Domain\PermissionEnum;
 use App\Modules\Core\Infrastructure\Models\School;
 use Database\Seeders\PilotSchoolSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use LogicException;
 use Tests\TestCase;
 
 class PilotSeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_pilot_seeder_refuses_to_run_in_production(): void
+    {
+        $originalEnvironment = config('app.env');
+        config(['app.env' => 'production']);
+
+        try {
+            $this->expectException(LogicException::class);
+            $this->seed(PilotSchoolSeeder::class);
+        } finally {
+            config(['app.env' => $originalEnvironment]);
+        }
+    }
 
     public function test_pilot_seeder_populates_complete_school_dataset(): void
     {

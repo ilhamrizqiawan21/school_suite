@@ -198,7 +198,7 @@ function formatDate(value: string) {
             <section v-if="exam_results.available && exam_results.items" class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
                 <div><h2 class="font-semibold text-slate-900">Analisis per butir</h2><p class="mt-1 text-xs leading-relaxed text-slate-500">Rasio benar hanya tersedia untuk soal objektif. Rata-rata poin menghitung attempt tanpa skor butir sebagai nol. Nama siswa dan isi jawaban tidak ditampilkan.</p></div>
                 <p class="mt-3 text-xs text-slate-500 lg:hidden">Geser tabel ke samping untuk melihat semua kolom.</p>
-                <div class="mt-4 min-w-0 overflow-x-auto rounded-lg border border-slate-200">
+                <div class="mt-4 min-w-0 overflow-x-auto table-scroll rounded-lg border border-slate-200" tabindex="0" role="region" aria-label="Analisis per butir">
                     <table class="app-table analytics-item-table w-full min-w-[820px] table-fixed text-left text-sm">
                         <colgroup><col class="w-[42%]"><col class="w-[15%]"><col class="w-[13%]"><col class="w-[14%]"><col class="w-[16%]"></colgroup>
                         <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th scope="col" class="px-3 py-3">Butir</th><th scope="col" class="px-3 py-3">Tipe</th><th scope="col" class="px-3 py-3">Terjawab</th><th scope="col" class="px-3 py-3">Benar</th><th scope="col" class="px-3 py-3">Rata-rata poin</th></tr></thead>

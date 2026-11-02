@@ -63,4 +63,11 @@ const confirmImport = () => {
 
 <style scoped>
 .import-preview{display:grid;gap:1rem}.warning-panel{padding:1rem 1.25rem;border:1px solid #f3cc75;border-radius:.75rem;background:#fffbeb;color:#854d0e}.warning-panel ul{margin:.5rem 0 0;padding-left:1.1rem;list-style:disc}.preview-table{padding:0;overflow:hidden}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.875rem}th,td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2e8f0;vertical-align:top}th{background:#f8fafc;color:#475569;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}.row-valid td:first-child{border-left:4px solid #16a34a}.row-invalid td:first-child{border-left:4px solid #dc2626}.valid-label{color:#15803d;font-weight:700}ul{margin:0;padding-left:1.1rem;color:#b91c1c;list-style:disc}.actions{display:flex;justify-content:flex-end;align-items:center;gap:.75rem}
+:global(html[data-theme='dark']) .warning-panel{border-color:color-mix(in srgb,var(--gold) 50%,var(--line));background:var(--gold-soft);color:var(--gold)}
+:global(html[data-theme='dark']) th,:global(html[data-theme='dark']) td{border-bottom-color:var(--line)}
+:global(html[data-theme='dark']) th{background:var(--surface-subtle);color:var(--ink-soft)}
+:global(html[data-theme='dark']) .row-valid td:first-child{border-left-color:var(--green)}
+:global(html[data-theme='dark']) .row-invalid td:first-child{border-left-color:var(--red)}
+:global(html[data-theme='dark']) .valid-label{color:var(--green)}
+:global(html[data-theme='dark']) .import-preview table ul{color:var(--red)}
 </style>

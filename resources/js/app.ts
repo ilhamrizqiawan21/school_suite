@@ -70,8 +70,11 @@ const setupTableScrollAffordances = () => {
     const refreshTableScrollers = () => {
         const currentTableScrollers = new Set<HTMLElement>();
 
-        document.querySelectorAll<HTMLElement>('.table-scroll, .overflow-x-auto').forEach((element) => {
+        document.querySelectorAll<HTMLElement>('.table-scroll, .table-wrap, .table-card, .overflow-x-auto, [class*="table-wrap"]').forEach((element) => {
             const isTableScroller = element.classList.contains('table-scroll')
+                || element.classList.contains('table-wrap')
+                || element.classList.contains('table-card')
+                || Array.from(element.classList).some((className) => className.includes('table-wrap'))
                 || Array.from(element.children).some((child) => child.tagName === 'TABLE');
 
             if (isTableScroller) currentTableScrollers.add(element);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface Requirement { id: number; code: string; label: string; is_required: boolean }
 interface Criterion { id: number; code: string; label: string; weight: number; max_score: number }
@@ -66,6 +66,36 @@ const statusReport = computed(() => props.statuses.map((status) => ({
     ...status,
     count: props.applicants.filter((applicant) => applicant.status === status.value).length,
 })));
+const applicantSearch = ref('');
+const applicantStatusFilter = ref('');
+const applicantTrackFilter = ref('');
+const showApplicantForm = ref(false);
+const applicantStatusSummary = computed(() => [
+    { value: 'needs_revision', label: applicantStatusLabel('needs_revision'), hint: 'Perlu ditindaklanjuti' },
+    { value: 'selection_review', label: applicantStatusLabel('selection_review'), hint: 'Menunggu penilaian' },
+    { value: 'accepted', label: applicantStatusLabel('accepted'), hint: 'Hasil seleksi' },
+]);
+const filteredApplicants = computed(() => {
+    const search = applicantSearch.value.trim().toLowerCase();
+
+    return props.applicants.filter((applicant) => {
+        const searchable = [applicant.registration_no, applicant.name, applicant.nisn, applicant.parent_name, applicant.previous_school]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+        const matchesSearch = !search || searchable.includes(search);
+        const matchesStatus = !applicantStatusFilter.value || applicant.status === applicantStatusFilter.value;
+        const matchesTrack = !applicantTrackFilter.value || String(applicant.track?.id ?? '') === applicantTrackFilter.value;
+
+        return matchesSearch && matchesStatus && matchesTrack;
+    });
+});
+const hasApplicantFilters = computed(() => Boolean(applicantSearch.value || applicantStatusFilter.value || applicantTrackFilter.value));
+function resetApplicantFilters() {
+    applicantSearch.value = '';
+    applicantStatusFilter.value = '';
+    applicantTrackFilter.value = '';
+}
 const totalQuota = computed(() => props.tracks.reduce((total, track) => total + track.quota, 0));
 const periodStatusLabel = computed(() => selectedPeriod.value ? (periodStatusLabels[selectedPeriod.value.status] ?? selectedPeriod.value.status) : 'Belum ada periode');
 const workflowStatusLabels: Record<string, string> = {
@@ -74,6 +104,139 @@ const workflowStatusLabels: Record<string, string> = {
 };
 const applicantStatusLabel = (value: string) => props.statuses.find((status) => status.value === value)?.label ?? workflowStatusLabels[value] ?? value;
 const documentStatusLabel = (value: string) => workflowStatusLabels[value] ?? value;
+const documentSearch = ref('');
+const documentStatusFilter = ref('');
+const documentSummary = computed(() => {
+    const documents = props.applicants.flatMap((applicant) => applicant.documents);
+
+    return {
+        applicants: props.applicants.length,
+        total: documents.length,
+        valid: documents.filter((document) => document.status === 'valid').length,
+        pending: documents.filter((document) => document.status === 'pending').length,
+        needsRevision: documents.filter((document) => document.status === 'needs_revision').length,
+    };
+});
+const filteredDocumentApplicants = computed(() => {
+    const search = documentSearch.value.trim().toLowerCase();
+
+    return props.applicants.filter((applicant) => {
+        const searchable = [applicant.registration_no, applicant.name, applicant.nisn, applicant.previous_school]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+        const matchesSearch = !search || searchable.includes(search);
+        const matchesStatus = !documentStatusFilter.value || applicant.documents.some((document) => document.status === documentStatusFilter.value);
+
+        return matchesSearch && matchesStatus;
+    });
+});
+const hasDocumentFilters = computed(() => Boolean(documentSearch.value || documentStatusFilter.value));
+const applicantDocumentSummary = (applicant: Applicant) => {
+    const documents = applicant.documents;
+    if (!documents.length) return { label: 'Belum ada berkas', className: 'document-summary-empty' };
+    if (documents.some((document) => document.status === 'needs_revision')) return { label: 'Perlu perbaikan', className: 'document-summary-revision' };
+    if (documents.every((document) => document.status === 'valid')) return { label: 'Lengkap & valid', className: 'document-summary-valid' };
+    return { label: 'Menunggu verifikasi', className: 'document-summary-pending' };
+};
+function resetDocumentFilters() {
+    documentSearch.value = '';
+    documentStatusFilter.value = '';
+}
+const selectionSearch = ref('');
+const selectionTrackFilter = ref('');
+const selectionDecisionFilter = ref('');
+const selectionSummary = computed(() => ({
+    applicants: props.applicants.length,
+    ranked: props.applicants.filter((applicant) => applicant.selection_result?.rank !== null && applicant.selection_result?.rank !== undefined).length,
+    evaluated: props.applicants.filter((applicant) => (applicant.selection_result?.total_score ?? 0) > 0).length,
+    decided: props.applicants.filter((applicant) => Boolean(applicant.selection_result?.decision)).length,
+}));
+const filteredSelectionApplicants = computed(() => {
+    const search = selectionSearch.value.trim().toLowerCase();
+
+    return props.applicants
+        .filter((applicant) => {
+            const searchable = [applicant.registration_no, applicant.name, applicant.nisn, applicant.previous_school]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            const decision = applicant.selection_result?.decision ?? 'pending';
+
+            return (!search || searchable.includes(search))
+                && (!selectionTrackFilter.value || String(applicant.track?.id ?? '') === selectionTrackFilter.value)
+                && (!selectionDecisionFilter.value || decision === selectionDecisionFilter.value);
+        })
+        .sort((first, second) => (first.selection_result?.rank ?? Number.MAX_SAFE_INTEGER) - (second.selection_result?.rank ?? Number.MAX_SAFE_INTEGER));
+});
+const hasSelectionFilters = computed(() => Boolean(selectionSearch.value || selectionTrackFilter.value || selectionDecisionFilter.value));
+const selectionDecisionLabel = (value?: string | null) => value ? (workflowStatusLabels[value] ?? value) : 'Belum diputuskan';
+const selectionDecisionClass = (value?: string | null) => value ? `selection-decision-${value}` : 'selection-decision-pending';
+function resetSelectionFilters() {
+    selectionSearch.value = '';
+    selectionTrackFilter.value = '';
+    selectionDecisionFilter.value = '';
+}
+const announcementSearch = ref('');
+const announcementTrackFilter = ref('');
+const announcementDecisionFilter = ref('');
+const announcementSummary = computed(() => ({
+    accepted: props.applicants.filter((applicant) => applicant.selection_result?.decision === 'accepted').length,
+    waitlisted: props.applicants.filter((applicant) => applicant.selection_result?.decision === 'waitlisted').length,
+    rejected: props.applicants.filter((applicant) => applicant.selection_result?.decision === 'rejected').length,
+    pending: props.applicants.filter((applicant) => !applicant.selection_result?.decision).length,
+}));
+const filteredAnnouncementApplicants = computed(() => {
+    const search = announcementSearch.value.trim().toLowerCase();
+
+    return props.applicants
+        .filter((applicant) => {
+            const searchable = [applicant.registration_no, applicant.name, applicant.nisn, applicant.previous_school]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            const decision = applicant.selection_result?.decision ?? 'pending';
+
+            return (!search || searchable.includes(search))
+                && (!announcementTrackFilter.value || String(applicant.track?.id ?? '') === announcementTrackFilter.value)
+                && (!announcementDecisionFilter.value || decision === announcementDecisionFilter.value);
+        })
+        .sort((first, second) => (first.selection_result?.rank ?? Number.MAX_SAFE_INTEGER) - (second.selection_result?.rank ?? Number.MAX_SAFE_INTEGER));
+});
+const hasAnnouncementFilters = computed(() => Boolean(announcementSearch.value || announcementTrackFilter.value || announcementDecisionFilter.value));
+function resetAnnouncementFilters() {
+    announcementSearch.value = '';
+    announcementTrackFilter.value = '';
+    announcementDecisionFilter.value = '';
+}
+const reRegistrationSearch = ref('');
+const reRegistrationStatusFilter = ref('');
+const reRegistrationApplicants = computed(() => props.applicants.filter((applicant) => applicant.status === 'accepted' || applicant.status === 're_registered'));
+const reRegistrationStatusKey = (applicant: Applicant) => applicant.status === 're_registered' || Boolean(applicant.re_registration?.student_id) || applicant.re_registration?.status === 'confirmed' ? 'completed' : 'pending';
+const reRegistrationStatusLabel = (applicant: Applicant) => reRegistrationStatusKey(applicant) === 'completed' ? 'Selesai' : 'Menunggu konfirmasi';
+const reRegistrationSummary = computed(() => ({
+    total: reRegistrationApplicants.value.length,
+    completed: reRegistrationApplicants.value.filter((applicant) => reRegistrationStatusKey(applicant) === 'completed').length,
+    pending: reRegistrationApplicants.value.filter((applicant) => reRegistrationStatusKey(applicant) === 'pending').length,
+}));
+const filteredReRegistrationApplicants = computed(() => {
+    const search = reRegistrationSearch.value.trim().toLowerCase();
+
+    return reRegistrationApplicants.value.filter((applicant) => {
+        const searchable = [applicant.registration_no, applicant.name, applicant.nisn, applicant.parent_name, applicant.previous_school]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+
+        return (!search || searchable.includes(search))
+            && (!reRegistrationStatusFilter.value || reRegistrationStatusKey(applicant) === reRegistrationStatusFilter.value);
+    });
+});
+const hasReRegistrationFilters = computed(() => Boolean(reRegistrationSearch.value || reRegistrationStatusFilter.value));
+function resetReRegistrationFilters() {
+    reRegistrationSearch.value = '';
+    reRegistrationStatusFilter.value = '';
+}
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value.slice(0, 10)}T00:00:00`))
     : null;
@@ -83,6 +246,7 @@ const formatDateRange = (start?: string | null, end?: string | null) => {
     if (from && to) return `${from} – ${to}`;
     return from ?? to ?? 'Tanggal belum diatur';
 };
+const memberInitials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
 function periodHref(path: string) {
     return props.selected_period_id ? `${path}?period_id=${props.selected_period_id}` : path;
 }
@@ -126,7 +290,7 @@ function addPeriod() { periodForm.post('/spmb/periode', { forceFormData: true, p
 function addTrack() { trackForm.post('/spmb/jalur', { preserveScroll: true, onSuccess: () => trackForm.reset('code', 'name') }); }
 function addRequirement() { requirementForm.post('/spmb/persyaratan', { preserveScroll: true, onSuccess: () => requirementForm.reset('code', 'label') }); }
 function addCriterion() { criterionForm.post('/spmb/kriteria', { preserveScroll: true, onSuccess: () => criterionForm.reset('code', 'label') }); }
-function addApplicant() { applicantForm.post('/spmb/pendaftar', { preserveScroll: true, onSuccess: () => applicantForm.reset('name', 'nisn', 'birth_date', 'parent_name', 'parent_phone', 'previous_school', 'notes') }); }
+function addApplicant() { applicantForm.post('/spmb/pendaftar', { preserveScroll: true, onSuccess: () => { applicantForm.reset('name', 'nisn', 'birth_date', 'parent_name', 'parent_phone', 'previous_school', 'notes'); showApplicantForm.value = false; } }); }
 function assignTeacher() { committeeForm.post('/spmb/panitia', { preserveScroll: true, onSuccess: () => committeeForm.reset() }); }
 function openPeriod(period: Period) { router.post(`/spmb/periode/${period.id}/status`, { status: 'registration_open' }, { preserveScroll: true }); }
 function rankPeriod() { if (props.selected_period_id) router.post(`/spmb/periode/${props.selected_period_id}/ranking`, {}, { preserveScroll: true }); }
@@ -222,7 +386,6 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                         <option value="">Belum ada periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }} · {{ periodStatusLabels[period.status] ?? period.status }}</option>
                     </select>
                 </label>
-                <div class="spmb-quick-links"><Link :href="periodHref('/spmb/periode')">Periode</Link><Link :href="periodHref('/spmb/jalur')">Jalur & kuota</Link><Link :href="periodHref('/spmb/panitia')">Panitia</Link><Link :href="periodHref('/spmb/pendaftar')">Pendaftar</Link><Link :href="periodHref('/spmb/berkas')">Berkas</Link><Link :href="periodHref('/spmb/seleksi')">Seleksi</Link><Link :href="periodHref('/spmb/pengumuman')">Pengumuman</Link><Link :href="periodHref('/spmb/daftar-ulang')">Daftar ulang</Link><Link :href="periodHref('/spmb/laporan')">Laporan</Link></div>
             </section>
 
             <section v-if="section === 'periods'" class="panel admissions-panel">
@@ -233,18 +396,52 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 
             <section v-if="section === 'tracks'" class="panel admissions-panel"><div class="table-title"><div><h2>Jalur, kuota, berkas & kriteria</h2><p>Konfigurasi mengikuti juknis periode, bukan angka hardcode.</p></div></div><form v-if="can_manage_committee && selected_period_id" class="admissions-form" @submit.prevent="addTrack"><label>Jalur<select v-model="trackForm.code"><option value="">Pilih jalur</option><option value="DOMISILI">Domisili</option><option value="AFIRMASI">Afirmasi</option><option value="PRESTASI">Prestasi</option><option value="MUTASI">Mutasi</option></select></label><label>Nama jalur<input v-model="trackForm.name" required /></label><label>Kuota<input v-model.number="trackForm.quota" type="number" min="1" required /></label><div class="admissions-form-actions"><button class="primary-button" type="submit">Tambah jalur</button></div></form><article v-for="track in tracks" :key="track.id" class="track-card"><div><strong>{{ track.name }}</strong><span>{{ track.code }} · kuota {{ track.quota }}</span></div><small>{{ track.requirements.length }} persyaratan · {{ track.criteria.length }} kriteria</small></article><form v-if="can_manage_committee && tracks.length" class="admissions-form compact-form" @submit.prevent="addRequirement"><label>Jalur<select v-model="requirementForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Kode berkas<input v-model="requirementForm.code" required placeholder="KK" /></label><label>Nama berkas<input v-model="requirementForm.label" required placeholder="Kartu Keluarga" /></label><button class="secondary-button" type="submit">Tambah berkas</button></form><form v-if="can_manage_committee && tracks.length" class="admissions-form compact-form" @submit.prevent="addCriterion"><label>Jalur<select v-model="criterionForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Kode kriteria<input v-model="criterionForm.code" required placeholder="NILAI" /></label><label>Nama kriteria<input v-model="criterionForm.label" required placeholder="Nilai seleksi" /></label><label>Bobot<input v-model.number="criterionForm.weight" type="number" min="0.01" step="0.01" /></label><button class="secondary-button" type="submit">Tambah kriteria</button></form></section>
 
-            <section v-if="section === 'committee'" class="panel admissions-panel"><div class="table-title"><div><h2>Panitia & jadwal</h2><p>Panitia guru dapat memverifikasi dan menilai pendaftar yang ditugaskan.</p></div></div><form v-if="can_manage_committee" class="admissions-assign-form" @submit.prevent="assignTeacher"><select v-model="committeeForm.user_id" required><option value="">Pilih guru</option><option v-for="teacher in available_teachers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</option></select><button class="primary-button" type="submit">Tugaskan guru</button></form><ul class="committee-list"><li v-for="member in committee" :key="member.id"><div><strong>{{ member.name }}</strong><span>{{ member.email }}</span></div><button v-if="can_manage_committee" class="secondary-button" type="button" @click="removeMember(member)">Cabut</button></li></ul></section>
+            <template v-if="section === 'committee'">
+                <section class="panel admissions-panel committee-panel">
+                    <div class="table-title committee-heading"><div><span class="section-overline">Penugasan tim</span><h2>Panitia & jadwal</h2><p>Atur guru yang bertugas memverifikasi berkas dan menilai pendaftar pada periode ini.</p></div><span class="committee-count"><strong>{{ committee.length }}</strong> guru ditugaskan</span></div>
+                    <div class="committee-management">
+                        <form v-if="can_manage_committee" class="admissions-assign-form" @submit.prevent="assignTeacher"><label for="committee-teacher">Tambah anggota panitia<select id="committee-teacher" v-model="committeeForm.user_id" required><option value="">Pilih guru</option><option v-for="teacher in available_teachers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</option></select></label><button class="primary-button" type="submit">Tugaskan guru</button></form>
+                        <div class="committee-guidance"><span class="guidance-mark" aria-hidden="true">✓</span><div><strong>Peran panitia</strong><p>Anggota yang ditugaskan dapat membantu proses verifikasi dan penilaian pendaftar.</p></div></div>
+                    </div>
+                    <div class="committee-list-heading"><div><h3>Panitia aktif</h3><p>Daftar guru yang saat ini menerima penugasan.</p></div><span>{{ committee.length }} anggota</span></div>
+                    <ul class="committee-list"><li v-for="member in committee" :key="member.id"><div class="committee-member-identity"><span class="member-avatar" aria-hidden="true">{{ memberInitials(member.name) }}</span><span class="committee-member-copy"><strong>{{ member.name }}</strong><span>{{ member.email }}</span></span></div><div class="committee-member-actions"><span class="member-status">Aktif</span><button v-if="can_manage_committee" class="secondary-button" type="button" @click="removeMember(member)">Cabut</button></div></li><li v-if="!committee.length" class="committee-empty"><span class="member-avatar" aria-hidden="true">＋</span><div><strong>Belum ada panitia</strong><span>Tugaskan guru untuk memulai proses penerimaan.</span></div></li></ul>
+                </section>
+                <section v-if="selectedPeriod" class="panel admissions-panel committee-schedule-panel">
+                    <div class="table-title committee-heading"><div><span class="section-overline">Kalender kerja</span><h2>Jadwal penerimaan</h2><p>Gunakan tanggal ini sebagai acuan pembagian tugas dan tindak lanjut panitia.</p></div><span class="status-pill">{{ periodStatusLabel }}</span></div>
+                    <div class="schedule-grid"><article class="schedule-item"><span class="schedule-index">01</span><div><strong>Verifikasi berkas</strong><span>{{ formatDateRange(selectedPeriod.verification_start, selectedPeriod.verification_end) }}</span><small>Pemeriksaan kelengkapan dan validitas dokumen.</small></div></article><article class="schedule-item"><span class="schedule-index">02</span><div><strong>Seleksi & penilaian</strong><span>{{ formatDateRange(selectedPeriod.selection_start, selectedPeriod.selection_end) }}</span><small>Penilaian pendaftar dan penetapan peringkat.</small></div></article><article class="schedule-item"><span class="schedule-index">03</span><div><strong>Pengumuman</strong><span>{{ formatDate(selectedPeriod.announcement_at) ?? 'Tanggal belum diatur' }}</span><small>Publikasi hasil seleksi kepada pendaftar.</small></div></article><article class="schedule-item"><span class="schedule-index">04</span><div><strong>Daftar ulang</strong><span>{{ formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) }}</span><small>Konfirmasi pendaftar diterima menjadi siswa.</small></div></article></div>
+                </section>
+            </template>
 
-            <section v-if="section === 'applicants'" class="panel admissions-panel"><div class="table-title"><div><h2>Pendaftar</h2><p>Satu pendaftaran aktif memilih satu jalur dalam satu periode.</p></div></div><form v-if="can_manage_applicants" class="admissions-form" @submit.prevent="addApplicant"><label>Periode<select v-model="applicantForm.period_id" required><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }}</option></select></label><label>Jalur<select v-model="applicantForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Nama calon siswa<input v-model="applicantForm.name" required /></label><label>NISN<input v-model="applicantForm.nisn" inputmode="numeric" /></label><label>Jenis kelamin<select v-model="applicantForm.gender"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label><label>Tanggal lahir<input v-model="applicantForm.birth_date" type="date" /></label><label>Nama orang tua/wali<input v-model="applicantForm.parent_name" /></label><label>Kontak orang tua<input v-model="applicantForm.parent_phone" /></label><label>Asal sekolah<input v-model="applicantForm.previous_school" /></label><label class="admissions-form-wide">Catatan<textarea v-model="applicantForm.notes" rows="2" /></label><div class="admissions-form-actions admissions-form-wide"><button class="primary-button" type="submit">Simpan pendaftar</button></div></form><div class="admissions-applicants"><article v-for="applicant in applicants" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill">{{ applicantStatusLabel(applicant.status) }}</span></div><div class="admissions-applicant-details"><span>{{ applicant.track?.name || 'Legacy' }}</span><span>NISN {{ applicant.nisn || '—' }}</span><span>Asal {{ applicant.previous_school || '—' }}</span></div><form v-if="can_manage_applicants" class="admissions-status-form" @submit.prevent="updateApplicant(applicant, $event)"><label>Status<select name="status" :value="applicant.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label><label>Catatan<textarea name="notes" rows="2">{{ applicant.notes }}</textarea></label><button class="secondary-button" type="submit">Simpan</button></form></article><p v-if="!applicants.length" class="empty-state">Belum ada pendaftar pada periode ini.</p></div></section>
+            <section v-if="section === 'applicants'" class="panel admissions-panel applicants-panel">
+                <div class="applicants-page-heading"><div class="table-title"><div><span class="section-overline">Data penerimaan</span><h2>Pendaftar</h2><p>Kelola data calon siswa dan pantau posisi mereka dalam alur penerimaan.</p></div></div><button v-if="can_manage_applicants" class="primary-button" type="button" :aria-expanded="showApplicantForm" aria-controls="applicant-create-form" @click="showApplicantForm = !showApplicantForm">{{ showApplicantForm ? 'Tutup form' : 'Tambah pendaftar' }}</button></div>
+                <div class="applicant-insights" aria-label="Ringkasan pendaftar"><div class="applicant-insight is-total"><span>Total pendaftar</span><strong>{{ applicants.length }}</strong><small>Pada periode terpilih</small></div><div v-for="status in applicantStatusSummary" :key="status.value" class="applicant-insight"><span>{{ status.label }}</span><strong>{{ applicants.filter((applicant) => applicant.status === status.value).length }}</strong><small>{{ status.hint }}</small></div></div>
+                <form v-if="can_manage_applicants && showApplicantForm" id="applicant-create-form" class="admissions-form applicant-create-form" @submit.prevent="addApplicant"><div class="form-section-intro"><span class="section-overline">Data baru</span><h3>Tambah pendaftar</h3><p>Lengkapi identitas dasar calon siswa, lalu simpan untuk masuk ke alur verifikasi.</p></div><label>Periode<select v-model="applicantForm.period_id" required><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }}</option></select></label><label>Jalur<select v-model="applicantForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Nama calon siswa<input v-model="applicantForm.name" required /></label><label>NISN<input v-model="applicantForm.nisn" inputmode="numeric" /></label><label>Jenis kelamin<select v-model="applicantForm.gender"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label><label>Tanggal lahir<input v-model="applicantForm.birth_date" type="date" /></label><label>Nama orang tua/wali<input v-model="applicantForm.parent_name" /></label><label>Kontak orang tua<input v-model="applicantForm.parent_phone" /></label><label>Asal sekolah<input v-model="applicantForm.previous_school" /></label><label class="admissions-form-wide">Catatan<textarea v-model="applicantForm.notes" rows="2" /></label><div class="admissions-form-actions admissions-form-wide"><button class="primary-button" type="submit">Simpan pendaftar</button></div></form>
+                <div class="applicant-list-panel"><div class="applicant-list-heading"><div><h3>Daftar pendaftar</h3><p>{{ filteredApplicants.length }} dari {{ applicants.length }} data ditampilkan</p></div><span v-if="hasApplicantFilters" class="filter-result-label">Filter aktif</span></div><div class="applicant-filters"><label class="applicant-search-field"><span>Cari pendaftar</span><input v-model="applicantSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Status</span><select v-model="applicantStatusFilter"><option value="">Semua status</option><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label><label><span>Jalur</span><select v-model="applicantTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><button v-if="hasApplicantFilters" class="filter-reset-button" type="button" @click="resetApplicantFilters">Reset filter</button></div><div class="admissions-applicants"><article v-for="applicant in filteredApplicants" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill" :class="`status-${applicant.status}`">{{ applicantStatusLabel(applicant.status) }}</span></div><div class="admissions-applicant-details"><span>{{ applicant.track?.name || 'Belum memilih jalur' }}</span><span>NISN {{ applicant.nisn || '—' }}</span><span>Asal {{ applicant.previous_school || '—' }}</span></div><form v-if="can_manage_applicants" class="admissions-status-form" @submit.prevent="updateApplicant(applicant, $event)"><label>Status<select name="status" :value="applicant.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label><label>Catatan<textarea name="notes" rows="2">{{ applicant.notes }}</textarea></label><button class="secondary-button" type="submit">Simpan perubahan</button></form></article><p v-if="!filteredApplicants.length" class="empty-state">{{ hasApplicantFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar pada periode ini.' }}</p></div></div>
+            </section>
 
-            <section v-if="section === 'documents'" class="panel admissions-panel"><div class="table-title"><div><h2>Verifikasi berkas</h2><p>Unggah dan periksa persyaratan setiap pendaftar.</p></div></div><article v-for="applicant in applicants" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div></div><div class="document-list"><div v-for="document in applicant.documents" :key="document.id" class="document-row"><span>{{ document.requirement?.label || document.original_name }}</span><span class="status-pill">{{ document.status }}</span><a :href="`/spmb/berkas/${document.id}/unduh`">Unduh</a><button v-if="can_manage_applicants" class="secondary-button" type="button" @click="verifyDocument(document, 'valid')">Valid</button><button v-if="can_manage_applicants" class="link-danger" type="button" @click="verifyDocument(document, 'needs_revision')">Perlu perbaikan</button></div></div><form v-if="can_manage_applicants && applicant.track" class="upload-form" @submit.prevent="uploadDocument(applicant)"><select v-model="documentForm(applicant).requirement_id"><option value="">Berkas umum</option><option v-for="requirement in applicant.track.requirements" :key="requirement.id" :value="requirement.id">{{ requirement.label }}</option></select><input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="documentForm(applicant).file = ($event.target as HTMLInputElement).files?.[0] || null" required /><button class="secondary-button" type="submit">Unggah</button></form></article><p v-if="!applicants.length" class="empty-state">Belum ada pendaftar untuk diverifikasi.</p></section>
+            <section v-if="section === 'documents'" class="panel admissions-panel documents-panel">
+                <div class="documents-page-heading"><div class="table-title"><div><span class="section-overline">Pemeriksaan dokumen</span><h2>Verifikasi berkas</h2><p>Periksa kelengkapan dokumen setiap pendaftar sebelum masuk ke tahap berikutnya.</p></div></div></div>
+                <div class="document-insights" aria-label="Ringkasan verifikasi"><div class="document-insight is-total"><span>Pendaftar</span><strong>{{ documentSummary.applicants }}</strong><small>Dalam periode ini</small></div><div class="document-insight"><span>Total berkas</span><strong>{{ documentSummary.total }}</strong><small>Dokumen yang diunggah</small></div><div class="document-insight is-valid"><span>Valid</span><strong>{{ documentSummary.valid }}</strong><small>Sudah terverifikasi</small></div><div class="document-insight is-attention"><span>Perlu perhatian</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div></div>
+                <div class="document-list-panel"><div class="document-list-heading"><div><h3>Daftar berkas</h3><p>{{ filteredDocumentApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan</p></div><span v-if="hasDocumentFilters" class="filter-result-label">Filter aktif</span></div><div class="document-filters"><label class="document-search-field"><span>Cari pendaftar</span><input v-model="documentSearch" type="search" placeholder="Nama atau nomor pendaftaran..." /></label><label><span>Status berkas</span><select v-model="documentStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu verifikasi</option><option value="valid">Valid</option><option value="needs_revision">Perlu perbaikan</option></select></label><button v-if="hasDocumentFilters" class="filter-reset-button" type="button" @click="resetDocumentFilters">Reset filter</button></div><div class="admissions-applicants"><article v-for="applicant in filteredDocumentApplicants" :key="applicant.id" class="admissions-applicant document-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p class="document-applicant-meta">{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.documents.length }} berkas</p></div><span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }}</span></div><div class="document-list"><div v-for="document in applicant.documents" :key="document.id" class="document-row"><div class="document-main"><span class="document-mark" aria-hidden="true">▤</span><div><strong>{{ document.requirement?.label || document.original_name }}</strong><small>{{ document.original_name }}</small></div></div><span class="status-pill document-status-pill" :class="`document-status-${document.status}`">{{ documentStatusLabel(document.status) }}</span><a :href="`/spmb/berkas/${document.id}/unduh`">Unduh</a><div v-if="can_manage_applicants" class="document-actions"><button class="secondary-button" type="button" @click="verifyDocument(document, 'valid')">Tandai valid</button><button class="link-danger" type="button" @click="verifyDocument(document, 'needs_revision')">Minta perbaikan</button></div></div></div><form v-if="can_manage_applicants && applicant.track" class="upload-form" @submit.prevent="uploadDocument(applicant)"><select v-model="documentForm(applicant).requirement_id"><option value="">Berkas umum</option><option v-for="requirement in applicant.track.requirements" :key="requirement.id" :value="requirement.id">{{ requirement.label }}</option></select><label class="document-upload-file"><span>Tambah dokumen</span><span class="document-file-picker"><input class="document-file-input" type="file" accept=".pdf,.jpg,.jpeg,.png" @change="documentForm(applicant).file = ($event.target as HTMLInputElement).files?.[0] || null" required /><span class="document-file-button">Pilih file</span><span class="document-file-name">{{ documentForm(applicant).file?.name || 'Belum ada file dipilih' }}</span></span></label><button class="secondary-button" type="submit">Unggah berkas</button></form></article><p v-if="!filteredDocumentApplicants.length" class="empty-state">{{ hasDocumentFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar untuk diverifikasi.' }}</p></div></div>
+            </section>
 
-            <section v-if="section === 'selection' || section === 'announcement'" class="panel admissions-panel"><div class="table-title"><div><h2>{{ section === 'selection' ? 'Seleksi & ranking' : 'Pengumuman' }}</h2><p>Hasil dihitung dari kriteria periode dan keputusan akhir memiliki jejak audit.</p></div><button v-if="section === 'selection' && can_manage_committee" class="primary-button" type="button" @click="rankPeriod">Hitung ranking</button></div><article v-for="applicant in applicants" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill">{{ applicant.selection_result?.decision || 'Belum diputuskan' }} · #{{ applicant.selection_result?.rank || '—' }}</span></div><p class="score-line">Total skor: {{ applicant.selection_result?.total_score || 0 }}</p><div v-if="section === 'selection' && can_manage_applicants" v-for="criterion in applicant.track?.criteria || []" :key="criterion.id" class="score-row"><span>{{ criterion.label }}</span><input v-model="scoreForm(applicant, criterion).score" type="number" min="0" :max="criterion.max_score" /><button class="secondary-button" type="button" @click="saveScore(applicant, criterion)">Simpan nilai</button></div><form v-if="section === 'selection' && can_manage_applicants" class="decision-form" @submit.prevent="finalizeApplicant(applicant)"><select v-model="decisionForm(applicant).decision"><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select><input v-model="decisionForm(applicant).override_reason" placeholder="Alasan keputusan / override" required /><button class="secondary-button" type="submit">Finalisasi</button></form></article><p v-if="!applicants.length" class="empty-state">Belum ada data seleksi.</p></section>
+            <section v-if="section === 'selection'" class="panel admissions-panel selection-panel">
+                <div class="selection-page-heading"><div class="table-title"><div><span class="section-overline">Penilaian kandidat</span><h2>Seleksi & ranking</h2><p>Nilai setiap kriteria, hitung peringkat, lalu tetapkan keputusan akhir dengan jejak audit yang jelas.</p></div></div><button v-if="can_manage_committee" class="primary-button" type="button" @click="rankPeriod">Hitung ranking</button></div>
+                <div class="selection-insights" aria-label="Ringkasan seleksi"><div class="selection-insight is-total"><span>Pendaftar</span><strong>{{ selectionSummary.applicants }}</strong><small>Dalam periode ini</small></div><div class="selection-insight"><span>Sudah dinilai</span><strong>{{ selectionSummary.evaluated }}</strong><small>Memiliki total skor</small></div><div class="selection-insight is-ranked"><span>Sudah diranking</span><strong>{{ selectionSummary.ranked }}</strong><small>Memiliki peringkat</small></div><div class="selection-insight is-decided"><span>Keputusan</span><strong>{{ selectionSummary.decided }}</strong><small>Sudah difinalisasi</small></div></div>
+                <div class="selection-list-panel"><div class="selection-list-heading"><div><h3>Daftar kandidat</h3><p>{{ filteredSelectionApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasSelectionFilters" class="filter-result-label">Filter aktif</span></div><div class="selection-filters"><label class="selection-search-field"><span>Cari kandidat</span><input v-model="selectionSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Jalur</span><select v-model="selectionTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label><span>Keputusan</span><select v-model="selectionDecisionFilter"><option value="">Semua keputusan</option><option value="pending">Belum diputuskan</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label><button v-if="hasSelectionFilters" class="filter-reset-button" type="button" @click="resetSelectionFilters">Reset filter</button></div><div class="selection-applicants"><article v-for="applicant in filteredSelectionApplicants" :key="applicant.id" class="selection-applicant"><div class="selection-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div><div class="selection-rank"><span>Peringkat</span><strong>#{{ applicant.selection_result?.rank || '—' }}</strong></div></div><div class="selection-score-summary"><span>Total skor</span><strong>{{ Number(applicant.selection_result?.total_score || 0).toFixed(2) }}</strong><span class="status-pill" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span></div><div v-if="can_manage_applicants && applicant.track?.criteria?.length" class="selection-criteria"><div v-for="criterion in applicant.track.criteria" :key="criterion.id" class="selection-criterion"><div><strong>{{ criterion.label }}</strong><small>Maks. {{ criterion.max_score }} poin</small></div><div class="selection-score-action"><input v-model="scoreForm(applicant, criterion).score" type="number" min="0" :max="criterion.max_score" :aria-label="`Nilai ${criterion.label} untuk ${applicant.name}`" /><button class="secondary-button" type="button" @click="saveScore(applicant, criterion)">Simpan nilai</button></div></div></div><p v-else-if="!applicant.track?.criteria?.length" class="selection-empty-note">Kriteria penilaian belum diatur untuk jalur ini.</p><form v-if="can_manage_applicants" class="selection-decision-form" @submit.prevent="finalizeApplicant(applicant)"><div class="selection-decision-heading"><div><strong>Keputusan akhir</strong><span>Tetapkan hasil setelah penilaian selesai.</span></div><span class="selection-decision-state" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span></div><div class="selection-decision-fields"><label>Keputusan<select v-model="decisionForm(applicant).decision"><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label><label class="selection-reason-field">Alasan keputusan<input v-model="decisionForm(applicant).override_reason" placeholder="Tuliskan alasan atau catatan keputusan" required /></label><button class="primary-button" type="submit">Simpan keputusan</button></div></form></article><p v-if="!filteredSelectionApplicants.length" class="empty-state">{{ hasSelectionFilters ? 'Tidak ada kandidat yang cocok dengan filter ini.' : 'Belum ada data seleksi.' }}</p></div></div>
+            </section>
+
+            <section v-if="section === 'announcement'" class="panel admissions-panel announcement-panel">
+                <div class="announcement-page-heading"><div class="table-title"><div><span class="section-overline">Hasil penerimaan</span><h2>Pengumuman</h2><p>Lihat hasil seleksi berdasarkan peringkat dan keputusan akhir setiap pendaftar.</p></div></div><div class="announcement-date"><span>Tanggal pengumuman</span><strong>{{ selectedPeriod?.announcement_at ? formatDate(selectedPeriod.announcement_at) : 'Belum diatur' }}</strong></div></div>
+                <div class="announcement-notice"><span class="guidance-mark" aria-hidden="true">i</span><div><strong>Hasil seleksi periode ini</strong><p>Gunakan filter untuk menemukan pendaftar dengan cepat. Data di halaman ini mengikuti keputusan yang sudah ditetapkan pada menu Seleksi & ranking.</p></div></div>
+                <div class="announcement-insights" aria-label="Ringkasan pengumuman"><div class="announcement-insight is-accepted"><span>Diterima</span><strong>{{ announcementSummary.accepted }}</strong><small>Masuk tahap daftar ulang</small></div><div class="announcement-insight is-waitlisted"><span>Cadangan</span><strong>{{ announcementSummary.waitlisted }}</strong><small>Menunggu perubahan kuota</small></div><div class="announcement-insight is-rejected"><span>Tidak diterima</span><strong>{{ announcementSummary.rejected }}</strong><small>Keputusan akhir</small></div><div class="announcement-insight is-pending"><span>Belum diputuskan</span><strong>{{ announcementSummary.pending }}</strong><small>Perlu ditinjau</small></div></div>
+                <div class="announcement-list-panel"><div class="announcement-list-heading"><div><h3>Daftar hasil seleksi</h3><p>{{ filteredAnnouncementApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasAnnouncementFilters" class="filter-result-label">Filter aktif</span></div><div class="announcement-filters"><label class="announcement-search-field"><span>Cari pendaftar</span><input v-model="announcementSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Jalur</span><select v-model="announcementTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label><span>Hasil</span><select v-model="announcementDecisionFilter"><option value="">Semua hasil</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option><option value="pending">Belum diputuskan</option></select></label><button v-if="hasAnnouncementFilters" class="filter-reset-button" type="button" @click="resetAnnouncementFilters">Reset filter</button></div><div class="announcement-applicants"><article v-for="applicant in filteredAnnouncementApplicants" :key="applicant.id" class="announcement-applicant"><div class="announcement-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div><span class="status-pill" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span></div><div class="announcement-result"><div><span>Hasil seleksi</span><strong :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</strong></div><div><span>Peringkat</span><strong>#{{ applicant.selection_result?.rank || '—' }}</strong></div><div><span>Total skor</span><strong>{{ Number(applicant.selection_result?.total_score || 0).toFixed(2) }}</strong></div></div></article><p v-if="!filteredAnnouncementApplicants.length" class="empty-state">{{ hasAnnouncementFilters ? 'Tidak ada hasil yang cocok dengan filter ini.' : 'Belum ada data pengumuman.' }}</p></div></div>
+            </section>
 
             <section v-if="section === 'reports'" class="report-grid">
                 <article class="panel admissions-panel report-panel">
                     <div class="table-title"><div><h2>Rekapitulasi per jalur</h2><p>Jumlah pendaftar dan penggunaan kuota periode yang dipilih.</p></div></div>
-                    <div class="report-table-wrap"><table class="report-table"><thead><tr><th>Jalur</th><th>Pendaftar</th><th>Diterima</th><th>Kuota</th></tr></thead><tbody><tr v-for="track in trackOverview" :key="track.id"><th scope="row">{{ track.name }}</th><td>{{ track.applicants }}</td><td>{{ track.accepted }}</td><td>{{ track.accepted }} / {{ track.quota }}</td></tr><tr v-if="!trackOverview.length"><td colspan="4" class="report-empty">Belum ada jalur pada periode ini.</td></tr></tbody><tfoot><tr><th scope="row">Total</th><td>{{ applicants.length }}</td><td>{{ summary.accepted + summary.re_registered }}</td><td>{{ totalQuota }}</td></tr></tfoot></table></div>
+                    <div class="report-table-wrap table-scroll" tabindex="0" role="region" aria-label="Rekapitulasi pendaftar per jalur"><table class="report-table"><thead><tr><th scope="col">Jalur</th><th scope="col">Pendaftar</th><th scope="col">Diterima</th><th scope="col">Kuota</th></tr></thead><tbody><tr v-for="track in trackOverview" :key="track.id"><th scope="row">{{ track.name }}</th><td>{{ track.applicants }}</td><td>{{ track.accepted }}</td><td>{{ track.accepted }} / {{ track.quota }}</td></tr><tr v-if="!trackOverview.length"><td colspan="4" class="report-empty">Belum ada jalur pada periode ini.</td></tr></tbody><tfoot><tr><th scope="row">Total</th><td>{{ applicants.length }}</td><td>{{ summary.accepted + summary.re_registered }}</td><td>{{ totalQuota }}</td></tr></tfoot></table></div>
                 </article>
                 <article class="panel admissions-panel report-panel">
                     <div class="table-title"><div><h2>Rekapitulasi status</h2><p>Posisi setiap pendaftar dalam alur penerimaan.</p></div></div>
@@ -252,7 +449,12 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                 </article>
             </section>
 
-            <section v-if="section === 're-registration'" class="panel admissions-panel"><div class="table-title"><div><h2>Daftar ulang</h2><p>Pendaftar diterima dibuat menjadi data siswa setelah NIS dikonfirmasi.</p></div></div><article v-for="applicant in applicants.filter((item) => item.status === 'accepted' || item.status === 're_registered')" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill">{{ applicant.re_registration?.status || 'pending' }}</span></div><form v-if="can_manage_applicants && !applicant.re_registration?.student_id" class="upload-form" @submit.prevent="confirmReRegistration(applicant)"><input v-model="reRegistrationForm(applicant).nis" placeholder="NIS siswa" required /><button class="primary-button" type="submit">Konfirmasi daftar ulang</button></form><p v-else class="score-line">Terhubung ke data siswa #{{ applicant.re_registration?.student_id }}</p></article></section>
+            <section v-if="section === 're-registration'" class="panel admissions-panel re-registration-panel">
+                <div class="re-registration-page-heading"><div class="table-title"><div><span class="section-overline">Tahap akhir penerimaan</span><h2>Daftar ulang</h2><p>Konfirmasi pendaftar yang diterima menjadi data siswa dengan mencatat NIS mereka.</p></div></div><div class="re-registration-date"><span>Periode daftar ulang</span><strong>{{ selectedPeriod ? formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) : 'Belum diatur' }}</strong></div></div>
+                <div class="re-registration-notice"><span class="guidance-mark" aria-hidden="true">i</span><div><strong>Alur konfirmasi siswa</strong><p>Masukkan NIS untuk membuat hubungan antara pendaftar yang diterima dan data siswa. Pendaftar yang sudah terhubung tidak perlu dikonfirmasi ulang.</p></div></div>
+                <div class="re-registration-insights" aria-label="Ringkasan daftar ulang"><div class="re-registration-insight is-total"><span>Diterima</span><strong>{{ reRegistrationSummary.total }}</strong><small>Masuk tahap daftar ulang</small></div><div class="re-registration-insight is-pending"><span>Menunggu konfirmasi</span><strong>{{ reRegistrationSummary.pending }}</strong><small>Memerlukan NIS</small></div><div class="re-registration-insight is-completed"><span>Selesai</span><strong>{{ reRegistrationSummary.completed }}</strong><small>Sudah terhubung ke siswa</small></div></div>
+                <div class="re-registration-list-panel"><div class="re-registration-list-heading"><div><h3>Daftar calon siswa</h3><p>{{ filteredReRegistrationApplicants.length }} dari {{ reRegistrationApplicants.length }} pendaftar ditampilkan</p></div><span v-if="hasReRegistrationFilters" class="filter-result-label">Filter aktif</span></div><div class="re-registration-filters"><label class="re-registration-search-field"><span>Cari pendaftar</span><input v-model="reRegistrationSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Status</span><select v-model="reRegistrationStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu konfirmasi</option><option value="completed">Selesai</option></select></label><button v-if="hasReRegistrationFilters" class="filter-reset-button" type="button" @click="resetReRegistrationFilters">Reset filter</button></div><div class="re-registration-applicants"><article v-for="applicant in filteredReRegistrationApplicants" :key="applicant.id" class="re-registration-applicant"><div class="re-registration-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div><span class="status-pill" :class="reRegistrationStatusKey(applicant) === 'completed' ? 're-registration-status-completed' : 're-registration-status-pending'">{{ reRegistrationStatusLabel(applicant) }}</span></div><div class="re-registration-details"><div><span>Nomor induk</span><strong>{{ applicant.re_registration?.student_id ? `Data siswa #${applicant.re_registration.student_id}` : 'Belum terhubung' }}</strong></div><div><span>Jalur penerimaan</span><strong>{{ applicant.track?.name || '—' }}</strong></div><div><span>Status pendaftar</span><strong>Diterima</strong></div></div><form v-if="can_manage_applicants && reRegistrationStatusKey(applicant) === 'pending'" class="re-registration-form" @submit.prevent="confirmReRegistration(applicant)"><label>Masukkan NIS siswa<input v-model="reRegistrationForm(applicant).nis" inputmode="numeric" placeholder="Contoh: 2027001" required /></label><button class="primary-button" type="submit">Konfirmasi daftar ulang</button></form><div v-else class="re-registration-complete"><span class="guidance-mark" aria-hidden="true">✓</span><p><strong>Sudah terhubung ke data siswa</strong><span>Nomor data siswa #{{ applicant.re_registration?.student_id || '—' }}</span></p></div></article><p v-if="!filteredReRegistrationApplicants.length" class="empty-state">{{ hasReRegistrationFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar yang masuk tahap daftar ulang.' }}</p></div></div>
+            </section>
         </div>
     </AppLayout>
 </template>
@@ -270,7 +472,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .overview-period-picker label { color: var(--ink-soft); font-size: .83rem; font-weight: 700; }
 .overview-period-picker select { min-width: min(24rem, 100%); border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .62rem .75rem; color: var(--ink); }
 .overview-period-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.3rem; border-left: 4px solid var(--primary); border-radius: .25rem .85rem .85rem .25rem; background: color-mix(in srgb, var(--primary-soft) 62%, var(--surface)); }
-.period-overline { color: var(--ink-soft); font-size: .8rem; font-weight: 650; }
+.period-overline { color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
 .overview-period-banner h2 { margin: .2rem 0 0; color: var(--ink); font-size: 1.35rem; letter-spacing: -.025em; }
 .period-phase-pill { display: inline-flex; align-items: center; gap: .5rem; border: 1px solid var(--line); border-radius: 999px; padding: .45rem .7rem; color: var(--ink); background: var(--surface); font-size: .8rem; font-weight: 700; white-space: nowrap; }
 .period-phase-pill i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--primary); }
@@ -279,7 +481,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .overview-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; }
 .overview-metric { display: grid; align-content: start; min-height: 7.6rem; padding: .95rem 1rem; border: 1px solid var(--line); border-radius: .8rem; color: inherit; background: var(--surface); text-decoration: none; }
 .overview-metric:hover { border-color: var(--primary); }
-.overview-metric > span { color: var(--ink-soft); font-size: .78rem; font-weight: 650; }
+.overview-metric > span { color: var(--ink-soft); font-size: var(--type-xs); font-weight: var(--weight-semibold); }
 .overview-metric strong { margin-top: .3rem; color: var(--ink); font-size: 1.8rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .overview-metric small { margin-top: .3rem; color: var(--ink-soft); font-size: .72rem; line-height: 1.4; }
 .overview-metric.metric-total { border-top: 3px solid var(--primary); }
@@ -298,12 +500,12 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .phase-track li.is-complete { color: var(--ink-soft); }
 .phase-track li.is-complete i { border-color: var(--primary); background: var(--primary); }
 .phase-track li.is-complete::before { background: var(--primary); }
-.phase-track li.is-current { color: var(--primary); font-weight: 750; }
+.phase-track li.is-current { color: var(--primary); font-weight: var(--weight-bold); }
 .phase-track li.is-current i { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 .period-date-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; margin: 0; border-top: 1px solid var(--line); }
 .period-date-list div { display: flex; justify-content: space-between; gap: .6rem; padding: .62rem 0; border-bottom: 1px solid var(--line); }
 .period-date-list dt { color: var(--ink-soft); font-size: .75rem; }
-.period-date-list dd { margin: 0; color: var(--ink); font-size: .75rem; font-weight: 650; text-align: right; }
+.period-date-list dd { margin: 0; color: var(--ink); font-size: var(--type-xs); font-weight: var(--weight-semibold); text-align: right; }
 .attention-panel { padding-bottom: .55rem; }
 .attention-row { display: grid; grid-template-columns: .65rem minmax(0, 1fr) auto; align-items: center; gap: .7rem; min-height: 4.1rem; border-top: 1px solid var(--line); color: inherit; text-decoration: none; }
 .attention-row:hover strong { color: var(--primary); }
@@ -329,11 +531,259 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .overview-empty-state p { max-width: 30rem; margin: 0 0 1rem; color: var(--ink-soft); font-size: .86rem; line-height: 1.55; }
 .admissions-summary { margin: 0; min-width: min(100%, 32rem); }
 .admissions-panel { padding: 1.25rem; color: var(--ink); background: var(--surface); border-color: var(--line); }
-.period-context { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.applicants-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
+.applicants-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.applicants-page-heading .table-title { margin: 0; }
+.applicants-page-heading .primary-button { flex: 0 0 auto; }
+.applicant-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1.25rem; }
+.applicant-insight { display: grid; gap: .2rem; min-height: 5.9rem; padding: .85rem .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.applicant-insight.is-total { border-top: 3px solid var(--primary); background: var(--primary-soft); }
+.applicant-insight span { color: var(--ink-soft); font-size: .73rem; font-weight: 700; }
+.applicant-insight strong { color: var(--ink); font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.applicant-insight small { color: var(--ink-faint); font-size: .68rem; }
+.applicant-create-form { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1.1rem; margin-bottom: 0; padding: 1.1rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .85rem; background: color-mix(in srgb, var(--primary-soft) 35%, var(--surface)); }
+.form-section-intro { grid-column: 1 / -1; padding-bottom: .25rem; border-bottom: 1px solid color-mix(in srgb, var(--primary) 14%, var(--line)); }
+.form-section-intro h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.form-section-intro p { margin: .3rem 0 0; color: var(--ink-soft); font-size: .78rem; }
+.applicant-list-panel { margin-top: 1.35rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }
+.applicant-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.applicant-list-heading h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.applicant-list-heading p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.filter-result-label { border-radius: 999px; padding: .28rem .55rem; color: var(--primary); background: var(--primary-soft); font-size: .7rem; font-weight: 800; }
+.applicant-filters { display: grid; grid-template-columns: minmax(15rem, 2fr) minmax(9rem, 1fr) minmax(9rem, 1fr) auto; align-items: end; gap: .7rem; margin: .9rem 0 1rem; padding: .8rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.applicant-filters label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.applicant-filters input, .applicant-filters select { width: 100%; min-height: 2.45rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .58rem .7rem; color: var(--ink); font-size: .8rem; }
+.applicant-search-field input { min-width: 0; }
+.filter-reset-button { min-height: 2.45rem; border: 0; border-radius: .6rem; padding: .58rem .7rem; color: var(--primary); background: transparent; font-size: .75rem; font-weight: 800; white-space: nowrap; }
+.filter-reset-button:hover { background: var(--primary-soft); }
+.applicant-list-panel .admissions-applicant { padding: 1rem 1.05rem; }
+.applicant-list-panel .admissions-status-form { margin-top: .15rem; }
+.status-needs_revision { color: #a15c00; background: #fff4d8; }
+.status-accepted, .status-re_registered { color: #138a62; background: #e5f5ee; }
+.status-rejected { color: #b42318; background: #fdebea; }
+.documents-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
+.document-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1.25rem; }
+.document-insight { display: grid; gap: .2rem; min-height: 5.9rem; padding: .85rem .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.document-insight.is-total { border-top: 3px solid var(--primary); background: var(--primary-soft); }
+.document-insight.is-valid { border-top: 3px solid #138a62; }
+.document-insight.is-attention { border-top: 3px solid #d89b32; }
+.document-insight span { color: var(--ink-soft); font-size: .73rem; font-weight: 700; }
+.document-insight strong { color: var(--ink); font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.document-insight small { color: var(--ink-faint); font-size: .68rem; }
+.document-list-panel { margin-top: 1.35rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }
+.document-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.document-list-heading h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.document-list-heading p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.document-filters { display: grid; grid-template-columns: minmax(15rem, 2fr) minmax(12rem, 1fr) auto; align-items: end; gap: .7rem; margin: .9rem 0 1rem; padding: .8rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.document-filters label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.document-filters input, .document-filters select { width: 100%; min-height: 2.45rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .58rem .7rem; color: var(--ink); font-size: .8rem; }
+.document-applicant { padding: 1rem 1.05rem; }
+.document-applicant-meta { margin: .28rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.document-main { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.document-mark { display: grid; flex: 0 0 2rem; place-items: center; width: 2rem; height: 2rem; border-radius: .6rem; color: var(--primary); background: var(--primary-soft); font-size: .9rem; }
+.document-main > div { display: grid; min-width: 0; gap: .18rem; }
+.document-main strong { overflow: hidden; color: var(--ink); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.document-main small { overflow: hidden; color: var(--ink-soft); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.document-row { display: grid; grid-template-columns: minmax(0, 1fr) 10rem 6rem 15rem; align-items: center; gap: .8rem; padding: .7rem .8rem; }
+.document-row > a { display: inline-flex; align-items: center; justify-content: center; justify-self: stretch; min-width: 4.4rem; min-height: 2.3rem; border: 1px solid var(--line); border-radius: .55rem; padding: .5rem .65rem; color: var(--primary); background: var(--surface-subtle); font-size: .72rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.document-row > a:hover { border-color: var(--primary); background: var(--primary-soft); }
+.document-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: .45rem; min-width: 0; padding-left: .7rem; border-left: 1px solid var(--line); }
+.document-actions .secondary-button, .document-actions .link-danger { display: inline-flex; align-items: center; justify-content: center; min-height: 2.3rem; border-radius: .55rem; padding: .5rem .7rem; font-size: .72rem; font-weight: 800; white-space: nowrap; }
+.document-actions .secondary-button { min-width: 5.6rem; }
+.document-actions .link-danger { min-width: 7.7rem; border: 1px solid #f1c9c5; background: #fff8f7; color: #b42318; }
+.document-actions .link-danger:hover { background: #fdebea; }
+.document-status-pill { justify-self: center; text-align: center; }
+.document-status-valid, .document-summary-valid { color: #138a62; background: #e5f5ee; }
+.document-status-needs_revision, .document-summary-revision { color: #a15c00; background: #fff4d8; }
+.document-status-pending, .document-summary-pending { color: #3157a4; background: var(--primary-soft); }
+.document-summary-empty { color: var(--ink-soft); background: var(--surface-subtle); }
+.document-applicant .upload-form { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(18rem, 1.4fr) auto; align-items: end; gap: .7rem; }
+.document-upload-file { display: grid; flex: 1; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.document-file-picker { position: relative; display: flex; align-items: center; min-width: 0; min-height: 2.6rem; overflow: hidden; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); }
+.document-file-input { position: absolute; inset: 0; z-index: 1; width: 100% !important; height: 100%; min-height: 0 !important; opacity: 0; cursor: pointer; }
+.document-file-button { flex: 0 0 auto; margin: .25rem; border: 1px solid var(--line-strong); border-radius: .45rem; padding: .42rem .6rem; color: var(--primary); background: var(--primary-soft); font-size: .72rem; font-weight: 800; }
+.document-file-name { min-width: 0; overflow: hidden; padding: 0 .6rem; color: var(--ink-soft); font-size: .75rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.document-applicant .upload-form > .secondary-button { min-height: 2.6rem; }
+.selection-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
+.selection-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.selection-page-heading .table-title { margin: 0; }
+.selection-page-heading .primary-button { flex: 0 0 auto; }
+.selection-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1.25rem; }
+.selection-insight { display: grid; gap: .2rem; min-height: 5.9rem; padding: .85rem .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.selection-insight.is-total { border-top: 3px solid var(--primary); background: var(--primary-soft); }
+.selection-insight.is-ranked { border-top: 3px solid #3157a4; }
+.selection-insight.is-decided { border-top: 3px solid #138a62; }
+.selection-insight span { color: var(--ink-soft); font-size: .73rem; font-weight: 700; }
+.selection-insight strong { color: var(--ink); font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.selection-insight small { color: var(--ink-faint); font-size: .68rem; }
+.selection-list-panel { margin-top: 1.35rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }
+.selection-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.selection-list-heading h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.selection-list-heading p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.selection-filters { display: grid; grid-template-columns: minmax(15rem, 2fr) minmax(10rem, 1fr) minmax(12rem, 1fr) auto; align-items: end; gap: .7rem; margin: .9rem 0 1rem; padding: .8rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.selection-filters label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.selection-filters input, .selection-filters select { width: 100%; min-height: 2.45rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .58rem .7rem; color: var(--ink); font-size: .8rem; }
+.selection-applicants { display: grid; gap: .85rem; }
+.selection-applicant { border: 1px solid var(--line); border-radius: .85rem; padding: 1rem 1.05rem; background: var(--surface); }
+.selection-applicant-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.selection-applicant-heading p { margin: .3rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.selection-rank { display: grid; justify-items: end; gap: .15rem; min-width: 5.5rem; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); text-align: right; }
+.selection-rank span { color: var(--ink-soft); font-size: .68rem; font-weight: 700; }
+.selection-rank strong { color: var(--primary); font-size: 1.1rem; line-height: 1; }
+.selection-score-summary { display: flex; align-items: center; gap: .55rem; margin-top: .9rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); color: var(--ink-soft); font-size: .76rem; }
+.selection-score-summary strong { color: var(--ink); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.selection-score-summary .status-pill { margin-left: auto; }
+.selection-decision-accepted { color: #138a62; background: #e5f5ee; }
+.selection-decision-waitlisted { color: #a15c00; background: #fff4d8; }
+.selection-decision-rejected { color: #b42318; background: #fdebea; }
+.selection-decision-pending { color: var(--primary); background: var(--primary-soft); }
+.selection-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin-top: .75rem; }
+.selection-criterion { display: flex; align-items: center; justify-content: space-between; gap: .7rem; min-width: 0; padding: .7rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); }
+.selection-criterion > div:first-child { display: grid; min-width: 0; gap: .2rem; }
+.selection-criterion strong { overflow: hidden; color: var(--ink); font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.selection-criterion small { color: var(--ink-faint); font-size: .68rem; }
+.selection-score-action { display: flex; align-items: center; flex: 0 0 auto; gap: .45rem; }
+.selection-score-action input { width: 4.5rem; min-height: 2.35rem; border: 1px solid var(--line-strong); border-radius: .55rem; padding: .5rem .55rem; color: var(--ink); background: var(--surface); text-align: center; }
+.selection-score-action .secondary-button { min-height: 2.35rem; padding: .5rem .65rem; font-size: .72rem; }
+.selection-empty-note { margin: .75rem 0 0; padding: .7rem .8rem; border: 1px dashed var(--line-strong); border-radius: .7rem; color: var(--ink-soft); font-size: .76rem; }
+.selection-decision-form { display: grid; gap: .8rem; margin-top: .9rem; padding: .85rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .8rem; background: color-mix(in srgb, var(--primary-soft) 35%, var(--surface)); }
+.selection-decision-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.selection-decision-heading > div { display: grid; gap: .2rem; }
+.selection-decision-heading strong { color: var(--ink); font-size: .82rem; }
+.selection-decision-heading span:not(.selection-decision-state) { color: var(--ink-soft); font-size: .72rem; }
+.selection-decision-state { border-radius: 999px; padding: .3rem .55rem; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+.selection-decision-fields { display: grid; grid-template-columns: minmax(11rem, .35fr) minmax(16rem, 1fr) auto; align-items: end; gap: .7rem; }
+.selection-decision-fields label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.selection-decision-fields select, .selection-decision-fields input { width: 100%; min-height: 2.55rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .6rem .7rem; color: var(--ink); }
+.selection-decision-fields .primary-button { min-height: 2.55rem; }
+.announcement-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
+.announcement-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.announcement-page-heading .table-title { margin: 0; }
+.announcement-date { display: grid; min-width: 11rem; gap: .25rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: right; }
+.announcement-date span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
+.announcement-date strong { color: var(--primary); font-size: .82rem; }
+.announcement-notice { display: flex; align-items: start; gap: .7rem; margin-top: 1.15rem; padding: .85rem .95rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .8rem; background: var(--primary-soft); }
+.announcement-notice .guidance-mark { flex: 0 0 1.6rem; }
+.announcement-notice div { display: grid; gap: .2rem; }
+.announcement-notice strong { color: var(--ink); font-size: .82rem; }
+.announcement-notice p { margin: 0; color: var(--ink-soft); font-size: .76rem; line-height: 1.45; }
+.announcement-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1.15rem; }
+.announcement-insight { display: grid; gap: .2rem; min-height: 5.9rem; padding: .85rem .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.announcement-insight.is-accepted { border-top: 3px solid #138a62; }
+.announcement-insight.is-waitlisted { border-top: 3px solid #d89b32; }
+.announcement-insight.is-rejected { border-top: 3px solid #b42318; }
+.announcement-insight.is-pending { border-top: 3px solid var(--primary); background: var(--primary-soft); }
+.announcement-insight span { color: var(--ink-soft); font-size: .73rem; font-weight: 700; }
+.announcement-insight strong { color: var(--ink); font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.announcement-insight small { color: var(--ink-faint); font-size: .68rem; }
+.announcement-list-panel { margin-top: 1.35rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }
+.announcement-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.announcement-list-heading h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.announcement-list-heading p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.announcement-filters { display: grid; grid-template-columns: minmax(15rem, 2fr) minmax(10rem, 1fr) minmax(12rem, 1fr) auto; align-items: end; gap: .7rem; margin: .9rem 0 1rem; padding: .8rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.announcement-filters label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.announcement-filters input, .announcement-filters select { width: 100%; min-height: 2.45rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .58rem .7rem; color: var(--ink); font-size: .8rem; }
+.announcement-applicants { display: grid; gap: .85rem; }
+.announcement-applicant { border: 1px solid var(--line); border-radius: .85rem; padding: 1rem 1.05rem; background: var(--surface); }
+.announcement-applicant-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.announcement-applicant-heading p { margin: .3rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.announcement-result { display: grid; grid-template-columns: minmax(12rem, 1.4fr) minmax(8rem, .7fr) minmax(8rem, .7fr); gap: .6rem; margin-top: .9rem; }
+.announcement-result div { display: grid; align-content: center; gap: .2rem; min-height: 3.8rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); }
+.announcement-result span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
+.announcement-result strong { color: var(--ink); font-size: .9rem; }
+.announcement-result strong.selection-decision-accepted { color: #138a62; }
+.announcement-result strong.selection-decision-waitlisted { color: #a15c00; }
+.announcement-result strong.selection-decision-rejected { color: #b42318; }
+.announcement-result strong.selection-decision-pending { color: var(--primary); }
+.re-registration-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
+.re-registration-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.re-registration-page-heading .table-title { margin: 0; }
+.re-registration-date { display: grid; min-width: 13rem; gap: .25rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: right; }
+.re-registration-date span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
+.re-registration-date strong { color: var(--primary); font-size: .82rem; }
+.re-registration-notice { display: flex; align-items: start; gap: .7rem; margin-top: 1.15rem; padding: .85rem .95rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .8rem; background: var(--primary-soft); }
+.re-registration-notice .guidance-mark { flex: 0 0 1.6rem; }
+.re-registration-notice div { display: grid; gap: .2rem; }
+.re-registration-notice strong { color: var(--ink); font-size: .82rem; }
+.re-registration-notice p { margin: 0; color: var(--ink-soft); font-size: .76rem; line-height: 1.45; }
+.re-registration-insights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; margin-top: 1.15rem; }
+.re-registration-insight { display: grid; gap: .2rem; min-height: 5.9rem; padding: .85rem .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.re-registration-insight.is-total { border-top: 3px solid var(--primary); background: var(--primary-soft); }
+.re-registration-insight.is-pending { border-top: 3px solid #d89b32; }
+.re-registration-insight.is-completed { border-top: 3px solid #138a62; }
+.re-registration-insight span { color: var(--ink-soft); font-size: .73rem; font-weight: 700; }
+.re-registration-insight strong { color: var(--ink); font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.re-registration-insight small { color: var(--ink-faint); font-size: .68rem; }
+.re-registration-list-panel { margin-top: 1.35rem; padding-top: 1.15rem; border-top: 1px solid var(--line); }
+.re-registration-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.re-registration-list-heading h3 { margin: 0; color: var(--ink); font-size: 1rem; }
+.re-registration-list-heading p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.re-registration-filters { display: grid; grid-template-columns: minmax(15rem, 2fr) minmax(12rem, 1fr) auto; align-items: end; gap: .7rem; margin: .9rem 0 1rem; padding: .8rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.re-registration-filters label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.re-registration-filters input, .re-registration-filters select { width: 100%; min-height: 2.45rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .58rem .7rem; color: var(--ink); font-size: .8rem; }
+.re-registration-applicants { display: grid; gap: .85rem; }
+.re-registration-applicant { border: 1px solid var(--line); border-radius: .85rem; padding: 1rem 1.05rem; background: var(--surface); }
+.re-registration-applicant-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.re-registration-applicant-heading p { margin: .3rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.re-registration-status-completed { color: #138a62; background: #e5f5ee; }
+.re-registration-status-pending { color: #a15c00; background: #fff4d8; }
+.re-registration-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: .9rem; }
+.re-registration-details div { display: grid; gap: .2rem; min-height: 3.6rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); }
+.re-registration-details span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
+.re-registration-details strong { color: var(--ink); font-size: .8rem; }
+.re-registration-form { display: grid; grid-template-columns: minmax(14rem, 1fr) auto; align-items: end; gap: .7rem; margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--line); }
+.re-registration-form label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.re-registration-form input { width: 100%; min-height: 2.55rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .6rem .7rem; color: var(--ink); }
+.re-registration-form .primary-button { min-height: 2.55rem; }
+.re-registration-complete { display: flex; align-items: center; gap: .65rem; margin-top: .8rem; padding: .7rem .8rem; border: 1px solid #bce5d4; border-radius: .7rem; background: #f0faf5; }
+.re-registration-complete .guidance-mark { flex: 0 0 1.6rem; background: #138a62; }
+.re-registration-complete p { display: grid; gap: .15rem; margin: 0; }
+.re-registration-complete strong { color: #116b4d; font-size: .78rem; }
+.re-registration-complete span:not(.guidance-mark) { color: #4d7665; font-size: .72rem; }
+.committee-panel, .committee-schedule-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
+.committee-heading { align-items: start; }
+.section-overline { display: block; margin-bottom: .35rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.committee-heading h2 { margin: 0; color: var(--ink); font-size: 1.25rem; letter-spacing: -.025em; }
+.committee-heading p { max-width: 40rem; margin: .35rem 0 0; color: var(--ink-soft); font-size: .84rem; line-height: 1.5; }
+.committee-count { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid var(--line); border-radius: 999px; padding: .45rem .65rem; color: var(--ink-soft); background: var(--surface-subtle); font-size: .75rem; white-space: nowrap; }
+.committee-count strong { color: var(--primary); font-size: .95rem; }
+.committee-management { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(16rem, .65fr); gap: 1rem; align-items: stretch; margin-top: 1.35rem; }
+.admissions-assign-form { display: flex; align-items: end; gap: .7rem; padding: .95rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface-subtle); }
+.admissions-assign-form label { display: grid; flex: 1; gap: .4rem; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
+.admissions-assign-form select { width: 100%; min-height: 2.6rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); padding: .65rem .75rem; color: var(--ink); }
+.committee-guidance { display: flex; align-items: start; gap: .7rem; padding: .95rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .85rem; background: var(--primary-soft); }
+.guidance-mark { display: grid; flex: 0 0 1.6rem; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; color: #fff; background: var(--primary); font-size: .8rem; font-weight: 800; }
+.committee-guidance strong { color: var(--ink); font-size: .82rem; }
+.committee-guidance p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .76rem; line-height: 1.45; }
+.committee-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; padding-bottom: .7rem; border-bottom: 1px solid var(--line); }
+.committee-list-heading h3 { margin: 0; color: var(--ink); font-size: .95rem; }
+.committee-list-heading p { margin: .2rem 0 0; color: var(--ink-soft); font-size: .76rem; }
+.committee-list-heading > span { color: var(--ink-faint); font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.committee-list { gap: .6rem; margin-top: .75rem; }
+.committee-list li { min-height: 4.25rem; padding: .75rem .85rem; background: var(--surface); }
+.committee-member-identity { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.member-avatar { display: grid; flex: 0 0 2.25rem; place-items: center; width: 2.25rem; height: 2.25rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .7rem; color: var(--primary); background: var(--primary-soft); font-size: .73rem; font-weight: 800; }
+.committee-member-copy { display: grid; min-width: 0; gap: .2rem; }
+.committee-member-copy strong { overflow: hidden; color: var(--ink); font-size: .85rem; text-overflow: ellipsis; white-space: nowrap; }
+.committee-member-copy span { overflow: hidden; color: var(--ink-soft); font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
+.committee-member-actions { display: flex; align-items: center; gap: .75rem; }
+.member-status { color: #138a62; font-size: .72rem; font-weight: 800; }
+.committee-empty { justify-content: start !important; color: var(--ink-soft); }
+.committee-empty > div { display: grid; gap: .2rem; }
+.committee-empty strong { color: var(--ink); font-size: .82rem; }
+.committee-empty > div span { font-size: .76rem; }
+.committee-schedule-panel { margin-top: 0; }
+.schedule-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin-top: 1.25rem; }
+.schedule-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; min-width: 0; padding: .9rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.schedule-index { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: .55rem; color: var(--primary); background: var(--primary-soft); font-size: .68rem; font-weight: 800; }
+.schedule-item div { display: grid; align-content: start; gap: .22rem; min-width: 0; }
+.schedule-item strong { color: var(--ink); font-size: .8rem; }
+.schedule-item span:not(.schedule-index) { color: var(--primary); font-size: var(--type-xs); font-weight: var(--weight-bold); line-height: var(--leading-snug); }
+.schedule-item small { color: var(--ink-soft); font-size: .7rem; line-height: 1.4; }
+.period-context { display: flex; align-items: end; gap: 1rem; flex-wrap: wrap; }
+.period-context > label { width: min(100%, 28rem); }
 .period-context label, .admissions-form label, .admissions-status-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .85rem; font-weight: 600; }
 .period-context select, .admissions-form input, .admissions-form select, .admissions-form textarea, .admissions-status-form select, .admissions-status-form textarea, .upload-form input, .upload-form select, .decision-form input, .decision-form select, .score-row input { width: 100%; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); padding: .65rem .75rem; color: var(--ink); }
-.spmb-quick-links { display: flex; flex-wrap: wrap; gap: .5rem; }
-.spmb-quick-links a { color: var(--primary); font-size: .85rem; font-weight: 700; }
 .admissions-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 .compact-form { grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid #e2e8f0; padding-top: 1rem; }
 .admissions-form-wide { grid-column: 1 / -1; }
@@ -359,6 +809,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .admissions-status-form label { flex: 1; }
 .document-list { display: grid; gap: .5rem; margin: .75rem 0; }
 .document-row { padding: .6rem .75rem; font-size: .85rem; }
+.document-row { display: grid; grid-template-columns: minmax(0, 1fr) 10rem 6rem 15rem; align-items: center; justify-content: normal; gap: .8rem; padding: .7rem .8rem; }
 .document-row a, .link-danger { color: #3157a4; font-size: .8rem; font-weight: 700; }
 .link-danger { border: 0; background: transparent; color: #b42318; cursor: pointer; }
 .score-row { display: grid; grid-template-columns: 1fr 8rem auto; align-items: center; gap: .75rem; margin-top: .5rem; color: #42526b; font-size: .85rem; }
@@ -372,13 +823,22 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .report-table th, .report-table td { padding: .7rem .55rem; border-bottom: 1px solid var(--line); }
 .report-table th { color: var(--ink); font-weight: 700; }
 .report-table td { color: var(--ink-soft); }
-.report-table thead th { color: var(--ink-soft); font-size: .74rem; font-weight: 650; }
-.report-table tfoot th, .report-table tfoot td { border-bottom: 0; color: var(--ink); font-weight: 750; }
+.report-table thead th { color: var(--ink-soft); font-size: var(--type-xs); font-weight: var(--weight-semibold); }
+.report-table tfoot th, .report-table tfoot td { border-bottom: 0; color: var(--ink); font-weight: var(--weight-bold); }
 .report-empty { padding: 1.2rem .55rem !important; text-align: center; }
 .status-report-list { border-top: 1px solid var(--line); }
 .status-report-list div { display: flex; justify-content: space-between; gap: 1rem; padding: .62rem 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: .8rem; }
 .status-report-list strong { color: var(--ink); font-variant-numeric: tabular-nums; }
-@media (max-width: 980px) { .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }.overview-columns { grid-template-columns: 1fr; } }
-@media (max-width: 820px) { .workflow-grid, .admissions-form, .compact-form { grid-template-columns: 1fr; } .admissions-form-wide { grid-column: auto; } .admissions-status-form, .decision-form, .upload-form, .score-row { display: grid; grid-template-columns: 1fr; align-items: stretch; } .admissions-applicant-heading { display: grid; }.spmb-overview-heading { align-items: start; flex-direction: column; }.overview-heading-actions { width: 100%; flex-wrap: wrap; }.overview-period-picker { align-items: stretch; flex-direction: column; gap: .45rem; }.overview-period-picker select { min-width: 0; }.overview-period-banner { align-items: start; flex-direction: column; }.track-overview-row { grid-template-columns: minmax(0, 1fr) auto; gap: .55rem .8rem; padding: .65rem 0; }.quota-progress { grid-column: 1 / -1; grid-row: 2; }.track-overview-quota { grid-column: 2; grid-row: 1; } }
-@media (max-width: 560px) { .overview-metrics { gap: .55rem; }.overview-metric { min-height: 7.2rem; padding: .8rem; }.overview-metric strong { font-size: 1.55rem; }.overview-metric small { font-size: .68rem; }.phase-track li { font-size: .58rem; }.phase-track { margin-inline: -.2rem; }.period-date-list { grid-template-columns: 1fr; }.overview-panel { padding: 1rem; }.overview-period-link { width: 100%; }.overview-period-picker select { width: 100%; }.report-grid { grid-template-columns: 1fr; } }
+@media (max-width: 980px) { .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }.overview-columns { grid-template-columns: 1fr; }.committee-management { grid-template-columns: 1fr; }.schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.applicant-insights, .document-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }.applicant-filters { grid-template-columns: minmax(0, 1fr) minmax(9rem, 1fr) minmax(9rem, 1fr); }.document-filters { grid-template-columns: minmax(0, 1fr) minmax(12rem, 1fr); }.filter-reset-button { justify-self: start; } }
+@media (max-width: 820px) { .workflow-grid, .admissions-form, .compact-form { grid-template-columns: 1fr; } .admissions-form-wide, .form-section-intro { grid-column: auto; } .admissions-status-form, .decision-form, .upload-form, .score-row { display: grid; grid-template-columns: 1fr; align-items: stretch; } .document-applicant .upload-form { grid-template-columns: 1fr; }.admissions-applicant-heading { display: grid; }.spmb-overview-heading { align-items: start; flex-direction: column; }.overview-heading-actions { width: 100%; flex-wrap: wrap; }.overview-period-picker { align-items: stretch; flex-direction: column; gap: .45rem; }.overview-period-picker select { min-width: 0; }.overview-period-banner { align-items: start; flex-direction: column; }.track-overview-row { grid-template-columns: minmax(0, 1fr) auto; gap: .55rem .8rem; padding: .65rem 0; }.quota-progress { grid-column: 1 / -1; grid-row: 2; }.track-overview-quota { grid-column: 2; grid-row: 1; }.period-context { align-items: stretch; }.committee-heading { flex-direction: column; }.committee-count { align-self: flex-start; }.applicants-page-heading { align-items: stretch; flex-direction: column; }.applicants-page-heading .primary-button { width: 100%; }.applicant-filters { grid-template-columns: 1fr 1fr; }.applicant-search-field { grid-column: 1 / -1; }.document-filters { grid-template-columns: 1fr 1fr; }.document-search-field { grid-column: 1 / -1; }.document-row { grid-template-columns: minmax(0, 1fr) auto; }.document-status-pill { justify-self: end; }.document-row > a { grid-column: 1; }.document-actions { grid-column: 2; grid-row: 2; padding-left: 0; border-left: 0; } }
+@media (max-width: 560px) { .overview-metrics { gap: .55rem; }.overview-metric { min-height: 7.2rem; padding: .8rem; }.overview-metric strong { font-size: 1.55rem; }.overview-metric small { font-size: .68rem; }.phase-track li { font-size: .58rem; }.phase-track { margin-inline: -.2rem; }.period-date-list { grid-template-columns: 1fr; }.overview-panel { padding: 1rem; }.overview-period-link { width: 100%; }.overview-period-picker select { width: 100%; }.report-grid { grid-template-columns: 1fr; }.schedule-grid { grid-template-columns: 1fr; }.admissions-assign-form { align-items: stretch; flex-direction: column; }.admissions-assign-form .primary-button { width: 100%; }.committee-list li { align-items: start; flex-direction: column; }.committee-member-actions { justify-content: space-between; width: 100%; }.committee-list-heading { align-items: start; flex-direction: column; gap: .35rem; }.applicant-insights, .document-insights { grid-template-columns: 1fr 1fr; }.applicant-insight, .document-insight { min-height: 5.4rem; padding: .75rem; }.applicant-filters, .document-filters { grid-template-columns: 1fr; }.applicant-search-field, .document-search-field { grid-column: auto; }.filter-reset-button { justify-self: stretch; }.applicant-list-heading, .document-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.document-row { grid-template-columns: 1fr; align-items: start; }.document-status-pill, .document-row > a, .document-actions { grid-column: auto; justify-self: start; }.document-row > a { width: 100%; }.document-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; padding-left: 0; border-left: 0; }.upload-form { gap: .6rem; } }
+@media (max-width: 980px) { .selection-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); } .selection-filters { grid-template-columns: minmax(0, 1fr) minmax(10rem, 1fr); } .selection-filters .selection-search-field { grid-column: 1 / -1; } .selection-filters .filter-reset-button { justify-self: start; } }
+@media (max-width: 820px) { .selection-page-heading { align-items: stretch; flex-direction: column; }.selection-page-heading .primary-button { width: 100%; }.selection-applicant-heading { display: grid; }.selection-rank { justify-items: start; text-align: left; }.selection-score-summary .status-pill { margin-left: auto; }.selection-criteria { grid-template-columns: 1fr; }.selection-decision-fields { grid-template-columns: 1fr 1fr; }.selection-reason-field { grid-column: 1 / -1; }.selection-decision-fields .primary-button { width: 100%; } }
+@media (max-width: 560px) { .selection-insights { grid-template-columns: 1fr 1fr; }.selection-insight { min-height: 5.4rem; padding: .75rem; }.selection-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.selection-filters { grid-template-columns: 1fr; }.selection-filters .selection-search-field { grid-column: auto; }.selection-filters .filter-reset-button { justify-self: stretch; }.selection-score-summary { align-items: start; flex-wrap: wrap; }.selection-score-summary .status-pill { margin-left: 0; }.selection-criterion { align-items: start; flex-direction: column; }.selection-score-action { width: 100%; }.selection-score-action input { flex: 1; width: auto; }.selection-score-action .secondary-button { flex: 0 0 auto; }.selection-decision-heading { align-items: start; flex-direction: column; }.selection-decision-fields { grid-template-columns: 1fr; }.selection-reason-field { grid-column: auto; } }
+@media (max-width: 980px) { .announcement-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }.announcement-filters { grid-template-columns: minmax(0, 1fr) minmax(10rem, 1fr); }.announcement-filters .announcement-search-field { grid-column: 1 / -1; }.announcement-filters .filter-reset-button { justify-self: start; } }
+@media (max-width: 820px) { .announcement-page-heading { align-items: stretch; flex-direction: column; }.announcement-date { text-align: left; }.announcement-applicant-heading { display: grid; }.announcement-result { grid-template-columns: repeat(2, minmax(0, 1fr)); }.announcement-result div:first-child { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .announcement-insights { grid-template-columns: 1fr 1fr; }.announcement-insight { min-height: 5.4rem; padding: .75rem; }.announcement-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.announcement-filters { grid-template-columns: 1fr; }.announcement-filters .announcement-search-field { grid-column: auto; }.announcement-filters .filter-reset-button { justify-self: stretch; }.announcement-result { grid-template-columns: 1fr; }.announcement-result div:first-child { grid-column: auto; } }
+@media (max-width: 980px) { .re-registration-insights { grid-template-columns: repeat(3, minmax(0, 1fr)); }.re-registration-filters { grid-template-columns: minmax(0, 1fr) minmax(12rem, 1fr); }.re-registration-filters .re-registration-search-field { grid-column: 1 / -1; }.re-registration-filters .filter-reset-button { justify-self: start; } }
+@media (max-width: 820px) { .re-registration-page-heading { align-items: stretch; flex-direction: column; }.re-registration-date { text-align: left; }.re-registration-applicant-heading { display: grid; }.re-registration-details { grid-template-columns: 1fr 1fr; }.re-registration-details div:last-child { grid-column: 1 / -1; }.re-registration-form { grid-template-columns: 1fr; }.re-registration-form .primary-button { width: 100%; } }
+@media (max-width: 560px) { .re-registration-insights { grid-template-columns: 1fr 1fr; }.re-registration-insight { min-height: 5.4rem; padding: .75rem; }.re-registration-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.re-registration-filters { grid-template-columns: 1fr; }.re-registration-filters .re-registration-search-field { grid-column: auto; }.re-registration-filters .filter-reset-button { justify-self: stretch; }.re-registration-details { grid-template-columns: 1fr; }.re-registration-details div:last-child { grid-column: auto; } }
 </style>

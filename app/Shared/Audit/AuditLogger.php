@@ -26,6 +26,12 @@ class AuditLogger
         'refresh_token',
         'pin',
         'credit_card',
+        'phone',
+        'parent_phone',
+        'nik',
+        'nis',
+        'nisn',
+        'address',
     ];
 
     /**

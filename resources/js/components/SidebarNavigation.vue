@@ -134,7 +134,19 @@ const sections: NavSection[] = [
         title: 'Tata Usaha',
         icon: 'M3 8h18v13H3zM7 8V5a2 2 0 012-2h6a2 2 0 012 2v3m-8 5h8m-8 4h5',
         items: [
-            { name: 'Persuratan & Arsip', href: '/administrasi/persuratan', key: 'correspondence', activePrefix: '/administrasi/persuratan', icon: 'M7 3h7l5 5v13H5V3h2zm7 0v5h5M8 12h8m-8 4h8' },
+            {
+                name: 'Persuratan',
+                href: '/administrasi/persuratan',
+                key: 'correspondence',
+                activePrefix: '/administrasi/persuratan',
+                icon: 'M7 3h7l5 5v13H5V3h2zm7 0v5h5M8 12h8m-8 4h8',
+                children: [
+                    { name: 'Dashboard Persuratan', href: '/administrasi/persuratan', key: 'correspondence-dashboard', exact: true, icon: 'M3 13h4V3H3v10zm7 8h4V3h-4v18zm7-5h4V3h-4v13' },
+                    { name: 'Surat Masuk', href: '/administrasi/persuratan/surat-masuk', key: 'correspondence-incoming', activePrefix: '/administrasi/persuratan/surat-masuk', icon: 'M4 4h16v16H4zM7 8h10M7 12h7M7 16h5' },
+                    { name: 'Surat Keluar', href: '/administrasi/persuratan/surat-keluar', key: 'correspondence-outgoing', activePrefix: '/administrasi/persuratan/surat-keluar', icon: 'M4 4h16v16H4zM7 8h10M7 12h6M7 16h4' },
+                    { name: 'Arsip', href: '/administrasi/persuratan/arsip', key: 'correspondence-archive', activePrefix: '/administrasi/persuratan/arsip', icon: 'M4 5h16v14H4zM8 9h8m-7 4h6' },
+                ],
+            },
             { name: 'Tugas Staf', href: '/administrasi/tugas', key: 'staff-tasks', activePrefix: '/administrasi/tugas', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5h6m-6 7h6m-6 4h6' },
             { name: 'Sarana & Prasarana', href: '/administrasi/sarpras', key: 'facilities', activePrefix: '/administrasi/sarpras', icon: 'M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01' },
         ],
@@ -143,13 +155,40 @@ const sections: NavSection[] = [
         title: 'Pengaturan',
         icon: 'M12 8a4 4 0 100 8 4 4 0 000-8zm0-5v2m0 14v2m9-9h-2M5 12H3m15.36-6.36-1.42 1.42M7.06 16.94l-1.42 1.42m12.72 0-1.42-1.42M7.06 7.06 5.64 5.64',
         items: [
-            { name: 'Profil Saya', href: '/profil', key: 'profile', activePrefix: '/profil', icon: 'M5.121 17.804A9 9 0 1118.88 17.804M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
+            {
+                name: 'Akun & Keamanan',
+                href: '/profil',
+                key: 'account-settings',
+                activePrefix: '/profil',
+                icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0M19 8v4m-2-2h4',
+                children: [
+                    { name: 'Profil Saya', href: '/profil', key: 'profile', activePrefix: '/profil', icon: 'M5.121 17.804A9 9 0 1118.88 17.804M15 11a3 3 0 11-6 0 3 3 0 016 0z' },
+                    { name: 'Keamanan', href: '/pengaturan/keamanan', key: 'security', activePrefix: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
+                ],
+            },
             { name: 'Pengguna', href: '/pengaturan/pengguna', key: 'users', activePrefix: '/pengaturan/pengguna', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-            { name: 'Profil Sekolah', href: '/pengaturan/sekolah', key: 'school', activePrefix: '/pengaturan/sekolah', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z' },
-            { name: 'Struktur Organisasi', href: '/pengaturan/struktur-organisasi', key: 'organization', activePrefix: '/pengaturan/struktur-organisasi', icon: 'M7 20h10M9 20v-4h6v4M12 16V4m0 0L8 7m4-3 4 3M5 11h4m6 0h4' },
-            { name: 'Berita Sekolah', href: '/pengaturan/berita', key: 'news', activePrefix: '/pengaturan/berita', icon: 'M4 5h16M4 9h16M4 13h10M4 17h8M3 3h18v18H3z' },
-            { name: 'Galeri Sekolah', href: '/pengaturan/galeri', key: 'gallery', activePrefix: '/pengaturan/galeri', icon: 'M4 5h16v14H4zM4 16l4-4 3 3 3-4 6 5M8 9h.01' },
-            { name: 'Keamanan', href: '/pengaturan/keamanan', key: 'security', activePrefix: '/pengaturan/keamanan', icon: 'M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z' },
+            {
+                name: 'Sekolah',
+                href: '/pengaturan/sekolah',
+                key: 'school-settings',
+                activePrefix: '/pengaturan/sekolah',
+                icon: 'M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 12h.01M9 15h.01M15 9h.01M15 12h.01M15 15h.01',
+                children: [
+                    { name: 'Profil Sekolah', href: '/pengaturan/sekolah', key: 'school', activePrefix: '/pengaturan/sekolah', icon: 'M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 12h.01M9 15h.01M15 9h.01M15 12h.01M15 15h.01' },
+                    { name: 'Struktur Organisasi', href: '/pengaturan/struktur-organisasi', key: 'organization', activePrefix: '/pengaturan/struktur-organisasi', icon: 'M7 20h10M9 20v-4h6v4M12 16V4m0 0L8 7m4-3 4 3M5 11h4m6 0h4' },
+                ],
+            },
+            {
+                name: 'Publikasi',
+                href: '/pengaturan/berita',
+                key: 'publication-settings',
+                activePrefix: '/pengaturan/berita',
+                icon: 'M4 5h16v14H4zM7 9h10M7 13h7M7 17h4',
+                children: [
+                    { name: 'Berita Sekolah', href: '/pengaturan/berita', key: 'news', activePrefix: '/pengaturan/berita', icon: 'M4 5h16M4 9h16M4 13h10M4 17h8M3 3h18v18H3z' },
+                    { name: 'Galeri Sekolah', href: '/pengaturan/galeri', key: 'gallery', activePrefix: '/pengaturan/galeri', icon: 'M4 5h16v14H4zM4 16l4-4 3 3 3-4 6 5M8 9h.01' },
+                ],
+            },
         ],
     },
 ];
@@ -419,7 +458,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 }
 
 .nav-section-trigger:hover { color: #fff; background: rgba(255,255,255,.07); }
-.nav-section-trigger:focus-visible { outline: 2px solid #f2bc55; outline-offset: 2px; }
+.nav-section-trigger:focus-visible { outline: 2px solid var(--sidebar-focus-token); outline-offset: 2px; }
 .nav-section-trigger > svg:first-child { width: 18px; height: 18px; flex: 0 0 18px; }
 .nav-section-trigger .nav-label { flex: 1; margin: 0; color: inherit; font-size: 12px; font-weight: 700; letter-spacing: .025em; }
 .nav-section-trigger .nav-label,

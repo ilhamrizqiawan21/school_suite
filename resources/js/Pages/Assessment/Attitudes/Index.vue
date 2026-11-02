@@ -122,7 +122,7 @@ function submit() {
                         <span class="student-count">{{ students.length }} siswa</span>
                     </div>
 
-                    <div class="attitude-table-wrap">
+                    <div class="attitude-table-wrap table-scroll" tabindex="0" role="region" aria-label="Tabel penilaian sikap">
                         <table class="app-table attitude-table">
                             <thead>
                                 <tr>
@@ -209,7 +209,7 @@ function submit() {
 .empty-row { padding: 2rem !important; color: var(--att-muted); text-align: center !important; }
 .legacy-notes { padding: .75rem 1rem; color: var(--att-muted); font-size: .78rem; }.legacy-notes summary { width: fit-content; cursor: pointer; color: var(--att-primary); font-weight: 700; }.legacy-note { padding: .6rem .2rem 0; }.legacy-note strong { color: var(--att-ink); }.legacy-note p { margin: .2rem 0 0; }
 .attitude-savebar { position: sticky; bottom: .7rem; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem .85rem; border: 1px solid var(--att-line); border-radius: .8rem; background: color-mix(in srgb, var(--att-surface) 94%, transparent); box-shadow: var(--shadow-md, 0 8px 25px rgb(24 48 78 / 12%)); backdrop-filter: blur(12px); }
-.save-status { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 720; }.save-status small { flex-basis: 100%; padding-left: 1rem; color: var(--att-muted); font-size: .7rem; font-weight: 500; }
+.save-status { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: var(--type-sm); font-weight: var(--weight-bold); }.save-status small { flex-basis: 100%; padding-left: 1rem; color: var(--att-muted); font-size: var(--type-2xs); font-weight: var(--weight-medium); }
 .status-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #178357; }.status-dot.dirty { background: #bd7912; box-shadow: 0 0 0 3px color-mix(in srgb, #bd7912 17%, transparent); }.status-dot.saved { background: #178357; }
 .save-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: .5rem; padding: .6rem 1rem; border: 1px solid var(--att-primary); border-radius: .6rem; background: var(--att-primary); color: #fff; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }.save-button:disabled { opacity: .55; cursor: not-allowed; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }

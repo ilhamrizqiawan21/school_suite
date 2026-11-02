@@ -48,7 +48,7 @@ class CorrespondenceController extends Controller
                 $signatureRequest = CorrespondenceSignatureRequest::query()
                     ->where('school_id', $record->school_id)
                     ->where('correspondence_record_id', $record->id)
-                    ->latest('id')->first(['id', 'status', 'error_code']);
+                    ->latest('id')->first(['id', 'status', 'error_code', 'error_message', 'provider_request_id', 'certificate_metadata', 'signed_at']);
 
                 return [
                     'id' => $record->id,
@@ -90,6 +90,11 @@ class CorrespondenceController extends Controller
                     'signature_request_id' => $signatureRequest?->id,
                     'signature_status' => $signatureRequest?->status,
                     'signature_error' => $signatureRequest?->error_code,
+                    'signature_error_message' => $signatureRequest?->error_message,
+                    'signature_provider_request_id' => $signatureRequest?->provider_request_id,
+                    'signature_verified' => $signatureRequest?->status === 'signed' && data_get($signatureRequest?->certificate_metadata, 'verified') === true,
+                    'signature_certificate_subject' => data_get($signatureRequest?->certificate_metadata, 'subject'),
+                    'signature_signed_at' => $signatureRequest?->signed_at?->toDateTimeString(),
                     'archived_at' => $record->archived_at?->toDateTimeString(),
                 ];
             });
@@ -99,13 +104,29 @@ class CorrespondenceController extends Controller
             'filter' => $filter,
             'can_manage' => $canManage,
             'signatories' => CorrespondenceSignatory::query()->where('school_id', $user->school_id)->where('is_active', true)
-                ->orderBy('name')->get(['id', 'name', 'title', 'employee_number', 'rank', 'template_scopes']),
+                ->orderBy('name')->get(['id', 'name', 'title', 'employee_number', 'rank', 'template_scopes', 'provider_reference'])
+                ->map(fn (CorrespondenceSignatory $signatory): array => [
+                    'id' => $signatory->id,
+                    'name' => $signatory->name,
+                    'title' => $signatory->title,
+                    'employee_number' => $signatory->employee_number,
+                    'rank' => $signatory->rank,
+                    'template_scopes' => $signatory->template_scopes,
+                    'provider_configured' => filled($signatory->provider_reference),
+                ]),
+            'tte_status' => [
+                'enabled' => (bool) config('correspondence.bsre.enabled', false),
+                'configured' => (bool) config('correspondence.bsre.enabled', false)
+                    && filled(config('correspondence.bsre.endpoint'))
+                    && filled(config('correspondence.bsre.token')),
+                'queue' => (string) config('queue.default'),
+            ],
             'queue_counts' => [
                 'incoming_new' => CorrespondenceRecord::where('school_id', $user->school_id)->where('letter_type', 'incoming')->where('status', 'received')->count(),
                 'awaiting_disposition' => CorrespondenceRecord::where('school_id', $user->school_id)->where('letter_type', 'incoming')->where('status', 'disposition')->count(),
                 'draft' => CorrespondenceRecord::where('school_id', $user->school_id)->where('letter_type', 'outgoing')->where('status', 'draft')->count(),
-                'awaiting_approval' => CorrespondenceRecord::where('school_id', $user->school_id)->where('approval_status', 'pending')->count(),
-                'awaiting_signature' => CorrespondenceRecord::where('school_id', $user->school_id)->whereIn('status', ['awaiting_signature', 'signature_pending', 'signature_failed'])->count(),
+                'awaiting_approval' => CorrespondenceRecord::where('school_id', $user->school_id)->where('letter_type', 'outgoing')->where('status', 'pending_approval')->count(),
+                'awaiting_signature' => CorrespondenceRecord::where('school_id', $user->school_id)->where('letter_type', 'outgoing')->whereIn('status', ['approved', 'awaiting_signature', 'signature_pending', 'signature_failed'])->count(),
                 'ready_to_send' => CorrespondenceRecord::where('school_id', $user->school_id)->where('status', 'issued')->count(),
                 'archived' => CorrespondenceRecord::where('school_id', $user->school_id)->where('status', 'archived')->count(),
             ],
@@ -129,6 +150,27 @@ class CorrespondenceController extends Controller
                 ],
             ],
         ]);
+    }
+
+    public function incoming(Request $request): Response
+    {
+        $request->merge(['filter' => 'incoming']);
+
+        return $this->index($request);
+    }
+
+    public function outgoing(Request $request): Response
+    {
+        $request->merge(['filter' => 'outgoing']);
+
+        return $this->index($request);
+    }
+
+    public function archive(Request $request): Response
+    {
+        $request->merge(['filter' => 'archived']);
+
+        return $this->index($request);
     }
 
     public function store(Request $request): RedirectResponse
@@ -234,6 +276,32 @@ class CorrespondenceController extends Controller
         $this->correspondence->updateDraft($user, $record, $data);
 
         return back()->with('message', 'Draf surat berhasil disimpan.');
+    }
+
+    public function updateIncoming(Request $request, CorrespondenceRecord $record): RedirectResponse
+    {
+        $user = $this->authorizeManager($request->user());
+        $this->correspondence->assertOwnedByActor($user, $record);
+        $data = $request->validate([
+            'letter_number' => [
+                'nullable', 'string', 'max:100',
+                Rule::unique('correspondence_records', 'letter_number')
+                    ->ignore($record->id)
+                    ->where(fn ($query) => $query->where('school_id', $user->school_id)->where('letter_type', 'incoming')),
+            ],
+            'letter_date' => ['nullable', 'date'],
+            'received_at' => ['required', 'date'],
+            'sender' => ['required', 'string', 'max:180'],
+            'subject' => ['required', 'string', 'max:200'],
+            'summary' => ['nullable', 'string', 'max:5000'],
+            'disposition' => ['nullable', 'string', 'max:3000'],
+            'attachment' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'extensions:pdf,doc,docx,jpg,jpeg,png'],
+        ]);
+        $attachment = $request->file('attachment');
+        unset($data['attachment']);
+        $this->correspondence->updateIncoming($user, $record, $data, $attachment);
+
+        return back()->with('message', 'Data surat masuk berhasil dikoreksi.');
     }
 
     public function approve(Request $request, CorrespondenceRecord $record): RedirectResponse
@@ -347,6 +415,7 @@ class CorrespondenceController extends Controller
             'user_id' => ['nullable', Rule::exists('users', 'id')->where(fn ($query) => $query->where('school_id', $user->school_id)->where('is_active', true))],
             'name' => ['required', 'string', 'max:180'], 'title' => ['required', 'string', 'max:180'],
             'employee_number' => ['nullable', 'string', 'max:80'], 'rank' => ['nullable', 'string', 'max:120'],
+            'provider_reference' => ['nullable', 'string', 'max:190'],
             'template_scopes' => ['nullable', 'array'], 'template_scopes.*' => [Rule::in(['official_school', 'invitation', 'assignment', 'statement'])],
             'is_active' => ['sometimes', 'boolean'],
         ]);

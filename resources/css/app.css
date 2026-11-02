@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './shell.css';
+@import './typography.css';
 @import './settings.css';
 @import './learning.css';
 @import './teacher.css';
@@ -13,19 +14,29 @@
     --font-sans: var(--font-ui);
     --font-serif: var(--font-display);
     --font-mono: var(--font-code);
-    --text-xs: .8125rem;
-    --text-xs--line-height: 1.4;
-    --text-sm: .9rem;
-    --text-sm--line-height: 1.5;
+    --text-2xs: var(--type-2xs);
+    --text-2xs--line-height: var(--leading-tight);
+    --text-xs: var(--type-xs);
+    --text-xs--line-height: var(--leading-tight);
+    --text-sm: var(--type-sm);
+    --text-sm--line-height: var(--leading-normal);
+    --text-base: var(--type-md);
+    --text-base--line-height: var(--leading-normal);
+    --text-lg: var(--type-lg);
+    --text-lg--line-height: var(--leading-snug);
+    --text-xl: var(--type-xl);
+    --text-xl--line-height: var(--leading-snug);
+    --text-2xl: var(--type-2xl);
+    --text-2xl--line-height: var(--leading-snug);
 }
 
 @layer base {
     html { text-size-adjust: 100%; }
     body {
         font-family: var(--font-sans);
-        font-size: .9375rem;
-        line-height: 1.55;
-        font-weight: 400;
+        font-size: var(--type-md);
+        line-height: var(--leading-relaxed);
+        font-weight: var(--weight-regular);
     }
 }
 
@@ -108,16 +119,58 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
 
 .row-action-button svg { width: 14px; height: 14px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .row-action-button--edit { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }
-.row-action-button--delete { color: var(--red); background: var(--red-soft); border-color: color-mix(in srgb, var(--red) 24%, var(--line)); }
+.row-action-button--edit svg { color: var(--edit); }
+.row-action-button--delete { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
 .row-action-button--archive { color: var(--gold); background: var(--gold-soft); border-color: color-mix(in srgb, var(--gold) 24%, var(--line)); }
 .row-action-button--edit:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-soft) 72%, var(--primary) 28%); }
-.row-action-button--delete:hover:not(:disabled) { background: color-mix(in srgb, var(--red-soft) 72%, var(--red) 28%); }
+.row-action-button--delete:hover:not(:disabled) { color: color-mix(in srgb, var(--delete) 78%, var(--ink) 22%); background: color-mix(in srgb, var(--delete-soft) 70%, var(--delete) 30%); }
 .row-action-button--archive:hover:not(:disabled) { background: color-mix(in srgb, var(--gold-soft) 72%, var(--gold) 28%); }
 .row-action-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgb(24 48 78 / 12%); }
 .row-action-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 38%, transparent); outline-offset: 2px; }
 .row-action-button:disabled { cursor: not-allowed; opacity: .48; }
 .row-action-icon { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
 .action-button { min-height: 38px; }
+
+.file-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    min-height: 38px;
+    padding: .5rem .75rem;
+    border: 1px solid;
+    border-radius: .6rem;
+    font: inherit;
+    font-size: var(--type-sm);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.file-action-button::before {
+    display: inline-grid;
+    width: 1.45rem;
+    height: 1.45rem;
+    place-items: center;
+    border-radius: .3rem;
+    color: #fff;
+    font-size: .58rem;
+    font-weight: var(--weight-heavy);
+    letter-spacing: -.02em;
+    line-height: 1;
+}
+
+.file-action-button--excel { color: var(--excel); background: var(--excel-soft); border-color: var(--excel-line); }
+.file-action-button--excel::before { background: var(--excel); content: 'X'; }
+.file-action-button--excel:hover { background: color-mix(in srgb, var(--excel-soft) 70%, var(--excel) 30%); }
+.file-action-button--pdf { color: var(--pdf); background: var(--pdf-soft); border-color: var(--pdf-line); }
+.file-action-button--pdf::before { background: var(--pdf); content: 'PDF'; font-size: .42rem; }
+.file-action-button--pdf:hover { background: color-mix(in srgb, var(--pdf-soft) 70%, var(--pdf) 30%); }
+.file-action-button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgb(24 48 78 / 10%); }
+.file-action-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 38%, transparent); outline-offset: 2px; }
+.file-action-button:disabled { cursor: not-allowed; opacity: .48; }
 
 html[data-theme='dark'] .text-slate-950,
 html[data-theme='dark'] .text-slate-900,
@@ -207,6 +260,27 @@ html[data-theme='dark'] .shadow-sm,
 html[data-theme='dark'] .shadow-md,
 html[data-theme='dark'] .shadow-xl { --tw-shadow-color: rgba(0, 0, 0, .28); }
 
+/* Primary is a readable link/accent in dark mode; action buttons need a
+ * darker fill so their white labels keep sufficient contrast. */
+html[data-theme='dark'] .primary-button,
+html[data-theme='dark'] .button.primary,
+html[data-theme='dark'] .action-primary,
+html[data-theme='dark'] .button-primary,
+html[data-theme='dark'] .save-button,
+html[data-theme='dark'] .download-button,
+html[data-theme='dark'] .page-link.active {
+    background: var(--primary-action) !important;
+    border-color: var(--primary-action) !important;
+    color: #fff !important;
+}
+html[data-theme='dark'] .primary-button:hover,
+html[data-theme='dark'] .button.primary:hover,
+html[data-theme='dark'] .action-primary:hover,
+html[data-theme='dark'] .button-primary:hover,
+html[data-theme='dark'] .save-button:hover,
+html[data-theme='dark'] .download-button:hover,
+html[data-theme='dark'] .page-link.active:hover { background: var(--primary-action-strong) !important; }
+
 /* Scoped page styles need a small set of semantic fallbacks too. */
 html[data-theme='dark'] .dashboard-view { color: var(--ink) !important; }
 html[data-theme='dark'] .dashboard-view .intro-kicker,
@@ -251,7 +325,7 @@ html[data-theme='dark'] .student-table tbody tr:hover .student-actions-cell { ba
     padding: 1.35rem 1.5rem;
     background: linear-gradient(135deg, var(--surface) 0%, var(--primary-soft) 180%);
     border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    border-radius: var(--card-radius-featured);
     box-shadow: var(--shadow-sm);
 }
 
@@ -368,7 +442,7 @@ html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card textarea {
     padding: 1.25rem 1.5rem;
     background: linear-gradient(135deg, var(--surface) 0%, var(--surface-subtle) 100%);
     border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    border-radius: var(--card-radius);
     box-shadow: var(--shadow-sm);
 }
 

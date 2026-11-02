@@ -11,12 +11,13 @@ use App\Modules\Core\Infrastructure\Models\SchoolOrganizationMember;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SchoolOrganizationController extends Controller
 {
@@ -118,9 +119,9 @@ class SchoolOrganizationController extends Controller
         return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil dihapus.');
     }
 
-    public function photo(int $member): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function photo(int $member): StreamedResponse
     {
-        $school = \App\Modules\Core\Infrastructure\Models\School::query()->firstOrFail();
+        $school = School::query()->firstOrFail();
         $item = SchoolOrganizationMember::query()
             ->where('school_id', $school->id)
             ->where('is_published', true)
@@ -129,7 +130,7 @@ class SchoolOrganizationController extends Controller
         return $this->imageResponse($item, ['Cache-Control' => 'public, max-age=3600']);
     }
 
-    public function adminPhoto(Request $request, int $member): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function adminPhoto(Request $request, int $member): StreamedResponse
     {
         $this->authorizeManager($request);
         $item = SchoolOrganizationMember::query()
@@ -196,7 +197,7 @@ class SchoolOrganizationController extends Controller
     }
 
     /** @param array<string, string> $headers */
-    private function imageResponse(SchoolOrganizationMember $member, array $headers): \Symfony\Component\HttpFoundation\StreamedResponse
+    private function imageResponse(SchoolOrganizationMember $member, array $headers): StreamedResponse
     {
         abort_unless($member->photo_path && Storage::disk('local')->exists($member->photo_path), 404);
 

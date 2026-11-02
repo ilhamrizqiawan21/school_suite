@@ -368,7 +368,7 @@ const removeResource = (url: string) => {
 
                 <section class="task-list-panel panel">
                     <div class="task-panel-heading"><div><p class="eyebrow">Daftar tugas</p><h2>Tugas yang diterbitkan</h2><p>Kelola deadline, progres pengumpulan, dan penilaian dari satu tempat.</p></div><label class="task-search task-search-wide"><span>⌕</span><input v-model="taskSearch" placeholder="Cari tugas" /></label></div>
-                    <div class="task-table-wrap">
+                    <div class="task-table-wrap table-scroll" tabindex="0" role="region" aria-label="Daftar tugas yang diterbitkan">
                         <table class="app-table task-table"><thead><tr><th scope="col">Judul</th><th scope="col">Kelas</th><th scope="col">Deadline</th><th scope="col">Pengumpulan</th><th scope="col">Aksi</th></tr></thead><tbody>
                             <tr v-for="assignment in filteredAssignments" :key="assignment.id">
                                 <td><strong>{{ assignment.title }}</strong><small>{{ assignment.instructions || 'Tanpa deskripsi tambahan.' }}</small></td>
@@ -688,7 +688,7 @@ const removeResource = (url: string) => {
 .task-row-actions { display: flex; align-items: center; gap: .35rem; }
 .task-outline-button, .task-icon-button { min-height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: .35rem .55rem; color: var(--green); background: transparent; border: 1px solid var(--green); border-radius: .45rem; font-size: .7rem; font-weight: 800; text-decoration: none; }
 .task-icon-button { width: 30px; padding: 0; color: var(--primary); border-color: var(--line-strong); }
-.task-icon-button.danger { color: var(--red); border-color: color-mix(in srgb, var(--red) 55%, var(--line)); }
+.task-icon-button.danger { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
 .task-empty-copy, .task-empty-row { padding: 1rem; color: var(--ink-faint); font-size: .75rem; text-align: center; }
 .material-upload-panel, .material-list-panel { padding: 1.25rem; }
 .material-panel-icon { color: var(--blue); background: var(--blue-soft); }

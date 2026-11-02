@@ -178,7 +178,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <Link href="/dashboard" class="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">← Kembali</Link>
-                    <button type="button" class="inline-flex min-h-10 items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!selectedSession || !studentList.length" @click="exportSessionCsv">Ekspor CSV</button>
+                    <button type="button" class="file-action-button file-action-button--excel" :disabled="!selectedSession || !studentList.length" @click="exportSessionCsv">Ekspor CSV</button>
                     <a href="/akademik/presensi/rekap" class="inline-flex min-h-10 items-center rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Rekap Absensi</a>
                 </div>
             </header>

@@ -99,6 +99,11 @@ export interface SharedProps {
         message?: string;
         error?: string;
     };
+    temporary_credential?: {
+        subject: string;
+        password: string;
+        expires_at: number;
+    } | null;
     [key: string]: unknown;
 }
 

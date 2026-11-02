@@ -1,0 +1,40 @@
+/* Shared type rhythm. Page-local styles may opt into a deliberate exception
+ * (public display copy, Arabic exam text, or print/PDF output), but internal
+ * application UI should use these values instead of one-off numbers. */
+:root {
+    --type-label: var(--type-xs);
+    --type-body: var(--type-md);
+    --type-control: var(--type-sm);
+}
+
+@layer base {
+    :where(button, input, select, textarea) {
+        font-family: inherit;
+    }
+
+    :where(p, li, dd) {
+        text-wrap: pretty;
+    }
+}
+
+@layer components {
+    .eyebrow {
+        font-size: var(--type-label);
+        font-weight: var(--weight-heavy);
+        letter-spacing: var(--tracking-label);
+        line-height: var(--leading-tight);
+    }
+
+    .app-table,
+    .table-card table {
+        font-size: var(--type-sm);
+    }
+
+    /* A few legacy pages keep their styles in compressed scoped blocks. Keep
+     * their visible controls on the same weight scale without rewriting the
+     * page layout around them. */
+    .remove-button {
+        font-size: var(--type-xs) !important;
+        font-weight: var(--weight-bold) !important;
+    }
+}

@@ -150,22 +150,22 @@ const deleteSchedule = (id: number) => {
     <AppLayout title="Jadwal Pelajaran">
         <Head title="Jadwal Pelajaran — School Suite" />
 
-        <div class="view space-y-6 schedule-page">
-            <!-- Header bar -->
+        <div class="view space-y-5 schedule-page">
             <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Jadwal Pelajaran</h1>
-                    <p class="text-sm text-slate-500 mt-1">
+                    <p class="schedule-page-kicker">Akademik · Kalender pembelajaran</p>
+                    <h1 class="schedule-page-title">Jadwal Pelajaran</h1>
+                    <p class="schedule-page-summary">
                         {{ is_student ? 'Jadwal pelajaran kelasmu pada periode aktif.' : 'Penyusunan jadwal mingguan dengan deteksi benturan guru, rombel, dan ruang kelas.' }}
                     </p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="schedule-heading-actions">
                     <button
                         v-if="can_manage && draft_count > 0"
                         type="button"
                         @click="publishAll"
-                        class="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition shadow-xs"
+                        class="schedule-action-button schedule-action-publish"
                     >
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         Terbitkan {{ draft_count }} Draf
@@ -174,7 +174,7 @@ const deleteSchedule = (id: number) => {
                         v-if="can_manage"
                         type="button"
                         :disabled="!active_term" @click="openAdd"
-                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-xs"
+                        class="schedule-action-button schedule-action-add"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -358,7 +358,20 @@ const deleteSchedule = (id: number) => {
 
 <style scoped>
 .schedule-page { min-width: 0; }
-.schedule-session > .flex { flex-wrap: wrap; gap: .5rem; }
+.schedule-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.schedule-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
+.schedule-page-summary { max-width: 680px; margin: .45rem 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.55; }
+.schedule-heading-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
+.schedule-action-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .45rem; padding: .65rem .9rem; border: 1px solid var(--line-strong); border-radius: .65rem; color: var(--ink-soft); background: var(--surface); font-size: .8rem; font-weight: 700; white-space: nowrap; transition: background .16s ease, border-color .16s ease, color .16s ease; }
+.schedule-action-button:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }
+.schedule-action-publish { color: var(--green); background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 24%, var(--line)); }
+.schedule-action-add { color: #fff; background: var(--primary); border-color: var(--primary); box-shadow: 0 5px 12px rgb(50 105 188 / 16%); }
+.schedule-action-add:hover { color: #fff; background: var(--primary-strong); }
+.schedule-action-button:disabled { cursor: not-allowed; opacity: .55; }
+.schedule-session > .flex { flex-wrap: nowrap; gap: .45rem; }
+.schedule-session > .flex > div { display: flex; align-items: center; justify-content: flex-end; gap: .25rem; flex-wrap: wrap; }
+.schedule-session :deep(.row-action-button) { display: inline-grid; width: 30px; height: 30px; place-items: center; padding: 0; font-size: 0; }
+.schedule-session :deep(.row-action-button svg) { width: 14px; height: 14px; }
 .schedule-student-context { flex-wrap: wrap; }
 .schedule-page .page-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; }
 .schedule-page .page-heading > div:first-child { min-width: 0; }
@@ -386,7 +399,7 @@ const deleteSchedule = (id: number) => {
 .schedule-no-results strong { color: var(--ink); font-size: 1rem; }
 .schedule-no-results span { font-size: .85rem; line-height: 1.5; }
 @media (max-width: 1200px) { .schedule-page .page-heading { grid-template-columns: minmax(0, 1fr); }.schedule-page .page-heading > :last-child { justify-content: flex-start; }.schedule-controls { grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(0, 1fr)); }.schedule-term-control { grid-column: auto; }.schedule-reset { grid-column: 1 / -1; justify-self: end; }.schedule-scroll-hint { display: block; } }
-@media (max-width: 640px) { .schedule-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.schedule-page .page-heading > :last-child { width: 100%; flex-direction: column; align-items: stretch; }.schedule-page .page-heading > :last-child button { justify-content: center; }.schedule-controls, .schedule-metrics, .schedule-metrics-manager { grid-template-columns: minmax(0, 1fr); }.schedule-term-control { grid-column: auto; }.schedule-reset { width: 100%; } }
+@media (max-width: 640px) { .schedule-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.schedule-heading-actions { width: 100%; flex-direction: column; align-items: stretch; }.schedule-heading-actions button { width: 100%; }.schedule-controls, .schedule-metrics, .schedule-metrics-manager { grid-template-columns: minmax(0, 1fr); }.schedule-term-control { grid-column: auto; }.schedule-reset { width: 100%; } }
 
 .schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 600; }
 .schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }

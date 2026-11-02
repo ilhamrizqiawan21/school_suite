@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 interface SchoolBrand {
     name: string;
@@ -28,6 +29,8 @@ const menus: { label: string; href: string; key: ActiveMenu }[] = [
     { label: 'Kontak', href: '/kontak', key: 'contact' },
 ];
 const primaryMenus = menus.filter((menu) => menu.key !== 'contact');
+const menuOpen = ref(false);
+const closeMenu = () => { menuOpen.value = false; };
 </script>
 
 <template>
@@ -54,12 +57,23 @@ const primaryMenus = menus.filter((menu) => menu.key !== 'contact');
         </div>
 
         <div class="public-header-nav-row">
-            <nav class="public-nav" aria-label="Navigasi publik">
+            <button
+                type="button"
+                class="nav-toggle"
+                aria-controls="public-navigation"
+                :aria-expanded="menuOpen"
+                @click="menuOpen = !menuOpen"
+            >
+                <span>{{ menuOpen ? 'Tutup menu' : 'Menu' }}</span>
+                <i aria-hidden="true"></i>
+            </button>
+            <nav id="public-navigation" class="public-nav" :class="{ 'is-open': menuOpen }" aria-label="Navigasi publik">
                 <Link
                     v-for="menu in primaryMenus"
                     :key="menu.key"
                     :href="menu.href"
                     :aria-current="props.active === menu.key ? 'page' : undefined"
+                    @click="closeMenu"
                 >
                     {{ menu.label }}
                 </Link>
@@ -176,9 +190,41 @@ const primaryMenus = menus.filter((menu) => menu.key !== 'contact');
 .public-header-nav-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     min-width: 0;
     padding: .65rem 0 .75rem;
 }
+
+.nav-toggle {
+    display: none;
+    min-height: 40px;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .55rem .7rem;
+    color: var(--public-ink, #173044);
+    background: var(--public-surface-alt, #fff);
+    border: 1px solid var(--public-line-strong, #d8dee8);
+    border-radius: .55rem;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 800;
+}
+
+.nav-toggle i,
+.nav-toggle i::before,
+.nav-toggle i::after {
+    display: block;
+    width: 1rem;
+    height: 2px;
+    background: currentColor;
+    border-radius: 999px;
+    content: '';
+}
+
+.nav-toggle i { position: relative; }
+.nav-toggle i::before { position: absolute; top: -.32rem; }
+.nav-toggle i::after { position: absolute; top: .32rem; }
 
 .public-nav {
     display: flex;
@@ -253,10 +299,25 @@ const primaryMenus = menus.filter((menu) => menu.key !== 'contact');
         font-size: .75rem;
     }
 
-    .public-header-nav-row { padding-top: .6rem; }
+    .public-header-nav-row {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: .65rem;
+        padding-top: .6rem;
+    }
+
+    .nav-toggle { display: inline-flex; }
 
     .public-nav {
+        display: none;
         width: 100%;
+        padding: .25rem;
+        background: var(--public-surface-alt, #fff);
+        border: 1px solid var(--public-line, #d8dee8);
+        border-radius: .7rem;
     }
+
+    .public-nav.is-open { display: grid; }
+    .public-nav a { width: 100%; padding: .65rem .7rem; }
 }
 </style>

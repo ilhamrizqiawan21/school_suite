@@ -1,7 +1,6 @@
 @php
-    $schoolName = $school['legal_name'] ?? ($school['name'] ?? 'Sekolah');
-    $legalName = $school['legal_name'] ?? null;
-    $parentInstitution = $school['parent_institution'] ?? null;
+    $schoolName = $school['name'] ?? 'Sekolah';
+    $parentInstitution = $school['parent_institution'] ?? ($school['legal_name'] ?? null);
     $address = collect([$school['address'] ?? null, $school['postal_code'] ?? null])->filter()->join(' ');
     $contact = collect([$school['phone'] ?? null, $school['email'] ?? null, $school['website'] ?? null, ! empty($school['npsn']) ? 'NPSN '.$school['npsn'] : null])->filter()->join(' · ');
 @endphp

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const props=defineProps<{status?:string;branding?:{school_name:string;logo_url?:string|null;favicon_url?:string|null;theme_primary?:string}|null}>();
 
@@ -16,6 +16,7 @@ const schoolInitial = computed(() => schoolName.value.trim().charAt(0).toUpperCa
 onMounted(() => {
     // Keep the branded login surface light; the saved preference is restored by AppLayout after sign-in.
     document.documentElement.dataset.theme = 'light';
+    document.documentElement.classList.add('login-page-active');
 
     if (props.branding?.theme_primary) {
         document.documentElement.style.setProperty('--primary', props.branding.theme_primary);
@@ -30,6 +31,10 @@ onMounted(() => {
         }
         link.href = props.branding.favicon_url;
     }
+});
+
+onBeforeUnmount(() => {
+    document.documentElement.classList.remove('login-page-active');
 });
 
 const submit = () => {
@@ -144,10 +149,16 @@ const submit = () => {
 </template>
 
 <style scoped>
+:global(html.login-page-active),
+:global(html.login-page-active body),
+:global(html.login-page-active #app) {
+    background: var(--canvas) !important;
+}
+
 .login-page {
     --login-ink: #173044;
-    --login-muted: #526673;
-    --login-paper: #f4f0e7;
+    --login-muted: #5d6e82;
+    --login-paper: var(--canvas);
     min-height: 100vh;
     min-height: 100svh;
     display: grid;
@@ -165,10 +176,10 @@ const submit = () => {
     width: min(100%, 1080px);
     min-height: 620px;
     overflow: hidden;
-    background: #fffdf8;
-    border: 1px solid #ded8cc;
+    background: #fbfdff;
+    border: 1px solid #d7e1ef;
     border-radius: 1.5rem;
-    box-shadow: 0 24px 60px rgb(23 48 68 / 9%);
+    box-shadow: 0 24px 60px rgb(31 65 105 / 13%);
 }
 
 .welcome-panel {
@@ -179,25 +190,26 @@ const submit = () => {
     min-width: 0;
     overflow: hidden;
     padding: clamp(2rem, 5vw, 4rem);
-    color: #fffdf8;
+    color: #f8fbff;
     background: var(--login-primary);
+    background: color-mix(in srgb, var(--login-primary) 92%, #102d52);
 }
 
 .school-brand { position: relative; z-index: 1; display: flex; align-items: center; gap: .85rem; min-width: 0; }
-.school-brand img, .brand-fallback { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; flex: 0 0 auto; padding: .35rem; object-fit: contain; color: var(--login-ink); background: #fffdf8; border-radius: 1rem 1rem 1rem .35rem; }
+.school-brand img, .brand-fallback { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; flex: 0 0 auto; padding: .35rem; object-fit: contain; color: var(--login-ink); background: #f8fbff; border-radius: 1rem 1rem 1rem .35rem; }
 .brand-fallback { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; }
 .brand-copy { display: grid; gap: .2rem; min-width: 0; }
 .brand-copy strong { overflow-wrap: anywhere; font-size: .95rem; line-height: 1.35; }
-.brand-copy small { color: rgb(255 253 248 / 75%); font-size: .75rem; }
+.brand-copy small { color: rgb(248 251 255 / 75%); font-size: .75rem; }
 .welcome-copy { position: relative; z-index: 1; max-width: 470px; margin: 4rem 0; }
 .welcome-kicker, .login-kicker { margin: 0; color: #f0d28a; font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .welcome-copy h1 { max-width: 9ch; margin: 1rem 0 1.2rem; font-family: var(--font-display); font-size: clamp(3rem, 5.5vw, 5.4rem); font-weight: 400; letter-spacing: -.065em; line-height: .98; }
-.welcome-copy > p:last-child { max-width: 330px; margin: 0; color: rgb(255 253 248 / 82%); font-size: 1rem; line-height: 1.75; }
-.welcome-footnote { position: relative; z-index: 1; margin: 0; color: rgb(255 253 248 / 76%); font-size: .78rem; }
-.welcome-orbit { position: absolute; right: -11rem; bottom: -13rem; width: 29rem; height: 29rem; border: 1px solid rgb(255 253 248 / 20%); border-radius: 50%; pointer-events: none; }
+.welcome-copy > p:last-child { max-width: 330px; margin: 0; color: rgb(248 251 255 / 82%); font-size: 1rem; line-height: 1.75; }
+.welcome-footnote { position: relative; z-index: 1; margin: 0; color: rgb(248 251 255 / 76%); font-size: .78rem; }
+.welcome-orbit { position: absolute; right: -11rem; bottom: -13rem; width: 29rem; height: 29rem; border: 1px solid rgb(248 251 255 / 20%); border-radius: 50%; pointer-events: none; }
 .orbit-two { right: -6rem; bottom: -17rem; width: 25rem; height: 25rem; border-color: rgb(240 210 138 / 35%); }
 
-.login-panel { align-self: center; width: 100%; max-width: 470px; margin-inline: auto; padding: clamp(2rem, 5vw, 4rem); }
+.login-panel { align-self: center; width: 100%; max-width: 470px; margin-inline: auto; padding: clamp(2rem, 5vw, 4rem); background: #fbfdff; }
 .login-heading { margin-bottom: 2rem; }
 .login-kicker { color: var(--login-primary); }
 .login-heading h2 { margin: .65rem 0 .45rem; font-family: var(--font-display); font-size: clamp(2rem, 3vw, 2.8rem); font-weight: 400; letter-spacing: -.045em; line-height: 1.08; }
@@ -206,9 +218,10 @@ const submit = () => {
 .login-form { display: grid; gap: 1.25rem; }
 .form-field { display: grid; gap: .5rem; min-width: 0; }
 .form-field label { color: var(--login-ink); font-size: .85rem; font-weight: 700; }
-.form-field input { width: 100%; min-height: 3.15rem; padding: .8rem .9rem; color: var(--login-ink); background: #fff; border: 1px solid #c9d1d6; border-radius: .7rem; font: inherit; font-size: .92rem; transition: border-color .15s ease, box-shadow .15s ease; }
-.form-field input::placeholder { color: #778891; }
+.form-field input { width: 100%; min-height: 3.15rem; padding: .8rem .9rem; color: var(--login-ink); background: #f8fbff; border: 1px solid #c7d4e3; border-radius: .7rem; font: inherit; font-size: .92rem; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+.form-field input::placeholder { color: #718197; }
 .form-field input:focus-visible { outline: 3px solid color-mix(in srgb, var(--login-primary) 28%, transparent); outline-offset: 1px; border-color: var(--login-primary); }
+.form-field input:focus { background: #fff; }
 .form-field input[aria-invalid='true'] { border-color: #b42318; }
 .form-field input:-webkit-autofill,
 .form-field input:-webkit-autofill:hover,
@@ -222,8 +235,8 @@ const submit = () => {
 .field-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .password-input-wrap { position: relative; }
 .password-input-wrap > input { padding-right: 3.35rem; }
-.password-toggle { position: absolute; top: 50%; right: .4rem; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; color: #526673; background: transparent; border: 0; border-radius: .55rem; cursor: pointer; transform: translateY(-50%); }
-.password-toggle:hover { color: var(--login-primary); background: #edf2fb; }
+.password-toggle { position: absolute; top: 50%; right: .4rem; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; color: #60738a; background: transparent; border: 0; border-radius: .55rem; cursor: pointer; transform: translateY(-50%); }
+.password-toggle:hover { color: var(--login-primary); background: color-mix(in srgb, var(--login-primary) 10%, #f8fbff); }
 .eye-icon { width: 1.25rem; height: 1.25rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .password-toggle:focus-visible, .remember-option input:focus-visible, .submit-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--login-primary) 35%, transparent); outline-offset: 3px; }
 .field-error { margin: 0; color: #a32118; font-size: .8rem; line-height: 1.5; }
@@ -233,7 +246,7 @@ const submit = () => {
 .submit-button:hover:not(:disabled) { filter: brightness(.92); transform: translateY(-1px); }
 .submit-button:disabled { opacity: .65; cursor: wait; }
 .spinner { width: 1.1rem; height: 1.1rem; animation: spin 1s linear infinite; }
-.system-note { margin: 1.8rem 0 0; padding-top: 1rem; color: #72818a; border-top: 1px solid #e6e1d8; font-size: .76rem; }
+.system-note { margin: 1.8rem 0 0; padding-top: 1rem; color: #718197; border-top: 1px solid #dce5ef; font-size: .76rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 760px) {

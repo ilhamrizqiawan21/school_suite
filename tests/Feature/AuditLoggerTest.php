@@ -96,6 +96,34 @@ class AuditLoggerTest extends TestCase
         $this->assertSame('Aman dan tidak rahasia', $newValues['nested']['description']);
     }
 
+    public function test_audit_logger_redacts_personal_identifiers(): void
+    {
+        $event = $this->logger->log(
+            eventType: 'test.personal-data.event',
+            targetType: 'User',
+            targetId: '101',
+            newValues: [
+                'phone' => '081234567890',
+                'parent_phone' => '081234567891',
+                'nik' => '317xxxxxxxxxxxx',
+                'nisn' => '0012345678',
+                'address' => 'Alamat privat',
+                'name' => 'Nama yang boleh dicatat',
+            ],
+            actor: $this->admin,
+            schoolId: $this->school->id
+        );
+
+        $newValues = AuditEvent::findOrFail($event->id)->new_values;
+
+        $this->assertSame('[REDACTED]', $newValues['phone']);
+        $this->assertSame('[REDACTED]', $newValues['parent_phone']);
+        $this->assertSame('[REDACTED]', $newValues['nik']);
+        $this->assertSame('[REDACTED]', $newValues['nisn']);
+        $this->assertSame('[REDACTED]', $newValues['address']);
+        $this->assertSame('Nama yang boleh dicatat', $newValues['name']);
+    }
+
     /**
      * Test user service triggers audit events upon user creation, update, and deletion.
      */

@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\Student;
+use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicant;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicantDocument;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicantScore;
@@ -15,7 +16,6 @@ use App\Modules\Admissions\Infrastructure\Models\AdmissionReRegistration;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionSelectionCriterion;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionSelectionResult;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionTrack;
-use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -228,7 +228,7 @@ class DemoAdmissionsSeeder extends Seeder
     private function samplePdf(string $documentName): string
     {
         $label = preg_replace('/[^A-Za-z0-9 -]/', '', $documentName) ?: 'Dokumen SPMB';
-        $stream = "BT /F1 16 Tf 72 760 Td (DATA CONTOH SPMB) Tj 0 -30 Td /F1 11 Tf (".$label.") Tj 0 -22 Td (Dokumen sintetis untuk pratinjau lokal.) Tj ET";
+        $stream = 'BT /F1 16 Tf 72 760 Td (DATA CONTOH SPMB) Tj 0 -30 Td /F1 11 Tf ('.$label.') Tj 0 -22 Td (Dokumen sintetis untuk pratinjau lokal.) Tj ET';
         $objects = [
             '<< /Type /Catalog /Pages 2 0 R >>',
             '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',

@@ -73,6 +73,10 @@
 <body>
     @include('correspondence.partials.letterhead', ['school' => $school])
     @if($isDraft)<div class="draft-banner">DRAF — BELUM DITERBITKAN</div>@endif
+    @if($record->letter_date)
+        @php($letterDate = $record->letter_date->locale('id')->translatedFormat('d F Y'))
+        <p class="letter-date">{{ collect([$school['city'] ?? null, $letterDate])->filter()->join(', ') }}</p>
+    @endif
     @include("correspondence.templates.{$template}")
     @include('correspondence.partials.signature')
     @if(count($carbonCopyLines))

@@ -191,6 +191,21 @@ class SchoolNewsTest extends TestCase
             ->has('news', 1));
     }
 
+    public function test_public_pages_use_the_school_base_color_with_a_saved_public_preset(): void
+    {
+        $this->school->update([
+            'settings' => [
+                'theme_primary' => '#277450',
+                'public_theme' => ['preset' => 'editorial'],
+            ],
+        ]);
+
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/School/Home')
+            ->where('school.theme.primary', '#277450')
+            ->where('school.theme.preset', 'editorial'));
+    }
+
     public function test_public_information_menu_has_dedicated_pages(): void
     {
         $this->get('/akademik-fasilitas')->assertOk()->assertInertia(fn (Assert $page) => $page

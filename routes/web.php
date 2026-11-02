@@ -248,8 +248,10 @@ Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard
 })->middleware('auth')->name('dashboard');
 
 // Observability & Health Check Subsystem (SS-F-009)
-Route::get('/up', HealthCheckController::class)->name('health.up');
-Route::get('/health', HealthCheckController::class)->name('health.index');
+Route::middleware('throttle:health')->group(function (): void {
+    Route::get('/up', HealthCheckController::class)->name('health.up');
+    Route::get('/health', HealthCheckController::class)->name('health.index');
+});
 
 Route::get('/kepsek/dashboard', fn () => redirect('/dashboard'))
     ->middleware(['auth', 'role:principal'])

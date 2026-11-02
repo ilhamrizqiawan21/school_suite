@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { SharedProps, Student } from '../../../types';
 
@@ -34,6 +34,8 @@ const props = defineProps<{
 }>();
 
 const page = usePage<SharedProps>();
+const temporaryCredential = computed(() => page.props.temporary_credential);
+const hideTemporaryCredential = ref(false);
 
 const search = ref(props.filters.search || '');
 const selectedStatus = ref(props.filters.status || '');
@@ -205,6 +207,7 @@ const deleteStudent = (student: Student) => {
             <!-- Header bar -->
             <div class="page-heading compact-heading">
                 <div>
+                    <p class="student-page-kicker">Akademik · Data kesiswaan</p>
                     <h1 class="student-page-title">Manajemen Data Siswa</h1>
                     <p class="student-page-summary">
                         {{ can_manage ? 'Kelola data induk siswa, penempatan rombel semester aktif, dan impor massal.' : 'Lihat data induk siswa dan penempatan rombel semester aktif.' }}
@@ -226,13 +229,13 @@ const deleteStudent = (student: Student) => {
                         </svg>
                         Impor Siswa
                     </button>
-                    <a :href="exportExcelUrl()" class="student-action-button student-action-export">
+                    <a :href="exportExcelUrl()" class="student-action-button student-action-export student-action-file file-action-button file-action-button--excel">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414A2 2 0 0018.414 8L14 3.586A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM13 3v6h6M8 13h8m-8 4h5" />
                         </svg>
                         Ekspor Excel
                     </a>
-                    <a :href="exportPdfUrl()" class="student-action-button student-action-export">
+                    <a :href="exportPdfUrl()" class="student-action-button student-action-export student-action-file file-action-button file-action-button--pdf">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2zm7 0v5h5M8 14h8m-8 3h6" /></svg>
                         Ekspor PDF
                     </a>
@@ -240,12 +243,22 @@ const deleteStudent = (student: Student) => {
             </div>
 
             <div v-if="page.props.flash?.message" class="student-notice student-notice-success" role="status">{{ page.props.flash.message }}</div>
+            <div v-if="temporaryCredential && !hideTemporaryCredential" class="student-notice border-amber-200 bg-amber-50 text-amber-950" role="alert">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <strong>Sandi sementara untuk {{ temporaryCredential.subject }}</strong>
+                        <p class="mt-1 text-sm">Tampilan ini hanya muncul sekali selama 5 menit. Sampaikan melalui kanal aman, lalu tutup panel ini.</p>
+                        <code class="mt-3 inline-block rounded bg-white px-3 py-2 text-base font-semibold tracking-wide">{{ temporaryCredential.password }}</code>
+                    </div>
+                    <button type="button" class="text-sm font-semibold underline" @click="hideTemporaryCredential = true">Tutup</button>
+                </div>
+            </div>
             <div v-if="page.props.errors?.student" class="student-notice student-notice-error" role="alert">{{ page.props.errors.student }}</div>
 
             <div class="student-summary-grid" aria-label="Ringkasan siswa seluruh sekolah">
-                <div class="panel student-stat"><span>Siswa aktif</span><strong>{{ stats.active }}</strong></div>
-                <div class="panel student-stat"><span>Lulus</span><strong>{{ stats.graduated }}</strong></div>
-                <div class="panel student-stat"><span>Keluar / pindah</span><strong>{{ stats.exited }}</strong></div>
+                <div class="panel student-stat student-stat-active"><span>Siswa aktif</span><strong>{{ stats.active }}</strong><small>terdaftar pada data sekolah</small></div>
+                <div class="panel student-stat student-stat-graduated"><span>Lulus</span><strong>{{ stats.graduated }}</strong><small>riwayat siswa selesai</small></div>
+                <div class="panel student-stat student-stat-exited"><span>Keluar / pindah</span><strong>{{ stats.exited }}</strong><small>perlu ditinjau bila diperlukan</small></div>
             </div>
 
             <!-- Filters -->
@@ -604,9 +617,14 @@ const deleteStudent = (student: Student) => {
 .student-notice { padding: .85rem 1rem; border-radius: var(--radius-sm); font-size: .85rem; overflow-wrap: anywhere; }
 .student-notice-success { color: var(--green); background: var(--green-soft); }
 .student-notice-error { color: var(--red); background: var(--red-soft); }
-.student-stat { display: grid; gap: .3rem; padding: 1rem 1.2rem; }
-.student-stat span { color: var(--ink-soft); font-size: .85rem; }
-.student-stat strong { color: var(--ink); font-size: 1.75rem; font-weight: 800; }
+.student-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.student-stat { display: grid; gap: .3rem; min-width: 0; padding: 1rem 1.2rem; border-top: 3px solid transparent; }
+.student-stat span { color: var(--ink-soft); font-size: .82rem; font-weight: 600; }
+.student-stat strong { color: var(--ink); font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+.student-stat small { color: var(--ink-faint); font-size: .72rem; line-height: 1.4; }
+.student-stat-active { border-top-color: #3269bc; background: color-mix(in srgb, #3269bc 7%, var(--surface)); }
+.student-stat-graduated { border-top-color: #3d9b78; background: color-mix(in srgb, #3d9b78 7%, var(--surface)); }
+.student-stat-exited { border-top-color: #ad7c2b; background: color-mix(in srgb, #ad7c2b 7%, var(--surface)); }
 .student-account-status { display: inline-block; padding: .25rem .55rem; border-radius: 999px; color: var(--ink-soft); background: var(--surface-strong); font-size: .75rem; white-space: nowrap; }
 .student-account-status.is-changed { color: var(--green); background: var(--green-soft); }
 .student-account-status.is-default { color: var(--gold); background: var(--gold-soft); }
@@ -615,6 +633,11 @@ const deleteStudent = (student: Student) => {
 .student-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
 .student-action-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: .65rem .9rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: .65rem; font-size: .8rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, border-color .16s ease; }
 .student-action-button:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }
+.student-action-file.file-action-button--excel { color: var(--excel); background: var(--excel-soft); border-color: var(--excel-line); }
+.student-action-file.file-action-button--pdf { color: var(--pdf); background: var(--pdf-soft); border-color: var(--pdf-line); }
+.student-action-file.file-action-button--excel:hover { color: var(--excel); background: color-mix(in srgb, var(--excel-soft) 70%, var(--excel) 30%); border-color: var(--excel); }
+.student-action-file.file-action-button--pdf:hover { color: var(--pdf); background: color-mix(in srgb, var(--pdf-soft) 70%, var(--pdf) 30%); border-color: var(--pdf); }
+.student-action-file > svg { display: none; }
 .student-action-add { color: #fff; background: var(--primary); border-color: var(--primary); }
 .student-action-add:hover { color: #fff; background: var(--primary-strong); }
 .student-action-import { color: var(--primary); border-color: var(--primary); }
@@ -635,9 +658,9 @@ const deleteStudent = (student: Student) => {
 .student-row-action svg { width: 16px; height: 16px; stroke-width: 2; }
 .student-row-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 10px rgba(24, 48, 78, .12); }
 .student-row-action:focus-visible, .student-action-button:focus-visible { outline: 3px solid rgba(50, 105, 188, .28); outline-offset: 2px; }
-.student-row-action-edit { color: #275da8; background: #edf4ff; border-color: #c9dcf8; }.student-row-action-edit:hover { background: #dfeeff; }
+.student-row-action-edit { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }.student-row-action-edit svg { color: var(--edit); }.student-row-action-edit:hover { background: color-mix(in srgb, var(--primary-soft) 72%, var(--primary) 28%); }
 .student-row-action-reset { color: #9a6508; background: #fff7dc; border-color: #ecd594; }.student-row-action-reset:hover:not(:disabled) { background: #f8e9b9; }
-.student-row-action-delete { color: #b33d3d; background: #fff0f0; border-color: #f2caca; }.student-row-action-delete:hover { background: #ffe1e1; }
+.student-row-action-delete { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }.student-row-action-delete:hover { background: color-mix(in srgb, var(--delete-soft) 70%, var(--delete) 30%); }
 .student-row-action:disabled { cursor: not-allowed; opacity: .42; }
 .student-mobile-list { display: none; }
 @media (max-width: 720px) {

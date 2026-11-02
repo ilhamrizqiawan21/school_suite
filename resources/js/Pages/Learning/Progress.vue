@@ -111,7 +111,7 @@ const clearFilters = () => {
                         <p>{{ filterForm.search || filterForm.class || filterForm.subject ? 'Ubah filter kelas, mata pelajaran, atau kata pencarian.' : 'Progress siswa akan muncul setelah materi atau tugas diterbitkan pada semester aktif.' }}</p>
                     </div>
 
-                    <div v-else class="table-wrap progress-desktop-table">
+                    <div v-else class="table-wrap table-scroll progress-desktop-table" tabindex="0" role="region" aria-label="Rekap progres belajar">
                         <table class="app-table data-table">
                             <thead><tr><th scope="col">{{ is_student ? 'Mata pelajaran' : 'Siswa' }}</th><th scope="col" v-if="!is_student">Kelas / Mapel</th><th scope="col">Materi dibaca</th><th scope="col">Tugas dikumpulkan</th><th scope="col" v-if="!is_student">Terlambat</th><th scope="col" v-if="!is_student">Revisi</th><th scope="col">Rerata nilai</th></tr></thead>
                             <tbody>

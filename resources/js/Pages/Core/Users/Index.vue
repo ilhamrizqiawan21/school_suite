@@ -191,7 +191,7 @@ const deleteUser = (user: UserItem) => {
             <!-- Users Table -->
             <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                 <p class="px-4 py-3 text-xs text-slate-500">Geser tabel ke samping pada layar kecil untuk melihat semua kolom dan tindakan.</p>
-                <div class="overflow-x-auto" tabindex="0" aria-label="Daftar pengguna">
+                <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Daftar pengguna">
                     <table class="app-table min-w-[680px] w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">

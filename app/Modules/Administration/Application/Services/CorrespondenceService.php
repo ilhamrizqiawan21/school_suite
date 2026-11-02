@@ -339,6 +339,50 @@ class CorrespondenceService
         });
     }
 
+    /** @param array<string, mixed> $data */
+    public function updateIncoming(User $actor, CorrespondenceRecord $record, array $data, ?UploadedFile $attachment = null): void
+    {
+        $storedPath = null;
+        $oldAttachmentPath = null;
+
+        try {
+            DB::transaction(function () use ($actor, $record, $data, $attachment, &$storedPath, &$oldAttachmentPath): void {
+                $record = CorrespondenceRecord::query()->where('school_id', $actor->school_id)->lockForUpdate()->findOrFail($record->id);
+                if ($record->letter_type !== 'incoming' || ! in_array($record->status, ['received', 'disposition'], true)) {
+                    throw ValidationException::withMessages(['status' => 'Surat masuk hanya dapat dikoreksi sebelum dinyatakan selesai.']);
+                }
+                $old = $record->only(array_keys($data));
+                $record->fill($data);
+                if ($attachment) {
+                    $storedPath = $this->storeAttachment($attachment, (int) $record->school_id);
+                    $oldAttachmentPath = $record->attachment_path;
+                    $record->attachment_path = $storedPath;
+                    $record->attachment_name = $this->safeOriginalName($attachment);
+                }
+                $record->save();
+                $this->audit->log(
+                    'administration.correspondence.incoming_updated',
+                    'CorrespondenceRecord',
+                    (string) $record->id,
+                    ['fields' => array_keys($data), 'attachment_replaced' => $attachment !== null, 'values' => $record->only(array_keys($data))],
+                    ['fields' => array_keys($old), 'values' => $old],
+                    $actor,
+                    (int) $record->school_id,
+                );
+            });
+
+            if ($oldAttachmentPath !== null && $storedPath !== $oldAttachmentPath) {
+                Storage::disk('local')->delete($oldAttachmentPath);
+            }
+        } catch (Throwable $exception) {
+            if ($storedPath !== null) {
+                Storage::disk('local')->delete($storedPath);
+            }
+
+            throw $exception;
+        }
+    }
+
     public function assertOwnedByActor(User $actor, CorrespondenceRecord $record): void
     {
         if ($actor->school_id === null || (int) $actor->school_id !== (int) $record->school_id) {
@@ -417,6 +461,7 @@ class CorrespondenceService
                 if (! $signatory) {
                     throw ValidationException::withMessages(['signatory_id' => 'Pilih pejabat penandatangan yang aktif.']);
                 }
+                $this->assertSignatoryCanSignTemplate($record, $signatory);
                 $record->signer_snapshot = $signatory->only(['name', 'title', 'employee_number', 'rank']);
             }
             $record->status = 'awaiting_signature';
@@ -463,6 +508,7 @@ class CorrespondenceService
             if (! $signatory) {
                 throw ValidationException::withMessages(['signatory_id' => 'Pilih pejabat penandatangan yang aktif.']);
             }
+            $this->assertSignatoryCanSignTemplate($record, $signatory);
             $this->initializeVerification($record);
             $record->status = 'signature_pending';
             $record->signature_method = 'bsre';
@@ -489,7 +535,7 @@ class CorrespondenceService
         if (! in_array($signatureRequest->status, ['failed', 'pending'], true)) {
             throw ValidationException::withMessages(['signature' => 'Permintaan tanda tangan ini tidak dapat diulang.']);
         }
-        $signatureRequest->update(['status' => 'pending', 'error_code' => null]);
+        $signatureRequest->update(['status' => 'pending', 'error_code' => null, 'error_message' => null]);
         $signatureRequest->record()->update(['status' => 'signature_pending']);
         $this->audit->log('administration.correspondence.bsre_retried', 'CorrespondenceSignatureRequest', (string) $signatureRequest->id,
             ['attempts' => $signatureRequest->attempts], actor: $actor, schoolId: (int) $actor->school_id);
@@ -503,7 +549,7 @@ class CorrespondenceService
             return;
         }
         $request->increment('attempts');
-        $request->update(['status' => 'processing', 'last_attempted_at' => now(), 'error_code' => null]);
+        $request->update(['status' => 'processing', 'last_attempted_at' => now(), 'error_code' => null, 'error_message' => null]);
         try {
             $bytes = (string) Storage::disk('local')->get($request->documentVersion->storage_path);
             $result = $this->signatureProvider->sign($bytes, $request->record->signatory, $request->idempotency_key, ['record_id' => $request->record->id]);
@@ -519,7 +565,11 @@ class CorrespondenceService
             $this->audit->log('administration.correspondence.bsre_signed', 'CorrespondenceSignatureRequest', (string) $request->id,
                 ['provider_request_id' => $result->providerRequestId], actor: $request->record->creator, schoolId: (int) $request->school_id);
         } catch (Throwable $exception) {
-            $request->update(['status' => 'failed', 'error_code' => Str::limit(class_basename($exception), 100, '')]);
+            $request->update([
+                'status' => 'failed',
+                'error_code' => Str::limit(class_basename($exception), 100, ''),
+                'error_message' => Str::limit($exception->getMessage() ?: 'Provider tanda tangan tidak dapat memproses dokumen.', 240, ''),
+            ]);
             $request->record->update(['status' => 'signature_failed']);
             $this->audit->log('administration.correspondence.bsre_failed', 'CorrespondenceSignatureRequest', (string) $request->id,
                 ['error_code' => $request->error_code], actor: $request->record->creator, schoolId: (int) $request->school_id);
@@ -548,6 +598,16 @@ class CorrespondenceService
         }
         if ($record->approval_required && $record->approval_status !== 'approved') {
             throw ValidationException::withMessages(['status' => 'Surat harus disetujui sebelum ditandatangani.']);
+        }
+    }
+
+    private function assertSignatoryCanSignTemplate(CorrespondenceRecord $record, CorrespondenceSignatory $signatory): void
+    {
+        $scopes = array_values(array_filter((array) $signatory->template_scopes));
+        if ($scopes !== [] && ! in_array($record->letter_template, $scopes, true)) {
+            throw ValidationException::withMessages([
+                'signatory_id' => 'Pejabat ini belum diberi kewenangan untuk template surat yang dipilih.',
+            ]);
         }
     }
 

@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -397,7 +398,13 @@ class TeacherController extends Controller
                 ['user_id' => $account->id], actor: $request->user(), schoolId: (int) $teacher->school_id);
         });
 
-        return back()->with('message', "Sandi sementara {$teacher->name}: {$password}. Guru wajib menggantinya saat login.");
+        return back()
+            ->with('message', 'Sandi sementara berhasil dibuat dan ditampilkan satu kali selama 5 menit. Sampaikan melalui kanal aman.')
+            ->with('temporary_credential', Crypt::encryptString(json_encode([
+                'subject' => $teacher->name,
+                'password' => $password,
+                'expires_at' => now()->addMinutes(5)->timestamp,
+            ], JSON_THROW_ON_ERROR)));
     }
 
     public function destroy(Request $request, Teacher $teacher): RedirectResponse

@@ -13,12 +13,15 @@ use App\Modules\Administration\Infrastructure\Models\CorrespondenceDocumentVersi
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceRecord;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceSignatory;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceSignatureRequest;
+use App\Modules\Administration\Infrastructure\Signatures\BsreElectronicSignatureProvider;
 use App\Modules\Core\Infrastructure\Models\AuditEvent;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +65,10 @@ class AdministrationCorrespondenceTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Administration/Correspondence/Index')
-                ->has('records', 0));
+                ->has('records', 0)
+                ->where('tte_status.enabled', false)
+                ->where('tte_status.configured', false)
+                ->has('tte_status.queue'));
 
         $this->actingAs($this->operator)->get(route('administration.correspondence.index'))->assertOk();
         $this->actingAs($this->teacher)->get(route('administration.correspondence.index'))->assertForbidden();
@@ -267,6 +273,71 @@ class AdministrationCorrespondenceTest extends TestCase
         $this->patch(route('administration.correspondence.status', $record), ['status' => 'archived'])->assertSessionHasNoErrors();
         auth()->logout();
         $this->get(route('administration.correspondence.verify', $record->verification_token))->assertOk()->assertSee('Diarsipkan');
+    }
+
+    public function test_outgoing_pdf_does_not_fail_when_school_logo_is_a_png_without_gd(): void
+    {
+        $logoPath = 'branding/1/cakrawala-arunika-logo.png';
+        Storage::disk('local')->put($logoPath, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            true,
+        ));
+        $this->school->update([
+            'name' => 'SMA Cakrawala Arunika',
+            'legal_name' => 'Yayasan Cakrawala Arunika',
+            'logo_path' => $logoPath,
+            'settings' => ['letterhead' => ['city' => 'Kota Arunika']],
+        ]);
+
+        $record = CorrespondenceRecord::create([
+            'school_id' => $this->school->id,
+            'created_by' => $this->admin->id,
+            'letter_type' => 'outgoing',
+            'letter_number' => 'PDF/PNG/001/2026',
+            'letter_date' => '2026-10-22',
+            'recipient' => 'Dinas Pendidikan',
+            'subject' => 'Uji render PDF',
+            'letter_body' => 'Isi surat untuk menguji hasil render PDF.',
+            'signer_name' => 'Kepala Sekolah',
+            'signer_title' => 'Kepala Sekolah',
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('administration.correspondence.pdf', $record));
+
+        $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+    }
+
+    public function test_letterhead_keeps_school_name_primary_and_places_letter_date_before_content(): void
+    {
+        $this->school->update([
+            'name' => 'SMA Cakrawala Arunika',
+            'legal_name' => 'Yayasan Cakrawala Arunika',
+            'settings' => ['letterhead' => ['city' => 'Kota Arunika']],
+        ]);
+        $record = CorrespondenceRecord::make([
+            'letter_type' => 'outgoing',
+            'letter_number' => 'FORMAT/001/2026',
+            'letter_date' => '2026-10-22',
+            'recipient' => 'Dinas Pendidikan',
+            'subject' => 'Uji format surat',
+            'letter_body' => 'Isi surat.',
+            'signer_name' => 'Kepala Sekolah',
+            'signer_title' => 'Kepala Sekolah',
+            'status' => 'draft',
+        ]);
+
+        $html = view('correspondence.letter', [
+            'record' => $record,
+            'school' => app(CorrespondenceService::class)->getSchoolLegalSnapshot($this->school->id),
+            'qr' => null,
+        ])->render();
+
+        $this->assertStringContainsString('<p class="letterhead-parent">Yayasan Cakrawala Arunika</p>', $html);
+        $this->assertStringContainsString('<p class="letterhead-name">SMA Cakrawala Arunika</p>', $html);
+        $this->assertStringContainsString('Kota Arunika, 22 Oktober 2026', $html);
+        $this->assertLessThan(strpos($html, '<table class="metadata">'), strpos($html, 'Kota Arunika, 22 Oktober 2026'));
     }
 
     public function test_verification_can_expire_or_be_revoked_and_each_attempt_is_audited_without_raw_token(): void
@@ -534,7 +605,9 @@ class AdministrationCorrespondenceTest extends TestCase
             app(CorrespondenceService::class)->processSignatureRequest($signatureRequest->id);
             $this->fail('Provider yang belum dikonfigurasi seharusnya gagal.');
         } catch (\RuntimeException) {
-            $this->assertSame('failed', $signatureRequest->fresh()->status);
+            $failedRequest = $signatureRequest->fresh();
+            $this->assertSame('failed', $failedRequest->status);
+            $this->assertSame('BSrE belum dikonfigurasi. Dokumen tidak ditandatangani.', $failedRequest->error_message);
             $this->assertSame('signature_failed', $record->fresh()->status);
             $this->assertNull($record->fresh()->document_hash);
         }
@@ -545,6 +618,44 @@ class AdministrationCorrespondenceTest extends TestCase
         $this->assertSame($idempotencyKey, $signatureRequest->idempotency_key);
         $this->assertSame(1, CorrespondenceSignatureRequest::count());
         Queue::assertPushed(ProcessCorrespondenceSignature::class, 2);
+    }
+
+    public function test_bsre_provider_requires_an_explicit_provider_signatory_reference(): void
+    {
+        config()->set('correspondence.bsre.endpoint', 'https://bsre.test/api');
+        config()->set('correspondence.bsre.token', 'test-token');
+
+        $signatory = CorrespondenceSignatory::create([
+            'school_id' => $this->school->id, 'user_id' => $this->principal->id,
+            'name' => $this->principal->name, 'title' => 'Kepala Sekolah', 'is_active' => true,
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Identitas penandatangan BSrE belum dipetakan.');
+
+        (new BsreElectronicSignatureProvider)->sign("%PDF-1.4\n%%EOF", $signatory, 'idempotency-key');
+    }
+
+    public function test_bsre_provider_uses_the_explicit_provider_signatory_reference(): void
+    {
+        config()->set('correspondence.bsre.endpoint', 'https://bsre.test/api');
+        config()->set('correspondence.bsre.token', 'test-token');
+        Http::fake(fn (Request $request) => Http::response([
+            'request_id' => 'provider-123',
+            'signed_pdf_base64' => base64_encode("%PDF-1.4\n% signed\n%%EOF"),
+            'certificate' => ['verified' => true],
+        ]));
+
+        $signatory = CorrespondenceSignatory::create([
+            'school_id' => $this->school->id, 'user_id' => $this->principal->id,
+            'name' => $this->principal->name, 'title' => 'Kepala Sekolah',
+            'provider_reference' => 'bsre-user-123', 'is_active' => true,
+        ]);
+
+        $result = (new BsreElectronicSignatureProvider)->sign("%PDF-1.4\n%%EOF", $signatory, 'idempotency-key');
+
+        $this->assertSame('provider-123', $result->providerRequestId);
+        Http::assertSent(fn (Request $request): bool => str_contains($request->body(), 'bsre-user-123'));
     }
 
     public function test_bsre_success_stores_provider_pdf_without_overlay_and_only_claims_verified_certificate_metadata(): void

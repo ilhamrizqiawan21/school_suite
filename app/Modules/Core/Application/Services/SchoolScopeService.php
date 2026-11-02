@@ -9,6 +9,23 @@ use Illuminate\Support\Facades\Storage;
 
 class SchoolScopeService
 {
+    /** @return array{id:int, name:?string, level:?string, address:?string, phone:?string, email:?string, logo_path:?string, theme:array<string, mixed>} */
+    public function getPrimaryPublicSnapshot(): array
+    {
+        $school = School::query()->orderBy('id')->firstOrFail();
+
+        return [
+            'id' => (int) $school->id,
+            'name' => $school->name,
+            'level' => $school->level,
+            'address' => $school->address,
+            'phone' => $school->phone,
+            'email' => $school->email,
+            'logo_path' => $school->logo_path,
+            'theme' => $school->publicTheme(),
+        ];
+    }
+
     /** Lock a school row to serialize school-scoped sequences inside a transaction. */
     public function lockSchool(int $schoolId): void
     {
@@ -53,6 +70,14 @@ class SchoolScopeService
         }
 
         $mime = Storage::disk('local')->mimeType($school->logo_path) ?: 'image/png';
+
+        // Dompdf relies on PHP GD for PNG decoding. A missing GD extension
+        // must not make every outgoing-letter PDF endpoint return HTTP 500.
+        // JPEG/SVG logos remain available; production should still enable GD
+        // when schools need PNG logos rendered inside PDFs.
+        if ($mime === 'image/png' && ! extension_loaded('gd')) {
+            return null;
+        }
 
         return 'data:'.$mime.';base64,'.base64_encode(Storage::disk('local')->get($school->logo_path));
     }

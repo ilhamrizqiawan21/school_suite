@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CorrespondenceSignatory extends Model
 {
-    protected $fillable = ['school_id', 'user_id', 'name', 'title', 'employee_number', 'rank', 'template_scopes', 'is_active'];
+    protected $fillable = ['school_id', 'user_id', 'provider_reference', 'name', 'title', 'employee_number', 'rank', 'template_scopes', 'is_active'];
 
     protected function casts(): array
     {

@@ -4,7 +4,9 @@ namespace App\Http\Middleware;
 
 use App\Shared\Navigation\SidebarNavigationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Inertia\Middleware;
+use Throwable;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -80,6 +82,41 @@ class HandleInertiaRequests extends Middleware
                 'message' => fn () => $request->session()->get('message'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'temporary_credential' => fn () => $this->pullTemporaryCredential($request),
         ];
+    }
+
+    /** @return array{subject:string, password:string, expires_at:int}|null */
+    private function pullTemporaryCredential(Request $request): ?array
+    {
+        if (! $request->routeIs('academic.students.index', 'academic.teachers.index')) {
+            return null;
+        }
+
+        $encrypted = $request->session()->pull('temporary_credential');
+        if (! is_string($encrypted)) {
+            return null;
+        }
+
+        try {
+            $payload = json_decode(Crypt::decryptString($encrypted), true, 512, JSON_THROW_ON_ERROR);
+            if (! is_array($payload)) {
+                return null;
+            }
+
+            $expiresAt = (int) ($payload['expires_at'] ?? 0);
+
+            if ($expiresAt < now()->timestamp || ! is_string($payload['subject'] ?? null) || ! is_string($payload['password'] ?? null)) {
+                return null;
+            }
+
+            return [
+                'subject' => $payload['subject'],
+                'password' => $payload['password'],
+                'expires_at' => $expiresAt,
+            ];
+        } catch (Throwable) {
+            return null;
+        }
     }
 }

@@ -19,13 +19,17 @@ final class BsreElectronicSignatureProvider implements ElectronicSignatureProvid
         if ($endpoint === '' || $token === '') {
             throw new RuntimeException('BSrE belum dikonfigurasi.');
         }
+        $providerReference = trim((string) $signatory->provider_reference);
+        if ($providerReference === '') {
+            throw new RuntimeException('Identitas penandatangan BSrE belum dipetakan.');
+        }
 
         $response = Http::asMultipart()->acceptJson()->withToken($token)
             ->timeout((int) config('correspondence.bsre.timeout', 30))
             ->attach('file', $pdfBytes, 'document.pdf')
             ->post($endpoint.'/sign', [
                 ['name' => 'idempotency_key', 'contents' => $idempotencyKey],
-                ['name' => 'signatory_reference', 'contents' => (string) ($signatory->user_id ?? $signatory->id)],
+                ['name' => 'signatory_reference', 'contents' => $providerReference],
             ]);
         if (! $response->successful()) {
             throw new RuntimeException('BSrE menolak permintaan tanda tangan (HTTP '.$response->status().').');

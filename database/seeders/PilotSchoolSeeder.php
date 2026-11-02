@@ -26,11 +26,24 @@ use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use LogicException;
 
 class PilotSchoolSeeder extends Seeder
 {
     public function run(): void
     {
+        if (config('app.env') === 'production') {
+            throw new LogicException('PilotSchoolSeeder hanya boleh dijalankan di local/testing, bukan production.');
+        }
+
+        $pilotPassword = (string) config('demo.pilot_password', '');
+        if ($pilotPassword === '' && config('app.env') === 'testing') {
+            $pilotPassword = 'test-only-pilot-password';
+        }
+        if (strlen($pilotPassword) < 12) {
+            throw new LogicException('PILOT_DEFAULT_PASSWORD wajib diisi minimal 12 karakter untuk menjalankan seeder pilot.');
+        }
+
         // 1. Roles & Permissions Baku
         $roles = [
             'admin' => Role::firstOrCreate(['name' => 'admin'], ['label' => 'Administrator', 'is_system' => true]),
@@ -84,7 +97,7 @@ class PilotSchoolSeeder extends Seeder
             ]
         );
 
-        $defaultPassword = Hash::make('password');
+        $defaultPassword = Hash::make($pilotPassword);
 
         // 3. Akun Pengguna Utama
         $admin = User::firstOrCreate(
@@ -99,7 +112,7 @@ class PilotSchoolSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $this->requirePilotPasswordRotation($admin);
+        $this->requirePilotPasswordRotation($admin, $pilotPassword);
 
         $principal = User::firstOrCreate(
             ['email' => 'kepsek@pilot.sch.id'],
@@ -113,7 +126,7 @@ class PilotSchoolSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $this->requirePilotPasswordRotation($principal);
+        $this->requirePilotPasswordRotation($principal, $pilotPassword);
 
         $operator = User::firstOrCreate(
             ['email' => 'operator@pilot.sch.id'],
@@ -127,7 +140,7 @@ class PilotSchoolSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $this->requirePilotPasswordRotation($operator);
+        $this->requirePilotPasswordRotation($operator, $pilotPassword);
 
         // 4. Tahun Ajaran & Semester
         $ayPast = AcademicYear::firstOrCreate(
@@ -197,7 +210,7 @@ class PilotSchoolSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
-            $this->requirePilotPasswordRotation($tUser);
+            $this->requirePilotPasswordRotation($tUser, $pilotPassword);
 
             $teachers[$tData['nip']] = Teacher::firstOrCreate(
                 ['school_id' => $school->id, 'nip' => $tData['nip']],
@@ -307,7 +320,7 @@ class PilotSchoolSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
-            $this->requirePilotPasswordRotation($studentUser);
+            $this->requirePilotPasswordRotation($studentUser, $pilotPassword);
 
             $student = Student::firstOrCreate(
                 ['school_id' => $school->id, 'nis' => $nis],
@@ -400,9 +413,9 @@ class PilotSchoolSeeder extends Seeder
         }
     }
 
-    private function requirePilotPasswordRotation(User $user): void
+    private function requirePilotPasswordRotation(User $user, string $pilotPassword): void
     {
-        if (! $user->must_change_password && Hash::check('password', $user->password)) {
+        if (! $user->must_change_password && Hash::check($pilotPassword, $user->password)) {
             $user->forceFill(['must_change_password' => true])->save();
         }
     }

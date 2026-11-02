@@ -69,6 +69,16 @@ class HealthCheckTest extends TestCase
         $this->get('/up')->assertOk()->assertJson(['status' => 'healthy']);
     }
 
+    public function test_health_check_does_not_write_a_probe_file(): void
+    {
+        $probe = storage_path('app/private/.health_check_probe');
+        @unlink($probe);
+
+        $this->get('/up')->assertOk();
+
+        $this->assertFileDoesNotExist($probe);
+    }
+
     public function test_sensitive_data_processor_redacts_credentials_in_logs(): void
     {
         $processor = new SanitizeSensitiveDataProcessor;

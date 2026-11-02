@@ -80,10 +80,20 @@ if ($parsedUrl === false || strtolower((string) ($parsedUrl['scheme'] ?? '')) !=
     $failures[] = 'APP_URL';
 }
 
-$required('APP_KEY');
+$appKey = $required('APP_KEY');
+$keyMaterial = str_starts_with($appKey, 'base64:')
+    ? base64_decode(substr($appKey, 7), true)
+    : $appKey;
+if ($keyMaterial === false || strlen((string) $keyMaterial) < 32) {
+    $failures[] = 'APP_KEY';
+}
 
 if (! $boolean((string) ($values['SESSION_SECURE_COOKIE'] ?? ''), true)) {
     $failures[] = 'SESSION_SECURE_COOKIE';
+}
+
+if (! $boolean((string) ($values['SESSION_ENCRYPT'] ?? ''), true)) {
+    $failures[] = 'SESSION_ENCRYPT';
 }
 
 $backupPassword = $required('BACKUP_PASSWORD');

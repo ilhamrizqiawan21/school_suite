@@ -44,11 +44,11 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 }
 
 .public-section-page {
-    --ink: #173044;
-    --muted: #526673;
-    --paper: #f4f0e7;
-    --deep: #123247;
-    --gold: #9a7329;
+    --ink: var(--public-ink, #173044);
+    --muted: var(--public-muted, #526673);
+    --paper: var(--public-paper, #fffdf8);
+    --deep: var(--public-primary, #3157a4);
+    --gold: var(--public-accent, #8a661f);
     min-height: 100vh;
     color: var(--ink);
     background: var(--paper);
@@ -100,7 +100,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     margin-top: 6rem;
     padding: 1.3rem 0 3rem;
     color: var(--muted);
-    border-top: 1px solid #cfc8ba;
+    border-top: 1px solid var(--public-line-strong);
     font-size: .82rem;
 }
 

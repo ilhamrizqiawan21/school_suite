@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../../layouts/AppLayout.vue';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { SharedProps } from '../../../types';
 
 interface SchoolData {
@@ -82,6 +82,20 @@ const form = useForm({
     logo: null as File | null,
     favicon: null as File | null,
 });
+
+const applyThemePreview = (primary?: string) => {
+    if (!primary) return;
+
+    document.documentElement.style.setProperty('--school-primary', primary);
+    document.documentElement.style.setProperty('--primary', primary);
+};
+
+const resetThemePreview = () => {
+    applyThemePreview(page.props.school?.theme_primary ?? props.school.settings?.theme_primary ?? '#3157a4');
+};
+
+watch(() => form.theme_primary, applyThemePreview, { immediate: true });
+onBeforeUnmount(resetThemePreview);
 
 const uploads = ref<Record<'logo' | 'favicon', string>>({ logo: '', favicon: '' });
 const uploadVersion = ref(0);

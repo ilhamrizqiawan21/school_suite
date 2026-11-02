@@ -232,22 +232,22 @@ const focusLabel = computed(() => {
     return 'Ruang kerja sekolah';
 });
 const focusTitle = computed(() => {
-    if (isAdmin.value) return 'Pusat kendali sekolah.';
-    if (isOperator.value) return 'Pusat pengelolaan data dan konfigurasi.';
-    if (isPrincipal.value) return 'Lihat sekolah dari gambaran utuh.';
-    if (isHomeroom.value) return 'Dampingi tumbuh kembang kelas binaan.';
-    if (isTeacher.value) return 'Mulai dari pekerjaan yang paling penting.';
-    if (isStudent.value) return 'Belajar dengan arah yang lebih jelas.';
-    return 'Semua pekerjaan sekolah, dari satu tempat.';
+    if (isAdmin.value) return 'Ringkasan sekolah hari ini.';
+    if (isOperator.value) return 'Kelola data sekolah dan pengaturan.';
+    if (isPrincipal.value) return 'Lihat ringkasan sekolah.';
+    if (isHomeroom.value) return 'Pantau perkembangan kelas.';
+    if (isTeacher.value) return 'Lihat tugas mengajar hari ini.';
+    if (isStudent.value) return 'Lihat jadwal dan tugas hari ini.';
+    return 'Akses pekerjaan sekolah dari satu halaman.';
 });
 const focusCopy = computed(() => {
-    if (isAdmin.value) return 'Pantau warga sekolah, komunikasi, dan data akademik tanpa berpindah-pindah konteks.';
-    if (isOperator.value) return 'Kelola master data siswa, guru, rombel, jadwal, dan skema penilaian secara terpadu.';
-    if (isPrincipal.value) return 'Pantau denyut akademik, laporan capaian, dan kesiapan operasional dari satu ruang pimpinan.';
+    if (isAdmin.value) return 'Lihat data warga sekolah, komunikasi, dan akademik dari satu halaman.';
+    if (isOperator.value) return 'Kelola data siswa, guru, rombel, jadwal, dan penilaian.';
+    if (isPrincipal.value) return 'Lihat kehadiran, capaian belajar, dan kesiapan operasional sekolah.';
     if (isHomeroom.value) return 'Pantau kehadiran, catatan pembinaan, kedisiplinan, dan informasi kelas.';
     if (isTeacher.value) return 'Kelola materi pembelajaran, presensi, bank soal, dan evaluasi hasil belajar siswa.';
     if (isStudent.value) return 'Akses materi pelajaran, jadwal kelas, ujian CBT, dan pantau capaian belajarmu.';
-    return 'Akses modul yang tersedia sesuai hak akses akun Anda.';
+    return 'Buka menu yang tersedia untuk akun Anda.';
 });
 const focusMetric = computed(() => {
     if (isAdmin.value || isPrincipal.value) return roleMetrics.value.students;
@@ -474,12 +474,12 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 
             <div v-if="!isPrincipal && !isTeacher && !isAdmin" class="command-layout">
                 <article class="focus-panel" :class="{ 'teacher-focus': isTeacher || isHomeroom, 'principal-focus': isPrincipal, 'student-focus': isStudent, 'operator-focus': isOperator }">
-                    <div class="focus-meta"><span>{{ focusLabel }}</span><span class="focus-status"><i /> Sistem aktif</span></div>
+                    <div class="focus-meta"><span>{{ focusLabel }}</span><span class="focus-status"><i /> Data diperbarui</span></div>
                     <div class="focus-content"><template v-if="!isAdmin"><span class="focus-number">{{ focusMetric ?? '—' }}</span><span class="focus-number-label">{{ focusMetricLabel }}</span></template><h2>{{ focusTitle }}</h2><p>{{ focusCopy }}</p><Link :href="primaryAction.href" class="focus-action">{{ primaryAction.title }} <span aria-hidden="true">↗</span></Link></div>
                     <div class="focus-orbit orbit-one" /><div class="focus-orbit orbit-two" />
                 </article>
                 <aside class="insight-panel">
-                    <div class="insight-heading"><div><span class="eyebrow">Jalan pintas</span><h2>Pekerjaan berikutnya</h2></div></div>
+                    <div class="insight-heading"><div><span class="eyebrow">Menu cepat</span><h2>Yang perlu dikerjakan</h2></div></div>
                     <Link :href="nextAction.href" class="signal-line"><span class="signal-dot" /><span><strong>{{ nextAction.title }}</strong><span class="signal-description">{{ nextAction.description }}</span></span><span class="signal-arrow" aria-hidden="true">↗</span></Link>
                     <div class="insight-rule" />
                     <div class="insight-footer"><span>Periode</span><strong>{{ activePeriod }}</strong></div>
@@ -526,7 +526,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </div>
 
                 <section class="principal-activity" aria-labelledby="principal-activity-title">
-                    <div class="principal-section-heading"><div><span>Aktivitas lintas peran</span><h2 id="principal-activity-title">Dari data sekolah sampai hasil belajar</h2></div><span>Ringkasan periode aktif</span></div>
+                    <div class="principal-section-heading"><div><span>Ringkasan sekolah</span><h2 id="principal-activity-title">Perkembangan sekolah</h2></div><span>Periode berjalan</span></div>
                     <div class="principal-activity-grid">
                         <Link v-for="item in principalActivity" :key="item.role" :href="item.href" class="principal-activity-item">
                             <span>{{ item.role }}</span><strong>{{ percentLabel(item.rate) }}</strong><h3>{{ item.title }}</h3><p>{{ item.detail }}</p>
@@ -584,7 +584,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                         </article>
                     </div>
                 </div>
-                <div v-else class="section-heading"><div><span class="eyebrow">Alur kerja</span><h2>{{ isPrincipal ? 'Pantauan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Alur kerja perwalian' : isTeacher ? 'Pekerjaan mengajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} langkah lanjutan</span></div>
+                <div v-else class="section-heading"><div><span class="eyebrow">Berikutnya</span><h2>{{ isPrincipal ? 'Ringkasan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Tugas wali kelas' : isTeacher ? 'Pekerjaan mengajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} menu</span></div>
                 <div v-if="!isAdmin && !isStudent" class="workflow-list">
                     <Link v-for="(action, index) in secondaryActions" :key="action.href" :href="action.href" class="workflow-row">
                         <span class="workflow-index">{{ String(index + 2).padStart(2, '0') }}</span><span class="workflow-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span><span class="workflow-copy"><strong>{{ action.title }}</strong><span>{{ action.description }}</span></span><span class="workflow-arrow" aria-hidden="true">↗</span>
@@ -793,4 +793,10 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 @media (max-width: 800px) { .command-layout, .principal-command { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid, .admin-action-groups { grid-template-columns: 1fr; }.admin-action-group:last-child { grid-column: auto; }.admin-action-group:last-child .admin-action-list { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
 @media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; }.principal-toolbar { align-items: start; flex-direction: column; }.principal-lead, .principal-attention, .principal-chart-panel, .principal-grade-panel, .principal-news { padding: 19px; }.principal-lead { min-height: 300px; }.principal-panel-heading { align-items: start; flex-direction: column; gap: 6px; }.principal-grade-meta { grid-template-columns: minmax(0, 1fr) auto; }.principal-grade-meta span { grid-column: 1; grid-row: 2; }.principal-grade-meta b { grid-column: 2; grid-row: 1 / 3; }.principal-activity-grid { grid-template-columns: 1fr; }.principal-activity-item { min-height: 182px; border-right: 0; border-bottom: 1px solid var(--line); }.principal-activity-item:last-child { border-bottom: 0; }.principal-news li { grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; }.principal-news li strong { grid-column: 1 / -1; white-space: normal; }.principal-news li time { text-align: right; } }
 @media (prefers-reduced-motion: reduce) { .workflow-row { transition: none; } }
+/* Shared card rhythm: role colors remain, geometry stays consistent. */
+.focus-panel, .insight-panel { border-radius: var(--card-radius-featured); }
+.insight-panel { padding: var(--card-padding); }
+.metric-item { min-height: 112px; padding: var(--card-padding-compact); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
+.student-overview-card { padding: var(--card-padding); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
+.admin-overview-card { padding: var(--card-padding-compact); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
 </style>

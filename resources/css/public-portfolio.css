@@ -7,6 +7,10 @@
     --public-ink: #173044;
     --public-muted: #526673;
     --public-muted-strong: #405762;
+    --public-surface-alt: color-mix(in srgb, var(--public-primary) 4%, var(--public-surface));
+    --public-line: color-mix(in srgb, var(--public-ink) 14%, transparent);
+    --public-line-strong: color-mix(in srgb, var(--public-ink) 22%, transparent);
+    --public-focus: color-mix(in srgb, var(--public-accent) 68%, white);
     --public-deep: var(--public-primary);
     --public-deep-hover: color-mix(in srgb, var(--public-primary) 78%, #173044);
     --public-gold: var(--public-accent);
@@ -177,7 +181,7 @@
 }
 
 .public-site a:focus-visible {
-    outline: 3px solid #c6953e;
+    outline: 3px solid var(--public-focus);
     outline-offset: 4px;
 }
 
@@ -201,5 +205,7 @@
     --paper: var(--public-paper, #fffdf8) !important;
     --deep: var(--public-deep, #123247) !important;
     --gold: var(--public-gold, #9a7329) !important;
+    --ink: var(--public-ink, #173044) !important;
+    --muted: var(--public-muted, #526673) !important;
     background: var(--public-paper, #fffdf8) !important;
 }

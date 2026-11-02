@@ -15,7 +15,6 @@ use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -467,14 +466,20 @@ class AcademicControllersTest extends TestCase
         $user = User::factory()->create(['school_id' => $this->school->id, 'role_id' => $role->id, 'must_change_password' => false, 'password_changed_at' => now()]);
         $student = Student::create(['school_id' => $this->school->id, 'user_id' => $user->id, 'nis' => '7010', 'name' => 'Siswa Reset', 'gender' => 'L']);
         $response = $this->actingAs($this->admin)->post('/akademik/siswa/'.$student->id.'/reset-password')->assertRedirect();
-        preg_match('/Siswa Reset: ([A-Za-z0-9]+)\./', session('message'), $matches);
-        $this->assertNotEmpty($matches[1] ?? null);
-        $this->assertTrue(Hash::check($matches[1], $user->fresh()->password));
+        $this->assertStringContainsString('ditampilkan satu kali', (string) session('message'));
+        $this->assertStringNotContainsString($user->fresh()->password, (string) session('message'));
         $this->assertTrue($user->fresh()->must_change_password);
         $this->assertNull($user->fresh()->password_changed_at);
         $this->assertDatabaseHas('audit_events', ['event_type' => 'academic.student.password_reset', 'target_id' => (string) $student->id]);
-        $this->assertStringNotContainsString($matches[1], (string) DB::table('audit_events')->where('event_type', 'academic.student.password_reset')->value('new_values'));
-        $this->get('/akademik/siswa')->assertInertia(fn ($page) => $page->where('students.data.0.account_status', 'default')->missing('students.data.0.user'));
+        $landing = $this->get('/akademik/siswa')->assertInertia(fn ($page) => $page
+            ->where('students.data.0.account_status', 'default')
+            ->missing('students.data.0.user')
+            ->where('temporary_credential.subject', 'Siswa Reset'));
+        $props = $landing->original->getData()['page']['props'];
+        $temporaryPassword = $props['temporary_credential']['password'] ?? null;
+        $this->assertIsString($temporaryPassword);
+        $this->assertTrue(Hash::check($temporaryPassword, $user->fresh()->password));
+        $this->get('/akademik/siswa')->assertInertia(fn ($page) => $page->where('temporary_credential', null));
     }
 
     public function test_student_actions_reject_other_schools_and_read_only_roles(): void
@@ -603,12 +608,18 @@ class AcademicControllersTest extends TestCase
     {
         $teacher = Teacher::create(['school_id' => $this->school->id, 'user_id' => $this->teacherUser->id, 'name' => 'Guru Reset', 'gender' => 'L']);
         $this->actingAs($this->admin)->post('/akademik/guru/'.$teacher->id.'/reset-password')->assertSessionHasNoErrors();
-        preg_match('/Guru Reset: ([A-Za-z0-9]+)\./', session('message'), $matches);
-        $this->assertTrue(Hash::check($matches[1], $this->teacherUser->fresh()->password));
+        $this->assertStringContainsString('ditampilkan satu kali', (string) session('message'));
         $this->assertTrue($this->teacherUser->fresh()->must_change_password);
         $this->assertNull($this->teacherUser->fresh()->password_changed_at);
-        $this->get('/akademik/guru')->assertInertia(fn ($page) => $page->where('teachers.data.0.account_status', 'default')->missing('teachers.data.0.user'));
-        $this->assertStringNotContainsString($matches[1], (string) DB::table('audit_events')->where('event_type', 'academic.teacher.password_reset')->value('new_values'));
+        $landing = $this->get('/akademik/guru')->assertInertia(fn ($page) => $page
+            ->where('teachers.data.0.account_status', 'default')
+            ->missing('teachers.data.0.user')
+            ->where('temporary_credential.subject', 'Guru Reset'));
+        $props = $landing->original->getData()['page']['props'];
+        $temporaryPassword = $props['temporary_credential']['password'] ?? null;
+        $this->assertIsString($temporaryPassword);
+        $this->assertTrue(Hash::check($temporaryPassword, $this->teacherUser->fresh()->password));
+        $this->get('/akademik/guru')->assertInertia(fn ($page) => $page->where('temporary_credential', null));
         $teacher->update(['user_id' => $this->admin->id]);
         $this->post('/akademik/guru/'.$teacher->id.'/reset-password')->assertSessionHasErrors('teacher');
         $teacher->update(['user_id' => null]);

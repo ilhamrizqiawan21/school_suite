@@ -22,6 +22,7 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
   - Runtime CLI dan PHP-FPM memakai PHP 8.3.x; `composer.lock` dikunci dengan `config.platform.php=8.3.0`.
   - `HEALTH_CHECK_URL=https://<domain-aplikasi>/up` disetel pada environment shell saat deploy.
   - PHP CLI dan FPM minimal 8.3; socket/service harus sesuai template.
+  - Ekstensi PHP `gd` terpasang pada CLI dan PHP-FPM; verifikasi dengan `composer check-platform-reqs`.
   - `BACKUP_PASSWORD` secret terpisah minimal 32 karakter dan salinan kunci offsite tersedia.
   - `APP_ENV=production`
   - `APP_DEBUG=false`
@@ -29,6 +30,7 @@ Wajib dipenuhi sebelum menjalankan skrip rilis ke server produksi:
   - `ENFORCE_PASSWORD_CHANGE=true` (atau kosong, yang diperlakukan sebagai aktif); nilai `false`, `0`, `off`, dan `no` ditolak untuk production.
   - `DB_CONNECTION=mysql` dengan database `school_suite` dan kredensial terisolasi.
   - `SESSION_SECURE_COOKIE=true` (untuk enkripsi cookie via HTTPS).
+  - `SESSION_ENCRYPT=true` untuk mengenkripsi payload session di storage.
   - Hak akses file `.env` dikunci ketat (`chmod 600 .env` milik `www-data:www-data`).
   - Shared storage dan direktori backup dimiliki user/group runtime yang sama dengan PHP-FPM, worker, dan scheduler (`RUNTIME_USER`/`RUNTIME_GROUP`, default `www-data`); deployment script menormalkan permission direktori ke `0770` dan file ke `0660`.
 

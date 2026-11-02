@@ -16,7 +16,7 @@ use App\Modules\Admissions\Infrastructure\Models\AdmissionDocumentRequirement;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionPeriod;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionSelectionCriterion;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionTrack;
-use App\Modules\Core\Infrastructure\Models\School;
+use App\Modules\Core\Application\Services\SchoolScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +34,7 @@ class AdmissionsController extends Controller
     public function __construct(
         private readonly TeacherDirectoryService $teacherDirectory,
         private readonly AdmissionWorkflowService $workflow,
+        private readonly SchoolScopeService $schoolScope,
     ) {}
 
     public function index(Request $request, AdmissionsPolicy $policy): Response
@@ -43,9 +44,9 @@ class AdmissionsController extends Controller
 
     public function publicIndex(): Response
     {
-        $school = School::query()->firstOrFail();
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
         $periods = AdmissionPeriod::query()
-            ->where('school_id', $school->id)
+            ->where('school_id', $school['id'])
             ->whereIn('status', ['registration_open', 'verification', 'selection', 'announcement', 're_registration'])
             ->with(['tracks' => fn ($query) => $query->where('is_active', true)->with('requirements')])
             ->orderByDesc('registration_start')
@@ -80,13 +81,13 @@ class AdmissionsController extends Controller
 
         return Inertia::render('Public/Admissions/Index', [
             'school' => [
-                'name' => $school->name,
-                'level' => $school->level,
-                'address' => $school->address,
-                'phone' => $school->phone,
-                'email' => $school->email,
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
-                'theme' => $school->publicTheme(),
+                'name' => $school['name'],
+                'level' => $school['level'],
+                'address' => $school['address'],
+                'phone' => $school['phone'],
+                'email' => $school['email'],
+                'logo_url' => $school['logo_path'] ? route('branding.school', [$school['id'], 'logo']) : null,
+                'theme' => $school['theme'],
             ],
             'periods' => $periods,
         ]);

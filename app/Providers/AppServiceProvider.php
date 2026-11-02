@@ -32,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(20)->by((string) ($request->user()?->id ?? $request->ip())),
         ]);
 
+        RateLimiter::for('health', fn (Request $request) => [
+            Limit::perMinute(60)->by((string) ($request->ip() ?? 'health-check')),
+        ]);
+
         // Pasang sanitasi log otomatis untuk melindungi parameter sensitif (AI_RULES Aturan 4 & 9)
         if (method_exists(Log::getFacadeRoot(), 'getLogger')) {
             Log::getLogger()->pushProcessor(new SanitizeSensitiveDataProcessor);

@@ -64,15 +64,7 @@ class HealthCheckController extends Controller
     {
         try {
             $privatePath = storage_path('app/private');
-            if (! File::isDirectory($privatePath)) {
-                File::makeDirectory($privatePath, 0755, true);
-            }
-
-            $testFile = "{$privatePath}/.health_check_probe";
-            $canWrite = (bool) @file_put_contents($testFile, 'probe');
-            if ($canWrite) {
-                @unlink($testFile);
-            }
+            $canWrite = File::isDirectory($privatePath) && is_writable($privatePath);
 
             return [
                 'healthy' => $canWrite,

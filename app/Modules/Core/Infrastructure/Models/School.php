@@ -123,7 +123,10 @@ class School extends Model
         $theme = self::PUBLIC_THEME_PRESETS[$preset];
         $legacyPrimary = data_get($settings, 'theme_primary');
 
-        if (! is_string($selectedPreset) && in_array($legacyPrimary, self::PUBLIC_THEME_COLORS, true)) {
+        // The school's identity color is the source of truth for the public
+        // primary color, even when a public visual preset is selected. The
+        // preset still supplies the supporting accent, surface, and ink.
+        if (in_array($legacyPrimary, self::PUBLIC_THEME_COLORS, true)) {
             $theme['primary'] = $legacyPrimary;
         }
 

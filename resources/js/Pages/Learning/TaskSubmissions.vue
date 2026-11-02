@@ -95,7 +95,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
             <section class="panel overflow-hidden">
                 <div class="submission-toolbar">
                     <div><p class="eyebrow">Daftar pengumpulan</p><h2>Jawaban siswa</h2></div>
-                    <div class="submission-tools"><label class="table-search"><span>⌕</span><input v-model="search" placeholder="Cari siswa" /></label><select v-model="statusFilter"><option value="all">Semua status</option><option value="submitted">Terkirim</option><option value="graded">Dinilai</option><option value="needs_revision">Perlu perbaikan</option><option value="not_submitted">Belum mengumpulkan</option></select><button class="secondary-button compact" type="button" @click="exportCsv">Excel</button><button class="secondary-button compact" type="button" @click="printPage">PDF</button></div>
+                    <div class="submission-tools"><label class="table-search"><span>⌕</span><input v-model="search" placeholder="Cari siswa" /></label><select v-model="statusFilter"><option value="all">Semua status</option><option value="submitted">Terkirim</option><option value="graded">Dinilai</option><option value="needs_revision">Perlu perbaikan</option><option value="not_submitted">Belum mengumpulkan</option></select><button class="file-action-button file-action-button--excel compact" type="button" @click="exportCsv">Excel</button><button class="file-action-button file-action-button--pdf compact" type="button" @click="printPage">PDF</button></div>
                 </div>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table submission-table">

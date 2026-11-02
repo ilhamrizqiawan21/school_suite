@@ -10,8 +10,12 @@ Route::middleware(['auth', 'role:admin,operator,principal', 'throttle:sensitive'
     ->name('administration.correspondence.')
     ->group(function (): void {
         Route::get('/', [CorrespondenceController::class, 'index'])->name('index');
+        Route::get('/surat-masuk', [CorrespondenceController::class, 'incoming'])->name('incoming.index');
+        Route::get('/surat-keluar', [CorrespondenceController::class, 'outgoing'])->name('outgoing.index');
+        Route::get('/arsip', [CorrespondenceController::class, 'archive'])->name('archive.index');
         Route::post('/surat', [CorrespondenceController::class, 'store'])->name('store');
         Route::patch('/surat/{record}/draf', [CorrespondenceController::class, 'updateDraft'])->name('draft');
+        Route::patch('/surat/{record}/masuk', [CorrespondenceController::class, 'updateIncoming'])->name('incoming');
         Route::get('/surat/{record}/pdf', [CorrespondenceController::class, 'pdf'])->name('pdf');
         Route::patch('/surat/{record}/status', [CorrespondenceController::class, 'updateStatus'])->name('status');
         Route::patch('/surat/{record}/verifikasi/revoke', [CorrespondenceController::class, 'revokeVerification'])->name('verification.revoke');

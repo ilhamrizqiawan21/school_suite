@@ -76,7 +76,7 @@ main {
 }
 
 .panel {
-    border-radius: 14px;
+    border-radius: var(--card-radius);
 }
 
 .page-heading h1 {
@@ -119,12 +119,12 @@ textarea:focus {
 }
 
 .focus-panel {
-    border-radius: 18px;
+    border-radius: var(--card-radius-featured);
     box-shadow: 0 16px 34px rgba(24, 48, 78, .13);
 }
 
 .insight-panel {
-    border-radius: 18px;
+    border-radius: var(--card-radius-featured);
     background: var(--surface);
 }
 
@@ -136,7 +136,7 @@ textarea:focus {
 .student-overview-card,
 .admin-overview-card,
 .attendance-chart-card {
-    border-radius: 14px;
+    border-radius: var(--card-radius);
 }
 
 .metric-item {

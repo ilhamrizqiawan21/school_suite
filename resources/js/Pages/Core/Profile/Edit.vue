@@ -187,7 +187,7 @@ const submit = () => form.post('/profil', {
     background: var(--primary-soft);
     color: var(--primary);
     font-size: 1.65rem;
-    font-weight: 900;
+    font-weight: var(--weight-heavy);
 }
 
 .avatar-preview img {
