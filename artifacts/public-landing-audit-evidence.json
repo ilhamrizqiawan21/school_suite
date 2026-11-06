@@ -1,0 +1,62 @@
+{
+  "contract": "All public landing pages share the configured school theme, derive accents from the base color instead of fixed orange/gold values, align card grids with the hero container, keep deliberate spacing, and remain readable responsively.",
+  "targetViewports": ["1440x900", "375x844"],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Public pages expose labelled navigation and headings; all nine audited routes loaded without browser console or page errors."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Audited public routes kept document and body scroll widths equal to the viewport at 1440px, 375px, and an additional 320px narrow-width check; section card grids align to the 1180px hero container with 24px desktop spacing and simulated green base rendering contained no legacy orange/gold computed colors."
+  },
+  "contentStates": {
+    "loading": { "status": "not-applicable", "reason": "This change targets rendered landing-page surfaces after navigation completes." },
+    "empty": { "status": "pass", "evidence": "News, gallery, and organization empty states remain visible inside contained themed surfaces." },
+    "error": { "status": "pass", "evidence": "Nine public routes produced zero console errors and zero page errors during navigation." },
+    "partial": { "status": "not-applicable", "reason": "No partial-data behavior was changed by the shared visual layer." },
+    "success": { "status": "not-applicable", "reason": "No mutation or submission flow is part of this landing-page audit." },
+    "permission": { "status": "not-applicable", "reason": "Audited pages are public routes." }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "1440x900",
+      "artifact": "ui-postfix-akademik-fasilitas.png",
+      "observation": "Academic landing page now uses the shared blue hero, rounded surface, clipped decoration, and themed cards."
+    },
+    {
+      "viewport": "375x844",
+      "artifact": "ui-postfix-mobile-akademik-fasilitas.png",
+      "observation": "Academic landing page remains readable on mobile with contained hero and stacked cards."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "public-home-base-green-no-orange.png",
+      "observation": "Homepage rendered with a green base uses green-derived accent text and no fixed orange/gold accent in the hero."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "public-home-green-final.png",
+      "observation": "Homepage receives the green primary and matching green accent directly from the backend theme payload; hero remains readable and contained."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "kesiswaan-card-layout-fixed.png",
+      "observation": "Kesiswaan cards align to the hero width, sit below it with a deliberate gap, and maintain readable contrast in the feature card."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "berita-card-layout-fixed.png",
+      "observation": "News cards align to the hero container and now have a visible 24px separation from the hero instead of touching its bottom edge."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "galeri-card-layout-fixed.png",
+      "observation": "Gallery album cards align to the hero container with a consistent 24px section gap and 24px internal grid gap."
+    },
+    {
+      "viewport": "375x844",
+      "artifact": "galeri-card-layout-mobile-fixed.png",
+      "observation": "Gallery cards remain contained on mobile, stack without horizontal overflow, and retain the same deliberate hero-to-grid spacing."
+    }
+  ]
+}

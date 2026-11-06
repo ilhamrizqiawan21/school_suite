@@ -510,4 +510,90 @@ const toggleProfileMenu = () => {
         scroll-behavior: auto !important;
     }
 }
+
+/* Shared public navigation: compact utility chrome with a clear active state. */
+.public-site-header {
+    padding-top: 1.25rem;
+}
+
+.public-site-header-top {
+    padding-bottom: .75rem;
+    border-bottom: 0;
+}
+
+.admissions-action {
+    border-radius: 999px;
+}
+
+.public-site-header-nav-row {
+    min-height: 3.2rem;
+    border-top: 1px solid color-mix(in srgb, var(--public-ink, #173044) 13%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--public-ink, #173044) 13%, transparent);
+}
+
+.public-nav {
+    gap: .35rem;
+}
+
+.public-nav > a,
+.nav-menu-trigger {
+    min-height: 36px;
+    padding: .45rem .8rem;
+    border-radius: 999px;
+}
+
+.public-nav > a[aria-current='page'],
+.profile-menu.is-active .nav-menu-trigger,
+.nav-menu-trigger[aria-expanded='true'] {
+    color: #fff !important;
+    background: var(--public-primary, #3157a4);
+}
+
+.public-nav > a[aria-current='page']::after,
+.profile-menu.is-active .nav-menu-trigger::after {
+    display: none;
+}
+
+@media (max-width: 1040px) {
+    .public-site-header-nav-row {
+        border-bottom: 0;
+    }
+
+    .public-nav > a,
+    .nav-menu-trigger {
+        border-radius: .65rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .public-site-header-top {
+        gap: .75rem;
+    }
+
+    .brand {
+        min-width: 0;
+        flex: 1 1 auto;
+        gap: .55rem;
+        font-size: .82rem;
+    }
+
+    .brand-name {
+        max-width: 7rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-height: 1.2;
+    }
+
+    .public-site-header-actions {
+        gap: .2rem;
+    }
+
+    .admissions-action,
+    .nav-toggle {
+        padding-inline: .55rem;
+        white-space: nowrap;
+    }
+}
 </style>

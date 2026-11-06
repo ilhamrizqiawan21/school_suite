@@ -124,11 +124,13 @@ class School extends Model
         $legacyPrimary = data_get($settings, 'theme_primary');
 
         // The school's identity color is the source of truth for the public
-        // primary color, even when a public visual preset is selected. The
-        // preset still supplies the supporting accent, surface, and ink.
+        // primary and accent colors, even when a public visual preset is selected.
+        // Presets still supply the supporting surface, ink, and muted tones.
         if (in_array($legacyPrimary, self::PUBLIC_THEME_COLORS, true)) {
             $theme['primary'] = $legacyPrimary;
         }
+
+        $theme['accent'] = $theme['primary'];
 
         $heroVariant = data_get($publicTheme, 'hero_variant');
         $hero = static fn (string $key): ?string => is_string(data_get($publicTheme, $key)) && trim((string) data_get($publicTheme, $key)) !== ''

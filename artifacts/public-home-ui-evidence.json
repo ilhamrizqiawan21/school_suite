@@ -1,0 +1,32 @@
+{
+  "contract": "Public school homepage hero must keep rounded corners, contain decorative layers, fit the viewport, and remain readable on desktop and mobile.",
+  "targetViewports": ["1440x900", "375x844"],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Public homepage loaded with labelled navigation, hero region, CTA links, and no browser console errors."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Hero overflow is hidden at both target viewports; document and body scroll widths match the viewport at 375px mobile width."
+  },
+  "contentStates": {
+    "loading": { "status": "not-applicable", "reason": "This fix targets static hero rendering after page load." },
+    "empty": { "status": "not-applicable", "reason": "The bug is presentational and does not change content availability." },
+    "error": { "status": "pass", "evidence": "Playwright reported zero console errors at both target viewports." },
+    "partial": { "status": "not-applicable", "reason": "No partial-data state is involved in the hero corner fix." },
+    "success": { "status": "not-applicable", "reason": "No form or mutation is involved." },
+    "permission": { "status": "not-applicable", "reason": "The public homepage is accessible without an authorization flow." }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "1440x900",
+      "artifact": "public-home-corner-fix.png",
+      "observation": "Hero card keeps a clean rounded top-left corner while the diagonal decoration remains clipped inside the card."
+    },
+    {
+      "viewport": "375x844",
+      "artifact": "public-home-corner-fix-mobile.png",
+      "observation": "Mobile hero remains contained, readable, and free of horizontal overflow after the corner fix."
+    }
+  ]
+}

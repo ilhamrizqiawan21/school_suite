@@ -1,7 +1,7 @@
 /* Public portfolio: stronger contrast, readable type, and explicit CTA states. */
 .public-site {
     --public-primary: #3157a4;
-    --public-accent: #8a661f;
+    --public-accent: var(--public-primary);
     --public-paper: color-mix(in srgb, var(--public-primary) 2.5%, var(--public-surface));
     --public-surface: #ffffff;
     --public-ink: #173044;
@@ -14,6 +14,12 @@
     --public-deep: var(--public-primary);
     --public-deep-hover: color-mix(in srgb, var(--public-primary) 78%, #173044);
     --public-gold: var(--public-accent);
+    --public-radius-sm: 10px;
+    --public-radius-md: 18px;
+    --public-radius-lg: 28px;
+    --public-shadow-soft: 0 12px 32px rgb(18 50 71 / 10%);
+    --public-shadow-deep: 0 24px 60px rgb(18 50 71 / 16%);
+    --public-transition: cubic-bezier(.2, .8, .2, 1);
     color: var(--public-ink);
     background-color: var(--public-paper);
     font-size: 16px;
@@ -106,7 +112,7 @@
 }
 
 .public-site .brand-mark {
-    background: color-mix(in srgb, var(--public-primary) 18%, #d4a74b);
+    background: color-mix(in srgb, var(--public-primary) 18%, var(--public-surface));
 }
 
 .public-site .hero-visual,
@@ -200,12 +206,267 @@
     }
 }
 
+/* Rendered accent colors stay derived from the school's base color. */
+body .public-site .eyebrow,
+body .public-site .kicker,
+body .public-site .card-number,
+body .public-site .card-label,
+body .public-site .section-label,
+body .public-site .service-number,
+body .public-site .service-link,
+body .public-site .quiet-link,
+body .public-site .read-more,
+body .public-site .back-link,
+body .public-site .card-link,
+body .public-site .resource-strip a,
+body .public-site .album-copy small,
+body .public-site .album-meta,
+body .public-site .date-grid span,
+body .public-site .flow-grid span,
+body .public-site .node-position,
+body .public-site .news-arrow,
+body .public-site .direction-grid article > span,
+body .public-site .article-page .back {
+    color: var(--public-primary) !important;
+}
+
+body .public-site.public-home .home-hero .eyebrow,
+body .public-site.public-home .hero-copy h1 span,
+body .public-site.public-home .hero-caption small,
+body .public-site .life-card-feature .card-number,
+body .public-site .life-card-feature .card-link,
+body .public-site .contact-card-main .card-label,
+body .public-site .contact-card-main .card-link,
+body .public-site .message-section .quote-mark,
+body .public-site .hero-note span,
+body .public-site .status-panel > span {
+    color: color-mix(in srgb, var(--public-primary) 32%, #f7f5ef 68%) !important;
+}
+
+body .public-site .life-card-feature p {
+    color: color-mix(in srgb, #f7f5ef 78%, transparent) !important;
+}
+
+body .public-site.public-section-page .info-grid,
+body .public-site.public-section-page .life-grid,
+body .public-site.public-section-page .contact-grid,
+body .public-site.school-profile .service-grid,
+body .public-site.public-admissions .flow-grid {
+    gap: clamp(1.2rem, 2vw, 1.5rem);
+}
+
+body .public-site.public-section-page > .section-content,
+body .public-site.public-section-page > .section-footer {
+    width: min(1180px, calc(100% - 3rem));
+    margin-inline: auto;
+}
+
+body .public-site.public-section-page > .section-content {
+    padding-top: 1.5rem;
+}
+
+body .public-site.public-news .intro,
+body .public-site.public-gallery .gallery-intro {
+    margin-bottom: 1.5rem;
+}
+
+body .public-site.public-section-page .info-grid,
+body .public-site.public-section-page .life-grid,
+body .public-site.public-section-page .contact-grid {
+    width: 100%;
+}
+
+body .public-site.public-home .explore-grid {
+    gap: 1.1rem;
+}
+
+body .public-site.public-news .card-image {
+    color: color-mix(in srgb, var(--public-primary) 32%, #f7f5ef 68%) !important;
+}
+
+body .public-site .status-meta span,
+body .public-site .track-summary span {
+    background: color-mix(in srgb, var(--public-primary) 6%, var(--public-surface)) !important;
+}
+
+body .public-site .hero-title-accent,
+body .public-site .hero-emblem,
+body .public-site .node-avatar {
+    color: var(--public-primary) !important;
+}
+
+body .public-site .hero-emblem,
+body .public-site .node-avatar,
+body .public-site .brand-mark {
+    background: color-mix(in srgb, var(--public-primary) 14%, var(--public-surface)) !important;
+}
+
+body .public-site .hero-visual::after,
+body .public-site .orbit {
+    border-color: color-mix(in srgb, var(--public-primary) 52%, transparent) !important;
+}
+
+body .public-site .organization-card {
+    border-top-color: var(--public-primary) !important;
+}
+
+body .public-site .period-status,
+body .public-site .status-badge {
+    color: var(--public-primary) !important;
+    background: color-mix(in srgb, var(--public-primary) 12%, var(--public-surface)) !important;
+}
+
+body .public-site .period-status.is-open,
+body .public-site .status-badge.is-open {
+    color: var(--public-primary) !important;
+    background: color-mix(in srgb, var(--public-primary) 16%, var(--public-surface)) !important;
+}
+
 /* Public pages inherit each school's configured identity color. */
 .public-site {
     --paper: var(--public-paper, #f2f6f9) !important;
     --deep: var(--public-deep, #123247) !important;
-    --gold: var(--public-gold, #9a7329) !important;
+    --gold: var(--public-gold, var(--public-primary)) !important;
     --ink: var(--public-ink, #173044) !important;
     --muted: var(--public-muted, #526673) !important;
     background: var(--public-paper, #f2f6f9) !important;
+}
+
+/* Shared landing-page finish: every public entry point uses the same brand surface. */
+.public-site.public-section-page .section-hero,
+.public-site.public-news .intro,
+.public-site.public-gallery .gallery-intro,
+.public-site.public-organization .page-intro {
+    position: relative;
+    isolation: isolate;
+    width: min(1180px, calc(100% - 3rem));
+    margin: 2rem auto 0;
+    padding: clamp(2rem, 4vw, 4rem);
+    overflow: hidden;
+    color: #f7f5ef;
+    background: var(--public-primary);
+    border-radius: var(--public-radius-lg);
+    box-shadow: var(--public-shadow-deep);
+}
+
+.public-site.public-section-page .section-hero::before,
+.public-site.public-news .intro::before,
+.public-site.public-gallery .gallery-intro::before,
+.public-site.public-organization .page-intro::before {
+    position: absolute;
+    inset: 0 48% 0 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--public-primary) 84%, #fff 16%);
+    clip-path: polygon(0 0, 78% 0, 100% 100%, 0 100%);
+    content: '';
+    opacity: .42;
+}
+
+.public-site.public-section-page .section-hero > *,
+.public-site.public-news .intro > *,
+.public-site.public-gallery .gallery-intro > *,
+.public-site.public-organization .page-intro > * {
+    position: relative;
+    z-index: 1;
+}
+
+.public-site.public-section-page .section-hero .eyebrow,
+.public-site.public-section-page .section-hero > p:last-child,
+.public-site.public-news .intro p,
+.public-site.public-news .intro span,
+.public-site.public-gallery .gallery-intro .kicker,
+.public-site.public-gallery .gallery-intro > p:last-child,
+.public-site.public-organization .page-intro .eyebrow,
+.public-site.public-organization .page-intro > p:last-child {
+    color: color-mix(in srgb, #f7f5ef 78%, transparent) !important;
+}
+
+.public-site.public-section-page .section-hero h1,
+.public-site.public-news .intro h1,
+.public-site.public-gallery .gallery-intro h1,
+.public-site.public-organization .page-intro h1 {
+    max-width: 860px;
+    color: #f7f5ef;
+}
+
+.public-site.public-section-page .info-card,
+.public-site.public-section-page .life-card:not(.life-card-feature),
+.public-site.public-section-page .contact-card:not(.contact-card-main),
+.public-site.public-news .news-card,
+.public-site.public-gallery .album-card,
+.public-site.public-organization .tree-flow,
+.public-site.public-admissions .period-card,
+.public-site.public-admissions .flow-grid article {
+    border-color: var(--public-line-strong);
+    border-radius: var(--public-radius-md);
+    background: var(--public-surface);
+    box-shadow: var(--public-shadow-soft);
+}
+
+.public-site.public-news .news-card,
+.public-site.public-gallery .album-card {
+    transition: transform .2s var(--public-transition), box-shadow .2s var(--public-transition), border-color .2s var(--public-transition);
+}
+
+.public-site.public-news .news-card:hover,
+.public-site.public-news .news-card:focus-visible,
+.public-site.public-gallery .album-card:hover,
+.public-site.public-gallery .album-card:focus-within {
+    border-color: var(--public-primary);
+    box-shadow: var(--public-shadow-deep);
+    transform: translateY(-4px);
+}
+
+.public-site.public-news .card-image,
+.public-site.public-gallery .album-images,
+.public-site.public-organization .tree-flow {
+    background: var(--public-surface-alt);
+}
+
+.public-site.public-news .read-more,
+.public-site.public-gallery .back-link,
+.public-site.public-organization .back-link,
+.public-site.public-section-page .card-link,
+.public-site.public-section-page .resource-strip a {
+    color: var(--public-accent);
+}
+
+.public-site.public-news .empty,
+.public-site.public-gallery .empty-gallery,
+.public-site.public-organization .empty-state,
+.public-site.public-admissions .empty-state {
+    color: var(--public-muted);
+    background: color-mix(in srgb, var(--public-primary) 3%, var(--public-surface));
+    border-color: var(--public-line-strong);
+    border-radius: var(--public-radius-md);
+}
+
+.public-site .contact-card a,
+.public-site .contact-list a,
+.public-site .article-body {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    body .public-site.public-section-page > .section-content,
+    body .public-site.public-section-page > .section-footer {
+        width: calc(100% - 2rem);
+    }
+
+    .public-site.public-section-page .section-hero,
+    .public-site.public-news .intro,
+    .public-site.public-gallery .gallery-intro,
+    .public-site.public-organization .page-intro {
+        width: calc(100% - 2rem);
+        margin-top: 1rem;
+        padding: 1.25rem;
+        border-radius: var(--public-radius-md);
+    }
+
+    .public-site.public-section-page .section-hero h1,
+    .public-site.public-news .intro h1,
+    .public-site.public-gallery .gallery-intro h1,
+    .public-site.public-organization .page-intro h1 {
+        font-size: clamp(2.8rem, 13vw, 4.5rem);
+    }
 }

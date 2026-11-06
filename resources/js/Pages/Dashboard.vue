@@ -381,7 +381,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 
 <template>
     <AppLayout title="Beranda">
-        <section class="view dashboard-view">
+        <section class="view dashboard-view" :class="{ 'is-admin-dashboard': isAdmin }">
             <header class="dashboard-intro">
                 <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
@@ -799,4 +799,323 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .metric-item { min-height: 112px; padding: var(--card-padding-compact); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
 .student-overview-card { padding: var(--card-padding); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
 .admin-overview-card { padding: var(--card-padding-compact); border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
+
+/* Admin command center: a denser, calmer workspace that makes the daily
+ * operating rhythm visible before the user opens a module. */
+.is-admin-dashboard .dashboard-intro {
+    position: relative;
+    min-height: 190px;
+    margin: 0 0 18px;
+    padding: 25px 30px 27px;
+    overflow: hidden;
+    color: #f5fbff;
+    background:
+        linear-gradient(118deg, color-mix(in srgb, var(--primary) 88%, #0c2734), color-mix(in srgb, var(--primary) 62%, #113d42));
+    border: 1px solid color-mix(in srgb, var(--primary) 72%, transparent);
+    border-radius: 24px 24px 24px 7px;
+    box-shadow: 0 18px 38px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.is-admin-dashboard .dashboard-intro::before,
+.is-admin-dashboard .dashboard-intro::after {
+    position: absolute;
+    content: '';
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.is-admin-dashboard .dashboard-intro::before {
+    width: 330px;
+    height: 330px;
+    right: -96px;
+    bottom: -215px;
+    box-shadow: 0 0 0 34px rgba(255, 255, 255, .035), 0 0 0 80px rgba(255, 255, 255, .025);
+}
+
+.is-admin-dashboard .dashboard-intro::after {
+    width: 8px;
+    height: 8px;
+    right: 28%;
+    top: 26%;
+    background: rgba(255, 255, 255, .72);
+    border: 0;
+    box-shadow: 0 0 0 7px rgba(255, 255, 255, .08);
+}
+
+.is-admin-dashboard .dashboard-intro > * {
+    position: relative;
+    z-index: 1;
+}
+
+.is-admin-dashboard .intro-kicker {
+    color: rgba(245, 251, 255, .72);
+    letter-spacing: .1em;
+}
+
+.is-admin-dashboard .live-pip {
+    background: #8ee0b0;
+    box-shadow: 0 0 0 4px rgba(142, 224, 176, .14);
+}
+
+.is-admin-dashboard .slash {
+    color: rgba(245, 251, 255, .4);
+}
+
+.is-admin-dashboard .intro-row {
+    align-items: center;
+    margin-top: 23px;
+}
+
+.is-admin-dashboard .intro-row h1 {
+    max-width: 760px;
+    color: #fff;
+    font-size: clamp(32px, 4vw, 50px);
+    letter-spacing: -.055em;
+}
+
+.is-admin-dashboard .date-stamp {
+    color: #fff;
+    background: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+.is-admin-dashboard .date-stamp span {
+    color: rgba(245, 251, 255, .72);
+}
+
+.is-admin-dashboard .metrics-first {
+    position: relative;
+    z-index: 2;
+    margin-top: -2px;
+}
+
+.is-admin-dashboard .metric-item {
+    min-height: 126px;
+    padding: 20px 20px 18px 22px;
+    border-radius: 18px 18px 18px 6px;
+    box-shadow: 0 9px 22px rgba(19, 42, 63, .07);
+}
+
+.is-admin-dashboard .metric-item::before {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 4px;
+    height: auto;
+    background: var(--primary);
+}
+
+.is-admin-dashboard .metric-tone-2::before { background: var(--green); }
+.is-admin-dashboard .metric-tone-3::before { background: var(--primary-strong); }
+.is-admin-dashboard .metric-tone-4::before { background: var(--violet); }
+
+.is-admin-dashboard .metric-head > span:first-child {
+    color: var(--ink-soft);
+    font-size: 12px;
+    letter-spacing: .01em;
+}
+
+.is-admin-dashboard .metric-item strong {
+    margin-top: 17px;
+    font-size: 32px;
+}
+
+.is-admin-dashboard .metric-item small {
+    font-size: 10px;
+}
+
+.is-admin-dashboard .admin-actions-section {
+    margin-top: 28px;
+}
+
+.is-admin-dashboard .section-heading {
+    margin-bottom: 16px;
+}
+
+.is-admin-dashboard .section-heading h2 {
+    font-size: 23px;
+    letter-spacing: -.045em;
+}
+
+.is-admin-dashboard .workflow-count {
+    padding: 7px 10px;
+    color: var(--primary-strong);
+    background: var(--primary-soft);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.is-admin-dashboard .admin-action-groups {
+    gap: 18px;
+}
+
+.is-admin-dashboard .admin-action-group {
+    position: relative;
+    padding: 20px;
+    overflow: hidden;
+    border-radius: 20px 20px 20px 7px;
+    box-shadow: 0 9px 22px rgba(19, 42, 63, .06);
+}
+
+.is-admin-dashboard .admin-action-group::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    content: '';
+    background: color-mix(in srgb, var(--primary) 70%, var(--line));
+}
+
+.is-admin-dashboard .admin-action-group:nth-child(2)::before { background: var(--green); }
+.is-admin-dashboard .admin-action-group:nth-child(3)::before { background: var(--violet); }
+
+.is-admin-dashboard .admin-action-group > header {
+    min-height: 78px;
+    margin-bottom: 10px;
+}
+
+.is-admin-dashboard .admin-action-group h3 {
+    font-size: 16px;
+    letter-spacing: -.03em;
+}
+
+.is-admin-dashboard .admin-action-group > header p {
+    max-width: 230px;
+    margin-top: 7px;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.is-admin-dashboard .admin-action-list li {
+    border-color: color-mix(in srgb, var(--line) 82%, transparent);
+}
+
+.is-admin-dashboard .admin-action-link {
+    min-height: 72px;
+    gap: 12px;
+    padding: 10px 4px;
+    border-radius: 12px;
+    transition: background-color .16s var(--ease), transform .16s var(--ease);
+}
+
+.is-admin-dashboard .admin-action-link:hover {
+    background: color-mix(in srgb, var(--primary-soft) 62%, transparent);
+    transform: translateX(3px);
+}
+
+.is-admin-dashboard .admin-action-icon {
+    width: 38px;
+    height: 38px;
+    color: var(--primary-strong);
+    background: color-mix(in srgb, var(--primary-soft) 78%, var(--surface));
+    border-radius: 12px 12px 12px 5px;
+}
+
+.is-admin-dashboard .admin-action-copy {
+    gap: 4px;
+}
+
+.is-admin-dashboard .admin-action-copy strong {
+    font-size: 12px;
+}
+
+.is-admin-dashboard .admin-action-copy small {
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.is-admin-dashboard .admin-action-arrow {
+    color: var(--primary);
+}
+
+.is-admin-dashboard .workflow-section {
+    margin-top: 38px;
+}
+
+.is-admin-dashboard .admin-overview-grid {
+    gap: 18px;
+}
+
+.is-admin-dashboard .admin-overview-card {
+    border-radius: 20px 20px 20px 7px;
+    box-shadow: 0 9px 22px rgba(19, 42, 63, .06);
+}
+
+.is-admin-dashboard .announcement-card,
+.is-admin-dashboard .login-card {
+    background: var(--surface);
+}
+
+.is-admin-dashboard .announcement-card {
+    border-top: 3px solid var(--primary);
+}
+
+.is-admin-dashboard .login-card {
+    border-top: 3px solid var(--green);
+}
+
+.is-admin-dashboard .announcement-card .admin-card-icon {
+    color: var(--primary-strong);
+    background: var(--primary-soft);
+}
+
+.is-admin-dashboard .login-card .admin-card-icon {
+    color: var(--green);
+    background: var(--green-soft);
+}
+
+:global(.app-shell:has(.is-admin-dashboard) .nav-item.is-active) {
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+
+@media (max-width: 800px) {
+    .is-admin-dashboard .dashboard-intro {
+        min-height: 175px;
+        padding: 22px 23px 24px;
+    }
+
+    .is-admin-dashboard .intro-row {
+        margin-top: 19px;
+    }
+}
+
+@media (max-width: 560px) {
+    .is-admin-dashboard .dashboard-intro {
+        min-height: 210px;
+        margin-inline: -2px;
+        padding: 20px 20px 22px;
+        border-radius: 20px 20px 20px 6px;
+    }
+
+    .is-admin-dashboard .intro-row h1 {
+        max-width: 270px;
+        font-size: 32px;
+        line-height: 1.02;
+    }
+
+    .is-admin-dashboard .metrics-first {
+        gap: 12px;
+    }
+
+    .is-admin-dashboard .metric-item {
+        min-height: 118px;
+        padding: 16px 15px 15px 18px;
+    }
+
+    .is-admin-dashboard .metric-item strong {
+        font-size: 28px;
+    }
+
+    .is-admin-dashboard .admin-actions-section {
+        margin-top: 30px;
+    }
+
+    .is-admin-dashboard .admin-action-group {
+        padding: 18px;
+    }
+}
 </style>
