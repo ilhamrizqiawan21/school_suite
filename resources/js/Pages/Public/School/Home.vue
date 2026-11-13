@@ -49,7 +49,6 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const heroTitle = computed(() => props.school.theme?.hero?.title || 'Tempat belajar yang memberi ruang untuk');
 const heroAccent = computed(() => props.school.theme?.hero?.accent || 'tumbuh bersama.');
 const heroPrimaryLabel = computed(() => props.school.theme?.hero?.primary_label || 'Kenali sekolah');
-const heroSecondaryLabel = computed(() => props.school.theme?.hero?.secondary_label || 'Baca kabar terbaru');
 const heroVariant = computed(() => props.school.theme?.hero_variant || 'collage');
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value))
@@ -70,7 +69,7 @@ const formatDate = (value?: string | null) => value
                 <p class="hero-lead">{{ school.about || 'Selamat datang di ruang informasi resmi sekolah kami.' }}</p>
                 <div class="hero-actions">
                     <Link href="/profil-sekolah" class="primary-button">{{ heroPrimaryLabel }}</Link>
-                    <Link href="/berita" class="text-link">{{ heroSecondaryLabel }}</Link>
+                    <Link href="/ppdb" class="text-link">Informasi PPDB</Link>
                 </div>
                 <div class="trust-line">
                     <span v-if="school.school_status">{{ school.school_status }}</span>
@@ -85,6 +84,25 @@ const formatDate = (value?: string | null) => value
                 </div>
                 <div v-else class="hero-placeholder"><span>{{ initial }}</span><small>Portofolio sekolah</small></div>
                 <div class="hero-caption"><small>{{ school.school_status || 'Ruang belajar bersama' }}</small><strong>Belajar. Berkarya. Berbagi.</strong></div>
+            </div>
+        </section>
+
+        <section class="home-pillars" aria-labelledby="pillars-title">
+            <div class="section-heading">
+                <h2 id="pillars-title">Pendidikan yang utuh, untuk setiap langkah.</h2>
+                <p>Akademik yang kuat bertemu karakter, kreativitas, dan kepedulian terhadap sesama.</p>
+            </div>
+            <div class="home-pillar-grid">
+                <article><span aria-hidden="true">◇</span><h3>Belajar dengan rasa ingin tahu</h3><p>Pembelajaran aktif yang menghubungkan pengetahuan dengan kehidupan sehari-hari.</p></article>
+                <article><span aria-hidden="true">◎</span><h3>Tumbuh dalam komunitas</h3><p>Pendampingan yang menghargai keunikan dan perkembangan setiap siswa.</p></article>
+                <article><span aria-hidden="true">✓</span><h3>Berkarya dengan percaya diri</h3><p>Ruang untuk olahraga, seni, sains, dan ide yang memberi dampak.</p></article>
+            </div>
+        </section>
+
+        <section v-if="school.theme?.sections?.gallery !== false && galleryPreview.length" class="home-life" aria-labelledby="life-title">
+            <div class="section-heading"><div><h2 id="life-title">Hari-hari yang penuh penemuan.</h2><p>Kehidupan di sekolah</p></div><Link href="/galeri" class="text-link">Lihat galeri</Link></div>
+            <div class="home-life-grid">
+                <Link v-for="photo in galleryPreview.slice(0, 3)" :key="photo.id" href="/galeri"><img :src="photo.url" :alt="photo.title || photo.caption || 'Kegiatan sekolah'" /><span>{{ photo.title || photo.caption || 'Kegiatan sekolah' }}</span></Link>
             </div>
         </section>
 
@@ -115,15 +133,7 @@ const formatDate = (value?: string | null) => value
             <p v-else class="empty-state">Berita sekolah akan tampil di halaman ini.</p>
         </section>
 
-        <section v-if="school.theme?.sections?.gallery !== false && galleryPreview.length" class="content-section gallery-section" aria-labelledby="gallery-title">
-            <div class="section-heading">
-                <div><p class="eyebrow">Portofolio sekolah</p><h2 id="gallery-title">Momen yang ingin dibagikan.</h2></div>
-                <Link href="/galeri" class="text-link">Buka galeri</Link>
-            </div>
-            <div class="gallery-preview">
-                <Link v-for="photo in galleryPreview" :key="photo.id" href="/galeri" class="gallery-preview-item"><img :src="photo.url" :alt="photo.title || photo.caption || 'Foto sekolah'" /><span>{{ photo.title || photo.caption || 'Kegiatan sekolah' }}</span></Link>
-            </div>
-        </section>
+        <section class="home-admissions" aria-labelledby="admissions-title"><div><h2 id="admissions-title">Langkah awal masa depan dimulai di sini.</h2><p>Pelajari jalur, persyaratan, dan jadwal pendaftaran peserta didik baru.</p></div><Link href="/ppdb" aria-label="Lihat informasi PPDB">Lihat PPDB <span aria-hidden="true">→</span></Link></section>
 
         <footer class="public-footer">
             <div><p class="eyebrow">Hubungi sekolah</p><h2>Mari terhubung.</h2></div>
@@ -463,5 +473,72 @@ const formatDate = (value?: string | null) => value
         padding: 2rem 1.25rem 2.5rem;
         border-radius: var(--public-radius-md) var(--public-radius-md) 0 0;
     }
+}
+
+/* Calm Academic mockup adaptation. */
+.public-home { background: #f4f7fb; }
+.public-home .home-hero,
+.public-home .home-pillars,
+.public-home .home-life,
+.public-home .home-admissions { width: min(1180px, calc(100% - 3rem)); margin-inline: auto; }
+.public-home .home-hero { gap: clamp(2rem, 5vw, 5rem); margin-top: 0; padding: clamp(3rem, 5vw, 5rem) 0; color: var(--ink); background: transparent; border-radius: 0; box-shadow: none; overflow: visible; }
+.public-home .home-hero::before,
+.public-home .home-hero::after { display: none; }
+.public-home .hero-copy h1 { margin: 0 0 1.5rem; color: var(--ink); font-family: var(--font-ui); font-size: clamp(2.7rem, 4vw, 4.2rem); font-weight: 700; letter-spacing: -.045em; line-height: 1.15; }
+.public-home .hero-copy h1 span { display: inline; color: var(--ink); }
+:global(body .public-site.public-home .hero-copy h1 span) { color: var(--ink) !important; }
+.public-home .hero-copy .eyebrow { margin-bottom: 1rem; color: var(--deep); }
+:global(body .public-site.public-home .home-hero .eyebrow) { color: var(--deep) !important; }
+.public-home .hero-lead { color: var(--muted); line-height: 1.65; }
+.public-home .hero-actions { flex-wrap: wrap; gap: .75rem 1.5rem; }
+.public-home .primary-button { color: #fff !important; background: var(--deep) !important; border: 1px solid var(--deep); border-radius: 10px; }
+.public-home .primary-button:hover,
+.public-home .primary-button:focus-visible { color: #fff !important; background: color-mix(in srgb, var(--deep) 80%, #172943) !important; border-color: var(--deep); }
+.public-home .hero-actions .text-link { color: var(--deep); }
+.public-home .trust-line { gap: 0; padding: 1rem 0; color: var(--muted); background: #fff; border: 1px solid #dde5ef; border-radius: 12px; }
+.public-home .trust-line span { padding: 0 1rem; }
+.public-home .trust-line span + span { padding-left: 1rem; border-color: #dde5ef; }
+.public-home .hero-visual { min-height: clamp(320px, 33vw, 455px); background: #e9eff7; border-radius: 18px; box-shadow: none; }
+.public-home .hero-photo-1 { inset: 0; width: 100%; height: 100%; border-radius: inherit; }
+.public-home .hero-photo-2,
+.public-home .hero-caption { display: none; }
+.public-home .home-pillars { padding: 1rem 0 4.5rem; }
+.public-home .home-pillars .section-heading { align-items: start; }
+.public-home .home-pillars .section-heading h2,
+.public-home .home-life .section-heading h2,
+.public-home .home-admissions h2 { max-width: 540px; margin: 0; color: var(--ink); font-family: var(--font-ui); font-size: clamp(1.8rem, 2.7vw, 2.7rem); font-weight: 700; letter-spacing: -.035em; line-height: 1.2; }
+.public-home .home-pillars .section-heading p { max-width: 360px; color: var(--muted); font-size: .95rem; line-height: 1.6; }
+.public-home .home-pillar-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1rem, 4vw, 4rem); padding-top: 1rem; }
+.public-home .home-pillar-grid article > span { color: var(--deep); font-size: 2rem; }
+.public-home .home-pillar-grid h3 { margin: .75rem 0 .5rem; color: var(--ink); font-size: 1.1rem; }
+.public-home .home-pillar-grid p { max-width: 300px; margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
+.public-home .home-life { padding: 3.5rem 0 5rem; background: #fff; }
+.public-home .home-life .section-heading p { margin: .4rem 0 0; color: var(--muted); }
+.public-home .home-life-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.public-home .home-life-grid a { display: grid; gap: .8rem; color: var(--ink); font-size: .9rem; font-weight: 600; text-decoration: none; }
+.public-home .home-life-grid a:hover span,
+.public-home .home-life-grid a:focus-visible span { color: var(--deep); text-decoration: underline; }
+.public-home .home-life-grid img { width: 100%; aspect-ratio: 1.5; object-fit: cover; border-radius: 12px; }
+.public-home .home-admissions { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 5rem; padding: clamp(1.5rem, 3vw, 2.5rem); background: #e9eff7; border-radius: 18px; }
+.public-home .home-admissions p { margin: .65rem 0 0; color: var(--muted); line-height: 1.5; }
+.public-home .home-admissions a { display: inline-flex; align-items: center; gap: .65rem; flex: 0 0 auto; padding: .75rem 1rem; color: #fff; background: var(--deep); border-radius: 10px; font-weight: 700; text-decoration: none; }
+.public-home .public-footer { margin-top: 2rem; color: var(--ink); background: transparent; border-top: 1px solid #dde5ef; border-radius: 0; }
+.public-home .public-footer h2,
+.public-home .public-footer .eyebrow { color: var(--ink); }
+.public-home .public-footer .contact-list { color: var(--muted); }
+@media (max-width: 900px) { .public-home .home-pillar-grid { gap: 1.5rem; } }
+@media (max-width: 600px) {
+    .public-home .home-hero,
+    .public-home .home-pillars,
+    .public-home .home-life,
+    .public-home .home-admissions { width: calc(100% - 2rem); }
+    .public-home .home-hero { padding: 2.5rem 0 3rem; }
+    .public-home .hero-copy h1 { font-size: clamp(2.3rem, 10vw, 3.4rem); }
+    .public-home .hero-visual { min-height: 260px; }
+    .public-home .home-pillar-grid,
+    .public-home .home-life-grid { grid-template-columns: 1fr; }
+    .public-home .home-pillars { padding-bottom: 3rem; }
+    .public-home .home-life { padding: 2.5rem 0; }
+    .public-home .home-admissions { align-items: flex-start; flex-direction: column; margin-top: 3rem; }
 }
 </style>

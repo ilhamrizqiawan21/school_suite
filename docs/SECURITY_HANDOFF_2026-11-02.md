@@ -7,7 +7,7 @@
 
 School Suite sudah diperiksa dari sisi keamanan, login, hak akses, pemisahan data antar sekolah, dokumen pribadi, pencadangan, konfigurasi server, dan tampilan yang digunakan sehari-hari.
 
-Hasilnya, temuan utama sudah ditangani dan sistem dinyatakan siap untuk masuk ke tahap pemasangan serta penggunaan resmi.
+Hasilnya, temuan utama sudah ditangani pada kode. Kesiapan production tetap memerlukan verifikasi backup/restore MySQL dan deployment pada server target.
 
 ## Yang sudah diperbaiki
 
@@ -70,9 +70,11 @@ Selain perbaikan keamanan, beberapa bagian yang paling sering digunakan sudah di
 - 434 pengujian sistem: **lulus**
 - Pemeriksaan tampilan dan alur penggunaan: **lulus**
 - Pemeriksaan kualitas kode: **lulus**
-- Pembuatan versi siap digunakan di server resmi: **lulus**
+- Pembuatan versi siap digunakan di server resmi: **belum diverifikasi pada server target**
 
-Dengan hasil tersebut, tidak ada temuan utama yang menghalangi proses pemasangan. Pengaturan khusus sekolah, seperti nama sekolah, logo, warna identitas, akun Admin, dan domain, tetap perlu diisi saat proses pemasangan.
+Dengan hasil tersebut, perbaikan kode utama dapat dilanjutkan ke proses pemasangan terkontrol. Gate backup/restore MySQL dan deployment live tetap wajib diselesaikan sebelum penggunaan resmi. Pengaturan khusus sekolah, seperti nama sekolah, logo, warna identitas, akun Admin, dan domain, tetap perlu diisi saat proses pemasangan.
+
+Catatan verifikasi ulang 13 November 2026: suite backend berisi 444 tes, dengan 442 lulus dan 2 dilewati. Drill MySQL terisolasi dan deployment live belum terbukti, sehingga dokumen ini tidak menggantikan gate operasional pada `docs/PROJECT_STATUS.md` dan `docs/DEPLOYMENT_CHECKLIST.md`.
 
 ## Akun demo baru
 

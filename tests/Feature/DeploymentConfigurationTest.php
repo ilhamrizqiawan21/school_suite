@@ -13,6 +13,11 @@ use Tests\TestCase;
 
 class DeploymentConfigurationTest extends TestCase
 {
+    public function test_application_timezone_defaults_to_school_timezone(): void
+    {
+        $this->assertSame('Asia/Jakarta', config('app.timezone'));
+    }
+
     public function test_security_headers_are_present_in_responses(): void
     {
         if (Schema::hasTable('failed_jobs')) {

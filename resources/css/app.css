@@ -7,6 +7,13 @@
 @import './modern-ui.css';
 @import './public-portfolio.css';
 
+.app-toast { position: fixed; z-index: 100; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: flex-start; gap: 12px; width: min(380px, calc(100vw - 32px)); padding: 14px 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: 12px; box-shadow: var(--shadow-md); font-size: .875rem; overflow-wrap: anywhere; }
+.app-toast--error { border-left-color: var(--red); }
+.app-toast-mark { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; color: var(--green); background: var(--green-soft); border-radius: 50%; font-weight: 800; }
+.app-toast--error .app-toast-mark { color: var(--red); background: var(--red-soft); }
+.app-toast button { margin-left: auto; padding: 0 4px; color: var(--ink-soft); background: none; border: 0; font-size: 22px; line-height: 1; }
+@media (max-width: 600px) { .app-toast { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); left: 16px; width: auto; } }
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 

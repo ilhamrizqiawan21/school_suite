@@ -31,6 +31,9 @@ const sidebarToggleLabel = computed(() => isMobileViewport.value
     ? (sidebarOpen.value ? 'Tutup navigasi' : 'Buka navigasi')
     : (desktopSidebarRail.value ? 'Perlebar sidebar' : 'Perkecil sidebar'));
 const darkTheme = ref(false);
+const toastMessage = ref('');
+const toastKind = ref<'success' | 'error'>('success');
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchRoot = ref<HTMLElement | null>(null);
 const searchQuery = ref('');
@@ -115,9 +118,18 @@ const handleDocumentPointerdown = (event: PointerEvent) => {
 };
 
 const applySchoolTheme = (primary?: string) => {
-    if (!primary) return;
+    if (primary && CSS.supports('color', primary)) document.documentElement.style.setProperty('--school-primary', primary);
+    else document.documentElement.style.removeProperty('--school-primary');
+};
 
-    document.documentElement.style.setProperty('--school-primary', primary);
+const showFlashToast = () => {
+    const flash = page.props.flash as { message?: string; error?: string } | undefined;
+    const message = flash?.error || flash?.message;
+    if (!message) return;
+    toastKind.value = flash?.error ? 'error' : 'success';
+    toastMessage.value = message;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastMessage.value = ''; }, 5000);
 };
 
 const toggleSidebar = () => {
@@ -208,6 +220,7 @@ onMounted(() => {
     } catch { desktopSidebarRail.value = false; }
 
     applySchoolTheme(page.props.school?.theme_primary);
+    showFlashToast();
     // Let the active light/dark token decide --primary. Login branding may
     // leave an inline value behind, which would otherwise override dark mode.
     document.documentElement.style.removeProperty('--primary');
@@ -230,8 +243,10 @@ onMounted(() => {
 });
 
 watch(() => page.props.school?.theme_primary, applySchoolTheme);
+watch(() => page.props.flash, showFlashToast, { deep: true });
 
 onBeforeUnmount(() => {
+    if (toastTimer) clearTimeout(toastTimer);
     if (sidebarViewportQuery && syncSidebarViewport) {
         sidebarViewportQuery.removeEventListener('change', syncSidebarViewport);
     }
@@ -325,6 +340,11 @@ onBeforeUnmount(() => {
                 <Breadcrumbs :title="layoutProps.title" />
                 <slot />
             </main>
+        </div>
+        <div v-if="toastMessage" class="app-toast" :class="`app-toast--${toastKind}`" role="status" aria-live="polite">
+            <span class="app-toast-mark" aria-hidden="true">{{ toastKind === 'success' ? '✓' : '!' }}</span>
+            <span>{{ toastMessage }}</span>
+            <button type="button" aria-label="Tutup notifikasi" @click="toastMessage = ''">×</button>
         </div>
     </div>
 </template>

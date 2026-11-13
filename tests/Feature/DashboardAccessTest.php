@@ -184,11 +184,18 @@ class DashboardAccessTest extends TestCase
             'published_at' => now(),
         ]);
 
+        $this->academicYear->update(['name' => '2030/2031']);
+        $this->activeTerm->update(['name' => 'Genap']);
+
         $this->actingAs($admin)
             ->get('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
+                ->where('activePeriod.academic_year', '2030/2031')
+                ->where('activePeriod.term', 'Genap')
+                ->where('activePeriod.label', '2030/2031 — Semester Genap')
+                ->where('activePeriod.is_active', true)
                 ->has('stats')
                 ->where('stats.modules_ready', 9)
                 ->where('stats.role_metrics.students', 1)

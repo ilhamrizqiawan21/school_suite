@@ -386,8 +386,9 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
                     <div>
-                        <h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : isStudent ? `Hai, ${firstName}.` : `${firstName}, ini pusat kerjamu.` }}</h1>
+                        <h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : isStudent ? `Hai, ${firstName}.` : isAdmin ? `Selamat datang, ${firstName}.` : `${firstName}, ini pusat kerjamu.` }}</h1>
                         <p v-if="isStudent">Pantau jadwal, tugas, ujian, dan capaian belajarmu dari satu tempat.</p>
+                        <p v-if="isAdmin">Berikut hal penting untuk pekerjaan sekolah hari ini.</p>
                     </div>
                     <div class="date-stamp"><strong>{{ today.day }}</strong><span>{{ today.month }}<br>{{ today.year }}</span></div>
                 </div>
@@ -431,6 +432,22 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                     <small>{{ metric.note }}</small>
                 </article>
             </section>
+
+            <div v-if="isAdmin" class="admin-priority-grid">
+                <section class="admin-priority-panel" aria-labelledby="admin-priority-title">
+                    <h2 id="admin-priority-title">Mulai dari sini</h2>
+                    <Link v-for="action in [adminActions[1], adminActions[3], adminActions[6]]" :key="action.href" :href="action.href" class="admin-priority-link">
+                        <span class="admin-priority-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span>
+                        <span><strong>{{ action.title }}</strong><small>{{ action.description }}</small></span>
+                        <span class="admin-priority-arrow" aria-hidden="true">→</span>
+                    </Link>
+                </section>
+                <section class="admin-priority-panel" aria-labelledby="admin-news-title">
+                    <div class="admin-priority-heading"><h2 id="admin-news-title">Kabar sekolah</h2><Link href="/komunikasi">Lihat semua</Link></div>
+                    <div v-if="latestAnnouncements.length" class="admin-priority-news"><strong>{{ latestAnnouncements[0].title }}</strong><p>{{ latestAnnouncements[0].author_name ?? 'Sekolah' }} · {{ formatDateTime(latestAnnouncements[0].published_at) }}</p></div>
+                    <p v-else class="admin-priority-empty">Belum ada pengumuman terbit.</p>
+                </section>
+            </div>
 
             <section v-if="isAdmin" class="admin-actions-section" aria-labelledby="admin-actions-title">
                 <div class="section-heading">
@@ -1118,4 +1135,43 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
         padding: 18px;
     }
 }
+
+/* Calm Academic dashboard panels. */
+.is-admin-dashboard .dashboard-intro { min-height: 0; padding: 0 0 1.5rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.is-admin-dashboard .dashboard-intro::before,
+.is-admin-dashboard .dashboard-intro::after { display: none; }
+.is-admin-dashboard .intro-kicker { color: var(--ink-soft); font-size: .8rem; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.is-admin-dashboard .intro-kicker .live-pip { display: none; }
+.is-admin-dashboard .intro-row { margin-top: 1.4rem; }
+.is-admin-dashboard .intro-row h1 { color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.2; }
+.is-admin-dashboard .intro-row p { margin-top: .4rem; color: var(--ink-soft); font-size: .95rem; }
+.is-admin-dashboard .date-stamp { color: var(--ink-soft); background: var(--surface); border-color: var(--line); }
+.is-admin-dashboard .metrics-first { margin-top: .5rem; }
+.is-admin-dashboard .metric-item { min-height: 142px; padding: 1.25rem; border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
+.is-admin-dashboard .metric-item::before { display: none; }
+.is-admin-dashboard .metric-item strong { color: var(--ink); font-size: clamp(1.7rem, 2.7vw, 2.2rem); }
+.is-admin-dashboard .admin-priority-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); gap: 1.25rem; margin-top: 1.5rem; }
+.is-admin-dashboard .admin-priority-panel { min-width: 0; padding: 1.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.is-admin-dashboard .admin-priority-panel h2 { margin: 0 0 1.25rem; color: var(--ink); font-size: 1.15rem; }
+.is-admin-dashboard .admin-priority-link { display: flex; align-items: center; gap: .9rem; min-height: 72px; padding: .6rem 0; color: var(--ink); text-decoration: none; }
+.is-admin-dashboard .admin-priority-link + .admin-priority-link { border-top: 1px solid var(--line); }
+.is-admin-dashboard .admin-priority-icon { flex: 0 0 38px; display: grid; place-items: center; width: 38px; height: 38px; color: var(--primary); background: var(--primary-soft); border-radius: 10px; }
+.is-admin-dashboard .admin-priority-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.is-admin-dashboard .admin-priority-link strong,
+.is-admin-dashboard .admin-priority-link small { display: block; }
+.is-admin-dashboard .admin-priority-link strong { font-size: .9rem; }
+.is-admin-dashboard .admin-priority-link small { margin-top: .2rem; color: var(--ink-soft); font-size: .75rem; line-height: 1.4; }
+.is-admin-dashboard .admin-priority-arrow { margin-left: auto; padding: .4rem .7rem; color: var(--primary); background: var(--primary-soft); border-radius: 9px; }
+.is-admin-dashboard .admin-priority-link:hover strong,
+.is-admin-dashboard .admin-priority-link:focus-visible strong { color: var(--primary); text-decoration: underline; }
+.is-admin-dashboard .admin-priority-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.is-admin-dashboard .admin-priority-heading a { color: var(--primary); font-size: .8rem; font-weight: 700; }
+.is-admin-dashboard .admin-priority-news strong { color: var(--ink); font-size: .95rem; }
+.is-admin-dashboard .admin-priority-news p,
+.is-admin-dashboard .admin-priority-empty { color: var(--ink-soft); font-size: .8rem; line-height: 1.5; }
+.is-admin-dashboard .admin-actions-section { margin-top: 2rem; }
+.is-admin-dashboard .admin-action-group { border-radius: 14px; box-shadow: none; }
+.is-admin-dashboard .admin-action-group::before { display: none; }
+@media (max-width: 800px) { .is-admin-dashboard .admin-priority-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .is-admin-dashboard .dashboard-intro { min-height: 0; padding: 0 0 1rem; border-radius: 0; } .is-admin-dashboard .intro-row h1 { max-width: none; font-size: 1.8rem; } .is-admin-dashboard .metric-item { min-height: 110px; padding: 1rem; } .is-admin-dashboard .admin-priority-panel { padding: 1.15rem; } }
 </style>

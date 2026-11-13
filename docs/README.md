@@ -150,6 +150,7 @@ npm audit
 ## Konfigurasi penting
 
 - `APP_URL` menentukan URL aplikasi dan base path Vite jika aplikasi dipasang di subpath.
+- `APP_TIMEZONE` menentukan timezone aplikasi; gunakan `Asia/Jakarta` untuk operasi sekolah di Indonesia.
 - `APP_KEY` wajib tersedia; jangan mengganti key pada instalasi yang sudah memiliki data terenkripsi.
 - `DB_CONNECTION`, `DB_*` mengatur database aplikasi.
 - `SESSION_SECURE_COOKIE=true` wajib untuk production di balik HTTPS.

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Shared\Navigation\SidebarNavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -39,6 +40,21 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $activeTerm = $user?->school_id
+            ? Term::query()
+                ->with('academicYear')
+                ->where('is_active', true)
+                ->whereHas('academicYear', fn ($query) => $query->where('school_id', $user->school_id))
+                ->first()
+            : null;
+        $activePeriod = [
+            'academic_year' => $activeTerm?->academicYear?->name,
+            'term' => $activeTerm?->name,
+            'label' => $activeTerm?->academicYear?->name && $activeTerm?->name
+                ? $activeTerm->academicYear->name.' — Semester '.$activeTerm->name
+                : 'Periode belum diatur',
+            'is_active' => $activeTerm !== null,
+        ];
 
         return [
             ...parent::share($request),
@@ -72,12 +88,7 @@ class HandleInertiaRequests extends Middleware
                 'favicon_url' => $user?->school?->favicon_path ? route('branding.school', [$user->school, 'favicon']) : null,
                 'theme_primary' => data_get($user?->school?->settings, 'theme_primary', '#3157a4'),
             ],
-            'activePeriod' => [
-                'academic_year' => '2026/2027',
-                'term' => 'Ganjil',
-                'label' => '2026/2027 — Semester Ganjil',
-                'is_active' => true,
-            ],
+            'activePeriod' => $activePeriod,
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
                 'error' => fn () => $request->session()->get('error'),

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { SharedProps, Student } from '../../../types';
 
@@ -45,6 +45,39 @@ const showAddModal = ref(false);
 const showImportModal = ref(false);
 const showEditModal = ref(false);
 const editingStudent = ref<Student | null>(null);
+const activeOverlay = computed(() => showEditModal.value || showImportModal.value || showAddModal.value);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(activeOverlay, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input:not([type="hidden"]), select, button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const closeOverlayOnEscape = (event: KeyboardEvent) => {
+    if (!activeOverlay.value) return;
+    if (event.key === 'Tab' && overlayRoot.value) {
+        const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]'));
+        const first = focusable[0];
+        const last = focusable.at(-1);
+        if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+            event.preventDefault();
+            (event.shiftKey ? last : first).focus();
+        }
+    }
+    if (event.key === 'Escape') {
+        if (showEditModal.value) closeEdit();
+        else if (showImportModal.value) showImportModal.value = false;
+        else showAddModal.value = false;
+    }
+};
+onMounted(() => document.addEventListener('keydown', closeOverlayOnEscape));
+onBeforeUnmount(() => document.removeEventListener('keydown', closeOverlayOnEscape));
 const statusLabels: Record<string, string> = {
     active: 'Aktif',
     graduated: 'Lulus',
@@ -242,7 +275,6 @@ const deleteStudent = (student: Student) => {
                 </div>
             </div>
 
-            <div v-if="page.props.flash?.message" class="student-notice student-notice-success" role="status">{{ page.props.flash.message }}</div>
             <div v-if="temporaryCredential && !hideTemporaryCredential" class="student-notice border-amber-200 bg-amber-50 text-amber-950" role="alert">
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -411,9 +443,9 @@ const deleteStudent = (student: Student) => {
                         </div>
                         <p v-if="can_manage" class="student-mobile-password">Status sandi: <span class="student-account-status" :class="`is-${s.account_status ?? 'unavailable'}`">{{ accountStatusLabels[s.account_status ?? 'unavailable'] }}</span></p>
                         <div v-if="can_manage" class="student-mobile-actions">
-                            <button type="button" :aria-label="`Edit data ${s.name}`" @click="openEdit(s)">Edit</button>
-                            <button type="button" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? `Reset password ${s.name}` : `${s.name} belum memiliki akun`" @click="resetPassword(s)">Reset sandi</button>
-                            <button type="button" class="student-mobile-delete" :aria-label="`Hapus data ${s.name}`" @click="deleteStudent(s)">Hapus</button>
+                            <button type="button" class="student-row-action-edit" :aria-label="`Edit data ${s.name}`" :title="`Edit data ${s.name}`" @click="openEdit(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
+                            <button type="button" class="student-row-action-reset" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? `Reset password ${s.name}` : `${s.name} belum memiliki akun`" :title="`Reset sandi ${s.name}`" @click="resetPassword(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-width="2" stroke-linecap="round" d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></button>
+                            <button type="button" class="student-mobile-delete" :aria-label="`Hapus data ${s.name}`" :title="`Hapus data ${s.name}`" @click="deleteStudent(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg></button>
                         </div>
                     </article>
                     <p v-if="students.data.length === 0" class="student-mobile-empty">Tidak ada data siswa yang cocok dengan filter.</p>
@@ -443,9 +475,9 @@ const deleteStudent = (student: Student) => {
         </div>
 
         <!-- Modal Tambah Siswa -->
-        <div v-if="showAddModal" role="dialog" aria-modal="true" aria-labelledby="student-add-title" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between border-b pb-3">
+        <div v-if="showAddModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="student-add-title" class="student-overlay">
+            <div class="student-drawer space-y-4">
+                <div class="student-drawer-header flex items-center justify-between border-b pb-3">
                     <h3 id="student-add-title" class="text-lg font-bold text-slate-900">Tambah siswa</h3>
                     <button type="button" @click="showAddModal = false" class="modal-close-button text-slate-400 hover:text-slate-600" aria-label="Tutup formulir tambah siswa">✕</button>
                 </div>
@@ -453,33 +485,33 @@ const deleteStudent = (student: Student) => {
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">NIS *</label>
-                            <input v-model="form.nis" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="student-add-nis" class="block text-xs font-semibold text-slate-700 mb-1">NIS *</label>
+                            <input id="student-add-nis" v-model="form.nis" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                             <div v-if="form.errors.nis" class="text-xs text-red-600 mt-1">{{ form.errors.nis }}</div>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">NISN</label>
-                            <input v-model="form.nisn" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="student-add-nisn" class="block text-xs font-semibold text-slate-700 mb-1">NISN</label>
+                            <input id="student-add-nisn" v-model="form.nisn" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
-                        <input v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label for="student-add-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+                        <input id="student-add-name" v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <div v-if="form.errors.name" class="text-xs text-red-600 mt-1">{{ form.errors.name }}</div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin *</label>
-                            <select v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="student-add-gender" class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin *</label>
+                            <select id="student-add-gender" v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option value="L">Laki-laki (L)</option>
                                 <option value="P">Perempuan (P)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Daftarkan ke Rombel</label>
-                            <select v-model="form.class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="student-add-class" class="block text-xs font-semibold text-slate-700 mb-1">Daftarkan ke Rombel</label>
+                            <select id="student-add-class" v-model="form.class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option value="">(Belum Ditempatkan)</option>
                                 <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
                             </select>
@@ -488,20 +520,20 @@ const deleteStudent = (student: Student) => {
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Wali / Orang Tua</label>
-                            <input v-model="form.parent_name" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="student-add-parent" class="block text-xs font-semibold text-slate-700 mb-1">Nama Wali / Orang Tua</label>
+                            <input id="student-add-parent" v-model="form.parent_name" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">No. HP Orang Tua</label>
-                            <input v-model="form.parent_phone" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="student-add-phone" class="block text-xs font-semibold text-slate-700 mb-1">No. HP Orang Tua</label>
+                            <input id="student-add-phone" v-model="form.parent_phone" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-2 pt-3 border-t">
+                    <div class="student-drawer-footer flex justify-end gap-2 pt-3 border-t">
                         <button type="button" @click="showAddModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
                             Batal
                         </button>
-                        <button type="submit" :disabled="form.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <button type="submit" :disabled="form.processing" class="primary-button disabled:opacity-50">
                             Simpan siswa
                         </button>
                     </div>
@@ -510,14 +542,14 @@ const deleteStudent = (student: Student) => {
         </div>
 
         <!-- Modal Edit Siswa -->
-        <div v-if="showEditModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-                <div class="flex items-center justify-between border-b pb-3">
+        <div v-if="showEditModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="student-edit-title" class="student-overlay">
+            <div class="student-drawer space-y-4">
+                <div class="student-drawer-header flex items-center justify-between border-b pb-3">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Perbarui data</p>
-                        <h3 class="text-lg font-bold text-slate-900">Edit data siswa</h3>
+                        <h3 id="student-edit-title" class="text-lg font-bold text-slate-900">Edit data siswa</h3>
                     </div>
-                    <button type="button" @click="closeEdit" class="text-slate-400 hover:text-slate-600" aria-label="Tutup">✕</button>
+                    <button type="button" @click="closeEdit" class="modal-close-button text-slate-400 hover:text-slate-600" aria-label="Tutup formulir edit siswa">✕</button>
                 </div>
 
                 <form @submit.prevent="submitEdit" class="space-y-4">
@@ -559,7 +591,7 @@ const deleteStudent = (student: Student) => {
                             <input v-model="editForm.parent_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </label>
                     </div>
-                    <div class="flex justify-end gap-2 border-t pt-4">
+                    <div class="student-drawer-footer flex justify-end gap-2 border-t pt-4">
                         <button type="button" @click="closeEdit" class="rounded-lg border px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
                         <button type="submit" :disabled="editForm.processing" class="primary-button !text-white disabled:cursor-not-allowed disabled:opacity-50">Simpan perubahan</button>
                     </div>
@@ -568,11 +600,11 @@ const deleteStudent = (student: Student) => {
         </div>
 
         <!-- Modal Impor siswa -->
-        <div v-if="showImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Impor Massal Siswa</h3>
-                    <button type="button" @click="showImportModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+        <div v-if="showImportModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="student-import-title" class="student-overlay">
+            <div class="student-drawer space-y-4">
+                <div class="student-drawer-header flex items-center justify-between border-b pb-3">
+                    <h3 id="student-import-title" class="text-lg font-bold text-slate-900">Impor Massal Siswa</h3>
+                    <button type="button" @click="showImportModal = false" class="modal-close-button text-slate-400 hover:text-slate-600" aria-label="Tutup formulir impor siswa">✕</button>
                 </div>
 
                 <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800 space-y-1">
@@ -585,25 +617,25 @@ const deleteStudent = (student: Student) => {
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV atau XLSX (maks. 5 MB) *</label>
-                        <input type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
+                        <label for="student-import-file" class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas CSV atau XLSX (maks. 5 MB) *</label>
+                        <input id="student-import-file" type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
                         <p class="mt-1 text-xs text-slate-500">Maksimal 1.000 siswa per berkas. Periksa data melalui preview sebelum menyimpan.</p>
                         <div v-if="importForm.errors.csv_file" class="text-xs text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas tujuan (wajib jika kolom Kelas terisi)</label>
-                        <select v-model="importForm.enroll_class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="student-import-class" class="block text-xs font-semibold text-slate-700 mb-1">Kelas tujuan (wajib jika kolom Kelas terisi)</label>
+                        <select id="student-import-class" v-model="importForm.enroll_class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option value="">(Hanya simpan data siswa, jangan tempatkan ke rombel)</option>
                             <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
                         </select>
                     </div>
 
-                    <div class="flex justify-end gap-2 pt-3 border-t">
+                    <div class="student-drawer-footer flex justify-end gap-2 pt-3 border-t">
                         <button type="button" @click="showImportModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
                             Batal
                         </button>
-                        <button type="submit" :disabled="importForm.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <button type="submit" :disabled="importForm.processing" class="primary-button disabled:opacity-50">
                             Lanjut ke preview
                         </button>
                     </div>
@@ -615,6 +647,16 @@ const deleteStudent = (student: Student) => {
 
 <style scoped>
 .student-notice { padding: .85rem 1rem; border-radius: var(--radius-sm); font-size: .85rem; overflow-wrap: anywhere; }
+.student-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.student-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.student-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); background: var(--surface); border-color: var(--line); }
+.student-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding-bottom: clamp(18px, 3vw, 30px); background: var(--surface); border-color: var(--line); }
+.student-drawer :deep(label), .student-drawer :deep(code) { overflow-wrap: anywhere; }
+.student-drawer :deep(input), .student-drawer :deep(select) { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.student-drawer :deep(input:focus-visible), .student-drawer :deep(select:focus-visible), .student-drawer button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.student-drawer :deep(.text-slate-900), .student-drawer :deep(.text-slate-700) { color: var(--ink); }
+.student-drawer :deep(.text-slate-600), .student-drawer :deep(.text-slate-500), .student-drawer :deep(.text-slate-400) { color: var(--ink-soft); }
+@media (max-width: 600px) { .student-overlay { align-items: flex-end; } .student-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 .student-notice-success { color: var(--green); background: var(--green-soft); }
 .student-notice-error { color: var(--red); background: var(--red-soft); }
 .student-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -677,7 +719,8 @@ const deleteStudent = (student: Student) => {
     .student-mobile-details { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 12px; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
     .student-mobile-details > span:nth-child(3) { flex-basis: 100%; }
     .student-mobile-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .student-mobile-actions button { min-height: 44px; padding: 0 10px; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-weight: 700; }
+    .student-mobile-actions button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: 9px; }
+    .student-mobile-actions button svg { width: 19px; height: 19px; }
     .student-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
     .student-mobile-actions button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
     .student-mobile-actions .student-mobile-delete { margin-left: auto; color: var(--red); background: var(--red-soft); }

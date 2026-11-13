@@ -1,6 +1,6 @@
 # Project Status — School Suite
 
-Terakhir diperbarui: 28 Oktober 2026
+Terakhir diperbarui: 13 November 2026
 
 ## Keadaan saat ini
 
@@ -21,7 +21,7 @@ Terakhir diperbarui: 28 Oktober 2026
     - Security headers middleware (`SecurityHeadersMiddleware`): `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `HSTS`.
     - Skrip otomasi deployment zero-downtime atomik (`deploy/deploy.sh`) dan skrip rollback darurat (`deploy/rollback.sh`).
     - Panduan checklist rilis produksi di `docs/DEPLOYMENT_CHECKLIST.md`.
-  - Verifikasi lokal 28 Oktober 2026 dengan PHP 8.3.36 dan konfigurasi test `APP_URL=https://school.test APP_ENV=testing`: `php artisan test --compact` — 394 tes, 393 lulus, 1 dilewati, 3.661 assertions. Drill MySQL terisolasi BELUM TERBUKTI. Pint, typecheck, dan build lulus. Deployment live belum dilakukan.
+  - Verifikasi backend lokal 13 November 2026 dengan PHP 8.3.6: `php artisan test --compact` — 444 tes, 442 lulus, 2 dilewati, 4.095 assertions. Pint lulus; drill MySQL terisolasi dan deployment live belum terbukti. Working tree bersih setelah verifikasi.
 - Langkah berikut: Ekspansi Modul Pasca-Pilot (S09 Modul Pembelajaran / LMS, S10 CBT, S11 SPMB, S12 Sipus, S13 TU & Sarpras).
 
 ## Blocker sebelum data nyata
