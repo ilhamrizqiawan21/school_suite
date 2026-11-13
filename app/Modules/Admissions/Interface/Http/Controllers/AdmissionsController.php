@@ -17,6 +17,7 @@ use App\Modules\Admissions\Infrastructure\Models\AdmissionPeriod;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionSelectionCriterion;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionTrack;
 use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,7 @@ class AdmissionsController extends Controller
         private readonly TeacherDirectoryService $teacherDirectory,
         private readonly AdmissionWorkflowService $workflow,
         private readonly SchoolScopeService $schoolScope,
+        private readonly AuditLogger $auditLogger,
     ) {}
 
     public function index(Request $request, AdmissionsPolicy $policy): Response
@@ -246,14 +248,92 @@ class AdmissionsController extends Controller
     public function update(Request $request, AdmissionApplicant $applicant): RedirectResponse
     {
         Gate::authorize('manageApplicant', $applicant);
+        $this->assertApplicantSchool($request, $applicant);
+        $schoolId = (int) $applicant->school_id;
+
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['registered', 'documents_verified', 'needs_revision', 'selection_review', 'accepted', 'waitlisted', 'rejected', 're_registered'])],
+            'period_id' => ['sometimes', 'nullable', 'integer', Rule::exists('admission_periods', 'id')->where('school_id', $schoolId)],
+            'track_id' => ['sometimes', 'nullable', 'integer', Rule::exists('admission_tracks', 'id')],
+            'name' => ['sometimes', 'required', 'string', 'max:150'],
+            'nisn' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'gender' => ['sometimes', 'required', 'in:L,P'],
+            'birth_date' => ['sometimes', 'nullable', 'date', 'before_or_equal:today'],
+            'parent_name' => ['sometimes', 'nullable', 'string', 'max:150'],
+            'parent_phone' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'previous_school' => ['sometimes', 'nullable', 'string', 'max:180'],
+            'status' => ['sometimes', 'required', Rule::in(['registered', 'documents_verified', 'needs_revision', 'selection_review', 'accepted', 'waitlisted', 'rejected', 're_registered'])],
             'notes' => ['nullable', 'string', 'max:3000'],
         ]);
-        $this->assertApplicantSchool($request, $applicant);
-        $applicant->update($validated);
 
-        return back()->with('message', 'Status pendaftar berhasil diperbarui.');
+        $targetPeriodId = array_key_exists('period_id', $validated) ? $validated['period_id'] : $applicant->period_id;
+        $targetTrackId = array_key_exists('track_id', $validated) ? $validated['track_id'] : $applicant->track_id;
+        $targetNisn = array_key_exists('nisn', $validated) ? $validated['nisn'] : $applicant->nisn;
+
+        if (! empty($targetPeriodId) || ! empty($targetTrackId)) {
+            if (empty($targetPeriodId) || empty($targetTrackId)) {
+                throw ValidationException::withMessages(['period_id' => 'Periode dan jalur wajib dipilih bersama.']);
+            }
+            $period = AdmissionPeriod::query()->where('school_id', $schoolId)->findOrFail($targetPeriodId);
+            AdmissionTrack::query()->where('period_id', $period->id)->findOrFail($targetTrackId);
+            if ($targetNisn !== null && $targetNisn !== '' && AdmissionApplicant::where('school_id', $schoolId)->where('period_id', $period->id)->where('nisn', $targetNisn)->where('id', '!=', $applicant->id)->exists()) {
+                throw ValidationException::withMessages(['nisn' => 'NISN sudah digunakan pada periode SPMB ini.']);
+            }
+        }
+
+        $oldValues = $applicant->only(array_keys($validated));
+        $applicant->update($validated);
+        $this->auditLogger->log(
+            'admissions.applicant.updated',
+            'admission_applicant',
+            (string) $applicant->id,
+            $applicant->only(array_keys($validated)),
+            $oldValues,
+            $request->user(),
+            $schoolId,
+        );
+
+        return back()->with('message', 'Data pendaftar berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, AdmissionApplicant $applicant): RedirectResponse
+    {
+        Gate::authorize('manageApplicant', $applicant);
+        $this->assertApplicantSchool($request, $applicant);
+
+        if ($applicant->status === 're_registered' || $applicant->reRegistration()->where('status', 'confirmed')->exists()) {
+            throw ValidationException::withMessages([
+                'applicant' => 'Pendaftar yang sudah menyelesaikan daftar ulang dan terhubung ke data siswa tidak dapat dihapus.',
+            ]);
+        }
+
+        $schoolId = (int) $applicant->school_id;
+        $snapshot = [
+            'registration_no' => $applicant->registration_no,
+            'name' => $applicant->name,
+            'nisn' => $applicant->nisn,
+            'status' => $applicant->status,
+        ];
+        $documentPaths = $applicant->documents()->pluck('path')->filter()->values()->all();
+
+        DB::transaction(function () use ($applicant, $schoolId, $snapshot, $request): void {
+            $applicantId = (string) $applicant->id;
+            $applicant->delete();
+            $this->auditLogger->log(
+                'admissions.applicant.deleted',
+                'admission_applicant',
+                $applicantId,
+                null,
+                $snapshot,
+                $request->user(),
+                $schoolId,
+            );
+        });
+
+        foreach ($documentPaths as $path) {
+            Storage::disk('local')->delete($path);
+        }
+
+        return back()->with('message', 'Data pendaftar berhasil dihapus.');
     }
 
     public function storeDocument(Request $request, AdmissionApplicant $applicant): RedirectResponse

@@ -834,3 +834,52 @@ Migrasi workflow mengubah constraint nomor surat menjadi berbasis tahun, menamba
 
 ### Rollback
 - Kembalikan perubahan pada file yang disentuh dengan `git checkout -- app/Modules/Admissions app/Shared/Navigation/SidebarNavigationService.php resources/js/components/SidebarNavigation.vue resources/js/Pages/Admissions/Index.vue tests/Feature/AdmissionsWorkflowTest.php tests/Feature/RoleMatrixAccessTest.php` lalu jalankan `npm run build`.
+
+## Tabel Ringkas Pendaftar & Verifikasi SPMB + Aksi Detail, Edit (Pensil), dan Hapus (Trash) — Opsi A (13 November 2026)
+
+### Task dan Requirement
+- **Task**: Mengubah daftar pada menu **Pendaftar & Verifikasi** (baik sub-tab *Daftar Pendaftar & Meja Kerja* maupun sub-tab *Antrean Verifikasi Berkas* sesuai **Opsi A**) menjadi tabel ringkas (*No, Nama Pendaftar, Tanggal Daftar, Jalur & Status Ringkas, Aksi*) yang dilengkapi tombol **Detail** (membuka *Slide-Over Drawer* 360°), tombol **Edit** berikon pensil (membuka modal edit biodata lengkap), dan tombol **Hapus** berikon tempat sampah (*trash*) dengan proteksi data siswa yang sudah daftar ulang serta pencatatan audit log.
+- **Requirement ID**: `S11-SPMB-UX-TABLE`, `SS-F-001` (otorisasi server-side & audit trail), `AI_RULES.md`.
+
+### Ringkasan Perubahan
+1. **Tabel Ringkas pada Menu Pendaftar & Verifikasi (`resources/js/Pages/Admissions/Index.vue`)**:
+   - **Sub-tab Daftar Pendaftar & Meja Kerja**: Menampilkan kolom `No`, `Nama Pendaftar` (beserta sub-teks nomor pendaftaran, NISN, asal sekolah), `Tanggal Daftar` (`created_at`), `Jalur & Status` (chip jalur, ringkasan berkas, status alur), dan kolom `Aksi`.
+   - **Sub-tab Antrean Verifikasi Berkas (Opsi A)**: Diseragamkan menggunakan tabel ringkas dengan kolom `No`, `Nama Pendaftar`, `Tanggal Daftar`, `Ringkasan Berkas` (status berkas & rasio berkas valid), dan kolom `Aksi`.
+   - **Kolom Aksi Terpadu**:
+     - Tombol **Detail**: Membuka *360° Applicant Slide-Over Drawer* untuk memeriksa biodata lengkap, mengunggah/mengunduh/memverifikasi berkas, memperbarui status alur, dan menginput nilai seleksi.
+     - Tombol **Edit (Ikon Pensil SVG)**: Membuka modal *Edit Data Pendaftar* untuk mengubah periode, jalur, status, nama, NISN, jenis kelamin, tanggal lahir, nama/kontak orang tua, asal sekolah, dan catatan.
+     - Tombol **Hapus (Ikon Trash SVG)**: Menghapus data pendaftar beserta berkas privatnya setelah konfirmasi; otomatis dinonaktifkan (*disabled*) apabila pendaftar sudah dikonfirmasi daftar ulang (`re_registered` / `confirmed`).
+2. **Dukungan Edit Biodata Lengkap & Hapus Pendaftar di Backend (`AdmissionsController.php` & `web.php`)**:
+   - Memperluas `PUT /spmb/pendaftar/{applicant}` (`AdmissionsController::update`) agar mendukung pembaruan biodata lengkap pendaftar (dengan validasi keunikan NISN dalam satu periode dan kesesuaian jalur-periode) sekaligus tetap kompatibel dengan form pembaruan cepat `status` & `notes` di dalam Drawer, serta mencatat event audit `admissions.applicant.updated`.
+   - Menambahkan rute `DELETE /spmb/pendaftar/{applicant}` (`admissions.applicants.destroy` → `AdmissionsController::destroy`) dengan otorisasi `Gate::authorize('manageApplicant', $applicant)`, proteksi penolakan hapus bila pendaftar sudah menyelesaikan daftar ulang (terhubung ke data siswa Akademik), penghapusan file dokumen privat dari storage lokal, serta pencatatan event audit `admissions.applicant.deleted`.
+
+### File & Migrasi yang Disentuh
+- `app/Modules/Admissions/Interface/Routes/web.php`
+- `app/Modules/Admissions/Interface/Http/Controllers/AdmissionsController.php`
+- `resources/js/Pages/Admissions/Index.vue`
+- `tests/Feature/AdmissionsWorkflowTest.php`
+- `docs/HANDOFF.md`
+- **Migrasi database**: Tidak ada migrasi baru (menggunakan skema tabel `admission_applicants` yang sudah ada).
+
+### Keputusan & Asumsi
+- Sesuai **Opsi A** yang dipilih pengguna, kedua sub-tab di menu **Pendaftar & Verifikasi** menggunakan tabel ringkas yang seragam dan mendelegasikan rincian pemeriksaan berkas ke dalam *Slide-Over Drawer* saat tombol **Detail** diklik.
+- Pendaftar yang sudah dikonfirmasi daftar ulang (`status = re_registered` atau `reRegistration.status = confirmed`) dilindungi di sisi UI dan server agar tidak dapat dihapus demi menjaga integritas referensi siswa Akademik.
+
+### Tes Beserta Hasil
+- `php artisan test tests/Feature/AdmissionsWorkflowTest.php tests/Feature/AdmissionsControllersTest.php tests/Architecture/ModularBoundaryTest.php` → **PASS** (17 tests, 100 assertions).
+- `./vendor/bin/pint --test` → **PASS**.
+- `npm run typecheck` (`vue-tsc --noEmit`) → **PASS** (0 errors).
+- `npm run build` (`vite build`) → **PASS**.
+
+### Risiko Tersisa
+- Penghapusan pendaftar bersifat permanen pada tabel `admission_applicants` (beserta dokumen privatnya di disk `local`), namun jejaknya tetap terekam di tabel `audit_events` (`admissions.applicant.deleted`) dan pendaftar yang sudah menjadi siswa Akademik tidak dapat dihapus.
+
+### Langkah Review Manual
+1. Buka menu **SPMB → Pendaftar & Verifikasi** (`/spmb/pendaftar`), pastikan daftar pendaftar kini tampil sebagai tabel ringkas berisi kolom **No**, **Nama Pendaftar**, **Tanggal Daftar**, **Jalur & Status**, dan **Aksi**.
+2. Klik tombol **Detail** pada salah satu baris untuk membuka panel detail samping (*Slide-Over Drawer*), lalu periksa biodata dan verifikasi berkas.
+3. Klik tombol **Edit (ikon pensil)** pada kolom Aksi, ubah biodata calon siswa (misalnya nama, NISN, atau asal sekolah), lalu simpan dan pastikan tabel langsung terbarui.
+4. Klik tombol **Hapus (ikon trash)** pada pendaftar yang belum daftar ulang untuk menguji penghapusan, dan pastikan tombol hapus otomatis terkunci pada pendaftar yang sudah berstatus *Daftar ulang*.
+5. Pindah ke sub-tab **Antrean Verifikasi Berkas**, pastikan tampilannya juga berupa tabel ringkas dengan aksi serupa.
+
+### Rollback
+- Kembalikan perubahan dengan `git checkout -- app/Modules/Admissions/Interface/Routes/web.php app/Modules/Admissions/Interface/Http/Controllers/AdmissionsController.php resources/js/Pages/Admissions/Index.vue tests/Feature/AdmissionsWorkflowTest.php` lalu jalankan `npm run build`.

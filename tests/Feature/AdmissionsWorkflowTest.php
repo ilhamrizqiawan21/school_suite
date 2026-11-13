@@ -246,6 +246,78 @@ class AdmissionsWorkflowTest extends TestCase
         ]);
         $this->assertTrue(AuditEvent::where('event_type', 'admissions.selection.finalized')->exists());
         $this->assertTrue(AuditEvent::where('event_type', 'admissions.re_registration.confirmed')->exists());
+
+        $this->actingAs($this->admin)
+            ->delete(route('admissions.applicants.destroy', $applicant))
+            ->assertSessionHasErrors('applicant');
+        $this->assertDatabaseHas('admission_applicants', ['id' => $applicant->id]);
+    }
+
+    public function test_authorized_actor_can_edit_applicant_biodata_and_delete_unconfirmed_applicant_with_audit(): void
+    {
+        Storage::fake('local');
+        [$period, $track] = $this->createConfiguredTrack();
+        $applicant = AdmissionApplicant::create([
+            'school_id' => $this->admin->school_id,
+            'period_id' => $period->id,
+            'track_id' => $track->id,
+            'registration_no' => 'SPMB-2027-EDITDEL',
+            'name' => 'Nama Awal',
+            'nisn' => '1122334455',
+            'gender' => 'L',
+            'created_by' => $this->admin->id,
+        ]);
+
+        $requirement = $track->requirements()->firstOrFail();
+        $this->actingAs($this->admin)->post(route('admissions.documents.store', $applicant), [
+            'requirement_id' => $requirement->id,
+            'file' => UploadedFile::fake()->create('akta.pdf', 100, 'application/pdf'),
+        ]);
+        $document = $applicant->documents()->firstOrFail();
+        Storage::disk('local')->assertExists($document->path);
+
+        $this->actingAs($this->admin)
+            ->put(route('admissions.applicants.update', $applicant), [
+                'period_id' => $period->id,
+                'track_id' => $track->id,
+                'name' => 'Nama Diperbarui',
+                'nisn' => '1122334499',
+                'gender' => 'P',
+                'birth_date' => '2012-05-14',
+                'parent_name' => 'Budi Santoso',
+                'parent_phone' => '081234567890',
+                'previous_school' => 'SDN 1 Percontohan',
+                'status' => 'documents_verified',
+                'notes' => 'Data telah diperbaiki.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('admission_applicants', [
+            'id' => $applicant->id,
+            'name' => 'Nama Diperbarui',
+            'nisn' => '1122334499',
+            'gender' => 'P',
+            'parent_name' => 'Budi Santoso',
+            'previous_school' => 'SDN 1 Percontohan',
+            'status' => 'documents_verified',
+        ]);
+        $this->assertTrue(AuditEvent::where('event_type', 'admissions.applicant.updated')->where('target_id', (string) $applicant->id)->exists());
+
+        $principal = User::where('email', 'kepsek@pilot.sch.id')->firstOrFail();
+        $principal->forceFill(['must_change_password' => false])->save();
+        $this->actingAs($principal)
+            ->delete(route('admissions.applicants.destroy', $applicant))
+            ->assertForbidden();
+
+        $this->actingAs($this->admin)
+            ->delete(route('admissions.applicants.destroy', $applicant))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('admission_applicants', ['id' => $applicant->id]);
+        Storage::disk('local')->assertMissing($document->path);
+        $this->assertTrue(AuditEvent::where('event_type', 'admissions.applicant.deleted')->where('target_id', (string) $applicant->id)->exists());
     }
 
     /** @return array{0: AdmissionPeriod, 1: AdmissionTrack} */

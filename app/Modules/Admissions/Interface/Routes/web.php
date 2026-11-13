@@ -30,6 +30,7 @@ Route::middleware(['auth', 'role:admin,operator,principal,teacher', 'throttle:se
         Route::post('/kriteria', [AdmissionsController::class, 'storeCriterion'])->name('criteria.store');
         Route::post('/pendaftar', [AdmissionsController::class, 'store'])->name('applicants.store');
         Route::put('/pendaftar/{applicant}', [AdmissionsController::class, 'update'])->name('applicants.update');
+        Route::delete('/pendaftar/{applicant}', [AdmissionsController::class, 'destroy'])->name('applicants.destroy');
         Route::post('/pendaftar/{applicant}/berkas', [AdmissionsController::class, 'storeDocument'])->name('documents.store');
         Route::put('/berkas/{document}/verifikasi', [AdmissionsController::class, 'verifyDocument'])->name('documents.verify');
         Route::get('/berkas/{document}/unduh', [AdmissionsController::class, 'downloadDocument'])->name('documents.download');

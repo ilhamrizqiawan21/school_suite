@@ -9,7 +9,7 @@ interface Track { id: number; code: string; name: string; quota: number; require
 interface Period { id: number; name: string; academic_year: string; level: string | null; status: string; registration_start?: string | null; registration_end?: string | null; verification_start?: string | null; verification_end?: string | null; selection_start?: string | null; selection_end?: string | null; announcement_at?: string | null; re_registration_start?: string | null; re_registration_end?: string | null; tracks: Track[] }
 interface Document { id: number; original_name: string; status: string; requirement?: Requirement }
 interface ApplicantScore { id: number; criterion_id: number; score: number | string; notes?: string | null; criterion?: Criterion }
-interface Applicant { id: number; registration_no: string; name: string; nisn: string | null; gender: 'L' | 'P'; birth_date: string | null; parent_name: string | null; parent_phone: string | null; previous_school: string | null; status: string; notes: string | null; track?: Track; selection_result?: { total_score: number; rank: number | null; decision: string | null }; documents: Document[]; scores?: ApplicantScore[]; re_registration?: { status: string; student_id: number | null } }
+interface Applicant { id: number; period_id?: number | null; track_id?: number | null; registration_no: string; name: string; nisn: string | null; gender: 'L' | 'P'; birth_date: string | null; parent_name: string | null; parent_phone: string | null; previous_school: string | null; status: string; notes: string | null; created_at?: string | null; track?: Track; selection_result?: { total_score: number; rank: number | null; decision: string | null }; documents: Document[]; scores?: ApplicantScore[]; re_registration?: { status: string; student_id: number | null } }
 interface CommitteeMember { id: number; name: string; email: string; assigned_at: string }
 interface Teacher { id: number; name: string; email: string }
 interface StatusOption { value: string; label: string }
@@ -343,6 +343,65 @@ function changeApplicantPeriod(event: Event) {
     applicantForm.period_id = (event.target as HTMLSelectElement).value;
     applicantForm.track_id = '';
 }
+const editingApplicant = ref<Applicant | null>(null);
+const editApplicantForm = useForm({
+    period_id: '',
+    track_id: '',
+    name: '',
+    nisn: '',
+    gender: 'L' as 'L' | 'P',
+    birth_date: '',
+    parent_name: '',
+    parent_phone: '',
+    previous_school: '',
+    status: 'registered',
+    notes: '',
+});
+const editApplicantTracks = computed(() => props.periods.find((period) => String(period.id) === editApplicantForm.period_id)?.tracks ?? []);
+function changeEditApplicantPeriod(event: Event) {
+    editApplicantForm.period_id = (event.target as HTMLSelectElement).value;
+    editApplicantForm.track_id = '';
+}
+function openEditApplicantModal(applicant: Applicant) {
+    editingApplicant.value = applicant;
+    editApplicantForm.period_id = applicant.period_id ? String(applicant.period_id) : (props.selected_period_id ? String(props.selected_period_id) : '');
+    editApplicantForm.track_id = applicant.track_id ? String(applicant.track_id) : (applicant.track?.id ? String(applicant.track.id) : '');
+    editApplicantForm.name = applicant.name;
+    editApplicantForm.nisn = applicant.nisn ?? '';
+    editApplicantForm.gender = applicant.gender;
+    editApplicantForm.birth_date = applicant.birth_date ? applicant.birth_date.slice(0, 10) : '';
+    editApplicantForm.parent_name = applicant.parent_name ?? '';
+    editApplicantForm.parent_phone = applicant.parent_phone ?? '';
+    editApplicantForm.previous_school = applicant.previous_school ?? '';
+    editApplicantForm.status = applicant.status;
+    editApplicantForm.notes = applicant.notes ?? '';
+}
+function closeEditApplicantModal() {
+    editingApplicant.value = null;
+}
+function submitEditApplicant() {
+    if (!editingApplicant.value) return;
+    editApplicantForm.put(`/spmb/pendaftar/${editingApplicant.value.id}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            editingApplicant.value = null;
+        },
+    });
+}
+const canDeleteApplicant = (applicant: Applicant) => applicant.status !== 're_registered' && applicant.re_registration?.status !== 'confirmed';
+function deleteApplicant(applicant: Applicant) {
+    if (!canDeleteApplicant(applicant)) return;
+    if (window.confirm(`Hapus data pendaftar ${applicant.name} (${applicant.registration_no}) beserta berkasnya?`)) {
+        router.delete(`/spmb/pendaftar/${applicant.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (selectedApplicantId.value === applicant.id) {
+                    selectedApplicantId.value = null;
+                }
+            },
+        });
+    }
+}
 const committeeForm = useForm({ user_id: '' });
 const documentForms: Record<number, ReturnType<typeof useForm>> = {};
 const scoreForms: Record<string, ReturnType<typeof useForm>> = {};
@@ -579,7 +638,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 
                     <div class="applicant-list-panel">
                         <div class="applicant-list-heading">
-                            <div><h3>Meja kerja pendaftar</h3><p>{{ filteredApplicants.length }} dari {{ applicants.length }} data ditampilkan · Klik "Periksa & Berkas" untuk membuka panel detail 360°</p></div>
+                            <div><h3>Meja kerja pendaftar</h3><p>{{ filteredApplicants.length }} dari {{ applicants.length }} data ditampilkan · Klik "Detail" untuk memeriksa berkas & status</p></div>
                             <span v-if="hasApplicantFilters" class="filter-result-label">Filter aktif</span>
                         </div>
                         <div class="applicant-filters">
@@ -589,41 +648,77 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                             <button v-if="hasApplicantFilters" class="filter-reset-button" type="button" @click="resetApplicantFilters">Reset filter</button>
                         </div>
 
-                        <div class="admissions-applicants">
-                            <article v-for="applicant in filteredApplicants" :key="applicant.id" class="admissions-applicant">
-                                <div class="admissions-applicant-heading">
-                                    <div>
-                                        <span class="admissions-registration">{{ applicant.registration_no }}</span>
-                                        <h3>{{ applicant.name }}</h3>
-                                    </div>
-                                    <div class="applicant-badge-cluster">
-                                        <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }} ({{ applicant.documents.length }})</span>
-                                        <span class="status-pill" :class="`status-${applicant.status}`">{{ applicantStatusLabel(applicant.status) }}</span>
-                                        <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">
-                                            Periksa & Berkas ({{ applicant.documents.length }})
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="admissions-applicant-details">
-                                    <span>Jalur: <strong>{{ applicant.track?.name || 'Belum memilih jalur' }}</strong></span>
-                                    <span>NISN: <strong>{{ applicant.nisn || '—' }}</strong></span>
-                                    <span>Asal: <strong>{{ applicant.previous_school || '—' }}</strong></span>
-                                    <span v-if="applicant.parent_name">Wali: <strong>{{ applicant.parent_name }} ({{ applicant.parent_phone || '—' }})</strong></span>
-                                </div>
-                                <form v-if="can_manage_applicants" class="admissions-status-form" @submit.prevent="updateApplicant(applicant, $event)">
-                                    <label>Status pendaftar<select name="status" :value="applicant.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label>
-                                    <label>Catatan verifikasi<textarea name="notes" rows="1" placeholder="Tambahkan catatan verifikasi...">{{ applicant.notes }}</textarea></label>
-                                    <button class="secondary-button" type="submit">Simpan perubahan</button>
-                                </form>
-                            </article>
-                            <p v-if="!filteredApplicants.length" class="empty-state">{{ hasApplicantFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar pada periode ini.' }}</p>
+                        <div v-if="filteredApplicants.length" class="intake-table-wrap table-scroll" tabindex="0" role="region" aria-label="Tabel daftar pendaftar">
+                            <table class="intake-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="col-no">No</th>
+                                        <th scope="col">Nama Pendaftar</th>
+                                        <th scope="col">Tanggal Daftar</th>
+                                        <th scope="col">Jalur & Status</th>
+                                        <th scope="col" class="col-actions">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(applicant, index) in filteredApplicants" :key="applicant.id">
+                                        <td class="col-no">{{ index + 1 }}</td>
+                                        <td>
+                                            <div class="intake-applicant-cell">
+                                                <strong>{{ applicant.name }}</strong>
+                                                <small>{{ applicant.registration_no }}<template v-if="applicant.nisn"> · NISN {{ applicant.nisn }}</template><template v-if="applicant.previous_school"> · {{ applicant.previous_school }}</template></small>
+                                            </div>
+                                        </td>
+                                        <td class="col-date">{{ formatDate(applicant.created_at) || '—' }}</td>
+                                        <td>
+                                            <div class="applicant-badge-cluster">
+                                                <span class="meta-chip">{{ applicant.track?.name || 'Belum pilih jalur' }}</span>
+                                                <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }} ({{ applicant.documents.length }})</span>
+                                                <span class="status-pill" :class="`status-${applicant.status}`">{{ applicantStatusLabel(applicant.status) }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="col-actions">
+                                            <div class="intake-action-group">
+                                                <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">
+                                                    Detail
+                                                </button>
+                                                <template v-if="can_manage_applicants">
+                                                    <button
+                                                        type="button"
+                                                        class="icon-action-btn is-edit"
+                                                        :title="`Edit data ${applicant.name}`"
+                                                        :aria-label="`Edit pendaftar ${applicant.name}`"
+                                                        @click="openEditApplicantModal(applicant)"
+                                                    >
+                                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.586 3.586a2 2 0 112.828 2.828l-8.793 8.793-3.536.707.707-3.536 8.794-8.792z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="icon-action-btn is-delete"
+                                                        :disabled="!canDeleteApplicant(applicant)"
+                                                        :title="canDeleteApplicant(applicant) ? `Hapus ${applicant.name}` : 'Pendaftar sudah daftar ulang tidak dapat dihapus'"
+                                                        :aria-label="`Hapus pendaftar ${applicant.name}`"
+                                                        @click="deleteApplicant(applicant)"
+                                                    >
+                                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h8m-6 0V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m2.5 0l-.58 9.28A1.5 1.5 0 0112.423 16.7H7.577a1.5 1.5 0 01-1.497-1.42L5.5 6h9zM8.5 9v4.5m3-4.5v4.5" />
+                                                        </svg>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
+                        <p v-else class="empty-state">{{ hasApplicantFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar pada periode ini.' }}</p>
                     </div>
                 </section>
 
                 <!-- SUB-TAB 2B: ANTREAN VERIFIKASI BERKAS -->
                 <section v-if="activeIntakeTab === 'documents'" class="panel admissions-panel documents-panel">
-                    <div class="documents-page-heading"><div class="table-title"><div><span class="section-overline">Pemeriksaan dokumen</span><h2>Verifikasi berkas</h2><p>Periksa kelengkapan dokumen setiap pendaftar secara berurutan atau unggah dokumen susulan.</p></div></div></div>
+                    <div class="documents-page-heading"><div class="table-title"><div><span class="section-overline">Pemeriksaan dokumen</span><h2>Verifikasi berkas</h2><p>Periksa kelengkapan dokumen setiap pendaftar secara berurutan melalui panel detail.</p></div></div></div>
                     <div class="document-insights" aria-label="Ringkasan verifikasi">
                         <div class="document-insight is-total"><span>Pendaftar</span><strong>{{ documentSummary.applicants }}</strong><small>Dalam periode ini</small></div>
                         <div class="document-insight"><span>Total berkas</span><strong>{{ documentSummary.total }}</strong><small>Dokumen yang diunggah</small></div>
@@ -631,44 +726,77 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                         <div class="document-insight is-attention"><span>Perlu perhatian</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div>
                     </div>
                     <div class="document-list-panel">
-                        <div class="document-list-heading"><div><h3>Daftar berkas pendaftar</h3><p>{{ filteredDocumentApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan</p></div><span v-if="hasDocumentFilters" class="filter-result-label">Filter aktif</span></div>
+                        <div class="document-list-heading"><div><h3>Daftar berkas pendaftar</h3><p>{{ filteredDocumentApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Klik "Detail" untuk memeriksa atau mengunggah berkas</p></div><span v-if="hasDocumentFilters" class="filter-result-label">Filter aktif</span></div>
                         <div class="document-filters">
                             <label class="document-search-field"><span>Cari pendaftar</span><input v-model="documentSearch" type="search" placeholder="Nama atau nomor pendaftaran..." /></label>
                             <label><span>Status berkas</span><select v-model="documentStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu verifikasi</option><option value="valid">Valid</option><option value="needs_revision">Perlu perbaikan</option></select></label>
                             <button v-if="hasDocumentFilters" class="filter-reset-button" type="button" @click="resetDocumentFilters">Reset filter</button>
                         </div>
-                        <div class="admissions-applicants">
-                            <article v-for="applicant in filteredDocumentApplicants" :key="applicant.id" class="admissions-applicant document-applicant">
-                                <div class="admissions-applicant-heading">
-                                    <div>
-                                        <span class="admissions-registration">{{ applicant.registration_no }}</span>
-                                        <h3>{{ applicant.name }}</h3>
-                                        <p class="document-applicant-meta">{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.documents.length }} berkas</p>
-                                    </div>
-                                    <div class="applicant-badge-cluster">
-                                        <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }}</span>
-                                        <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">Buka Panel Detail</button>
-                                    </div>
-                                </div>
-                                <div class="document-list">
-                                    <div v-for="document in applicant.documents" :key="document.id" class="document-row">
-                                        <div class="document-main"><span class="document-mark" aria-hidden="true">▤</span><div><strong>{{ document.requirement?.label || document.original_name }}</strong><small>{{ document.original_name }}</small></div></div>
-                                        <span class="status-pill document-status-pill" :class="`document-status-${document.status}`">{{ documentStatusLabel(document.status) }}</span>
-                                        <a :href="`/spmb/berkas/${document.id}/unduh`">Unduh</a>
-                                        <div v-if="can_manage_applicants" class="document-actions">
-                                            <button class="secondary-button" type="button" @click="verifyDocument(document, 'valid')">Tandai valid</button>
-                                            <button class="link-danger" type="button" @click="verifyDocument(document, 'needs_revision')">Minta perbaikan</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <form v-if="can_manage_applicants && applicant.track" class="upload-form" @submit.prevent="uploadDocument(applicant)">
-                                    <select v-model="documentForm(applicant).requirement_id"><option value="">Berkas umum</option><option v-for="requirement in applicant.track.requirements" :key="requirement.id" :value="requirement.id">{{ requirement.label }}</option></select>
-                                    <label class="document-upload-file"><span>Tambah dokumen</span><span class="document-file-picker"><input class="document-file-input" type="file" accept=".pdf,.jpg,.jpeg,.png" @change="documentForm(applicant).file = ($event.target as HTMLInputElement).files?.[0] || null" required /><span class="document-file-button">Pilih file</span><span class="document-file-name">{{ documentForm(applicant).file?.name || 'Belum ada file dipilih' }}</span></span></label>
-                                    <button class="secondary-button" type="submit">Unggah berkas</button>
-                                </form>
-                            </article>
-                            <p v-if="!filteredDocumentApplicants.length" class="empty-state">{{ hasDocumentFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar untuk diverifikasi.' }}</p>
+
+                        <div v-if="filteredDocumentApplicants.length" class="intake-table-wrap table-scroll" tabindex="0" role="region" aria-label="Tabel verifikasi berkas pendaftar">
+                            <table class="intake-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="col-no">No</th>
+                                        <th scope="col">Nama Pendaftar</th>
+                                        <th scope="col">Tanggal Daftar</th>
+                                        <th scope="col">Ringkasan Berkas</th>
+                                        <th scope="col" class="col-actions">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(applicant, index) in filteredDocumentApplicants" :key="applicant.id">
+                                        <td class="col-no">{{ index + 1 }}</td>
+                                        <td>
+                                            <div class="intake-applicant-cell">
+                                                <strong>{{ applicant.name }}</strong>
+                                                <small>{{ applicant.registration_no }} · {{ applicant.track?.name || 'Belum memilih jalur' }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="col-date">{{ formatDate(applicant.created_at) || '—' }}</td>
+                                        <td>
+                                            <div class="applicant-badge-cluster">
+                                                <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }}</span>
+                                                <span class="meta-chip">{{ applicant.documents.filter((d) => d.status === 'valid').length }}/{{ applicant.documents.length }} berkas valid</span>
+                                            </div>
+                                        </td>
+                                        <td class="col-actions">
+                                            <div class="intake-action-group">
+                                                <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">
+                                                    Detail
+                                                </button>
+                                                <template v-if="can_manage_applicants">
+                                                    <button
+                                                        type="button"
+                                                        class="icon-action-btn is-edit"
+                                                        :title="`Edit data ${applicant.name}`"
+                                                        :aria-label="`Edit pendaftar ${applicant.name}`"
+                                                        @click="openEditApplicantModal(applicant)"
+                                                    >
+                                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.586 3.586a2 2 0 112.828 2.828l-8.793 8.793-3.536.707.707-3.536 8.794-8.792z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="icon-action-btn is-delete"
+                                                        :disabled="!canDeleteApplicant(applicant)"
+                                                        :title="canDeleteApplicant(applicant) ? `Hapus ${applicant.name}` : 'Pendaftar sudah daftar ulang tidak dapat dihapus'"
+                                                        :aria-label="`Hapus pendaftar ${applicant.name}`"
+                                                        @click="deleteApplicant(applicant)"
+                                                    >
+                                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h8m-6 0V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m2.5 0l-.58 9.28A1.5 1.5 0 0112.423 16.7H7.577a1.5 1.5 0 01-1.497-1.42L5.5 6h9zM8.5 9v4.5m3-4.5v4.5" />
+                                                        </svg>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
+                        <p v-else class="empty-state">{{ hasDocumentFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar untuk diverifikasi.' }}</p>
                     </div>
                 </section>
             </template>
@@ -999,8 +1127,36 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                     <div class="applicant-drawer-body">
                         <!-- 1. Identitas & Status -->
                         <section class="drawer-section">
-                            <h3>Identitas & Status Pendaftar</h3>
+                            <div class="drawer-section-head">
+                                <h3>Identitas & Status Pendaftar</h3>
+                                <div v-if="can_manage_applicants" class="intake-action-group">
+                                    <button
+                                        type="button"
+                                        class="icon-action-btn is-edit"
+                                        :title="`Edit data ${selectedApplicant.name}`"
+                                        :aria-label="`Edit pendaftar ${selectedApplicant.name}`"
+                                        @click="openEditApplicantModal(selectedApplicant)"
+                                    >
+                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.586 3.586a2 2 0 112.828 2.828l-8.793 8.793-3.536.707.707-3.536 8.794-8.792z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="icon-action-btn is-delete"
+                                        :disabled="!canDeleteApplicant(selectedApplicant)"
+                                        :title="canDeleteApplicant(selectedApplicant) ? `Hapus ${selectedApplicant.name}` : 'Pendaftar sudah daftar ulang tidak dapat dihapus'"
+                                        :aria-label="`Hapus pendaftar ${selectedApplicant.name}`"
+                                        @click="deleteApplicant(selectedApplicant)"
+                                    >
+                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h8m-6 0V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m2.5 0l-.58 9.28A1.5 1.5 0 0112.423 16.7H7.577a1.5 1.5 0 01-1.497-1.42L5.5 6h9zM8.5 9v4.5m3-4.5v4.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                             <dl class="drawer-meta-grid">
+                                <div><dt>Tanggal Daftar</dt><dd>{{ formatDate(selectedApplicant.created_at) || '—' }}</dd></div>
                                 <div><dt>Jenis Kelamin</dt><dd>{{ selectedApplicant.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</dd></div>
                                 <div><dt>Tanggal Lahir</dt><dd>{{ formatDate(selectedApplicant.birth_date) || '—' }}</dd></div>
                                 <div><dt>Asal Sekolah</dt><dd>{{ selectedApplicant.previous_school || '—' }}</dd></div>
@@ -1064,6 +1220,37 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                         </section>
                     </div>
                 </aside>
+            </div>
+
+            <!-- EDIT APPLICANT MODAL -->
+            <div v-if="editingApplicant" class="applicant-modal-overlay" role="dialog" aria-modal="true" :aria-label="`Edit data pendaftar ${editingApplicant.name}`" @click.self="closeEditApplicantModal">
+                <section class="applicant-modal panel admissions-panel">
+                    <header class="applicant-modal-header">
+                        <div>
+                            <span class="admissions-registration">{{ editingApplicant.registration_no }}</span>
+                            <h2>Edit Data Pendaftar</h2>
+                            <p>Perbarui identitas calon siswa, jalur pendaftaran, atau status verifikasi.</p>
+                        </div>
+                        <button type="button" class="secondary-button btn-compact" aria-label="Tutup form edit" @click="closeEditApplicantModal">Tutup ×</button>
+                    </header>
+                    <form class="admissions-form applicant-edit-form" @submit.prevent="submitEditApplicant">
+                        <label>Periode<select v-model="editApplicantForm.period_id" required @change="changeEditApplicantPeriod"><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="String(period.id)">{{ period.name }}</option></select></label>
+                        <label>Jalur<select v-model="editApplicantForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in editApplicantTracks.length ? editApplicantTracks : tracks" :key="track.id" :value="String(track.id)">{{ track.name }}</option></select></label>
+                        <label>Status alur<select v-model="editApplicantForm.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label>
+                        <label>Nama calon siswa<input v-model="editApplicantForm.name" required /></label>
+                        <label>NISN<input v-model="editApplicantForm.nisn" inputmode="numeric" /></label>
+                        <label>Jenis kelamin<select v-model="editApplicantForm.gender"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label>
+                        <label>Tanggal lahir<input v-model="editApplicantForm.birth_date" type="date" /></label>
+                        <label>Nama orang tua/wali<input v-model="editApplicantForm.parent_name" /></label>
+                        <label>Kontak orang tua<input v-model="editApplicantForm.parent_phone" /></label>
+                        <label class="admissions-form-wide">Asal sekolah<input v-model="editApplicantForm.previous_school" /></label>
+                        <label class="admissions-form-wide">Catatan verifikasi<textarea v-model="editApplicantForm.notes" rows="2" /></label>
+                        <div class="admissions-form-actions admissions-form-wide">
+                            <button type="button" class="secondary-button" @click="closeEditApplicantModal">Batal</button>
+                            <button type="submit" class="primary-button" :disabled="editApplicantForm.processing">Simpan perubahan</button>
+                        </div>
+                    </form>
+                </section>
             </div>
         </div>
     </AppLayout>
@@ -1511,6 +1698,31 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .drawer-doc-actions { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
 .drawer-upload-form { flex-wrap: wrap; }
 .drawer-criteria { grid-template-columns: 1fr; }
+.intake-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); }
+.intake-table { width: 100%; border-collapse: collapse; font-size: .82rem; text-align: left; }
+.intake-table th, .intake-table td { padding: .75rem .9rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.intake-table thead th { background: var(--surface-subtle); color: var(--ink-soft); font-size: .74rem; font-weight: 700; white-space: nowrap; }
+.intake-table tbody tr:last-child td { border-bottom: 0; }
+.intake-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 25%, var(--surface)); }
+.intake-table .col-no { width: 3.2rem; color: var(--ink-soft); font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+.intake-table .col-date { white-space: nowrap; color: var(--ink-soft); font-size: .78rem; font-weight: 600; }
+.intake-table .col-actions { width: 1%; white-space: nowrap; text-align: right; }
+.intake-applicant-cell { display: grid; gap: .18rem; min-width: 12rem; }
+.intake-applicant-cell strong { color: var(--ink); font-size: .86rem; font-weight: 700; }
+.intake-applicant-cell small { color: var(--ink-soft); font-size: .73rem; }
+.intake-action-group { display: inline-flex; align-items: center; justify-content: flex-end; gap: .4rem; }
+.icon-action-btn { display: inline-grid; place-items: center; width: 2.15rem; height: 2.15rem; border: 1px solid var(--line-strong); border-radius: .55rem; background: var(--surface); color: var(--ink-soft); cursor: pointer; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
+.icon-action-btn svg { width: 1rem; height: 1rem; }
+.icon-action-btn.is-edit:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.icon-action-btn.is-delete { border-color: #f1c9c5; background: #fff8f7; color: #b42318; }
+.icon-action-btn.is-delete:hover:not(:disabled) { border-color: #b42318; background: #fdebea; }
+.icon-action-btn:disabled { opacity: .45; cursor: not-allowed; }
+.applicant-modal-overlay { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 1rem; background: rgba(15, 23, 42, .45); backdrop-filter: blur(2px); }
+.applicant-modal { width: min(46rem, 100%); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: .95rem; box-shadow: 0 20px 45px rgba(15, 23, 42, .2); }
+.applicant-modal-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding-bottom: .9rem; margin-bottom: 1rem; border-bottom: 1px solid var(--line); }
+.applicant-modal-header h2 { margin: .15rem 0 0; color: var(--ink); font-size: 1.2rem; }
+.applicant-modal-header p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .78rem; }
+.applicant-edit-form { margin-bottom: 0; }
 @media (max-width: 900px) { .setup-checklist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .setup-checklist-grid, .drawer-meta-grid, .drawer-document-row { grid-template-columns: 1fr; } }
 </style>
