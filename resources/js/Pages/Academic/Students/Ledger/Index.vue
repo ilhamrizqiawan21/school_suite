@@ -96,8 +96,8 @@ function resetFilters() {
                                 <th scope="col" class="px-5 py-3">Nama siswa</th>
                                 <th scope="col" class="px-5 py-3">NIS / NISN</th>
                                 <th scope="col" class="px-5 py-3">Rombel aktif</th>
-                                <th scope="col" class="px-5 py-3">Status</th>
-                                <th scope="col" class="px-5 py-3 text-right">Buku induk</th>
+                                <th scope="col" class="px-5 py-3 text-center">Status</th>
+                                <th scope="col" class="px-5 py-3 text-center">Buku induk</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
@@ -108,8 +108,8 @@ function resetFilters() {
                                 </td>
                                 <td class="px-5 py-3.5 text-sm text-slate-700">{{ student.nis }}<span class="mt-0.5 block text-xs text-slate-500">NISN {{ student.nisn || '—' }}</span></td>
                                 <td class="px-5 py-3.5 text-slate-700">{{ student.class_name || 'Belum ada rombel aktif' }}</td>
-                                <td class="px-5 py-3.5"><span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="student.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">{{ statusLabels[student.status] || student.status }}</span></td>
-                                <td class="px-5 py-3.5 text-right"><Link class="ledger-profile-action" :href="`/akademik/buku-induk/${student.id}`">Lihat profil</Link></td>
+                                <td class="px-5 py-3.5 text-center"><span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="student.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">{{ statusLabels[student.status] || student.status }}</span></td>
+                                <td class="px-5 py-3.5 text-center"><Link class="ledger-profile-action" :href="`/akademik/buku-induk/${student.id}`">Lihat profil</Link></td>
                             </tr>
                             <tr v-if="students.data.length === 0">
                                 <td colspan="5" class="px-5 py-14 text-center">
@@ -141,7 +141,7 @@ function resetFilters() {
 .ledger-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .ledger-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
 .ledger-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.55; }
-.ledger-term-card { display: grid; gap: .3rem; min-width: 210px; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); text-align: right; }
+.ledger-term-card { display: grid; gap: .3rem; min-width: 210px; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); text-align: center; }
 .ledger-term-card span { color: var(--ink-faint); font-size: .72rem; }
 .ledger-term-card strong { color: var(--ink); font-size: .8rem; }
 .ledger-panel { overflow: hidden; }
@@ -161,5 +161,5 @@ function resetFilters() {
 .ledger-profile-action { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; padding: .5rem .75rem; border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line)); border-radius: .6rem; background: var(--primary-soft); color: var(--primary-strong); font-size: .75rem; font-weight: 800; text-decoration: none; transition: background .16s ease, border-color .16s ease; }
 .ledger-profile-action:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 15%, var(--surface)); }
 @media (max-width: 900px) { .ledger-filterbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }.ledger-filter-field:first-child, .ledger-filter-actions { grid-column: 1 / -1; }.ledger-filter-actions { justify-content: flex-end; } }
-@media (max-width: 640px) { .ledger-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.ledger-term-card { min-width: 0; text-align: left; }.ledger-filterbar { grid-template-columns: minmax(0, 1fr); }.ledger-filter-field:first-child, .ledger-filter-actions { grid-column: auto; }.ledger-filter-actions { display: grid; grid-template-columns: 1fr 1fr; }.ledger-filter-actions button { width: 100%; } }
+@media (max-width: 640px) { .ledger-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.ledger-term-card { min-width: 0; text-align: center; }.ledger-filterbar { grid-template-columns: minmax(0, 1fr); }.ledger-filter-field:first-child, .ledger-filter-actions { grid-column: auto; }.ledger-filter-actions { display: grid; grid-template-columns: 1fr 1fr; }.ledger-filter-actions button { width: 100%; } }
 </style>

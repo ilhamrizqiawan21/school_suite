@@ -306,7 +306,6 @@ onBeforeUnmount(() => {
                         @input="refreshMenuSearch"
                         @keydown="handleSearchKeydown"
                     />
-                    <kbd v-if="!searchQuery">Ctrl K</kbd>
                     <div v-if="searchOpen" id="global-search-results" class="global-search-results" role="listbox" aria-label="Hasil pencarian menu">
                         <template v-if="searchResults.length">
                             <Link

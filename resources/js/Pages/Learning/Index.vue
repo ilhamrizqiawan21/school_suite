@@ -796,3 +796,16 @@ const removeResource = (url: string) => {
 @media (max-width: 880px) { .student-task-row { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(70px, .7fr)) auto; gap: .65rem; } }
 @media (max-width: 620px) { .task-dashboard-stats, .task-class-grid { grid-template-columns: 1fr; } .task-panel-heading, .task-form-footer, .material-list-heading, .student-course-picker-heading, .student-panel-heading { align-items: stretch; flex-direction: column; } .task-search-wide, .material-list-tools, .material-list-tools select, .material-list-tools .task-search, .student-course-select { width: 100%; max-width: none; } .task-save-button, .material-upload-button { width: 100%; } .task-form-grid { grid-template-columns: 1fr; } .material-resource-card { grid-template-columns: auto minmax(0, 1fr); } .material-resource-actions { grid-column: 1 / -1; justify-content: flex-end; } .student-course-chip { align-self: flex-start; } .student-learning-summary.student-task-summary { grid-template-columns: 1fr; } .student-task-row { grid-template-columns: 1fr 1fr; gap: .75rem; } .student-task-main { grid-column: 1 / -1; } .student-task-open { justify-self: end; } }
 </style>
+
+<style scoped>
+/* Summary metrics share the same quiet card treatment across menus. */
+.grade-summary { gap: .75rem; overflow: visible; background: transparent; border: 0; box-shadow: none; }
+.grade-summary > div, .grade-summary > article { display: grid; align-content: center; gap: .25rem; min-width: 0; text-align: center; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid #3157a4; border-radius: .8rem; box-shadow: none; }
+.grade-summary > div:nth-child(2), .grade-summary > article:nth-child(2) { border-top-color: #7952a3; }
+.grade-summary > div:nth-child(3), .grade-summary > article:nth-child(3) { border-top-color: #138a62; }
+.grade-summary > div:nth-child(4), .grade-summary > article:nth-child(4) { border-top-color: #168782; }
+.grade-summary > div::before, .grade-summary > article::before { content: none; }
+.grade-summary > .score-summary-green { border-top-color: #138a62; }
+.grade-summary > .score-summary-red { border-top-color: #b42318; }
+.grade-summary > .score-summary-gold { border-top-color: #c28a27; }
+</style>

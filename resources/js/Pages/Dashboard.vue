@@ -117,14 +117,7 @@ const isPrincipal = computed(() => role.value === 'principal');
 const isHomeroom = computed(() => role.value === 'homeroom');
 const isTeacher = computed(() => role.value === 'teacher');
 const isStudent = computed(() => role.value === 'student');
-const today = computed(() => {
-    const parts = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).formatToParts(new Date());
-    return {
-        day: parts.find((part) => part.type === 'day')?.value ?? '—',
-        month: parts.find((part) => part.type === 'month')?.value ?? '',
-        year: parts.find((part) => part.type === 'year')?.value ?? '',
-    };
-});
+const today = computed(() => new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()));
 const formatDateTime = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
     : '—';
@@ -383,14 +376,14 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
     <AppLayout title="Beranda">
         <section class="view dashboard-view" :class="{ 'is-admin-dashboard': isAdmin }">
             <header class="dashboard-intro">
-                <div class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
+                <div v-if="!isAdmin" class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
                     <div>
                         <h1>{{ isPrincipal ? 'Gambaran sekolah hari ini.' : isStudent ? `Hai, ${firstName}.` : isAdmin ? `Selamat datang, ${firstName}.` : `${firstName}, ini pusat kerjamu.` }}</h1>
                         <p v-if="isStudent">Pantau jadwal, tugas, ujian, dan capaian belajarmu dari satu tempat.</p>
                         <p v-if="isAdmin">Berikut hal penting untuk pekerjaan sekolah hari ini.</p>
                     </div>
-                    <div class="date-stamp"><strong>{{ today.day }}</strong><span>{{ today.month }}<br>{{ today.year }}</span></div>
+                    <div class="date-stamp"><span>{{ today }}</span></div>
                 </div>
             </header>
 
@@ -655,7 +648,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .intro-kicker { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
 .live-pip { width: 7px; height: 7px; background: var(--green); border-radius: 50%; box-shadow: 0 0 0 4px var(--green-soft); }.slash { color: var(--ink-faint); }
 .intro-row { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-top: 18px; }.intro-row h1 { margin: 0; color: var(--ink); font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -.045em; line-height: 1.03; }.intro-row p { max-width: 540px; margin: 12px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
-.date-stamp { display: flex; align-items: center; gap: 9px; padding: 9px 12px 9px 10px; color: var(--ink); border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }.date-stamp strong { font-size: 27px; letter-spacing: -.06em; line-height: 1; }.date-stamp span { color: var(--ink-soft); font-size: 10px; font-weight: 700; line-height: 1.25; }
+.date-stamp { display: flex; max-width: 190px; align-items: center; padding: 7px 9px; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }.date-stamp span { color: var(--ink-soft); font-size: 10px; font-weight: 700; line-height: 1.35; text-align: center; text-transform: capitalize; }
 .command-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, .8fr); gap: 15px; }.focus-panel { min-height: 330px; padding: 27px 30px; color: #f7fbff; background: #172d4c; border-radius: 25px 25px 25px 7px; overflow: hidden; position: relative; box-shadow: 0 20px 38px rgba(24, 48, 78, .16); }.focus-panel.teacher-focus { background: #1d4d56; }.focus-meta { display: flex; align-items: center; justify-content: space-between; gap: 15px; color: #a7bdd5; font-size: 10px; font-weight: 700; letter-spacing: .04em; position: relative; z-index: 1; }.focus-status { display: inline-flex; align-items: center; gap: 6px; color: #c8e9d7; }.focus-status i { width: 6px; height: 6px; background: #72d29c; border-radius: 50%; }.focus-content { position: relative; z-index: 1; margin-top: 38px; max-width: 510px; }.focus-number { display: block; color: #f4c86c; font: 700 58px var(--font-display); letter-spacing: -.06em; line-height: .9; }.focus-number-label { display: block; margin-top: 9px; color: #adc0d4; font-size: 11px; }.focus-content h2 { max-width: 390px; margin: 22px 0 8px; color: #fff; font-size: clamp(22px, 3vw, 31px); letter-spacing: -.035em; line-height: 1.1; }.focus-content p { max-width: 430px; margin: 0; color: #b6c7d8; font-size: 12px; line-height: 1.7; }.focus-action { display: inline-flex; align-items: center; gap: 13px; margin-top: 22px; padding: 11px 15px; color: #1c304b; background: #f5c86d; border-radius: 9px; font-size: 11px; font-weight: 800; text-decoration: none; }.focus-action:hover { background: #ffda89; }.focus-action span { font-size: 17px; line-height: .7; }.focus-orbit { position: absolute; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; }.orbit-one { width: 390px; height: 390px; right: -145px; bottom: -190px; }.orbit-two { width: 290px; height: 290px; right: -95px; bottom: -140px; }
 .insight-panel { display: flex; flex-direction: column; justify-content: space-between; min-height: 330px; padding: 24px; background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 7px 25px 25px 25px; }.insight-heading { display: flex; justify-content: space-between; gap: 12px; }.insight-heading h2 { margin: 7px 0 0; color: var(--ink); font-size: 18px; letter-spacing: -.025em; }.signal { color: var(--gold); font: 700 21px var(--font-display); }.signal-line { display: flex; align-items: start; gap: 12px; margin-top: 55px; }.signal-dot { width: 12px; height: 12px; flex: 0 0 auto; margin-top: 4px; border: 3px solid var(--gold); border-radius: 50%; box-shadow: 0 0 0 5px var(--gold-soft); }.signal-line strong { color: var(--ink); font-size: 13px; }.signal-line p { margin: 6px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.65; }.insight-rule { height: 1px; margin: 25px 0 14px; background: var(--line); }.insight-footer { display: flex; justify-content: space-between; gap: 12px; color: var(--ink-faint); font-size: 10px; }.insight-footer strong { color: var(--ink-soft); font-size: 10px; text-align: right; }
 .metrics-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
@@ -808,7 +801,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 @media (max-width: 1000px) { .student-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.student-announcements-card { grid-column: 1 / -1; } }
 @media (max-width: 980px) { .admin-action-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-action-group:last-child { grid-column: 1 / -1; }.admin-action-group:last-child .admin-action-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 14px; } }
 @media (max-width: 800px) { .command-layout, .principal-command { grid-template-columns: 1fr; }.insight-panel { min-height: 225px; }.signal-line { margin-top: 30px; }.metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.admin-overview-grid, .student-overview-grid, .admin-action-groups { grid-template-columns: 1fr; }.admin-action-group:last-child { grid-column: auto; }.admin-action-group:last-child .admin-action-list { grid-template-columns: 1fr; }.student-announcements-card { grid-column: auto; }.attendance-chart-meta { flex-direction: column; gap: 10px; } }
-@media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { display: none; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; }.principal-toolbar { align-items: start; flex-direction: column; }.principal-lead, .principal-attention, .principal-chart-panel, .principal-grade-panel, .principal-news { padding: 19px; }.principal-lead { min-height: 300px; }.principal-panel-heading { align-items: start; flex-direction: column; gap: 6px; }.principal-grade-meta { grid-template-columns: minmax(0, 1fr) auto; }.principal-grade-meta span { grid-column: 1; grid-row: 2; }.principal-grade-meta b { grid-column: 2; grid-row: 1 / 3; }.principal-activity-grid { grid-template-columns: 1fr; }.principal-activity-item { min-height: 182px; border-right: 0; border-bottom: 1px solid var(--line); }.principal-activity-item:last-child { border-bottom: 0; }.principal-news li { grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; }.principal-news li strong { grid-column: 1 / -1; white-space: normal; }.principal-news li time { text-align: right; } }
+@media (max-width: 560px) { .intro-row { align-items: start; }.intro-row h1 { font-size: 30px; }.date-stamp { max-width: 128px; padding: 6px 8px; }.date-stamp span { font-size: 9px; }.focus-panel { min-height: 360px; padding: 23px; }.focus-content { margin-top: 32px; }.metrics-strip { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-item { min-height: 105px; padding: 14px 12px; }.metric-item strong { font-size: 24px; }.workflow-row { gap: 10px; }.workflow-index { display: none; }.workflow-copy span { max-width: 235px; }.dashboard-footer { margin-top: 28px; }.principal-toolbar { align-items: start; flex-direction: column; }.principal-lead, .principal-attention, .principal-chart-panel, .principal-grade-panel, .principal-news { padding: 19px; }.principal-lead { min-height: 300px; }.principal-panel-heading { align-items: start; flex-direction: column; gap: 6px; }.principal-grade-meta { grid-template-columns: minmax(0, 1fr) auto; }.principal-grade-meta span { grid-column: 1; grid-row: 2; }.principal-grade-meta b { grid-column: 2; grid-row: 1 / 3; }.principal-activity-grid { grid-template-columns: 1fr; }.principal-activity-item { min-height: 182px; border-right: 0; border-bottom: 1px solid var(--line); }.principal-activity-item:last-child { border-bottom: 0; }.principal-news li { grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; }.principal-news li strong { grid-column: 1 / -1; white-space: normal; }.principal-news li time { text-align: right; } }
 @media (prefers-reduced-motion: reduce) { .workflow-row { transition: none; } }
 /* Shared card rhythm: role colors remain, geometry stays consistent. */
 .focus-panel, .insight-panel { border-radius: var(--card-radius-featured); }
@@ -1149,6 +1142,18 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .is-admin-dashboard .metrics-first { margin-top: .5rem; }
 .is-admin-dashboard .metric-item { min-height: 142px; padding: 1.25rem; border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
 .is-admin-dashboard .metric-item::before { display: none; }
+.is-admin-dashboard .metrics-first .metric-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; text-align: center; }
+.is-admin-dashboard .metrics-first .metric-head { justify-content: center; text-align: center; }
+.is-admin-dashboard .metrics-first .metric-arrow { display: none; }
+.is-admin-dashboard .metrics-first .metric-item strong { margin-top: .35rem; }
+.is-admin-dashboard .metrics-first .metric-tone-1 { --metric-accent: #3269bc; color: #244f91; background: #edf4ff; border-color: #c9dcfa; }
+.is-admin-dashboard .metrics-first .metric-tone-2 { --metric-accent: #24845b; color: #176443; background: #eaf7f0; border-color: #c3e6d2; }
+.is-admin-dashboard .metrics-first .metric-tone-3 { --metric-accent: #a86a12; color: #80500d; background: #fff5e5; border-color: #f0d7aa; }
+.is-admin-dashboard .metrics-first .metric-tone-4 { --metric-accent: #7652a8; color: #5d3d8c; background: #f4effb; border-color: #ded0f2; }
+.is-admin-dashboard .metrics-first .metric-item .metric-head > span:first-child,
+.is-admin-dashboard .metrics-first .metric-item strong,
+.is-admin-dashboard .metrics-first .metric-item small { color: inherit; }
+.is-admin-dashboard .metrics-first .metric-item strong { font-weight: 800; }
 .is-admin-dashboard .metric-item strong { color: var(--ink); font-size: clamp(1.7rem, 2.7vw, 2.2rem); }
 .is-admin-dashboard .admin-priority-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); gap: 1.25rem; margin-top: 1.5rem; }
 .is-admin-dashboard .admin-priority-panel { min-width: 0; padding: 1.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }

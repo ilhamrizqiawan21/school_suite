@@ -226,9 +226,9 @@ const deleteUser = (user: UserItem) => {
                             <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
                                 <th scope="col" class="py-3 px-4">Nama Lengkap</th>
                                 <th scope="col" class="py-3 px-4">Akun</th>
-                                <th scope="col" class="py-3 px-4">Peran</th>
-                                <th scope="col" class="py-3 px-4">Status</th>
-                                <th scope="col" v-if="can_update || can_delete" class="py-3 px-4 text-right">Aksi</th>
+                                <th scope="col" class="py-3 px-4 text-center">Peran</th>
+                                <th scope="col" class="py-3 px-4 text-center">Status</th>
+                                <th scope="col" v-if="can_update || can_delete" class="py-3 px-4 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -241,12 +241,12 @@ const deleteUser = (user: UserItem) => {
                                     <div class="font-medium text-slate-800">{{ u.email }}</div>
                                     <div v-if="u.username" class="text-[11px] text-slate-400">@{{ u.username }}</div>
                                 </td>
-                                <td class="py-3 px-4">
+                                <td class="py-3 px-4 text-center">
                                     <span class="inline-flex px-2 py-0.5 rounded-md font-medium text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-100">
                                         {{ u.role?.label ?? 'Tanpa Peran' }}
                                     </span>
                                 </td>
-                                <td class="py-3 px-4">
+                                <td class="py-3 px-4 text-center">
                                     <span
                                         :class="[
                                             'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium',
@@ -257,7 +257,7 @@ const deleteUser = (user: UserItem) => {
                                         {{ u.is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td v-if="can_update || can_delete" class="py-3 px-4 text-right space-x-2">
+                                <td v-if="can_update || can_delete" class="py-3 px-4 text-center space-x-2">
                                     <RowActionButton v-if="u.can_update" action="edit" label="Ubah" @click="openEditModal(u)" />
                                     <RowActionButton v-if="u.can_delete" :disabled="deletingId !== null" action="delete" label="Hapus" @click="deleteUser(u)" />
                                 </td>

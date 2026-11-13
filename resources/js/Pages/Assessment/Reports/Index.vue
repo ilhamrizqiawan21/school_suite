@@ -99,4 +99,9 @@ const statusLabel = (value: string) => ({ draft: 'Draf', reviewed: 'Ditinjau', p
 .report-status.published{color:var(--green);background:var(--green-soft);border-color:color-mix(in srgb,var(--green) 25%,var(--line))}
 .report-status.draft{color:var(--gold);background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 25%,var(--line))}
 @media(max-width:700px){.reports-heading{align-items:stretch}}
+/* Center report status, publication date, count, and document actions. */
+.register-context .report-count { text-align: center; }
+.report-table th:nth-child(2), .report-table td:nth-child(2), .report-table th:nth-child(3), .report-table td:nth-child(3), .action-column { text-align: center; }
+.report-table .report-actions { justify-content: center; }
+@media(max-width:700px) { .register-context .report-count { text-align: center; } }
 </style>

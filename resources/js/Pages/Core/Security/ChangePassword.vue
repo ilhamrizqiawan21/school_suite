@@ -1,8 +1,46 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 const form = useForm({ current_password: '', password: '', password_confirmation: '' });
-const submit = () => form.put('/ganti-password', { onFinish: () => form.reset() });
+const showCurrent = ref(false);
+const showNew = ref(false);
+const showConfirmation = ref(false);
+const currentStatus = ref<'idle' | 'checking' | 'valid' | 'invalid' | 'error'>('idle');
+const criteria = computed(() => [
+    { label: 'Minimal 10 karakter', met: Array.from(form.password).length >= 10 },
+    { label: 'Huruf besar', met: /\p{Lu}/u.test(form.password) },
+    { label: 'Huruf kecil', met: /\p{Ll}/u.test(form.password) },
+    { label: 'Angka', met: /[0-9]/.test(form.password) },
+]);
+let checkTimer: ReturnType<typeof setTimeout> | undefined;
+let checkSequence = 0;
+watch(() => form.current_password, (password) => {
+    form.clearErrors('current_password');
+    if (checkTimer) clearTimeout(checkTimer);
+    const sequence = ++checkSequence;
+    if (!password) {
+        currentStatus.value = 'idle';
+        return;
+    }
+    currentStatus.value = 'checking';
+    checkTimer = setTimeout(() => { void checkCurrent(password, sequence); }, 500);
+});
+const checkCurrent = async (password: string, sequence: number) => {
+    try {
+        const response = await fetch('/ganti-password/periksa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' },
+            body: JSON.stringify({ current_password: password }),
+        });
+        if (!response.ok) throw new Error('Pemeriksaan gagal');
+        const result = await response.json();
+        if (sequence === checkSequence && form.current_password === password) currentStatus.value = result.valid ? 'valid' : 'invalid';
+    } catch {
+        if (sequence === checkSequence && form.current_password === password) currentStatus.value = 'error';
+    }
+};
+const submit = () => form.put('/ganti-password', { onSuccess: () => form.reset() });
 </script>
 
 <template>
@@ -21,15 +59,21 @@ const submit = () => form.put('/ganti-password', { onFinish: () => form.reset() 
                 <p>Gunakan minimal 10 karakter dengan huruf besar, huruf kecil, dan angka.</p>
             </div>
             <label>Kata sandi saat ini
-                <input v-model="form.current_password" type="password" autocomplete="current-password" required />
+                <span class="password-input-wrap"><input v-model="form.current_password" :type="showCurrent ? 'text' : 'password'" autocomplete="current-password" required /><button type="button" class="eye-toggle" :aria-label="showCurrent ? 'Sembunyikan kata sandi saat ini' : 'Tampilkan kata sandi saat ini'" :aria-pressed="showCurrent" @click="showCurrent = !showCurrent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/><path v-if="showCurrent" stroke-linecap="round" d="m4 4 16 16"/></svg></button></span>
+                <span v-if="currentStatus === 'checking'" class="criterion" role="status">Memeriksa kata sandi…</span>
+                <span v-if="currentStatus === 'valid'" class="feedback-valid" role="status">Kata sandi saat ini benar.</span>
+                <small v-else-if="currentStatus === 'invalid'" role="status">Kata sandi saat ini salah.</small>
+                <small v-else-if="currentStatus === 'error'" role="status">Pemeriksaan gagal. Coba lagi nanti.</small>
                 <small v-if="form.errors.current_password">{{ form.errors.current_password }}</small>
             </label>
             <label>Kata sandi baru
-                <input v-model="form.password" type="password" autocomplete="new-password" minlength="10" required />
+                <span class="password-input-wrap"><input v-model="form.password" :type="showNew ? 'text' : 'password'" autocomplete="new-password" minlength="10" required /><button type="button" class="eye-toggle" :aria-label="showNew ? 'Sembunyikan kata sandi baru' : 'Tampilkan kata sandi baru'" :aria-pressed="showNew" @click="showNew = !showNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/><path v-if="showNew" stroke-linecap="round" d="m4 4 16 16"/></svg></button></span>
+                <span v-for="criterion in criteria" :key="criterion.label" :class="criterion.met ? 'feedback-valid' : 'criterion'">{{ criterion.met ? '✓' : '○' }} {{ criterion.label }}</span>
                 <small v-if="form.errors.password">{{ form.errors.password }}</small>
             </label>
             <label>Konfirmasi kata sandi
-                <input v-model="form.password_confirmation" type="password" autocomplete="new-password" minlength="10" required />
+                <span class="password-input-wrap"><input v-model="form.password_confirmation" :type="showConfirmation ? 'text' : 'password'" autocomplete="new-password" minlength="10" required /><button type="button" class="eye-toggle" :aria-label="showConfirmation ? 'Sembunyikan konfirmasi kata sandi' : 'Tampilkan konfirmasi kata sandi'" :aria-pressed="showConfirmation" @click="showConfirmation = !showConfirmation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/><path v-if="showConfirmation" stroke-linecap="round" d="m4 4 16 16"/></svg></button></span>
+                <span v-if="form.password_confirmation" :class="form.password === form.password_confirmation ? 'feedback-valid' : 'criterion'">{{ form.password === form.password_confirmation ? 'Kata sandi cocok.' : 'Kata sandi belum cocok.' }}</span>
                 <small v-if="form.errors.password_confirmation">{{ form.errors.password_confirmation }}</small>
             </label>
             <button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan dan lanjutkan' }}</button>
@@ -48,8 +92,15 @@ const submit = () => form.put('/ganti-password', { onFinish: () => form.reset() 
 .password-card .eyebrow { color: var(--primary-strong); }
 .password-card label { display: grid; gap: .45rem; color: var(--ink); font-size: .85rem; font-weight: 700; }
 .password-card input { min-height: 48px; padding: .7rem .85rem; border: 1px solid var(--line-strong); border-radius: .7rem; color: var(--ink); background: var(--surface); }
+.password-input-wrap { display: flex; align-items: center; position: relative; }
+.password-input-wrap input { width: 100%; padding-right: 3rem; }
+.password-card .eye-toggle { position: absolute; right: .35rem; display: grid; place-items: center; width: 2.35rem; height: 2.35rem; min-height: 0; padding: .45rem; color: var(--ink-soft); background: transparent; border-radius: .5rem; }
+.password-card .eye-toggle:hover { color: var(--ink); background: var(--primary-soft); }
+.eye-toggle svg { width: 1.25rem; height: 1.25rem; }
 .password-card input:focus-visible, .password-card button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; }
 .password-card small { color: var(--delete); }
+.feedback-valid { color: #16803c; font-size: .8rem; }
+.criterion { color: var(--ink-soft); font-size: .8rem; }
 .password-card button { min-height: 48px; background: var(--primary-action); }
 .password-card button:hover:not(:disabled) { background: var(--primary-action-strong); }
 .password-card button:disabled { opacity: .55; cursor: not-allowed; }

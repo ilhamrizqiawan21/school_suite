@@ -316,4 +316,6 @@ const conditionClass = (condition: string) => `condition-${condition}`;
 .facilities-page .text-action { min-height: 44px; padding: .45rem .65rem; color: var(--primary); border-radius: 8px; }
 .facilities-page .button:focus-visible, .facilities-page .text-action:focus-visible, .facilities-page input:focus-visible, .facilities-page select:focus-visible, .facilities-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 @media (max-width: 560px) { .facilities-page .hero-actions, .facilities-page .filters { align-items: stretch; flex-direction: column; width: 100%; } .facilities-page .hero-actions > *, .facilities-page .filters > * { width: 100%; max-width: none; } .facilities-page .summary-grid article { min-width: 0; } }
+/* Center categorical status and action columns while keeping asset descriptions left aligned. */
+.asset-table th:nth-child(n+3), .asset-table td:nth-child(n+3) { text-align: center; }
 </style>

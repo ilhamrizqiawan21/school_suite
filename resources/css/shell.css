@@ -213,10 +213,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .app-shell.is-sidebar-rail .nav-nested-block { margin-left: 0; padding-left: 0; background: transparent; }
 }
 .topbar { position: sticky; top: 0; z-index: 30; height: var(--topbar); display: flex; align-items: center; gap: 13px; padding: 0 28px; background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
-.global-search { position: relative; width: clamp(220px, 28vw, 380px); height: 40px; display: flex; align-items: center; gap: 9px; padding: 0 11px; color: var(--ink-faint); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 10px; }
+.global-search { position: relative; flex: 0 1 clamp(220px, 28vw, 380px); min-width: 0; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; color: var(--ink-faint); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 10px; transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease; }
 .global-search:focus-within, .global-search.is-focused { border-color: color-mix(in srgb, var(--primary) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent); }
-.global-search svg, .table-search svg { width: 17px; height: 17px; }
-.global-search input, .table-search input { min-width: 0; flex: 1; color: var(--ink); background: transparent; border: 0; outline: 0; }
+.global-search > svg { flex: 0 0 17px; width: 17px; height: 17px; }
+.table-search svg { width: 17px; height: 17px; }
+.global-search input:not([type='checkbox']):not([type='radio']):not([type='file']) { display: block; width: 100%; min-width: 0; min-height: 0; flex: 1 1 auto; padding: 0; color: var(--ink); background: transparent; border: 0; border-radius: 0; outline: 0; box-shadow: none; }
+.table-search input { min-width: 0; flex: 1; color: var(--ink); background: transparent; border: 0; outline: 0; }
+.global-search input:not([type='checkbox']):not([type='radio']):not([type='file']):hover,
+.global-search input:not([type='checkbox']):not([type='radio']):not([type='file']):focus-visible { border: 0; box-shadow: none; }
 .global-search input::placeholder, .table-search input::placeholder { color: var(--ink-faint); }
 .global-search-results { position: absolute; z-index: 60; top: calc(100% + 8px); left: 0; width: min(360px, 76vw); overflow: hidden; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-md); }
 .global-search-result { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; color: var(--ink); border-radius: 8px; text-decoration: none; }
@@ -473,7 +477,10 @@ input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--primary)
 
 @media (max-width: 1180px) {
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
-  .context-switcher { display: none; }
+  .context-switcher { display: flex; min-width: 0; gap: 6px; padding-inline: 8px; }
+  .context-switcher > div { min-width: 0; }
+  .context-switcher small { display: none; }
+  .context-switcher strong { display: block; max-width: 150px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; }
   .grade-summary { grid-template-columns: repeat(2, 1fr); }
   .grade-summary > div:nth-child(2) { border-right: 0; }
   .grade-summary > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
@@ -489,14 +496,16 @@ input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--primary)
   .sidebar-backdrop.is-visible { display: block; }
   .workspace { margin-left: 0; }
   .topbar { padding: 0 18px; }
-  .global-search { flex: 1; width: auto; }
+  .global-search { flex: 1 1 180px; width: auto; }
   .global-search kbd, .state-selector, .profile-copy { display: none; }
   main { padding: 24px 20px 42px; }
 }
 
 @media (max-width: 720px) {
   .topbar { gap: 8px; padding: 0 12px; }
-  .global-search { height: 38px; }
+  .global-search { height: 38px; flex-basis: 120px; gap: 7px; padding-inline: 9px; }
+  .context-switcher { flex: 0 1 auto; border-left: 0; }
+  .context-switcher strong { max-width: 105px; }
   .global-search input { font-size: 12px; }
   .global-search-results { width: min(320px, calc(100vw - 24px)); }
   .profile-button { padding: 3px; }

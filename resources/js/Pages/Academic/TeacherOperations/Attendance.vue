@@ -229,4 +229,21 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
     .attendance-save-bar > div { width: 100%; }
     .attendance-save-bar button { flex: 1; }
 }
+/* Keep status and recording controls visually centered while leaving teacher and notes readable. */
+.attendance-table td[data-label="Status"], .attendance-table td[data-label="Pencatatan"] { text-align: center; }
+.attendance-table td[data-label="Status"] select { text-align: center; text-align-last: center; }
+.attendance-table td[data-label="Pencatatan"] > span, .attendance-table td[data-label="Pencatatan"] > a { margin-inline: auto; }
+</style>
+
+<style scoped>
+/* Summary metrics share the same quiet card treatment across menus. */
+.grade-summary { gap: .75rem; overflow: visible; background: transparent; border: 0; box-shadow: none; }
+.grade-summary > div, .grade-summary > article { display: grid; align-content: center; gap: .25rem; min-width: 0; text-align: center; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid #3157a4; border-radius: .8rem; box-shadow: none; }
+.grade-summary > div:nth-child(2), .grade-summary > article:nth-child(2) { border-top-color: #7952a3; }
+.grade-summary > div:nth-child(3), .grade-summary > article:nth-child(3) { border-top-color: #138a62; }
+.grade-summary > div:nth-child(4), .grade-summary > article:nth-child(4) { border-top-color: #168782; }
+.grade-summary > div::before, .grade-summary > article::before { content: none; }
+.grade-summary > .score-summary-green { border-top-color: #138a62; }
+.grade-summary > .score-summary-red { border-top-color: #b42318; }
+.grade-summary > .score-summary-gold { border-top-color: #c28a27; }
 </style>

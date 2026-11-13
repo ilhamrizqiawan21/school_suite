@@ -619,4 +619,7 @@ const submitImport = () => {
     .teacher-filter-controls .teacher-filter-select:last-of-type, .teacher-filter-controls .secondary-button:first-of-type, .teacher-filter-submit { grid-column: 1; }
 }
 @media (max-width: 600px) { .teacher-overlay { align-items: flex-end; }.teacher-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); }.teacher-drawer .grid-cols-2 { grid-template-columns: 1fr; } }
+/* Center employment, homeroom, account status, and action columns. */
+.teacher-table th:nth-child(n+5), .teacher-table td:nth-child(n+5) { text-align: center; }
+.teacher-table td:nth-child(n+5) > span, .teacher-table td:nth-child(n+5) > .teacher-row-actions { margin-inline: auto; }
 </style>

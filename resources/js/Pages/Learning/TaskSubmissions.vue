@@ -206,4 +206,6 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 .modal-card input, .modal-card select, .modal-card textarea { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .65rem .75rem; font: inherit; }
 @media (max-width: 980px) { .submission-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .submission-toolbar { align-items: flex-start; flex-direction: column; } .submission-tools { width: 100%; justify-content: flex-start; } }
 @media (max-width: 700px) { .page-heading { align-items: flex-start; flex-direction: column; } .submission-stats { grid-template-columns: 1fr 1fr; } .table-search { width: 100%; } }
+/* Center status, time, score, and action columns in the submission table. */
+.submission-table th:nth-child(2), .submission-table td:nth-child(2), .submission-table th:nth-child(3), .submission-table td:nth-child(3), .submission-table th:nth-child(5), .submission-table td:nth-child(5), .submission-table th:nth-child(6), .submission-table td:nth-child(6) { text-align: center; }
 </style>

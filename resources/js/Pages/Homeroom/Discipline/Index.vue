@@ -665,4 +665,8 @@ const submitDispensation = () => {
 .discipline-dialog button[type='submit']:hover { background: var(--primary-action-strong); }
 .discipline-page :is(button, select, [role='region']):focus-visible, .discipline-dialog :is(button, input, select, textarea):focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; }
 @media (max-width: 640px) { .discipline-header button { width: 100%; } .discipline-tabs > div:first-child { width: 100%; } .discipline-tabs > div:last-child, .discipline-tabs select { width: 100%; } .discipline-dialog .grid { grid-template-columns: 1fr; } }
+/* Center dates, point totals, rank badges, and status values in discipline tables. */
+table th:first-child, table td:first-child, table th:nth-child(5), table td:nth-child(5) { text-align: center; }
+table td:nth-child(5) > span, table td:nth-child(6) > span { margin-inline: auto; }
+table td > span.rounded-full { display: inline-flex; justify-content: center; }
 </style>

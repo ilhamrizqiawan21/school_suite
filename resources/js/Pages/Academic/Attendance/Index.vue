@@ -243,12 +243,12 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                         </div>
                         <div class="attendance-table-wrap overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                             <table class="app-table w-full min-w-[720px] border-collapse text-left text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th scope="col" class="w-24 px-4 py-3">No / NIS</th><th scope="col" class="min-w-44 px-4 py-3">Nama siswa</th><th scope="col" class="min-w-64 px-4 py-3">Status</th><th scope="col" class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
+                                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th scope="col" class="w-24 px-4 py-3">No / NIS</th><th scope="col" class="min-w-44 px-4 py-3">Nama siswa</th><th scope="col" class="min-w-64 px-4 py-3 text-center">Status</th><th scope="col" class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
                                 <tbody class="divide-y divide-slate-100 text-slate-700">
                                     <tr v-for="(student, index) in studentList" :key="student.enrollment_id" class="hover:bg-slate-50">
                                         <td class="whitespace-nowrap px-4 py-3 text-xs"><span class="block font-semibold text-slate-700">{{ student.roll_number || index + 1 }}</span><span class="text-slate-500">{{ student.nis }}</span></td>
                                         <td class="px-4 py-3"><span class="font-semibold text-slate-900">{{ student.name }}</span><span class="ml-2 text-xs text-slate-500">{{ student.gender }}</span></td>
-                                        <td class="px-4 py-3"><div class="flex flex-wrap gap-1.5">
+                                        <td class="px-4 py-3 text-center"><div class="flex flex-wrap justify-center gap-1.5">
                                             <button v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="statusButtonClass(option[0], student.status === option[0])" class="min-h-9 rounded-md border px-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300" @click="student.status = option[0]">{{ option[1] }}</button>
                                         </div></td>
                                         <td class="px-4 py-3"><input v-model="student.notes" type="text" maxlength="255" placeholder="Opsional" class="w-full min-w-40 rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></td>

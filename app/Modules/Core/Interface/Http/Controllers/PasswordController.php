@@ -7,6 +7,7 @@ namespace App\Modules\Core\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,9 +25,19 @@ class PasswordController extends Controller
         return Inertia::render('Core/Security/ChangePassword');
     }
 
+    public function check(Request $request): JsonResponse
+    {
+        $data = $request->validate(['current_password' => ['required', 'string']]);
+
+        return response()->json(['valid' => Hash::check($data['current_password'], $request->user()->password)]);
+    }
+
     public function update(Request $request): RedirectResponse
     {
-        $data = $request->validate(['current_password' => ['required', 'current_password'], 'password' => ['required', 'confirmed', Password::min(10)->letters()->mixedCase()->numbers()]]);
+        $data = $request->validate(['current_password' => ['required', 'current_password'], 'password' => ['required', 'confirmed', Password::min(10)->letters()->mixedCase()->numbers()]], [
+            'current_password.current_password' => 'Kata sandi saat ini salah.',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
+        ]);
         $user = $request->user();
         $user->update(['password' => Hash::make($data['password']), 'must_change_password' => false, 'password_changed_at' => now()]);
         if (config('session.driver') === 'database' && Schema::hasTable('sessions')) {

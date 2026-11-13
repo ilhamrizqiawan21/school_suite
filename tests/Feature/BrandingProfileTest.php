@@ -132,6 +132,23 @@ class BrandingProfileTest extends TestCase
         $this->assertSame('Admin', $this->admin->fresh()->name);
     }
 
+    public function test_current_password_can_be_checked_without_changing_it(): void
+    {
+        $this->actingAs($this->admin)->postJson('/ganti-password/periksa', ['current_password' => 'wrong'])
+            ->assertOk()->assertJson(['valid' => false]);
+        $this->actingAs($this->admin)->postJson('/ganti-password/periksa', ['current_password' => 'Password123'])
+            ->assertOk()->assertJson(['valid' => true]);
+        $this->assertTrue(Hash::check('Password123', $this->admin->fresh()->password));
+    }
+
+    public function test_password_change_rejects_incorrect_current_password_and_weak_password(): void
+    {
+        $this->actingAs($this->admin)->from('/ganti-password')->put('/ganti-password', [
+            'current_password' => 'wrong', 'password' => 'weak', 'password_confirmation' => 'weak',
+        ])->assertSessionHasErrors(['current_password', 'password']);
+        $this->assertTrue(Hash::check('Password123', $this->admin->fresh()->password));
+    }
+
     public function test_password_change_invalidates_other_database_sessions(): void
     {
         config(['session.driver' => 'database']);

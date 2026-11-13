@@ -53,4 +53,7 @@ const submit = () => form.put(`/akademik/kelas-daring/${props.session.id}/presen
 .online-attendance-actions span { color: var(--green); font-size: .8rem; }
 .online-attendance-actions button { min-height: 44px; }
 @media (max-width: 700px) { .online-attendance-heading { align-items: flex-start; flex-direction: column; }.online-attendance-table, .online-attendance-panel-heading { display: none; }.online-attendance-panel { background: transparent; border: 0; box-shadow: none; }.online-attendance-cards { display: grid; gap: 12px; }.online-attendance-cards article { display: grid; gap: .8rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }.online-attendance-cards strong, .online-attendance-cards small { display: block; }.online-attendance-cards strong { color: var(--ink); }.online-attendance-cards small { margin-top: .2rem; color: var(--ink-soft); font-size: .75rem; }.online-attendance-cards label { display: grid; gap: .3rem; color: var(--ink-soft); font-size: .75rem; font-weight: 700; }.online-attendance-cards > p { color: var(--ink-soft); }.online-attendance-actions { padding: 1rem 0; border: 0; }.online-attendance-actions button { width: 100%; } }
+/* Center attendance status controls while leaving student names and notes left aligned. */
+.data-table th:nth-child(2), .data-table td:nth-child(2) { text-align: center; }
+.data-table td:nth-child(2) select { text-align: center; text-align-last: center; }
 </style>

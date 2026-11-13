@@ -783,4 +783,7 @@ const deleteStudent = (student: Student) => {
     .student-mobile-empty { padding: 24px 16px; color: var(--ink-soft); font-size: 13px; text-align: center; }
     .student-page :deep(.table-footer) { align-items: flex-start; flex-direction: column; gap: 10px; }
 }
+/* Center compact status and action columns while preserving readable identity text. */
+.student-table th:nth-child(n+6), .student-table td:nth-child(n+6) { text-align: center; }
+.student-table td:nth-child(n+6) > span, .student-table td:nth-child(n+6) > .student-row-actions { margin-inline: auto; }
 </style>

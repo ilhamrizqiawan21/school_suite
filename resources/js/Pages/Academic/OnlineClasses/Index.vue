@@ -147,4 +147,6 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
 .modal-actions { display: flex; justify-content: flex-end; gap: .65rem; }
 .form-error { color: var(--red); font-size: .8rem; }
 @media (max-width: 760px) { .online-session-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.span-2 { grid-column: auto; }.online-session-card { min-height: 0; }.modal-backdrop { align-items: flex-end; }.modal-card { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
+/* Center schedule metadata, status, attendance, and actions in the session table. */
+.data-table th:nth-child(n+2), .data-table td:nth-child(n+2) { text-align: center; }
 </style>

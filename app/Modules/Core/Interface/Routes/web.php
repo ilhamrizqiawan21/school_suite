@@ -38,6 +38,7 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/ganti-password', [PasswordController::class, 'edit'])->name('core.password.edit');
+    Route::post('/ganti-password/periksa', [PasswordController::class, 'check'])->middleware('throttle:sensitive')->name('core.password.check');
     Route::put('/ganti-password', [PasswordController::class, 'update'])->middleware('throttle:sensitive')->name('core.password.update');
     Route::get('/profil', [ProfileController::class, 'edit'])->name('core.profile.edit');
     Route::post('/profil', [ProfileController::class, 'update'])->middleware('throttle:uploads')->name('core.profile.update');

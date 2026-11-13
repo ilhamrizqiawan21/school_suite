@@ -492,9 +492,9 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 
                     <section class="overview-metrics" aria-label="Ringkasan periode terpilih">
                         <Link :href="periodHref('/spmb/pendaftar')" class="overview-metric metric-total"><span>Total pendaftar</span><strong>{{ overviewCounts.applicants }}</strong><small>Semua pendaftar pada periode ini</small></Link>
-                        <Link :href="periodHref('/spmb/seleksi')" class="overview-metric"><span>Diterima</span><strong>{{ overviewCounts.accepted }}</strong><small>Termasuk yang sudah daftar ulang</small></Link>
-                        <Link :href="periodHref('/spmb/seleksi')" class="overview-metric"><span>Cadangan</span><strong>{{ overviewCounts.waitlisted }}</strong><small>Menunggu perubahan kuota</small></Link>
-                        <Link :href="periodHref('/spmb/daftar-ulang')" class="overview-metric"><span>Daftar ulang selesai</span><strong>{{ overviewCounts.reRegistered }}</strong><small>Sudah tercatat sebagai siswa</small></Link>
+                        <Link :href="periodHref('/spmb/seleksi')" class="overview-metric is-accepted"><span>Diterima</span><strong>{{ overviewCounts.accepted }}</strong><small>Termasuk yang sudah daftar ulang</small></Link>
+                        <Link :href="periodHref('/spmb/seleksi')" class="overview-metric is-waitlisted"><span>Cadangan</span><strong>{{ overviewCounts.waitlisted }}</strong><small>Menunggu perubahan kuota</small></Link>
+                        <Link :href="periodHref('/spmb/daftar-ulang')" class="overview-metric is-completed"><span>Daftar ulang selesai</span><strong>{{ overviewCounts.reRegistered }}</strong><small>Sudah tercatat sebagai siswa</small></Link>
                     </section>
 
                     <template v-if="activeOverviewTab === 'summary'">
@@ -632,8 +632,8 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                 <section v-if="activeIntakeTab === 'all'" class="panel admissions-panel applicants-panel">
                     <div class="applicant-insights" aria-label="Ringkasan pendaftar">
                         <div class="applicant-insight is-total"><span>Total pendaftar</span><strong>{{ applicants.length }}</strong><small>Pada periode terpilih</small></div>
-                        <div class="applicant-insight"><span>Berkas perlu cek</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div>
-                        <div v-for="status in applicantStatusSummary.slice(1)" :key="status.value" class="applicant-insight"><span>{{ status.label }}</span><strong>{{ applicants.filter((applicant) => applicant.status === status.value).length }}</strong><small>{{ status.hint }}</small></div>
+                        <div class="applicant-insight is-attention"><span>Berkas perlu cek</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div>
+                        <div v-for="status in applicantStatusSummary.slice(1)" :key="status.value" class="applicant-insight" :class="`is-${status.value}`"><span>{{ status.label }}</span><strong>{{ applicants.filter((applicant) => applicant.status === status.value).length }}</strong><small>{{ status.hint }}</small></div>
                     </div>
 
                     <div class="applicant-list-panel">
@@ -1183,7 +1183,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                                         <a :href="`/spmb/berkas/${document.id}/unduh`" class="secondary-button btn-compact">Unduh</a>
                                         <template v-if="can_manage_applicants">
                                             <button class="secondary-button btn-compact" type="button" @click="verifyDocument(document, 'valid')">Valid</button>
-                                            <button class="link-danger btn-compact" type="button" @click="verifyDocument(document, 'needs_revision')">Revisi</button>
+                                            <button class="secondary-button btn-compact revision-button" type="button" @click="verifyDocument(document, 'needs_revision')">Revisi</button>
                                         </template>
                                     </div>
                                 </div>
@@ -1261,7 +1261,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .spmb-overview-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
 .overview-heading-actions { display: flex; align-items: center; gap: .6rem; }
 .spmb-kicker { margin: 0 0 .4rem; color: var(--primary); font-size: .78rem; font-weight: 700; }
-.spmb-overview-heading h1 { margin: 0; color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.25rem); letter-spacing: -.045em; }
+.spmb-overview-heading h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.2; }
 .spmb-overview-heading p:not(.spmb-kicker) { margin: .45rem 0 0; color: var(--ink-soft); font-size: .92rem; }
 .overview-period-link { display: inline-flex; align-items: center; justify-content: center; gap: .65rem; min-height: 2.75rem; border: 1px solid var(--line-strong); border-radius: .7rem; padding: .65rem .9rem; color: var(--primary); background: var(--surface); font-size: .85rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .overview-period-link:hover { border-color: var(--primary); background: var(--primary-soft); }
@@ -1336,6 +1336,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .admissions-page-header .admissions-summary > div { min-height: 100px; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .admissions-page-header .admissions-summary span { color: var(--ink-soft); }
 .admissions-page-header .admissions-summary strong { color: var(--ink); }
+
 .admissions-panel { padding: 1.25rem; color: var(--ink); background: var(--surface); border-color: var(--line); }
 .applicants-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
 .applicants-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
@@ -1433,12 +1434,12 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .selection-applicant { border: 1px solid var(--line); border-radius: .85rem; padding: 1rem 1.05rem; background: var(--surface); }
 .selection-applicant-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .selection-applicant-heading p { margin: .3rem 0 0; color: var(--ink-soft); font-size: .76rem; }
-.selection-rank { display: grid; justify-items: end; gap: .15rem; min-width: 5.5rem; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); text-align: right; }
+.selection-rank { display: grid; justify-items: center; gap: .15rem; min-width: 5.5rem; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); text-align: center; }
 .selection-rank span { color: var(--ink-soft); font-size: .68rem; font-weight: 700; }
 .selection-rank strong { color: var(--primary); font-size: 1.1rem; line-height: 1; }
-.selection-score-summary { display: flex; align-items: center; gap: .55rem; margin-top: .9rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); color: var(--ink-soft); font-size: .76rem; }
+.selection-score-summary { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .55rem; margin-top: .9rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); color: var(--ink-soft); font-size: .76rem; text-align: center; }
 .selection-score-summary strong { color: var(--ink); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-.selection-score-summary .status-pill { margin-left: auto; }
+.selection-score-summary .status-pill { margin-left: 0; }
 .selection-decision-accepted { color: #138a62; background: #e5f5ee; }
 .selection-decision-waitlisted { color: #a15c00; background: #fff4d8; }
 .selection-decision-rejected { color: #b42318; background: #fdebea; }
@@ -1458,14 +1459,16 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .selection-decision-heading strong { color: var(--ink); font-size: .82rem; }
 .selection-decision-heading span:not(.selection-decision-state) { color: var(--ink-soft); font-size: .72rem; }
 .selection-decision-state { border-radius: 999px; padding: .3rem .55rem; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+.selection-decision-state, .selection-score-summary .status-pill { text-align: center; justify-content: center; }
 .selection-decision-fields { display: grid; grid-template-columns: minmax(11rem, .35fr) minmax(16rem, 1fr) auto; align-items: end; gap: .7rem; }
 .selection-decision-fields label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
 .selection-decision-fields select, .selection-decision-fields input { width: 100%; min-height: 2.55rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); padding: .6rem .7rem; color: var(--ink); }
+.selection-decision-fields select { text-align: center; text-align-last: center; }
 .selection-decision-fields .primary-button { min-height: 2.55rem; }
 .announcement-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
 .announcement-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .announcement-page-heading .table-title { margin: 0; }
-.announcement-date { display: grid; min-width: 11rem; gap: .25rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: right; }
+.announcement-date { display: grid; min-width: 11rem; gap: .25rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: center; }
 .announcement-date span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
 .announcement-date strong { color: var(--primary); font-size: .82rem; }
 .announcement-notice { display: flex; align-items: start; gap: .7rem; margin-top: 1.15rem; padding: .85rem .95rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .8rem; background: var(--primary-soft); }
@@ -1494,7 +1497,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .announcement-applicant-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .announcement-applicant-heading p { margin: .3rem 0 0; color: var(--ink-soft); font-size: .76rem; }
 .announcement-result { display: grid; grid-template-columns: minmax(12rem, 1.4fr) minmax(8rem, .7fr) minmax(8rem, .7fr); gap: .6rem; margin-top: .9rem; }
-.announcement-result div { display: grid; align-content: center; gap: .2rem; min-height: 3.8rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); }
+.announcement-result div { display: grid; align-content: center; gap: .2rem; min-height: 3.8rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); text-align: center; }
 .announcement-result span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
 .announcement-result strong { color: var(--ink); font-size: .9rem; }
 .announcement-result strong.selection-decision-accepted { color: #138a62; }
@@ -1504,7 +1507,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .re-registration-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
 .re-registration-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .re-registration-page-heading .table-title { margin: 0; }
-.re-registration-date { display: grid; min-width: 13rem; gap: .25rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: right; }
+.re-registration-date { display: grid; min-width: 13rem; gap: .25rem; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: center; }
 .re-registration-date span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
 .re-registration-date strong { color: var(--primary); font-size: .82rem; }
 .re-registration-notice { display: flex; align-items: start; gap: .7rem; margin-top: 1.15rem; padding: .85rem .95rem; border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line)); border-radius: .8rem; background: var(--primary-soft); }
@@ -1534,7 +1537,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .re-registration-status-completed { color: #138a62; background: #e5f5ee; }
 .re-registration-status-pending { color: #a15c00; background: #fff4d8; }
 .re-registration-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: .9rem; }
-.re-registration-details div { display: grid; gap: .2rem; min-height: 3.6rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); }
+.re-registration-details div { display: grid; gap: .2rem; min-height: 3.6rem; padding: .65rem .75rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface-subtle); text-align: center; }
 .re-registration-details span { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
 .re-registration-details strong { color: var(--ink); font-size: .8rem; }
 .re-registration-form { display: grid; grid-template-columns: minmax(14rem, 1fr) auto; align-items: end; gap: .7rem; margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--line); }
@@ -1639,13 +1642,13 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 @media (max-width: 820px) { .workflow-grid, .admissions-form, .compact-form { grid-template-columns: 1fr; } .admissions-form-wide, .form-section-intro { grid-column: auto; } .admissions-status-form, .decision-form, .upload-form, .score-row { display: grid; grid-template-columns: 1fr; align-items: stretch; } .document-applicant .upload-form { grid-template-columns: 1fr; }.admissions-applicant-heading { display: grid; }.spmb-overview-heading { align-items: start; flex-direction: column; }.overview-heading-actions { width: 100%; flex-wrap: wrap; }.overview-period-picker { align-items: stretch; flex-direction: column; gap: .45rem; }.overview-period-picker select { min-width: 0; }.overview-period-banner { align-items: start; flex-direction: column; }.track-overview-row { grid-template-columns: minmax(0, 1fr) auto; gap: .55rem .8rem; padding: .65rem 0; }.quota-progress { grid-column: 1 / -1; grid-row: 2; }.track-overview-quota { grid-column: 2; grid-row: 1; }.period-context { align-items: stretch; }.committee-heading { flex-direction: column; }.committee-count { align-self: flex-start; }.applicants-page-heading { align-items: stretch; flex-direction: column; }.applicants-page-heading .primary-button { width: 100%; }.applicant-filters { grid-template-columns: 1fr 1fr; }.applicant-search-field { grid-column: 1 / -1; }.document-filters { grid-template-columns: 1fr 1fr; }.document-search-field { grid-column: 1 / -1; }.document-row { grid-template-columns: minmax(0, 1fr) auto; }.document-status-pill { justify-self: end; }.document-row > a { grid-column: 1; }.document-actions { grid-column: 2; grid-row: 2; padding-left: 0; border-left: 0; } }
 @media (max-width: 560px) { .overview-metrics { gap: .55rem; }.overview-metric { min-height: 7.2rem; padding: .8rem; }.overview-metric strong { font-size: 1.55rem; }.overview-metric small { font-size: .68rem; }.phase-track li { font-size: .58rem; }.phase-track { margin-inline: -.2rem; }.period-date-list { grid-template-columns: 1fr; }.overview-panel { padding: 1rem; }.overview-period-link { width: 100%; }.overview-period-picker select { width: 100%; }.report-grid { grid-template-columns: 1fr; }.schedule-grid { grid-template-columns: 1fr; }.admissions-assign-form { align-items: stretch; flex-direction: column; }.admissions-assign-form .primary-button { width: 100%; }.committee-list li { align-items: start; flex-direction: column; }.committee-member-actions { justify-content: space-between; width: 100%; }.committee-list-heading { align-items: start; flex-direction: column; gap: .35rem; }.applicant-insights, .document-insights { grid-template-columns: 1fr 1fr; }.applicant-insight, .document-insight { min-height: 5.4rem; padding: .75rem; }.applicant-filters, .document-filters { grid-template-columns: 1fr; }.applicant-search-field, .document-search-field { grid-column: auto; }.filter-reset-button { justify-self: stretch; }.applicant-list-heading, .document-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.document-row { grid-template-columns: 1fr; align-items: start; }.document-status-pill, .document-row > a, .document-actions { grid-column: auto; justify-self: start; }.document-row > a { width: 100%; }.document-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; padding-left: 0; border-left: 0; }.upload-form { gap: .6rem; } }
 @media (max-width: 980px) { .selection-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); } .selection-filters { grid-template-columns: minmax(0, 1fr) minmax(10rem, 1fr); } .selection-filters .selection-search-field { grid-column: 1 / -1; } .selection-filters .filter-reset-button { justify-self: start; } }
-@media (max-width: 820px) { .selection-page-heading { align-items: stretch; flex-direction: column; }.selection-page-heading .primary-button { width: 100%; }.selection-applicant-heading { display: grid; }.selection-rank { justify-items: start; text-align: left; }.selection-score-summary .status-pill { margin-left: auto; }.selection-criteria { grid-template-columns: 1fr; }.selection-decision-fields { grid-template-columns: 1fr 1fr; }.selection-reason-field { grid-column: 1 / -1; }.selection-decision-fields .primary-button { width: 100%; } }
+@media (max-width: 820px) { .selection-page-heading { align-items: stretch; flex-direction: column; }.selection-page-heading .primary-button { width: 100%; }.selection-applicant-heading { display: grid; }.selection-rank { justify-items: center; text-align: center; }.selection-score-summary .status-pill { margin-left: 0; }.selection-criteria { grid-template-columns: 1fr; }.selection-decision-fields { grid-template-columns: 1fr 1fr; }.selection-reason-field { grid-column: 1 / -1; }.selection-decision-fields .primary-button { width: 100%; } }
 @media (max-width: 560px) { .selection-insights { grid-template-columns: 1fr 1fr; }.selection-insight { min-height: 5.4rem; padding: .75rem; }.selection-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.selection-filters { grid-template-columns: 1fr; }.selection-filters .selection-search-field { grid-column: auto; }.selection-filters .filter-reset-button { justify-self: stretch; }.selection-score-summary { align-items: start; flex-wrap: wrap; }.selection-score-summary .status-pill { margin-left: 0; }.selection-criterion { align-items: start; flex-direction: column; }.selection-score-action { width: 100%; }.selection-score-action input { flex: 1; width: auto; }.selection-score-action .secondary-button { flex: 0 0 auto; }.selection-decision-heading { align-items: start; flex-direction: column; }.selection-decision-fields { grid-template-columns: 1fr; }.selection-reason-field { grid-column: auto; } }
 @media (max-width: 980px) { .announcement-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }.announcement-filters { grid-template-columns: minmax(0, 1fr) minmax(10rem, 1fr); }.announcement-filters .announcement-search-field { grid-column: 1 / -1; }.announcement-filters .filter-reset-button { justify-self: start; } }
-@media (max-width: 820px) { .announcement-page-heading { align-items: stretch; flex-direction: column; }.announcement-date { text-align: left; }.announcement-applicant-heading { display: grid; }.announcement-result { grid-template-columns: repeat(2, minmax(0, 1fr)); }.announcement-result div:first-child { grid-column: 1 / -1; } }
+@media (max-width: 820px) { .announcement-page-heading { align-items: stretch; flex-direction: column; }.announcement-date { text-align: center; }.announcement-applicant-heading { display: grid; }.announcement-result { grid-template-columns: repeat(2, minmax(0, 1fr)); }.announcement-result div:first-child { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .announcement-insights { grid-template-columns: 1fr 1fr; }.announcement-insight { min-height: 5.4rem; padding: .75rem; }.announcement-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.announcement-filters { grid-template-columns: 1fr; }.announcement-filters .announcement-search-field { grid-column: auto; }.announcement-filters .filter-reset-button { justify-self: stretch; }.announcement-result { grid-template-columns: 1fr; }.announcement-result div:first-child { grid-column: auto; } }
 @media (max-width: 980px) { .re-registration-insights { grid-template-columns: repeat(3, minmax(0, 1fr)); }.re-registration-filters { grid-template-columns: minmax(0, 1fr) minmax(12rem, 1fr); }.re-registration-filters .re-registration-search-field { grid-column: 1 / -1; }.re-registration-filters .filter-reset-button { justify-self: start; } }
-@media (max-width: 820px) { .re-registration-page-heading { align-items: stretch; flex-direction: column; }.re-registration-date { text-align: left; }.re-registration-applicant-heading { display: grid; }.re-registration-details { grid-template-columns: 1fr 1fr; }.re-registration-details div:last-child { grid-column: 1 / -1; }.re-registration-form { grid-template-columns: 1fr; }.re-registration-form .primary-button { width: 100%; } }
+@media (max-width: 820px) { .re-registration-page-heading { align-items: stretch; flex-direction: column; }.re-registration-date { text-align: center; }.re-registration-applicant-heading { display: grid; }.re-registration-details { grid-template-columns: 1fr 1fr; }.re-registration-details div:last-child { grid-column: 1 / -1; }.re-registration-form { grid-template-columns: 1fr; }.re-registration-form .primary-button { width: 100%; } }
 @media (max-width: 560px) { .re-registration-insights { grid-template-columns: 1fr 1fr; }.re-registration-insight { min-height: 5.4rem; padding: .75rem; }.re-registration-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.re-registration-filters { grid-template-columns: 1fr; }.re-registration-filters .re-registration-search-field { grid-column: auto; }.re-registration-filters .filter-reset-button { justify-self: stretch; }.re-registration-details { grid-template-columns: 1fr; }.re-registration-details div:last-child { grid-column: auto; } }
 @media (max-width: 600px) { .admissions-page-header .admissions-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
@@ -1680,12 +1683,12 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .track-meta-pills { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .5rem; border-top: 1px solid var(--line); }
 .meta-chip { border: 1px solid var(--line); border-radius: 999px; padding: .2rem .55rem; color: var(--ink-soft); background: var(--surface-subtle); font-size: .7rem; font-weight: 600; }
 .meta-chip.is-criterion { color: var(--primary); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }
-.applicant-drawer-overlay { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: flex-end; background: rgba(15, 23, 42, .45); backdrop-filter: blur(2px); }
-.applicant-drawer { display: flex; flex-direction: column; width: min(42rem, 100vw); height: 100%; overflow: hidden; background: var(--surface); border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(15, 23, 42, .16); }
+.applicant-drawer-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 1rem; background: rgba(15, 23, 42, .45); backdrop-filter: blur(2px); }
+.applicant-drawer { display: flex; flex-direction: column; width: min(42rem, 100%); max-height: calc(100dvh - 2rem); overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; box-shadow: 0 16px 40px rgba(15, 23, 42, .2); }
 .applicant-drawer-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.35rem; border-bottom: 1px solid var(--line); background: var(--surface-subtle); }
 .applicant-drawer-header h2 { margin: .15rem 0 0; color: var(--ink); font-size: 1.2rem; }
 .applicant-drawer-header p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .78rem; }
-.applicant-drawer-body { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: 1.1rem; padding: 1.25rem 1.35rem; }
+.applicant-drawer-body { flex: 1; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 1.1rem; padding: 1.25rem 1.35rem; }
 .drawer-section { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); }
 .drawer-section h3 { margin: 0; color: var(--ink); font-size: .92rem; }
 .drawer-section-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
@@ -1696,6 +1699,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .drawer-status-form { flex-direction: column; align-items: stretch; }
 .drawer-document-row { grid-template-columns: minmax(0, 1fr) auto auto; }
 .drawer-doc-actions { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+.drawer-doc-actions .revision-button { color: #b42318; }
 .drawer-upload-form { flex-wrap: wrap; }
 .drawer-criteria { grid-template-columns: 1fr; }
 .intake-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); }
@@ -1705,12 +1709,14 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .intake-table tbody tr:last-child td { border-bottom: 0; }
 .intake-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 25%, var(--surface)); }
 .intake-table .col-no { width: 3.2rem; color: var(--ink-soft); font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
-.intake-table .col-date { white-space: nowrap; color: var(--ink-soft); font-size: .78rem; font-weight: 600; }
-.intake-table .col-actions { width: 1%; white-space: nowrap; text-align: right; }
+.intake-table .col-date { white-space: nowrap; color: var(--ink-soft); font-size: .78rem; font-weight: 600; text-align: center; }
+.intake-table th:nth-child(4), .intake-table td:nth-child(4) { text-align: center; }
+.intake-table td:nth-child(4) .applicant-badge-cluster { justify-content: center; }
+.intake-table .col-actions { width: 1%; white-space: nowrap; text-align: center; }
 .intake-applicant-cell { display: grid; gap: .18rem; min-width: 12rem; }
 .intake-applicant-cell strong { color: var(--ink); font-size: .86rem; font-weight: 700; }
 .intake-applicant-cell small { color: var(--ink-soft); font-size: .73rem; }
-.intake-action-group { display: inline-flex; align-items: center; justify-content: flex-end; gap: .4rem; }
+.intake-action-group { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
 .icon-action-btn { display: inline-grid; place-items: center; width: 2.15rem; height: 2.15rem; border: 1px solid var(--line-strong); border-radius: .55rem; background: var(--surface); color: var(--ink-soft); cursor: pointer; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
 .icon-action-btn svg { width: 1rem; height: 1rem; }
 .icon-action-btn.is-edit:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
@@ -1725,4 +1731,29 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .applicant-edit-form { margin-bottom: 0; }
 @media (max-width: 900px) { .setup-checklist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .setup-checklist-grid, .drawer-meta-grid, .drawer-document-row { grid-template-columns: 1fr; } }
+/* Consistent, restrained summary cards across SPMB workspaces. */
+.admissions-page-header .admissions-summary > div,
+.overview-metric, .applicant-insight, .document-insight, .selection-insight, .announcement-insight, .re-registration-insight {
+    text-align: center;
+    align-content: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid #7952a3;
+}
+.admissions-page-header .admissions-summary > div:nth-child(1) { border-top-color: #3157a4; }
+.admissions-page-header .admissions-summary > div:nth-child(2) { border-top-color: #7952a3; }
+.admissions-page-header .admissions-summary > div:nth-child(3) { border-top-color: #138a62; }
+.admissions-page-header .admissions-summary > div:nth-child(4) { border-top-color: #168782; }
+.applicant-insight.is-total, .document-insight.is-total, .selection-insight.is-total,
+.re-registration-insight.is-total, .announcement-insight.is-pending { background: var(--surface); }
+.applicant-insight.is-total, .document-insight.is-total, .selection-insight.is-total,
+.overview-metric.metric-total { border-top-color: #7952a3; }
+.re-registration-insight.is-total { border-top-color: #138a62; }
+.overview-metric.is-accepted, .applicant-insight.is-accepted, .document-insight.is-valid,
+.selection-insight.is-decided, .announcement-insight.is-accepted { border-top-color: #138a62; }
+.overview-metric.is-completed, .re-registration-insight.is-completed { border-top-color: #168782; }
+.overview-metric.is-waitlisted, .applicant-insight.is-attention, .applicant-insight.is-selection_review,
+.document-insight.is-attention, .announcement-insight.is-waitlisted, .announcement-insight.is-pending,
+.re-registration-insight.is-pending { border-top-color: #c28a27; }
+.announcement-insight.is-rejected { border-top-color: #b42318; }
 </style>

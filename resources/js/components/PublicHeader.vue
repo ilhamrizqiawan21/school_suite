@@ -397,13 +397,25 @@ const toggleProfileMenu = () => {
 
 @media (max-width: 1040px) {
     .public-site-header-nav-row {
-        align-items: flex-start;
+        position: absolute;
+        top: 100%;
+        right: 1rem;
+        left: 1rem;
+        display: block;
         min-height: 0;
-        padding-top: 0;
+        padding-top: .5rem;
+        pointer-events: none;
     }
 
     .public-nav {
-        display: none;
+        display: grid;
+        max-height: calc(100dvh - 6rem);
+        overflow-y: auto;
+        visibility: hidden;
+        opacity: 0;
+        transform: scale(.97);
+        transform-origin: top right;
+        transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
         order: 3;
         flex-basis: 100%;
         align-items: stretch;
@@ -412,11 +424,15 @@ const toggleProfileMenu = () => {
         background: var(--public-surface-alt, #fff);
         border: 1px solid var(--public-line, #d8dee8);
         border-radius: .7rem;
+        box-shadow: 0 12px 30px rgb(18 50 71 / 14%);
     }
 
     .public-nav.is-open {
-        display: grid;
-        margin-top: .7rem;
+        visibility: visible;
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: auto;
+        transition: opacity .2s ease, transform .2s ease, visibility 0s;
     }
 
     .public-nav > a,
@@ -626,6 +642,5 @@ const toggleProfileMenu = () => {
     .public-site-header.is-home { padding-inline: 1rem; }
     .public-site-header.is-home .public-site-header-top { padding: .85rem 0; }
     .public-site-header.is-home .public-site-header-nav-row { border: 0; }
-    .public-site-header.is-home:not(.is-menu-open) .public-site-header-nav-row { display: none; }
 }
 </style>

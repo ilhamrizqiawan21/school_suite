@@ -96,4 +96,6 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .error, .modal-card small { color: var(--delete); }
 .empty-state { text-align: center; padding: 2rem; color: var(--ink-soft); }
 @media (max-width: 640px) { .security-hero .actions, .security-hero .actions > * { width: 100%; justify-content: center; } .tabs { flex-wrap: nowrap; overflow-x: auto; } .tabs button { flex: 0 0 auto; white-space: nowrap; } .pagination .actions { width: 100%; } .pagination .actions button { flex: 1; } }
+/* Center status, count, and action-oriented columns in the audit tables. */
+.security-panel table th:nth-child(4), .security-panel table td:nth-child(4), .security-panel table th:nth-child(5), .security-panel table td:nth-child(5) { text-align: center; }
 </style>
