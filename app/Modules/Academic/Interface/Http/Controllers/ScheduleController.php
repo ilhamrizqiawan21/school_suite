@@ -13,8 +13,11 @@ use App\Modules\Academic\Infrastructure\Models\Schedule;
 use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Core\Application\Services\SchoolScopeService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -40,8 +43,8 @@ class ScheduleController extends Controller
         $termQuery = Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $schoolId));
         $terms = $isStudent ? collect() : (clone $termQuery)->with('academicYear:id,name')->orderByDesc('start_date')->get();
         $activeTerm = ! $isStudent && $request->filled('term_id')
-            ? (clone $termQuery)->whereKey($request->query('term_id'))->firstOrFail()
-            : (clone $termQuery)->where('is_active', true)->first();
+            ? (clone $termQuery)->with('academicYear:id,name')->whereKey($request->query('term_id'))->firstOrFail()
+            : (clone $termQuery)->with('academicYear:id,name')->where('is_active', true)->first();
 
         $studentClassId = $isStudent && $activeTerm
             ? Enrollment::query()
@@ -95,6 +98,99 @@ class ScheduleController extends Controller
             'draft_count' => $isStudent ? 0 : $draftCount,
             'is_student' => $isStudent,
         ]);
+    }
+
+    public function exportPdf(Request $request, SchoolScopeService $schoolScope): Response
+    {
+        Gate::authorize('viewAny', Schedule::class);
+
+        $schoolId = (int) $request->user()->school_id;
+        $isStudent = $request->user()->hasRole('student');
+
+        $validated = $request->validate([
+            'term_id' => ['nullable', 'integer'],
+            'class_group_id' => ['nullable', 'integer'],
+            'teacher_id' => ['nullable', 'integer'],
+            'day_of_week' => ['nullable', 'integer', 'min:1', 'max:7'],
+            'status' => ['nullable', 'in:published,draft'],
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $termQuery = Term::whereHas('academicYear', fn ($query) => $query->where('school_id', $schoolId))
+            ->with('academicYear:id,name');
+
+        $activeTerm = ! $isStudent && ! empty($validated['term_id'])
+            ? (clone $termQuery)->whereKey($validated['term_id'])->firstOrFail()
+            : (clone $termQuery)->where('is_active', true)->first();
+
+        $studentClassId = $isStudent && $activeTerm
+            ? Enrollment::query()
+                ->where('term_id', $activeTerm->id)
+                ->where('status', 'active')
+                ->whereHas('student', fn ($query) => $query->where('user_id', $request->user()->id)->where('school_id', $schoolId))
+                ->value('class_group_id')
+            : null;
+
+        $classGroupId = $isStudent ? $studentClassId : ($validated['class_group_id'] ?? null);
+        $teacherId = $isStudent ? null : ($validated['teacher_id'] ?? null);
+        $dayOfWeek = $validated['day_of_week'] ?? null;
+        $statusFilter = $isStudent ? 'published' : ($validated['status'] ?? null);
+        $search = isset($validated['search']) ? trim((string) $validated['search']) : '';
+
+        $schedules = $activeTerm
+            ? Schedule::where('school_id', $schoolId)
+                ->where('term_id', $activeTerm->id)
+                ->when($isStudent, fn ($q) => $q->where('class_group_id', $studentClassId ?? 0)->where('status', 'published'))
+                ->when(! $isStudent && $classGroupId, fn ($q) => $q->where('class_group_id', $classGroupId))
+                ->when(! $isStudent && $teacherId, fn ($q) => $q->where('teacher_id', $teacherId))
+                ->when($dayOfWeek, fn ($q) => $q->where('day_of_week', (int) $dayOfWeek))
+                ->when(! $isStudent && $statusFilter, fn ($q) => $q->where('status', $statusFilter))
+                ->with(['classGroup:id,name,grade_level', 'subject:id,name,code', 'teacher:id,name'])
+                ->orderBy('day_of_week')
+                ->orderBy('start_time')
+                ->get()
+            : collect();
+
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+            $dayNames = [
+                1 => 'senin', 2 => 'selasa', 3 => 'rabu',
+                4 => 'kamis', 5 => 'jumat', 6 => 'sabtu', 7 => 'minggu',
+            ];
+            $schedules = $schedules->filter(function (Schedule $slot) use ($needle, $dayNames): bool {
+                $haystack = mb_strtolower(implode(' ', [
+                    $slot->subject?->name ?? '',
+                    $slot->subject?->code ?? '',
+                    $slot->teacher?->name ?? '',
+                    $slot->classGroup?->name ? 'kelas '.$slot->classGroup->name : '',
+                    $slot->room ?? '',
+                    $dayNames[$slot->day_of_week] ?? '',
+                ]));
+
+                return str_contains($haystack, $needle);
+            })->values();
+        }
+
+        $selectedClass = $classGroupId
+            ? ClassGroup::where('school_id', $schoolId)->find($classGroupId)
+            : null;
+        $selectedTeacher = $teacherId
+            ? Teacher::where('school_id', $schoolId)->find($teacherId)
+            : null;
+
+        $school = (object) $schoolScope->getSchoolDetails($schoolId);
+
+        return Pdf::loadView('academic.schedules-export', [
+            'schedules' => $schedules,
+            'school' => $school,
+            'term' => $activeTerm,
+            'selectedClass' => $selectedClass,
+            'selectedTeacher' => $selectedTeacher,
+            'selectedDay' => $dayOfWeek ? (int) $dayOfWeek : null,
+            'selectedStatus' => $statusFilter,
+            'search' => $search,
+            'generatedAt' => now('Asia/Jakarta'),
+        ])->setPaper('a4', 'landscape')->download('jadwal-pelajaran.pdf');
     }
 
     public function store(Request $request): RedirectResponse

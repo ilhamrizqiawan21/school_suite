@@ -303,7 +303,7 @@ const deleteStudent = (student: Student) => {
 
             <!-- Filters -->
             <div class="toolbar panel student-filterbar">
-                <label class="table-search">
+                <label class="table-search search-control-shell">
                     <input
                         v-model="search"
                         @keyup.enter="applyFilters"

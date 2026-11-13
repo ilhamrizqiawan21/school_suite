@@ -30,8 +30,10 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'identity' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            // Batasi ukuran input sebelum query dan proses hash agar request
+            // login berukuran ekstrem tidak membebani aplikasi.
+            'identity' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:255'],
             'remember' => ['sometimes', 'boolean'],
         ];
     }

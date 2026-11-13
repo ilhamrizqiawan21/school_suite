@@ -63,6 +63,7 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
 
     // Jadwal Pelajaran (Schedules)
     Route::get('jadwal', [ScheduleController::class, 'index'])->middleware('role:admin,operator,principal,teacher,homeroom,student')->name('schedules.index');
+    Route::get('jadwal/export/pdf', [ScheduleController::class, 'exportPdf'])->middleware(['throttle:sensitive', 'role:admin,operator,principal,teacher,homeroom,student'])->name('schedules.export.pdf');
     Route::post('jadwal', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::put('jadwal/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
     Route::post('jadwal/terbitkan', [ScheduleController::class, 'publish'])->name('schedules.publish');

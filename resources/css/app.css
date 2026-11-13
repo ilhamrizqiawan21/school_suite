@@ -18,6 +18,98 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/* Shared search control: keep every page-level search field aligned with the
+ * topbar search without changing each page's filtering behaviour. */
+.search-control-shell {
+    position: relative;
+    box-sizing: border-box;
+    display: flex !important;
+    min-width: 0;
+    height: var(--control-height);
+    min-height: var(--control-height);
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px !important;
+    color: var(--ink-faint);
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 10px !important;
+    transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+.search-control-shell:focus-within {
+    border-color: color-mix(in srgb, var(--primary) 55%, var(--line)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent) !important;
+}
+
+.search-control-shell > svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+}
+
+.search-control-shell > input,
+input.search-control,
+.picker-toolbar input {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    color: var(--ink) !important;
+    font: inherit;
+}
+
+.search-control-shell > input {
+    display: block;
+    width: 100%;
+    flex: 1 1 auto;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0;
+    box-shadow: none !important;
+}
+
+input.search-control,
+.picker-toolbar input {
+    width: 100%;
+    height: var(--control-height);
+    padding: 0 12px;
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 10px !important;
+    outline: 0;
+    box-shadow: none;
+    transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+input.search-control:hover,
+.picker-toolbar input:hover {
+    border-color: color-mix(in srgb, var(--primary) 34%, var(--line)) !important;
+}
+
+input.search-control:focus-visible,
+.picker-toolbar input:focus-visible {
+    border-color: color-mix(in srgb, var(--primary) 55%, var(--line)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent) !important;
+}
+
+.search-control-shell > input::placeholder,
+input.search-control::placeholder,
+.picker-toolbar input::placeholder {
+    color: var(--ink-faint);
+}
+
+/* Keep icon-wrapped inputs inset after the shared direct-input rule above. */
+.search-control-shell > input {
+    height: auto;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
 @theme {
     --font-sans: var(--font-ui);
     --font-serif: var(--font-display);
@@ -352,7 +444,9 @@ html[data-theme='dark'] .student-table tbody tr:hover .student-actions-cell { ba
 
 .schedule-page .schedule-session {
     background: color-mix(in srgb, var(--surface) 88%, var(--surface-subtle)) !important;
-    border-color: var(--line) !important;
+    border-top-color: var(--line) !important;
+    border-right-color: var(--line) !important;
+    border-bottom-color: var(--line) !important;
 }
 
 .schedule-page .schedule-meta,

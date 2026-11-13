@@ -551,7 +551,8 @@ function submitApproval(record: CorrespondenceRecord) {
                 </template>
             </section>
 
-            <section v-if="can_manage" v-show="creating" id="form-surat" class="panel correspondence-panel wizard-panel" tabindex="-1">
+            <div v-if="can_manage && creating" role="dialog" aria-modal="true" class="modal-backdrop" @click.self="creating = false" @keydown.esc="creating = false">
+            <section id="form-surat" class="panel correspondence-panel wizard-panel modal-card" tabindex="-1">
                 <div class="wizard-heading"><div><p class="eyebrow">{{ form.letter_type === 'incoming' ? 'Surat masuk' : 'Surat keluar' }}</p><h2>{{ editingType === 'incoming' ? 'Koreksi data surat masuk' : editingType === 'outgoing' ? 'Perbaiki draf surat keluar' : form.letter_type === 'incoming' ? 'Catat surat masuk' : 'Buat surat keluar' }}</h2></div><button type="button" class="wizard-close" aria-label="Tutup formulir" @click="creating = false">×</button></div>
                 <ol class="stepper" :aria-label="`Langkah ${wizardStep} dari ${maxStep}`">
                     <li v-for="(label, index) in stepLabels" :key="label" :class="{ active: wizardStep === index + 1, done: wizardStep > index + 1 }"><span>{{ index + 1 }}</span><small>{{ label }}</small></li>
@@ -575,6 +576,7 @@ function submitApproval(record: CorrespondenceRecord) {
                     <div class="wizard-actions"><button v-if="wizardStep > 1" class="secondary-button" type="button" @click="previousStep">← Sebelumnya</button><span></span><button class="secondary-button" type="button" @click="creating = false">Batal</button><button v-if="wizardStep < maxStep" class="primary-button" type="button" @click="nextStep">Lanjutkan →</button><button v-else class="primary-button" type="submit" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editingId ? 'Simpan perubahan' : form.letter_type === 'incoming' ? 'Catat surat' : 'Simpan draf' }}</button></div>
                 </form>
             </section>
+            </div>
 
             <section class="panel correspondence-panel">
                 <div class="table-title">
@@ -598,7 +600,7 @@ function submitApproval(record: CorrespondenceRecord) {
                 </nav>
 
                 <label class="search-label">Cari surat
-                    <input v-model="search" type="search" placeholder="Perihal, nomor, asal, atau tujuan" />
+                    <input v-model="search" class="search-control" type="search" placeholder="Perihal, nomor, asal, atau tujuan" />
                 </label>
                 <div v-if="visibleRecords.length" class="table-scroll" tabindex="0" role="region" aria-label="Daftar surat tersimpan">
                     <table class="app-table correspondence-table">
@@ -707,6 +709,8 @@ function submitApproval(record: CorrespondenceRecord) {
 .wizard-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .wizard-heading h2 { margin: .15rem 0 0; color: #172b4d; }
 .wizard-close { border: 0; background: transparent; color: #64748b; font-size: 1.6rem; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(760px, 100%); max-height: 90dvh; overflow-y: auto; border-radius: 16px; box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
 .stepper { display: grid; grid-template-columns: repeat(5, 1fr); margin: 1.2rem 0; padding: 0; list-style: none; }
 .stepper li { position: relative; display: grid; justify-items: center; gap: .3rem; color: #94a3b8; }
 .stepper li:not(:last-child)::after { position: absolute; top: .85rem; left: calc(50% + 1.15rem); width: calc(100% - 2.3rem); height: 2px; background: #e2e8f0; content: ''; }
@@ -870,152 +874,185 @@ function submitApproval(record: CorrespondenceRecord) {
 .incoming-review-note, .tte-readiness-panel { border-color: color-mix(in srgb, var(--primary) 25%, var(--line)); background: var(--primary-soft); }
 .signatory-form, .review-card, .dashboard-filter-bar { border-color: var(--line); background: var(--surface-subtle); }
 .wizard-error { border-radius: var(--card-radius-compact); }
-:global(html[data-theme='dark']) .incoming-page,
-:global(html[data-theme='dark']) .outgoing-page,
-:global(html[data-theme='dark']) .archive-page { color: var(--ink); }
-:global(html[data-theme='dark']) .incoming-page .incoming-flow-panel,
-:global(html[data-theme='dark']) .outgoing-page .outgoing-flow-panel,
-:global(html[data-theme='dark']) .incoming-page .correspondence-panel,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-panel,
-:global(html[data-theme='dark']) .archive-page .correspondence-panel,
-:global(html[data-theme='dark']) .incoming-page .queue-grid button,
-:global(html[data-theme='dark']) .outgoing-page .queue-grid button,
-:global(html[data-theme='dark']) .archive-page .queue-grid button,
-:global(html[data-theme='dark']) .incoming-page .correspondence-card,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-card,
-:global(html[data-theme='dark']) .archive-page .correspondence-card { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink); }
-:global(html[data-theme='dark']) .incoming-page .queue-grid button.is-selected,
-:global(html[data-theme='dark']) .outgoing-page .queue-grid button.is-selected,
-:global(html[data-theme='dark']) .archive-page .queue-grid button.is-selected { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark']) .incoming-page .archive-hero-summary > div,
-:global(html[data-theme='dark']) .outgoing-page .outgoing-hero-summary > div,
-:global(html[data-theme='dark']) .archive-page .archive-hero-summary > div { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .incoming-page .incoming-hero-summary { background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 45%, var(--surface)), var(--primary-soft)) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark']) .incoming-page .incoming-flow-list li,
-:global(html[data-theme='dark']) .outgoing-page .outgoing-flow-list li { border-top-color: var(--line) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .incoming-flow-list li > span,
-:global(html[data-theme='dark']) .outgoing-page .outgoing-flow-list li > span { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .incoming-flow-list strong,
-:global(html[data-theme='dark']) .outgoing-page .outgoing-flow-list strong,
-:global(html[data-theme='dark']) .incoming-page .queue-grid strong,
-:global(html[data-theme='dark']) .outgoing-page .queue-grid strong,
-:global(html[data-theme='dark']) .archive-page .queue-grid strong,
-:global(html[data-theme='dark']) .incoming-page .correspondence-card h3,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-card h3,
-:global(html[data-theme='dark']) .archive-page .correspondence-card h3 { color: var(--ink) !important; }
-:global(html[data-theme='dark']) .incoming-page .incoming-flow-list small,
-:global(html[data-theme='dark']) .outgoing-page .outgoing-flow-list small,
-:global(html[data-theme='dark']) .incoming-page .queue-grid span,
-:global(html[data-theme='dark']) .incoming-page .queue-grid small,
-:global(html[data-theme='dark']) .outgoing-page .queue-grid span,
-:global(html[data-theme='dark']) .outgoing-page .queue-grid small,
-:global(html[data-theme='dark']) .archive-page .queue-grid span,
-:global(html[data-theme='dark']) .archive-page .queue-grid small,
-:global(html[data-theme='dark']) .incoming-page .correspondence-card-heading p,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-card-heading p,
-:global(html[data-theme='dark']) .archive-page .correspondence-card-heading p,
-:global(html[data-theme='dark']) .incoming-page .correspondence-meta dt,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-meta dt,
-:global(html[data-theme='dark']) .archive-page .correspondence-meta dt,
-:global(html[data-theme='dark']) .incoming-page .correspondence-card p,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-card p,
-:global(html[data-theme='dark']) .archive-page .correspondence-card p { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .wizard-heading h2,
-:global(html[data-theme='dark']) .outgoing-page .wizard-heading h2,
-:global(html[data-theme='dark']) .incoming-page .review-card,
-:global(html[data-theme='dark']) .outgoing-page .review-card,
-:global(html[data-theme='dark']) .incoming-page .signatory-form,
-:global(html[data-theme='dark']) .outgoing-page .signatory-form { color: var(--ink); }
-:global(html[data-theme='dark']) .incoming-page .wizard-grid input,
-:global(html[data-theme='dark']) .incoming-page .wizard-grid select,
-:global(html[data-theme='dark']) .incoming-page .wizard-grid textarea,
-:global(html[data-theme='dark']) .outgoing-page .wizard-grid input,
-:global(html[data-theme='dark']) .outgoing-page .wizard-grid select,
-:global(html[data-theme='dark']) .outgoing-page .wizard-grid textarea,
-:global(html[data-theme='dark']) .incoming-page .approval-note-input,
-:global(html[data-theme='dark']) .outgoing-page .approval-note-input,
-:global(html[data-theme='dark']) .incoming-page .correspondence-form input,
-:global(html[data-theme='dark']) .incoming-page .correspondence-form select,
-:global(html[data-theme='dark']) .incoming-page .correspondence-form textarea,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-form input,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-form select,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-form textarea,
-:global(html[data-theme='dark']) .incoming-page .status-update-form input,
-:global(html[data-theme='dark']) .incoming-page .status-update-form select,
-:global(html[data-theme='dark']) .outgoing-page .status-update-form input,
-:global(html[data-theme='dark']) .outgoing-page .status-update-form select,
-:global(html[data-theme='dark']) .dashboard-filter-bar input,
-:global(html[data-theme='dark']) .dashboard-filter-bar select { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark']) .incoming-page .signatory-form,
-:global(html[data-theme='dark']) .outgoing-page .signatory-form,
-:global(html[data-theme='dark']) .incoming-page .review-card,
-:global(html[data-theme='dark']) .outgoing-page .review-card,
-:global(html[data-theme='dark']) .dashboard-filter-bar { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .incoming-page .template-choices label,
-:global(html[data-theme='dark']) .outgoing-page .template-choices label,
-:global(html[data-theme='dark']) .incoming-page .signature-options label,
-:global(html[data-theme='dark']) .outgoing-page .signature-options label { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark']) .incoming-page .template-choices label.selected,
-:global(html[data-theme='dark']) .outgoing-page .template-choices label.selected,
-:global(html[data-theme='dark']) .incoming-page .signature-options label.selected,
-:global(html[data-theme='dark']) .outgoing-page .signature-options label.selected { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark']) .incoming-page .stepper li:not(:last-child)::after,
-:global(html[data-theme='dark']) .outgoing-page .stepper li:not(:last-child)::after,
-:global(html[data-theme='dark']) .incoming-page .correspondence-footer,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-footer,
-:global(html[data-theme='dark']) .archive-page .correspondence-footer,
-:global(html[data-theme='dark']) .incoming-page .correspondence-table tr { background: transparent; border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .incoming-page .stepper span,
-:global(html[data-theme='dark']) .outgoing-page .stepper span { background: var(--surface) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .incoming-page .incoming-review-note,
-:global(html[data-theme='dark']) .outgoing-page .incoming-review-note,
-:global(html[data-theme='dark']) .incoming-page .tte-readiness-panel,
-:global(html[data-theme='dark']) .outgoing-page .tte-readiness-panel { background: var(--primary-soft) !important; border-color: var(--line) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .tte-readiness-panel.is-ready,
-:global(html[data-theme='dark']) .outgoing-page .tte-readiness-panel.is-ready { background: var(--green-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .tte-readiness-panel.is-blocked,
-:global(html[data-theme='dark']) .outgoing-page .tte-readiness-panel.is-blocked { background: var(--gold-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .warning-note,
-:global(html[data-theme='dark']) .outgoing-page .warning-note,
-:global(html[data-theme='dark']) .incoming-page .wizard-error,
-:global(html[data-theme='dark']) .outgoing-page .wizard-error { background: var(--red-soft) !important; border-color: var(--delete-line) !important; color: var(--red) !important; }
-:global(html[data-theme='dark']) .incoming-page .correspondence-table,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-table,
-:global(html[data-theme='dark']) .archive-page .correspondence-table { border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .incoming-page .correspondence-table th,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-table th,
-:global(html[data-theme='dark']) .archive-page .correspondence-table th { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .incoming-page .correspondence-table td,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-table td,
-:global(html[data-theme='dark']) .archive-page .correspondence-table td,
-:global(html[data-theme='dark']) .incoming-page .party-cell-content strong,
-:global(html[data-theme='dark']) .outgoing-page .party-cell-content strong,
-:global(html[data-theme='dark']) .archive-page .party-cell-content strong { color: var(--ink) !important; }
-:global(html[data-theme='dark']) .incoming-page .correspondence-table td > small,
-:global(html[data-theme='dark']) .outgoing-page .correspondence-table td > small,
-:global(html[data-theme='dark']) .archive-page .correspondence-table td > small,
-:global(html[data-theme='dark']) .incoming-page .party-cell-content small,
-:global(html[data-theme='dark']) .outgoing-page .party-cell-content small,
-:global(html[data-theme='dark']) .archive-page .party-cell-content small { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .kind-incoming,
-:global(html[data-theme='dark']) .status-chip.status-received,
-:global(html[data-theme='dark']) .status-chip.status-draft,
-:global(html[data-theme='dark']) .status-chip.status-approved { background: var(--primary-soft) !important; color: var(--primary) !important; }
-:global(html[data-theme='dark']) .kind-outgoing { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .status-chip.status-disposition,
-:global(html[data-theme='dark']) .status-chip.status-pending_approval,
-:global(html[data-theme='dark']) .status-chip.status-awaiting_signature,
-:global(html[data-theme='dark']) .status-chip.status-signature_pending { background: var(--gold-soft) !important; color: var(--gold) !important; }
-:global(html[data-theme='dark']) .status-chip.status-done,
-:global(html[data-theme='dark']) .status-chip.status-archived,
-:global(html[data-theme='dark']) .status-chip.status-issued,
-:global(html[data-theme='dark']) .status-chip.status-sent { background: var(--green-soft) !important; color: var(--green) !important; }
-:global(html[data-theme='dark']) .status-chip.status-signature_failed { background: var(--red-soft) !important; color: var(--red) !important; }
-:global(html[data-theme='dark']) .pdf-action-link { background: var(--pdf-soft) !important; border-color: var(--pdf-line) !important; color: var(--pdf) !important; }
-:global(html[data-theme='dark']) .primary-row-action { background: var(--primary-action) !important; border-color: var(--primary-action) !important; color: #fff !important; }
-:global(html[data-theme='dark']) .primary-row-action:hover { background: var(--primary-action-strong) !important; border-color: var(--primary-action-strong) !important; }
-:global(html[data-theme='dark']) .secondary-row-action,
-:global(html[data-theme='dark']) .row-action-button { background: var(--surface-subtle) !important; border-color: var(--line) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark'] .incoming-page) ,
+:global(html[data-theme='dark'] .outgoing-page) ,
+:global(html[data-theme='dark'] .archive-page) { color: var(--ink); }
+:global(html[data-theme='dark'] .incoming-page .incoming-flow-panel) ,
+:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-panel) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-panel) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-panel) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-panel) ,
+:global(html[data-theme='dark'] .incoming-page .queue-grid button) ,
+:global(html[data-theme='dark'] .outgoing-page .queue-grid button) ,
+:global(html[data-theme='dark'] .archive-page .queue-grid button) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-card) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-card) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-card) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink); }
+:global(html[data-theme='dark'] .incoming-page .queue-grid button.is-selected) ,
+:global(html[data-theme='dark'] .outgoing-page .queue-grid button.is-selected) ,
+:global(html[data-theme='dark'] .archive-page .queue-grid button.is-selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
+:global(html[data-theme='dark'] .incoming-page .archive-hero-summary > div) ,
+:global(html[data-theme='dark'] .outgoing-page .outgoing-hero-summary > div) ,
+:global(html[data-theme='dark'] .archive-page .archive-hero-summary > div) { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .incoming-page .incoming-hero-summary) { background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 45%, var(--surface)), var(--primary-soft)) !important; border-color: var(--primary) !important; }
+:global(html[data-theme='dark'] .incoming-page .incoming-flow-list li) ,
+:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list li) { border-top-color: var(--line) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .incoming-flow-list li > span) ,
+:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list li > span) { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .incoming-flow-list strong) ,
+:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list strong) ,
+:global(html[data-theme='dark'] .incoming-page .queue-grid strong) ,
+:global(html[data-theme='dark'] .outgoing-page .queue-grid strong) ,
+:global(html[data-theme='dark'] .archive-page .queue-grid strong) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-card h3) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-card h3) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-card h3) { color: var(--ink) !important; }
+:global(html[data-theme='dark'] .incoming-page .incoming-flow-list small) ,
+:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list small) ,
+:global(html[data-theme='dark'] .incoming-page .queue-grid span) ,
+:global(html[data-theme='dark'] .incoming-page .queue-grid small) ,
+:global(html[data-theme='dark'] .outgoing-page .queue-grid span) ,
+:global(html[data-theme='dark'] .outgoing-page .queue-grid small) ,
+:global(html[data-theme='dark'] .archive-page .queue-grid span) ,
+:global(html[data-theme='dark'] .archive-page .queue-grid small) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-card-heading p) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-card-heading p) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-card-heading p) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-meta dt) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-meta dt) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-meta dt) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-card p) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-card p) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-card p) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .wizard-heading h2) ,
+:global(html[data-theme='dark'] .outgoing-page .wizard-heading h2) ,
+:global(html[data-theme='dark'] .incoming-page .review-card) ,
+:global(html[data-theme='dark'] .outgoing-page .review-card) ,
+:global(html[data-theme='dark'] .incoming-page .signatory-form) ,
+:global(html[data-theme='dark'] .outgoing-page .signatory-form) { color: var(--ink); }
+:global(html[data-theme='dark'] .incoming-page .wizard-grid input) ,
+:global(html[data-theme='dark'] .incoming-page .wizard-grid select) ,
+:global(html[data-theme='dark'] .incoming-page .wizard-grid textarea) ,
+:global(html[data-theme='dark'] .outgoing-page .wizard-grid input) ,
+:global(html[data-theme='dark'] .outgoing-page .wizard-grid select) ,
+:global(html[data-theme='dark'] .outgoing-page .wizard-grid textarea) ,
+:global(html[data-theme='dark'] .incoming-page .approval-note-input) ,
+:global(html[data-theme='dark'] .outgoing-page .approval-note-input) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-form input) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-form select) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-form textarea) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-form input) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-form select) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-form textarea) ,
+:global(html[data-theme='dark'] .incoming-page .status-update-form input) ,
+:global(html[data-theme='dark'] .incoming-page .status-update-form select) ,
+:global(html[data-theme='dark'] .outgoing-page .status-update-form input) ,
+:global(html[data-theme='dark'] .outgoing-page .status-update-form select) ,
+:global(html[data-theme='dark'] .dashboard-filter-bar input) ,
+:global(html[data-theme='dark'] .dashboard-filter-bar select) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark'] .incoming-page .signatory-form) ,
+:global(html[data-theme='dark'] .outgoing-page .signatory-form) ,
+:global(html[data-theme='dark'] .incoming-page .review-card) ,
+:global(html[data-theme='dark'] .outgoing-page .review-card) ,
+:global(html[data-theme='dark'] .dashboard-filter-bar) { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .incoming-page .template-choices label) ,
+:global(html[data-theme='dark'] .outgoing-page .template-choices label) ,
+:global(html[data-theme='dark'] .incoming-page .signature-options label) ,
+:global(html[data-theme='dark'] .outgoing-page .signature-options label) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark'] .incoming-page .template-choices label.selected) ,
+:global(html[data-theme='dark'] .outgoing-page .template-choices label.selected) ,
+:global(html[data-theme='dark'] .incoming-page .signature-options label.selected) ,
+:global(html[data-theme='dark'] .outgoing-page .signature-options label.selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
+:global(html[data-theme='dark'] .incoming-page .stepper li:not(:last-child)::after) ,
+:global(html[data-theme='dark'] .outgoing-page .stepper li:not(:last-child)::after) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-footer) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-footer) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-footer) ,
+:global(html[data-theme='dark'] .incoming-page .correspondence-table tr) { background: transparent; border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .incoming-page .stepper span) ,
+:global(html[data-theme='dark'] .outgoing-page .stepper span) { background: var(--surface) !important; border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .incoming-page .incoming-review-note) ,
+:global(html[data-theme='dark'] .outgoing-page .incoming-review-note) ,
+:global(html[data-theme='dark'] .incoming-page .tte-readiness-panel) ,
+:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel) { background: var(--primary-soft) !important; border-color: var(--line) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .tte-readiness-panel.is-ready) ,
+:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel.is-ready) { background: var(--green-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .tte-readiness-panel.is-blocked) ,
+:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel.is-blocked) { background: var(--gold-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .warning-note) ,
+:global(html[data-theme='dark'] .outgoing-page .warning-note) ,
+:global(html[data-theme='dark'] .incoming-page .wizard-error) ,
+:global(html[data-theme='dark'] .outgoing-page .wizard-error) { background: var(--red-soft) !important; border-color: var(--delete-line) !important; color: var(--red) !important; }
+:global(html[data-theme='dark'] .incoming-page .correspondence-table) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-table) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-table) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .incoming-page .correspondence-table th) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-table th) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-table th) { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .incoming-page .correspondence-table td) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-table td) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-table td) ,
+:global(html[data-theme='dark'] .incoming-page .party-cell-content strong) ,
+:global(html[data-theme='dark'] .outgoing-page .party-cell-content strong) ,
+:global(html[data-theme='dark'] .archive-page .party-cell-content strong) { color: var(--ink) !important; }
+:global(html[data-theme='dark'] .incoming-page .correspondence-table td > small) ,
+:global(html[data-theme='dark'] .outgoing-page .correspondence-table td > small) ,
+:global(html[data-theme='dark'] .archive-page .correspondence-table td > small) ,
+:global(html[data-theme='dark'] .incoming-page .party-cell-content small) ,
+:global(html[data-theme='dark'] .outgoing-page .party-cell-content small) ,
+:global(html[data-theme='dark'] .archive-page .party-cell-content small) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .kind-incoming) ,
+:global(html[data-theme='dark'] .status-chip.status-received) ,
+:global(html[data-theme='dark'] .status-chip.status-draft) ,
+:global(html[data-theme='dark'] .status-chip.status-approved) { background: var(--primary-soft) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark'] .kind-outgoing) { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .status-chip.status-disposition) ,
+:global(html[data-theme='dark'] .status-chip.status-pending_approval) ,
+:global(html[data-theme='dark'] .status-chip.status-awaiting_signature) ,
+:global(html[data-theme='dark'] .status-chip.status-signature_pending) { background: var(--gold-soft) !important; color: var(--gold) !important; }
+:global(html[data-theme='dark'] .status-chip.status-done) ,
+:global(html[data-theme='dark'] .status-chip.status-archived) ,
+:global(html[data-theme='dark'] .status-chip.status-issued) ,
+:global(html[data-theme='dark'] .status-chip.status-sent) { background: var(--green-soft) !important; color: var(--green) !important; }
+:global(html[data-theme='dark'] .status-chip.status-signature_failed) { background: var(--red-soft) !important; color: var(--red) !important; }
+:global(html[data-theme='dark'] .pdf-action-link) { background: var(--pdf-soft) !important; border-color: var(--pdf-line) !important; color: var(--pdf) !important; }
+:global(html[data-theme='dark'] .primary-row-action) { background: var(--primary-action) !important; border-color: var(--primary-action) !important; color: #fff !important; }
+:global(html[data-theme='dark'] .primary-row-action:hover) { background: var(--primary-action-strong) !important; border-color: var(--primary-action-strong) !important; }
+:global(html[data-theme='dark'] .secondary-row-action) ,
+:global(html[data-theme='dark'] .row-action-button) { background: var(--surface-subtle) !important; border-color: var(--line) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-tabs) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-tab) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-tab.is-active) { background: var(--primary-soft) !important; border-color: var(--primary) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark'] .correspondence-page .queue-grid button) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark'] .correspondence-page .queue-grid button span) ,
+:global(html[data-theme='dark'] .correspondence-page .queue-grid button small) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .correspondence-page .queue-grid button strong) { color: var(--ink) !important; }
+:global(html[data-theme='dark'] .correspondence-page .table-scroll) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table) ,
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table th) ,
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table td) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table th) { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table td) ,
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table td strong) ,
+:global(html[data-theme='dark'] .correspondence-page .party-cell-content strong) { color: var(--ink) !important; }
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table td > small) ,
+:global(html[data-theme='dark'] .correspondence-page .party-cell-content small) ,
+:global(html[data-theme='dark'] .correspondence-page .correspondence-table td::before) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .correspondence-page .search-label) ,
+:global(html[data-theme='dark'] .correspondence-page .dashboard-filter-bar label) ,
+:global(html[data-theme='dark'] .correspondence-page .workflow-help) ,
+:global(html[data-theme='dark'] .correspondence-page .pagination) ,
+:global(html[data-theme='dark'] .correspondence-page .empty-state) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .correspondence-page .field-hint) ,
+:global(html[data-theme='dark'] .correspondence-page .approval-option small) { color: var(--ink-faint) !important; }
+:global(html[data-theme='dark'] .correspondence-page .secondary-button) { background: var(--surface) !important; border-color: var(--line-strong) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark'] .correspondence-page .secondary-button:hover) { background: var(--primary-soft) !important; border-color: var(--primary) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark'] .correspondence-page .approval-reject-button) { background: var(--red-soft) !important; border-color: var(--delete-line) !important; color: var(--red) !important; }
+:global(html[data-theme='dark'] .correspondence-page .secondary-action-group) ,
+:global(html[data-theme='dark'] .correspondence-page .status-update-form) ,
+:global(html[data-theme='dark'] .correspondence-page .approval-actions) ,
+:global(html[data-theme='dark'] .correspondence-page .correspondence-footer) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .correspondence-page .row-action-link) { color: var(--primary) !important; }
 .correspondence-page .hero-card, .correspondence-page .panel, .correspondence-page .incoming-flow-panel, .correspondence-page .outgoing-flow-panel { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
 .correspondence-page .correspondence-hero-metrics > div, .correspondence-page .incoming-hero-summary, .correspondence-page .outgoing-hero-summary > div, .correspondence-page .archive-hero-summary > div { color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: none; }
 .correspondence-page .correspondence-hero-metrics > div:first-child, .correspondence-page .incoming-hero-summary { border-top: 3px solid var(--primary); }
@@ -1029,4 +1066,9 @@ function submitApproval(record: CorrespondenceRecord) {
 .correspondence-page .wizard-grid input, .correspondence-page .wizard-grid select, .correspondence-page .wizard-grid textarea, .correspondence-page .dashboard-filter-bar input, .correspondence-page .dashboard-filter-bar select, .correspondence-page .search-label input, .correspondence-page .status-update-form input, .correspondence-page .status-update-form select { min-height: 44px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); border-radius: 10px; }
 .correspondence-page button:focus-visible, .correspondence-page input:focus-visible, .correspondence-page select:focus-visible, .correspondence-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 @media (max-width: 600px) { .correspondence-page .correspondence-hero-metrics, .correspondence-page .outgoing-hero-summary, .correspondence-page .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .correspondence-page .incoming-hero-summary { flex-basis: 100%; } .correspondence-page .workflow-actions { align-items: stretch; flex-direction: column; } .correspondence-page .workflow-actions > * { width: 100%; } }
+:global(html[data-theme='dark'] .correspondence-page .queue-grid button.is-selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
+:global(html[data-theme='dark'] .correspondence-page .primary-row-action) { background: var(--primary-action) !important; border-color: var(--primary-action) !important; color: #fff !important; }
+:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel h2),
+:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel p),
+:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel small) { color: #fff !important; }
 </style>

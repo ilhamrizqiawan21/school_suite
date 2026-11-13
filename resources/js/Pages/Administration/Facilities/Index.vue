@@ -44,6 +44,8 @@ const returnErrors = ref<Record<number, string>>({});
 const returning = ref<number | null>(null);
 
 const blankAsset = () => ({ inventory_code: '', name: '', category: '', location: '', condition: 'good', status: 'available', notes: '' });
+const showAssetModal = ref(false);
+const showLoanModal = ref(false);
 const assetForm = useForm(blankAsset());
 const assetLevelError = computed(() => (assetForm.errors as unknown as Record<string, string>).asset ?? '');
 const loanForm = useForm({ asset_id: '', borrower_name: '', borrower_reference: '', borrowed_at: new Date().toISOString().slice(0, 10), due_at: '', notes: '' });
@@ -60,6 +62,14 @@ function applyFilters() {
     router.get('/administrasi/sarpras', { search: search.value || undefined, status: statusFilter.value || undefined }, { preserveState: true, replace: true });
 }
 
+function openCreateAsset() {
+    editingAssetId.value = null;
+    assetForm.defaults(blankAsset());
+    assetForm.reset();
+    assetForm.clearErrors();
+    showAssetModal.value = true;
+}
+
 function editAsset(asset: Asset) {
     editingAssetId.value = asset.id;
     assetForm.clearErrors();
@@ -73,11 +83,12 @@ function editAsset(asset: Asset) {
         notes: asset.notes ?? '',
     });
     assetForm.reset();
-    document.getElementById('asset-form')?.scrollIntoView({ behavior: 'smooth' });
+    showAssetModal.value = true;
 }
 
 function cancelEdit() {
     if (assetForm.isDirty && !window.confirm('Batalkan perubahan data aset yang belum disimpan?')) return;
+    showAssetModal.value = false;
     editingAssetId.value = null;
     assetForm.defaults(blankAsset());
     assetForm.reset();
@@ -89,14 +100,23 @@ function saveAsset() {
     const method = editingAssetId.value ? 'put' : 'post';
     assetForm.submit(method, url, {
         preserveScroll: true,
-        onSuccess: () => { cancelEdit(); },
+        onSuccess: () => {
+            showAssetModal.value = false;
+            editingAssetId.value = null;
+            assetForm.defaults(blankAsset());
+            assetForm.reset();
+            assetForm.clearErrors();
+        },
     });
 }
 
 function borrowAsset() {
     loanForm.post('/administrasi/sarpras/peminjaman', {
         preserveScroll: true,
-        onSuccess: () => loanForm.reset('asset_id', 'borrower_name', 'borrower_reference', 'due_at', 'notes'),
+        onSuccess: () => {
+            showLoanModal.value = false;
+            loanForm.reset('asset_id', 'borrower_name', 'borrower_reference', 'due_at', 'notes');
+        },
     });
 }
 
@@ -136,25 +156,27 @@ const conditionClass = (condition: string) => `condition-${condition}`;
                 <article class="summary-maintenance"><span>Perawatan</span><strong>{{ summary.maintenance }}</strong><small>Tidak tersedia sementara</small></article>
             </section>
 
-            <section id="asset-form" class="panel">
-                <div class="section-heading"><div><h2>{{ editingAssetId ? 'Ubah data aset' : 'Tambah aset' }}</h2><p>Kode inventaris harus unik di sekolah ini.</p></div><button v-if="editingAssetId" class="button secondary" type="button" @click="cancelEdit">Batal ubah</button></div>
-                <form class="asset-form" @submit.prevent="saveAsset">
-                    <label><span>Kode inventaris</span><input v-model="assetForm.inventory_code" required maxlength="80"><small v-if="assetForm.errors.inventory_code">{{ assetForm.errors.inventory_code }}</small></label>
-                    <label><span>Nama aset</span><input v-model="assetForm.name" required maxlength="180"><small v-if="assetForm.errors.name">{{ assetForm.errors.name }}</small></label>
-                    <label><span>Kategori</span><input v-model="assetForm.category" required maxlength="100" placeholder="Elektronik, mebel, ..."><small v-if="assetForm.errors.category">{{ assetForm.errors.category }}</small></label>
-                    <label><span>Lokasi</span><input v-model="assetForm.location" maxlength="180" placeholder="Ruang / gedung"></label>
-                    <label><span>Kondisi</span><select v-model="assetForm.condition"><option value="good">Baik</option><option value="fair">Cukup</option><option value="poor">Kurang baik</option><option value="damaged">Rusak</option></select></label>
-                    <label><span>Status</span><select v-model="assetForm.status"><option value="available">Tersedia</option><option value="maintenance">Perawatan</option><option value="inactive">Nonaktif</option></select></label>
-                    <label class="wide"><span>Catatan</span><textarea v-model="assetForm.notes" rows="2" maxlength="5000" /></label>
-                    <div class="form-actions wide"><small v-if="assetLevelError">{{ assetLevelError }}</small><button type="submit" class="button primary" :disabled="assetForm.processing">{{ assetForm.processing ? 'Menyimpan…' : editingAssetId ? 'Simpan perubahan' : 'Simpan aset' }}</button></div>
-                    <p v-if="assetForm.hasErrors" class="form-error wide" role="alert">{{ Object.values(assetForm.errors).join(' ') }}</p>
-                </form>
-            </section>
+            <div v-if="showAssetModal" role="dialog" aria-modal="true" aria-labelledby="asset-modal-title" class="modal-backdrop" @click.self="cancelEdit" @keydown.esc="cancelEdit">
+                <section id="asset-form" class="modal-card">
+                    <div class="section-heading"><div><h2 id="asset-modal-title">{{ editingAssetId ? 'Ubah data aset' : 'Tambah aset' }}</h2><p>Kode inventaris harus unik di sekolah ini.</p></div><button class="modal-close" type="button" aria-label="Tutup formulir aset" @click="cancelEdit">×</button></div>
+                    <form class="asset-form" @submit.prevent="saveAsset">
+                        <label><span>Kode inventaris</span><input v-model="assetForm.inventory_code" required maxlength="80"><small v-if="assetForm.errors.inventory_code">{{ assetForm.errors.inventory_code }}</small></label>
+                        <label><span>Nama aset</span><input v-model="assetForm.name" required maxlength="180"><small v-if="assetForm.errors.name">{{ assetForm.errors.name }}</small></label>
+                        <label><span>Kategori</span><input v-model="assetForm.category" required maxlength="100" placeholder="Elektronik, mebel, ..."><small v-if="assetForm.errors.category">{{ assetForm.errors.category }}</small></label>
+                        <label><span>Lokasi</span><input v-model="assetForm.location" maxlength="180" placeholder="Ruang / gedung"></label>
+                        <label><span>Kondisi</span><select v-model="assetForm.condition"><option value="good">Baik</option><option value="fair">Cukup</option><option value="poor">Kurang baik</option><option value="damaged">Rusak</option></select></label>
+                        <label><span>Status</span><select v-model="assetForm.status"><option value="available">Tersedia</option><option value="maintenance">Perawatan</option><option value="inactive">Nonaktif</option></select></label>
+                        <label class="wide"><span>Catatan</span><textarea v-model="assetForm.notes" rows="2" maxlength="5000" /></label>
+                        <div class="form-actions wide"><small v-if="assetLevelError">{{ assetLevelError }}</small><button type="button" class="button secondary" @click="cancelEdit">Batal</button><button type="submit" class="button primary" :disabled="assetForm.processing">{{ assetForm.processing ? 'Menyimpan…' : editingAssetId ? 'Simpan perubahan' : 'Simpan aset' }}</button></div>
+                        <p v-if="assetForm.hasErrors" class="form-error wide" role="alert">{{ Object.values(assetForm.errors).join(' ') }}</p>
+                    </form>
+                </section>
+            </div>
 
             <section class="panel">
-                <div class="section-heading"><div><h2>Daftar aset</h2><p>Daftar hanya menampilkan aset milik sekolah Anda.</p></div></div>
+                <div class="section-heading"><div><h2>Daftar aset</h2><p>Daftar hanya menampilkan aset milik sekolah Anda.</p></div><button type="button" class="button primary" @click="openCreateAsset">+ Tambah aset</button></div>
                 <form class="filters" @submit.prevent="applyFilters">
-                    <input v-model="search" aria-label="Cari aset" placeholder="Cari kode, nama, kategori…">
+                    <input v-model="search" class="search-control" type="search" aria-label="Cari aset" placeholder="Cari kode, nama, kategori…">
                     <select v-model="statusFilter" aria-label="Filter status"><option value="">Semua status</option><option value="available">Tersedia</option><option value="borrowed">Dipinjam</option><option value="maintenance">Perawatan</option><option value="inactive">Nonaktif</option></select>
                     <button type="submit" class="button secondary">Terapkan</button>
                     <Link href="/administrasi/sarpras" class="button secondary">Reset</Link>
@@ -166,9 +188,9 @@ const conditionClass = (condition: string) => `condition-${condition}`;
                 <nav class="page-controls" aria-label="Halaman aset"><Link v-if="asset_pages.previous" :href="asset_pages.previous" preserve-scroll class="button secondary">Sebelumnya</Link><span>{{ asset_pages.total }} aset · halaman {{ asset_pages.current }} / {{ asset_pages.last }}</span><Link v-if="asset_pages.next" :href="asset_pages.next" preserve-scroll class="button secondary">Berikutnya</Link></nav>
             </section>
 
-            <section class="panel loan-grid">
-                <div id="loan-form">
-                    <div class="section-heading"><div><p class="eyebrow">Transaksi aset</p><h2>Catat peminjaman</h2><p>Peminjaman hanya dapat dibuat untuk aset yang tersedia.</p></div></div>
+            <div v-if="showLoanModal" role="dialog" aria-modal="true" aria-labelledby="loan-modal-title" class="modal-backdrop" @click.self="showLoanModal = false" @keydown.esc="showLoanModal = false">
+                <section id="loan-form" class="modal-card">
+                    <div class="section-heading"><div><p class="eyebrow">Transaksi aset</p><h2 id="loan-modal-title">Catat peminjaman</h2><p>Peminjaman hanya dapat dibuat untuk aset yang tersedia.</p></div><button type="button" class="modal-close" aria-label="Tutup formulir peminjaman" @click="showLoanModal = false">×</button></div>
                     <form class="loan-form" @submit.prevent="borrowAsset">
                         <label><span>Aset</span><select v-model="loanForm.asset_id" required><option value="" disabled>Pilih aset</option><option v-for="asset in availableAssets" :key="asset.id" :value="String(asset.id)">{{ asset.inventory_code }} · {{ asset.name }}</option></select><small v-if="loanForm.errors.asset_id">{{ loanForm.errors.asset_id }}</small></label>
                         <label><span>Nama peminjam</span><input v-model="loanForm.borrower_name" required maxlength="180"><small v-if="loanForm.errors.borrower_name">{{ loanForm.errors.borrower_name }}</small></label>
@@ -176,13 +198,16 @@ const conditionClass = (condition: string) => `condition-${condition}`;
                         <label><span>Tanggal pinjam</span><input v-model="loanForm.borrowed_at" type="date" required></label>
                         <label><span>Batas pengembalian</span><input v-model="loanForm.due_at" type="date"></label>
                         <label class="wide"><span>Catatan</span><textarea v-model="loanForm.notes" rows="2" maxlength="5000" /></label>
-                        <div class="form-actions wide"><button type="submit" class="button primary" :disabled="loanForm.processing || availableAssets.length === 0">Catat peminjaman</button></div>
+                        <div class="form-actions wide"><button type="button" class="button secondary" @click="showLoanModal = false">Batal</button><button type="submit" class="button primary" :disabled="loanForm.processing || availableAssets.length === 0">Catat peminjaman</button></div>
                         <p v-if="!availableAssets.length" class="wide">Belum ada aset tersedia. Tambahkan aset atau catat pengembalian terlebih dahulu.</p>
                         <p v-if="loanForm.hasErrors" class="form-error wide" role="alert">{{ Object.values(loanForm.errors).join(' ') }}</p>
                     </form>
-                </div>
+                </section>
+            </div>
+
+            <section class="panel">
                 <div id="loan-history">
-                    <div class="section-heading"><div><p class="eyebrow">Kontrol pengembalian</p><h2>Pengembalian & riwayat</h2><p>Peminjaman yang belum kembali ditampilkan lebih dahulu.</p></div></div>
+                    <div class="section-heading"><div><p class="eyebrow">Kontrol pengembalian</p><h2>Pengembalian & riwayat</h2><p>Peminjaman yang belum kembali ditampilkan lebih dahulu.</p></div><button type="button" class="button primary" @click="showLoanModal = true">+ Catat peminjaman</button></div>
                     <div class="loan-list">
                         <article v-for="loan in loans" :key="loan.id" class="loan-item">
                             <div><strong>{{ loan.asset?.name || 'Aset' }}</strong><small>{{ loan.asset?.inventory_code }} · {{ loan.borrower_name }}</small><small>Pinjam {{ dateLabel(loan.borrowed_at) }} · {{ loan.returned_at ? 'dikembalikan ' + dateLabel(loan.returned_at) : 'batas kembali ' + dateLabel(loan.due_at) }}</small></div>
@@ -266,45 +291,45 @@ const conditionClass = (condition: string) => `condition-${condition}`;
 .asset-table .text-action { display: inline-flex; align-items: center; gap: .35rem; min-height: 34px; border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line)); border-radius: .55rem; padding: .42rem .62rem; color: var(--primary-strong); background: var(--primary-soft); }
 .asset-table .text-action::before { color: var(--edit); content: '✎'; font-size: .9rem; line-height: 1; }
 .asset-table .text-action:hover:not(:disabled) { border-color: var(--primary); background: color-mix(in srgb, var(--primary-soft) 72%, var(--primary) 28%); }
-:global(html[data-theme='dark']) .facilities-page { --facility-ink: var(--ink); --facility-muted: var(--ink-soft); --facility-line: var(--line); }
-:global(html[data-theme='dark']) .facilities-page .hero-card,
-:global(html[data-theme='dark']) .facilities-page .panel { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink); }
-:global(html[data-theme='dark']) .facilities-page .hero-card { background: linear-gradient(120deg, var(--surface-subtle), var(--surface)) !important; }
-:global(html[data-theme='dark']) .facilities-page .workflow p,
-:global(html[data-theme='dark']) .facilities-page .hero-card p:last-child,
-:global(html[data-theme='dark']) .facilities-page .section-heading p,
-:global(html[data-theme='dark']) .facilities-page .page-controls,
-:global(html[data-theme='dark']) .facilities-page .summary-grid span,
-:global(html[data-theme='dark']) .facilities-page .summary-grid article small,
-:global(html[data-theme='dark']) .facilities-page td small,
-:global(html[data-theme='dark']) .facilities-page .loan-item small,
-:global(html[data-theme='dark']) .facilities-page .empty { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .facilities-page .asset-form input,
-:global(html[data-theme='dark']) .facilities-page .asset-form select,
-:global(html[data-theme='dark']) .facilities-page .asset-form textarea,
-:global(html[data-theme='dark']) .facilities-page .loan-form input,
-:global(html[data-theme='dark']) .facilities-page .loan-form select,
-:global(html[data-theme='dark']) .facilities-page .loan-form textarea,
-:global(html[data-theme='dark']) .facilities-page .filters input,
-:global(html[data-theme='dark']) .facilities-page .filters select,
-:global(html[data-theme='dark']) .facilities-page .return-form select { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark']) .facilities-page .asset-form label span,
-:global(html[data-theme='dark']) .facilities-page .loan-form label span,
-:global(html[data-theme='dark']) .facilities-page th { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .facilities-page th,
-:global(html[data-theme='dark']) .facilities-page td { border-bottom-color: var(--line) !important; }
-:global(html[data-theme='dark']) .facilities-page th { background: var(--surface-subtle); }
-:global(html[data-theme='dark']) .facilities-page .workflow-steps li,
-:global(html[data-theme='dark']) .facilities-page .loan-grid > div + div { border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .facilities-page .loan-item { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .facilities-page .status.available,
-:global(html[data-theme='dark']) .facilities-page .condition-good { background: var(--green-soft); color: var(--green); }
-:global(html[data-theme='dark']) .facilities-page .status.borrowed,
-:global(html[data-theme='dark']) .facilities-page .condition-fair { background: var(--gold-soft); color: var(--gold); }
-:global(html[data-theme='dark']) .facilities-page .status.maintenance,
-:global(html[data-theme='dark']) .facilities-page .status.inactive,
-:global(html[data-theme='dark']) .facilities-page .condition-poor,
-:global(html[data-theme='dark']) .facilities-page .condition-damaged { background: var(--red-soft); color: var(--red); }
+:global(html[data-theme='dark'] .facilities-page) { --facility-ink: var(--ink); --facility-muted: var(--ink-soft); --facility-line: var(--line); }
+:global(html[data-theme='dark'] .facilities-page .hero-card) ,
+:global(html[data-theme='dark'] .facilities-page .panel) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink); }
+:global(html[data-theme='dark'] .facilities-page .hero-card) { background: linear-gradient(120deg, var(--surface-subtle), var(--surface)) !important; }
+:global(html[data-theme='dark'] .facilities-page .workflow p) ,
+:global(html[data-theme='dark'] .facilities-page .hero-card p:last-child) ,
+:global(html[data-theme='dark'] .facilities-page .section-heading p) ,
+:global(html[data-theme='dark'] .facilities-page .page-controls) ,
+:global(html[data-theme='dark'] .facilities-page .summary-grid span) ,
+:global(html[data-theme='dark'] .facilities-page .summary-grid article small) ,
+:global(html[data-theme='dark'] .facilities-page td small) ,
+:global(html[data-theme='dark'] .facilities-page .loan-item small) ,
+:global(html[data-theme='dark'] .facilities-page .empty) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .facilities-page .asset-form input) ,
+:global(html[data-theme='dark'] .facilities-page .asset-form select) ,
+:global(html[data-theme='dark'] .facilities-page .asset-form textarea) ,
+:global(html[data-theme='dark'] .facilities-page .loan-form input) ,
+:global(html[data-theme='dark'] .facilities-page .loan-form select) ,
+:global(html[data-theme='dark'] .facilities-page .loan-form textarea) ,
+:global(html[data-theme='dark'] .facilities-page .filters input) ,
+:global(html[data-theme='dark'] .facilities-page .filters select) ,
+:global(html[data-theme='dark'] .facilities-page .return-form select) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark'] .facilities-page .asset-form label span) ,
+:global(html[data-theme='dark'] .facilities-page .loan-form label span) ,
+:global(html[data-theme='dark'] .facilities-page th) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .facilities-page th) ,
+:global(html[data-theme='dark'] .facilities-page td) { border-bottom-color: var(--line) !important; }
+:global(html[data-theme='dark'] .facilities-page th) { background: var(--surface-subtle); }
+:global(html[data-theme='dark'] .facilities-page .workflow-steps li) ,
+:global(html[data-theme='dark'] .facilities-page .loan-grid > div + div) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .facilities-page .loan-item) { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .facilities-page .status.available) ,
+:global(html[data-theme='dark'] .facilities-page .condition-good) { background: var(--green-soft); color: var(--green); }
+:global(html[data-theme='dark'] .facilities-page .status.borrowed) ,
+:global(html[data-theme='dark'] .facilities-page .condition-fair) { background: var(--gold-soft); color: var(--gold); }
+:global(html[data-theme='dark'] .facilities-page .status.maintenance) ,
+:global(html[data-theme='dark'] .facilities-page .status.inactive) ,
+:global(html[data-theme='dark'] .facilities-page .condition-poor) ,
+:global(html[data-theme='dark'] .facilities-page .condition-damaged) { background: var(--red-soft); color: var(--red); }
 .facilities-page .hero-card, .facilities-page .panel { background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
 .facilities-page .hero-card { padding: clamp(1rem, 2.5vw, 1.5rem); }
 .facilities-page .summary-grid article { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 12px; }
@@ -318,4 +343,17 @@ const conditionClass = (condition: string) => `condition-${condition}`;
 @media (max-width: 560px) { .facilities-page .hero-actions, .facilities-page .filters { align-items: stretch; flex-direction: column; width: 100%; } .facilities-page .hero-actions > *, .facilities-page .filters > * { width: 100%; max-width: none; } .facilities-page .summary-grid article { min-width: 0; } }
 /* Center categorical status and action columns while keeping asset descriptions left aligned. */
 .asset-table th:nth-child(n+3), .asset-table td:nth-child(n+3) { text-align: center; }
+:global(html[data-theme='dark'] .facilities-page .summary-grid article) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink); }
+:global(html[data-theme='dark'] .facilities-page .summary-available strong) { color: var(--green); }
+:global(html[data-theme='dark'] .facilities-page .summary-borrowed strong) { color: var(--gold); }
+:global(html[data-theme='dark'] .facilities-page .summary-maintenance strong),
+:global(html[data-theme='dark'] .facilities-page .form-error) { color: var(--red); }
+:global(html[data-theme='dark'] .facilities-page .text-action),
+:global(html[data-theme='dark'] .facilities-page .workflow-steps a),
+:global(html[data-theme='dark'] .facilities-page .eyebrow) { color: var(--primary); }
+:global(html[data-theme='dark'] .facilities-page .button.secondary) { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
+:global(html[data-theme='dark'] .facilities-page .status:not(.available):not(.borrowed):not(.maintenance):not(.inactive)) { background: var(--surface-strong); color: var(--ink-soft); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(720px, 100%); max-height: 90dvh; overflow-y: auto; display: grid; gap: 1rem; padding: 1.35rem; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 </style>

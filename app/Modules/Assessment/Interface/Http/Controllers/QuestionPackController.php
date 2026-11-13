@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -88,6 +89,7 @@ class QuestionPackController extends Controller
             ->get();
 
         return Inertia::render('Assessment/QuestionPacks/Index', [
+            'document_defaults' => $this->documentProfile($request),
             'packs' => $packs,
             'filters' => [...$filters, 'status' => $filters['status'] ?? 'all'],
             'question_options' => $questionOptions,
@@ -114,6 +116,36 @@ class QuestionPackController extends Controller
         ], actor: $request->user(), schoolId: (int) $pack->school_id);
 
         return back()->with('message', 'Paket soal berhasil dibuat.');
+    }
+
+    public function documents(Request $request, QuestionPack $pack): Response
+    {
+        $this->authorizePack($request, $pack, 'edit');
+        $pack->load('items.questionVersion');
+        $questions = $pack->items->flatMap(function ($item) {
+            $q = $item->questionVersion;
+            if (! $q) {
+                throw ValidationException::withMessages(['items' => 'Snapshot soal tidak tersedia.']);
+            }
+            $base = ['teks' => $q->prompt, 'kunci' => $q->correct_answer, 'pedomanSkor' => $q->essay_rubric ?: $q->explanation,
+                'tujuan' => ['label' => $q->indicator_text], 'levelKognitif' => $q->cognitive_level];
+            if ($q->type === 'matching') {
+                return collect($q->matching_pairs ?? [])->map(fn ($pair) => [...$base, 'jenis' => 'menjodohkan', 'teks' => $q->prompt."\n".($pair['left'] ?? ''), 'kunci' => $pair['right'] ?? '']);
+            }
+
+            return [[...$base, 'jenis' => $q->type === 'essay' ? 'essay' : 'pg',
+                'opsi' => collect($q->type === 'true_false' ? ['Benar', 'Salah'] : ($q->options ?? []))->values()->map(fn ($text, $i) => ['label' => chr(65 + $i), 'teks' => is_array($text) ? ($text['text'] ?? $text['teks'] ?? '') : $text])->all(),
+                'kunci' => $q->type === 'true_false' ? ($q->correct_answer === 'true' ? 'A' : 'B') : ($q->type === 'multiple_choice' ? chr(65 + (int) array_search($q->correct_answer, $q->options ?? [], true)) : $q->essay_rubric)]];
+        })->values();
+        if ($questions->count() > 200) {
+            throw ValidationException::withMessages(['items' => 'Naskah maksimal 200 butir, termasuk setiap pasangan menjodohkan. Pecah paket menjadi beberapa naskah.']);
+        }
+
+        return Inertia::render('Assessment/QuestionPacks/Documents', [
+            'profile' => $this->documentProfile($request),
+            'pack' => ['id' => $pack->id, 'name' => $pack->name, 'duration_minutes' => $pack->duration_minutes, 'settings' => $pack->document_settings ?? []],
+            'questions' => $questions,
+        ]);
     }
 
     public function update(Request $request, QuestionPack $pack): RedirectResponse
@@ -172,6 +204,7 @@ class QuestionPackController extends Controller
                 'created_by' => $request->user()->id,
                 'name' => mb_strimwidth($pack->name.' (salinan)', 0, 180),
                 'description' => $pack->description,
+                'document_settings' => $pack->document_settings,
                 'jenjang' => $pack->jenjang,
                 'curriculum' => $pack->curriculum,
                 'duration_minutes' => $pack->duration_minutes,
@@ -209,7 +242,28 @@ class QuestionPackController extends Controller
             'randomize_questions' => ['required', 'boolean'],
             'randomize_options' => ['required', 'boolean'],
             'status' => ['required', Rule::in(['draft', 'active'])],
-            'items' => ['required', 'array', 'min:1', 'max:100'],
+            'items' => ['required', 'array', 'min:1', 'max:200'],
+            'document_settings' => ['nullable', 'array:mapel,kelas,semester,tahunPelajaran,tanggal,waktu,paper,kop'],
+            'document_settings.mapel' => ['required_with:document_settings', 'string', 'max:120'],
+            'document_settings.kelas' => ['required_with:document_settings', 'string', 'max:120'],
+            'document_settings.semester' => ['nullable', 'string', 'max:40'],
+            'document_settings.tahunPelajaran' => ['nullable', 'string', 'max:40'],
+            'document_settings.tanggal' => ['nullable', 'date_format:Y-m-d'],
+            'document_settings.waktu' => ['nullable', 'string', 'max:60'],
+            'document_settings.paper' => ['nullable', 'array:ukuran,orientasi,columns'],
+            'document_settings.paper.ukuran' => ['required_with:document_settings.paper', Rule::in(['A4', 'F4'])],
+            'document_settings.paper.orientasi' => ['required_with:document_settings.paper', Rule::in(['portrait', 'landscape'])],
+            'document_settings.paper.columns' => ['required_with:document_settings.paper', 'integer', 'between:1,3'],
+            'document_settings.kop' => ['nullable', 'array:namaLembaga,yayasan,keterangan,alamat,judul,subjudul,petunjuk,gambar,rasioGambar'],
+            'document_settings.kop.namaLembaga' => ['nullable', 'string', 'max:160'],
+            'document_settings.kop.yayasan' => ['nullable', 'string', 'max:160'],
+            'document_settings.kop.keterangan' => ['nullable', 'string', 'max:300'],
+            'document_settings.kop.alamat' => ['nullable', 'string', 'max:240'],
+            'document_settings.kop.judul' => ['nullable', 'string', 'max:160'],
+            'document_settings.kop.subjudul' => ['nullable', 'string', 'max:160'],
+            'document_settings.kop.petunjuk' => ['nullable', 'string', 'max:1000'],
+            'document_settings.kop.gambar' => ['nullable', 'string', 'max:2200000', 'regex:~^data:image/(png|jpeg);base64,[A-Za-z0-9+/=]+$~'],
+            'document_settings.kop.rasioGambar' => ['nullable', 'numeric', 'between:2,12'],
             'items.*.question_id' => ['required', 'integer', 'distinct'],
             'items.*.points' => ['required', 'numeric', 'min:0.1', 'max:100'],
         ]);
@@ -259,6 +313,7 @@ class QuestionPackController extends Controller
             'created_by' => $createdBy ?? $request->user()->id,
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
+            'document_settings' => $data['document_settings'] ?? null,
             'jenjang' => $data['jenjang'],
             'curriculum' => $data['curriculum'],
             'duration_minutes' => $data['duration_minutes'] ?? null,
@@ -284,7 +339,7 @@ class QuestionPackController extends Controller
             $questionId = (int) $item['question_id'];
             $question = $questions->get($questionId);
             $existing = $oldItems->get($questionId);
-            if (! $question->is_active && $existing) {
+            if ($existing) {
                 $versionId = $existing->question_version_id;
             } else {
                 if ($question->jenjang !== null && $question->jenjang !== $pack->jenjang) {
@@ -307,6 +362,22 @@ class QuestionPackController extends Controller
                 'points' => $item['points'],
             ]);
         }
+    }
+
+    private function documentProfile(Request $request): array
+    {
+        $school = $request->user()->school;
+        $logo = '';
+        if ($school?->logo_path && Storage::disk('public')->exists($school->logo_path) && Storage::disk('public')->size($school->logo_path) <= 1500000) {
+            $bytes = Storage::disk('public')->get($school->logo_path);
+            $info = @getimagesizefromstring($bytes);
+            if ($info && in_array($info['mime'], ['image/png', 'image/jpeg'], true)) {
+                $logo = 'data:'.$info['mime'].';base64,'.base64_encode($bytes);
+            }
+        }
+
+        return ['namaMadrasah' => $school?->name ?? '', 'logo' => $logo,
+            'kop' => ['namaLembaga' => $school?->name ?? '', 'alamat' => $school?->address ?? '', 'keterangan' => $school?->accreditation ? 'Akreditasi '.$school->accreditation : '']];
     }
 
     private function authorizeManager(Request $request): void

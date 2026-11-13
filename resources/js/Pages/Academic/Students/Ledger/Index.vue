@@ -64,7 +64,7 @@ function resetFilters() {
                 <form class="ledger-filterbar" @submit.prevent="applyFilters">
                     <label class="ledger-filter-field">
                         Cari siswa
-                        <input v-model="filters.search" type="search" placeholder="Nama, NIS, atau NISN" />
+                        <input v-model="filters.search" class="search-control" type="search" placeholder="Nama, NIS, atau NISN" />
                     </label>
                     <label class="ledger-filter-field">
                         Status

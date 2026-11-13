@@ -82,8 +82,9 @@ function setStartDate() {
             <ul v-if="actionErrors.length" class="panel p-4 text-sm text-red-700" role="alert"><li v-for="error in actionErrors" :key="error">{{ error }}</li></ul>
             <section class="leave-summary" aria-label="Ringkasan seluruh pengajuan"><div v-for="tab in statusTabs" :key="tab.value" :class="`leave-summary-${tab.value}`"><span>{{ tab.label }}</span><strong>{{ summary[tab.value] }}</strong></div></section>
 
-            <section v-if="showForm && can_apply" class="panel p-5">
-                <div class="mb-4"><h2 class="text-base font-semibold text-slate-900">Pengajuan baru</h2><p class="mt-1 text-sm text-slate-500">Rentang maksimal {{ max_days }} hari kalender. Pengajuan tidak dapat bertumpuk dengan pengajuan yang masih aktif.</p></div>
+            <div v-if="showForm && can_apply" role="dialog" aria-modal="true" aria-labelledby="leave-modal-title" class="modal-backdrop" @click.self="closeForm" @keydown.esc="closeForm">
+                <section class="modal-card p-5">
+                    <div class="mb-4 flex items-start justify-between gap-3"><div><h2 id="leave-modal-title" class="text-base font-semibold text-slate-900">Pengajuan baru</h2><p class="mt-1 text-sm text-slate-500">Rentang maksimal {{ max_days }} hari kalender. Pengajuan tidak dapat bertumpuk dengan pengajuan yang masih aktif.</p></div><button type="button" class="modal-close" aria-label="Tutup formulir pengajuan" @click="closeForm">×</button></div>
                 <form class="grid gap-4 md:grid-cols-2" @submit.prevent="submit">
                     <label class="grid gap-1 text-sm font-medium text-slate-700">Jenis
                         <select v-model="form.type" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm"><option v-for="(label, value) in types" :key="value" :value="value">{{ label }}</option></select>
@@ -103,10 +104,11 @@ function setStartDate() {
                     </label>
                     <p class="text-sm text-slate-500 md:col-span-2">Durasi {{ duration }} hari kalender. Minggu dilewati pada pengisian absensi; catatan absensi yang sudah ada dipertahankan.</p><div class="flex justify-end gap-2 md:col-span-2"><button type="button" class="secondary-button" :disabled="form.processing" @click="closeForm">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim…' : 'Kirim pengajuan' }}</button></div>
                 </form>
-            </section>
+                </section>
+            </div>
 
             <form class="panel leave-filter-form" @submit.prevent="applyFilters">
-                <label class="leave-filter-search">Cari pengajuan<input v-model="search" type="search" placeholder="Nama, NIP, atau alasan…" /></label>
+                <label class="leave-filter-search">Cari pengajuan<input v-model="search" class="search-control" type="search" placeholder="Nama, NIP, atau alasan…" /></label>
                 <label class="leave-filter-type">Jenis pengajuan<select v-model="selectedType"><option value="">Semua jenis</option><option v-for="(label, value) in types" :key="value" :value="value">{{ label }}</option></select></label>
                 <label class="leave-filter-month">Bulan izin/cuti<input v-model="month" type="month" /></label>
                 <div class="leave-filter-actions"><button class="secondary-button" type="submit">Terapkan filter</button><button class="secondary-button" type="button" @click="resetFilters">Reset filter</button></div>
@@ -174,4 +176,7 @@ function setStartDate() {
     .leave-filter-search, .leave-filter-actions { grid-column: 1 / -1; }
     .leave-filter-actions { justify-content: flex-end; }
 }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(640px, 100%); max-height: 90dvh; overflow-y: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 </style>

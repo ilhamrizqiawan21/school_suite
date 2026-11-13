@@ -11,6 +11,9 @@ const props = defineProps<{
 }>();
 
 const onlyErrors = ref(false);
+const validOnly = ref(false);
+const skipDuplicates = ref(true);
+const processing = ref(false);
 const page = ref(1);
 const pageSize = 25;
 const visibleRows = computed(() => props.rows.filter((row) => !onlyErrors.value || !row.valid));
@@ -19,7 +22,8 @@ const pagedRows = computed(() => visibleRows.value.slice((page.value - 1) * page
 function toggleErrors(value: boolean) { onlyErrors.value = value; page.value = 1; }
 
 function confirmImport() {
-    router.post(`/penilaian/bank-soal/import/${props.token}/confirm`);
+    if (props.invalid_count && !window.confirm('Lewati baris bermasalah dan impor hanya baris valid?')) return;
+    router.post(`/penilaian/bank-soal/import/${props.token}/confirm`, { valid_only: validOnly.value, skip_duplicates: skipDuplicates.value }, { onStart: () => processing.value = true, onFinish: () => processing.value = false });
 }
 </script>
 
@@ -31,7 +35,9 @@ function confirmImport() {
                 <div>
                     <p class="eyebrow">Impor XLSX · langkah 2 dari 2</p>
                     <h1>Periksa hasil validasi</h1>
-                    <p>{{ valid_count }} baris valid · {{ invalid_count }} baris perlu diperbaiki. Impor hanya dilanjutkan bila semua baris valid.</p>
+                    <p>{{ valid_count }} baris valid · {{ invalid_count }} baris perlu diperbaiki. Periksa sebelum menyimpan.</p>
+                    <label v-if="invalid_count"><input v-model="validOnly" type="checkbox" /> Lewati baris bermasalah, impor hanya baris valid</label>
+                    <label><input v-model="skipDuplicates" type="checkbox" /> Lewati soal dengan teks dan jenis yang sama di bank saya</label>
                 </div>
             </section>
             <section class="panel preview-list">
@@ -47,7 +53,7 @@ function confirmImport() {
             </section>
             <footer class="actions">
                 <Link href="/penilaian/bank-soal" class="secondary-button">Batal</Link>
-                <button type="button" class="primary-button" :disabled="invalid_count > 0 || valid_count === 0" @click="confirmImport">Konfirmasi impor {{ valid_count }} soal</button>
+                <button type="button" class="primary-button" :disabled="processing || (invalid_count > 0 && !validOnly) || valid_count === 0" @click="confirmImport">Konfirmasi impor {{ valid_count }} soal</button>
             </footer>
         </main>
     </AppLayout>

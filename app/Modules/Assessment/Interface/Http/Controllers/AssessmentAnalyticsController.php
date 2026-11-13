@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Assessment\Application\Services\AssessmentAnalyticsService;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,6 +34,7 @@ class AssessmentAnalyticsController extends Controller
         return Inertia::render('Assessment/Analytics/Index', [
             ...$this->analytics->report($request->user(), $this->filters($request)),
             'can_manage_question_bank' => $request->user()->hasRole(['teacher', 'homeroom']),
+            'analysis_classes' => DB::table('class_groups')->where('school_id', $request->user()->school_id)->select('name')->distinct()->orderBy('name')->get(),
         ]);
     }
 
@@ -107,7 +109,7 @@ class AssessmentAnalyticsController extends Controller
             'type' => ['nullable', Rule::in(['multiple_choice', 'essay', 'true_false', 'matching'])],
             'jenjang' => ['nullable', Rule::in(['SD', 'SMP', 'SMA'])],
             'curriculum' => ['nullable', Rule::in(['merdeka', 'kbc', 'both'])],
-            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3'])],
+            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'])],
             'exam_id' => ['nullable', 'integer', 'min:1'],
         ]);
     }

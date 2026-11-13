@@ -23,6 +23,8 @@ type QuestionForm = {
     essay_rubric: string;
     correct_answer: string;
     explanation: string;
+    source: string;
+    class_label: string;
     points: number;
 };
 
@@ -43,11 +45,11 @@ const editing = ref<number | null>(null);
 const filterForm = ref({ ...props.filters });
 const blank = (): QuestionForm => ({
     subject_id: '', teaching_assignment_id: '', type: 'multiple_choice', jenjang: '', curriculum: 'merdeka',
-    prompt: '', indicator_text: '', cognitive_level: '', kko_term_id: '', kko_text: '', category_names: '', tag_names: '', options: ['', ''], matching_pairs: [{ left: '', right: '' }, { left: '', right: '' }],
-    essay_rubric: '', correct_answer: '', explanation: '', points: 1,
+    prompt: '', indicator_text: '', cognitive_level: '', kko_term_id: '', kko_text: '', category_names: '', tag_names: '', options: ['', ''], matching_pairs: [{ left: '', right: '' }],
+    essay_rubric: '', correct_answer: '', explanation: '', source: '', class_label: '', points: 1,
 });
 const form = useForm<QuestionForm>(blank());
-const importForm = useForm<{ file: File | null }>({ file: null });
+const importForm = useForm<{ file: File | null; jenjang: string; curriculum: string }>({ file: null, jenjang: 'SMP', curriculum: 'merdeka' });
 const exportUrl = computed(() => `/penilaian/bank-soal/export?${new URLSearchParams(Object.entries(filterForm.value).filter(([, value]) => value !== '' && value !== null).map(([key, value]) => [key, String(value)]))}`);
 const activeFilterCount = computed(() => Object.entries(filterForm.value).filter(([key, value]) => value !== '' && value !== null && value !== undefined && (key !== 'status' || value !== 'active')).length);
 const editingQuestion = computed(() => props.questions.data.find((q) => q.id === editing.value));
@@ -66,7 +68,7 @@ function applyFilters() {
 
 function resetFilters() {
     filterForm.value = {
-        search: '', type: '', subject_id: '', jenjang: '', curriculum: '', cognitive_level: '',
+        search: '', type: '', subject_id: '', jenjang: '', curriculum: '', cognitive_level: '', class_label: '', usage: '',
         category_id: '', tag_id: '', status: 'active',
     };
     applyFilters();
@@ -85,6 +87,7 @@ function openEdit(question: any) {
     form.clearErrors();
     form.defaults({
         subject_id: question.subject_id ?? '', teaching_assignment_id: question.teaching_assignment_id ?? '',
+        source: question.source ?? '', class_label: question.class_label ?? '',
         type: question.type, jenjang: question.jenjang ?? '', curriculum: question.curriculum ?? 'merdeka',
         prompt: question.prompt, indicator_text: question.indicator_text ?? '', cognitive_level: question.cognitive_level ?? '',
         kko_term_id: question.kko_term_id ?? '', kko_text: question.kko_text ?? '',
@@ -104,6 +107,7 @@ function closeForm() {
 }
 
 function submit() {
+    if (!editing.value && props.questions.data.some(q => q.prompt.trim().toLocaleLowerCase() === form.prompt.trim().toLocaleLowerCase() && q.type === form.type) && !window.confirm('Soal dengan teks dan jenis yang sama sudah ada. Tetap simpan sebagai butir baru?')) return;
     const payload = {
         ...form.data(),
         subject_id: form.subject_id || null,
@@ -138,7 +142,7 @@ function addPair() {
     if (form.matching_pairs.length < 10) form.matching_pairs.push({ left: '', right: '' });
 }
 function removePair(index: number) {
-    if (form.matching_pairs.length > 2) form.matching_pairs.splice(index, 1);
+    if (form.matching_pairs.length > 1) form.matching_pairs.splice(index, 1);
 }
 function action(path: string, label: string) {
     if (window.confirm(label)) router.post(path, {}, { preserveScroll: true });
@@ -161,7 +165,7 @@ function typeLabel(type: string) {
                 <div class="hero-actions">
                     <div class="hero-link-actions"><Link href="/ujian" class="secondary-button">Ujian & CBT</Link><Link href="/penilaian/bank-soal/template" class="secondary-button">Unduh template</Link><a :href="exportUrl" class="secondary-button">Ekspor XLSX</a></div>
                     <form class="import-control" aria-label="Impor soal" @submit.prevent="submitImport">
-                        <label class="file-picker">Pilih XLSX<input type="file" accept=".xlsx" @change="importForm.file = ($event.target as HTMLInputElement).files?.[0] ?? null" /></label>
+                        <label>Jenjang impor<select v-model="importForm.jenjang"><option>SD</option><option>SMP</option><option>SMA</option></select></label><label>Kurikulum impor<select v-model="importForm.curriculum"><option value="merdeka">Merdeka</option><option value="kbc">KBC</option><option value="both">Keduanya</option></select></label><label class="file-picker">Pilih XLSX / CSV<input type="file" accept=".xlsx,.csv" @change="importForm.file = ($event.target as HTMLInputElement).files?.[0] ?? null" /></label>
                         <button type="submit" class="secondary-button" :disabled="importForm.processing || !importForm.file">{{ importForm.processing ? 'Memeriksa…' : 'Preview impor' }}</button>
                         <small v-if="importForm.errors.file" class="form-error">{{ importForm.errors.file }}</small>
                     </form>
@@ -185,12 +189,12 @@ function typeLabel(type: string) {
             <section class="panel filters-panel">
                 <div class="filters-heading"><div><p class="eyebrow">Penyaringan katalog</p><h2>Temukan soal yang tepat</h2><p>Gunakan satu atau beberapa filter untuk menyusun paket asesmen lebih cepat.</p></div><button v-if="activeFilterCount" type="button" class="text-button reset-button" @click="resetFilters">Reset filter <span>{{ activeFilterCount }}</span></button></div>
                 <form class="filters-grid" @submit.prevent="applyFilters">
-                    <label class="search-field">Cari soal<input v-model="filterForm.search" placeholder="Cari teks soal atau indikator" /></label>
+                    <label class="search-field">Cari soal<input v-model="filterForm.search" class="search-control" type="search" placeholder="Cari teks soal atau indikator" /></label>
                     <label>Jenis<select v-model="filterForm.type"><option value="">Semua jenis</option><option value="multiple_choice">Pilihan ganda</option><option value="essay">Esai</option><option value="true_false">Benar / salah</option><option value="matching">Menjodohkan</option></select></label>
                     <label>Mata pelajaran<select v-model="filterForm.subject_id"><option value="">Semua mapel</option><option v-for="s in subjects" :key="s.id" :value="String(s.id)">{{ s.code }} · {{ s.name }}</option></select></label>
                     <label>Jenjang<select v-model="filterForm.jenjang"><option value="">Semua</option><option value="SD">SD</option><option value="SMP">SMP</option><option value="SMA">SMA</option></select></label>
                     <label>Kurikulum<select v-model="filterForm.curriculum"><option value="">Semua</option><option value="merdeka">Merdeka</option><option value="kbc">KBC</option><option value="both">Merdeka & KBC</option></select></label>
-                    <label>Level kognitif<select v-model="filterForm.cognitive_level"><option value="">Semua</option><option value="L1">L1 · LOTS</option><option value="L2">L2 · MOTS</option><option value="L3">L3 · HOTS</option></select></label>
+                    <label>Kelas<input v-model="filterForm.class_label" placeholder="Semua kelas" /></label><label>Pemakaian<select v-model="filterForm.usage"><option value="">Semua</option><option value="used">Sudah dipakai</option><option value="unused">Belum dipakai</option></select></label><label>Level kognitif<select v-model="filterForm.cognitive_level"><option value="">Semua</option><option v-for="(label, level) in {C1:'Mengingat',C2:'Memahami',C3:'Menerapkan',C4:'Menganalisis',C5:'Mengevaluasi',C6:'Mencipta'}" :key="level" :value="level">{{ level }} · {{ label }}</option><option value="L1">L1 · LOTS</option><option value="L2">L2 · MOTS</option><option value="L3">L3 · HOTS</option></select></label>
                     <label>Kategori<select v-model="filterForm.category_id"><option value="">Semua kategori</option><option v-for="category in categories" :key="category.id" :value="String(category.id)">{{ category.name }}</option></select></label>
                     <label>Tag<select v-model="filterForm.tag_id"><option value="">Semua tag</option><option v-for="tag in tags" :key="tag.id" :value="String(tag.id)">{{ tag.name }}</option></select></label>
                     <label>Status<select v-model="filterForm.status"><option value="active">Aktif</option><option value="archived">Arsip</option><option value="all">Semua</option></select></label>
@@ -233,10 +237,10 @@ function typeLabel(type: string) {
                     <label>Jenis soal<select v-model="form.type"><option value="multiple_choice">Pilihan ganda</option><option value="essay">Esai</option><option value="true_false">Benar / salah</option><option value="matching">Menjodohkan</option></select></label>
                     <label>Jenjang<select v-model="form.jenjang" required><option value="">Pilih jenjang</option><option value="SD">SD</option><option value="SMP">SMP</option><option value="SMA">SMA</option></select></label>
                     <label>Kurikulum<select v-model="form.curriculum" required><option value="merdeka">Merdeka</option><option value="kbc">KBC</option><option value="both">Merdeka & KBC</option></select></label>
-                    <label>Level kognitif<select v-model="form.cognitive_level"><option value="">Belum diklasifikasikan</option><option value="L1">L1 · LOTS (C1–C2)</option><option value="L2">L2 · MOTS (C3–C4)</option><option value="L3">L3 · HOTS (C5–C6)</option></select></label>
+                    <label>Level kognitif<select v-model="form.cognitive_level"><option value="">Belum diklasifikasikan</option><option v-for="(label, level) in {C1:'Mengingat',C2:'Memahami',C3:'Menerapkan',C4:'Menganalisis',C5:'Mengevaluasi',C6:'Mencipta'}" :key="level" :value="level">{{ level }} · {{ label }}</option><option value="L1">L1 · LOTS (C1–C2)</option><option value="L2">L2 · MOTS (C3–C4)</option><option value="L3">L3 · HOTS (C5–C6)</option></select></label>
                     <label class="span-all">Teks soal<textarea v-model="form.prompt" rows="4" required maxlength="10000" /></label>
                     <label class="span-all">Indikator soal<textarea v-model="form.indicator_text" rows="2" maxlength="5000" placeholder="Kompetensi atau indikator yang diukur" /></label>
-                    <label>KKO (kata kerja operasional)<input v-model="form.kko_text" list="question-kko-terms" maxlength="180" placeholder="Cari, misalnya: menganalisis" @change="selectKkoByText" /><datalist id="question-kko-terms"><option v-for="term in visibleKkoTerms" :key="term.id" :value="term.term">{{ term.cognitive_level }}</option></datalist></label>
+                    <label>Kelas / rombel<input v-model="form.class_label" maxlength="120" placeholder="Contoh: VII A" /></label><label>Sumber<input v-model="form.source" maxlength="500" placeholder="Buku atau referensi soal" /></label><label>KKO (kata kerja operasional)<input v-model="form.kko_text" list="question-kko-terms" maxlength="180" placeholder="Cari, misalnya: menganalisis" @change="selectKkoByText" /><datalist id="question-kko-terms"><option v-for="term in visibleKkoTerms" :key="term.id" :value="term.term">{{ term.cognitive_level }}</option></datalist></label>
                     <label>Kategori (pisahkan dengan koma)<input v-model="form.category_names" maxlength="1000" placeholder="Contoh: Aljabar, Persamaan" /></label>
                     <label>Tag (pisahkan dengan koma)<input v-model="form.tag_names" maxlength="1000" placeholder="Contoh: remedial, HOTS" /></label>
                     <label>Poin default<input v-model.number="form.points" type="number" min="0.1" max="100" step="0.1" required /></label>
@@ -249,7 +253,7 @@ function typeLabel(type: string) {
                     </div>
                     <label v-if="hasTypeFields === 'true_false'" class="span-all">Kunci jawaban<select v-model="form.correct_answer" required><option value="">Pilih jawaban benar</option><option value="true">Benar</option><option value="false">Salah</option></select></label>
                     <label v-if="hasTypeFields === 'essay'" class="span-all">Rubrik penilaian<textarea v-model="form.essay_rubric" rows="3" maxlength="5000" placeholder="Kriteria atau panduan penilaian esai" /></label>
-                    <div v-if="hasTypeFields === 'matching'" class="span-all type-fields"><h3>Pasangan yang benar</h3><div v-for="(pair, index) in form.matching_pairs" :key="index" class="pair-row"><input v-model="pair.left" :aria-label="`Bagian kiri ${index + 1}`" placeholder="Pernyataan" maxlength="1000" required /><span>↔</span><input v-model="pair.right" :aria-label="`Bagian kanan ${index + 1}`" placeholder="Pasangan jawaban" maxlength="1000" required /><button v-if="form.matching_pairs.length > 2" type="button" class="icon-button" aria-label="Hapus pasangan" @click="removePair(index)">×</button></div><button v-if="form.matching_pairs.length < 10" type="button" class="text-button" @click="addPair">+ Tambah pasangan</button></div>
+                    <div v-if="hasTypeFields === 'matching'" class="span-all type-fields"><h3>Pasangan yang benar</h3><div v-for="(pair, index) in form.matching_pairs" :key="index" class="pair-row"><input v-model="pair.left" :aria-label="`Bagian kiri ${index + 1}`" placeholder="Pernyataan" maxlength="1000" required /><span>↔</span><input v-model="pair.right" :aria-label="`Bagian kanan ${index + 1}`" placeholder="Pasangan jawaban" maxlength="1000" required /><button v-if="form.matching_pairs.length > 1" type="button" class="icon-button" aria-label="Hapus pasangan" @click="removePair(index)">×</button></div><button v-if="form.matching_pairs.length < 10" type="button" class="text-button" @click="addPair">+ Tambah pasangan</button></div>
                     <label class="span-all">Penjelasan jawaban<textarea v-model="form.explanation" rows="2" maxlength="5000" placeholder="Opsional" /></label>
                 </div>
                 <p v-if="form.hasErrors" class="form-error">{{ Object.values(form.errors)[0] }}</p>

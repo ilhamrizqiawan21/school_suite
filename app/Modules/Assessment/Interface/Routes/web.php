@@ -8,6 +8,7 @@ use App\Modules\Assessment\Interface\Http\Controllers\ExamController;
 use App\Modules\Assessment\Interface\Http\Controllers\QuestionBankController;
 use App\Modules\Assessment\Interface\Http\Controllers\QuestionPackController;
 use App\Modules\Assessment\Interface\Http\Controllers\QuestionShareController;
+use App\Modules\Assessment\Interface\Http\Controllers\QuickAnalysisController;
 use App\Modules\Assessment\Interface\Http\Controllers\ReportCardController;
 use App\Modules\Assessment\Interface\Http\Controllers\ReportingController;
 use App\Modules\Assessment\Interface\Http\Controllers\ScoreInputController;
@@ -15,6 +16,12 @@ use App\Modules\Assessment\Interface\Http\Controllers\StudentAttitudeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('penilaian')->name('assessment.')->group(function () {
+    Route::middleware(['role:teacher,homeroom', 'throttle:sensitive'])->prefix('analisis/cepat')->group(function () {
+        Route::post('import', [QuickAnalysisController::class, 'import'])->name('quick-analysis.import');
+        Route::post('export', [QuickAnalysisController::class, 'export'])->name('quick-analysis.export');
+        Route::post('pdf', [QuickAnalysisController::class, 'pdf'])->name('quick-analysis.pdf');
+        Route::match(['get', 'put', 'delete'], 'draft', [QuickAnalysisController::class, 'draft'])->name('quick-analysis.draft');
+    });
     Route::get('analisis', [AssessmentAnalyticsController::class, 'index'])->middleware('throttle:sensitive')->name('analytics.index');
     Route::get('analisis/export', [AssessmentAnalyticsController::class, 'export'])->middleware('throttle:sensitive')->name('analytics.export');
     Route::get('berbagi-soal', [QuestionShareController::class, 'index'])->middleware('role:teacher,homeroom')->name('question-shares.index');
@@ -24,6 +31,7 @@ Route::middleware(['auth'])->prefix('penilaian')->name('assessment.')->group(fun
     Route::post('berbagi-soal/{share}/cabut', [QuestionShareController::class, 'revoke'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('question-shares.revoke');
     Route::post('berbagi-soal/{share}/salin', [QuestionShareController::class, 'copy'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('question-shares.copy');
     Route::get('paket-soal', [QuestionPackController::class, 'index'])->middleware('role:teacher,homeroom')->name('question-packs.index');
+    Route::get('paket-soal/{pack}/dokumen', [QuestionPackController::class, 'documents'])->middleware('role:teacher,homeroom')->name('question-packs.documents');
     Route::post('paket-soal', [QuestionPackController::class, 'store'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('question-packs.store');
     Route::put('paket-soal/{pack}', [QuestionPackController::class, 'update'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('question-packs.update');
     Route::post('paket-soal/{pack}/arsip', [QuestionPackController::class, 'archive'])->middleware(['throttle:sensitive', 'role:teacher,homeroom'])->name('question-packs.archive');

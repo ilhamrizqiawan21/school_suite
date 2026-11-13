@@ -42,6 +42,7 @@ const form = useForm({
 });
 const decision = useForm({ decision_note: '' });
 const page = usePage<any>();
+const showForm = ref(false);
 const resourceSearch = ref('');
 
 const availableResources = computed(() => {
@@ -128,6 +129,7 @@ function shareName(share: any) {
                     <span><b>2</b>Tentukan izin</span>
                     <span><b>3</b>Tunggu persetujuan</span>
                 </div>
+                <button type="button" class="primary-button" @click="showForm = true">+ Bagikan sumber</button>
             </header>
 
             <div v-if="page.props.flash?.message" class="sharing-alert sharing-alert-success" role="status">
@@ -143,11 +145,12 @@ function shareName(share: any) {
                 <article class="sharing-metric metric-success"><span class="metric-icon">✓</span><div><p>Akses aktif di halaman ini</p><strong>{{ summary.active }}</strong></div></article>
             </section>
 
-            <form @submit.prevent="submit" class="sharing-form panel-card">
-                <div class="sharing-section-heading">
-                    <div><p class="eyebrow">Permintaan baru</p><h2>Kirim akses sumber</h2><p>Pilih sumber milik Anda, lalu tentukan apa yang boleh dilakukan penerima.</p></div>
-                    <span class="sharing-step-label">Guru / wali kelas</span>
-                </div>
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="share-modal-title" class="modal-backdrop" @click.self="showForm = false" @keydown.esc="showForm = false">
+                <form @submit.prevent="submit" class="sharing-form modal-card">
+                    <div class="sharing-section-heading">
+                        <div><p class="eyebrow">Permintaan baru</p><h2 id="share-modal-title">Kirim akses sumber</h2><p>Pilih sumber milik Anda, lalu tentukan apa yang boleh dilakukan penerima.</p></div>
+                        <button type="button" class="modal-close" aria-label="Tutup formulir berbagi" @click="showForm = false">×</button>
+                    </div>
                 <div class="sharing-form-grid">
                     <label class="sharing-field">Jenis sumber
                         <select v-model="form.resource_type" @change="form.resource_id = ''; resourceSearch = ''">
@@ -156,7 +159,7 @@ function shareName(share: any) {
                         </select>
                     </label>
                     <label class="sharing-field">Cari sumber
-                        <input v-model="resourceSearch" type="search" placeholder="Judul, mapel, atau jenjang" />
+                        <input v-model="resourceSearch" class="search-control" type="search" placeholder="Judul, mapel, atau jenjang" />
                     </label>
                     <label class="sharing-field sharing-field-wide">Sumber yang dibagikan
                         <select v-model="form.resource_id" required>
@@ -179,8 +182,9 @@ function shareName(share: any) {
                         <textarea v-model="form.request_note" maxlength="2000" rows="2" placeholder="Contoh: gunakan untuk ulangan harian kelas VII-A" />
                     </label>
                 </div>
-                <div class="sharing-form-footer"><p>Permintaan baru aktif setelah penerima menyetujui.</p><button type="submit" :disabled="form.processing || !availableResources.length" class="btn btn-primary">Kirim permintaan</button></div>
+                <div class="sharing-form-footer"><p>Permintaan baru aktif setelah penerima menyetujui.</p><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button type="submit" :disabled="form.processing || !availableResources.length" class="btn btn-primary">Kirim permintaan</button></div>
             </form>
+            </div>
 
             <section class="sharing-requests">
                 <div class="sharing-decision-note panel-card">
@@ -237,4 +241,7 @@ function shareName(share: any) {
 .sharing-flow{min-width:12rem;background:var(--surface)}
 @media(max-width:760px){.sharing-hero{flex-direction:column}.sharing-flow{width:100%;grid-template-columns:repeat(3,minmax(0,1fr))}.sharing-flow span{font-size:.68rem}}
 @media(max-width:480px){.sharing-flow{grid-template-columns:1fr}}
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(680px, 100%); max-height: 90dvh; overflow-y: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 </style>

@@ -131,8 +131,8 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
         <Head title="Absensi Guru" />
         <main class="view attendance-page space-y-5">
             <section class="hero-card attendance-hero">
-                <div><p class="eyebrow">Akademik · Kehadiran guru</p><h1>Presensi guru</h1><p>Catat kehadiran harian, periksa izin, dan atur guru pengganti.</p></div>
-                <div class="flex flex-wrap gap-2"><Link class="secondary-button" href="/akademik/absensi-guru/rekap">Rekap bulanan</Link><Link class="secondary-button" href="/akademik/izin-guru">Izin &amp; cuti</Link></div>
+                <div class="attendance-heading"><p class="eyebrow">Akademik · Kehadiran guru</p><h1>Presensi guru</h1><p>{{ can_manage_all ? 'Catat kehadiran harian, periksa izin, dan atur guru pengganti.' : 'Catat kehadiran harian dan periksa riwayat presensi Anda.' }}</p></div>
+                <div class="attendance-heading-actions"><Link class="secondary-button" href="/akademik/absensi-guru/rekap">Rekap bulanan</Link><Link class="secondary-button" href="/akademik/izin-guru">Izin &amp; cuti</Link></div>
             </section>
             <p v-if="message" class="panel p-4" role="status">{{ message }}</p>
             <section class="grade-summary" aria-label="Ringkasan isian absensi">
@@ -158,7 +158,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                 <form v-else @submit.prevent="save">
                     <div v-if="can_manage_all" class="space-y-4 border-b px-5 py-4">
                         <div class="flex flex-wrap gap-3">
-                            <input v-model="search" type="search" aria-label="Cari guru atau NIP" placeholder="Cari nama atau NIP…" class="min-w-0 flex-1 rounded-lg border px-3 py-2" />
+                            <input v-model="search" type="search" aria-label="Cari guru atau NIP" placeholder="Cari nama atau NIP…" class="search-control min-w-0 flex-1" />
                             <select v-model="statusFilter" aria-label="Filter status kehadiran" class="rounded-lg border px-3 py-2"><option value="">Semua status</option><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select>
                             <select v-model="recordingFilter" aria-label="Filter pencatatan" class="rounded-lg border px-3 py-2"><option value="">Semua pencatatan</option><option value="unrecorded">Belum dicatat</option><option value="recorded">Sudah dicatat</option></select>
                             <button type="button" class="secondary-button" @click="search = ''; statusFilter = ''; recordingFilter = ''">Reset filter</button>
@@ -201,10 +201,17 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 
 <style scoped>
 .attendance-page { min-width: 0; }
-.attendance-hero { min-height: 0; padding: 0 0 1.25rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.attendance-hero { min-height: 0; padding: .5rem 1.25rem 1.25rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
 .attendance-hero h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
 .attendance-hero p { color: var(--ink-soft); }
 .attendance-hero .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+.attendance-hero { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.attendance-heading { min-width: 0; }
+.attendance-heading .eyebrow { margin: 0 0 .4rem; }
+.attendance-heading h1 { margin: 0; font-weight: 700; line-height: 1.2; letter-spacing: -.035em; }
+.attendance-heading > p:last-child { max-width: 40rem; margin: .5rem 0 0; font-size: .875rem; line-height: 1.55; }
+.attendance-heading-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+@media (max-width: 700px) { .attendance-heading-actions { width: 100%; } }
 .attendance-list-panel { border-radius: 14px; }
 .attendance-page input, .attendance-page select { max-width: 100%; }
 .bulk-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }

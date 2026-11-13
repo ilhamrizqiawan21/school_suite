@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
+import QuickAnalysis from './QuickAnalysis.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 
 type Distribution = { label: string; count: number };
 type ExamItem = {
@@ -19,6 +20,7 @@ type ExamItem = {
 type Exam = { id: number; title: string; status: string; starts_at: string };
 
 const props = defineProps<{
+    analysis_classes?: { name: string }[];
     filters: Record<string, string | number | undefined>;
     subjects: { id: number; name: string }[];
     categories: { id: number; name: string }[];
@@ -42,6 +44,7 @@ const props = defineProps<{
     };
     can_manage_question_bank: boolean;
 }>();
+const showOverview = ref(false);
 
 const filterForm = reactive({
     subject_id: props.filters.subject_id ?? '',
@@ -105,9 +108,11 @@ function formatDate(value: string) {
 </script>
 
 <template>
-    <Head :title="can_manage_question_bank ? 'Analisis Bank Soal dan Ujian' : 'Analisis Asesmen dan Ujian'" />
+    <Head :title="can_manage_question_bank ? 'Analisis Soal' : 'Analisis Asesmen dan Ujian'" />
     <AppLayout>
-        <div class="view analytics-page space-y-6">
+        <nav v-if="can_manage_question_bank" class="analysis-menu" aria-label="Menu analisis"><button class="secondary-button" :aria-pressed="!showOverview" @click="showOverview=false">Analisis soal</button><button class="secondary-button" :aria-pressed="showOverview" @click="showOverview=true">Statistik bank & ujian</button></nav>
+        <QuickAnalysis v-if="can_manage_question_bank && !showOverview" :classes="analysis_classes ?? []" />
+        <div v-else class="view analytics-page space-y-6">
             <header class="page-heading compact-heading">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Wawasan asesmen</p>
@@ -216,6 +221,8 @@ function formatDate(value: string) {
 </template>
 
 <style scoped>
+.analysis-menu { display:flex; flex-wrap:wrap; gap:.65rem; padding:1rem 1.5rem; }
+.analysis-menu [aria-pressed=true] { background:var(--primary-soft); color:var(--primary); border-color:var(--primary); }
 .analytics-item-table {
     table-layout: fixed;
 }

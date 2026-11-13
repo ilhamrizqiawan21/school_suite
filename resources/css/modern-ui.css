@@ -259,7 +259,9 @@ select {
 }
 
 .schedule-page .schedule-session {
-    border-color: var(--line) !important;
+    border-top-color: var(--line) !important;
+    border-right-color: var(--line) !important;
+    border-bottom-color: var(--line) !important;
     background: var(--surface-subtle) !important;
 }
 

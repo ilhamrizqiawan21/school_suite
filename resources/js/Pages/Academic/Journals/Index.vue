@@ -625,7 +625,7 @@ const chart = computed(() => {
                     </div>
                 </div>
                 <div class="filter-panel">
-                    <label>Cari jurnal<input v-model="historySearch" type="search" placeholder="Materi, mapel, rombel..." @keyup.enter="applyHistoryFilters" /></label>
+                    <label>Cari jurnal<input v-model="historySearch" class="search-control" type="search" placeholder="Materi, mapel, rombel..." @keyup.enter="applyHistoryFilters" /></label>
                     <label>Tanggal<input v-model="historyDate" type="date" /></label>
                     <label>Rombel<select v-model="selectedClass"><option value="">Semua rombel</option><option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
                     <label>Mata pelajaran<select v-model="selectedSubject"><option value="">Semua mata pelajaran</option><option v-for="item in subjects" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>

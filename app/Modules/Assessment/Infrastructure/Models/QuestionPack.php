@@ -13,12 +13,13 @@ class QuestionPack extends Model
 {
     protected $fillable = [
         'school_id', 'created_by', 'name', 'description', 'jenjang', 'curriculum', 'duration_minutes',
-        'randomize_questions', 'randomize_options', 'status',
+        'randomize_questions', 'randomize_options', 'status', 'document_settings',
     ];
 
     protected function casts(): array
     {
         return [
+            'document_settings' => 'array',
             'duration_minutes' => 'integer',
             'randomize_questions' => 'boolean',
             'randomize_options' => 'boolean',

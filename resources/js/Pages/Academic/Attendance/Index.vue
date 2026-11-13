@@ -267,7 +267,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                             </article>
                             <p v-if="!studentList.length" class="attendance-mobile-empty">Belum ada siswa pada kelas dan semester aktif ini.</p>
                         </div>
-                        <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_18px_rgba(15,23,42,0.08)] backdrop-blur">
+                        <div class="attendance-save-bar sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_18px_rgba(15,23,42,0.08)] backdrop-blur">
                             <p class="text-sm" :class="isDirty ? 'font-semibold text-amber-700' : 'text-slate-500'" role="status" aria-live="polite">
                                 <template v-if="isDirty">● Ada perubahan yang belum disimpan</template>
                                 <template v-else-if="canSave">Belum ada presensi untuk pertemuan ini</template>
@@ -308,6 +308,17 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 .attendance-heading h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
 .attendance-heading p:not(.eyebrow) { color: var(--ink-soft); }
 .attendance-heading .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+:global(html[data-theme='dark'] .attendance-page .attendance-save-bar) { background: var(--surface) !important; border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .attendance-page .text-emerald-900) { color: var(--green) !important; }
+:global(html[data-theme='dark'] .attendance-page .text-amber-900) { color: var(--gold) !important; }
+:global(html[data-theme='dark'] .attendance-page .text-blue-900) { color: var(--blue) !important; }
+:global(html[data-theme='dark'] .attendance-page .text-rose-900) { color: var(--red) !important; }
+:global(html[data-theme='dark'] .attendance-page button[aria-pressed='false']) { background: var(--surface) !important; border-color: var(--line-strong) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true']) { color: #fff !important; }
+:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-emerald-600) { background: #087a55 !important; border-color: #087a55 !important; }
+:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-amber-500) { background: #8a5000 !important; border-color: #8a5000 !important; }
+:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-blue-600) { background: #1d4ed8 !important; border-color: #1d4ed8 !important; }
+:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-rose-600) { background: #be123c !important; border-color: #be123c !important; }
 .attendance-mobile-list { display: none; }
 @media (max-width: 720px) {
     .attendance-heading { align-items: flex-start; }

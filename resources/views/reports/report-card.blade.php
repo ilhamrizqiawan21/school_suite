@@ -5,20 +5,20 @@
     <title>Rapor {{ $report['student']['name'] }}</title>
     <style>
         @page { margin: 34px 38px 58px; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #202a33; line-height: 1.4; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #000; line-height: 1.4; }
         h1,h2,h3,p { margin: 0; }
         .letterhead { text-align: center; border-bottom: 2px solid #263a48; padding-bottom: 12px; }
         .letterhead h2 { font-size: 17px; }
-        .letterhead p { font-size: 9px; color: #526777; }
+        .letterhead p { font-size: 9px; color: #000; }
         .logo { width: 54px; height: 54px; float: left; }
         .identity { width: 100%; border-bottom: 3px double #70818c; padding: 8px 0; }
         .identity td { padding: 3px 0; vertical-align: top; }
-        .identity .label { width: 16%; color: #526777; }
+        .identity .label { width: 16%; color: #000; }
         .identity .value { width: 36%; }
         h1 { text-align: center; font-size: 14px; margin: 21px 0 18px; }
         h3 { font-size: 10px; margin: 0 0 5px; }
         .draft { text-align: center; color: #855b16; margin: -12px 0 12px; font-size: 9px; }
-        .data { width: 100%; border-collapse: collapse; margin-bottom: 13px; }
+        .data { width: 100%; border-collapse: collapse; border: 1px solid #7b8993; margin-bottom: 13px; }
         .data th { background: #f1f4f6; font-size: 8px; text-align: left; }
         .data td,.data th { padding: 6px 7px; border: 1px solid #7b8993; }
         .data td { vertical-align: middle; }
@@ -30,14 +30,14 @@
         .number { width: 4%; text-align: center; }
         tr, .keep-together { page-break-inside: avoid; }
         thead { display: table-header-group; }
-        .supplement { page-break-before: always; }
+        .supplement { margin-top: 16px; }
         .note,.parent-response { padding: 9px; border: 1px solid #7b8993; min-height: 39px; margin-bottom: 13px; white-space: pre-line; }
         .parent-response { height: 50px; }
         .signatures { width: 100%; margin-top: 20px; text-align: left; page-break-inside: avoid; }
         .signatures td { width: 50%; padding: 0 20px; vertical-align: top; font-size: 9px; }
         .signature-name { margin-top: 48px; font-weight: bold; }
         .principal { text-align: center; padding-top: 24px!important; }
-        .footer { position: fixed; bottom: -38px; left: 0; right: 0; font-size: 7px; color: #526777; }
+        .footer { position: fixed; bottom: -38px; left: 0; right: 0; font-size: 7px; color: #000; }
         .footer-top { width: 100%; }
         .page-number:before { content: counter(page); }
         .checksum { font-family: DejaVu Sans Mono, monospace; font-size: 6px; word-wrap: break-word; margin-top: 3px; }
@@ -63,8 +63,10 @@
         <div class="keep-together"><h3>Prestasi</h3><table class="data"><thead><tr><th class="number">No.</th><th>Jenis prestasi</th><th>Keterangan</th></tr></thead><tbody>@forelse($report['notes']['achievements'] ?? [] as $index => $achievement)<tr><td class="number">{{ $index + 1 }}</td><td>{{ $achievement['title'] }}</td><td>{{ implode(' - ', array_filter([$achievement['level'] ?? null, $achievement['rank'] ?? null])) ?: '-' }}</td></tr>@empty<tr><td colspan="3">Belum ada catatan prestasi.</td></tr>@endforelse</tbody></table></div>
         <div class="keep-together"><h3>Ketidakhadiran</h3><table class="data"><tbody>@foreach(['sick' => 'Sakit', 'permitted' => 'Izin', 'absent' => 'Tanpa keterangan'] as $key => $label)<tr><td style="width:40%">{{ $label }}</td><td class="center" style="width:15%">{{ $report['attendance'][$key] ?? 0 }}</td><td>hari</td></tr>@endforeach</tbody></table></div>
         <div class="keep-together"><h3>Catatan wali kelas</h3><p class="note">{{ ($report['notes']['homeroom_notes'] ?? '') ?: 'Belum ada catatan wali kelas.' }}</p></div>
-        <div class="keep-together"><h3>Tanggapan orang tua / wali</h3><div class="parent-response"></div></div>
-        <table class="signatures"><tr><td>Orang tua / wali<div class="signature-name">( ................................ )</div></td><td>{{ $report['published_at'] ?? 'Tanggal: ........................' }}<br>Wali kelas<div class="signature-name">{{ $report['academic']['homeroom_teacher'] }}</div></td></tr><tr><td colspan="2" class="principal">Mengetahui,<br>Kepala sekolah<div class="signature-name">{{ $report['school']['principal_name'] ?: '( ................................ )' }}</div></td></tr></table>
+        <div class="keep-together">
+            <h3>Tanggapan orang tua / wali</h3><div class="parent-response"></div>
+            <table class="signatures"><tr><td>Orang tua / wali<div class="signature-name">( ................................ )</div></td><td>{{ $report['published_at'] ?? 'Tanggal: ........................' }}<br>Wali kelas<div class="signature-name">{{ $report['academic']['homeroom_teacher'] ?: '( ................................ )' }}</div></td></tr><tr><td colspan="2" class="principal">Mengetahui,<br>Kepala sekolah<div class="signature-name">{{ $report['school']['principal_name'] ?: '( ................................ )' }}</div></td></tr></table>
+        </div>
     </div>
 </body>
 </html>

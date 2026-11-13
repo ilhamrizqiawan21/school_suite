@@ -19,6 +19,7 @@ interface GalleryAlbum {
 
 const props = defineProps<{ albums: GalleryAlbum[]; can_manage: boolean }>();
 const page = usePage<any>();
+const showForm = ref(false);
 const editing = ref<GalleryAlbum | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const previewUrls = ref<string[]>([]);
@@ -45,11 +46,17 @@ const selectPhotos = (event: Event) => {
 };
 
 const reset = () => {
+    showForm.value = false;
     editing.value = null;
     form.reset();
     form.clearErrors();
     clearPreviews();
     if (fileInput.value) fileInput.value.value = '';
+};
+
+const openCreate = () => {
+    reset();
+    showForm.value = true;
 };
 
 const edit = (album: GalleryAlbum) => {
@@ -61,6 +68,7 @@ const edit = (album: GalleryAlbum) => {
     form.clearErrors();
     clearPreviews();
     if (fileInput.value) fileInput.value.value = '';
+    showForm.value = true;
 };
 
 const submit = () => {
@@ -88,28 +96,31 @@ const remove = (album: GalleryAlbum) => {
                     <h1>Galeri sekolah</h1>
                     <p>Kelompokkan sampai empat foto dalam satu momen agar portofolio lebih rapi dan mudah dikelola.</p>
                 </div>
+                <button v-if="can_manage" type="button" class="primary-button" @click="openCreate">+ Tambah grup foto</button>
             </section>
 
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
 
-            <form class="panel gallery-editor" @submit.prevent="submit">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">{{ editing ? 'Edit grup foto' : 'Tambah grup foto' }}</p>
-                        <h2>{{ editing ? 'Perbarui momen sekolah' : 'Tambahkan momen sekolah' }}</h2>
-                        <p>Satu judul dapat memuat maksimal 4 foto dengan ukuran total maksimal 5 MB.</p>
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title" class="modal-backdrop" @click.self="reset" @keydown.esc="reset">
+                <form class="modal-card gallery-editor" @submit.prevent="submit">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">{{ editing ? 'Edit grup foto' : 'Tambah grup foto' }}</p>
+                            <h2 id="gallery-modal-title">{{ editing ? 'Perbarui momen sekolah' : 'Tambahkan momen sekolah' }}</h2>
+                            <p>Satu judul dapat memuat maksimal 4 foto dengan ukuran total maksimal 5 MB.</p>
+                        </div>
+                        <button type="button" class="modal-close" aria-label="Tutup formulir galeri" @click="reset">×</button>
                     </div>
-                    <button v-if="editing" type="button" class="secondary-button" @click="reset">Grup baru</button>
-                </div>
-                <div class="gallery-fields">
-                    <label class="wide"><span>Foto{{ editing ? ' pengganti (opsional)' : '' }}</span><span class="file-picker"><input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple :required="!editing" @change="selectPhotos" /><span class="file-picker-button">{{ form.photos.length ? `${form.photos.length} foto dipilih` : 'Pilih foto' }}</span><span class="file-picker-name">{{ form.photos.length ? form.photos.map((file) => file.name).join(', ') : 'Maksimal 4 foto · total 5 MB' }}</span></span><small>JPG, PNG, atau WebP. Pilihan lebih dari 4 foto akan dipotong menjadi 4 foto pertama.</small><em v-if="form.errors.photos">{{ form.errors.photos }}</em></label>
-                    <div v-if="previewUrls.length" class="selected-previews wide"><figure v-for="(url, index) in previewUrls" :key="url"><img :src="url" :alt="form.photos[index]?.name || `Pratinjau foto ${index + 1}`" /><figcaption>Foto {{ index + 1 }}</figcaption></figure></div>
-                    <label><span>Judul grup foto</span><input v-model="form.title" maxlength="120" placeholder="Contoh: Kegiatan belajar di laboratorium" required /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
-                    <label><span>Keterangan grup</span><textarea v-model="form.caption" rows="3" maxlength="255" placeholder="Keterangan singkat untuk pengunjung portofolio."></textarea><em v-if="form.errors.caption">{{ form.errors.caption }}</em></label>
-                    <label class="publish-choice"><input v-model="form.is_published" type="checkbox" /><span><strong>Tampilkan di portofolio</strong><small>Grup yang tidak dicentang hanya tersimpan di panel admin.</small></span></label>
-                </div>
-                <div class="form-actions"><button type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambahkan ke galeri' }}</button></div>
-            </form>
+                    <div class="gallery-fields">
+                        <label class="wide"><span>Foto{{ editing ? ' pengganti (opsional)' : '' }}</span><span class="file-picker"><input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple :required="!editing" @change="selectPhotos" /><span class="file-picker-button">{{ form.photos.length ? `${form.photos.length} foto dipilih` : 'Pilih foto' }}</span><span class="file-picker-name">{{ form.photos.length ? form.photos.map((file) => file.name).join(', ') : 'Maksimal 4 foto · total 5 MB' }}</span></span><small>JPG, PNG, atau WebP. Pilihan lebih dari 4 foto akan dipotong menjadi 4 foto pertama.</small><em v-if="form.errors.photos">{{ form.errors.photos }}</em></label>
+                        <div v-if="previewUrls.length" class="selected-previews wide"><figure v-for="(url, index) in previewUrls" :key="url"><img :src="url" :alt="form.photos[index]?.name || `Pratinjau foto ${index + 1}`" /><figcaption>Foto {{ index + 1 }}</figcaption></figure></div>
+                        <label><span>Judul grup foto</span><input v-model="form.title" maxlength="120" placeholder="Contoh: Kegiatan belajar di laboratorium" required /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
+                        <label><span>Keterangan grup</span><textarea v-model="form.caption" rows="3" maxlength="255" placeholder="Keterangan singkat untuk pengunjung portofolio."></textarea><em v-if="form.errors.caption">{{ form.errors.caption }}</em></label>
+                        <label class="publish-choice"><input v-model="form.is_published" type="checkbox" /><span><strong>Tampilkan di portofolio</strong><small>Grup yang tidak dicentang hanya tersimpan di panel admin.</small></span></label>
+                    </div>
+                    <div class="form-actions"><button type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambahkan ke galeri' }}</button></div>
+                </form>
+            </div>
 
             <section class="panel gallery-list">
                 <div class="section-heading"><div><p class="eyebrow">Koleksi portofolio</p><h2>Grup foto sekolah</h2><p>{{ albums.length }} momen tersimpan.</p></div></div>
@@ -134,5 +145,21 @@ const remove = (album: GalleryAlbum) => {
 .gallery-fields input:focus-visible, .gallery-fields textarea:focus-visible, .gallery-page button:focus-visible, .gallery-page .file-picker:focus-within { outline: 3px solid var(--primary); outline-offset: 2px; }
 .album-card { background: var(--surface); border-radius: 12px; }
 .album-actions button { min-height: 44px; padding: .45rem .7rem; }
+.gallery-fields label, .album-card, .album-body { min-width: 0; }
+.gallery-page .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-bottom: .85rem; border-bottom: 1px solid var(--line); }
+.gallery-fields .file-picker input { min-width: 0; min-height: 0; padding: 0; border: 0; }
+.publish-choice input { flex: 0 0 16px; }
+.album-card { display: flex; flex-direction: column; }
+.album-body { flex: 1; grid-template-rows: 1fr auto; gap: 1rem; padding: 1rem; }
+.album-body h3 { overflow-wrap: anywhere; }
+.cover-grid img:only-child { grid-column: 1 / -1; grid-row: 1 / -1; }
+.cover-grid img:first-child:nth-last-child(2), .cover-grid img:first-child:nth-last-child(2) ~ img { grid-row: 1 / -1; }
+.visibility-badge, .photo-count { background: var(--surface); color: var(--ink); }
+.visibility-badge.published { color: var(--green); }
+.visibility-badge.hidden { color: var(--ink-soft); }
+.notice.success { background: var(--green-soft); color: var(--green); border-color: var(--line); }
 @media (max-width: 600px) { .album-actions { flex-wrap: wrap; } .album-actions button { flex: 1; } }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(680px, 100%); max-height: 90dvh; overflow-y: auto; display: grid; gap: 1rem; padding: 1.35rem; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 </style>

@@ -15,7 +15,7 @@ class ExamQuestionVersion extends Model
     protected $fillable = [
         'exam_question_id', 'version_number', 'type', 'prompt', 'indicator_text', 'cognitive_level', 'kko_term_id', 'kko_text',
         'options', 'matching_pairs', 'essay_rubric', 'correct_answer', 'explanation', 'points', 'subject_id', 'subject_code_snapshot',
-        'subject_name_snapshot', 'jenjang', 'curriculum', 'created_by',
+        'subject_name_snapshot', 'jenjang', 'curriculum', 'created_by', 'source', 'class_label',
     ];
 
     protected function casts(): array

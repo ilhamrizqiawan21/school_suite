@@ -9,6 +9,7 @@ interface NewsItem { id: number; title: string; slug: string; excerpt?: string |
 const props = defineProps<{ news: NewsItem[]; can_manage: boolean }>();
 const page = usePage<{ flash?: { message?: string } }>();
 const maxPhotoBytes = 2 * 1024 * 1024;
+const showForm = ref(false);
 const editingId = ref<number | null>(null);
 const localPhotoError = ref('');
 const searchTerm = ref('');
@@ -48,11 +49,16 @@ const clearPhotoPreviews = () => {
     photoPreviews.value = [];
 };
 const reset = () => {
+    showForm.value = false;
     editingId.value = null;
     localPhotoError.value = '';
     clearPhotoPreviews();
     form.reset();
     form.clearErrors();
+};
+const openCreate = () => {
+    reset();
+    showForm.value = true;
 };
 const edit = (item: NewsItem) => {
     editingId.value = item.id;
@@ -66,7 +72,7 @@ const edit = (item: NewsItem) => {
     form.photo_captions = [];
     localPhotoError.value = '';
     form.clearErrors();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showForm.value = true;
 };
 const selectPhotos = (event: Event) => {
     const maxNewPhotos = Math.max(0, 5 - (editing.value?.photos.length ?? 0));
@@ -116,11 +122,12 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
     <Head title="Berita Sekolah" />
     <AppLayout title="Berita Sekolah">
         <main class="view news-page">
-            <section class="hero-card"><div><p class="eyebrow">Website sekolah</p><h1>Berita sekolah</h1><p>Tulis informasi kegiatan dan pencapaian sekolah untuk ditampilkan pada halaman publik.</p></div></section>
+            <section class="hero-card"><div><p class="eyebrow">Website sekolah</p><h1>Berita sekolah</h1><p>Tulis informasi kegiatan dan pencapaian sekolah untuk ditampilkan pada halaman publik.</p></div><button v-if="can_manage" type="button" class="primary-button" @click="openCreate">+ Buat berita</button></section>
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
 
-            <form class="panel news-editor" @submit.prevent="save">
-                <div class="section-heading"><div><p class="eyebrow">{{ editing ? 'Edit berita' : 'Berita baru' }}</p><h2>{{ editing ? editing.title : 'Buat berita sekolah' }}</h2><p>Berita dapat disimpan sebagai draf atau langsung diterbitkan.</p></div><button v-if="editing" type="button" class="secondary-button" @click="reset">Berita baru</button></div>
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="news-modal-title" class="modal-backdrop" @click.self="reset" @keydown.esc="reset">
+                <form class="modal-card news-editor" @submit.prevent="save">
+                    <div class="section-heading"><div><p class="eyebrow">{{ editing ? 'Edit berita' : 'Berita baru' }}</p><h2 id="news-modal-title">{{ editing ? editing.title : 'Buat berita sekolah' }}</h2><p>Berita dapat disimpan sebagai draf atau langsung diterbitkan.</p></div><button type="button" class="modal-close" aria-label="Tutup formulir berita" @click="reset">×</button></div>
                 <label><span>Judul berita <small class="char-count">{{ form.title.length }}/180</small></span><input v-model="form.title" required maxlength="180" placeholder="Contoh: Siswa meraih juara lomba sains" /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
                 <label><span>Ringkasan <small class="char-count">{{ form.excerpt.length }}/500</small></span><textarea v-model="form.excerpt" rows="2" maxlength="500" placeholder="Ringkasan singkat yang tampil di kartu berita."></textarea><em v-if="form.errors.excerpt">{{ form.errors.excerpt }}</em></label>
                 <label><span>Isi berita <small class="char-count">{{ form.body.length }}/20.000</small></span><textarea v-model="form.body" required rows="8" maxlength="20000" placeholder="Tuliskan isi berita secara lengkap."></textarea><em v-if="form.errors.body">{{ form.errors.body }}</em></label>
@@ -129,9 +136,10 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                 <div v-if="form.photos.length" class="selected-photos"><span class="field-label">Foto baru dan keterangannya</span><div class="photo-grid"><figure v-for="(photo, index) in form.photos" :key="`${photo.name}-${index}`"><img :src="photoPreviews[index]" :alt="photo.name" /><figcaption><strong>{{ photo.name }}</strong><input v-model="form.photo_captions[index]" maxlength="255" placeholder="Keterangan foto (opsional)" /><button type="button" class="text-button danger" @click="removeSelectedPhoto(index)">Batalkan</button></figcaption></figure></div></div>
                 <div v-if="editing?.photos.length" class="existing-photos"><span class="field-label">Foto tersimpan</span><div class="photo-grid"><figure v-for="photo in editing.photos" :key="photo.id"><img :src="photo.url" :alt="photo.caption || photo.name || 'Foto berita'" /><figcaption><strong>{{ photo.name || 'Foto berita' }}</strong><small v-if="photo.caption">{{ photo.caption }}</small><button type="button" class="text-button danger" @click="removePhoto(photo)">Hapus</button></figcaption></figure></div></div>
                 <div class="form-actions"><button type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</button><button type="submit" class="primary-button" :disabled="form.processing || !form.title || !form.body">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan berita' }}</button></div>
-            </form>
+                </form>
+            </div>
 
-            <section class="panel news-list"><div class="section-heading"><div><h2>Daftar berita</h2><p>{{ filteredNews.length }} dari {{ news.length }} berita ditampilkan.</p></div><a class="secondary-button" href="/berita" target="_blank" rel="noreferrer">Lihat halaman publik</a></div><div class="news-summary"><div><span>Terbit</span><strong>{{ publishedCount }}</strong></div><div><span>Draf</span><strong>{{ draftCount }}</strong></div><div><span>Total foto</span><strong>{{ news.reduce((total, item) => total + item.photos.length, 0) }}</strong></div></div><div class="news-toolbar"><label class="search-field"><span aria-hidden="true">⌕</span><input v-model="searchTerm" type="search" placeholder="Cari judul atau isi berita" /></label><select v-model="statusFilter" aria-label="Filter status berita"><option value="all">Semua status</option><option value="published">Terbit</option><option value="draft">Draf</option></select></div><article v-for="item in filteredNews" :key="item.id" class="news-row"><div class="news-thumb"><img v-if="item.photos[0]" :src="item.photos[0].url" :alt="item.title" /><span v-else>SS</span></div><div class="news-copy"><div class="news-meta"><span :class="['status-badge', item.status]">{{ item.status === 'published' ? 'Terbit' : 'Draf' }}</span><span>{{ formatDate(item.published_at) }}</span></div><h3>{{ item.title }}</h3><p>{{ item.excerpt || item.body }}</p><small>{{ item.author_name || 'Sekolah' }} · {{ item.photos.length }} foto</small></div><div class="row-actions"><button type="button" class="secondary-button row-action-icon" aria-label="Edit berita" title="Edit berita" @click="edit(item)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.5 3.5 3.5-.5L18.8 7.2l-3.5-3.5L4 16.5Zm9.9-10.9 3.5 3.5" /></svg></button><button type="button" class="text-button danger row-action-icon row-action-delete" aria-label="Hapus berita" title="Hapus berita" @click="remove(item)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16m-10 4v6m4-6v6M9 7V4h6v3m-9 0 1 13h10l1-13" /></svg></button></div></article><div v-if="!filteredNews.length" class="empty-state"><strong>{{ news.length ? 'Berita tidak ditemukan' : 'Belum ada berita' }}</strong><p>{{ news.length ? 'Coba ubah kata kunci atau filter status.' : 'Berita sekolah yang diterbitkan akan tampil di halaman publik.' }}</p></div></section>
+            <section class="panel news-list"><div class="section-heading"><div><h2>Daftar berita</h2><p>{{ filteredNews.length }} dari {{ news.length }} berita ditampilkan.</p></div><a class="secondary-button" href="/berita" target="_blank" rel="noreferrer">Lihat halaman publik</a></div><div class="news-summary"><div><span>Terbit</span><strong>{{ publishedCount }}</strong></div><div><span>Draf</span><strong>{{ draftCount }}</strong></div><div><span>Total foto</span><strong>{{ news.reduce((total, item) => total + item.photos.length, 0) }}</strong></div></div><div class="news-toolbar"><label class="search-field search-control-shell"><span aria-hidden="true">⌕</span><input v-model="searchTerm" type="search" placeholder="Cari judul atau isi berita" /></label><select v-model="statusFilter" aria-label="Filter status berita"><option value="all">Semua status</option><option value="published">Terbit</option><option value="draft">Draf</option></select></div><article v-for="item in filteredNews" :key="item.id" class="news-row"><div class="news-thumb"><img v-if="item.photos[0]" :src="item.photos[0].url" :alt="item.title" /><span v-else>SS</span></div><div class="news-copy"><div class="news-meta"><span :class="['status-badge', item.status]">{{ item.status === 'published' ? 'Terbit' : 'Draf' }}</span><span>{{ formatDate(item.published_at) }}</span></div><h3>{{ item.title }}</h3><p>{{ item.excerpt || item.body }}</p><small>{{ item.author_name || 'Sekolah' }} · {{ item.photos.length }} foto</small></div><div class="row-actions"><button type="button" class="secondary-button row-action-icon" aria-label="Edit berita" title="Edit berita" @click="edit(item)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.5 3.5 3.5-.5L18.8 7.2l-3.5-3.5L4 16.5Zm9.9-10.9 3.5 3.5" /></svg></button><button type="button" class="text-button danger row-action-icon row-action-delete" aria-label="Hapus berita" title="Hapus berita" @click="remove(item)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16m-10 4v6m4-6v6M9 7V4h6v3m-9 0 1 13h10l-1-13" /></svg></button></div></article><div v-if="!filteredNews.length" class="empty-state"><strong>{{ news.length ? 'Berita tidak ditemukan' : 'Belum ada berita' }}</strong><p>{{ news.length ? 'Coba ubah kata kunci atau filter status.' : 'Berita sekolah yang diterbitkan akan tampil di halaman publik.' }}</p></div></section>
         </main>
     </AppLayout>
 </template>
@@ -143,6 +151,9 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 .row-actions{align-items:center;gap:.45rem;flex:0 0 auto}.row-action-icon{width:32px;min-height:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:8px;box-shadow:none}.row-action-icon svg{width:15px;height:15px}.row-actions .secondary-button.row-action-icon{color:var(--green);background:var(--green-soft);border:1px solid color-mix(in srgb,var(--green) 22%,transparent)}.row-actions .secondary-button.row-action-icon:hover{color:var(--green);background:color-mix(in srgb,var(--green-soft) 78%,var(--surface));border-color:color-mix(in srgb,var(--green) 38%,transparent);transform:none;box-shadow:none}.row-actions .text-button.row-action-icon{color:var(--red);background:var(--red-soft);border:1px solid color-mix(in srgb,var(--red) 22%,transparent)}.row-actions .text-button.row-action-icon:hover{color:var(--red);background:color-mix(in srgb,var(--red-soft) 78%,var(--surface));border-color:color-mix(in srgb,var(--red) 38%,transparent)}
 .news-page .hero-card { background: var(--surface); border-radius: 14px; box-shadow: none; }
 .news-page .news-editor, .news-page .news-list { padding: clamp(1rem, 2.5vw, 1.5rem); border-radius: 14px; box-shadow: none; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(720px, 100%); max-height: 90dvh; overflow-y: auto; border: 1px solid var(--line); background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25) !important; }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 .news-editor input, .news-editor select, .news-editor textarea, .news-toolbar > select, .search-field { min-height: 44px; background: var(--surface); border-color: var(--line-strong); }
 .news-editor input:focus-visible, .news-editor select:focus-visible, .news-editor textarea:focus-visible, .news-toolbar select:focus-visible, .search-field:focus-within, .news-page button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .news-page .row-action-icon { width: 44px; min-height: 44px; height: 44px; }

@@ -91,8 +91,9 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                 <div class="task-summary-card task-summary-completed"><span>Selesai</span><strong>{{ summary.completed }}</strong><small>Tugas yang sudah ditutup</small></div>
             </section>
             <div class="task-guidance"><strong>{{ can_manage ? 'Cara kerja tugas' : 'Perbarui tugas' }}</strong><span>{{ can_manage ? 'Buat tugas, pilih penanggung jawab, lalu pantau sampai selesai.' : 'Buka lampiran bila ada, lalu perbarui progres saat pekerjaan berjalan.' }}</span></div>
-            <section v-if="showForm && can_manage" id="staff-task-form" class="panel task-form-panel scroll-mt-24">
-                <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2>{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><button type="button" class="secondary-button" @click="showForm = false">Tutup</button></div>
+            <div v-if="showForm && can_manage" role="dialog" aria-modal="true" aria-labelledby="staff-task-modal-title" class="modal-backdrop" @click.self="showForm = false" @keydown.esc="showForm = false">
+                <section id="staff-task-form" class="modal-card task-form-panel">
+                    <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2 id="staff-task-modal-title">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><button type="button" class="modal-close" aria-label="Tutup formulir tugas" @click="showForm = false">×</button></div>
                 <ul v-if="Object.keys(form.errors).length" class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                 <form class="task-form-grid" @submit.prevent="save">
                     <label class="field md:col-span-2">Judul<input v-model="form.title" required maxlength="180" /><small v-if="form.errors.title">{{ form.errors.title }}</small></label>
@@ -105,12 +106,13 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <label v-if="editingId" class="field">Status<select v-model="form.status"><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
                     <div class="task-form-actions"><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</button></div>
                 </form>
-            </section>
+                </section>
+            </div>
 
             <section class="panel task-filter-panel">
                 <div class="task-panel-heading compact"><div><p class="eyebrow">Penyaringan</p><h2>Daftar tugas</h2><p>Temukan tugas berdasarkan kata kunci, status, prioritas, atau penanggung jawab.</p></div></div>
                 <form class="task-filter-grid" @submit.prevent="applyFilters">
-                    <label class="field">Cari tugas<input v-model="filters.search" maxlength="180" placeholder="Judul atau kategori" /></label>
+                    <label class="field">Cari tugas<input v-model="filters.search" class="search-control" type="search" maxlength="180" placeholder="Judul atau kategori" /></label>
                     <label class="field">Status<select v-model="filters.status"><option value="">Semua status</option><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
                     <label class="field">Prioritas<select v-model="filters.priority"><option value="">Semua prioritas</option><option value="low">Rendah</option><option value="normal">Normal</option><option value="high">Tinggi</option><option value="urgent">Mendesak</option></select></label>
                     <label v-if="can_manage" class="field">Penanggung jawab<select v-model="filters.assignee_id"><option value="">Semua staf</option><option v-for="person in assignees" :key="person.id" :value="String(person.id)">{{ person.name }}</option></select></label>
@@ -252,39 +254,39 @@ progress::-moz-progress-bar { background: #315db3; }
 .task-summary-overdue { border-top: 3px solid var(--red) !important; }
 .task-summary-completed { border-top: 3px solid var(--green) !important; }
 .task-form-panel, .task-filter-panel, .task-list-panel { border-radius: var(--card-radius); }
-:global(html[data-theme='dark']) .staff-tasks-page { --task-ink: var(--ink); --task-muted: var(--ink-soft); --task-line: var(--line); }
-:global(html[data-theme='dark']) .staff-tasks-page .task-summary-card,
-:global(html[data-theme='dark']) .staff-tasks-page .task-guidance,
-:global(html[data-theme='dark']) .staff-tasks-page .task-form-panel,
-:global(html[data-theme='dark']) .staff-tasks-page .task-filter-panel,
-:global(html[data-theme='dark']) .staff-tasks-page .task-list-panel { border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-summary-card { background: var(--surface) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-guidance { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-guidance strong { color: var(--primary); }
-:global(html[data-theme='dark']) .staff-tasks-page .task-status-assigned,
-:global(html[data-theme='dark']) .staff-tasks-page .task-priority-high { background: var(--primary-soft) !important; color: var(--primary) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-status-in_progress { background: var(--gold-soft) !important; color: var(--gold) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-status-completed { background: var(--green-soft) !important; color: var(--green) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-status-cancelled,
-:global(html[data-theme='dark']) .staff-tasks-page .task-priority-low,
-:global(html[data-theme='dark']) .staff-tasks-page .task-priority-normal { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-priority-urgent { background: var(--red-soft) !important; color: var(--red) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-description,
-:global(html[data-theme='dark']) .staff-tasks-page .task-category,
-:global(html[data-theme='dark']) .staff-tasks-page .task-progress-heading,
-:global(html[data-theme='dark']) .staff-tasks-page .task-progress-editor,
-:global(html[data-theme='dark']) .staff-tasks-page .field { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .task-side,
-:global(html[data-theme='dark']) .staff-tasks-page .task-item,
-:global(html[data-theme='dark']) .staff-tasks-page .task-form-actions,
-:global(html[data-theme='dark']) .staff-tasks-page .task-filter-actions { border-color: var(--line) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page .field input,
-:global(html[data-theme='dark']) .staff-tasks-page .field select,
-:global(html[data-theme='dark']) .staff-tasks-page .field textarea { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark']) .staff-tasks-page progress,
-:global(html[data-theme='dark']) .staff-tasks-page progress::-webkit-progress-bar { background: var(--surface-strong); }
-:global(html[data-theme='dark']) .staff-tasks-page progress::-webkit-progress-value,
-:global(html[data-theme='dark']) .staff-tasks-page progress::-moz-progress-bar { background: var(--primary); }
+:global(html[data-theme='dark'] .staff-tasks-page) { --task-ink: var(--ink); --task-muted: var(--ink-soft); --task-line: var(--line); }
+:global(html[data-theme='dark'] .staff-tasks-page .task-summary-card) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-guidance) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-form-panel) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-filter-panel) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-list-panel) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-summary-card) { background: var(--surface) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-guidance) { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-guidance strong) { color: var(--primary); }
+:global(html[data-theme='dark'] .staff-tasks-page .task-status-assigned) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-priority-high) { background: var(--primary-soft) !important; color: var(--primary) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-status-in_progress) { background: var(--gold-soft) !important; color: var(--gold) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-status-completed) { background: var(--green-soft) !important; color: var(--green) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-status-cancelled) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-priority-low) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-priority-normal) { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-priority-urgent) { background: var(--red-soft) !important; color: var(--red) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-description) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-category) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-progress-heading) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-progress-editor) ,
+:global(html[data-theme='dark'] .staff-tasks-page .field) { color: var(--ink-soft) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-side) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-item) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-form-actions) ,
+:global(html[data-theme='dark'] .staff-tasks-page .task-filter-actions) { border-color: var(--line) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .field input) ,
+:global(html[data-theme='dark'] .staff-tasks-page .field select) ,
+:global(html[data-theme='dark'] .staff-tasks-page .field textarea) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page progress) ,
+:global(html[data-theme='dark'] .staff-tasks-page progress::-webkit-progress-bar) { background: var(--surface-strong); }
+:global(html[data-theme='dark'] .staff-tasks-page progress::-webkit-progress-value) ,
+:global(html[data-theme='dark'] .staff-tasks-page progress::-moz-progress-bar) { background: var(--primary); }
 .staff-tasks-page .hero-card, .staff-tasks-page .panel { background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
 .staff-tasks-page .staff-task-hero { padding: clamp(1rem, 2.5vw, 1.5rem); }
 .staff-tasks-page .task-summary-card { color: var(--ink); background: var(--surface) !important; border: 1px solid var(--line); border-radius: 12px; }
@@ -298,4 +300,11 @@ progress::-moz-progress-bar { background: #315db3; }
 .staff-tasks-page .task-item { border-color: var(--line); }
 .staff-tasks-page button:focus-visible, .staff-tasks-page input:focus-visible, .staff-tasks-page select:focus-visible, .staff-tasks-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 @media (max-width: 680px) { .staff-tasks-page .staff-task-hero-actions, .staff-tasks-page .task-filter-actions, .staff-tasks-page .task-form-actions { width: 100%; } .staff-tasks-page .staff-task-hero-actions > *, .staff-tasks-page .task-filter-actions > *, .staff-tasks-page .task-form-actions > * { flex: 1; } }
+:global(html[data-theme='dark'] .staff-tasks-page .task-summary-overdue strong),
+:global(html[data-theme='dark'] .staff-tasks-page .task-overdue) { color: var(--red) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .task-summary-completed strong) { color: var(--green) !important; }
+:global(html[data-theme='dark'] .staff-tasks-page .secondary-button) { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(700px, 100%); max-height: 90dvh; overflow-y: auto; padding: 1.35rem; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 </style>

@@ -192,7 +192,19 @@ class LearningControllersTest extends TestCase
         $this->actingAs($admin);
 
         $this->get(route('learning.index'))->assertForbidden();
-        $this->get(route('learning.progress.index'))->assertOk();
+        $this->get(route('learning.progress.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Learning/Progress')
+                ->where('can_manage_lms', false)
+                ->has('student_groups')
+                ->has('summary.complete_rows')
+                ->has('summary.attention_rows'));
+        $this->get(route('learning.progress.index', ['status' => 'attention', 'sort' => 'attention_desc']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('filters.status', 'attention')
+                ->where('filters.sort', 'attention_desc'));
         $this->post(route('learning.assignments.store'), [
             'teaching_assignment_id' => $this->teachingAssignment->id,
             'title' => 'Tugas Admin',

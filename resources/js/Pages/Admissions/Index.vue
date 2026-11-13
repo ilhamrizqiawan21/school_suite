@@ -642,7 +642,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                             <span v-if="hasApplicantFilters" class="filter-result-label">Filter aktif</span>
                         </div>
                         <div class="applicant-filters">
-                            <label class="applicant-search-field"><span>Cari pendaftar</span><input v-model="applicantSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN, asal sekolah..." /></label>
+                            <label class="applicant-search-field"><span>Cari pendaftar</span><input v-model="applicantSearch" class="search-control" type="search" placeholder="Nama, nomor pendaftaran, NISN, asal sekolah..." /></label>
                             <label><span>Status alur</span><select v-model="applicantStatusFilter"><option value="">Semua status</option><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label>
                             <label><span>Jalur</span><select v-model="applicantTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
                             <button v-if="hasApplicantFilters" class="filter-reset-button" type="button" @click="resetApplicantFilters">Reset filter</button>
@@ -728,7 +728,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                     <div class="document-list-panel">
                         <div class="document-list-heading"><div><h3>Daftar berkas pendaftar</h3><p>{{ filteredDocumentApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Klik "Detail" untuk memeriksa atau mengunggah berkas</p></div><span v-if="hasDocumentFilters" class="filter-result-label">Filter aktif</span></div>
                         <div class="document-filters">
-                            <label class="document-search-field"><span>Cari pendaftar</span><input v-model="documentSearch" type="search" placeholder="Nama atau nomor pendaftaran..." /></label>
+                            <label class="document-search-field"><span>Cari pendaftar</span><input v-model="documentSearch" class="search-control" type="search" placeholder="Nama atau nomor pendaftaran..." /></label>
                             <label><span>Status berkas</span><select v-model="documentStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu verifikasi</option><option value="valid">Valid</option><option value="needs_revision">Perlu perbaikan</option></select></label>
                             <button v-if="hasDocumentFilters" class="filter-reset-button" type="button" @click="resetDocumentFilters">Reset filter</button>
                         </div>
@@ -834,7 +834,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                     <div class="selection-list-panel">
                         <div class="selection-list-heading"><div><h3>Daftar kandidat</h3><p>{{ filteredSelectionApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasSelectionFilters" class="filter-result-label">Filter aktif</span></div>
                         <div class="selection-filters">
-                            <label class="selection-search-field"><span>Cari kandidat</span><input v-model="selectionSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
+                            <label class="selection-search-field"><span>Cari kandidat</span><input v-model="selectionSearch" class="search-control" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
                             <label><span>Jalur</span><select v-model="selectionTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
                             <label><span>Keputusan</span><select v-model="selectionDecisionFilter"><option value="">Semua keputusan</option><option value="pending">Belum diputuskan</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label>
                             <button v-if="hasSelectionFilters" class="filter-reset-button" type="button" @click="resetSelectionFilters">Reset filter</button>
@@ -904,7 +904,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                     <div class="announcement-list-panel">
                         <div class="announcement-list-heading"><div><h3>Daftar hasil seleksi</h3><p>{{ filteredAnnouncementApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasAnnouncementFilters" class="filter-result-label">Filter aktif</span></div>
                         <div class="announcement-filters">
-                            <label class="announcement-search-field"><span>Cari pendaftar</span><input v-model="announcementSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
+                            <label class="announcement-search-field"><span>Cari pendaftar</span><input v-model="announcementSearch" class="search-control" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
                             <label><span>Jalur</span><select v-model="announcementTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
                             <label><span>Hasil</span><select v-model="announcementDecisionFilter"><option value="">Semua hasil</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option><option value="pending">Belum diputuskan</option></select></label>
                             <button v-if="hasAnnouncementFilters" class="filter-reset-button" type="button" @click="resetAnnouncementFilters">Reset filter</button>
@@ -938,7 +938,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                     <div class="re-registration-list-panel">
                         <div class="re-registration-list-heading"><div><h3>Daftar calon siswa</h3><p>{{ filteredReRegistrationApplicants.length }} dari {{ reRegistrationApplicants.length }} pendaftar ditampilkan</p></div><span v-if="hasReRegistrationFilters" class="filter-result-label">Filter aktif</span></div>
                         <div class="re-registration-filters">
-                            <label class="re-registration-search-field"><span>Cari pendaftar</span><input v-model="reRegistrationSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
+                            <label class="re-registration-search-field"><span>Cari pendaftar</span><input v-model="reRegistrationSearch" class="search-control" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
                             <label><span>Status</span><select v-model="reRegistrationStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu konfirmasi</option><option value="completed">Selesai</option></select></label>
                             <button v-if="hasReRegistrationFilters" class="filter-reset-button" type="button" @click="resetReRegistrationFilters">Reset filter</button>
                         </div>

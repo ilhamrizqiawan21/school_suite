@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
@@ -157,14 +157,29 @@ const isTaskSection = computed(() => props.section === 'assignments');
 const isMaterialSection = computed(() => props.section === 'materials');
 const studentEndpoint = (path: string) => props.capabilities.submit ? `/siswa${path}` : `/pembelajaran${path}`;
 const taskSearch = ref('');
+const page = usePage();
+const taskClassView = computed(() => {
+    const id = new URL(page.url, 'http://localhost').searchParams.get('kelas');
+    return taskClasses.value.find(item => String(item.id) === id) ?? null;
+});
 const classSearch = ref('');
 const materialSearch = ref('');
 const firstStudentContentId = props.materials[0]?.teaching_assignment.id
     ?? props.assignments[0]?.teaching_assignment.id
     ?? props.teaching_assignments[0]?.id
     ?? '';
-const materialClassId = ref<number | ''>(props.capabilities.submit ? firstStudentContentId : (props.teaching_assignments[0]?.id ?? ''));
-const selectedStudentAssignmentId = ref<number | ''>(firstStudentContentId);
+const materialClassId = ref<number | ''>(props.capabilities.submit ? '' : (props.teaching_assignments[0]?.id ?? ''));
+const initialStudentAssignmentId = (() => {
+    const subjectParam = new URL(page.url, 'http://localhost').searchParams.get('subject');
+    if (subjectParam) {
+        const matched = props.teaching_assignments.find((item) => String(item.subject.id) === subjectParam);
+        if (matched) return matched.id;
+    }
+    return '' as number | '';
+})();
+const selectedStudentAssignmentId = ref<number | ''>(initialStudentAssignmentId);
+const studentSearch = ref('');
+const studentTaskFilter = ref<'all' | 'pending' | 'submitted' | 'revision' | 'overdue'>('all');
 const selectedTaskClassIds = ref<number[]>(props.teaching_assignments.length ? [props.teaching_assignments[0].id] : []);
 const taskStats = computed<TaskStats>(() => props.task_stats ?? {
     active_tasks: props.assignments.length,
@@ -177,12 +192,38 @@ const taskClasses = computed(() => props.task_classes ?? []);
 const filteredTaskClasses = computed(() => taskClasses.value.filter((item) => `${item.class_group ?? ''} ${item.subject ?? ''}`.toLowerCase().includes(classSearch.value.toLowerCase())));
 const filteredAssignments = computed(() => props.assignments.filter((assignment) => {
     const query = taskSearch.value.toLowerCase();
-    return !query || `${assignment.title} ${assignment.teaching_assignment.class_group.name} ${assignment.teaching_assignment.subject.name}`.toLowerCase().includes(query);
+    return (!taskClassView.value || assignment.teaching_assignment.id === taskClassView.value.id) && (!query || `${assignment.title} ${assignment.teaching_assignment.class_group.name} ${assignment.teaching_assignment.subject.name}`.toLowerCase().includes(query));
 }));
 const selectedMaterialClass = computed(() => props.teaching_assignments.find((item) => item.id === materialClassId.value) ?? props.teaching_assignments[0]);
-const selectedStudentAssignment = computed(() => props.teaching_assignments.find((item) => item.id === selectedStudentAssignmentId.value) ?? props.teaching_assignments[0]);
-const studentMaterials = computed(() => props.materials.filter((material) => material.teaching_assignment.id === selectedStudentAssignmentId.value));
-const studentAssignments = computed(() => props.assignments.filter((assignment) => assignment.teaching_assignment.id === selectedStudentAssignmentId.value));
+const selectedStudentAssignment = computed(() =>
+    selectedStudentAssignmentId.value === ''
+        ? null
+        : (props.teaching_assignments.find((item) => item.id === selectedStudentAssignmentId.value) ?? null),
+);
+const studentMaterials = computed(() => {
+    const query = studentSearch.value.trim().toLowerCase();
+    return props.materials.filter((material) => {
+        const matchesSubject = selectedStudentAssignmentId.value === '' || material.teaching_assignment.id === selectedStudentAssignmentId.value;
+        const matchesQuery = !query || `${material.title} ${material.description ?? ''} ${material.teaching_assignment.subject.name}`.toLowerCase().includes(query);
+        return matchesSubject && matchesQuery;
+    });
+});
+const studentAssignmentsBase = computed(() => {
+    const query = studentSearch.value.trim().toLowerCase();
+    return props.assignments.filter((assignment) => {
+        const matchesSubject = selectedStudentAssignmentId.value === '' || assignment.teaching_assignment.id === selectedStudentAssignmentId.value;
+        const matchesQuery = !query || `${assignment.title} ${assignment.instructions ?? ''} ${assignment.teaching_assignment.subject.name}`.toLowerCase().includes(query);
+        return matchesSubject && matchesQuery;
+    });
+});
+const studentAssignments = computed(() => studentAssignmentsBase.value.filter((assignment) => {
+    const submission = assignment.submissions[0];
+    if (studentTaskFilter.value === 'pending') return !submission;
+    if (studentTaskFilter.value === 'submitted') return Boolean(submission);
+    if (studentTaskFilter.value === 'revision') return submission?.review_status === 'needs_revision';
+    if (studentTaskFilter.value === 'overdue') return !submission && Boolean(assignment.due_at) && new Date(assignment.due_at!).getTime() < Date.now();
+    return true;
+}));
 const filteredMaterials = computed(() => props.materials.filter((material) => {
     const matchesClass = materialClassId.value === '' || material.teaching_assignment.id === materialClassId.value;
     const query = materialSearch.value.toLowerCase();
@@ -294,7 +335,7 @@ const removeResource = (url: string) => {
     <AppLayout title="Pembelajaran">
         <Head title="Pembelajaran" />
 
-        <div class="view space-y-6 learning-page">
+        <div class="view space-y-6 learning-page" :class="{ 'student-learning-page': capabilities.submit }">
             <section class="hero-card compact-hero">
                 <div>
                     <p class="eyebrow">{{ capabilities.submit ? 'Pembelajaran siswa' : (isMaterialSection && selectedMaterialClass ? 'Kelas & mapel' : 'Ruang pembelajaran') }} · {{ active_term?.name ?? 'Belum ada semester aktif' }}</p>
@@ -306,6 +347,9 @@ const removeResource = (url: string) => {
                     <button v-if="activeTab === 'materials'" class="primary-button" type="button" @click="showMaterialForm = true">Tambah materi</button>
                     <button v-else class="primary-button" type="button" @click="showAssignmentForm = true">Buat tugas</button>
                 </div>
+                <div v-else-if="capabilities.submit" class="hero-actions">
+                    <Link class="secondary-button" href="/siswa/progress">Progress belajar</Link>
+                </div>
             </section>
 
             <nav v-if="capabilities.manage" class="class-workspace-nav" aria-label="Alur kerja kelas dan mata pelajaran">
@@ -315,6 +359,14 @@ const removeResource = (url: string) => {
                 <Link class="workspace-tab" href="/penilaian/skor">Nilai</Link>
                 <Link class="workspace-tab" href="/akademik/presensi">Absensi</Link>
                 <Link class="workspace-tab" href="/komunikasi/chat">Chat</Link>
+            </nav>
+
+            <nav v-else-if="capabilities.submit" class="class-workspace-nav" aria-label="Navigasi belajar siswa">
+                <Link class="workspace-tab" :class="{ 'is-current': activeTab === 'materials' }" href="/siswa/materi">Materi Pelajaran</Link>
+                <Link class="workspace-tab" :class="{ 'is-current': activeTab === 'assignments' }" href="/siswa/tugas">Tugas Saya</Link>
+                <Link class="workspace-tab" href="/siswa/progress">Progress Belajar</Link>
+                <Link class="workspace-tab" href="/akademik/kelas-daring">Kelas Daring</Link>
+                <Link class="workspace-tab" href="/komunikasi/chat">Diskusi Kelas</Link>
             </nav>
 
             <section v-if="capabilities.manage && !isTaskSection && !isMaterialSection" class="grade-summary">
@@ -345,7 +397,7 @@ const removeResource = (url: string) => {
                 </section>
 
                 <section class="material-list-panel panel">
-                    <div class="task-panel-heading material-list-heading"><div><p class="eyebrow">Daftar materi</p><h2>Materi pembelajaran</h2><p>{{ filteredMaterials.length }} materi tersedia untuk kelas yang dipilih.</p></div><div class="material-list-tools"><select v-model="materialClassId" aria-label="Pilih kelas dan mata pelajaran"><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.class_group.name }} · {{ item.subject.name }}</option></select><label class="task-search"><span>⌕</span><input v-model="materialSearch" placeholder="Cari materi" /></label></div></div>
+                    <div class="task-panel-heading material-list-heading"><div><p class="eyebrow">Daftar materi</p><h2>Materi pembelajaran</h2><p>{{ filteredMaterials.length }} materi tersedia untuk kelas yang dipilih.</p></div><div class="material-list-tools"><select v-model="materialClassId" aria-label="Pilih kelas dan mata pelajaran"><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.class_group.name }} · {{ item.subject.name }}</option></select><label class="task-search search-control-shell"><span>⌕</span><input v-model="materialSearch" type="search" placeholder="Cari materi" /></label></div></div>
                     <div v-if="filteredMaterials.length" class="material-resource-grid">
                         <article v-for="material in filteredMaterials" :key="material.id" class="material-resource-card">
                             <div class="material-resource-icon">▤</div><div class="material-resource-body"><small>{{ material.teaching_assignment.class_group.name }} · {{ material.teaching_assignment.subject.name }}</small><h3>{{ material.title }}</h3><p>{{ material.description || 'Tidak ada deskripsi tambahan.' }}</p><span>{{ material.original_filename || 'Berkas materi' }} · {{ formatDate(material.published_at) }}</span></div><div class="material-resource-actions"><a class="material-download-button" :href="`/pembelajaran/materi/${material.id}/unduh`">Unduh</a><RowActionButton v-if="capabilities.manage" action="delete" label="Hapus" :aria-label="`Hapus materi ${material.title}`" @click="removeResource(`/pembelajaran/materi/${material.id}`)" /></div>
@@ -356,7 +408,7 @@ const removeResource = (url: string) => {
             </template>
 
             <template v-else-if="isTaskSection && capabilities.manage">
-                <section class="task-dashboard-stats" aria-label="Ringkasan tugas">
+                <section v-if="!taskClassView" class="task-dashboard-stats" aria-label="Ringkasan tugas">
                     <article class="task-stat task-stat-green"><span>Tugas aktif</span><strong>{{ taskStats.active_tasks }}</strong><small>tugas yang diterbitkan</small></article>
                     <article class="task-stat task-stat-blue"><span>Penugasan</span><strong>{{ taskStats.target_classes }}</strong><small>kelas dan mata pelajaran</small></article>
                     <article class="task-stat task-stat-teal"><span>Pengumpulan</span><strong>{{ taskStats.submissions }}</strong><small>jawaban siswa</small></article>
@@ -364,7 +416,7 @@ const removeResource = (url: string) => {
                     <article class="task-stat task-stat-amber"><span>Lewat deadline</span><strong>{{ taskStats.overdue }}</strong><small>perlu ditindaklanjuti</small></article>
                 </section>
 
-                <section class="task-create-panel panel">
+                <section v-if="!taskClassView" class="task-create-panel panel">
                     <div class="task-panel-heading"><div><p class="eyebrow">Buat tugas baru</p><h2>Bagikan aktivitas ke kelas</h2><p>Pilih satu atau beberapa kelas tujuan. Sistem membuat satu tugas untuk setiap kelas yang dipilih.</p></div><span class="task-panel-icon">＋</span></div>
                     <form class="task-create-form" @submit.prevent="submitAssignment">
                         <div class="task-form-main">
@@ -375,7 +427,7 @@ const removeResource = (url: string) => {
                         </div>
                         <div class="task-class-picker">
                             <div class="task-picker-heading"><div><strong>Pilih kelas tujuan *</strong><small>{{ selectedTaskClassIds.length }} kelas dipilih</small></div><button type="button" class="text-button" @click="toggleAllTaskClasses">{{ selectedTaskClassIds.length === teaching_assignments.length ? 'Batal pilih semua' : 'Pilih semua' }}</button></div>
-                            <label class="task-search"><span>⌕</span><input v-model="classSearch" placeholder="Cari kelas atau mapel" /></label>
+                            <label class="task-search search-control-shell"><span>⌕</span><input v-model="classSearch" type="search" placeholder="Cari kelas atau mapel" /></label>
                             <div class="task-class-options">
                                 <label v-for="item in filteredTaskClasses" :key="item.id" class="task-class-option" :class="{ 'is-selected': selectedTaskClassIds.includes(item.id) }">
                                     <input v-model="selectedTaskClassIds" type="checkbox" :value="item.id" />
@@ -388,20 +440,22 @@ const removeResource = (url: string) => {
                     </form>
                 </section>
 
-                <section class="task-class-panel panel">
-                    <div class="task-panel-heading"><div><p class="eyebrow">Kelas dan mata pelajaran</p><h2>Ringkasan penugasan</h2><p>Pilih kelas untuk melihat daftar tugas dan progres pengumpulan.</p></div><label class="task-search task-search-wide"><span>⌕</span><input v-model="taskSearch" placeholder="Cari tugas, kelas, atau mapel" /></label></div>
+                <section v-if="!taskClassView" class="task-class-panel panel">
+                    <div class="task-panel-heading"><div><p class="eyebrow">Kelas dan mata pelajaran</p><h2>Ringkasan penugasan</h2><p>Pilih kelas untuk melihat daftar tugas dan progres pengumpulan.</p></div><label class="task-search search-control-shell task-search-wide"><span>⌕</span><input v-model="taskSearch" type="search" placeholder="Cari tugas, kelas, atau mapel" /></label></div>
                     <div class="task-class-grid">
                         <article v-for="item in filteredTaskClasses" :key="item.id" class="task-class-card" :class="{ 'is-highlighted': selectedTaskClassIds.includes(item.id) }">
                             <div class="task-class-card-top"><div><small>SEMESTER AKTIF</small><h3>{{ item.class_group }}</h3><p>{{ item.subject }}</p></div><span class="task-class-bookmark">▣</span></div>
                             <div class="task-class-metrics"><span><strong>{{ item.assignment_count }}</strong> tugas</span><span><strong>{{ item.submission_count }}</strong> kumpul</span><span><strong>{{ item.needs_grading }}</strong> dinilai</span><span><strong>{{ item.overdue }}</strong> lewat</span></div>
                             <p class="task-class-latest">{{ item.latest_title || 'Belum ada tugas diterbitkan' }}</p>
-                            <button type="button" class="task-card-action" @click="selectedTaskClassIds = [item.id]; taskSearch = `${item.class_group} ${item.subject}`">Lihat tugas kelas →</button>
+                            <Link class="task-card-action" :href="`/pembelajaran/tugas?kelas=${item.id}`">Lihat tugas kelas →</Link>
                         </article>
                     </div>
                 </section>
 
-                <section class="task-list-panel panel">
-                    <div class="task-panel-heading"><div><p class="eyebrow">Daftar tugas</p><h2>Tugas yang diterbitkan</h2><p>Kelola deadline, progres pengumpulan, dan penilaian dari satu tempat.</p></div><label class="task-search task-search-wide"><span>⌕</span><input v-model="taskSearch" placeholder="Cari tugas" /></label></div>
+                <section v-if="taskClassView" class="task-list-panel panel">
+                    <Link href="/pembelajaran/tugas" class="secondary-button">← Kembali ke daftar kelas</Link>
+                    <p class="task-empty-copy">{{ taskClassView.class_group }} · {{ taskClassView.subject }}</p>
+                    <div class="task-panel-heading"><div><p class="eyebrow">Daftar tugas</p><h2>Tugas yang diterbitkan</h2><p>Kelola deadline, progres pengumpulan, dan penilaian dari satu tempat.</p></div><label class="task-search search-control-shell task-search-wide"><span>⌕</span><input v-model="taskSearch" type="search" placeholder="Cari tugas" /></label></div>
                     <div class="task-table-wrap table-scroll" tabindex="0" role="region" aria-label="Daftar tugas yang diterbitkan">
                         <table class="app-table task-table"><thead><tr><th scope="col">Judul</th><th scope="col">Kelas</th><th scope="col">Deadline</th><th scope="col">Pengumpulan</th><th scope="col">Aksi</th></tr></thead><tbody>
                             <tr v-for="assignment in filteredAssignments" :key="assignment.id">
@@ -421,29 +475,54 @@ const removeResource = (url: string) => {
                 <section class="student-course-picker panel">
                     <div class="student-course-picker-heading">
                         <div>
-                            <p class="eyebrow">Kelas & mata pelajaran</p>
-                            <h2>Pilih mapel untuk mulai belajar</h2>
-                            <p>Materi dan tugas akan ditampilkan sesuai mapel yang dipilih.</p>
+                            <p class="eyebrow">Filter & pencarian belajar</p>
+                            <h2>{{ activeTab === 'materials' ? 'Cari materi pelajaran' : 'Filter tugas saya' }}</h2>
+                            <p>Tampilkan semua mata pelajaran atau pilih satu mapel tertentu untuk fokus belajar.</p>
                         </div>
-                        <label class="student-course-select">
-                            <span>Pilih mapel</span>
-                            <select v-model="selectedStudentAssignmentId">
-                                <option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option>
-                            </select>
-                        </label>
+                        <div class="student-filter-controls">
+                            <label class="task-search search-control-shell student-search-input">
+                                <span aria-hidden="true">⌕</span>
+                                <input v-model="studentSearch" type="search" :placeholder="activeTab === 'materials' ? 'Cari judul materi atau mapel…' : 'Cari judul tugas atau mapel…'" />
+                            </label>
+                            <label class="student-course-select">
+                                <span class="sr-only">Pilih mata pelajaran</span>
+                                <select v-model="selectedStudentAssignmentId">
+                                    <option value="">Semua mata pelajaran ({{ teaching_assignments.length }})</option>
+                                    <option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div v-if="activeTab === 'assignments'" class="student-status-pills" role="group" aria-label="Filter status tugas">
+                        <button type="button" class="student-filter-pill" :class="{ 'is-active': studentTaskFilter === 'all' }" @click="studentTaskFilter = 'all'">
+                            Semua <b>{{ studentAssignmentsBase.length }}</b>
+                        </button>
+                        <button type="button" class="student-filter-pill" :class="{ 'is-active': studentTaskFilter === 'pending' }" @click="studentTaskFilter = 'pending'">
+                            Belum dikumpulkan <b>{{ studentAssignmentsBase.filter(a => !a.submissions.length).length }}</b>
+                        </button>
+                        <button type="button" class="student-filter-pill" :class="{ 'is-active': studentTaskFilter === 'submitted' }" @click="studentTaskFilter = 'submitted'">
+                            Sudah dikumpulkan <b>{{ studentAssignmentsBase.filter(a => a.submissions.length).length }}</b>
+                        </button>
+                        <button type="button" class="student-filter-pill" :class="{ 'is-active': studentTaskFilter === 'revision' }" @click="studentTaskFilter = 'revision'">
+                            Perlu diperbaiki <b>{{ studentAssignmentsBase.filter(a => a.submissions[0]?.review_status === 'needs_revision').length }}</b>
+                        </button>
+                        <button type="button" class="student-filter-pill" :class="{ 'is-active': studentTaskFilter === 'overdue' }" @click="studentTaskFilter = 'overdue'">
+                            Terlambat <b>{{ studentAssignmentsBase.filter(a => !a.submissions.length && a.due_at && new Date(a.due_at).getTime() < Date.now()).length }}</b>
+                        </button>
                     </div>
                 </section>
 
                 <section v-if="activeTab === 'materials'" class="panel student-learning-panel">
                     <div class="student-panel-heading">
                         <div><p class="eyebrow">Materi pembelajaran</p><h2>{{ studentMaterials.length }} materi tersedia</h2><p>Unduh bahan ajar dan tandai sudah dibaca setelah selesai dipelajari.</p></div>
-                        <span class="student-course-chip">{{ selectedStudentAssignment?.subject.name }} · {{ selectedStudentAssignment?.class_group.name }}</span>
+                        <span class="student-course-chip">{{ selectedStudentAssignment ? `${selectedStudentAssignment.subject.name} · ${selectedStudentAssignment.class_group.name}` : 'Semua Mata Pelajaran' }}</span>
                     </div>
                     <div v-if="studentMaterials.length" class="student-material-grid">
                         <article v-for="material in studentMaterials" :key="material.id" class="student-material-card">
                             <div class="student-material-icon">M</div>
                             <div class="student-material-body">
-                                <div class="student-material-meta"><span>{{ material.original_filename?.split('.').pop()?.toUpperCase() || 'MATERI' }}</span><span>{{ formatShortDate(material.published_at) }}</span></div>
+                                <div class="student-material-meta"><span>{{ material.teaching_assignment.subject.name }}</span><span>{{ material.original_filename?.split('.').pop()?.toUpperCase() || 'MATERI' }}</span><span>{{ formatShortDate(material.published_at) }}</span></div>
                                 <h3>{{ material.title }}</h3>
                                 <p>{{ material.description || 'Materi pembelajaran tanpa deskripsi tambahan.' }}</p>
                                 <span v-if="read_material_ids.includes(material.id)" class="read-badge">✓ Sudah dibaca</span>
@@ -455,13 +534,13 @@ const removeResource = (url: string) => {
                             </div>
                         </article>
                     </div>
-                    <div v-else class="student-empty-state"><strong>Belum ada materi untuk mapel ini</strong><p>Pilih mapel lain atau tunggu guru menerbitkan bahan ajar.</p></div>
+                    <div v-else class="student-empty-state"><strong>Belum ada materi yang sesuai</strong><p>Ubah pilihan mata pelajaran atau tunggu guru menerbitkan bahan ajar.</p></div>
                 </section>
 
                 <section v-else class="panel student-learning-panel">
                     <div class="student-panel-heading">
-                        <div><p class="eyebrow">Tugas saya</p><h2>{{ studentAssignments.length }} tugas pada mapel terpilih</h2><p>Buka tugas untuk membaca instruksi, mengirim jawaban, dan melihat nilai.</p></div>
-                        <span class="student-course-chip">{{ selectedStudentAssignment?.subject.name }} · {{ selectedStudentAssignment?.class_group.name }}</span>
+                        <div><p class="eyebrow">Tugas saya</p><h2>{{ studentAssignments.length }} tugas ditampilkan</h2><p>Buka tugas untuk membaca instruksi, mengirim jawaban, dan melihat nilai.</p></div>
+                        <span class="student-course-chip">{{ selectedStudentAssignment ? `${selectedStudentAssignment.subject.name} · ${selectedStudentAssignment.class_group.name}` : 'Semua Mata Pelajaran' }}</span>
                     </div>
                     <div class="student-task-list">
                         <article v-for="assignment in studentAssignments" :key="assignment.id" class="student-task-row">
@@ -750,6 +829,14 @@ const removeResource = (url: string) => {
 .material-empty-state p { margin: 0; font-size: .75rem; }
 .material-empty-icon { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; margin-bottom: .25rem; border-radius: .7rem; color: var(--ink-faint); background: var(--surface-strong); }
 .student-course-picker, .student-learning-panel { padding: 1.25rem; }
+.student-filter-controls { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+.student-search-input { min-width: 220px; min-height: 42px; }
+.student-status-pills { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; margin-top: 1rem; padding-top: .85rem; border-top: 1px solid var(--line); }
+.student-filter-pill { display: inline-flex; align-items: center; gap: .38rem; padding: .36rem .72rem; font-size: .74rem; font-weight: 700; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 999px; cursor: pointer; transition: all .15s ease; }
+.student-filter-pill:hover { border-color: var(--primary); color: var(--ink); }
+.student-filter-pill.is-active { color: #fff; background: var(--primary); border-color: var(--primary); }
+.student-filter-pill b { padding: .04rem .36rem; border-radius: 999px; font-size: .68rem; background: color-mix(in srgb, currentColor 14%, transparent); }
+.student-filter-pill.is-active b { color: #fff; background: rgba(255,255,255,.22); }
 .student-learning-summary.student-task-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .student-course-picker-heading, .student-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .student-course-picker-heading h2, .student-panel-heading h2 { margin: .15rem 0 .25rem; color: var(--ink); font-size: 1.15rem; letter-spacing: -.025em; }
@@ -757,7 +844,7 @@ const removeResource = (url: string) => {
 .student-course-select { min-width: min(320px, 100%); display: grid; gap: .35rem; color: var(--ink-soft); font-size: .74rem; font-weight: 800; }
 .student-course-select select { width: 100%; min-height: 42px; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: 0 .75rem; font: inherit; font-weight: 600; }
 .student-course-chip { flex: 0 0 auto; padding: .42rem .65rem; border-radius: 999px; color: var(--primary); background: var(--primary-soft); font-size: .7rem; font-weight: 800; }
-.student-material-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .85rem; margin-top: 1.1rem; }
+.student-material-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: .85rem; margin-top: 1.1rem; }
 .student-material-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8rem; padding: 1rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface-subtle); }
 .student-material-icon { width: 2.55rem; height: 2.55rem; display: grid; place-items: center; border-radius: .7rem; color: var(--blue); background: var(--blue-soft); font-size: .85rem; font-weight: 800; }
 .student-material-body { min-width: 0; }
@@ -791,6 +878,23 @@ const removeResource = (url: string) => {
 .student-empty-state p { margin: 0; font-size: .78rem; }
 .student-task-open { white-space: nowrap; }
 .student-empty-row { padding: 2rem 1rem; color: var(--ink-faint); text-align: center; }
+.student-learning-page .compact-hero > div:first-child { padding-left: .5rem; }
+.student-learning-page .compact-hero h1, .student-material-body h3, .student-material-body p { overflow-wrap: anywhere; }
+.student-course-picker-heading > div, .student-panel-heading > div { min-width: 0; }
+.student-course-chip { max-width: 100%; overflow-wrap: anywhere; }
+.student-material-actions { flex-wrap: wrap; }
+.student-learning-page { display: grid; gap: 1.25rem; min-width: 0; }
+.student-learning-page > * { margin-block: 0; min-width: 0; }
+.student-learning-page .student-learning-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); width: 100%; }
+.student-learning-page .student-learning-summary > div { min-height: 104px; padding: 1rem 1.25rem; text-align: left; }
+.student-learning-page .student-filter-controls { display: grid; grid-template-columns: minmax(0, 1fr); flex: 0 1 360px; width: 100%; }
+.student-learning-page .student-filter-controls .task-search { width: 100%; max-width: none; }
+.student-learning-page .student-course-select { min-width: 0; }
+.student-learning-page .student-material-card { grid-template-rows: 1fr auto; }
+.student-learning-page .student-material-body h3 { font-weight: 700; line-height: 1.5; }
+.student-learning-page .student-material-meta { color: var(--ink-soft); }
+@media (max-width: 900px) { .student-learning-page .student-course-picker-heading { flex-direction: column; } .student-learning-page .student-filter-controls { flex-basis: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .student-learning-page .student-filter-controls { grid-template-columns: minmax(0, 1fr); } .student-learning-page .student-learning-summary.student-task-summary { grid-template-columns: minmax(0, 1fr); } .student-learning-page .workspace-tab { padding: .65rem .75rem; } }
 @media (max-width: 760px) { .compact-hero, .resource-card { align-items: stretch; flex-direction: column; } .submission-row { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } }
 @media (max-width: 980px) { .task-dashboard-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .task-create-form { grid-template-columns: 1fr; } .task-class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .task-form-footer { grid-column: auto; } }
 @media (max-width: 880px) { .student-task-row { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(70px, .7fr)) auto; gap: .65rem; } }

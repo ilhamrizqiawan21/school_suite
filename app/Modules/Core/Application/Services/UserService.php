@@ -51,7 +51,10 @@ class UserService
             'phone' => isset($data['phone']) ? (string) $data['phone'] : null,
             'password' => Hash::make((string) $data['password']),
             'is_active' => (bool) ($data['is_active'] ?? true),
-            'must_change_password' => true,
+            // Akun baru dapat langsung digunakan tanpa dipaksa masuk ke alur
+            // perubahan kata sandi awal. Reset password oleh administrator
+            // tetap menandai akun untuk perubahan kata sandi pada login berikutnya.
+            'must_change_password' => false,
         ]);
 
         $this->auditLogger->log(

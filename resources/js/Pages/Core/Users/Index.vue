@@ -190,7 +190,7 @@ const deleteUser = (user: UserItem) => {
             <!-- Flash message -->
             <p v-if="actionError" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert">{{ actionError }}</p>
             <form class="panel grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]" @submit.prevent="applyFilters">
-                <label class="user-field">Cari pengguna<input v-model="search" type="search" maxlength="255" placeholder="Nama, email, atau username" /></label>
+                <label class="user-field">Cari pengguna<input v-model="search" class="search-control" type="search" maxlength="255" placeholder="Nama, email, atau username" /></label>
                 <label class="user-field">Peran<select v-model="selectedRole"><option value="">Semua peran</option><option v-for="r in filter_roles" :key="r.id" :value="r.name">{{ r.label }}</option></select></label>
                 <label class="user-field">Status akun<select v-model="selectedStatus"><option value="">Semua status</option><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></label>
                 <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>

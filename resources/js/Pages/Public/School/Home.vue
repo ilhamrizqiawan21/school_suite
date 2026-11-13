@@ -49,8 +49,8 @@ const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const heroTitle = computed(() => props.school.theme?.hero?.title || 'Tempat belajar yang memberi ruang untuk');
 const heroAccent = computed(() => props.school.theme?.hero?.accent || 'tumbuh bersama.');
-const heroPrimaryLabel = computed(() => props.school.theme?.hero?.primary_label || 'Kenali sekolah');
-const heroSecondaryLabel = computed(() => props.school.theme?.hero?.secondary_label || 'Baca kabar terbaru');
+const heroPrimaryLabel = computed(() => props.school.theme?.hero?.primary_label || 'Daftar PPDB');
+const heroSecondaryLabel = computed(() => props.school.theme?.hero?.secondary_label || 'Kenali sekolah');
 const heroVariant = computed(() => props.school.theme?.hero_variant || 'collage');
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value))
@@ -70,8 +70,9 @@ const formatDate = (value?: string | null) => value
                 <h1 id="home-title">{{ heroTitle }} <span>{{ heroAccent }}</span></h1>
                 <p class="hero-lead">{{ school.about || 'Selamat datang di ruang informasi resmi sekolah kami.' }}</p>
                 <div class="hero-actions">
-                    <Link href="/profil-sekolah" class="primary-button">{{ heroPrimaryLabel }}</Link>
-                    <Link href="/berita" class="text-link">{{ heroSecondaryLabel }}</Link>
+                    <Link href="/ppdb" class="primary-button">{{ heroPrimaryLabel }}</Link>
+                    <Link href="/profil-sekolah" class="secondary-button">{{ heroSecondaryLabel }}</Link>
+                    <Link href="/login" class="text-link">Portal Siswa &amp; Guru ↗</Link>
                 </div>
                 <div class="trust-line">
                     <span v-if="school.school_status">{{ school.school_status }}</span>
@@ -83,10 +84,34 @@ const formatDate = (value?: string | null) => value
             <div class="hero-visual" aria-label="Portofolio sekolah">
                 <div v-if="galleryPreview.length" class="hero-photo-grid">
                     <img class="hero-photo hero-photo-1" :src="galleryPreview[0].url" :alt="galleryPreview[0].title || galleryPreview[0].caption || ('Kegiatan ' + school.name)" />
+                    <img v-if="galleryPreview[1]" class="hero-photo hero-photo-2" :src="galleryPreview[1].url" :alt="galleryPreview[1].title || galleryPreview[1].caption || ('Suasana ' + school.name)" />
                 </div>
                 <div v-else class="hero-placeholder"><span>{{ initial }}</span><small>Portofolio sekolah</small></div>
                 <div class="hero-caption"><small>{{ school.school_status || 'Ruang belajar bersama' }}</small><strong>Belajar. Berkarya. Berbagi.</strong></div>
             </div>
+        </section>
+
+        <section class="audience-pathways" aria-label="Jalur cepat pengunjung">
+            <Link href="/ppdb" class="pathway-card">
+                <span class="pathway-tag">Calon Siswa &amp; Orang Tua</span>
+                <strong>Informasi &amp; Pendaftaran PPDB</strong>
+                <small>Lihat jalur masuk, syarat, dan jadwal pendaftaran.</small>
+            </Link>
+            <Link href="/program" class="pathway-card">
+                <span class="pathway-tag">Akademik &amp; Minat</span>
+                <strong>Program Unggulan</strong>
+                <small>Kurikulum, ekstrakurikuler, dan pembinaan prestasi.</small>
+            </Link>
+            <Link href="/kehidupan-siswa" class="pathway-card">
+                <span class="pathway-tag">Lingkungan Belajar</span>
+                <strong>Kehidupan Siswa</strong>
+                <small>Kegiatan harian, karya, dan budaya sekolah.</small>
+            </Link>
+            <Link href="/login" class="pathway-card pathway-portal">
+                <span class="pathway-tag">Warga Sekolah</span>
+                <strong>Masuk Portal Akademik</strong>
+                <small>Akses LMS, jadwal, rapor, dan layanan guru/siswa.</small>
+            </Link>
         </section>
 
         <section class="home-pillars" aria-labelledby="pillars-title">
@@ -138,8 +163,28 @@ const formatDate = (value?: string | null) => value
         <section class="home-admissions" aria-labelledby="admissions-title"><div><h2 id="admissions-title">Langkah awal masa depan dimulai di sini.</h2><p>Pelajari jalur, persyaratan, dan jadwal pendaftaran peserta didik baru.</p></div><Link href="/ppdb" aria-label="Lihat informasi PPDB">Lihat PPDB <span aria-hidden="true">→</span></Link></section>
 
         <footer class="public-footer">
-            <div><p class="eyebrow">Hubungi sekolah</p><h2>Mari terhubung.</h2></div>
-            <div class="contact-list"><p v-if="school.address">{{ school.address }}</p><a v-if="school.phone" :href="'tel:' + school.phone">{{ school.phone }}</a><a v-if="school.email" :href="'mailto:' + school.email">{{ school.email }}</a></div>
+            <div class="footer-brand">
+                <p class="eyebrow">Hubungi sekolah</p>
+                <h2>{{ school.name }}</h2>
+                <p class="footer-desc">{{ school.about || 'Ruang belajar yang aman, kolaboratif, dan berorientasi pada masa depan siswa.' }}</p>
+            </div>
+            <div class="footer-links">
+                <p class="footer-heading">Tautan cepat</p>
+                <nav aria-label="Navigasi footer">
+                    <Link href="/profil-sekolah">Profil Sekolah</Link>
+                    <Link href="/program">Program</Link>
+                    <Link href="/ppdb">PPDB</Link>
+                    <Link href="/berita">Berita</Link>
+                    <Link href="/galeri">Galeri</Link>
+                    <Link href="/login">Portal Login</Link>
+                </nav>
+            </div>
+            <div class="contact-list">
+                <p class="footer-heading">Kontak resmi</p>
+                <p v-if="school.address">{{ school.address }}</p>
+                <a v-if="school.phone" :href="'tel:' + school.phone">{{ school.phone }}</a>
+                <a v-if="school.email" :href="'mailto:' + school.email">{{ school.email }}</a>
+            </div>
         </footer>
     </main>
 </template>
@@ -549,5 +594,59 @@ const formatDate = (value?: string | null) => value
     .public-home .home-life { padding: 2.5rem 0; }
     .public-home .home-life-grid a:nth-child(n+2) { display: none; }
     .public-home .home-admissions { align-items: flex-start; flex-direction: column; margin-top: 3rem; }
+}
+.public-home .hero-copy h1 { font-size: clamp(2.2rem, 4.4vw, 3.85rem); line-height: 1.08; letter-spacing: -.04em; }
+.public-home .hero-actions { flex-wrap: wrap; gap: .85rem 1.15rem; }
+.public-home .secondary-button { padding: .82rem 1.05rem; color: var(--deep); background: transparent; border: 1px solid color-mix(in srgb, var(--deep) 28%, transparent); border-radius: .45rem; font-size: .82rem; font-weight: 700; text-decoration: none; }
+.public-home .secondary-button:hover { background: color-mix(in srgb, var(--deep) 6%, transparent); }
+.audience-pathways { width: min(1120px, calc(100% - 3rem)); margin: 0 auto 3.5rem; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .9rem; }
+.pathway-card { display: grid; gap: .35rem; align-content: start; padding: 1.1rem 1.15rem; border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent); border-radius: .85rem; background: #fff; text-decoration: none; color: var(--ink); transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.pathway-card:hover { transform: translateY(-2px); border-color: var(--deep); box-shadow: 0 10px 24px rgb(15 23 42 / .07); }
+.pathway-tag { color: var(--gold); font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.pathway-card strong { font-size: .95rem; line-height: 1.3; }
+.pathway-card small { color: var(--muted); font-size: .78rem; line-height: 1.45; }
+.pathway-portal { background: color-mix(in srgb, var(--deep) 5%, #fff); border-color: color-mix(in srgb, var(--deep) 22%, transparent); }
+.public-home .public-footer { display: grid; grid-template-columns: 1.2fr .9fr 1fr; gap: 2rem; align-items: start; }
+.footer-brand h2 { margin: .35rem 0 .5rem; font-size: 1.35rem; }
+.footer-desc { margin: 0; color: var(--muted); font-size: .85rem; line-height: 1.6; max-width: 38ch; }
+.footer-heading { margin: 0 0 .65rem; font-size: .75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.footer-links nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem .8rem; }
+.footer-links a { color: var(--ink); font-size: .84rem; font-weight: 600; text-decoration: none; }
+.footer-links a:hover { color: var(--deep); text-decoration: underline; }
+@media (max-width: 960px) {
+    .audience-pathways { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .public-home .public-footer { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+@media (max-width: 560px) {
+    .audience-pathways { grid-template-columns: 1fr; width: min(1120px, calc(100% - 2rem)); }
+}
+.public-home > section,
+.public-home > .public-footer { width: min(1180px, calc(100% - 3rem)); box-sizing: border-box; }
+.public-home .section-heading h2 { font-family: var(--font-ui); font-size: clamp(1.8rem, 2.7vw, 2.7rem); font-weight: 700; letter-spacing: -.035em; line-height: 1.2; }
+.public-home .section-heading .text-link { flex-shrink: 0; color: var(--deep); }
+.public-home .home-life { padding: 2rem; border: 1px solid var(--public-line-strong); border-radius: 18px; }
+.public-home .explore-section,
+.public-home .content-section { padding-top: 4rem; padding-bottom: 0; }
+.public-home .explore-item strong,
+.public-home .news-body h3,
+.public-home .public-footer h2 { font-family: var(--font-ui); font-weight: 700; letter-spacing: -.02em; }
+.public-home .explore-item strong { font-size: 1.1rem; }
+.public-home .explore-item { box-shadow: none; }
+.public-home .news-card { display: flex; flex-direction: column; box-shadow: none; }
+.public-home .news-body { flex: 1; grid-template-rows: auto auto 1fr auto; padding: 1.25rem; }
+.public-home .news-body h3 { font-size: 1.1rem; line-height: 1.4; }
+.public-home .news-image { flex-shrink: 0; }
+.public-home .public-footer { padding-inline: 0; }
+.public-home .contact-list { min-width: 0; overflow-wrap: anywhere; }
+.public-home .hero-actions > a { min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 600px) {
+    .public-home > section,
+    .public-home > .public-footer { width: calc(100% - 2rem); }
+    .public-home .hero-copy h1 { font-size: clamp(2rem, 8vw, 2.7rem); line-height: 1.15; }
+    .public-home .hero-actions { flex-direction: row; align-items: center; gap: .75rem; }
+    .public-home .home-life { padding: 1.25rem; }
+    .public-home .explore-section,
+    .public-home .content-section { padding-top: 2.5rem; }
+    .public-home .section-heading { margin-bottom: 1.25rem; }
 }
 </style>

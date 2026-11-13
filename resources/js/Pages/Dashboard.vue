@@ -189,13 +189,14 @@ const principalActions = [
     { title: 'Rekap presensi', description: 'Tinjau kehadiran siswa per rombongan belajar.', href: '/akademik/presensi/rekap', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14v14z' },
 ];
 const studentActions = [
-    { title: 'Ruang belajar LMS', description: 'Akses materi pelajaran, modul ajar, dan kumpulkan tugas kelas.', href: '/pembelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
-    { title: 'Jadwal pelajaran', description: 'Lihat agenda belajar harian, waktu sesi, dan ruang kelas.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { title: 'Materi pelajaran', description: 'Akses bahan ajar, modul PDF, dan tandai materi yang sudah dipelajari.', href: '/siswa/materi', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
+    { title: 'Tugas saya', description: 'Pantau tenggat waktu, unggah jawaban, dan periksa catatan revisi.', href: '/siswa/tugas', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+    { title: 'Jadwal saya', description: 'Lihat agenda belajar harian, waktu sesi, dan ruang kelas.', href: '/akademik/jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
     { title: 'Ujian CBT', description: 'Kerjakan asesmen online yang siap diikuti dan tinjau hasilnya.', href: '/ujian', icon: 'M6 3h12v18H6zM9 7h6M9 11h6M9 15h4' },
-    { title: 'Rapor & nilai saya', description: 'Tinjau capaian hasil belajar dan nilai semester aktif.', href: '/penilaian/rapor', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
-    { title: 'Progress belajar mandiri', description: 'Pantau ketuntasan materi, tugas terkirim, dan persentase kehadiran.', href: '/pembelajaran/progress', icon: 'M9 17v-6m4 6V7m4 10V4M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z' },
-    { title: 'Diskusi & chat kelas', description: 'Berinteraksi dengan guru dan teman dalam ruang kelas.', href: '/komunikasi/chat', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z' },
+    { title: 'Progress belajar', description: 'Pantau ketuntasan materi, tugas terkirim, dan persentase kehadiran.', href: '/siswa/progress', icon: 'M9 17v-6m4 6V7m4 10V4M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z' },
+    { title: 'Rapor saya', description: 'Tinjau capaian hasil belajar dan unduh rapor semester aktif.', href: '/penilaian/rapor', icon: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5' },
     { title: 'Kelas daring', description: 'Masuk ke ruang pertemuan virtual interaktif.', href: '/akademik/kelas-daring', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+    { title: 'Diskusi kelas', description: 'Berinteraksi dengan guru dan teman dalam ruang kelas.', href: '/komunikasi/chat', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z' },
 ];
 const fallbackActions = [
     { title: 'Data siswa', description: 'Kelola identitas peserta didik dan penempatan kelas.', href: '/akademik/siswa', icon: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8' },
@@ -374,7 +375,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 
 <template>
     <AppLayout title="Beranda">
-        <section class="view dashboard-view" :class="{ 'is-admin-dashboard': isAdmin }">
+        <section class="view dashboard-view" :class="{ 'is-admin-dashboard': isAdmin, 'is-student-dashboard': isStudent }">
             <header class="dashboard-intro">
                 <div v-if="!isAdmin" class="intro-kicker"><span class="live-pip" />{{ roleLabel }} <span class="slash">/</span> {{ activePeriod }}</div>
                 <div class="intro-row">
@@ -504,6 +505,57 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </article>
             </section>
 
+            <section v-if="isStudent" class="student-overview" aria-labelledby="student-overview-title">
+                <div class="section-heading student-section-heading"><div><span class="eyebrow">Ringkasan belajarmu</span><h2 id="student-overview-title">Yang perlu kamu lihat hari ini</h2></div><span class="workflow-count">{{ activePeriod }}</span></div>
+                <div class="student-overview-grid">
+                    <article class="student-overview-card attendance-card">
+                        <header><span class="student-card-kicker">Kehadiran</span><Link href="/siswa/progress">Lihat progres ↗</Link></header>
+                        <div class="attendance-rate"><strong>{{ roleMetrics.attendance_total ? `${studentAttendancePercent}%` : '—' }}</strong><span>{{ roleMetrics.attendance_total ? 'hadir' : 'belum ada data' }}</span></div>
+                        <div v-if="roleMetrics.attendance_total" class="attendance-meter" role="progressbar" :aria-valuenow="studentAttendancePercent" aria-valuemin="0" aria-valuemax="100" :aria-label="`Kehadiran ${studentAttendancePercent}%`"><span :style="{ width: `${studentAttendancePercent}%` }" /></div>
+                        <p>{{ roleMetrics.attendance_present ?? 0 }} dari {{ roleMetrics.attendance_total ?? 0 }} catatan presensi berstatus hadir.</p>
+                    </article>
+
+                    <article class="student-overview-card assignment-card">
+                        <header><span class="student-card-kicker">Tugas</span><Link href="/siswa/tugas">Buka tugas saya ↗</Link></header>
+                        <div class="assignment-counts">
+                            <div><strong>{{ roleMetrics.assignments_submitted ?? 0 }}</strong><span>Sudah dikumpulkan</span></div>
+                            <div><strong>{{ roleMetrics.assignments_pending ?? 0 }}</strong><span>Belum dikumpulkan</span></div>
+                        </div>
+                        <p>{{ roleMetrics.assignments_total ?? 0 }} tugas diterbitkan untuk kelas aktif.</p>
+                    </article>
+
+                    <article class="student-overview-card student-announcements-card">
+                        <header><span class="student-card-kicker">Pengumuman</span><Link href="/komunikasi">Lihat semua ↗</Link></header>
+                        <ol v-if="latestAnnouncements.length" class="student-announcement-list">
+                            <li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }} · {{ formatDateTime(item.published_at) }}</span></li>
+                        </ol>
+                        <p v-else class="student-announcement-empty">Belum ada pengumuman terbaru untuk kelasmu.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section v-if="isStudent" class="student-shortcuts" aria-labelledby="student-shortcuts-title">
+                <div class="section-heading student-section-heading">
+                    <div>
+                        <span class="eyebrow">Akses cepat belajar</span>
+                        <h2 id="student-shortcuts-title">Semua menu siswa</h2>
+                    </div>
+                    <span class="workflow-count">{{ studentActions.length }} menu</span>
+                </div>
+                <div class="student-shortcuts-grid">
+                    <Link v-for="action in studentActions" :key="action.href" :href="action.href" class="student-shortcut-card">
+                        <span class="student-shortcut-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path :d="action.icon" /></svg>
+                        </span>
+                        <span class="student-shortcut-copy">
+                            <strong>{{ action.title }}</strong>
+                            <small>{{ action.description }}</small>
+                        </span>
+                        <span class="student-shortcut-arrow" aria-hidden="true">↗</span>
+                    </Link>
+                </div>
+            </section>
+
             <section v-if="isPrincipal" class="principal-overview" aria-label="Ikhtisar sekolah">
                 <div class="principal-charts">
                     <section class="principal-chart-panel" aria-labelledby="principal-attendance-title">
@@ -554,7 +606,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </section>
             </section>
 
-            <section v-if="!isTeacher && !isHomeroom && !isPrincipal" class="workflow-section">
+            <section v-if="isAdmin" class="workflow-section">
                 <div v-if="isAdmin" class="section-heading"><div><span class="eyebrow">Aktivitas terbaru</span><h2>Komunikasi & keamanan akun</h2></div></div>
                 <div v-if="isAdmin" class="admin-overview-grid">
                     <section class="admin-overview-card announcement-card">
@@ -565,40 +617,6 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                         <header class="admin-card-header"><div class="admin-card-title"><span class="admin-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 11c1.657 0 3-1.343 3-3V5a3 3 0 00-6 0v3c0 1.657 1.343 3 3 3zm0 0v2m-7 8h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg></span><span class="admin-card-copy"><strong>Log login</strong><span>10 aktivitas login terakhir</span></span></div><Link href="/pengaturan/keamanan" class="admin-card-link">Lihat semua ↗</Link></header>
                         <ol class="admin-list"><li v-for="item in latestLoginLogs" :key="item.id"><span><strong>{{ item.user_name }}</strong><small>{{ item.ip_address ?? 'IP tidak tersedia' }}</small></span><time :class="item.status === 'success' ? 'login-success' : 'login-failed'">{{ item.status === 'success' ? 'Berhasil' : 'Gagal' }} · {{ formatDateTime(item.created_at) }}</time></li><li v-if="!latestLoginLogs.length" class="admin-empty">Belum ada log login.</li></ol>
                     </section>
-                </div>
-                <div v-else-if="isStudent" class="student-overview">
-                    <div class="section-heading student-section-heading"><div><span class="eyebrow">Ringkasan belajarmu</span><h2>Yang perlu kamu lihat hari ini</h2></div><span class="workflow-count">{{ activePeriod }}</span></div>
-                    <div class="student-overview-grid">
-                        <article class="student-overview-card attendance-card">
-                            <header><span class="student-card-kicker">Kehadiran</span><Link href="/pembelajaran/progress">Lihat progres ↗</Link></header>
-                            <div class="attendance-rate"><strong>{{ studentAttendancePercent }}%</strong><span>hadir</span></div>
-                            <div class="attendance-meter" role="progressbar" :aria-valuenow="studentAttendancePercent" aria-valuemin="0" aria-valuemax="100" :aria-label="`Kehadiran ${studentAttendancePercent}%`"><span :style="{ width: `${studentAttendancePercent}%` }" /></div>
-                            <p>{{ roleMetrics.attendance_present ?? 0 }} dari {{ roleMetrics.attendance_total ?? 0 }} catatan presensi berstatus hadir.</p>
-                        </article>
-
-                        <article class="student-overview-card assignment-card">
-                            <header><span class="student-card-kicker">Tugas</span><Link href="/pembelajaran">Buka ruang belajar ↗</Link></header>
-                            <div class="assignment-counts">
-                                <div><strong>{{ roleMetrics.assignments_submitted ?? 0 }}</strong><span>Sudah dikumpulkan</span></div>
-                                <div><strong>{{ roleMetrics.assignments_pending ?? 0 }}</strong><span>Belum dikumpulkan</span></div>
-                            </div>
-                            <p>{{ roleMetrics.assignments_total ?? 0 }} tugas diterbitkan untuk kelas aktif.</p>
-                        </article>
-
-                        <article class="student-overview-card student-announcements-card">
-                            <header><span class="student-card-kicker">Pengumuman</span><Link href="/komunikasi">Lihat semua ↗</Link></header>
-                            <ol v-if="latestAnnouncements.length" class="student-announcement-list">
-                                <li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }} · {{ formatDateTime(item.published_at) }}</span></li>
-                            </ol>
-                            <p v-else class="student-announcement-empty">Belum ada pengumuman terbaru untuk kelasmu.</p>
-                        </article>
-                    </div>
-                </div>
-                <div v-else class="section-heading"><div><span class="eyebrow">Berikutnya</span><h2>{{ isPrincipal ? 'Ringkasan pimpinan' : isOperator ? 'Administrasi sekolah' : isHomeroom ? 'Tugas wali kelas' : isTeacher ? 'Pekerjaan mengajar' : 'Akses cepat' }}</h2></div><span class="workflow-count">{{ secondaryActions.length }} menu</span></div>
-                <div v-if="!isAdmin && !isStudent" class="workflow-list">
-                    <Link v-for="(action, index) in secondaryActions" :key="action.href" :href="action.href" class="workflow-row">
-                        <span class="workflow-index">{{ String(index + 2).padStart(2, '0') }}</span><span class="workflow-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span><span class="workflow-copy"><strong>{{ action.title }}</strong><span>{{ action.description }}</span></span><span class="workflow-arrow" aria-hidden="true">↗</span>
-                    </Link>
                 </div>
             </section>
 
@@ -1179,4 +1197,30 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .is-admin-dashboard .admin-action-group::before { display: none; }
 @media (max-width: 800px) { .is-admin-dashboard .admin-priority-grid { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .is-admin-dashboard .dashboard-intro { min-height: 0; padding: 0 0 1rem; border-radius: 0; } .is-admin-dashboard .intro-row h1 { max-width: none; font-size: 1.8rem; } .is-admin-dashboard .metric-item { min-height: 110px; padding: 1rem; } .is-admin-dashboard .admin-priority-panel { padding: 1.15rem; } }
+.is-student-dashboard .dashboard-intro { margin-bottom: 1.5rem; }
+.is-student-dashboard .intro-row { gap: 1rem; }
+.is-student-dashboard .intro-row p { max-width: 42rem; line-height: 1.6; color: var(--ink-soft); }
+.is-student-dashboard .student-overview { margin-top: 2rem; }
+.is-student-dashboard .student-section-heading { gap: 1rem; flex-wrap: wrap; }
+.is-student-dashboard .student-overview-card { min-height: 210px; padding: 1.35rem; border-radius: var(--card-radius); }
+.is-student-dashboard .student-overview-card > header { align-items: baseline; flex-wrap: wrap; }
+.is-student-dashboard .student-overview-card > header a { font-size: .8rem; white-space: normal; }
+.is-student-dashboard .student-card-kicker { font-size: .95rem; }
+.is-student-dashboard .attendance-rate span, .is-student-dashboard .student-overview-card > p { font-size: .85rem; line-height: 1.55; }
+.is-student-dashboard .student-announcement-list strong { font-size: .875rem; white-space: normal; overflow-wrap: anywhere; }
+.is-student-dashboard .student-announcement-list span, .is-student-dashboard .student-announcement-empty { color: var(--ink-soft); font-size: .78rem; }
+.student-shortcuts { margin-top: 2rem; }
+.student-shortcuts-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .85rem; }
+.student-shortcut-card { display: grid; grid-template-columns: 38px minmax(0, 1fr) 16px; align-items: center; gap: .75rem; min-width: 0; padding: .95rem 1rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--card-radius); box-shadow: var(--card-shadow); text-decoration: none; transition: border-color .16s var(--ease), transform .16s var(--ease); }
+.student-shortcut-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.student-shortcut-icon { display: grid; place-items: center; width: 38px; height: 38px; color: var(--primary); background: var(--primary-soft); border-radius: 10px; }
+.student-shortcut-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; }
+.student-shortcut-copy { display: grid; gap: .2rem; min-width: 0; }
+.student-shortcut-copy strong { font-size: .84rem; font-weight: 800; color: var(--ink); }
+.student-shortcut-copy small { font-size: .72rem; line-height: 1.4; color: var(--ink-soft); }
+.student-shortcut-arrow { color: var(--ink-faint); font-size: .95rem; }
+.student-shortcut-card:hover .student-shortcut-arrow { color: var(--primary); }
+@media (max-width: 1080px) { .student-shortcuts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 800px) { .is-student-dashboard .student-overview-card { min-height: 0; } }
+@media (max-width: 560px) { .is-student-dashboard .intro-row { align-items: flex-start; flex-direction: column; } .is-student-dashboard .student-overview, .student-shortcuts { margin-top: 1.5rem; } .is-student-dashboard .student-overview-card { padding: 1.1rem; } .student-shortcuts-grid { grid-template-columns: 1fr; } }
 </style>

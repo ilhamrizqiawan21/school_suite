@@ -229,7 +229,7 @@ const submitImport = () => {
             </div>
 
             <div class="toolbar panel teacher-filterbar">
-                <label class="table-search">
+                <label class="table-search search-control-shell">
                     <input
                         aria-label="Cari nama, NIP, atau email" v-model="search"
                         @keyup.enter="applyFilters"

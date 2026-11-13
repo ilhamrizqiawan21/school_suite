@@ -414,7 +414,7 @@ const printScores = () => window.print();
                         <p>Isi nilai pada setiap komponen. Nilai akhir dan rata-rata berbobot dihitung otomatis sesuai KKTP.</p>
                     </div>
                     <div class="score-table-tools">
-                        <label class="student-search">
+                        <label class="student-search search-control-shell">
                             <span aria-hidden="true">⌕</span>
                             <input v-model="studentSearch" type="search" placeholder="Cari siswa / NIS" aria-label="Cari siswa atau NIS" />
                         </label>

@@ -469,4 +469,33 @@ class DailyOperationsControllersTest extends TestCase
         $this->assertSame(2, Schedule::where('status', 'draft')->count());
         $this->assertSame(0, Schedule::where('status', 'published')->count());
     }
+
+    public function test_schedule_export_pdf_downloads_and_respects_role_isolation(): void
+    {
+        Schedule::create($this->scheduleData(['school_id' => $this->school->id, 'status' => 'published', 'room' => 'Ruang Terbit 7A']));
+        Schedule::create($this->scheduleData(['school_id' => $this->school->id, 'day_of_week' => 6, 'status' => 'draft', 'room' => 'Ruang Draf 7A']));
+        $otherClass = ClassGroup::create(['school_id' => $this->school->id, 'academic_year_id' => $this->term->academic_year_id, 'grade_level' => 7, 'name' => '7B']);
+        Schedule::create($this->scheduleData(['school_id' => $this->school->id, 'class_group_id' => $otherClass->id, 'day_of_week' => 2, 'status' => 'published', 'room' => 'Ruang Kelas 7B']));
+
+        $adminResponse = $this->actingAs($this->admin)->get('/akademik/jadwal/export/pdf?day_of_week=1&status=published');
+        $adminResponse->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $adminResponse->headers->get('content-type'));
+        $this->assertStringContainsString('jadwal-pelajaran.pdf', (string) $adminResponse->headers->get('content-disposition'));
+
+        $studentResponse = $this->actingAs($this->studentUser)->get('/akademik/jadwal/export/pdf?class_group_id='.$otherClass->id.'&status=draft');
+        $studentResponse->assertOk();
+        $this->assertStringContainsString('application/pdf', (string) $studentResponse->headers->get('content-type'));
+
+        $parentRole = Role::create(['name' => 'parent', 'label' => 'Orang Tua', 'is_system' => true]);
+        $parentUser = User::create([
+            'school_id' => $this->school->id,
+            'role_id' => $parentRole->id,
+            'name' => 'Orang Tua Siswa',
+            'username' => 'ortu',
+            'email' => 'ortu@school.test',
+            'password' => bcrypt('OrtuPass123!'),
+            'is_active' => true,
+        ]);
+        $this->actingAs($parentUser)->get('/akademik/jadwal/export/pdf')->assertForbidden();
+    }
 }

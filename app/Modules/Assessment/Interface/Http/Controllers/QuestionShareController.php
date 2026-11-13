@@ -240,6 +240,7 @@ class QuestionShareController extends Controller
                     'subject_id' => $version->subject_id ?? $source->subject_id, 'teaching_assignment_id' => null,
                     'type' => $version->type, 'jenjang' => $version->jenjang, 'curriculum' => $version->curriculum,
                     'prompt' => $version->prompt, 'indicator_text' => $version->indicator_text,
+                    'source' => $version->source, 'class_label' => $version->class_label,
                     'cognitive_level' => $version->cognitive_level, 'kko_term_id' => $version->kko_term_id,
                     'kko_text' => $version->kko_text, 'options' => $version->options,
                     'matching_pairs' => $version->matching_pairs, 'essay_rubric' => $version->essay_rubric,
@@ -249,6 +250,7 @@ class QuestionShareController extends Controller
                 $copy = ExamQuestion::create($attributes);
                 $copyVersion = $copy->versions()->create([
                     'version_number' => 1, 'type' => $version->type, 'prompt' => $version->prompt,
+                    'source' => $version->source, 'class_label' => $version->class_label,
                     'indicator_text' => $version->indicator_text, 'cognitive_level' => $version->cognitive_level,
                     'kko_term_id' => $version->kko_term_id, 'kko_text' => $version->kko_text,
                     'options' => $version->options, 'matching_pairs' => $version->matching_pairs,
@@ -285,6 +287,7 @@ class QuestionShareController extends Controller
             $copy = QuestionPack::create([
                 'school_id' => $source->school_id, 'created_by' => $request->user()->id,
                 'name' => mb_strimwidth($source->name.' (salinan)', 0, 180), 'description' => $source->description,
+                'document_settings' => $source->document_settings,
                 'jenjang' => $source->jenjang, 'curriculum' => $source->curriculum,
                 'duration_minutes' => $source->duration_minutes, 'randomize_questions' => $source->randomize_questions,
                 'randomize_options' => $source->randomize_options, 'status' => 'draft',

@@ -111,6 +111,9 @@ const formatDate = (value?: string | null) => value
 <style scoped>
 .task-detail-page { max-width: 980px; margin: 0 auto; }
 .page-heading, .section-heading, .heading-actions, .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.page-heading { flex-wrap: wrap; padding: 1.35rem 1.5rem; }
+.page-heading > div:first-child { min-width: 0; flex: 1 1 20rem; }
+.page-heading h1, .task-instructions p, .submission-content, .file-list a { overflow-wrap: anywhere; }
 .heading-actions, .form-actions { flex-wrap: wrap; }
 .task-detail-card { padding: 1.25rem; }
 .task-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
@@ -124,7 +127,7 @@ const formatDate = (value?: string | null) => value
 .status-pill, .task-status-pill { display: inline-flex; width: fit-content; padding: .35rem .65rem; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: .75rem; font-weight: 800; }
 .status-pill { margin-right: 1.25rem; }
 .status-pill.is-success, .task-status-pill.is-success { color: var(--green); background: var(--green-soft); }
-.status-pill.is-warning, .task-status-pill.is-warning { color: #a16207; background: #fef3c7; }
+.status-pill.is-warning, .task-status-pill.is-warning { color: var(--gold); background: var(--gold-soft); }
 .status-pill.is-danger, .task-status-pill.is-danger { color: var(--red); background: var(--red-soft); }
 .submission-date { margin: .9rem 1.25rem 0; color: var(--ink-faint); font-size: .75rem; }
 .submission-content, .file-list, .feedback-box { margin: 1rem 1.25rem 0; }
@@ -137,5 +140,5 @@ const formatDate = (value?: string | null) => value
 .form-hint { margin: -.5rem 0 0; color: var(--ink-faint); font-size: .75rem; }
 .form-error { color: var(--red); font-size: .8rem; }
 .empty-state { padding: 2rem; color: var(--ink-soft); text-align: center; }
-@media (max-width: 700px) { .page-heading, .section-heading { align-items: flex-start; flex-direction: column; } .task-meta-grid { grid-template-columns: 1fr; } .status-pill { margin-right: 0; } }
+@media (max-width: 700px) { .page-heading, .section-heading { align-items: flex-start; flex-direction: column; } .page-heading { padding: 1.2rem; } .page-heading > div:first-child { flex-basis: auto; } .task-meta-grid { grid-template-columns: 1fr; } .status-pill { margin-right: 0; } }
 </style>

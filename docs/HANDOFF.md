@@ -2,6 +2,19 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Duplikasi alur soal Jurnal Guru — 13 November 2026
+
+Rujukan dipatok ke `ilhamrizqiawan21/jurnal-harian-guru`, branch `fitur-lisensi-2-0`, commit `27b2eaaf69c1f8e555fb3198c4150a837500322e`.
+
+- Bank soal: C1–C6, kelas, sumber, pasangan tunggal, impor CSV/XLSX format School Suite maupun PG Jurnal Guru, preview validasi, impor baris valid secara eksplisit, dan melewati duplikat.
+- Paket soal: identitas, kop teks/gambar, A4/F4, portrait/landscape, 1–3 kolom, pratinjau naskah/kunci/kisi-kisi, Word memakai mesin rujukan; PDF menggunakan dialog cetak browser. Snapshot tetap tersimpan saat bank berubah dan saat paket disalin.
+- Analisis soal: mesin hitung dan validasi rujukan, tiga langkah, manual/impor, draf terenkripsi per akun/sekolah, Excel tiga sheet yang dapat diimpor ulang, dan PDF khusus analisis. Excel membersihkan draf, PDF mempertahankannya.
+- Dua migrasi penambahan kolom nullable sudah diterapkan pada MySQL lokal: `2026_11_13_120000` dan `2026_11_13_120100`.
+
+Verifikasi: suite backend 453 tes (451 lulus, 2 dilewati), TypeScript dan build lulus, tes mesin CommonJS/ESM serta XML Word lulus. Pemeriksaan browser memakai SQLite uji terpisah: analisis lima siswa, unduhan Excel/PDF, penyimpanan pengaturan F4 landscape tiga kolom, naskah/kunci/kisi-kisi, dan unduhan Word. Gaya iframe memakai nonce CSP halaman.
+
+Detail adaptasi dan perintah uji tercatat di `resources/js/lib/reference/README.md`. Belum dipublikasikan atau di-commit; perubahan UI lain yang sebelumnya ada di worktree tetap dipertahankan.
+
 ## Tugas 1 — Kompatibilitas dependency PHP 8.3 (27 Oktober 2026)
 
 ### File yang diubah
@@ -883,3 +896,153 @@ Migrasi workflow mengubah constraint nomor surat menjadi berbasis tahun, menamba
 
 ### Rollback
 - Kembalikan perubahan dengan `git checkout -- app/Modules/Admissions/Interface/Routes/web.php app/Modules/Admissions/Interface/Http/Controllers/AdmissionsController.php resources/js/Pages/Admissions/Index.vue tests/Feature/AdmissionsWorkflowTest.php` lalu jalankan `npm run build`.
+
+## Perapihan Tata Letak Halaman Jadwal Pelajaran (Opsi A) & Ekspor PDF (13 November 2026)
+
+### Task dan Requirement
+- **Task**:
+  1. Merapikan halaman **Jadwal Pelajaran** (`/akademik/jadwal`) sesuai **Opsi A** (*Mode Ganda: Papan Mingguan 6 Hari + Tabel Daftar Terstruktur*, dilengkapi pencarian cepat, filter hari & status, serta tata letak kartu sesi yang rapi tanpa bertumpuk/terpotong).
+  2. Menambahkan fitur **Ekspor ke PDF** (`/akademik/jadwal/export/pdf`) pada halaman Jadwal Pelajaran yang menghormati filter aktif dan batasan otorisasi per peran.
+- **Requirement ID**: `SS-F-004` (penyusunan jadwal, deteksi konflik, penerbitan draf, ekspor jadwal), `DESIGN.md` (Calm Academic OS), `AI_RULES.md`.
+
+### Ringkasan Perubahan
+1. **Mode Tampilan Ganda (*Papan Mingguan* & *Tabel Daftar*) di `resources/js/Pages/Academic/Schedules/Index.vue`**:
+   - **Papan Mingguan**: Menampilkan 6 hari sekolah aktif (Senin–Sabtu) secara proporsional tanpa memaksa *horizontal scroll* sempit (3 kolom di layar menengah, 6 kolom di layar lebar). Hari Minggu disembunyikan secara bawaan jika kosong dan dapat dimunculkan lewat opsi *Tampilkan Minggu* (atau otomatis tampil bila memiliki jadwal).
+   - **Tabel Daftar Terstruktur**: Menyajikan alternatif tabel berurutan (kolom *Hari, Jam, Mata Pelajaran, Rombel, Guru Pengajar, Ruang/Lab, Status, Aksi*) agar memudahkan pemindaian puluhan slot jadwal sekaligus.
+2. **Perapihan Hierarki Kartu Sesi Jadwal**:
+   - Memisahkan elemen ke dalam 4 baris yang terstruktur rapi: (1) *Jam & lencana Status (Terbit/Draf)*, (2) *Nama & Kode Mata Pelajaran*, (3) *Chip Rombel & Ruangan/Lab*, dan (4) *Nama Guru Pengajar & Tombol Aksi Ikon (Ubah/Hapus)* di sudut kanan bawah sehingga tidak lagi saling bertumpuk di baris atas.
+   - Menambahkan tombol pintas `+` pada header setiap hari untuk langsung membuka formulir tambah slot jadwal pada hari tersebut.
+3. **Pencarian Cepat, Filter Hari (Pills), dan Filter Status**:
+   - Menambahkan kotak pencarian instan (*Mapel, kode, guru, kelas, ruang*), tombol filter per hari (*Semua Hari, Senin..Sabtu*) lengkap dengan penghitung sesi, serta filter status (*Semua, Terbit, Draf*).
+   - Memperbaiki *override* border di `resources/css/app.css` dan `resources/css/modern-ui.css` agar indikator aksen kiri kartu sesi tetap tampil jelas di mode terang maupun gelap.
+4. **Fitur Ekspor Jadwal Pelajaran ke PDF (`/akademik/jadwal/export/pdf`)**:
+   - Menambahkan rute `GET /akademik/jadwal/export/pdf` (`academic.schedules.export.pdf`) di `app/Modules/Academic/Interface/Routes/web.php` dengan middleware `['throttle:sensitive', 'role:admin,operator,principal,teacher,homeroom,student']`.
+   - Menambahkan method `ScheduleController::exportPdf()` yang menghasilkan dokumen PDF A4 Landscape via `Barryvdh\DomPDF\Facade\Pdf` dari template `resources/views/academic/schedules-export.blade.php`.
+   - Mendukung penerusan filter aktif (`term_id`, `class_group_id`, `teacher_id`, `day_of_week`, `status`, dan `search`) serta mengisolasi role `student` agar hanya dapat mengekspor jadwal `published` dari rombel aktifnya sendiri pada semester aktif.
+   - Menambahkan tombol **Ekspor PDF** (`.file-action-button--pdf`) di header halaman `resources/js/Pages/Academic/Schedules/Index.vue` yang menyertakan query filter aktif secara dinamis.
+
+### File & Migrasi yang Disentuh
+- `app/Modules/Academic/Interface/Routes/web.php`
+- `app/Modules/Academic/Interface/Http/Controllers/ScheduleController.php`
+- `resources/views/academic/schedules-export.blade.php`
+- `resources/js/Pages/Academic/Schedules/Index.vue`
+- `resources/css/app.css`
+- `resources/css/modern-ui.css`
+- `tests/Feature/DailyOperationsControllersTest.php`
+- `docs/HANDOFF.md`
+- **Migrasi database**: Tidak ada perubahan skema/migrasi baru.
+
+### Keputusan & Asumsi
+- Sesuai **Opsi A** yang dipilih pengguna, halaman jadwal menyediakan sakelar *Papan Mingguan* dan *Tabel Daftar* tanpa mengubah kontrak props Inertia maupun aturan otorisasi server-side (`ScheduleController` & `SchedulePolicy`).
+- Ekspor PDF menggunakan `SchoolScopeService::getSchoolDetails()` dari modul `Core\Application` untuk menjaga batas arsitektur modular monolith (`ModularBoundaryTest`).
+
+### Tes Beserta Hasil
+- `php artisan test --compact tests/Feature/DailyOperationsControllersTest.php tests/Feature/ScheduleConflictTest.php tests/Feature/RoleMatrixAccessTest.php tests/Architecture/ModularBoundaryTest.php` → **PASS** (41 tests, 337 assertions).
+- `./vendor/bin/pint` → **PASS**.
+- `npm run typecheck` (`vue-tsc --noEmit`) → **PASS** (0 errors).
+- `npm run build` (`vite build`) → **PASS**.
+
+### Risiko Tersisa
+- Tidak ada risiko regresi terdeteksi; seluruh validasi benturan guru/rombel/ruang dan isolasi hak akses per peran di sisi server tetap utuh dan teruji.
+
+### Langkah Review Manual
+1. Buka menu **Akademik → Jadwal Pelajaran** (`/akademik/jadwal`).
+2. Periksa tampilan **Papan Mingguan**: pastikan kartu sesi pada setiap hari menampilkan jam, status, mata pelajaran, kelas, ruang, nama guru, serta tombol ikon Ubah/Hapus dengan rapi tanpa terpotong.
+3. Klik sakelar **Tabel Daftar** di kanan atas untuk melihat seluruh jadwal dalam bentuk tabel terstruktur.
+4. Uji filter cepat menggunakan *pill* nama hari (mis. klik **Senin** untuk fokus 1 hari), filter status (*Terbit* / *Draf*), serta kotak pencarian.
+5. Klik tombol **Ekspor PDF** di bagian kanan atas halaman untuk mengunduh dokumen `jadwal-pelajaran.pdf` sesuai filter yang sedang aktif.
+
+### Rollback
+- Kembalikan perubahan dengan `git checkout -- app/Modules/Academic/Interface/Routes/web.php app/Modules/Academic/Interface/Http/Controllers/ScheduleController.php resources/js/Pages/Academic/Schedules/Index.vue resources/css/app.css resources/css/modern-ui.css tests/Feature/DailyOperationsControllersTest.php && rm -f resources/views/academic/schedules-export.blade.php` lalu jalankan `npm run build`.
+
+## Redesign Halaman Progress Belajar — Opsi A (13 November 2026)
+
+### Task dan Requirement
+- **Task**: Merombak antarmuka dan kontrol halaman **Progress Belajar** (`/pembelajaran/progress` & `/siswa/progress`) sesuai **Opsi A** (*Mode Ganda: Tabel Analitik + Kartu Ringkas per Siswa, Filter Status Cepat & Bar Progres Visual*) agar lebih mudah dipahami, dikontrol, dan dibaca.
+- **Requirement ID**: `SS-F-009` (monitoring progres belajar LMS), `DESIGN.md` (Calm Academic OS), `AI_RULES.md`.
+
+### Ringkasan Perubahan
+1. **Mode Ganda (*Tabel Analitik* & *Kartu per Siswa*) di `resources/js/Pages/Learning/Progress.vue`**:
+   - **Tabel Analitik**: Menampilkan progres tiap siswa per mata pelajaran dilengkapi *progress bar* visual berwarna (`emerald`/`amber`/`rose`), lencana status (*Tuntas, Sedang Berjalan, Perlu Perhatian, Perlu Revisi, Terlambat*), lencana rerata nilai, dan tombol pintas langsung ke **Materi** atau **Tugas** terfilter.
+   - **Kartu Ringkas per Siswa**: Mengelompokkan capaian lintas seluruh mata pelajaran untuk setiap siswa dalam satu kartu ringkas (ketuntasan total, total materi dibaca, tugas dikumpulkan, keterlambatan, revisi, dan daftar rincian nilai per mapel yang dapat diperluas).
+2. **Kontrol Cepat (Filter Status Pills & Pengurutan Prioritas) di `LearningProgressController.php` & `Progress.vue`**:
+   - Menambahkan *Quick Status Filter Pills* (**Semua Status**, **Perlu Perhatian**, **Perlu Revisi**, **Terlambat**, **Belum Tuntas**, **Tuntas 100%**) beserta penghitung jumlah baris otomatis.
+   - Menambahkan opsi pengurutan (*Prioritas Pendampingan, Progres Terendah/Tertinggi, Nilai Tertinggi/Terendah, Nama Siswa A–Z*) dan penerapan filter otomatis saat dropdown Kelas/Mapel/Urutan diubah.
+3. **Kartu KPI dengan Mini Progress Bar & Kepatuhan Hak Akses**:
+   - Memperkaya 4 kartu metrik ringkasan di bagian atas dengan *mini progress bar* dan indikator persentase.
+   - Menyesuaikan tombol pintas LMS menggunakan flag `can_manage_lms` agar peran manajerial (`admin`, `operator`, `principal`) yang memantau progres tidak diarahkan ke rute khusus pengajar/siswa yang membatasi akses.
+
+### File & Migrasi yang Disentuh
+- `app/Modules/Learning/Interface/Http/Controllers/LearningProgressController.php`
+- `resources/js/Pages/Learning/Progress.vue`
+- `tests/Feature/LearningControllersTest.php`
+- `docs/HANDOFF.md`
+- **Migrasi database**: Tidak ada perubahan skema/migrasi baru.
+
+### Keputusan & Asumsi
+- Sesuai **Opsi A** yang dipilih pengguna, halaman menyediakan sakelar tampilan **Tabel Analitik** dan **Kartu per Siswa** bagi peran non-siswa, serta mempertahankan tampilan khusus siswa lengkap dengan rincian kehadiran (`personal_attendance`).
+
+### Tes Beserta Hasil
+- `php artisan test --compact tests/Feature/LearningControllersTest.php tests/Architecture/ModularBoundaryTest.php` → **PASS** (9 tests, 124 assertions).
+- `./vendor/bin/pint` → **PASS**.
+- `npm run typecheck` (`vue-tsc --noEmit`) → **PASS** (0 errors).
+- `npm run build` (`vite build`) → **PASS**.
+
+### Risiko Tersisa
+- Tidak ada risiko regresi terdeteksi; batas modular monolith dan matriks izin peran tetap terjaga.
+
+### Langkah Review Manual
+1. Buka menu **Pembelajaran → Progress Belajar** (`/pembelajaran/progress`).
+2. Periksa kartu ringkasan KPI di bagian atas dan klik *pill* filter cepat (**Perlu Perhatian**, **Perlu Revisi**, **Terlambat**, **Tuntas 100%**) serta dropdown pengurutan (**Urut: Prioritas Pendampingan**).
+3. Periksa **Tabel Analitik**: pastikan bar progres materi & tugas, lencana status, dan lencana nilai tampil jelas dan mudah dipindai.
+4. Klik sakelar **Kartu per Siswa** di kanan atas untuk melihat agregasi capaian belajar per siswa lintas mata pelajaran.
+
+### Rollback
+- Kembalikan perubahan dengan `git checkout -- app/Modules/Learning/Interface/Http/Controllers/LearningProgressController.php resources/js/Pages/Learning/Progress.vue tests/Feature/LearningControllersTest.php` lalu jalankan `npm run build`.
+
+---
+
+## Perapihan Menu & Halaman Role Siswa — Paket Lengkap Opsi A (13 November 2026)
+
+### Task dan Requirement
+- Merapikan seluruh menu dan pengalaman antarmuka role `student` agar konsisten dengan halaman role lain (gaya *Calm Academic OS*: sidebar label ramah siswa, ringkasan metrik, filter pills status, navigasi lintas fitur siswa, dan keterbacaan aksi).
+- Cakupan perubahan murni di lapisan frontend (`resources/js/**`) tanpa mengubah rute backend atau policy otorisasi server-side.
+
+### Ringkasan Perubahan
+1. **Sidebar Siswa (`resources/js/components/SidebarNavigation.vue`)**
+   - Menambahkan mapping `displayName` khusus role `student` sehingga label navigasi menjadi lebih personal dan jelas: *Jadwal Saya*, *Materi Pelajaran*, *Tugas Saya*, *Progress Belajar*, *Ujian CBT*, *Rapor Saya*, *Pengumuman & Agenda*, *Diskusi Kelas*, dan *Profil Saya*.
+2. **Dashboard Siswa (`resources/js/Pages/Dashboard.vue`)**
+   - Memperbarui `studentActions` menjadi 8 akses utama dengan rute kanonis siswa (`/siswa/materi`, `/siswa/tugas`, `/akademik/jadwal`, `/ujian`, `/siswa/progress`, `/penilaian/rapor`, `/akademik/kelas-daring`, `/komunikasi/chat`).
+   - Memperbarui tautan pada seksi `student-overview` ke `/siswa/progress` dan `/siswa/tugas`.
+   - Menambahkan seksi `student-shortcuts` ("Akses cepat belajar / Semua menu siswa") beserta CSS responsif.
+3. **Materi & Tugas LMS Siswa (`resources/js/Pages/Learning/Index.vue`)**
+   - Menambahkan opsi *"Semua mata pelajaran"* (`''`), dukungan query `?subject=`, pencarian `studentSearch`, dan filter status cepat tugas (`all`, `pending`, `submitted`, `revision`, `overdue`).
+   - Menambahkan `.class-workspace-nav` khusus siswa (*Materi Pelajaran*, *Tugas Saya*, *Progress Belajar*, *Kelas Daring*, *Diskusi Kelas*) dan tombol hero *Progress belajar*.
+4. **Ujian CBT Siswa (`resources/js/Pages/Assessment/Exams/Index.vue`)**
+   - Menambahkan 4 kartu ringkasan `.grade-summary` (*Total Ujian*, *Siap Dikerjakan*, *Terjadwal*, *Selesai*), filter pills status (`all`, `ready`, `upcoming`, `done`), serta menampilkan nama mata pelajaran pada `.exam-meta`.
+5. **Kelas Daring Siswa (`resources/js/Pages/Academic/OnlineClasses/Index.vue`)**
+   - Menambahkan tombol pintas hero *Jadwal saya*, 4 kartu ringkasan `.grade-summary` (*Total Pertemuan*, *Sedang Berlangsung*, *Terjadwal*, *Selesai*), filter pills status (`all`, `live`, `scheduled`, `completed`), serta empty state khusus hasil filter.
+
+### File yang Disentuh
+- `resources/js/components/SidebarNavigation.vue`
+- `resources/js/Pages/Dashboard.vue`
+- `resources/js/Pages/Learning/Index.vue`
+- `resources/js/Pages/Assessment/Exams/Index.vue`
+- `resources/js/Pages/Academic/OnlineClasses/Index.vue`
+
+### Keputusan / Asumsi
+- Semua tautan LMS siswa diarahkan ke rute kanonis `/siswa/materi`, `/siswa/tugas`, dan `/siswa/progress` agar state aktif pada `SidebarNavigation.vue` tetap akurat.
+- Tidak ada perubahan migrasi, database, maupun policy otorisasi backend.
+
+### Tes dan Verifikasi
+- `npm run typecheck && npm run build`: **PASS** (0 error TypeScript/Vue, 854 modul ter-transform, build Vite selesai dalam 2.74s).
+- `php artisan test --compact tests/Feature/DashboardAccessTest.php tests/Feature/LearningControllersTest.php tests/Feature/RoleMatrixAccessTest.php tests/Feature/RouteAndPermissionStressTest.php`: **PASS** (41 tests, 863 assertions, 0 failures).
+
+### Langkah Review Manual
+1. Login sebagai akun siswa, periksa sidebar kiri (*Jadwal Saya*, *Materi Pelajaran*, *Tugas Saya*, *Progress Belajar*, *Ujian CBT*, *Rapor Saya*, *Pengumuman & Agenda*, *Diskusi Kelas*, *Profil Saya*).
+2. Cek `/dashboard` (bagian `student-overview` dan `student-shortcuts`).
+3. Cek `/siswa/materi` dan `/siswa/tugas` (filter semua mapel, kotak pencarian, filter pills status tugas, serta navigasi `.class-workspace-nav`).
+4. Cek `/ujian` dan `/akademik/kelas-daring` (4 kartu ringkasan dan filter pills status).
+
+### Rollback
+- Kembalikan perubahan dengan `git checkout -- resources/js/components/SidebarNavigation.vue resources/js/Pages/Dashboard.vue resources/js/Pages/Learning/Index.vue resources/js/Pages/Assessment/Exams/Index.vue resources/js/Pages/Academic/OnlineClasses/Index.vue` lalu jalankan `npm run build`.

@@ -41,7 +41,7 @@ class QuestionBankController extends Controller
         $this->authorizeManager($request);
         $user = $request->user();
         $schoolId = (int) $user->school_id;
-        $filters = $request->only(['search', 'type', 'subject_id', 'jenjang', 'curriculum', 'cognitive_level', 'category_id', 'tag_id', 'status']);
+        $filters = $request->only(['search', 'type', 'subject_id', 'jenjang', 'curriculum', 'cognitive_level', 'category_id', 'tag_id', 'status', 'class_label', 'usage']);
 
         $query = ExamQuestion::query()
             ->leftJoin('subjects', 'subjects.id', '=', 'exam_questions.subject_id')
@@ -57,6 +57,9 @@ class QuestionBankController extends Controller
             ->when(($filters['status'] ?? 'active') === 'active', fn (Builder $q) => $q->where('exam_questions.is_active', true))
             ->when(($filters['status'] ?? 'active') === 'archived', fn (Builder $q) => $q->where('exam_questions.is_active', false))
             ->when(! in_array(($filters['status'] ?? 'active'), ['active', 'archived'], true), fn (Builder $q) => $q)
+            ->when($request->filled('class_label'), fn (Builder $q) => $q->where('exam_questions.class_label', $request->input('class_label')))
+            ->when($request->input('usage') === 'used', fn (Builder $q) => $q->whereHas('examItems'))
+            ->when($request->input('usage') === 'unused', fn (Builder $q) => $q->whereDoesntHave('examItems'))
             ->when($request->filled('type'), fn (Builder $q) => $q->where('exam_questions.type', $filters['type']))
             ->when($request->filled('subject_id'), fn (Builder $q) => $q->where('exam_questions.subject_id', $filters['subject_id']))
             ->when($request->filled('jenjang'), fn (Builder $q) => $q->where('exam_questions.jenjang', $filters['jenjang']))
@@ -203,6 +206,7 @@ class QuestionBankController extends Controller
                 'essay_rubric' => $source->essay_rubric,
                 'correct_answer' => $source->correct_answer,
                 'explanation' => $source->explanation,
+                'source' => $source->source, 'class_label' => $source->class_label,
                 'points' => $source->points,
                 'category_names' => $question->categories()->pluck('name')->all(),
                 'tag_names' => $question->tags()->pluck('name')->all(),
@@ -232,7 +236,7 @@ class QuestionBankController extends Controller
     public function previewImport(Request $request, QuestionSpreadsheetService $spreadsheet): Response|RedirectResponse
     {
         $this->authorizeManager($request);
-        $request->validate(['file' => ['required', 'file', 'mimes:xlsx', 'max:2048']]);
+        $request->validate(['file' => ['required', 'file', 'extensions:xlsx,csv', 'max:5120'], 'jenjang' => ['nullable', Rule::in(['SD', 'SMP', 'SMA'])], 'curriculum' => ['nullable', Rule::in(['merdeka', 'kbc', 'both'])]]);
 
         try {
             $sourceRows = $spreadsheet->read($request->file('file'));
@@ -244,7 +248,7 @@ class QuestionBankController extends Controller
         $previewRows = [];
         $validRows = [];
         foreach ($sourceRows as $source) {
-            [$data, $errors] = $this->normalizeImportRow($source['values'], $schoolId);
+            [$data, $errors] = $this->normalizeImportRow([...$source['values'], 'jenjang' => $source['values']['jenjang'] ?? $request->input('jenjang', 'SMP'), 'curriculum' => $source['values']['curriculum'] ?? $request->input('curriculum', 'merdeka')], $schoolId);
             $previewRows[] = ['row' => $source['row'], 'valid' => $errors === [], 'errors' => $errors, 'prompt' => $data['prompt'] ?? '', 'type' => $data['type'] ?? '', 'correct_answer' => $data['correct_answer'] ?? ''];
             if ($errors === []) {
                 $data['source_row'] = $source['row'];
@@ -284,12 +288,16 @@ class QuestionBankController extends Controller
         try {
             $stage = Cache::get($cacheKey);
             abort_unless(is_array($stage) && $stage['user_id'] === (int) $request->user()->id && $stage['school_id'] === (int) $request->user()->school_id, 404, 'Preview impor sudah kedaluwarsa atau tidak tersedia.');
-            abort_if($stage['errors'] || $stage['rows'] === [], 422, 'Perbaiki semua baris yang bermasalah lalu unggah ulang sebelum impor.');
+            $request->validate(['valid_only' => ['sometimes', 'boolean'], 'skip_duplicates' => ['sometimes', 'boolean']]);
+            abort_if(($stage['errors'] && ! $request->boolean('valid_only')) || $stage['rows'] === [], 422, 'Perbaiki semua baris yang bermasalah lalu unggah ulang sebelum impor.');
 
             $created = DB::transaction(function () use ($request, $stage) {
                 $ids = [];
                 foreach ($stage['rows'] as $row) {
                     unset($row['source_row']);
+                    if ($request->boolean('skip_duplicates') && ExamQuestion::where('school_id', $request->user()->school_id)->where('owner_id', $request->user()->id)->where('prompt', $row['prompt'])->where('type', $row['type'])->exists()) {
+                        continue;
+                    }
                     $data = $this->assertMetadataOwnership($request, $row);
                     $question = ExamQuestion::create($this->rootAttributes($data, $request, 1));
                     $this->createVersion($question, $data, $request);
@@ -351,12 +359,12 @@ class QuestionBankController extends Controller
                 $question->options === null ? '' : json_encode($question->options, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                 $question->matching_pairs === null ? '' : json_encode($question->matching_pairs, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                 $question->essay_rubric, $question->correct_answer, $question->explanation, $question->points,
-                $question->categories->pluck('name')->implode(', '), $question->tags->pluck('name')->implode(', '),
+                $question->categories->pluck('name')->implode(', '), $question->tags->pluck('name')->implode(', '), $question->source, $question->class_label,
             ], null, 'A'.($sheet->getHighestRow() + 1));
         }
         // Force text type for every exported cell so spreadsheet formulas remain inert.
         foreach ($sheet->getRowIterator(1, $sheet->getHighestRow()) as $row) {
-            foreach ($row->getCellIterator('A', 'P') as $cell) {
+            foreach ($row->getCellIterator('A', 'R') as $cell) {
                 $cell->setValueExplicit((string) ($cell->getValue() ?? ''), DataType::TYPE_STRING);
             }
         }
@@ -376,6 +384,12 @@ class QuestionBankController extends Controller
         $pairs = $this->decodeJsonCell($row['matching_pairs_json'] ?? null);
         $subjectCode = trim((string) ($row['subject_code'] ?? ''));
         $subjectId = $subjectCode === '' ? null : DB::table('subjects')->where('school_id', $schoolId)->whereRaw('LOWER(code) = ?', [mb_strtolower($subjectCode)])->value('id');
+        if ($subjectId === null && ! empty($row['subject_name'])) {
+            $subjectId = DB::table('subjects')->where('school_id', $schoolId)->where(fn ($q) => $q->where('name', $row['subject_name'])->orWhere('code', $row['subject_name']))->value('id');
+            if (! $subjectId) {
+                return [[], ['Mapel '.$row['subject_name'].' belum ada di sekolah. Tambahkan mapel terlebih dahulu.']];
+            }
+        }
         $data = [
             'subject_id' => $subjectId,
             'type' => trim((string) ($row['type'] ?? '')),
@@ -390,7 +404,8 @@ class QuestionBankController extends Controller
             'essay_rubric' => $this->nullableText($row['essay_rubric'] ?? null),
             'correct_answer' => $this->nullableText($row['correct_answer'] ?? null),
             'explanation' => $this->nullableText($row['explanation'] ?? null),
-            'points' => $row['points'],
+            'source' => $this->nullableText($row['source'] ?? null), 'class_label' => $this->nullableText($row['class_label'] ?? null),
+            'points' => $row['points'] ?? 1,
             'category_names' => $this->splitNames($row['category_names'] ?? ''),
             'tag_names' => $this->splitNames($row['tag_names'] ?? ''),
         ];
@@ -407,7 +422,7 @@ class QuestionBankController extends Controller
             $data['kko_term_id'] = $term?->id;
             if ($term && empty($data['cognitive_level'])) {
                 $data['cognitive_level'] = $term->cognitive_level;
-            } elseif ($term && $term->cognitive_level !== $data['cognitive_level']) {
+            } elseif ($term && $term->cognitive_level !== $this->cognitiveTier($data['cognitive_level'])) {
                 return [$data, ['Level kognitif tidak sesuai dengan KKO yang dipilih.']];
             }
         } else {
@@ -420,17 +435,19 @@ class QuestionBankController extends Controller
             'curriculum' => ['required', Rule::in(['merdeka', 'kbc', 'both'])],
             'prompt' => ['required', 'string', 'max:10000'],
             'indicator_text' => ['nullable', 'string', 'max:5000'],
-            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3'])],
+            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'])],
             'kko_text' => ['nullable', 'string', 'max:180'],
             'kko_term_id' => ['nullable', 'integer'],
             'options' => ['nullable', 'array', 'min:2', 'max:8'],
             'options.*' => ['required', 'string', 'max:1000', 'distinct'],
-            'matching_pairs' => ['nullable', 'array', 'min:2', 'max:10'],
+            'matching_pairs' => ['nullable', 'array', 'min:1', 'max:10'],
             'matching_pairs.*.left' => ['required', 'string', 'max:1000', 'distinct'],
             'matching_pairs.*.right' => ['required', 'string', 'max:1000', 'distinct'],
             'essay_rubric' => ['nullable', 'string', 'max:5000'],
             'correct_answer' => ['nullable', 'string', 'max:2000'],
             'explanation' => ['nullable', 'string', 'max:5000'],
+            'source' => ['nullable', 'string', 'max:500'],
+            'class_label' => ['nullable', 'string', 'max:120'],
             'points' => ['required', 'numeric', 'min:0.1', 'max:100'],
             'category_names' => ['nullable', 'array', 'max:10'],
             'category_names.*' => ['required', 'string', 'max:100'],
@@ -448,7 +465,7 @@ class QuestionBankController extends Controller
                 $validator->errors()->add('correct_answer', 'Kunci benar/salah harus berupa true atau false.');
             } elseif ($data['type'] === 'matching') {
                 $pairsValid = collect($data['matching_pairs'] ?? [])->every(fn ($pair) => is_array($pair) && ! empty($pair['left']) && ! empty($pair['right']));
-                if (count($data['matching_pairs'] ?? []) < 2 || ! $pairsValid) {
+                if (count($data['matching_pairs'] ?? []) < 1 || ! $pairsValid) {
                     $validator->errors()->add('matching_pairs', 'Menjodohkan membutuhkan matching_pairs_json minimal dua pasangan.');
                 } else {
                     $data['correct_answer'] = json_encode(collect($data['matching_pairs'])->mapWithKeys(fn ($pair) => [$pair['left'] => $pair['right']])->all(), JSON_THROW_ON_ERROR);
@@ -516,7 +533,7 @@ class QuestionBankController extends Controller
             'curriculum' => ['required', Rule::in(['merdeka', 'kbc', 'both'])],
             'prompt' => ['required', 'string', 'max:10000'],
             'indicator_text' => ['nullable', 'string', 'max:5000'],
-            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3'])],
+            'cognitive_level' => ['nullable', Rule::in(['L1', 'L2', 'L3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'])],
             'kko_term_id' => ['nullable', 'integer', 'exists:question_kko_terms,id'],
             'kko_text' => ['nullable', 'string', 'max:180'],
             'category_names' => ['nullable', 'array', 'max:10'],
@@ -525,12 +542,14 @@ class QuestionBankController extends Controller
             'tag_names.*' => ['required', 'string', 'max:60'],
             'options' => ['nullable', 'array', 'min:2', 'max:8'],
             'options.*' => ['required', 'string', 'max:1000', 'distinct'],
-            'matching_pairs' => ['nullable', 'array', 'min:2', 'max:10'],
+            'matching_pairs' => ['nullable', 'array', 'min:1', 'max:10'],
             'matching_pairs.*.left' => ['required', 'string', 'max:1000', 'distinct'],
             'matching_pairs.*.right' => ['required', 'string', 'max:1000', 'distinct'],
             'essay_rubric' => ['nullable', 'string', 'max:5000'],
             'correct_answer' => ['nullable', 'string', 'max:2000'],
             'explanation' => ['nullable', 'string', 'max:5000'],
+            'source' => ['nullable', 'string', 'max:500'],
+            'class_label' => ['nullable', 'string', 'max:120'],
             'points' => ['required', 'numeric', 'min:0.1', 'max:100'],
         ]);
 
@@ -540,7 +559,7 @@ class QuestionBankController extends Controller
         } elseif ($data['type'] === 'true_false') {
             abort_unless(in_array($data['correct_answer'] ?? null, ['true', 'false'], true), 422, 'Pilih kunci Benar atau Salah.');
         } elseif ($data['type'] === 'matching') {
-            abort_unless(count($data['matching_pairs'] ?? []) >= 2, 422, 'Soal menjodohkan membutuhkan minimal dua pasangan.');
+            abort_unless(count($data['matching_pairs'] ?? []) >= 1, 422, 'Soal menjodohkan membutuhkan minimal dua pasangan.');
             $data['correct_answer'] = json_encode(collect($data['matching_pairs'])->mapWithKeys(fn ($pair) => [$pair['left'] => $pair['right']])->all(), JSON_THROW_ON_ERROR);
         } else {
             $data['correct_answer'] = null;
@@ -588,8 +607,8 @@ class QuestionBankController extends Controller
                 ->where(fn ($q) => $q->whereNull('school_id')->orWhere('school_id', $schoolId))->first();
             abort_unless($term, 422, 'KKO tidak tersedia untuk sekolah ini.');
             abort_unless($term->subject_id === null || (! empty($data['subject_id']) && (int) $term->subject_id === (int) $data['subject_id']), 422, 'KKO tidak sesuai dengan mata pelajaran.');
-            abort_unless(empty($data['cognitive_level']) || $term->cognitive_level === $data['cognitive_level'], 422, 'Level kognitif harus sesuai dengan KKO.');
-            $data['cognitive_level'] = $term->cognitive_level;
+            abort_unless(empty($data['cognitive_level']) || $term->cognitive_level === $this->cognitiveTier($data['cognitive_level']), 422, 'Level kognitif harus sesuai dengan KKO.');
+            $data['cognitive_level'] = $data['cognitive_level'] ?: $term->cognitive_level;
             $data['kko_text'] = $term->term;
         }
 
@@ -599,6 +618,11 @@ class QuestionBankController extends Controller
     /** @param array<string, mixed> $data
      * @return array<string, mixed>
      */
+    private function cognitiveTier(?string $level): ?string
+    {
+        return ['C1' => 'L1', 'C2' => 'L1', 'C3' => 'L2', 'C4' => 'L2', 'C5' => 'L3', 'C6' => 'L3'][$level ?? ''] ?? $level;
+    }
+
     private function rootAttributes(array $data, Request $request, int $version): array
     {
         return [
@@ -636,6 +660,7 @@ class QuestionBankController extends Controller
             'essay_rubric' => $data['essay_rubric'] ?? null,
             'correct_answer' => $data['correct_answer'] ?? null,
             'explanation' => $data['explanation'] ?? null,
+            'source' => $data['source'] ?? null, 'class_label' => $data['class_label'] ?? null,
             'points' => $data['points'],
             'subject_id' => $data['subject_id'] ?? null,
             'subject_code_snapshot' => $subject?->code,

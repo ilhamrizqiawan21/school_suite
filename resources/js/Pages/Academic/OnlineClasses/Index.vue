@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface OnlineSession {
     id: number;
@@ -32,23 +32,95 @@ const setStatus = (id: number, status: string) => useForm({ status }).put(`/akad
 
 const formatDateTime = (value: string) => new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(value));
 const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terjadwal', live: 'Sedang berlangsung', completed: 'Selesai', cancelled: 'Dibatalkan' };
+
+const studentStatusFilter = ref<'all' | 'live' | 'scheduled' | 'completed'>('all');
+const studentStats = computed(() => {
+    const items = props.sessions;
+    return {
+        total: items.length,
+        live: items.filter((item) => item.status === 'live').length,
+        scheduled: items.filter((item) => item.status === 'scheduled').length,
+        completed: items.filter((item) => item.status === 'completed').length,
+    };
+});
+const filteredStudentSessions = computed(() => {
+    if (studentStatusFilter.value === 'all') return props.sessions;
+    return props.sessions.filter((item) => item.status === studentStatusFilter.value);
+});
 </script>
 
 <template>
     <AppLayout title="Kelas Daring">
         <Head title="Kelas Daring" />
         <main class="view space-y-6 online-classes-page">
-            <section class="hero-card online-hero">
+            <section class="hero-card online-hero" :class="{ 'student-online-hero': is_student }">
                 <div>
                     <p class="eyebrow">{{ is_student ? 'Kelas saya' : 'Operasi akademik' }} · {{ term?.name ?? 'Belum ada semester aktif' }}</p>
                     <h1>{{ is_student ? 'Pertemuan daring' : 'Kelas & presensi daring' }}</h1>
                     <p>{{ is_student ? 'Lihat jadwal pertemuan kelas dan buka tautan saat waktunya belajar.' : 'Jadwalkan pertemuan, kelola tautan, status, dan kehadiran siswa.' }}</p>
                 </div>
-                <button v-if="can_manage" class="primary-button" type="button" @click="open = true">+ Pertemuan daring</button>
+                <div class="hero-actions">
+                    <Link v-if="is_student" href="/akademik/jadwal" class="ghost-button">Jadwal saya</Link>
+                    <button v-if="can_manage" class="primary-button" type="button" @click="open = true">+ Pertemuan daring</button>
+                </div>
+            </section>
+
+            <section v-if="is_student" class="grade-summary" aria-label="Ringkasan pertemuan daring">
+                <article class="summary-card">
+                    <span>Total Pertemuan</span>
+                    <strong>{{ studentStats.total }}</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Sedang Berlangsung</span>
+                    <strong>{{ studentStats.live }}</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Terjadwal</span>
+                    <strong>{{ studentStats.scheduled }}</strong>
+                </article>
+                <article class="summary-card">
+                    <span>Selesai</span>
+                    <strong>{{ studentStats.completed }}</strong>
+                </article>
+            </section>
+
+            <section v-if="is_student" class="online-filter-pills" aria-label="Filter status pertemuan">
+                <button
+                    type="button"
+                    class="online-filter-pill"
+                    :class="{ 'is-active': studentStatusFilter === 'all' }"
+                    @click="studentStatusFilter = 'all'"
+                >
+                    Semua <b>{{ studentStats.total }}</b>
+                </button>
+                <button
+                    type="button"
+                    class="online-filter-pill"
+                    :class="{ 'is-active': studentStatusFilter === 'live' }"
+                    @click="studentStatusFilter = 'live'"
+                >
+                    Sedang Berlangsung <b>{{ studentStats.live }}</b>
+                </button>
+                <button
+                    type="button"
+                    class="online-filter-pill"
+                    :class="{ 'is-active': studentStatusFilter === 'scheduled' }"
+                    @click="studentStatusFilter = 'scheduled'"
+                >
+                    Terjadwal <b>{{ studentStats.scheduled }}</b>
+                </button>
+                <button
+                    type="button"
+                    class="online-filter-pill"
+                    :class="{ 'is-active': studentStatusFilter === 'completed' }"
+                    @click="studentStatusFilter = 'completed'"
+                >
+                    Selesai <b>{{ studentStats.completed }}</b>
+                </button>
             </section>
 
             <section v-if="is_student" class="online-session-grid" aria-label="Daftar pertemuan daring">
-                <article v-for="item in sessions" :key="item.id" class="online-session-card">
+                <article v-for="item in filteredStudentSessions" :key="item.id" class="online-session-card">
                     <div class="online-session-topline">
                         <span class="online-status" :class="`status-${item.status}`">{{ statusLabel[item.status] }}</span>
                         <span class="online-session-date">{{ formatDateTime(item.starts_at) }}</span>
@@ -61,11 +133,12 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
                         {{ item.status === 'live' ? 'Masuk kelas' : 'Buka tautan pertemuan' }} <span aria-hidden="true">↗</span>
                     </a>
                 </article>
-                <div v-if="sessions.length === 0" class="online-empty">
+                <div v-if="filteredStudentSessions.length === 0" class="online-empty">
                     <span class="online-empty-mark" aria-hidden="true">◷</span>
-                    <h2>Belum ada pertemuan daring</h2>
-                    <p>Jadwal pertemuan untuk kelasmu akan muncul di sini.</p>
-                    <Link href="/akademik/jadwal" class="secondary-button">Lihat jadwal pelajaran</Link>
+                    <h2>{{ sessions.length === 0 ? 'Belum ada pertemuan daring' : 'Tidak ada pertemuan untuk status ini' }}</h2>
+                    <p>{{ sessions.length === 0 ? 'Jadwal pertemuan untuk kelasmu akan muncul di sini.' : 'Pilih filter "Semua" untuk melihat seluruh pertemuan daring.' }}</p>
+                    <Link v-if="sessions.length === 0" href="/akademik/jadwal" class="secondary-button">Lihat jadwal pelajaran</Link>
+                    <button v-else type="button" class="secondary-button" @click="studentStatusFilter = 'all'">Tampilkan semua</button>
                 </div>
             </section>
 
@@ -110,10 +183,14 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
 </template>
 
 <style scoped>
-.online-hero { min-height: 0; padding: 0 0 1.25rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-.online-hero h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
+.online-hero { min-height: 0; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; padding: 1.35rem 1.5rem; color: var(--ink); }
+.online-hero > div { flex: 1 1 20rem; min-width: 0; }
+.student-online-hero > div { padding-left: .75rem; }
+.online-hero h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); overflow-wrap: anywhere; }
 .online-hero p { color: var(--ink-soft); }
 .online-hero .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+.online-hero .primary-button { flex-shrink: 0; }
+@media (max-width: 560px) { .online-hero { padding: 1.2rem; } .student-online-hero > div { padding-left: .5rem; } .online-hero .primary-button { max-width: 100%; } }
 .online-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
 .online-list-heading h2 { margin: 0; color: var(--ink); font-size: 1rem; }
 .online-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: .75rem; }
@@ -149,4 +226,16 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
 @media (max-width: 760px) { .online-session-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.span-2 { grid-column: auto; }.online-session-card { min-height: 0; }.modal-backdrop { align-items: flex-end; }.modal-card { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 /* Center schedule metadata, status, attendance, and actions in the session table. */
 .data-table th:nth-child(n+2), .data-table td:nth-child(n+2) { text-align: center; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.grade-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.summary-card { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.summary-card span { color: var(--ink-3); font-size: 12px; font-weight: 700; }
+.summary-card strong { color: var(--ink); font-size: 24px; line-height: 1.15; letter-spacing: -.03em; }
+.online-filter-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.online-filter-pill { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s ease; }
+.online-filter-pill:hover { border-color: #c6dbce; color: var(--ink); }
+.online-filter-pill.is-active { border-color: #155e43; background: #edf6f0; color: #155e43; }
+.online-filter-pill b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: rgba(15, 23, 42, .07); font-size: 11px; font-weight: 800; }
+.online-filter-pill.is-active b { background: #155e43; color: #fff; }
+@media (max-width: 760px) { .grade-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

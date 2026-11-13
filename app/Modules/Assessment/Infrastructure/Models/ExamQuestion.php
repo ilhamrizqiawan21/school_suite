@@ -13,7 +13,7 @@ class ExamQuestion extends Model
     protected $fillable = [
         'school_id', 'teaching_assignment_id', 'owner_id', 'subject_id', 'type', 'jenjang', 'curriculum',
         'prompt', 'indicator_text', 'cognitive_level', 'kko_term_id', 'kko_text', 'options', 'matching_pairs', 'essay_rubric', 'correct_answer', 'explanation',
-        'points', 'is_active', 'current_version',
+        'points', 'is_active', 'current_version', 'source', 'class_label',
     ];
 
     protected function casts(): array

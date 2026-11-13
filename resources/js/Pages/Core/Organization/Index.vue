@@ -18,6 +18,7 @@ interface OrganizationMember {
 
 const props = defineProps<{ members: OrganizationMember[] }>();
 const page = usePage<SharedProps>();
+const showForm = ref(false);
 const editing = ref<OrganizationMember | null>(null);
 const form = useForm({
     name: '',
@@ -45,11 +46,16 @@ const selectPhoto = (event: Event) => {
 };
 const parentName = (parentId?: number | null) => props.members.find((member) => member.id === parentId)?.name ?? 'Pimpinan utama';
 const reset = () => {
+    showForm.value = false;
     editing.value = null;
     clearUploadPreview();
     form.reset();
     form.photo = null;
     form.clearErrors();
+};
+const openCreate = () => {
+    reset();
+    showForm.value = true;
 };
 const edit = (member: OrganizationMember) => {
     editing.value = member;
@@ -61,7 +67,7 @@ const edit = (member: OrganizationMember) => {
     form.is_published = member.is_published;
     form.photo = null;
     clearUploadPreview();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showForm.value = true;
 };
 const submit = () => {
     const options = { preserveScroll: true, onSuccess: reset };
@@ -87,31 +93,35 @@ const remove = (member: OrganizationMember) => {
                     <h1>Struktur organisasi sekolah</h1>
                     <p>Susun pimpinan dan unit kerja sekolah dalam bentuk hierarki yang akan tampil di profil publik.</p>
                 </div>
+                <button type="button" class="primary-button" @click="openCreate">+ Tambah anggota</button>
             </section>
 
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
             <div v-if="Object.keys(form.errors).length" class="notice error" role="alert">Periksa isian struktur organisasi yang ditandai.</div>
 
-            <section class="panel editor-panel">
-                <div class="section-heading"><div><h2>{{ editing ? 'Ubah anggota organisasi' : 'Tambah anggota organisasi' }}</h2><p>Gunakan atasan untuk membentuk hubungan hierarki. Kosongkan jika menjadi pimpinan utama.</p></div><button v-if="editing" type="button" class="secondary-button" @click="reset">Batal ubah</button></div>
-                <form class="organization-form" @submit.prevent="submit">
-                    <label><span>Nama personel *</span><input v-model="form.name" maxlength="150" required placeholder="Contoh: Drs. Budi Santoso" /><em v-if="form.errors.name">{{ form.errors.name }}</em></label>
-                    <label><span>Jabatan *</span><input v-model="form.position" maxlength="120" required placeholder="Contoh: Kepala Sekolah" /><em v-if="form.errors.position">{{ form.errors.position }}</em></label>
-                    <label><span>Bidang / unit kerja</span><input v-model="form.department" maxlength="120" placeholder="Contoh: Pimpinan atau Kurikulum" /><em v-if="form.errors.department">{{ form.errors.department }}</em></label>
-                    <label class="photo-field"><span>Foto personel</span><div class="file-picker"><input type="file" accept="image/jpeg,image/png,image/webp" @change="selectPhoto" /><span class="file-picker-button">Pilih foto</span><span class="file-picker-name">{{ form.photo?.name || (editing?.photo_url ? 'Foto saat ini tersimpan' : 'Belum ada foto dipilih') }}</span></div><div v-if="photoPreview" class="photo-preview"><img :src="photoPreview" alt="Pratinjau foto personel" /></div><small>JPG, PNG, atau WebP; maksimal 2 MB. Foto baru akan mengganti foto sebelumnya setelah disimpan.</small><em v-if="form.errors.photo">{{ form.errors.photo }}</em></label>
-                    <label><span>Atasan langsung</span><select v-model="form.parent_id"><option :value="null">Pimpinan utama</option><option v-for="member in parentOptions" :key="member.id" :value="member.id">{{ member.name }} — {{ member.position }}</option></select><em v-if="form.errors.parent_id">{{ form.errors.parent_id }}</em></label>
-                    <label><span>Urutan tampil</span><input v-model.number="form.sort_order" type="number" min="0" max="999" /><em v-if="form.errors.sort_order">{{ form.errors.sort_order }}</em></label>
-                    <label class="publish-choice"><input v-model="form.is_published" type="checkbox" /><span><strong>Tampilkan di profil publik</strong><small>Matikan untuk menyimpan data internal tanpa menampilkannya kepada pengunjung.</small></span></label>
-                    <div class="form-actions"><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambah ke struktur' }}</button></div>
-                </form>
-            </section>
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="org-modal-title" class="modal-backdrop" @click.self="reset" @keydown.esc="reset">
+                <section class="modal-card editor-panel">
+                    <div class="section-heading"><div><h2 id="org-modal-title">{{ editing ? 'Ubah anggota organisasi' : 'Tambah anggota organisasi' }}</h2><p>Gunakan atasan untuk membentuk hubungan hierarki. Kosongkan jika menjadi pimpinan utama.</p></div><button type="button" class="modal-close" aria-label="Tutup formulir organisasi" @click="reset">×</button></div>
+                    <form class="organization-form" @submit.prevent="submit">
+                        <label><span>Nama personel *</span><input v-model="form.name" maxlength="150" required placeholder="Contoh: Drs. Budi Santoso" /><em v-if="form.errors.name">{{ form.errors.name }}</em></label>
+                        <label><span>Jabatan *</span><input v-model="form.position" maxlength="120" required placeholder="Contoh: Kepala Sekolah" /><em v-if="form.errors.position">{{ form.errors.position }}</em></label>
+                        <label><span>Bidang / unit kerja</span><input v-model="form.department" maxlength="120" placeholder="Contoh: Pimpinan atau Kurikulum" /><em v-if="form.errors.department">{{ form.errors.department }}</em></label>
+                        <label class="photo-field"><span>Foto personel</span><div class="file-picker"><input type="file" accept="image/jpeg,image/png,image/webp" @change="selectPhoto" /><span class="file-picker-button">Pilih foto</span><span class="file-picker-name">{{ form.photo?.name || (editing?.photo_url ? 'Foto saat ini tersimpan' : 'Belum ada foto dipilih') }}</span></div><div v-if="photoPreview" class="photo-preview"><img :src="photoPreview" alt="Pratinjau foto personel" /></div><small>JPG, PNG, atau WebP; maksimal 2 MB. Foto baru akan mengganti foto sebelumnya setelah disimpan.</small><em v-if="form.errors.photo">{{ form.errors.photo }}</em></label>
+                        <label><span>Atasan langsung</span><select v-model="form.parent_id"><option :value="null">Pimpinan utama</option><option v-for="member in parentOptions" :key="member.id" :value="member.id">{{ member.name }} — {{ member.position }}</option></select><em v-if="form.errors.parent_id">{{ form.errors.parent_id }}</em></label>
+                        <label><span>Urutan tampil</span><input v-model.number="form.sort_order" type="number" min="0" max="999" /><em v-if="form.errors.sort_order">{{ form.errors.sort_order }}</em></label>
+                        <label class="publish-choice"><input v-model="form.is_published" type="checkbox" /><span><strong>Tampilkan di profil publik</strong><small>Matikan untuk menyimpan data internal tanpa menampilkannya kepada pengunjung.</small></span></label>
+                        <div class="form-actions"><button type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambah ke struktur' }}</button></div>
+                    </form>
+                </section>
+            </div>
 
             <section class="panel organization-list">
                 <div class="section-heading"><div><h2>Peta organisasi</h2><p>{{ members.length }} anggota tersimpan. Kedalaman kartu menunjukkan hubungan atasan dan bawahan.</p></div></div>
                 <div v-if="members.length" class="member-list">
                     <article v-for="member in members" :key="member.id" class="member-card" :style="{ '--depth': member.depth }">
                         <div class="member-rail" aria-hidden="true" />
-                        <div class="member-avatar"><img v-if="member.photo_url" :src="member.photo_url" :alt="`Foto ${member.name}`" /><span v-else>{{ member.name.slice(0, 1) }}</span></div><div class="member-content"><div class="member-heading"><div><span class="member-position">{{ member.position }}</span><h3>{{ member.name }}</h3></div><span class="status" :class="member.is_published ? 'published' : 'hidden'">{{ member.is_published ? 'Publik' : 'Internal' }}</span></div><p>{{ member.department || 'Unit kerja belum diisi' }} · Atasan: {{ parentName(member.parent_id) }}</p></div>
+                        <div class="member-avatar"><img v-if="member.photo_url" :src="member.photo_url" :alt="`Foto ${member.name}`" /><span v-else>{{ member.name.slice(0, 1) }}</span></div><div class="member-content"><div class="member-heading"><div><span class="member-position">{{ member.position }}</span><h3>{{ member.name }}</h3></div></div><p>{{ member.department || 'Unit kerja belum diisi' }} · Atasan: {{ parentName(member.parent_id) }}</p></div>
+                        <span class="status" :class="member.is_published ? 'published' : 'hidden'">{{ member.is_published ? 'Publik' : 'Internal' }}</span>
                         <div class="member-actions"><button type="button" class="text-button" @click="edit(member)">Ubah</button><button type="button" class="text-button danger" @click="remove(member)">Hapus</button></div>
                     </article>
                 </div>
@@ -127,6 +137,10 @@ const remove = (member: OrganizationMember) => {
 .organization-page .hero-card { background: var(--surface); border-radius: 14px; box-shadow: none; }
 .organization-page .editor-panel, .organization-page .organization-list { padding: clamp(1rem, 2.5vw, 1.5rem); border-radius: 14px; box-shadow: none; }
 .organization-form label input:not([type=checkbox]), .organization-form select { background: var(--surface); border-color: var(--line-strong); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
+.modal-card { width: min(680px, 100%); max-height: 90dvh; overflow-y: auto; border: 1px solid var(--line); background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25) !important; }
+.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.form-actions { gap: .65rem; }
 .organization-page .file-picker { min-height: 48px; background: var(--surface); border-color: var(--line-strong); }
 .organization-form input:focus-visible, .organization-form select:focus-visible, .organization-page button:focus-visible, .organization-page .file-picker:focus-within { outline: 3px solid var(--primary); outline-offset: 2px; }
 .member-card { background: var(--surface); border-radius: 12px; }
@@ -134,4 +148,14 @@ const remove = (member: OrganizationMember) => {
 .member-actions .text-button:hover { background: var(--primary-soft); }
 .member-actions .text-button.danger:hover { background: var(--red-soft); }
 @media (max-width: 650px) { .member-card { margin-left: min(calc(var(--depth) * .5rem), 1.5rem); } }
+.member-card { grid-template-columns: 5px 44px minmax(0,1fr) 5rem auto; }
+.member-card > .status { justify-self: center; text-align: center; }
+.status.published { color: var(--green); background: var(--green-soft); }
+.notice.success { color: var(--green); background: var(--green-soft); border-color: var(--line); }
+.notice.error { color: var(--red); background: var(--red-soft); border-color: var(--line); }
+@media (max-width:650px) {
+    .member-card { grid-template-columns: 5px 44px minmax(0,1fr) auto; }
+    .member-card > .status { grid-column: 4; grid-row: 1; }
+    .member-actions { grid-column: 3 / -1; }
+}
 </style>

@@ -3,6 +3,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
+import ExamDocumentSettings from '@/components/ExamDocumentSettings.vue';
+// @ts-expect-error Reference JavaScript module.
+import { normalizeExamPackage } from '@/lib/reference/examPackage.js';
 
 type QuestionOption = {
     id: number;
@@ -28,6 +31,7 @@ type PackItemForm = {
 };
 
 type PackForm = {
+    document_settings: any;
     name: string;
     description: string;
     jenjang: string;
@@ -44,6 +48,7 @@ const props = defineProps<{
     filters: Record<string, string>;
     question_options: QuestionOption[];
     capabilities: { manage_all: boolean };
+    document_defaults?: any;
 }>();
 
 const showForm = ref(false);
@@ -52,6 +57,7 @@ const questionSearch = ref('');
 const packError = ref('');
 const filterForm = ref({ ...props.filters });
 const blank = (): PackForm => ({
+    document_settings: normalizeExamPackage({ kop: props.document_defaults?.kop }, props.document_defaults),
     name: '', description: '', jenjang: '', curriculum: 'merdeka', duration_minutes: '',
     randomize_questions: false, randomize_options: false, status: 'draft', items: [],
 });
@@ -96,6 +102,7 @@ function openEdit(pack: any) {
     editing.value = pack.id;
     form.clearErrors();
     form.defaults({
+        document_settings: normalizeExamPackage({ kop: props.document_defaults?.kop, ...pack.document_settings }, props.document_defaults),
         name: pack.name,
         description: pack.description ?? '',
         jenjang: pack.jenjang,
@@ -169,6 +176,7 @@ function submit() {
     packError.value = '';
     const payload = {
         ...form.data(),
+        document_settings: Object.fromEntries(['mapel', 'kelas', 'semester', 'tahunPelajaran', 'tanggal', 'waktu', 'paper', 'kop'].map(key => [key, form.document_settings[key]])),
         duration_minutes: form.duration_minutes === '' ? null : form.duration_minutes,
         items: form.items.map((item) => ({ question_id: item.question_id, points: item.points })),
     };
@@ -213,7 +221,7 @@ function typeLabel(type: string) {
 
             <section class="panel filters-panel">
                 <form class="filters-grid" @submit.prevent="applyFilters">
-                    <label class="search-field">Cari paket<input v-model="filterForm.search" placeholder="Nama atau deskripsi paket" /></label>
+                    <label class="search-field">Cari paket<input v-model="filterForm.search" class="search-control" type="search" placeholder="Nama atau deskripsi paket" /></label>
                     <label>Jenjang<select v-model="filterForm.jenjang"><option value="">Semua jenjang</option><option value="SD">SD</option><option value="SMP">SMP</option><option value="SMA">SMA</option></select></label>
                     <label>Kurikulum<select v-model="filterForm.curriculum"><option value="">Semua kurikulum</option><option value="merdeka">Merdeka</option><option value="kbc">KBC</option><option value="both">Merdeka & KBC</option></select></label>
                     <label>Status<select v-model="filterForm.status"><option value="all">Semua status</option><option value="draft">Draf</option><option value="active">Aktif</option><option value="archived">Arsip</option></select></label>
@@ -229,6 +237,7 @@ function typeLabel(type: string) {
                             <h2>{{ pack.name }}</h2>
                         </div>
                         <div class="pack-actions">
+                            <Link class="text-button" :href="`/penilaian/paket-soal/${pack.id}/dokumen`">Pratinjau & ekspor</Link>
                             <RowActionButton v-if="pack.status !== 'archived'" action="edit" label="Ubah" @click="openEdit(pack)" />
                             <button type="button" class="text-button" @click="action(`/penilaian/paket-soal/${pack.id}/duplikasi`, 'Duplikasi paket ini sebagai draf baru?')">Duplikasi</button>
                             <Link class="text-button" :href="`/penilaian/berbagi-soal?type=pack&id=${pack.id}`">Bagikan</Link>
@@ -265,11 +274,12 @@ function typeLabel(type: string) {
                     <label class="toggle-row"><input v-model="form.randomize_questions" type="checkbox" /> Acak urutan soal saat digunakan</label>
                     <label class="toggle-row"><input v-model="form.randomize_options" type="checkbox" /> Acak opsi saat digunakan</label>
                 </section>
+                <ExamDocumentSettings v-model="form.document_settings" />
 
                 <section class="item-builder">
                     <div class="item-builder-heading"><div><h3>Soal dalam paket</h3><p>{{ form.items.length }} soal · {{ totalPoints.toLocaleString('id-ID') }} poin total</p></div></div>
                     <div class="question-picker">
-                        <label>Cari soal yang tersedia<input v-model="questionSearch" placeholder="Cari teks soal atau mapel" /></label>
+                        <label>Cari soal yang tersedia<input v-model="questionSearch" class="search-control" type="search" placeholder="Cari teks soal atau mapel" /></label>
                         <div class="question-options">
                             <button v-for="question in availableQuestions" :key="question.id" type="button" class="question-option" :disabled="!question.version_available" @click="addQuestion(question)">
                                 <span><b>{{ question.subject_code ? `${question.subject_code} · ` : '' }}{{ typeLabel(question.type) }}</b><small>{{ question.prompt }}</small></span><strong>{{ question.version_available ? '+ Tambah' : 'Versi belum tersimpan' }}</strong>

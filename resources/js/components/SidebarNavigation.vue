@@ -193,6 +193,21 @@ const currentUrl = computed(() => page.url);
 const userId = computed(() => (page.props.auth as any)?.user?.id as number | undefined);
 const currentRole = computed(() => (page.props.auth as any)?.user?.role as string | undefined);
 const displayName = (item: NavItem) => {
+    if (currentRole.value === 'student') {
+        return ({
+            schedules: 'Jadwal Saya',
+            'online-classes': 'Kelas Daring',
+            'learning-materials': 'Materi Pelajaran',
+            'learning-assignments': 'Tugas Saya',
+            'learning-progress': 'Progress Belajar',
+            exams: 'Ujian CBT',
+            reports: 'Rapor Saya',
+            communication: 'Pengumuman & Agenda',
+            'communication-chat': 'Diskusi Kelas',
+            profile: 'Profil Saya',
+        } as Record<string, string>)[item.key] ?? item.name;
+    }
+
     if (currentRole.value !== 'principal') return item.name;
 
     return ({
