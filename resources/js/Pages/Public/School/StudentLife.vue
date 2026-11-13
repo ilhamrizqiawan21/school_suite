@@ -38,6 +38,10 @@ defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
                     <Link href="/galeri" class="card-link">Buka galeri →</Link>
                 </article>
             </div>
+            <section v-if="gallery.length" class="life-gallery" aria-labelledby="life-gallery-title">
+                <div class="life-gallery-heading"><div><span>Kehidupan di sekolah</span><h2 id="life-gallery-title">Momen dari komunitas sekolah.</h2></div><Link href="/galeri">Lihat semua foto →</Link></div>
+                <div class="life-gallery-grid"><figure v-for="photo in gallery.slice(0, 3)" :key="photo.id"><img :src="photo.url" :alt="photo.title || photo.caption || 'Kegiatan sekolah'" loading="lazy" /><figcaption>{{ photo.title || photo.caption || 'Kegiatan sekolah' }}</figcaption></figure></div>
+            </section>
         </section>
     </PublicSectionLayout>
 </template>
@@ -50,4 +54,15 @@ defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
 .card-number { color: #9a7329; font-size: .75rem; font-weight: 800; letter-spacing: .08em; }.life-card h2 { margin: 0; font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; }.life-card p { margin: 0; color: #526673; font-size: .9rem; line-height: 1.65; }.card-link { align-self: end; margin-top: auto; color: #9a7329; font-size: .85rem; font-weight: 800; text-decoration: none; }
 @media (max-width: 800px) { .life-grid { grid-template-columns: 1fr 1fr; }.life-card-feature { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .life-grid { grid-template-columns: 1fr; }.life-card-feature { grid-column: auto; } }
+.life-gallery { margin-top: clamp(2.5rem, 6vw, 5rem); }
+.life-gallery-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }
+.life-gallery-heading span { color: var(--public-primary); font-size: .8rem; font-weight: 700; }
+.life-gallery-heading h2 { margin: .5rem 0 0; color: var(--public-ink); font-size: clamp(1.5rem, 2.6vw, 2.4rem); letter-spacing: -.035em; }
+.life-gallery-heading a { color: var(--public-primary); font-size: .85rem; font-weight: 700; }
+.life-gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
+.life-gallery-grid figure { min-width: 0; margin: 0; }
+.life-gallery-grid img { width: 100%; aspect-ratio: 1.5; object-fit: cover; border-radius: 12px; }
+.life-gallery-grid figcaption { margin-top: .6rem; color: var(--public-ink); font-size: .85rem; font-weight: 600; }
+@media (max-width: 800px) { .life-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .life-gallery-heading { align-items: start; flex-direction: column; }.life-gallery-grid { grid-template-columns: 1fr; } }
 </style>

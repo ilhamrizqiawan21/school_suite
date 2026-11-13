@@ -119,6 +119,7 @@ const form = useForm({
     birth_place: '',
     birth_date: '',
     religion: 'Islam',
+    address: '',
     parent_phone: '',
     parent_name: '',
     class_group_id: '',
@@ -142,6 +143,7 @@ const editForm = useForm({
     birth_place: '',
     birth_date: '',
     religion: 'Islam',
+    address: '',
     parent_phone: '',
     parent_name: '',
     status: 'active',
@@ -157,13 +159,16 @@ const openEdit = (student: Student) => {
     editForm.birth_place = student.birth_place || '';
     editForm.birth_date = student.birth_date ? student.birth_date.slice(0, 10) : '';
     editForm.religion = student.religion || 'Islam';
+    editForm.address = student.address || '';
     editForm.parent_phone = student.parent_phone || '';
     editForm.parent_name = student.parent_name || '';
     editForm.status = student.status;
+    editForm.defaults();
     showEditModal.value = true;
 };
 
-const closeEdit = () => {
+const closeEdit = (saved = false) => {
+    if (!saved && editForm.isDirty && !window.confirm('Perubahan belum disimpan. Tutup formulir dan buang perubahan?')) return;
     showEditModal.value = false;
     editingStudent.value = null;
     editForm.reset();
@@ -175,7 +180,7 @@ const submitEdit = () => {
 
     editForm.put(`/akademik/siswa/${editingStudent.value.id}`, {
         preserveScroll: true,
-        onSuccess: closeEdit,
+        onSuccess: () => closeEdit(true),
     });
 };
 
@@ -241,36 +246,39 @@ const deleteStudent = (student: Student) => {
             <div class="page-heading compact-heading">
                 <div>
                     <p class="student-page-kicker">Akademik · Data kesiswaan</p>
-                    <h1 class="student-page-title">Manajemen Data Siswa</h1>
+                    <h1 class="student-page-title">Data siswa</h1>
                     <p class="student-page-summary">
                         {{ can_manage ? 'Kelola data induk siswa, penempatan rombel semester aktif, dan impor massal.' : 'Lihat data induk siswa dan penempatan rombel semester aktif.' }}
                     </p>
+                    <p class="student-mobile-count">{{ stats.active }} siswa aktif · {{ classes.length }} rombel</p>
                 </div>
                 <div class="student-header-actions">
-                    <button v-if="can_manage" type="button" class="student-action-button student-action-add" @click="showAddModal = true">
+                    <button v-if="can_manage" type="button" class="student-action-button student-action-add" aria-label="Tambah siswa" title="Tambah siswa" @click="showAddModal = true">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" /></svg>
-                        Tambah siswa
+                        <span>Tambah siswa</span>
                     </button>
                     <button
                         v-if="can_manage"
                         type="button"
                         @click="showImportModal = true"
                         class="student-action-button student-action-import"
+                        aria-label="Impor siswa"
+                        title="Impor siswa"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        Impor Siswa
+                        <span>Impor siswa</span>
                     </button>
-                    <a :href="exportExcelUrl()" class="student-action-button student-action-export student-action-file file-action-button file-action-button--excel">
+                    <a :href="exportExcelUrl()" class="student-action-button student-action-export student-action-file file-action-button file-action-button--excel" aria-label="Ekspor Excel" title="Ekspor Excel">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414A2 2 0 0018.414 8L14 3.586A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2zM13 3v6h6M8 13h8m-8 4h5" />
                         </svg>
-                        Ekspor Excel
+                        <span>Ekspor Excel</span>
                     </a>
-                    <a :href="exportPdfUrl()" class="student-action-button student-action-export student-action-file file-action-button file-action-button--pdf">
+                    <a :href="exportPdfUrl()" class="student-action-button student-action-export student-action-file file-action-button file-action-button--pdf" aria-label="Ekspor PDF" title="Ekspor PDF">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2zm7 0v5h5M8 14h8m-8 3h6" /></svg>
-                        Ekspor PDF
+                        <span>Ekspor PDF</span>
                     </a>
                 </div>
             </div>
@@ -348,6 +356,7 @@ const deleteStudent = (student: Student) => {
 
             <!-- Table -->
             <div class="table-card panel student-table-card">
+                <div class="student-list-heading"><h2>Daftar peserta didik</h2><span>{{ students.total }} siswa</span></div>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table student-table w-full text-left border-collapse text-sm">
                         <thead>
@@ -396,20 +405,20 @@ const deleteStudent = (student: Student) => {
                                 <td v-if="can_manage" class="px-5 py-3.5"><span class="student-account-status" :class="`is-${s.account_status ?? 'unavailable'}`">{{ accountStatusLabels[s.account_status ?? 'unavailable'] }}</span></td>
                                 <td v-if="can_manage" class="student-actions-cell px-5 py-3.5">
                                     <div class="student-row-actions">
-                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-edit" aria-label="Edit data siswa" title="Edit data siswa" @click="openEdit(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-edit" :aria-label="`Edit data ${s.name}`" :title="`Edit data ${s.name}`" @click="openEdit(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
                                             </svg>
                                             <span class="sr-only">Edit</span>
                                         </button>
-                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-reset" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? 'Buat sandi sementara baru' : 'Siswa belum memiliki akun'" :title="s.user_id ? 'Buat sandi sementara baru' : 'Siswa belum memiliki akun'" @click="resetPassword(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-reset" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? `Buat sandi sementara baru untuk ${s.name}` : `${s.name} belum memiliki akun`" :title="s.user_id ? `Buat sandi sementara baru untuk ${s.name}` : `${s.name} belum memiliki akun`" @click="resetPassword(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10V7a4 4 0 118 0v3" />
                                             </svg>
                                             <span class="sr-only">Reset password</span>
                                         </button>
-                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-delete" aria-label="Hapus data siswa" title="Hapus data siswa" @click="deleteStudent(s)">
+                                        <button v-if="can_manage" type="button" class="student-row-action student-row-action-delete" :aria-label="`Hapus data ${s.name}`" :title="`Hapus data ${s.name}`" @click="deleteStudent(s)">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
                                             </svg>
@@ -432,21 +441,20 @@ const deleteStudent = (student: Student) => {
                         <div class="student-mobile-top">
                             <div>
                                 <h2>{{ s.name }}</h2>
-                                <p>NIS {{ s.nis }}<span v-if="s.nisn"> · NISN {{ s.nisn }}</span></p>
+                                <p>NIS {{ s.nis }} · {{ s.enrollments?.[0]?.class_group?.name ?? 'Belum ada rombel' }}</p>
                             </div>
-                            <span class="student-mobile-status" :class="s.status === 'active' ? 'is-active' : ''">{{ statusLabels[s.status] ?? s.status }}</span>
                         </div>
                         <div class="student-mobile-details">
-                            <span>{{ s.enrollments?.[0]?.class_group?.name ?? 'Belum ada rombel' }}</span>
+                            <span v-if="s.nisn">NISN {{ s.nisn }}</span>
                             <span>{{ s.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
                             <span v-if="s.parent_name || s.parent_phone">Wali: {{ s.parent_name || '—' }}<span v-if="s.parent_phone"> · {{ s.parent_phone }}</span></span>
                         </div>
                         <p v-if="can_manage" class="student-mobile-password">Status sandi: <span class="student-account-status" :class="`is-${s.account_status ?? 'unavailable'}`">{{ accountStatusLabels[s.account_status ?? 'unavailable'] }}</span></p>
-                        <div v-if="can_manage" class="student-mobile-actions">
+                        <div class="student-mobile-card-footer"><span class="student-mobile-status" :class="s.status === 'active' ? 'is-active' : ''">{{ statusLabels[s.status] ?? s.status }}</span><div v-if="can_manage" class="student-mobile-actions">
                             <button type="button" class="student-row-action-edit" :aria-label="`Edit data ${s.name}`" :title="`Edit data ${s.name}`" @click="openEdit(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
                             <button type="button" class="student-row-action-reset" :disabled="!s.user_id || !['default', 'changed'].includes(s.account_status ?? '')" :aria-label="s.user_id ? `Reset password ${s.name}` : `${s.name} belum memiliki akun`" :title="`Reset sandi ${s.name}`" @click="resetPassword(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-width="2" stroke-linecap="round" d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></button>
                             <button type="button" class="student-mobile-delete" :aria-label="`Hapus data ${s.name}`" :title="`Hapus data ${s.name}`" @click="deleteStudent(s)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg></button>
-                        </div>
+                        </div></div>
                     </article>
                     <p v-if="students.data.length === 0" class="student-mobile-empty">Tidak ada data siswa yang cocok dengan filter.</p>
                 </div>
@@ -519,6 +527,15 @@ const deleteStudent = (student: Student) => {
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div><label for="student-add-birth-place" class="block text-xs font-semibold text-slate-700 mb-1">Tempat lahir</label><input id="student-add-birth-place" v-model="form.birth_place" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                        <div><label for="student-add-birth-date" class="block text-xs font-semibold text-slate-700 mb-1">Tanggal lahir</label><input id="student-add-birth-date" v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div><label for="student-add-religion" class="block text-xs font-semibold text-slate-700 mb-1">Agama</label><input id="student-add-religion" v-model="form.religion" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                        <div><label for="student-add-address" class="block text-xs font-semibold text-slate-700 mb-1">Alamat</label><input id="student-add-address" v-model="form.address" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <label for="student-add-parent" class="block text-xs font-semibold text-slate-700 mb-1">Nama Wali / Orang Tua</label>
                             <input id="student-add-parent" v-model="form.parent_name" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
@@ -548,8 +565,9 @@ const deleteStudent = (student: Student) => {
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Perbarui data</p>
                         <h3 id="student-edit-title" class="text-lg font-bold text-slate-900">Edit data siswa</h3>
+                        <p v-if="editingStudent" class="student-edit-context">{{ editingStudent.name }} · NIS {{ editingStudent.nis }}</p>
                     </div>
-                    <button type="button" @click="closeEdit" class="modal-close-button text-slate-400 hover:text-slate-600" aria-label="Tutup formulir edit siswa">✕</button>
+                    <button type="button" @click="closeEdit()" class="modal-close-button text-slate-400 hover:text-slate-600" aria-label="Tutup formulir edit siswa">✕</button>
                 </div>
 
                 <form @submit.prevent="submitEdit" class="space-y-4">
@@ -584,6 +602,26 @@ const deleteStudent = (student: Student) => {
                         </label>
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label class="text-xs font-semibold text-slate-700">Tempat lahir
+                            <input v-model="editForm.birth_place" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <span v-if="editForm.errors.birth_place" class="mt-1 block text-xs font-medium text-red-600">{{ editForm.errors.birth_place }}</span>
+                        </label>
+                        <label class="text-xs font-semibold text-slate-700">Tanggal lahir
+                            <input v-model="editForm.birth_date" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <span v-if="editForm.errors.birth_date" class="mt-1 block text-xs font-medium text-red-600">{{ editForm.errors.birth_date }}</span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label class="text-xs font-semibold text-slate-700">Agama
+                            <input v-model="editForm.religion" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <span v-if="editForm.errors.religion" class="mt-1 block text-xs font-medium text-red-600">{{ editForm.errors.religion }}</span>
+                        </label>
+                        <label class="text-xs font-semibold text-slate-700">Alamat
+                            <input v-model="editForm.address" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <span v-if="editForm.errors.address" class="mt-1 block text-xs font-medium text-red-600">{{ editForm.errors.address }}</span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <label class="text-xs font-semibold text-slate-700">Nama wali / orang tua
                             <input v-model="editForm.parent_name" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </label>
@@ -592,7 +630,8 @@ const deleteStudent = (student: Student) => {
                         </label>
                     </div>
                     <div class="student-drawer-footer flex justify-end gap-2 border-t pt-4">
-                        <button type="button" @click="closeEdit" class="rounded-lg border px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+                        <span v-if="editForm.isDirty" class="student-unsaved-note">Perubahan belum disimpan</span>
+                        <button type="button" @click="closeEdit()" class="rounded-lg border px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
                         <button type="submit" :disabled="editForm.processing" class="primary-button !text-white disabled:cursor-not-allowed disabled:opacity-50">Simpan perubahan</button>
                     </div>
                 </form>
@@ -651,6 +690,7 @@ const deleteStudent = (student: Student) => {
 .student-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
 .student-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); background: var(--surface); border-color: var(--line); }
 .student-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding-bottom: clamp(18px, 3vw, 30px); background: var(--surface); border-color: var(--line); }
+.student-unsaved-note { align-self: center; margin-right: auto; color: var(--ink-soft); font-size: .75rem; }
 .student-drawer :deep(label), .student-drawer :deep(code) { overflow-wrap: anywhere; }
 .student-drawer :deep(input), .student-drawer :deep(select) { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .student-drawer :deep(input:focus-visible), .student-drawer :deep(select:focus-visible), .student-drawer button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
@@ -659,6 +699,8 @@ const deleteStudent = (student: Student) => {
 @media (max-width: 600px) { .student-overlay { align-items: flex-end; } .student-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 .student-notice-success { color: var(--green); background: var(--green-soft); }
 .student-notice-error { color: var(--red); background: var(--red-soft); }
+.student-edit-context { margin: .3rem 0 0; color: var(--ink-soft); font-size: .8rem; }
+.student-mobile-count { display: none; }
 .student-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .student-stat { display: grid; gap: .3rem; min-width: 0; padding: 1rem 1.2rem; border-top: 3px solid transparent; }
 .student-stat span { color: var(--ink-soft); font-size: .82rem; font-weight: 600; }
@@ -679,7 +721,7 @@ const deleteStudent = (student: Student) => {
 .student-action-file.file-action-button--pdf { color: var(--pdf); background: var(--pdf-soft); border-color: var(--pdf-line); }
 .student-action-file.file-action-button--excel:hover { color: var(--excel); background: color-mix(in srgb, var(--excel-soft) 70%, var(--excel) 30%); border-color: var(--excel); }
 .student-action-file.file-action-button--pdf:hover { color: var(--pdf); background: color-mix(in srgb, var(--pdf-soft) 70%, var(--pdf) 30%); border-color: var(--pdf); }
-.student-action-file > svg { display: none; }
+.student-action-file > svg { display: block; }
 .student-action-add { color: #fff; background: var(--primary); border-color: var(--primary); }
 .student-action-add:hover { color: #fff; background: var(--primary-strong); }
 .student-action-import { color: var(--primary); border-color: var(--primary); }
@@ -687,6 +729,9 @@ const deleteStudent = (student: Student) => {
 .student-page :deep(.toolbar) { gap: .75rem; }
 .modal-close-button { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; border-radius: .65rem; }
 .student-table { min-width: 920px; }
+.student-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
+.student-list-heading h2 { margin: 0; color: var(--ink); font-size: 1rem; font-weight: 700; }
+.student-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: .75rem; white-space: nowrap; }
 .student-table thead { background: var(--surface-subtle); color: var(--ink-faint); }
 .student-table thead th { border-bottom: 1px solid var(--line); font-size: .75rem; font-weight: 700; letter-spacing: .025em; line-height: 1.3; white-space: nowrap; }
 .student-table tbody tr { background: var(--surface); border-bottom: 1px solid var(--line); transition: background-color .18s ease, box-shadow .18s ease; }.student-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface)); box-shadow: inset 3px 0 0 var(--primary); }.student-table td { vertical-align: middle; }
@@ -706,24 +751,35 @@ const deleteStudent = (student: Student) => {
 .student-row-action:disabled { cursor: not-allowed; opacity: .42; }
 .student-mobile-list { display: none; }
 @media (max-width: 720px) {
-    .student-header-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-    .student-action-add { grid-column: 1 / -1; }
+    .student-page-kicker, .student-page-summary, .student-summary-grid { display: none; }
+    .student-mobile-count { display: block; margin: .4rem 0 0; color: var(--ink-soft); font-size: .8rem; }
+    .student-header-actions { display: flex; justify-content: flex-start; width: 100%; }
+    .student-header-actions .student-action-button { width: 44px; height: 44px; padding: 0; }
+    .student-header-actions .student-action-button span { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .student-header-actions .student-action-button svg { display: block; width: 19px; height: 19px; }
+    .student-action-add { order: 4; margin-left: auto; }
+    .student-action-import { order: 3; }
+    .student-action-file.file-action-button--excel { order: 1; }
+    .student-action-file.file-action-button--pdf { order: 2; }
     .table-scroll { display: none; }
-    .student-mobile-list { display: grid; gap: 0; }
-    .student-mobile-card { padding: 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .student-list-heading { display: none; }
+    .student-table-card { background: transparent; border: 0; box-shadow: none; }
+    .student-mobile-list { display: grid; gap: 12px; }
+    .student-mobile-card { padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
     .student-mobile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
     .student-mobile-top h2 { margin: 0; color: var(--ink); font-size: 15px; font-weight: 700; line-height: 1.35; }
     .student-mobile-top p { margin: 4px 0 0; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
     .student-mobile-status { flex: 0 0 auto; padding: 4px 8px; color: var(--ink-soft); background: var(--surface-strong); border-radius: 999px; font-size: 11px; font-weight: 700; }
     .student-mobile-status.is-active { color: var(--green); background: var(--green-soft); }
-    .student-mobile-details { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 12px; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+    .student-mobile-details { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 8px; color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
     .student-mobile-details > span:nth-child(3) { flex-basis: 100%; }
-    .student-mobile-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .student-mobile-card-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 14px; }
+    .student-mobile-actions { display: flex; gap: 8px; margin-top: 0; }
     .student-mobile-actions button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: 9px; }
     .student-mobile-actions button svg { width: 19px; height: 19px; }
     .student-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
     .student-mobile-actions button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-    .student-mobile-actions .student-mobile-delete { margin-left: auto; color: var(--red); background: var(--red-soft); }
+    .student-mobile-actions .student-mobile-delete { color: var(--red); background: var(--red-soft); }
     .student-mobile-empty { padding: 24px 16px; color: var(--ink-soft); font-size: 13px; text-align: center; }
     .student-page :deep(.table-footer) { align-items: flex-start; flex-direction: column; gap: 10px; }
 }

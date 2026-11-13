@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
@@ -19,11 +19,41 @@ const props = defineProps<{
     can_chat: boolean;
 }>();
 
-const page = usePage<{ flash?: { message?: string } }>();
 const communicationBase = window.location.pathname.startsWith('/guru/') ? '/guru' : '/komunikasi';
 const tab = ref(['announcements', 'calendar', 'notifications'].includes(props.active_tab) ? props.active_tab : 'announcements');
 const showAnnouncementForm = ref(false);
 const showEventForm = ref(false);
+const activeOverlay = computed(() => showAnnouncementForm.value || showEventForm.value);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(activeOverlay, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input, textarea, select, button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const handleOverlayKeydown = (event: KeyboardEvent) => {
+    if (!activeOverlay.value) return;
+    if (event.key === 'Escape') {
+        showAnnouncementForm.value = false;
+        showEventForm.value = false;
+    }
+    if (event.key !== 'Tab' || !overlayRoot.value) return;
+    const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
 const unreadCount = computed(() => props.notifications.filter((item) => !item.read_at).length);
 
 const audienceOptions = [
@@ -75,8 +105,8 @@ const markRead = (notification: NotificationItem) => {
 <template>
     <AppLayout title="Komunikasi">
         <Head title="Komunikasi Sekolah" />
-        <main class="view space-y-6">
-            <section class="hero-card communication-hero">
+        <div class="view communication-page space-y-6">
+            <header class="communication-hero">
                 <div>
                     <p class="eyebrow">Pusat informasi sekolah</p>
                     <h1>Pengumuman & agenda</h1>
@@ -85,9 +115,7 @@ const markRead = (notification: NotificationItem) => {
                 <div class="hero-actions">
                     <Link v-if="can_chat" class="secondary-button" :href="`${communicationBase}/chat`">Chat kelas</Link>
                 </div>
-            </section>
-
-            <div v-if="page.props.flash?.message" class="comm-notice" role="status">{{ page.props.flash.message }}</div>
+            </header>
 
             <section class="grade-summary comm-summary" aria-label="Ringkasan informasi">
                 <div><span>Pengumuman</span><strong>{{ announcements.length }}</strong><small>yang dapat Anda lihat</small></div>
@@ -144,9 +172,9 @@ const markRead = (notification: NotificationItem) => {
                     <div v-if="!notifications.length" class="empty-state"><strong>Belum ada notifikasi</strong><p>Pemberitahuan pribadi akan tampil di sini.</p></div>
                 </div>
             </section>
-        </main>
+        </div>
 
-        <div v-if="showAnnouncementForm" class="modal-backdrop" @click.self="showAnnouncementForm = false">
+        <div v-if="showAnnouncementForm" ref="overlayRoot" class="modal-backdrop" @click.self="showAnnouncementForm = false">
             <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="announcement-title" @submit.prevent="submitAnnouncement">
                 <div class="modal-heading"><div><p class="eyebrow">Informasi baru</p><h2 id="announcement-title">Buat pengumuman</h2><p>Pengumuman langsung terbit. Notifikasi dibuat untuk akun aktif yang sesuai sasaran; jumlah penerima ditampilkan setelah terbit.</p></div><button type="button" aria-label="Tutup formulir pengumuman" @click="showAnnouncementForm = false">×</button></div>
                 <label>Judul <input v-model="announcementForm.title" required maxlength="180" placeholder="Contoh: Jadwal pembagian rapor" /><small v-if="announcementForm.errors.title" class="form-error">{{ announcementForm.errors.title }}</small></label>
@@ -159,7 +187,7 @@ const markRead = (notification: NotificationItem) => {
             </form>
         </div>
 
-        <div v-if="showEventForm" class="modal-backdrop" @click.self="showEventForm = false">
+        <div v-if="showEventForm" ref="overlayRoot" class="modal-backdrop" @click.self="showEventForm = false">
             <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="event-title" @submit.prevent="submitEvent">
                 <div class="modal-heading"><div><p class="eyebrow">Kalender sekolah</p><h2 id="event-title">Tambah agenda</h2><p>Agenda tersimpan di halaman ini. Untuk mengirim notifikasi, buat pengumuman terpisah.</p></div><button type="button" aria-label="Tutup formulir agenda" @click="showEventForm = false">×</button></div>
                 <label>Nama agenda<input v-model="eventForm.title" required maxlength="180" placeholder="Contoh: Rapat orang tua" /><small v-if="eventForm.errors.title" class="form-error">{{ eventForm.errors.title }}</small></label>
@@ -202,4 +230,16 @@ const markRead = (notification: NotificationItem) => {
     .modal-actions { flex-wrap: wrap; }
 }
 @media (max-width: 440px) { .comm-summary { grid-template-columns: 1fr; } }
+.communication-page .communication-hero { padding: .5rem 0 .75rem; }
+.communication-page .communication-hero .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: none; }
+.communication-page .communication-hero h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.2; }
+.communication-page .communication-hero p:not(.eyebrow) { max-width: 600px; margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.communication-page > .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
+.communication-page .comm-summary > div { background: var(--surface); border-color: var(--line); }
+.modal-backdrop { display: flex; justify-content: flex-end; padding: 0; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.modal-card { align-content: start; width: min(560px, 100%); height: 100%; max-height: none; gap: 1rem; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 0; box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.modal-heading { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.modal-actions { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding: 1rem 0 clamp(18px, 3vw, 30px); background: var(--surface); border-top: 1px solid var(--line); }
+.modal-card :is(input, select, textarea):focus-visible, .modal-card button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 600px) { .modal-backdrop { align-items: flex-end; } .modal-card { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; } }
 </style>

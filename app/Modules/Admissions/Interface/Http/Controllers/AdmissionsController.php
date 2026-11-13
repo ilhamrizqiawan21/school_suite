@@ -377,7 +377,7 @@ class AdmissionsController extends Controller
         $selectedPeriodId = $request->integer('period_id') ?: $periods->first()?->id;
         $selectedPeriod = $periods->firstWhere('id', $selectedPeriodId);
         $tracks = $selectedPeriod?->tracks ?? collect();
-        $applicants = AdmissionApplicant::query()->where('school_id', $schoolId)->when($selectedPeriodId, fn ($query) => $query->where('period_id', $selectedPeriodId))->with(['track', 'period', 'documents.requirement', 'selectionResult', 'reRegistration'])->latest()->get();
+        $applicants = AdmissionApplicant::query()->where('school_id', $schoolId)->when($selectedPeriodId, fn ($query) => $query->where('period_id', $selectedPeriodId))->with(['track', 'period', 'documents.requirement', 'scores.criterion', 'selectionResult', 'reRegistration'])->latest()->get();
         $committee = DB::table('admission_committee_members')->join('users', 'users.id', '=', 'admission_committee_members.user_id')->where('admission_committee_members.school_id', $schoolId)->orderBy('users.name')->get(['users.id', 'users.name', 'users.email', 'admission_committee_members.created_at as assigned_at']);
         $teachers = $user->hasRole(['admin', 'operator']) ? $this->teacherDirectory->activeTeacherUsersForSchool($schoolId, $committee->pluck('id')->map(fn ($id) => (int) $id)->all()) : collect();
 

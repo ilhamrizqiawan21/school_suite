@@ -7,11 +7,12 @@
 @import './modern-ui.css';
 @import './public-portfolio.css';
 
-.app-toast { position: fixed; z-index: 100; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: flex-start; gap: 12px; width: min(380px, calc(100vw - 32px)); padding: 14px 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: 12px; box-shadow: var(--shadow-md); font-size: .875rem; overflow-wrap: anywhere; }
-.app-toast--error { border-left-color: var(--red); }
-.app-toast-mark { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; color: var(--green); background: var(--green-soft); border-radius: 50%; font-weight: 800; }
-.app-toast--error .app-toast-mark { color: var(--red); background: var(--red-soft); }
-.app-toast button { margin-left: auto; padding: 0 4px; color: var(--ink-soft); background: none; border: 0; font-size: 22px; line-height: 1; }
+.app-toast { position: fixed; z-index: 100; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: flex-start; gap: 12px; width: min(440px, calc(100vw - 32px)); padding: 14px 16px; color: #fff; background: #26344d; border: 1px solid #26344d; border-radius: 12px; box-shadow: var(--shadow-md); font-size: .875rem; overflow-wrap: anywhere; }
+.app-toast--error { color: #a43743; background: #fff0f1; border-color: #f3d6da; }
+.app-toast-mark { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; color: #bde2d1; font-weight: 800; }
+.app-toast--error .app-toast-mark { color: #a43743; }
+.app-toast button { margin-left: auto; padding: 0 4px; color: inherit; background: none; border: 0; font-size: 22px; line-height: 1; }
+.app-toast button:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
 @media (max-width: 600px) { .app-toast { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); left: 16px; width: auto; } }
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -107,8 +108,8 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
 
 .row-action-button {
     display: inline-flex;
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 44px;
+    min-height: 44px;
     align-items: center;
     justify-content: center;
     gap: .4rem;
@@ -135,7 +136,7 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
 .row-action-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgb(24 48 78 / 12%); }
 .row-action-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 38%, transparent); outline-offset: 2px; }
 .row-action-button:disabled { cursor: not-allowed; opacity: .48; }
-.row-action-icon { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+.row-action-icon { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
 .action-button { min-height: 38px; }
 
 .file-action-button {

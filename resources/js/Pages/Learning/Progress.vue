@@ -57,7 +57,7 @@ const clearFilters = () => {
 <template>
     <Head title="Progress Belajar" />
     <AppLayout>
-        <main class="view space-y-6 learning-progress-page">
+        <div class="view space-y-6 learning-progress-page">
             <section class="hero-card compact-hero">
                 <div>
                     <p class="eyebrow">{{ is_student ? 'Ringkasan belajar saya' : 'Monitoring pembelajaran' }} · {{ active_term?.name ?? 'Belum ada semester aktif' }}</p>
@@ -148,7 +148,7 @@ const clearFilters = () => {
                     <Link v-for="(link, index) in pagination.links" :key="index" :href="link.url ?? '#progress'" :class="{ current: link.active, disabled: !link.url }" preserve-scroll v-html="link.label" />
                 </nav>
             </section>
-        </main>
+        </div>
     </AppLayout>
 </template>
 

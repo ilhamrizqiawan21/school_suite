@@ -159,6 +159,7 @@ class RoleMatrixAccessTest extends TestCase
 
         $this->actingAs($admin)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->where('navigation.visible_keys', fn ($keys) => $keys->contains('admissions')
+                && $keys->contains('admissions-settings')
                 && $keys->contains('admissions-periods')
                 && $keys->contains('admissions-tracks')
                 && $keys->contains('admissions-applicants')

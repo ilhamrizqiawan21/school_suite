@@ -285,4 +285,17 @@ progress::-moz-progress-bar { background: #315db3; }
 :global(html[data-theme='dark']) .staff-tasks-page progress::-webkit-progress-bar { background: var(--surface-strong); }
 :global(html[data-theme='dark']) .staff-tasks-page progress::-webkit-progress-value,
 :global(html[data-theme='dark']) .staff-tasks-page progress::-moz-progress-bar { background: var(--primary); }
+.staff-tasks-page .hero-card, .staff-tasks-page .panel { background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
+.staff-tasks-page .staff-task-hero { padding: clamp(1rem, 2.5vw, 1.5rem); }
+.staff-tasks-page .task-summary-card { color: var(--ink); background: var(--surface) !important; border: 1px solid var(--line); border-radius: 12px; }
+.staff-tasks-page .task-summary-active, .staff-tasks-page .task-summary-overdue, .staff-tasks-page .task-summary-completed { border-top-width: 3px; }
+.staff-tasks-page .task-summary-active { border-top-color: var(--primary); }
+.staff-tasks-page .task-summary-overdue { border-top-color: var(--red); }
+.staff-tasks-page .task-summary-completed { border-top-color: var(--green); }
+.staff-tasks-page .task-summary-card span, .staff-tasks-page .task-summary-card small { color: var(--ink-soft); }
+.staff-tasks-page .task-summary-card strong { color: var(--ink); }
+.staff-tasks-page .field input, .staff-tasks-page .field select, .staff-tasks-page .field textarea { min-height: 44px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); border-radius: 10px; }
+.staff-tasks-page .task-item { border-color: var(--line); }
+.staff-tasks-page button:focus-visible, .staff-tasks-page input:focus-visible, .staff-tasks-page select:focus-visible, .staff-tasks-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 680px) { .staff-tasks-page .staff-task-hero-actions, .staff-tasks-page .task-filter-actions, .staff-tasks-page .task-form-actions { width: 100%; } .staff-tasks-page .staff-task-hero-actions > *, .staff-tasks-page .task-filter-actions > *, .staff-tasks-page .task-form-actions > * { flex: 1; } }
 </style>

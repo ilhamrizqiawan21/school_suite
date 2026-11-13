@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SharedProps } from '../../../types';
 import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -68,6 +68,31 @@ const schedulesForDay = (dayId: number) => props.schedules.filter(slot => slot.d
 const selectedClass = ref(props.filters.class_group_id || '');
 const selectedTeacher = ref(props.filters.teacher_id || '');
 const showAddModal = ref(false);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(showAddModal, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input, select, button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const handleOverlayKeydown = (event: KeyboardEvent) => {
+    if (!showAddModal.value || event.key !== 'Tab' || !overlayRoot.value) return;
+    const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled])'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
 
 const days = [
     { id: 1, name: 'Senin' },
@@ -154,7 +179,7 @@ const deleteSchedule = (id: number) => {
             <div class="page-heading compact-heading">
                 <div>
                     <p class="schedule-page-kicker">Akademik · Kalender pembelajaran</p>
-                    <h1 class="schedule-page-title">Jadwal Pelajaran</h1>
+                    <h1 class="schedule-page-title">Jadwal pelajaran</h1>
                     <p class="schedule-page-summary">
                         {{ is_student ? 'Jadwal pelajaran kelasmu pada periode aktif.' : 'Penyusunan jadwal mingguan dengan deteksi benturan guru, rombel, dan ruang kelas.' }}
                     </p>
@@ -283,11 +308,11 @@ const deleteSchedule = (id: number) => {
         </div>
 
         <!-- Modal Tambah Slot Jadwal -->
-        <div v-if="can_manage && showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div role="dialog" aria-modal="true" aria-labelledby="schedule-form-title" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div v-if="can_manage && showAddModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="schedule-form-title" class="schedule-overlay" @keydown.esc="showAddModal = false">
+            <div class="schedule-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="schedule-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Jadwal Pelajaran' : 'Tambah Slot Jadwal Pelajaran' }}</h3>
-                    <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600" aria-label="Tutup formulir jadwal">✕</button>
+                    <button type="button" @click="showAddModal = false" class="schedule-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir jadwal">✕</button>
                 </div>
 
                 <ul v-if="Object.keys(form.errors).length" role="alert" class="text-sm text-red-700"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
@@ -296,14 +321,14 @@ const deleteSchedule = (id: number) => {
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Hari *</label>
-                            <select v-model="form.day_of_week" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-day" class="block text-xs font-semibold text-slate-700 mb-1">Hari *</label>
+                            <select id="schedule-day" v-model="form.day_of_week" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Rombel (Kelas) *</label>
-                            <select v-model="form.class_group_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-class" class="block text-xs font-semibold text-slate-700 mb-1">Rombel (kelas) *</label>
+                            <select id="schedule-class" v-model="form.class_group_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option value="">Pilih rombel...</option>
                                 <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
                             </select>
@@ -312,15 +337,15 @@ const deleteSchedule = (id: number) => {
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mata Pelajaran *</label>
-                            <select v-model="form.subject_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-subject" class="block text-xs font-semibold text-slate-700 mb-1">Mata pelajaran *</label>
+                            <select id="schedule-subject" v-model="form.subject_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option value="">Pilih mapel...</option>
                                 <option v-for="s in subjects" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.code }})</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Guru Pengajar *</label>
-                            <select v-model="form.teacher_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-teacher" class="block text-xs font-semibold text-slate-700 mb-1">Guru pengajar *</label>
+                            <select id="schedule-teacher" v-model="form.teacher_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option value="">Pilih guru...</option>
                                 <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
                             </select>
@@ -329,16 +354,16 @@ const deleteSchedule = (id: number) => {
 
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Mulai *</label>
-                            <input v-model="form.start_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="schedule-start" class="block text-xs font-semibold text-slate-700 mb-1">Mulai *</label>
+                            <input id="schedule-start" v-model="form.start_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Selesai *</label>
-                            <input v-model="form.end_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="schedule-end" class="block text-xs font-semibold text-slate-700 mb-1">Selesai *</label>
+                            <input id="schedule-end" v-model="form.end_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Ruang / Lab</label>
-                            <input v-model="form.room" type="text" placeholder="contoh: Lab IPA" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="schedule-room" class="block text-xs font-semibold text-slate-700 mb-1">Ruang / lab</label>
+                            <input id="schedule-room" v-model="form.room" type="text" placeholder="contoh: Lab IPA" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
@@ -357,6 +382,13 @@ const deleteSchedule = (id: number) => {
 </template>
 
 <style scoped>
+.schedule-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.schedule-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.schedule-drawer input, .schedule-drawer select { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.schedule-drawer .text-slate-900, .schedule-drawer .text-slate-700 { color: var(--ink); }
+.schedule-drawer .text-slate-600, .schedule-drawer .text-slate-500, .schedule-drawer .text-slate-400 { color: var(--ink-soft); }
+.schedule-drawer button:focus-visible, .schedule-drawer input:focus-visible, .schedule-drawer select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.schedule-close { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 9px; }
 .schedule-page { min-width: 0; }
 .schedule-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .schedule-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
@@ -403,5 +435,6 @@ const deleteSchedule = (id: number) => {
 
 .schedule-student-context { display: flex; align-items: center; gap: .55rem; min-height: 48px; padding: .75rem 1rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; font-size: .84rem; font-weight: 600; }
 .schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+@media (max-width: 600px) { .schedule-overlay { align-items: flex-end; }.schedule-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); }.schedule-drawer .grid-cols-2, .schedule-drawer .grid-cols-3 { grid-template-columns: 1fr; } }
 </style>
 

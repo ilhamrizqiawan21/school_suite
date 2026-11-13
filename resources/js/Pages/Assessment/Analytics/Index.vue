@@ -107,7 +107,7 @@ function formatDate(value: string) {
 <template>
     <Head :title="can_manage_question_bank ? 'Analisis Bank Soal dan Ujian' : 'Analisis Asesmen dan Ujian'" />
     <AppLayout>
-        <main class="view space-y-6">
+        <div class="view analytics-page space-y-6">
             <header class="page-heading compact-heading">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Wawasan asesmen</p>
@@ -211,7 +211,7 @@ function formatDate(value: string) {
             </section>
 
             <p class="text-xs leading-relaxed text-slate-500">Definisi: persentase distribusi adalah jumlah attempt pada rentang ÷ seluruh attempt yang sudah dinilai; rasio benar butir adalah jawaban benar ÷ jawaban objektif yang dinilai; rata-rata poin adalah total poin butir ÷ seluruh attempt yang dinilai. Analisis statistik tidak membuka kunci jawaban.</p>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
@@ -230,4 +230,21 @@ function formatDate(value: string) {
 .analytics-item-table tbody td:nth-child(4) {
     white-space: nowrap !important;
 }
+.analytics-page{max-width:1440px;margin-inline:auto}
+.analytics-page .compact-heading{align-items:flex-start;padding:0 0 .8rem;border-bottom:1px solid var(--line)}
+.analytics-page .compact-heading h1{color:var(--ink);font-size:clamp(1.55rem,2.2vw,2rem);font-weight:800;letter-spacing:-.035em}
+.analytics-page .text-indigo-600,.analytics-page .text-indigo-700,.analytics-page .text-indigo-700\/80{color:var(--primary)}
+.analytics-page .text-indigo-950,.analytics-page .text-slate-900,.analytics-page .text-slate-700{color:var(--ink)}
+.analytics-page .text-slate-600,.analytics-page .text-slate-500{color:var(--ink-soft)}
+.analytics-page .bg-white{background:var(--surface)}
+.analytics-page .bg-slate-50{background:var(--surface-subtle)}
+.analytics-page .bg-indigo-50{background:var(--primary-soft)}
+.analytics-page .bg-indigo-600,.analytics-page .bg-indigo-500{background:var(--primary)}
+.analytics-page .border-slate-200,.analytics-page .border-slate-100{border-color:var(--line)}
+.analytics-page .border-slate-300{border-color:var(--line-strong)}
+.analytics-page .border-indigo-100{border-color:color-mix(in srgb,var(--primary) 22%,var(--line))}
+.analytics-page select{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.analytics-page article,.analytics-page>form,.analytics-page>section:not([class*="grid"]){box-shadow:var(--shadow-sm)}
+.analytics-page .analytics-item-table th{background:var(--surface-subtle);color:var(--ink-soft)}
+@media(max-width:640px){.analytics-page .compact-heading{align-items:stretch;flex-direction:column}.analytics-page .compact-heading>a{align-self:flex-start}}
 </style>

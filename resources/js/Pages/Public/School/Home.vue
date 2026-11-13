@@ -44,11 +44,13 @@ interface GalleryItem {
 
 const props = defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
 const galleryPreview = computed(() => props.gallery.slice(0, 4));
+const lifePhotos = computed(() => galleryPreview.value.length > 1 ? galleryPreview.value.slice(1) : galleryPreview.value);
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const heroTitle = computed(() => props.school.theme?.hero?.title || 'Tempat belajar yang memberi ruang untuk');
 const heroAccent = computed(() => props.school.theme?.hero?.accent || 'tumbuh bersama.');
 const heroPrimaryLabel = computed(() => props.school.theme?.hero?.primary_label || 'Kenali sekolah');
+const heroSecondaryLabel = computed(() => props.school.theme?.hero?.secondary_label || 'Baca kabar terbaru');
 const heroVariant = computed(() => props.school.theme?.hero_variant || 'collage');
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value))
@@ -69,7 +71,7 @@ const formatDate = (value?: string | null) => value
                 <p class="hero-lead">{{ school.about || 'Selamat datang di ruang informasi resmi sekolah kami.' }}</p>
                 <div class="hero-actions">
                     <Link href="/profil-sekolah" class="primary-button">{{ heroPrimaryLabel }}</Link>
-                    <Link href="/ppdb" class="text-link">Informasi PPDB</Link>
+                    <Link href="/berita" class="text-link">{{ heroSecondaryLabel }}</Link>
                 </div>
                 <div class="trust-line">
                     <span v-if="school.school_status">{{ school.school_status }}</span>
@@ -80,7 +82,7 @@ const formatDate = (value?: string | null) => value
 
             <div class="hero-visual" aria-label="Portofolio sekolah">
                 <div v-if="galleryPreview.length" class="hero-photo-grid">
-                    <img v-for="(photo, index) in galleryPreview" :key="photo.id" :class="'hero-photo hero-photo-' + (index + 1)" :src="photo.url" :alt="photo.title || photo.caption || ('Kegiatan ' + school.name)" />
+                    <img class="hero-photo hero-photo-1" :src="galleryPreview[0].url" :alt="galleryPreview[0].title || galleryPreview[0].caption || ('Kegiatan ' + school.name)" />
                 </div>
                 <div v-else class="hero-placeholder"><span>{{ initial }}</span><small>Portofolio sekolah</small></div>
                 <div class="hero-caption"><small>{{ school.school_status || 'Ruang belajar bersama' }}</small><strong>Belajar. Berkarya. Berbagi.</strong></div>
@@ -93,16 +95,16 @@ const formatDate = (value?: string | null) => value
                 <p>Akademik yang kuat bertemu karakter, kreativitas, dan kepedulian terhadap sesama.</p>
             </div>
             <div class="home-pillar-grid">
-                <article><span aria-hidden="true">◇</span><h3>Belajar dengan rasa ingin tahu</h3><p>Pembelajaran aktif yang menghubungkan pengetahuan dengan kehidupan sehari-hari.</p></article>
-                <article><span aria-hidden="true">◎</span><h3>Tumbuh dalam komunitas</h3><p>Pendampingan yang menghargai keunikan dan perkembangan setiap siswa.</p></article>
-                <article><span aria-hidden="true">✓</span><h3>Berkarya dengan percaya diri</h3><p>Ruang untuk olahraga, seni, sains, dan ide yang memberi dampak.</p></article>
+                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5.5C9.5 3.7 6.8 3.3 3 4v14c3.8-.7 6.5-.3 9 1.5 2.5-1.8 5.2-2.2 9-1.5V4c-3.8-.7-6.5-.3-9 1.5ZM12 5.5v14" /></svg><h3>Belajar dengan rasa ingin tahu</h3><p>Pembelajaran aktif yang menghubungkan pengetahuan dengan kehidupan sehari-hari.</p></article>
+                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-2a5.5 5.5 0 0 1 11 0v2M16 5.3a3 3 0 0 1 0 5.4M17 14a5.5 5.5 0 0 1 3.5 5.1V20" /></svg><h3>Tumbuh dalam komunitas</h3><p>Pendampingan yang menghargai keunikan dan perkembangan setiap siswa.</p></article>
+                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m4 12 5 5L20 5" /></svg><h3>Berkarya dengan percaya diri</h3><p>Ruang untuk olahraga, seni, sains, dan ide yang memberi dampak.</p></article>
             </div>
         </section>
 
         <section v-if="school.theme?.sections?.gallery !== false && galleryPreview.length" class="home-life" aria-labelledby="life-title">
             <div class="section-heading"><div><h2 id="life-title">Hari-hari yang penuh penemuan.</h2><p>Kehidupan di sekolah</p></div><Link href="/galeri" class="text-link">Lihat galeri</Link></div>
             <div class="home-life-grid">
-                <Link v-for="photo in galleryPreview.slice(0, 3)" :key="photo.id" href="/galeri"><img :src="photo.url" :alt="photo.title || photo.caption || 'Kegiatan sekolah'" /><span>{{ photo.title || photo.caption || 'Kegiatan sekolah' }}</span></Link>
+                <Link v-for="photo in lifePhotos.slice(0, 3)" :key="photo.id" href="/galeri"><img :src="photo.url" :alt="photo.title || photo.caption || 'Kegiatan sekolah'" /><span>{{ photo.title || photo.caption || 'Kegiatan sekolah' }}</span></Link>
             </div>
         </section>
 
@@ -490,6 +492,7 @@ const formatDate = (value?: string | null) => value
 .public-home .hero-copy .eyebrow { margin-bottom: 1rem; color: var(--deep); }
 :global(body .public-site.public-home .home-hero .eyebrow) { color: var(--deep) !important; }
 .public-home .hero-lead { color: var(--muted); line-height: 1.65; }
+.public-home .hero-lead { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
 .public-home .hero-actions { flex-wrap: wrap; gap: .75rem 1.5rem; }
 .public-home .primary-button { color: #fff !important; background: var(--deep) !important; border: 1px solid var(--deep); border-radius: 10px; }
 .public-home .primary-button:hover,
@@ -509,7 +512,7 @@ const formatDate = (value?: string | null) => value
 .public-home .home-admissions h2 { max-width: 540px; margin: 0; color: var(--ink); font-family: var(--font-ui); font-size: clamp(1.8rem, 2.7vw, 2.7rem); font-weight: 700; letter-spacing: -.035em; line-height: 1.2; }
 .public-home .home-pillars .section-heading p { max-width: 360px; color: var(--muted); font-size: .95rem; line-height: 1.6; }
 .public-home .home-pillar-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1rem, 4vw, 4rem); padding-top: 1rem; }
-.public-home .home-pillar-grid article > span { color: var(--deep); font-size: 2rem; }
+.public-home .home-pillar-grid article > svg { width: 30px; height: 30px; color: var(--deep); stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
 .public-home .home-pillar-grid h3 { margin: .75rem 0 .5rem; color: var(--ink); font-size: 1.1rem; }
 .public-home .home-pillar-grid p { max-width: 300px; margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
 .public-home .home-life { padding: 3.5rem 0 5rem; background: #fff; }
@@ -532,13 +535,19 @@ const formatDate = (value?: string | null) => value
     .public-home .home-pillars,
     .public-home .home-life,
     .public-home .home-admissions { width: calc(100% - 2rem); }
-    .public-home .home-hero { padding: 2.5rem 0 3rem; }
-    .public-home .hero-copy h1 { font-size: clamp(2.3rem, 10vw, 3.4rem); }
+    .public-home .home-hero { padding: 1.6rem 0 3rem; }
+    .public-home .hero-copy .eyebrow { display: none; }
+    .public-home .hero-copy h1 { font-size: clamp(1.85rem, 7.5vw, 2.5rem); }
+    .public-home .hero-lead { font-size: .93rem; -webkit-line-clamp: 3; }
+    .public-home .hero-actions { margin-top: 1.5rem; }
+    .public-home .hero-actions .text-link,
+    .public-home .trust-line { display: none; }
     .public-home .hero-visual { min-height: 260px; }
     .public-home .home-pillar-grid,
     .public-home .home-life-grid { grid-template-columns: 1fr; }
     .public-home .home-pillars { padding-bottom: 3rem; }
     .public-home .home-life { padding: 2.5rem 0; }
+    .public-home .home-life-grid a:nth-child(n+2) { display: none; }
     .public-home .home-admissions { align-items: flex-start; flex-direction: column; margin-top: 3rem; }
 }
 </style>

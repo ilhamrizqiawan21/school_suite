@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 interface ComponentItem {
@@ -120,16 +120,25 @@ const weightTotals = (components: ComponentItem[]) => {
     }
     return Array.from(totals, ([assignmentId, total]) => ({ assignmentId, label: assignmentLabel(assignmentId), total: Math.round(total * 100) / 100 }));
 };
+const closeActiveDialog = (event: KeyboardEvent) => {
+    if (event.key !== 'Escape') return;
+    if (isCreateSchemeOpen.value) closeSchemeForm();
+    else if (isCreateComponentOpen.value && !componentForm.processing) isCreateComponentOpen.value = false;
+    else if (bindingComponent.value && !bindingForm.processing) bindingComponent.value = null;
+};
+onMounted(() => window.addEventListener('keydown', closeActiveDialog));
+onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 </script>
 
 <template>
     <AppLayout>
         <Head title="Skema Penilaian Berversi" />
 
-        <div class="view space-y-6">
+        <div class="view schemes-page space-y-6">
             <!-- Header Halaman -->
-            <div class="page-heading compact-heading">
+            <header class="page-heading compact-heading schemes-heading">
                 <div>
+                    <p class="eyebrow">Asesmen · Formula nilai</p>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Skema & Bobot Penilaian</h1>
                     <p class="text-sm text-slate-500 mt-1">
                         Konfigurasi formula pembobotan, aturan pembulatan, dan batas kelulusan KKTP berversi.
@@ -139,7 +148,7 @@ const weightTotals = (components: ComponentItem[]) => {
                 <div v-if="props.can_manage">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors"
+                        class="primary-button inline-flex items-center gap-2"
                         @click="openSchemeForm"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,14 +157,14 @@ const weightTotals = (components: ComponentItem[]) => {
                         <span>Buat Versi Skema Baru</span>
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- Daftar Skema -->
             <div class="grid grid-cols-1 gap-6">
                 <div
                     v-for="scheme in props.schemes"
                     :key="scheme.id"
-                    class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden"
+                    class="scheme-panel bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden"
                 >
                     <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50">
                         <div class="space-y-1">
@@ -246,11 +255,11 @@ const weightTotals = (components: ComponentItem[]) => {
             <!-- Modal Buat Skema Baru -->
             <div
                 v-if="props.can_manage && isCreateSchemeOpen"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+                class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
-                <div class="bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4">
+                <div class="scheme-dialog bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-scheme-title">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-bold text-slate-900">Buat Skema Penilaian Baru</h2>
+                        <h2 id="new-scheme-title" class="text-lg font-bold text-slate-900">Buat Skema Penilaian Baru</h2>
                         <button
                             type="button"
                             class="text-slate-400 hover:text-slate-600"
@@ -352,9 +361,9 @@ const weightTotals = (components: ComponentItem[]) => {
                 </div>
             </div>
 
-            <div v-if="props.can_manage && bindingComponent" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                <form class="bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" @submit.prevent="submitBinding">
-                    <h2 class="text-lg font-bold text-slate-900">Petakan {{ bindingComponent.component.name }}</h2>
+            <div v-if="props.can_manage && bindingComponent" class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+                <form class="scheme-dialog bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="binding-title" @submit.prevent="submitBinding">
+                    <h2 id="binding-title" class="text-lg font-bold text-slate-900">Petakan {{ bindingComponent.component.name }}</h2>
                     <p class="text-sm text-slate-500">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
                     <label for="binding-assignment" class="block text-sm font-semibold text-slate-700">Kelas & Mata Pelajaran</label>
                     <select id="binding-assignment" v-model="bindingForm.teaching_assignment_id" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
@@ -372,14 +381,15 @@ const weightTotals = (components: ComponentItem[]) => {
             <!-- Modal Tambah Komponen -->
             <div
                 v-if="props.can_manage && isCreateComponentOpen"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+                class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
-                <div class="bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4">
+                <div class="scheme-dialog bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-component-title">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-bold text-slate-900">Tambah Komponen Penilaian</h2>
+                        <h2 id="new-component-title" class="text-lg font-bold text-slate-900">Tambah Komponen Penilaian</h2>
                         <button
                             type="button"
                             class="text-slate-400 hover:text-slate-600"
+                            aria-label="Tutup formulir komponen"
                             @click="isCreateComponentOpen = false"
                         >
                             &times;
@@ -485,4 +495,26 @@ const weightTotals = (components: ComponentItem[]) => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.schemes-page{max-width:1440px;margin-inline:auto}
+.schemes-heading{align-items:flex-start;padding:0 0 .8rem;border-bottom:1px solid var(--line)}
+.schemes-heading h1{margin:.25rem 0;color:var(--ink);font-size:clamp(1.55rem,2.2vw,2rem);font-weight:800;letter-spacing:-.035em}
+.schemes-heading p:not(.eyebrow){color:var(--ink-soft);line-height:1.55}
+.scheme-panel,.schemes-page .bg-white{background:var(--surface)}
+.schemes-page .bg-slate-50\/50,.schemes-page .bg-slate-50{background:var(--surface-subtle)}
+.schemes-page .border-slate-200,.schemes-page .border-slate-100{border-color:var(--line)}
+.schemes-page .border-slate-300{border-color:var(--line-strong)}
+.schemes-page .text-slate-900,.schemes-page .text-slate-800,.schemes-page .text-slate-700{color:var(--ink)}
+.schemes-page .text-slate-600,.schemes-page .text-slate-500,.schemes-page .text-slate-400{color:var(--ink-soft)}
+.schemes-page .bg-indigo-100{background:var(--primary-soft)}
+.schemes-page .text-indigo-800,.schemes-page .text-indigo-600{color:var(--primary)}
+.schemes-page .bg-emerald-100{background:var(--green-soft)}
+.schemes-page .text-emerald-800,.schemes-page .text-emerald-700{color:var(--green)}
+.schemes-page .bg-indigo-600{background:var(--primary)}
+.scheme-backdrop{background:color-mix(in srgb,var(--ink) 58%,transparent)}
+.scheme-dialog{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.scheme-dialog input,.scheme-dialog select{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+@media(max-width:640px){.schemes-heading{align-items:stretch;flex-direction:column}.scheme-backdrop{padding:0}.scheme-dialog{width:100vw;max-width:none;max-height:100dvh;min-height:100dvh;border-radius:0;padding:1rem}.schemes-page .table-scroll{overflow-x:auto}}
+</style>
 

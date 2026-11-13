@@ -130,8 +130,8 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
     <AppLayout title="Absensi Guru">
         <Head title="Absensi Guru" />
         <main class="view attendance-page space-y-5">
-            <section class="hero-card">
-                <div><p class="eyebrow">Administrasi akademik</p><h1>Absensi guru</h1><p>Catat kehadiran harian, periksa izin, dan atur guru pengganti.</p></div>
+            <section class="hero-card attendance-hero">
+                <div><p class="eyebrow">Akademik · Kehadiran guru</p><h1>Presensi guru</h1><p>Catat kehadiran harian, periksa izin, dan atur guru pengganti.</p></div>
                 <div class="flex flex-wrap gap-2"><Link class="secondary-button" href="/akademik/absensi-guru/rekap">Rekap bulanan</Link><Link class="secondary-button" href="/akademik/izin-guru">Izin &amp; cuti</Link></div>
             </section>
             <p v-if="message" class="panel p-4" role="status">{{ message }}</p>
@@ -152,7 +152,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                 <p class="mt-3 text-sm text-slate-500">{{ can_manage_all ? 'Kelola seluruh guru aktif di sekolah.' : 'Anda hanya dapat mengisi absensi sendiri.' }}</p>
                 <p v-if="page.props.errors?.date" class="mt-2 text-sm text-red-700" role="alert">{{ page.props.errors.date }}</p>
             </section>
-            <section class="panel overflow-hidden">
+            <section class="panel attendance-list-panel overflow-hidden">
                 <header class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4"><div><h2 class="text-base font-semibold">{{ formatDate(date) }}</h2><p class="mt-1 text-sm text-slate-500">Isian awal Hadir adalah usulan, belum tercatat sampai disimpan.</p></div><span class="text-sm text-slate-500">{{ visibleRows.length }} dari {{ rows.length }} guru</span></header>
                 <div v-if="!rows.length" class="px-6 py-14 text-center text-sm text-slate-500">{{ can_manage_all ? 'Belum ada guru aktif untuk dicatat.' : 'Data guru aktif Anda belum tersedia.' }}</div>
                 <form v-else @submit.prevent="save">
@@ -201,6 +201,11 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 
 <style scoped>
 .attendance-page { min-width: 0; }
+.attendance-hero { min-height: 0; padding: 0 0 1.25rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.attendance-hero h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
+.attendance-hero p { color: var(--ink-soft); }
+.attendance-hero .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+.attendance-list-panel { border-radius: 14px; }
 .attendance-page input, .attendance-page select { max-width: 100%; }
 .bulk-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
 .bulk-controls label { display: grid; gap: .35rem; font-size: .875rem; font-weight: 600; }
@@ -215,7 +220,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 @media (max-width: 700px) {
     .attendance-table thead { display: none; }
     .attendance-table, .attendance-table tbody, .attendance-table tr { display: block; }
-    .attendance-table tr { padding: .5rem 1rem; border-bottom: 1px solid var(--line); }
+    .attendance-table tr { margin: 12px; padding: .6rem .9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
     .attendance-table td { height: auto; display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: .5rem; padding: .5rem 0; border: 0; }
     .attendance-table td::before { content: attr(data-label); color: var(--ink-soft); font-size: .75rem; }
     .attendance-table td > small, .attendance-table td > a, .attendance-table td > span, .attendance-table td > strong { grid-column: 2; }

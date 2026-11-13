@@ -470,3 +470,189 @@ body .public-site .status-badge.is-open {
         font-size: clamp(2.8rem, 13vw, 4.5rem);
     }
 }
+
+/* Calm Academic continuation for the remaining public pages. */
+body .public-site.public-section-page .section-hero,
+body .public-site.public-news .intro,
+body .public-site.public-gallery .gallery-intro {
+    padding: clamp(2.5rem, 5vw, 4.5rem) 0 2.5rem;
+    color: var(--public-ink);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+body .public-site.public-section-page .section-hero::before,
+body .public-site.public-news .intro::before,
+body .public-site.public-gallery .gallery-intro::before { display: none; }
+
+body .public-site.public-section-page .section-hero h1,
+body .public-site.public-news .intro h1,
+body .public-site.public-gallery .gallery-intro h1 {
+    max-width: 760px;
+    color: var(--public-ink);
+    font-family: var(--font-ui);
+    font-size: clamp(2.1rem, 4vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: 1.15;
+}
+
+body .public-site.public-section-page .section-hero .eyebrow,
+body .public-site.public-news .intro p,
+body .public-site.public-gallery .gallery-intro .kicker { color: var(--public-primary) !important; }
+
+body .public-site.public-section-page .section-hero > p:last-child,
+body .public-site.public-news .intro span,
+body .public-site.public-gallery .gallery-intro > p:last-child {
+    max-width: 670px;
+    color: var(--public-muted) !important;
+    line-height: 1.65;
+}
+
+body .public-site.public-section-page .info-card,
+body .public-site.public-section-page .life-card,
+body .public-site.public-section-page .contact-card,
+body .public-site.public-news .news-card,
+body .public-site.public-gallery .album-card,
+body .public-site.public-admissions .period-card,
+body .public-site.public-admissions .flow-grid article,
+body .public-site.school-profile .service-card {
+    color: var(--public-ink);
+    background: var(--public-surface) !important;
+    border: 1px solid var(--public-line);
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+body .public-site.public-section-page .life-card-feature p,
+body .public-site.public-section-page .contact-card-main p { color: var(--public-muted) !important; }
+
+body .public-site.public-section-page .life-card-feature .card-number,
+body .public-site.public-section-page .life-card-feature .card-link,
+body .public-site.public-section-page .contact-card-main .card-label,
+body .public-site.public-section-page .contact-card-main .card-link { color: var(--public-primary) !important; }
+
+body .public-site.public-section-page .info-card h2,
+body .public-site.public-section-page .life-card h2,
+body .public-site.public-news .card-body h2,
+body .public-site.public-gallery .album-copy h2,
+body .public-site.school-profile .service-card strong {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    letter-spacing: -.025em;
+}
+
+body .public-site.public-gallery .album-card:nth-child(n) { transform: none; }
+body .public-site.public-gallery .album-images { background: var(--public-surface-alt); }
+body .public-site.public-news .news-card:hover,
+body .public-site.public-news .news-card:focus-visible,
+body .public-site.public-gallery .album-card:hover,
+body .public-site.public-gallery .album-card:focus-within { box-shadow: 0 8px 24px rgb(18 50 71 / 8%); transform: none; }
+
+body .public-site.school-profile .hero h1,
+body .public-site.school-profile .two-column h2,
+body .public-site.school-profile .section-heading h2,
+body .public-site.school-profile .service-intro h2,
+body .public-site.school-profile .contact-footer h2 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: 1.15;
+}
+body .public-site.school-profile .hero h1 { font-size: clamp(2.2rem, 4vw, 3.8rem); }
+body .public-site.school-profile .hero-title-accent { color: var(--public-ink) !important; }
+body .public-site.school-profile .hero-visual { background: var(--public-surface-alt) !important; border: 1px solid var(--public-line); border-radius: 18px; }
+body .public-site.school-profile .hero-note { color: var(--public-ink); }
+body .public-site.school-profile .hero-note span { color: var(--public-primary) !important; }
+body .public-site.school-profile .hero-note small { color: var(--public-muted); }
+body .public-site.school-profile .orbit { border-color: var(--public-line) !important; }
+
+body .public-site.public-admissions .admissions-status h1,
+body .public-site.public-admissions .section-heading h2,
+body .public-site.public-admissions .public-footer h2 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: 1.15;
+}
+body .public-site.public-admissions .status-copy h1,
+body .public-site.public-admissions .admissions-hero h1 { max-width: 720px; font-size: clamp(2.5rem, 5vw, 4.5rem); }
+body .public-site.public-admissions .admissions-status { background: var(--public-surface-alt); border: 1px solid var(--public-line); }
+body .public-site.public-admissions .admissions-status::after { background: linear-gradient(90deg, var(--public-surface-alt) 0%, color-mix(in srgb, var(--public-surface-alt) 75%, transparent) 55%, transparent 100%); }
+body .public-site.public-admissions .school-building-art img { opacity: .2; }
+body .public-site.public-admissions .status-panel { background: var(--public-surface-alt) !important; border: 1px solid var(--public-line); box-shadow: none; }
+body .public-site.public-admissions .status-panel strong { color: var(--public-ink); }
+body .public-site.public-admissions .status-panel small { color: var(--public-muted); }
+body .public-site.public-admissions .status-panel > span { color: var(--public-primary) !important; }
+
+@media (max-width: 600px) {
+    body .public-site.public-section-page .section-hero,
+    body .public-site.public-news .intro,
+    body .public-site.public-gallery .gallery-intro { padding: 1.7rem 0 1.4rem; }
+    body .public-site.public-section-page .section-hero h1,
+    body .public-site.public-news .intro h1,
+    body .public-site.public-gallery .gallery-intro h1 { font-size: clamp(1.85rem, 8vw, 2.6rem); }
+    body .public-site.school-profile .hero { padding-top: 2.5rem; }
+    body .public-site.school-profile .hero h1 { font-size: clamp(2rem, 8vw, 2.8rem); }
+}
+
+body .public-site.public-organization .page-intro {
+    padding: clamp(2.5rem, 5vw, 4.5rem) 0 2.5rem;
+    color: var(--public-ink);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+body .public-site.public-organization .page-intro::before { display: none; }
+body .public-site.public-organization .page-intro h1 {
+    max-width: 760px;
+    color: var(--public-ink);
+    font-family: var(--font-ui);
+    font-size: clamp(2.1rem, 4vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: 1.15;
+}
+body .public-site.public-organization .page-intro .eyebrow { color: var(--public-primary) !important; }
+body .public-site.public-organization .page-intro > p:last-child { color: var(--public-muted) !important; line-height: 1.65; }
+body .public-site.public-organization .organization-tree { margin-top: 1rem; }
+body .public-site.public-organization .tree-flow { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+body .public-site.public-organization .organization-card {
+    color: var(--public-ink);
+    background: var(--public-surface);
+    border: 1px solid var(--public-line);
+    border-top: 3px solid var(--public-primary);
+    border-radius: 14px;
+    box-shadow: none;
+}
+body .public-site.public-organization .organization-card h2 { font-family: var(--font-ui); font-weight: 700; letter-spacing: -.02em; }
+body .public-site.public-organization .organization-card p { color: var(--public-muted); }
+
+body .public-site.article-page .public-site-header { max-width: 1180px; }
+body .public-site.article-page article {
+    max-width: 900px;
+    margin-top: clamp(2.5rem, 5vw, 5rem);
+    padding: clamp(1.3rem, 3vw, 3rem);
+    background: var(--public-surface);
+    border: 1px solid var(--public-line);
+    border-radius: 18px;
+}
+body .public-site.article-page .back { color: var(--public-primary); }
+body .public-site.article-page article > small { color: var(--public-muted); }
+body .public-site.article-page h1 {
+    color: var(--public-ink);
+    font-family: var(--font-ui);
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: 1.16;
+}
+body .public-site.article-page .article-body { max-width: 76ch; color: var(--public-ink); font-size: 1rem; line-height: 1.8; }
+body .public-site.article-page .article-gallery img { border-radius: 12px; }
+body .public-site.article-page .article-gallery figcaption { color: var(--public-muted); }
+@media (max-width: 600px) {
+    body .public-site.public-organization .page-intro { padding: 1.7rem 0 1.4rem; }
+    body .public-site.public-organization .page-intro h1 { font-size: clamp(1.85rem, 8vw, 2.6rem); }
+    body .public-site.article-page article { margin-top: 1.5rem; }
+}

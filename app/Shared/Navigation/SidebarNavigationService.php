@@ -13,6 +13,7 @@ class SidebarNavigationService
     /** @var list<string> */
     private const ADMISSIONS_NAV_KEYS = [
         'admissions',
+        'admissions-settings',
         'admissions-periods',
         'admissions-tracks',
         'admissions-committee',

@@ -320,7 +320,7 @@ const printScores = () => window.print();
                 <a href="/dashboard" class="workspace-tab"><span aria-hidden="true">⌂</span>Ringkasan</a>
                 <a href="/pembelajaran" class="workspace-tab"><span aria-hidden="true">▤</span>Materi</a>
                 <a href="/pembelajaran" class="workspace-tab"><span aria-hidden="true">✓</span>Tugas</a>
-                <a href="#" class="workspace-tab is-active" aria-current="page"><span aria-hidden="true">▥</span>Nilai</a>
+                <span class="workspace-tab is-active" aria-current="page"><span aria-hidden="true">▥</span>Nilai</span>
                 <a href="/akademik/presensi" class="workspace-tab"><span aria-hidden="true">◷</span>Absensi</a>
                 <a href="/komunikasi/chat" class="workspace-tab"><span aria-hidden="true">⋯</span>Chat</a>
             </nav>
@@ -581,5 +581,11 @@ const printScores = () => window.print();
 }
 @media (max-width: 900px) { .score-hero { align-items: stretch; flex-direction: column; } .score-hero-actions { justify-content: flex-start; } .score-hero-context { width: 100%; } .grade-toolbar { grid-template-columns: 1fr 1fr; } .score-toolbar-actions { grid-column: 1 / -1; justify-content: space-between; } .score-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .score-summary { grid-template-columns: 1fr 1fr; gap: .55rem; } .score-summary-card { padding: .75rem; } .score-summary-card strong { font-size: 1.2rem; } .grade-toolbar { grid-template-columns: 1fr; } .score-toolbar-actions { grid-column: auto; align-items: stretch; flex-direction: column; } .score-filter-context { text-align: left; } .score-table-heading { align-items: flex-start; flex-direction: column; } .score-table-tools { width: 100%; justify-content: space-between; } .student-search { width: min(100%, 240px); } .workspace-tabs { margin-inline: -.15rem; } }
+.score-hero{align-items:flex-start;padding:0 0 .8rem;border-bottom:1px solid var(--line)}
+.score-hero h1{font-size:clamp(1.55rem,2.2vw,2rem);font-weight:800;letter-spacing:-.035em}
+.score-hero>div>p:last-child{max-width:62ch;color:var(--ink-soft);font-size:.85rem;line-height:1.55}
+.score-hero-context{background:var(--surface);border-color:var(--line);box-shadow:var(--shadow-sm)}
+.workspace-tabs{scrollbar-width:thin}
+@media(max-width:600px){.score-hero-actions{width:100%}.score-hero-actions .secondary-button{flex:1;justify-content:center}}
 </style>
 

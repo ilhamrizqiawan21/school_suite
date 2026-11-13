@@ -780,3 +780,57 @@ has_old_letter_number=yes has_new_signer_identifier=no
 ### Risiko
 
 Migrasi workflow mengubah constraint nomor surat menjadi berbasis tahun, menambah tabel versi dokumen/signature request, dan menambah kolom metadata. Data lama tidak hilang pada copy ini, tetapi rollback menghapus struktur baru; backup dan uji pada salinan wajib dilakukan sebelum production. SQLite memakai implementasi kolom/trigger yang berbeda dari MySQL, sehingga kompatibilitas MySQL production tetap **BELUM TERBUKTI**.
+
+## Redesign Alur & Navigasi Menu SPMB — Opsi B (13 November 2026)
+
+### Task dan Requirement
+- **Task**: Redesign alur / flow menu SPMB (Opsi B: *Pipeline Workspace* + *360° Applicant Drawer* + Konsolidasi Navigasi Sidebar menjadi 4 menu fokus).
+- **Requirement ID**: `S11-SPMB-UX`, `SS-F-001` (otorisasi server-side tetap ditegakkan), `AI_RULES.md`.
+
+### Ringkasan Perubahan
+1. **Konsolidasi Navigasi Sidebar SPMB (10 menu → 4 menu fokus)** di `resources/js/components/SidebarNavigation.vue`:
+   - **Dashboard & Laporan** (`/spmb`, aktif juga pada `/spmb/laporan`)
+   - **Pendaftar & Verifikasi** (`/spmb/pendaftar`, aktif juga pada `/spmb/berkas`)
+   - **Seleksi & Daftar Ulang** (`/spmb/seleksi`, aktif juga pada `/spmb/pengumuman` dan `/spmb/daftar-ulang`)
+   - **Pengaturan SPMB** (`/spmb/pengaturan`, aktif juga pada `/spmb/periode`, `/spmb/jalur`, `/spmb/panitia`)
+2. **Redesign Alur *Pipeline Workspace* di `resources/js/Pages/Admissions/Index.vue`**:
+   - **Dashboard & Laporan**: menggabungkan ringkasan eksekutif, tahapan, tindak lanjut, keterisian kuota per jalur, dan tab *Rekapitulasi & Laporan* dalam satu layar.
+   - **Pendaftar & Verifikasi + *360° Applicant Slide-over Drawer***: meja kerja terpadu untuk memfilter calon siswa, melihat ringkasan status berkas langsung pada kartu pendaftar, dan membuka panel samping (*drawer*) untuk memeriksa identitas, mengunggah/memverifikasi berkas (*Valid* / *Revisi*), memperbarui status, serta menginput nilai kriteria tanpa berpindah halaman.
+   - **Seleksi & Daftar Ulang Terpadu**: menyatukan tahapan (1) *Penilaian & Ranking*, (2) *Pengumuman Kelulusan*, dan (3) *Daftar Ulang Siswa* dalam satu alur berurutan, dilengkapi tombol bantu **"Isi sesuai kuota"** pada keputusan seleksi dan **"Saran NIS"** pada konfirmasi daftar ulang.
+   - **Pengaturan SPMB + *Setup Readiness Checklist***: menyatukan pengaturan *Periode & Juknis*, *Jalur, Kuota, Berkas & Kriteria*, serta *Panitia & Jadwal* dengan indikator kesiapan 4 langkah sebelum periode dapat dibuka.
+3. **Kompatibilitas Penuh Rute & Backend**:
+   - Menambahkan rute `GET /spmb/pengaturan` (`admissions.settings.index`) di `app/Modules/Admissions/Interface/Routes/web.php` dan key `admissions-settings` di `app/Shared/Navigation/SidebarNavigationService.php`.
+   - Memuat relasi `scores.criterion` pada daftar pendaftar di `AdmissionsController::render()` agar nilai seleksi yang sudah tersimpan langsung tampil saat form dibuka kembali.
+   - Seluruh 10 rute GET lama dan seluruh endpoint POST/PUT/DELETE tetap dipertahankan 100% kompatibel.
+
+### File & Migrasi yang Disentuh
+- `app/Modules/Admissions/Interface/Routes/web.php`
+- `app/Modules/Admissions/Interface/Http/Controllers/AdmissionsController.php`
+- `app/Shared/Navigation/SidebarNavigationService.php`
+- `resources/js/components/SidebarNavigation.vue`
+- `resources/js/Pages/Admissions/Index.vue`
+- `tests/Feature/AdmissionsWorkflowTest.php`
+- `tests/Feature/RoleMatrixAccessTest.php`
+- `docs/HANDOFF.md`
+- **Migrasi database**: Tidak ada perubahan skema/migrasi baru.
+
+### Keputusan & Asumsi
+- Sesuai pilihan pengguna (**Opsi B**), navigasi sidebar disederhanakan menjadi 4 menu berbasis alur kerja (*Overview, Intake, Decision, Settings*), sementara URL lama (`/spmb/periode`, `/spmb/jalur`, `/spmb/panitia`, `/spmb/berkas`, `/spmb/pengumuman`, `/spmb/daftar-ulang`, `/spmb/laporan`) tetap dipertahankan dan otomatis membuka tab yang relevan.
+
+### Tes Beserta Hasil
+- `php artisan test --compact tests/Feature/AdmissionsWorkflowTest.php tests/Feature/AdmissionsControllersTest.php tests/Feature/RoleMatrixAccessTest.php tests/Architecture/ModularBoundaryTest.php` → **PASS** (29 tests, 271 assertions).
+- `vendor/bin/pint --test` → **PASS**.
+- `npm run typecheck` (`vue-tsc --noEmit`) → **PASS** (0 errors).
+- `npm run build` (`vite build`) → **PASS**.
+
+### Risiko Tersisa
+- Tidak ada perubahan skema database atau pelonggaran kebijakan otorisasi; semua kontrol akses server-side (`AdmissionsPolicy` & Gate) tetap sama.
+
+### Langkah Review Manual
+1. Login sebagai Admin atau Operator, lalu buka menu **SPMB** di sidebar; pastikan kini tampil 4 menu ringkas (*Dashboard & Laporan*, *Pendaftar & Verifikasi*, *Seleksi & Daftar Ulang*, *Pengaturan SPMB*).
+2. Buka **Pengaturan SPMB** (`/spmb/pengaturan`), periksa *Checklist Kesiapan Periode* dan berpindah antar tab *Periode & Juknis*, *Jalur, Kuota, Berkas & Kriteria*, serta *Panitia & Jadwal*.
+3. Buka **Pendaftar & Verifikasi** (`/spmb/pendaftar`), klik tombol **"Periksa & Berkas"** pada salah satu pendaftar untuk membuka *Slide-over Drawer* 360° dan uji verifikasi berkas / perubahan status tanpa berpindah halaman.
+4. Buka **Seleksi & Daftar Ulang** (`/spmb/seleksi`), uji fitur input nilai, *Hitung ranking*, tombol *Isi sesuai kuota*, tab *Pengumuman Kelulusan*, serta tombol *Saran NIS* pada tab *Daftar Ulang Siswa*.
+
+### Rollback
+- Kembalikan perubahan pada file yang disentuh dengan `git checkout -- app/Modules/Admissions app/Shared/Navigation/SidebarNavigationService.php resources/js/components/SidebarNavigation.vue resources/js/Pages/Admissions/Index.vue tests/Feature/AdmissionsWorkflowTest.php tests/Feature/RoleMatrixAccessTest.php` lalu jalankan `npm run build`.

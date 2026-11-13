@@ -138,15 +138,14 @@ const submit = () => {
 <template>
     <Head title="Profil Sekolah" />
     <AppLayout title="Profil Sekolah">
-        <main class="view school-page">
-            <section class="hero-card">
+        <div class="view school-page">
+            <header class="school-heading">
                 <div>
                 <p class="eyebrow">Pengaturan sekolah</p>
                 <h1>Identitas & profil sekolah</h1>
                 <p>Lengkapi identitas dan kontak yang digunakan pada kop surat, rapor, dan dokumen sekolah.</p>
                 </div>
-            </section>
-            <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
+            </header>
             <div v-if="!canUpdate" class="notice" role="status">Anda dapat melihat profil sekolah. Perubahan dikelola administrator yang memiliki akses pengaturan sekolah.</div>
             <form class="school-form" @submit.prevent="submit">
                 <div v-if="hasErrors" class="notice" role="alert">Profil sekolah belum disimpan. Periksa isian yang ditandai di bawah.</div>
@@ -217,7 +216,7 @@ const submit = () => {
                     <div v-if="canUpdate" class="panel save-bar"><span>{{ form.isDirty ? 'Ada perubahan yang belum disimpan' : 'Profil sekolah sudah tersimpan' }}</span><button type="submit" class="primary-button" :disabled="form.processing || !form.isDirty">{{ form.processing ? 'Menyimpan…' : 'Simpan profil sekolah' }}</button></div>
                 </fieldset>
             </form>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
@@ -225,4 +224,15 @@ const submit = () => {
 .settings-section,.save-bar{padding:1.25rem}.section-heading h2{font-weight: 700}.hero-card>div{min-width:0}.notice{padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.85rem;line-height:1.6}.notice.success{background:#ecfdf5;color:#166534}
 .school-page,.school-form,fieldset{display:grid;gap:1.25rem;min-width:0}.school-page{max-width:1100px;margin:auto}fieldset{border:0;padding:0;margin:0}.settings-section{display:grid;gap:1.25rem;min-width:0}.section-heading h2{margin:0;font-size:1rem}.section-heading p{margin:.4rem 0 0;color:var(--ink-soft);font-size:.8rem;line-height:1.6}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.settings-section label{display:grid;align-content:start;gap:.45rem;min-width:0;font-size:.8rem;font-weight:700}.settings-section input:not([type=radio]),.settings-section select,.settings-section textarea{width:100%;min-width:0;min-height:44px;padding:.7rem .8rem;border:1px solid var(--line);border-radius:.7rem;background:var(--surface);color:var(--ink);font:inherit;font-weight:400}.settings-section textarea{resize:vertical;line-height:1.6}.settings-section :is(input,select,textarea):focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 30%,transparent);outline-offset:2px}.wide{grid-column:1/-1}.settings-section small{font-size:.72rem;font-weight:400;color:var(--ink-soft);line-height:1.6;overflow-wrap:anywhere}.settings-section em{font-size:.75rem;font-style:normal;color:var(--red)}.image-preview{display:grid;place-items:center;height:110px;border:1px dashed var(--line);border-radius:.7rem;background:var(--surface-subtle)}.image-preview img{max-width:100%;max-height:90px;object-fit:contain}.color-picker{display:grid;gap:.6rem;font-size:.8rem;font-weight:700}.theme-options{display:flex;flex-wrap:wrap;gap:.6rem}.settings-section .theme-choice{display:flex;align-items:center;gap:.4rem;padding:.65rem;border:1px solid var(--line);border-radius:.65rem;font-size:.75rem}.theme-choice i{width:1.1rem;height:1.1rem;border-radius:50%}.save-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}.save-bar span{font-size:.8rem;color:var(--ink-soft)}button{min-height:44px}.upload-field button{width:fit-content}fieldset:disabled input,fieldset:disabled select,fieldset:disabled textarea{opacity:.7}@media(max-width:640px){.fields{grid-template-columns:1fr}.save-bar{flex-direction:column;align-items:stretch}.save-bar button{width:100%}}
 .section-toggles{display:flex;flex-wrap:wrap;gap:.65rem}.settings-section .section-toggles label{display:flex;align-items:center;gap:.55rem;min-height:44px;padding:.55rem .75rem;border:1px solid var(--line);border-radius:.65rem;font-weight:600}.section-toggles input{width:1.1rem;height:1.1rem;accent-color:var(--primary)}
+.school-page { width: 100%; }
+.school-heading { padding: .5rem 0 .75rem; }
+.school-heading .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: none; }
+.school-heading h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.2; }
+.school-heading p:not(.eyebrow) { max-width: 640px; margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.settings-section { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
+.settings-section .section-heading { display: block; margin-bottom: .25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--line); }
+.settings-section .section-heading h2 { color: var(--ink); font-size: 1.05rem; }
+.save-bar { position: sticky; bottom: 1rem; z-index: 10; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-md); }
+.theme-choice:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+@media (max-width: 640px) { .save-bar { bottom: max(.5rem, env(safe-area-inset-bottom)); } }
 </style>

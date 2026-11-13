@@ -88,9 +88,9 @@ const deleteNote = (id: number) => {
     <AppLayout title="Catatan Observasi Siswa">
         <Head title="Catatan Observasi — School Suite" />
 
-        <div class="space-y-6">
+        <div class="space-y-6 observations-page">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="observations-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Catatan Observasi & Perkembangan Siswa</h1>
                     <p class="text-sm text-slate-500 mt-1">
@@ -113,7 +113,7 @@ const deleteNote = (id: number) => {
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
+            <div class="observations-filters bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
                     <select
                         v-model="selectedClass"
@@ -145,7 +145,7 @@ const deleteNote = (id: number) => {
                 <div
                     v-for="note in notes"
                     :key="note.id"
-                    class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3"
+                    class="observation-note bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3"
                 >
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                         <div class="flex items-center gap-2 flex-wrap">
@@ -190,10 +190,10 @@ const deleteNote = (id: number) => {
         </div>
 
         <!-- Modal Tambah Catatan -->
-        <div v-if="showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div v-if="showAddModal" class="observation-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="observation-dialog bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4" role="dialog" aria-modal="true" aria-labelledby="observation-modal-title">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Tambah Catatan Observasi</h3>
+                    <h3 id="observation-modal-title" class="text-lg font-bold text-slate-900">Tambah Catatan Observasi</h3>
                     <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
@@ -249,4 +249,21 @@ const deleteNote = (id: number) => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.observations-header { padding: clamp(1.25rem, 2.5vw, 2rem); border: 1px solid var(--line); border-radius: 1.25rem; background: linear-gradient(135deg, var(--surface), var(--surface-subtle)); }
+.observations-header h1, .observation-note h3 { color: var(--ink); }
+.observations-header p, .observation-note p { color: var(--ink-soft); line-height: 1.65; }
+.observations-header button, .observation-dialog button[type='submit'] { min-height: 44px; background: var(--primary-action); }
+.observations-header button:hover, .observation-dialog button[type='submit']:hover { background: var(--primary-action-strong); }
+.observations-filters, .observation-note, .observation-dialog { border-color: var(--line); background: var(--surface); }
+.observations-filters select, .observation-dialog :is(input, select, textarea) { min-height: 44px; border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+.observation-dialog { max-height: min(90vh, 900px); overflow-y: auto; }
+.observation-dialog h3 { color: var(--ink); }
+.observation-dialog label { color: var(--ink-soft); }
+.observation-dialog button[type='button'] { min-height: 44px; }
+.observations-page :is(button, select, input, textarea):focus-visible,
+.observation-dialog :is(button, select, input, textarea):focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; }
+@media (max-width: 640px) { .observations-header button { width: 100%; justify-content: center; } .observation-dialog .grid { grid-template-columns: 1fr; } }
+</style>
 

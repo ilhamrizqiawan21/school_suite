@@ -12,6 +12,7 @@ Route::middleware(['auth', 'role:admin,operator,principal,teacher', 'throttle:se
     ->name('admissions.')
     ->group(function (): void {
         Route::get('/', [AdmissionsController::class, 'index'])->name('index');
+        Route::get('/pengaturan', [AdmissionsController::class, 'section'])->defaults('section', 'settings')->name('settings.index');
         Route::get('/periode', [AdmissionsController::class, 'section'])->defaults('section', 'periods')->name('periods.index');
         Route::get('/jalur', [AdmissionsController::class, 'section'])->defaults('section', 'tracks')->name('tracks.index');
         Route::get('/panitia', [AdmissionsController::class, 'section'])->defaults('section', 'committee')->name('committee.index');

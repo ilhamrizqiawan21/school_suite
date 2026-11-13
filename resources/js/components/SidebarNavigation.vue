@@ -8,6 +8,7 @@ interface NavItem {
     key: string;
     icon: string;
     activePrefix?: string;
+    activePrefixes?: string[];
     exact?: boolean;
     studentHref?: string;
     studentActivePrefix?: string;
@@ -39,16 +40,10 @@ const sections: NavSection[] = [
         title: 'SPMB',
         icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12zm4-6h2m-2 3h4',
         items: [
-            { name: 'Dashboard SPMB', href: '/spmb', key: 'admissions', exact: true, activePrefix: '/spmb', icon: 'M3 13h4V3H3v10zm7 8h4V3h-4v18zm7-5h4V3h-4v13z' },
-            { name: 'Periode & Juknis', href: '/spmb/periode', key: 'admissions-periods', activePrefix: '/spmb/periode', icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12' },
-            { name: 'Jalur & Kuota', href: '/spmb/jalur', key: 'admissions-tracks', activePrefix: '/spmb/jalur', icon: 'M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-5 2v4' },
-            { name: 'Panitia & Jadwal', href: '/spmb/panitia', key: 'admissions-committee', activePrefix: '/spmb/panitia', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.857-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2a5 5 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-            { name: 'Pendaftar', href: '/spmb/pendaftar', key: 'admissions-applicants', activePrefix: '/spmb/pendaftar', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z' },
-            { name: 'Verifikasi Berkas', href: '/spmb/berkas', key: 'admissions-documents', activePrefix: '/spmb/berkas', icon: 'M5 4h14v16H5zM8 8h8M8 12h5m-5 4h8' },
-            { name: 'Seleksi & Ranking', href: '/spmb/seleksi', key: 'admissions-selection', activePrefix: '/spmb/seleksi', icon: 'M4 19h16M7 16V9m5 7V5m5 11v-3' },
-            { name: 'Pengumuman', href: '/spmb/pengumuman', key: 'admissions-announcement', activePrefix: '/spmb/pengumuman', icon: 'M4 5h16v12H4zM8 21h8M12 17v4' },
-            { name: 'Daftar Ulang', href: '/spmb/daftar-ulang', key: 'admissions-re-registration', activePrefix: '/spmb/daftar-ulang', icon: 'M5 12h14m-6-6 6 6-6 6M4 4h6' },
-            { name: 'Laporan & Arsip', href: '/spmb/laporan', key: 'admissions-reports', activePrefix: '/spmb/laporan', icon: 'M5 3h14v18H5zM8 7h8M8 11h8M8 15h5' },
+            { name: 'Dashboard & Laporan', href: '/spmb', key: 'admissions', exact: true, activePrefixes: ['/spmb/laporan'], icon: 'M3 13h4V3H3v10zm7 8h4V3h-4v18zm7-5h4V3h-4v13z' },
+            { name: 'Pendaftar & Verifikasi', href: '/spmb/pendaftar', key: 'admissions-applicants', activePrefixes: ['/spmb/pendaftar', '/spmb/berkas'], icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z' },
+            { name: 'Seleksi & Daftar Ulang', href: '/spmb/seleksi', key: 'admissions-selection', activePrefixes: ['/spmb/seleksi', '/spmb/pengumuman', '/spmb/daftar-ulang'], icon: 'M4 19h16M7 16V9m5 7V5m5 11v-3' },
+            { name: 'Pengaturan SPMB', href: '/spmb/pengaturan', key: 'admissions-settings', activePrefixes: ['/spmb/pengaturan', '/spmb/periode', '/spmb/jalur', '/spmb/panitia'], icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12' },
         ],
     },
     {
@@ -234,6 +229,14 @@ const isItemActive = (item: NavItem): boolean => {
     const currentPath = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
     const targetHref = item.href.length > 1 && item.href.endsWith('/') ? item.href.slice(0, -1) : item.href;
 
+    if (item.activePrefixes?.length) {
+        const matchesAnyPrefix = item.activePrefixes.some((rawPrefix) => {
+            const prefix = rawPrefix.length > 1 && rawPrefix.endsWith('/') ? rawPrefix.slice(0, -1) : rawPrefix;
+            return currentPath === prefix || currentPath.startsWith(prefix + '/');
+        });
+        if (matchesAnyPrefix) return true;
+    }
+
     if (item.exact || targetHref === '/') {
         return currentPath === targetHref;
     }
@@ -334,6 +337,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 
 <template>
     <nav class="nav-stack" aria-label="Navigasi Utama">
+        <span class="sidebar-workspace-label">Ruang kerja</span>
         <Link
             :href="resolvedItem(homeItem).href"
             :class="['nav-item', isItemActive(resolvedItem(homeItem)) ? 'is-active' : '']"
@@ -357,6 +361,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
                 <button
                     type="button"
                     class="nav-section-trigger"
+                    :class="{ 'is-active': isSectionActive(section) }"
                     :aria-expanded="isExpanded(section.title, isSectionActive(section))"
                     :aria-controls="groupId(section.title)"
                     :aria-label="section.title"
@@ -431,6 +436,8 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 </template>
 
 <style scoped>
+.sidebar-workspace-label { display: block; margin: 12px 11px 7px; color: var(--ink-faint); font-size: 11px; }
+:global(.is-sidebar-rail) .sidebar-workspace-label { display: none; }
 .nav-group-trigger {
     width: 100%;
     border: 0;
@@ -450,14 +457,15 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
     padding: 7px 11px;
     border: 0;
     border-radius: 9px;
-    color: #b4c3dc;
+    color: var(--ink);
     background: transparent;
     font: inherit;
     text-align: left;
     cursor: pointer;
 }
 
-.nav-section-trigger:hover { color: #fff; background: rgba(255,255,255,.07); }
+.nav-section-trigger:hover { color: var(--primary-strong); background: var(--primary-soft); }
+.nav-section-trigger.is-active { color: var(--primary-strong); background: var(--primary-soft); box-shadow: inset 3px 0 0 var(--primary); }
 .nav-section-trigger:focus-visible { outline: 2px solid var(--sidebar-focus-token); outline-offset: 2px; }
 .nav-section-trigger > svg:first-child { width: 18px; height: 18px; flex: 0 0 18px; }
 .nav-section-trigger .nav-label { flex: 1; margin: 0; color: inherit; font-size: 12px; font-weight: 700; letter-spacing: .025em; }
@@ -489,7 +497,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
     gap: 0.2rem;
     margin: 0.2rem 0 0.4rem 0.85rem;
     padding-left: 0.55rem;
-    border-left: 1px solid currentColor;
+    border-left: 1px solid var(--line);
 }
 
 .nav-subitem {
@@ -502,7 +510,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
     gap: 3px;
     margin: 0.2rem 0 0.4rem 0.85rem;
     padding: 2px 0 5px 0.55rem;
-    border-left: 1px solid currentColor;
+    border-left: 1px solid var(--line);
 }
 .nav-nested-block {
     position: relative;

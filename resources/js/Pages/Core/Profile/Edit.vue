@@ -55,19 +55,15 @@ const submit = () => form.post('/profil', {
     <Head title="Profil Saya" />
 
     <AppLayout title="Profil Saya">
-        <main class="view profile-page">
-            <section class="hero-card profile-header">
+        <div class="view profile-page">
+            <header class="profile-header">
                 <div>
                     <p class="eyebrow">Akun pribadi</p>
                     <h1>Profil saya</h1>
                     <p>Kelola foto, identitas kontak, dan keamanan akun Anda.</p>
                 </div>
                 <a class="secondary-button" href="/ganti-password">Ganti kata sandi</a>
-            </section>
-
-            <div v-if="page.props.flash?.message" class="notice success" role="status">
-                {{ page.props.flash.message }}
-            </div>
+            </header>
 
             <section class="panel profile-panel">
                 <aside class="profile-identity">
@@ -139,7 +135,7 @@ const submit = () => form.post('/profil', {
                     </div>
                 </form>
             </section>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
@@ -156,7 +152,11 @@ const submit = () => form.post('/profil', {
     align-items: center;
     justify-content: space-between;
     gap: 2rem;
+    padding: .5rem 0 .75rem;
 }
+.profile-header .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; letter-spacing: .04em; text-transform: none; }
+.profile-header h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; }
+.profile-header p:not(.eyebrow) { margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; }
 
 .profile-panel {
     display: grid;

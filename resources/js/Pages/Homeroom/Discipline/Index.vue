@@ -181,9 +181,9 @@ const submitDispensation = () => {
     <AppLayout title="Kedisiplinan & Prestasi Siswa">
         <Head title="Kedisiplinan & Prestasi — School Suite" />
 
-        <div class="space-y-6">
+        <div class="space-y-6 discipline-page">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="discipline-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kedisiplinan, Prestasi, & Dispensasi Siswa</h1>
                     <p class="text-sm text-slate-500 mt-1">
@@ -228,7 +228,7 @@ const submitDispensation = () => {
             </div>
 
             <!-- Tab Headers & Filter -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200">
+            <div class="discipline-tabs flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200">
                 <div class="flex gap-4">
                     <button
                         type="button"
@@ -427,8 +427,8 @@ const submitDispensation = () => {
         </div>
 
         <!-- Modal Tambah Insiden -->
-        <div v-if="showIncidentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div v-if="showIncidentModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="discipline-dialog bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Catat Insiden Pelanggaran Tata Tertib</h3>
                     <button type="button" @click="showIncidentModal = false" class="text-slate-400">✕</button>
@@ -478,8 +478,8 @@ const submitDispensation = () => {
         </div>
 
         <!-- Modal Tambah Prestasi -->
-        <div v-if="showAchievementModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div v-if="showAchievementModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="discipline-dialog bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Catat Prestasi & Capaian Siswa</h3>
                     <button type="button" @click="showAchievementModal = false" class="text-slate-400">✕</button>
@@ -542,8 +542,8 @@ const submitDispensation = () => {
         </div>
 
         <!-- Modal Tambah Bantuan / Konseling -->
-        <div v-if="showAssistanceModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div v-if="showAssistanceModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="discipline-dialog bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Catat Tindak Lanjut & Konseling</h3>
                     <button type="button" @click="showAssistanceModal = false" class="text-slate-400">✕</button>
@@ -591,8 +591,8 @@ const submitDispensation = () => {
         </div>
 
         <!-- Modal Tambah Dispensasi / Surat Izin -->
-        <div v-if="showDispensationModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
+        <div v-if="showDispensationModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+            <div class="discipline-dialog bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 class="text-lg font-bold text-slate-900">Catat Surat Dispensasi / Izin Siswa</h3>
                     <button type="button" @click="showDispensationModal = false" class="text-slate-400">✕</button>
@@ -643,3 +643,26 @@ const submitDispensation = () => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.discipline-header { padding: clamp(1.25rem, 2.5vw, 2rem); border: 1px solid var(--line); border-radius: 1.25rem; background: linear-gradient(135deg, var(--surface), var(--surface-subtle)); }
+.discipline-header h1 { color: var(--ink); }
+.discipline-header p { max-width: 60ch; color: var(--ink-soft); line-height: 1.65; }
+.discipline-header button { min-height: 44px; background: var(--primary-action); }
+.discipline-header button:hover { background: var(--primary-action-strong); }
+.discipline-tabs { border-color: var(--line); }
+.discipline-tabs > div:first-child { max-width: 100%; overflow-x: auto; }
+.discipline-tabs button { min-height: 44px; white-space: nowrap; }
+.discipline-tabs button.border-rose-600, .discipline-tabs button.border-emerald-600, .discipline-tabs button.border-indigo-600, .discipline-tabs button.border-amber-600 { border-color: var(--primary-action); color: var(--primary-strong); }
+.discipline-tabs select { min-height: 44px; border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+.discipline-page > [role='region'] { border-color: var(--line); background: var(--surface); }
+.discipline-dialog { max-height: min(90vh, 900px); overflow-y: auto; border: 1px solid var(--line); background: var(--surface); }
+.discipline-dialog h3 { color: var(--ink); }
+.discipline-dialog label { color: var(--ink-soft); }
+.discipline-dialog :is(input, select, textarea) { min-height: 44px; border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+.discipline-dialog button { min-height: 44px; }
+.discipline-dialog button[type='submit'] { background: var(--primary-action); }
+.discipline-dialog button[type='submit']:hover { background: var(--primary-action-strong); }
+.discipline-page :is(button, select, [role='region']):focus-visible, .discipline-dialog :is(button, input, select, textarea):focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; }
+@media (max-width: 640px) { .discipline-header button { width: 100%; } .discipline-tabs > div:first-child { width: 100%; } .discipline-tabs > div:last-child, .discipline-tabs select { width: 100%; } .discipline-dialog .grid { grid-template-columns: 1fr; } }
+</style>

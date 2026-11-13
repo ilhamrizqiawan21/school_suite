@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
@@ -87,6 +87,40 @@ const showMaterialForm = ref(false);
 const showAssignmentForm = ref(false);
 const selectedAssignment = ref<Assignment | null>(null);
 const selectedSubmission = ref<Submission | null>(null);
+const activeOverlay = computed(() => showMaterialForm.value || showAssignmentForm.value || !!selectedAssignment.value || !!selectedSubmission.value);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(activeOverlay, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input:not([type="hidden"]), select, textarea, button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const handleOverlayKeydown = (event: KeyboardEvent) => {
+    if (!activeOverlay.value) return;
+    if (event.key === 'Escape') {
+        selectedSubmission.value = null;
+        selectedAssignment.value = null;
+        showAssignmentForm.value = false;
+        showMaterialForm.value = false;
+        return;
+    }
+    if (event.key !== 'Tab' || !overlayRoot.value) return;
+    const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
 
 const materialForm = useForm({
     teaching_assignment_id: props.teaching_assignments[0]?.id ?? '',
@@ -531,9 +565,9 @@ const removeResource = (url: string) => {
             </section>
         </div>
 
-        <div v-if="showMaterialForm" class="modal-backdrop" @click.self="showMaterialForm = false">
+        <div v-if="showMaterialForm" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="material-modal-title" @click.self="showMaterialForm = false">
             <form class="modal-card" @submit.prevent="submitMaterial">
-                <div class="modal-heading"><div><p class="eyebrow">Materi baru</p><h2>Terbitkan bahan ajar</h2></div><button type="button" aria-label="Tutup formulir materi" @click="showMaterialForm = false">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Materi baru</p><h2 id="material-modal-title">Terbitkan bahan ajar</h2></div><button type="button" aria-label="Tutup formulir materi" @click="showMaterialForm = false">×</button></div>
                 <label>Kelas dan mata pelajaran<select v-model="materialForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option></select></label>
                 <label>Judul<input v-model="materialForm.title" required maxlength="180" /></label>
                 <label>Deskripsi<textarea v-model="materialForm.description" rows="4" /></label>
@@ -544,9 +578,9 @@ const removeResource = (url: string) => {
             </form>
         </div>
 
-        <div v-if="showAssignmentForm" class="modal-backdrop" @click.self="showAssignmentForm = false">
+        <div v-if="showAssignmentForm" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title" @click.self="showAssignmentForm = false">
             <form class="modal-card" @submit.prevent="submitAssignment">
-                <div class="modal-heading"><div><p class="eyebrow">Tugas baru</p><h2>Buat aktivitas siswa</h2></div><button type="button" aria-label="Tutup formulir tugas" @click="showAssignmentForm = false">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Tugas baru</p><h2 id="assignment-modal-title">Buat aktivitas siswa</h2></div><button type="button" aria-label="Tutup formulir tugas" @click="showAssignmentForm = false">×</button></div>
                 <label>Kelas dan mata pelajaran<select v-model="assignmentForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option></select></label>
                 <label>Judul<input v-model="assignmentForm.title" required maxlength="180" /></label>
                 <label>Instruksi<textarea v-model="assignmentForm.instructions" rows="5" /></label>
@@ -557,9 +591,9 @@ const removeResource = (url: string) => {
             </form>
         </div>
 
-        <div v-if="selectedAssignment" class="modal-backdrop" @click.self="selectedAssignment = null">
+        <div v-if="selectedAssignment" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-modal-title" @click.self="selectedAssignment = null">
             <form class="modal-card" @submit.prevent="submitWork">
-                <div class="modal-heading"><div><p class="eyebrow">Pengumpulan tugas</p><h2>{{ selectedAssignment.title }}</h2></div><button type="button" aria-label="Tutup pengumpulan tugas" @click="selectedAssignment = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Pengumpulan tugas</p><h2 id="submission-modal-title">{{ selectedAssignment.title }}</h2></div><button type="button" aria-label="Tutup pengumpulan tugas" @click="selectedAssignment = null">×</button></div>
                 <label>Jawaban teks<textarea v-model="submissionForm.content" rows="7" placeholder="Tulis jawaban atau catatan untuk guru" /></label>
                 <label>Lampiran (maksimal 5)<input type="file" multiple @change="handleSubmissionFiles" /></label>
                 <p v-if="submissionForm.hasErrors" class="form-error">Isi jawaban teks atau pilih minimal satu berkas.</p>
@@ -567,9 +601,9 @@ const removeResource = (url: string) => {
             </form>
         </div>
 
-        <div v-if="selectedSubmission" class="modal-backdrop" @click.self="selectedSubmission = null">
+        <div v-if="selectedSubmission" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="grade-modal-title" @click.self="selectedSubmission = null">
             <form class="modal-card" @submit.prevent="submitGrade">
-                <div class="modal-heading"><div><p class="eyebrow">Penilaian tugas</p><h2>{{ selectedSubmission.enrollment?.student?.name }}</h2></div><button type="button" aria-label="Tutup penilaian tugas" @click="selectedSubmission = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Penilaian tugas</p><h2 id="grade-modal-title">{{ selectedSubmission.enrollment?.student?.name }}</h2></div><button type="button" aria-label="Tutup penilaian tugas" @click="selectedSubmission = null">×</button></div>
                 <label>Keputusan<select v-model="gradeForm.review_status"><option value="approved">Setujui & beri nilai</option><option value="needs_revision">Minta perbaikan</option></select></label>
                 <label v-if="gradeForm.review_status === 'approved'">Nilai<input v-model.number="gradeForm.score" type="number" min="0" required /></label>
                 <label>Umpan balik<textarea v-model="gradeForm.feedback" rows="5" /></label>
@@ -588,48 +622,48 @@ const removeResource = (url: string) => {
 .workspace-tab.is-current { background: var(--primary-soft, #e8eefb); color: var(--primary, #3157a4); }
 .workspace-tab:focus-visible { outline: 2px solid var(--primary, #3157a4); outline-offset: 2px; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line, #e5e7eb); }
-.material-policy { margin: 0; padding: .75rem 1.25rem; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: .78rem; line-height: 1.45; }
-.segmented-control { display: inline-flex; padding: .25rem; border-radius: .75rem; background: #eef2ff; }
-.segmented-control button { padding: .55rem 1rem; border-radius: .55rem; color: #64748b; font-weight: 700; }
-.segmented-control .is-active { background: #fff; color: #4338ca; box-shadow: 0 1px 3px rgb(15 23 42 / .12); }
+.material-policy { margin: 0; padding: .75rem 1.25rem; border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: .78rem; line-height: 1.45; }
+.segmented-control { display: inline-flex; padding: .25rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); }
+.segmented-control button { min-height: 40px; padding: .55rem 1rem; border-radius: .55rem; color: var(--ink-soft); font-weight: 700; }
+.segmented-control .is-active { background: var(--primary-soft); color: var(--primary-strong); }
 .resource-grid, .assignment-list { display: grid; gap: 1rem; padding: 1.25rem; }
 .resource-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.resource-card, .assignment-card { display: flex; gap: 1rem; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.1rem; background: #fff; }
+.resource-card, .assignment-card { display: flex; gap: 1rem; border: 1px solid var(--line); border-radius: 14px; padding: 1.1rem; background: var(--surface); }
 .assignment-card { flex-wrap: wrap; align-items: flex-start; }
-.resource-icon { width: 2.75rem; height: 2.75rem; flex: 0 0 auto; display: grid; place-items: center; border-radius: .8rem; background: #eef2ff; color: #4f46e5; font-weight: 800; }
+.resource-icon { width: 2.75rem; height: 2.75rem; flex: 0 0 auto; display: grid; place-items: center; border-radius: .8rem; background: var(--primary-soft); color: var(--primary); font-weight: 800; }
 .resource-body, .assignment-main { min-width: 0; flex: 1; }
-.resource-body h2, .assignment-main h2, .modal-heading h2 { margin: .2rem 0 .35rem; color: #0f172a; font-size: 1.05rem; font-weight: 800; }
-.resource-body p, .assignment-main > p { color: #64748b; font-size: .875rem; }
-.resource-body small { display: block; margin-top: .75rem; color: #94a3b8; }
+.resource-body h2, .assignment-main h2, .modal-heading h2 { margin: .2rem 0 .35rem; color: var(--ink); font-size: 1.05rem; font-weight: 800; }
+.resource-body p, .assignment-main > p { color: var(--ink-soft); font-size: .875rem; }
+.resource-body small { display: block; margin-top: .75rem; color: var(--ink-faint); }
 .assignment-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
-.assignment-meta span { padding: .3rem .55rem; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: .72rem; font-weight: 700; }
-.submission-list { width: 100%; display: grid; gap: .6rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
-.submission-row { display: grid; grid-template-columns: minmax(150px, 1fr) 2fr 1fr auto; align-items: center; gap: 1rem; padding: .8rem; border-radius: .75rem; background: #f8fafc; font-size: .82rem; }
-.submission-row small { display: block; color: #64748b; }
+.assignment-meta span { padding: .3rem .55rem; border-radius: 999px; background: var(--surface-strong); color: var(--ink-soft); font-size: .72rem; font-weight: 700; }
+.submission-list { width: 100%; display: grid; gap: .6rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.submission-row { display: grid; grid-template-columns: minmax(150px, 1fr) 2fr 1fr auto; align-items: center; gap: 1rem; padding: .8rem; border-radius: .75rem; background: var(--surface-subtle); font-size: .82rem; }
+.submission-row small { display: block; color: var(--ink-soft); }
 .submission-files { display: grid; gap: .2rem; }
-.submission-files a { color: #4f46e5; text-decoration: underline; }
+.submission-files a { color: var(--primary); text-decoration: underline; }
 .submission-score { display: flex; align-items: center; gap: .5rem; }
-.danger-link, .text-button { color: #dc2626; font-size: .78rem; font-weight: 700; }
-.text-button { color: #4f46e5; }
-.empty-state { grid-column: 1 / -1; padding: 3rem 1rem; text-align: center; color: #64748b; }
-.empty-state strong { display: block; color: #334155; font-size: 1rem; }
+.danger-link, .text-button { color: var(--red); font-size: .78rem; font-weight: 700; }
+.text-button { color: var(--primary); }
+.empty-state { grid-column: 1 / -1; padding: 3rem 1rem; text-align: center; color: var(--ink-soft); }
+.empty-state strong { display: block; color: var(--ink); font-size: 1rem; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); }
-.modal-card { width: min(620px, 100%); max-height: 90vh; overflow-y: auto; display: grid; gap: 1rem; padding: 1.35rem; border-radius: 1rem; background: #fff; box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.modal-card { width: min(620px, 100%); max-height: 90dvh; overflow-y: auto; display: grid; gap: 1rem; padding: 1.35rem; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
 .modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.modal-heading > button { color: #64748b; font-size: 1.6rem; line-height: 1; }
-.modal-card label { display: grid; gap: .4rem; color: #334155; font-size: .8rem; font-weight: 700; }
-.modal-card input:not([type='checkbox']), .modal-card select, .modal-card textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; padding: .65rem .75rem; font: inherit; font-weight: 500; }
+.modal-heading > button { min-width: 44px; min-height: 44px; color: var(--ink-soft); font-size: 1.6rem; line-height: 1; }
+.modal-card label { display: grid; gap: .4rem; color: var(--ink); font-size: .8rem; font-weight: 700; }
+.modal-card input:not([type='checkbox']), .modal-card select, .modal-card textarea { width: 100%; border: 1px solid var(--line-strong); border-radius: .65rem; padding: .65rem .75rem; color: var(--ink); background: var(--surface); font: inherit; font-weight: 500; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .check-row { display: flex !important; grid-template-columns: none; flex-direction: row; align-items: center; }
 .modal-actions { justify-content: flex-end; padding-top: .5rem; }
-.form-error { color: #dc2626; font-size: .8rem; }
-.form-hint { margin: -.45rem 0 0; color: #64748b; font-size: .75rem; line-height: 1.4; }
-.read-badge { color: #15803d; font-size: .78rem; font-weight: 800; }
+.form-error { color: var(--red); font-size: .8rem; }
+.form-hint { margin: -.45rem 0 0; color: var(--ink-soft); font-size: .75rem; line-height: 1.4; }
+.read-badge { color: var(--green); font-size: .78rem; font-weight: 800; }
 .task-dashboard-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .85rem; }
 .task-stat { min-height: 112px; display: grid; align-content: center; gap: .15rem; padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
 .task-stat span, .task-stat small { color: var(--ink-soft); font-size: .75rem; }
 .task-stat strong { color: var(--ink); font-size: 2rem; line-height: 1; letter-spacing: -.04em; }
-.task-stat-green { border-top: 3px solid #28b47d; } .task-stat-blue { border-top: 3px solid #5c8ff0; } .task-stat-teal { border-top: 3px solid #28c3b4; } .task-stat-red { border-top: 3px solid #e76e73; } .task-stat-amber { border-top: 3px solid #d9a73e; }
+.task-stat-green, .task-stat-blue, .task-stat-teal, .task-stat-red, .task-stat-amber { border-top: 1px solid var(--line); }
 .task-create-panel, .task-class-panel, .task-list-panel { padding: 1.25rem; }
 .task-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .task-panel-heading h2 { margin: .15rem 0 .25rem; color: var(--ink); font-size: 1.15rem; letter-spacing: -.025em; }
@@ -657,7 +691,7 @@ const removeResource = (url: string) => {
 .task-class-option small { margin-top: .2rem; color: var(--ink-soft); font-size: .68rem; font-weight: 500; }
 .task-form-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: .85rem; border-top: 1px solid var(--line); }
 .task-form-footer .form-error { margin: 0; }
-.task-save-button { min-height: 40px; padding: .65rem 1.15rem; color: white; background: #218b59; border: 1px solid #218b59; border-radius: .6rem; font-size: .8rem; font-weight: 800; }
+.task-save-button { min-height: 44px; padding: .65rem 1.15rem; color: white; background: var(--primary); border: 1px solid var(--primary); border-radius: .6rem; font-size: .8rem; font-weight: 800; }
 .task-save-button:disabled { opacity: .55; cursor: not-allowed; }
 .task-class-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
 .task-class-card { padding: .95rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
@@ -684,7 +718,7 @@ const removeResource = (url: string) => {
 .task-progress-label { display: flex; align-items: center; justify-content: space-between; gap: .7rem; color: var(--ink-soft); font-size: .68rem; }
 .task-progress-label strong { color: var(--ink) !important; font-size: .7rem !important; }
 .task-progress-track { height: .35rem; margin-top: .35rem; overflow: hidden; border-radius: 999px; background: var(--surface-strong); }
-.task-progress-track i { display: block; height: 100%; border-radius: inherit; background: #2aa36b; }
+.task-progress-track i { display: block; height: 100%; border-radius: inherit; background: var(--green); }
 .task-row-actions { display: flex; align-items: center; gap: .35rem; }
 .task-outline-button, .task-icon-button { min-height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: .35rem .55rem; color: var(--green); background: transparent; border: 1px solid var(--green); border-radius: .45rem; font-size: .7rem; font-weight: 800; text-decoration: none; }
 .task-icon-button { width: 30px; padding: 0; color: var(--primary); border-color: var(--line-strong); }
@@ -697,7 +731,7 @@ const removeResource = (url: string) => {
 .material-inline-form input:not([type='file']), .material-inline-form select, .material-inline-form textarea { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .7rem .8rem; font: inherit; }
 .material-inline-form input[type='file'] { width: 100%; min-height: 42px; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .55rem .7rem; font: inherit; }
 .material-inline-form small { color: var(--ink-faint); font-size: .7rem; font-weight: 500; }
-.material-upload-button { min-height: 40px; width: 100%; color: white; background: #218b59; border: 1px solid #218b59; border-radius: .6rem; font-size: .8rem; font-weight: 800; }
+.material-upload-button { min-height: 44px; width: 100%; color: white; background: var(--primary); border: 1px solid var(--primary); border-radius: .6rem; font-size: .8rem; font-weight: 800; }
 .material-upload-button:disabled { opacity: .55; cursor: not-allowed; }
 .material-list-heading { align-items: center; }
 .material-list-tools { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; justify-content: flex-end; }
@@ -749,7 +783,7 @@ const removeResource = (url: string) => {
 .student-status-pill { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .55rem; border-radius: 999px; font-size: .68rem; font-weight: 800; white-space: nowrap; }
 .student-status-pill::before { width: .35rem; height: .35rem; content: ''; border-radius: 50%; background: currentColor; }
 .student-status-pill.is-success { color: var(--green); background: var(--green-soft); }
-.student-status-pill.is-warning { color: #a16207; background: #fef3c7; }
+.student-status-pill.is-warning { color: var(--gold); background: var(--gold-soft); }
 .student-status-pill.is-danger { color: var(--red); background: var(--red-soft); }
 .student-task-score { color: var(--green) !important; font-size: .85rem !important; }
 .student-empty-state { min-height: 220px; display: grid; align-content: center; justify-items: center; gap: .35rem; margin-top: 1rem; color: var(--ink-faint); text-align: center; }

@@ -87,7 +87,7 @@ function submit() {
 <template>
     <Head title="Penilaian Sikap" />
     <AppLayout>
-        <main class="attitude-page">
+        <div class="attitude-page">
             <header class="attitude-header">
                 <div>
                     <p class="attitude-eyebrow">Penilaian · {{ active_term?.name ?? 'Belum ada semester aktif' }}</p>
@@ -122,7 +122,7 @@ function submit() {
                         <span class="student-count">{{ students.length }} siswa</span>
                     </div>
 
-                    <div class="attitude-table-wrap table-scroll" tabindex="0" role="region" aria-label="Tabel penilaian sikap">
+                    <div class="attitude-table-wrap table-scroll" tabindex="0" role="region" :aria-label="`Tabel ${group.title.toLowerCase()}`">
                         <table class="app-table attitude-table">
                             <thead>
                                 <tr>
@@ -172,7 +172,7 @@ function submit() {
                     </button>
                 </footer>
             </form>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
@@ -216,4 +216,10 @@ function submit() {
 @media (max-width: 700px) { .attitude-page { padding: .75rem; padding-bottom: 6rem; }.attitude-header { align-items: stretch; flex-direction: column; }.class-picker { flex-basis: auto; }.scale-note { align-items: flex-start; flex-direction: column; }.section-heading { padding: .8rem; }.section-heading p { max-width: 42ch; }.attitude-table { min-width: 760px; }.attitude-table .student-column, .student-cell { width: 170px; }.attitude-table th, .attitude-table td { padding: .5rem .35rem; }.indicator-column { width: 72px; }.average-column { width: 82px; }.attitude-savebar { bottom: .35rem; }.save-status small { display: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
 html[data-theme='dark'] .average-high { color: #81d5ab; } html[data-theme='dark'] .average-mid { color: #f0c678; } html[data-theme='dark'] .average-low { color: #f2a0a0; }
+.attitude-page{padding:0;padding-bottom:5rem;max-width:1440px;gap:1.25rem}
+.attitude-header{align-items:flex-start;padding:0 0 .8rem;border:0;border-bottom:1px solid var(--att-line);border-radius:0;background:transparent}
+.attitude-header h1{font-size:clamp(1.55rem,2.2vw,2rem)}
+.attitude-header .attitude-eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em}
+.scale-note{background:var(--att-surface)}
+@media(max-width:700px){.attitude-page{padding:0;padding-bottom:5rem}.attitude-header{padding:0 0 .8rem}}
 </style>

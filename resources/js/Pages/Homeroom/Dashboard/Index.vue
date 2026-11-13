@@ -67,7 +67,7 @@ const changeClass = () => {
 
         <div class="view space-y-6 homeroom-page">
             <!-- Header bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="homeroom-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">
                         Ruang Kerja Wali Kelas
@@ -117,7 +117,7 @@ const changeClass = () => {
 
                 <div class="homeroom-metric">
                     <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rata-rata Kehadiran</div>
-                    <div class="text-2xl font-bold text-emerald-600 mt-2">{{ summary?.average_attendance_percentage || 100 }}%</div>
+                    <div class="text-2xl font-bold text-emerald-600 mt-2">{{ summary?.average_attendance_percentage ?? 0 }}%</div>
                     <div class="text-xs text-slate-400 mt-1">Presensi semester berjalan</div>
                 </div>
 
@@ -235,4 +235,29 @@ const changeClass = () => {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.homeroom-header {
+    padding: clamp(1.25rem, 2.5vw, 2rem);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, var(--surface), var(--surface-subtle));
+}
+.homeroom-header h1 { color: var(--ink); }
+.homeroom-header h1 span { color: var(--primary-strong); }
+.homeroom-header p { max-width: 60ch; color: var(--ink-soft); line-height: 1.65; }
+.homeroom-header select,
+.homeroom-header a { min-height: 44px; }
+.homeroom-header select { border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+.homeroom-header a:last-child { background: var(--primary-action); }
+.homeroom-header a:last-child:hover { background: var(--primary-action-strong); }
+.homeroom-table-card { border-color: var(--line); background: var(--surface); }
+.homeroom-page .table-scroll:focus-visible,
+.homeroom-header :is(a, select):focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; }
+@media (max-width: 640px) {
+    .homeroom-header > div:last-child { width: 100%; flex-wrap: wrap; }
+    .homeroom-header > div:last-child > div { width: 100%; justify-content: space-between; }
+    .homeroom-header a { flex: 1 1 auto; text-align: center; }
+}
+</style>
 

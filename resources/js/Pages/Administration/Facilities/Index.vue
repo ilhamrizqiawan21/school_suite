@@ -305,4 +305,15 @@ const conditionClass = (condition: string) => `condition-${condition}`;
 :global(html[data-theme='dark']) .facilities-page .status.inactive,
 :global(html[data-theme='dark']) .facilities-page .condition-poor,
 :global(html[data-theme='dark']) .facilities-page .condition-damaged { background: var(--red-soft); color: var(--red); }
+.facilities-page .hero-card, .facilities-page .panel { background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
+.facilities-page .hero-card { padding: clamp(1rem, 2.5vw, 1.5rem); }
+.facilities-page .summary-grid article { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 12px; }
+.facilities-page .summary-grid span, .facilities-page .section-heading p { color: var(--ink-soft); }
+.facilities-page .asset-form label span, .facilities-page .loan-form label span { color: var(--ink-soft); }
+.facilities-page .asset-form input, .facilities-page .asset-form select, .facilities-page .asset-form textarea, .facilities-page .loan-form input, .facilities-page .loan-form select, .facilities-page .loan-form textarea, .facilities-page .filters input, .facilities-page .filters select, .facilities-page .return-form select { min-height: 44px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); border-radius: 10px; }
+.facilities-page .button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; color: var(--primary); background: var(--surface); border-color: var(--line); border-radius: 10px; }
+.facilities-page .button.primary { color: #fff; background: var(--primary-action); border-color: var(--primary-action); }
+.facilities-page .text-action { min-height: 44px; padding: .45rem .65rem; color: var(--primary); border-radius: 8px; }
+.facilities-page .button:focus-visible, .facilities-page .text-action:focus-visible, .facilities-page input:focus-visible, .facilities-page select:focus-visible, .facilities-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 560px) { .facilities-page .hero-actions, .facilities-page .filters { align-items: stretch; flex-direction: column; width: 100%; } .facilities-page .hero-actions > *, .facilities-page .filters > * { width: 100%; max-width: none; } .facilities-page .summary-grid article { min-width: 0; } }
 </style>

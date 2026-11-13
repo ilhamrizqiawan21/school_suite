@@ -115,7 +115,7 @@ const creatingSignatory = ref(false);
 const signatoryForm = useForm({ name: '', title: '', employee_number: '', rank: '', provider_reference: '', template_scopes: [] as string[] });
 const wizardStep = ref(1);
 const wizardError = ref('');
-const activeSection = ref<'all' | 'incoming' | 'outgoing' | 'approval' | 'ready' | 'archived'>(props.filter === 'outgoing' || props.filter === 'archived' ? props.filter : props.filter === 'incoming' ? 'incoming' : 'all');
+const activeSection = ref<'all' | 'incoming' | 'outgoing' | 'approval' | 'signature' | 'ready' | 'archived'>(props.filter === 'outgoing' || props.filter === 'archived' ? props.filter : props.filter === 'incoming' ? 'incoming' : 'all');
 const search = ref('');
 const dashboardDateFrom = ref('');
 const dashboardDateTo = ref('');
@@ -144,7 +144,8 @@ const sectionRecords = computed(() => props.records.filter((record) => {
     if (activeSection.value === 'all') return true;
     if (activeSection.value === 'archived') return record.status === 'archived';
     if (activeSection.value === 'ready') return record.letter_type === 'outgoing' && record.status === 'issued';
-    if (activeSection.value === 'approval') return record.letter_type === 'outgoing' && (record.status === 'pending_approval' || ['approved', 'awaiting_signature', 'signature_pending', 'signature_failed'].includes(record.status));
+    if (activeSection.value === 'approval') return record.letter_type === 'outgoing' && record.status === 'pending_approval';
+    if (activeSection.value === 'signature') return record.letter_type === 'outgoing' && ['approved', 'awaiting_signature', 'signature_pending', 'signature_failed'].includes(record.status);
     return record.letter_type === activeSection.value && record.status !== 'archived';
 }));
 const filteredRecords = computed(() => {
@@ -461,7 +462,7 @@ function submitApproval(record: CorrespondenceRecord) {
 <template>
     <Head :title="pageTitle" />
     <AppLayout :title="pageTitle">
-        <main :class="['view', 'space-y-6', { 'incoming-page': props.filter === 'incoming', 'outgoing-page': props.filter === 'outgoing', 'archive-page': props.filter === 'archived' }]">
+        <main :class="['view', 'space-y-6', 'correspondence-page', { 'incoming-page': props.filter === 'incoming', 'outgoing-page': props.filter === 'outgoing', 'archive-page': props.filter === 'archived' }]">
             <section class="hero-card">
                 <div>
                     <p class="eyebrow">Administrasi sekolah</p>
@@ -530,7 +531,7 @@ function submitApproval(record: CorrespondenceRecord) {
                     <button type="button" :class="{ 'is-selected': activeSection === 'incoming' }" @click="activeSection = 'incoming'"><span>Surat masuk aktif</span><strong>{{ queueCounts.incoming }}</strong><small>{{ queueCounts.disposition }} perlu disposisi</small></button>
                     <button type="button" :class="{ 'is-selected': activeSection === 'outgoing' }" @click="activeSection = 'outgoing'"><span>Draf surat</span><strong>{{ queueCounts.draft }}</strong><small>Perlu dilengkapi</small></button>
                     <button type="button" :class="{ 'is-selected': activeSection === 'approval' }" @click="activeSection = 'approval'"><span>Persetujuan</span><strong>{{ queueCounts.approval }}</strong><small>Sudah diajukan</small></button>
-                    <button type="button" :class="{ 'is-selected': activeSection === 'approval' }" @click="activeSection = 'approval'"><span>Tanda tangan</span><strong>{{ queueCounts.signature }}</strong><small>Manual atau BSrE</small></button>
+                    <button type="button" :class="{ 'is-selected': activeSection === 'signature' }" @click="activeSection = 'signature'"><span>Tanda tangan</span><strong>{{ queueCounts.signature }}</strong><small>Manual atau BSrE</small></button>
                     <button type="button" :class="{ 'is-selected': activeSection === 'ready' }" @click="activeSection = 'ready'"><span>Siap dikirim</span><strong>{{ queueCounts.ready }}</strong><small>Dokumen final</small></button>
                     <button type="button" :class="{ 'is-selected': activeSection === 'archived' }" @click="activeSection = 'archived'"><span>Arsip</span><strong>{{ queueCounts.archived }}</strong><small>Tersimpan</small></button>
                 </div>
@@ -593,7 +594,7 @@ function submitApproval(record: CorrespondenceRecord) {
                     <label>Diarsipkan sampai<input v-model="archiveDateTo" type="date" /></label>
                 </div>
                 <nav v-if="props.filter === 'all'" class="correspondence-tabs" aria-label="Filter surat">
-                    <button v-for="tab in [{ value: 'all', label: 'Semua Surat' }, { value: 'incoming', label: 'Surat Masuk' }, { value: 'outgoing', label: 'Surat Keluar' }, { value: 'approval', label: 'Persetujuan & TTE' }, { value: 'ready', label: 'Siap Dikirim' }, { value: 'archived', label: 'Arsip' }]" :key="tab.value" type="button" class="correspondence-tab" :class="{ 'is-active': activeSection === tab.value }" @click="activeSection = tab.value as typeof activeSection">{{ tab.label }}</button>
+                    <button v-for="tab in [{ value: 'all', label: 'Semua Surat' }, { value: 'incoming', label: 'Surat Masuk' }, { value: 'outgoing', label: 'Surat Keluar' }, { value: 'approval', label: 'Persetujuan' }, { value: 'signature', label: 'Tanda tangan' }, { value: 'ready', label: 'Siap Dikirim' }, { value: 'archived', label: 'Arsip' }]" :key="tab.value" type="button" class="correspondence-tab" :class="{ 'is-active': activeSection === tab.value }" @click="activeSection = tab.value as typeof activeSection">{{ tab.label }}</button>
                 </nav>
 
                 <label class="search-label">Cari surat
@@ -1015,4 +1016,17 @@ function submitApproval(record: CorrespondenceRecord) {
 :global(html[data-theme='dark']) .primary-row-action:hover { background: var(--primary-action-strong) !important; border-color: var(--primary-action-strong) !important; }
 :global(html[data-theme='dark']) .secondary-row-action,
 :global(html[data-theme='dark']) .row-action-button { background: var(--surface-subtle) !important; border-color: var(--line) !important; color: var(--primary) !important; }
+.correspondence-page .hero-card, .correspondence-page .panel, .correspondence-page .incoming-flow-panel, .correspondence-page .outgoing-flow-panel { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
+.correspondence-page .correspondence-hero-metrics > div, .correspondence-page .incoming-hero-summary, .correspondence-page .outgoing-hero-summary > div, .correspondence-page .archive-hero-summary > div { color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: none; }
+.correspondence-page .correspondence-hero-metrics > div:first-child, .correspondence-page .incoming-hero-summary { border-top: 3px solid var(--primary); }
+.correspondence-page .correspondence-hero-metrics > div:nth-child(2) { border-top: 3px solid var(--green); }
+.correspondence-page .correspondence-hero-metrics > div:nth-child(3) { border-top: 3px solid var(--gold); }
+.correspondence-page .correspondence-hero-metrics strong, .correspondence-page .incoming-hero-summary strong, .correspondence-page .outgoing-hero-summary strong, .correspondence-page .archive-hero-summary strong { color: var(--ink); }
+.correspondence-page .correspondence-hero-metrics span, .correspondence-page .correspondence-hero-metrics small, .correspondence-page .incoming-hero-summary span, .correspondence-page .incoming-hero-summary small, .correspondence-page .outgoing-hero-summary span, .correspondence-page .archive-hero-summary span, .correspondence-page .archive-hero-summary small { color: var(--ink-soft); }
+.correspondence-page .queue-grid button { background: var(--surface); border-color: var(--line); border-radius: 10px; box-shadow: none; }
+.correspondence-page .queue-grid button.is-selected { background: var(--primary-soft); border-color: var(--primary); }
+.correspondence-page .dashboard-filter-bar, .correspondence-page .correspondence-card { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 12px; }
+.correspondence-page .wizard-grid input, .correspondence-page .wizard-grid select, .correspondence-page .wizard-grid textarea, .correspondence-page .dashboard-filter-bar input, .correspondence-page .dashboard-filter-bar select, .correspondence-page .search-label input, .correspondence-page .status-update-form input, .correspondence-page .status-update-form select { min-height: 44px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); border-radius: 10px; }
+.correspondence-page button:focus-visible, .correspondence-page input:focus-visible, .correspondence-page select:focus-visible, .correspondence-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 600px) { .correspondence-page .correspondence-hero-metrics, .correspondence-page .outgoing-hero-summary, .correspondence-page .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .correspondence-page .incoming-hero-summary { flex-basis: 100%; } .correspondence-page .workflow-actions { align-items: stretch; flex-direction: column; } .correspondence-page .workflow-actions > * { width: 100%; } }
 </style>

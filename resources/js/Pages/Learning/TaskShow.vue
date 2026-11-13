@@ -60,7 +60,7 @@ const formatDate = (value?: string | null) => value
 <template>
     <AppLayout title="Detail Tugas">
         <Head :title="`Tugas · ${assignment.title}`" />
-        <main class="view space-y-6 task-detail-page">
+        <div class="view space-y-6 task-detail-page">
             <header class="page-heading">
                 <div>
                     <p class="eyebrow">{{ assignment.subject }} · Kelas {{ assignment.class_group }}</p>
@@ -104,7 +104,7 @@ const formatDate = (value?: string | null) => value
                 </form>
             </section>
             <section v-else-if="!can_manage" class="panel empty-state"><strong>Pengumpulan terkunci</strong><p>Jawaban sudah dikirim dan menunggu pemeriksaan guru.</p></section>
-        </main>
+        </div>
     </AppLayout>
 </template>
 

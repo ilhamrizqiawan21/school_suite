@@ -7,4 +7,15 @@
 :global(html[data-theme='dark']) .recap-table th{background:var(--surface-subtle);color:var(--ink-soft)}
 :global(html[data-theme='dark']) .rate{background:var(--primary-soft);color:var(--primary)}
 :global(html[data-theme='dark']) .empty{color:var(--ink-faint)}
+.recap-hero { min-height: 0; padding: 0 0 1.25rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.recap-hero h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
+.recap-hero p { color: var(--ink-soft); }
+.recap-hero .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+.filter { gap: .75rem; padding: 1rem; border-radius: 14px; }
+.filter label { color: var(--ink-soft); }
+.filter input, .filter select { min-height: 44px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.recap-table th, .recap-table td { border-bottom-color: var(--line); }
+.recap-table th { color: var(--ink-soft); background: var(--surface-subtle); text-transform: none; }
+.rate { color: var(--primary); background: var(--primary-soft); }
+@media (max-width: 760px) { .filter > * { width: 100%; }.recap-table { min-width: 700px; } }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { Teacher, SharedProps } from '../../../types';
 
@@ -59,6 +59,34 @@ const dateLabel = (value?: string | null) => value
 
 const showAddModal = ref(false);
 const showImportModal = ref(false);
+const activeOverlay = computed(() => showAddModal.value || showImportModal.value);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(activeOverlay, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input:not([type="hidden"]), select, button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const handleOverlayKeydown = (event: KeyboardEvent) => {
+    if (!activeOverlay.value) return;
+    if (event.key === 'Escape') { showAddModal.value = false; showImportModal.value = false; }
+    if (event.key !== 'Tab' || !overlayRoot.value) return;
+    const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
 
 const applyFilters = () => {
     router.get(
@@ -156,7 +184,7 @@ const submitImport = () => {
             <div class="page-heading compact-heading">
                 <div>
                     <p class="teacher-page-kicker">Akademik · Sumber daya sekolah</p>
-                    <h1 class="teacher-page-title">Manajemen Data Guru</h1>
+                    <h1 class="teacher-page-title">Data guru</h1>
                     <p class="teacher-page-summary">
                         Kelola profil pendidik, status kepegawaian, akun login, dan penugasan wali kelas.
                     </p>
@@ -172,7 +200,7 @@ const submitImport = () => {
                         </svg>
                         Impor data
                     </button>
-                    <a :href="exportUrl()" class="teacher-action-button">Ekspor Excel</a>
+                    <a :href="exportUrl()" class="teacher-action-button teacher-action-excel" aria-label="Ekspor Excel" title="Ekspor Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 3h10l4 4v14H5zM15 3v5h4M8 13h8m-8 4h8" /></svg><span>Ekspor Excel</span></a>
                     <a v-if="can_manage" href="/akademik/guru/template?format=xlsx" class="teacher-action-button">Unduh template</a>
                 </div>
             </div>
@@ -236,6 +264,7 @@ const submitImport = () => {
             </div>
 
             <div class="table-card panel teacher-table-card">
+                <div class="teacher-list-heading"><h2>Daftar pendidik</h2><span>{{ teachers.total }} guru</span></div>
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table teacher-table w-full text-left border-collapse text-sm">
                         <thead>
@@ -326,9 +355,9 @@ const submitImport = () => {
                         </div>
                         <p v-if="can_manage" class="teacher-mobile-password">Status akun: <span class="teacher-account-status" :class="`is-${t.account_status ?? 'unavailable'}`">{{ accountLabels[t.account_status ?? 'unavailable'] }}</span></p>
                         <div v-if="can_manage" class="teacher-mobile-actions">
-                            <button type="button" @click="openEdit(t)">Ubah</button>
-                            <button type="button" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" @click="resetPassword(t)">Reset sandi</button>
-                            <button type="button" class="teacher-mobile-delete" @click="deleteTeacher(t)">Hapus</button>
+                            <button type="button" :aria-label="`Ubah data ${t.name}`" :title="`Ubah data ${t.name}`" @click="openEdit(t)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
+                            <button type="button" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" :title="`Reset sandi ${t.name}`" @click="resetPassword(t)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-width="2" stroke-linecap="round" d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></button>
+                            <button type="button" class="teacher-mobile-delete" :aria-label="`Hapus data ${t.name}`" :title="`Hapus data ${t.name}`" @click="deleteTeacher(t)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg></button>
                         </div>
                     </article>
                     <p v-if="teachers.data.length === 0" class="teacher-mobile-empty">Tidak ada data guru yang cocok dengan filter.</p>
@@ -357,23 +386,23 @@ const submitImport = () => {
         </div>
 
         <!-- Modal Tambah Guru -->
-        <div v-if="can_manage && showAddModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div role="dialog" aria-modal="true" aria-labelledby="teacher-form-title" class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div v-if="can_manage && showAddModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="teacher-form-title" class="teacher-overlay">
+            <div class="teacher-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="teacher-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Data Guru' : 'Tambah Guru Baru' }}</h3>
-                    <button type="button" @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                    <button type="button" @click="showAddModal = false" class="teacher-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir guru">✕</button>
                 </div>
 
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">NIP</label>
-                            <input v-model="form.nip" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="teacher-form-nip" class="block text-xs font-semibold text-slate-700 mb-1">NIP</label>
+                            <input id="teacher-form-nip" v-model="form.nip" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                             <div v-if="form.errors.nip" class="text-xs text-red-600 mt-1">{{ form.errors.nip }}</div>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin *</label>
-                            <select v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="teacher-form-gender" class="block text-xs font-semibold text-slate-700 mb-1">Jenis kelamin *</label>
+                            <select id="teacher-form-gender" v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                                 <option value="L">Laki-laki (L)</option>
                                 <option value="P">Perempuan (P)</option>
                             </select>
@@ -381,32 +410,32 @@ const submitImport = () => {
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
-                        <input v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label for="teacher-form-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama lengkap & gelar *</label>
+                        <input id="teacher-form-name" v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <div v-if="form.errors.name" class="text-xs text-red-600 mt-1">{{ form.errors.name }}</div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lahir</label>
-                        <input v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label for="teacher-form-birth-date" class="block text-xs font-semibold text-slate-700 mb-1">Tanggal lahir</label>
+                        <input id="teacher-form-birth-date" v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <p class="mt-1 text-xs text-slate-500">Tanggal pensiun dihitung pada ulang tahun ke-60.</p>
                         <div v-if="form.errors.birth_date" class="text-xs text-red-600 mt-1">{{ form.errors.birth_date }}</div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-                            <input v-model="form.email" type="email" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="teacher-form-email" class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                            <input id="teacher-form-email" v-model="form.email" type="email" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">No. HP / WhatsApp</label>
-                            <input v-model="form.phone" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="teacher-form-phone" class="block text-xs font-semibold text-slate-700 mb-1">No. HP / WhatsApp</label>
+                            <input id="teacher-form-phone" v-model="form.phone" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status Kepegawaian</label>
-                        <select v-model="form.employment_status" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="teacher-form-employment" class="block text-xs font-semibold text-slate-700 mb-1">Status kepegawaian</label>
+                        <select id="teacher-form-employment" v-model="form.employment_status" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option value="">Belum diisi</option>
                             <option v-for="status in employmentOptions" :key="status" :value="status">{{ status }}</option>
                         </select>
@@ -414,8 +443,8 @@ const submitImport = () => {
 
                     <label class="flex items-center gap-2 text-sm"><input v-model="form.is_active" type="checkbox" /> Data guru aktif</label>
                     <div v-if="can_link_accounts" class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700">Akun login (opsional)</label>
-                        <select v-model="form.user_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="teacher-form-account" class="block text-xs font-semibold text-slate-700">Akun login (opsional)</label>
+                        <select id="teacher-form-account" v-model="form.user_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option :value="null">Tidak ditautkan</option>
                             <option
                                 v-for="account in account_candidates"
@@ -444,11 +473,11 @@ const submitImport = () => {
         </div>
 
         <!-- Modal Impor Excel / CSV Guru -->
-        <div v-if="can_manage && showImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+        <div v-if="can_manage && showImportModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="teacher-import-title" class="teacher-overlay">
+            <div class="teacher-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Impor Massal Pendidik</h3>
-                    <button type="button" @click="showImportModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+                    <h3 id="teacher-import-title" class="text-lg font-bold text-slate-900">Impor Massal Pendidik</h3>
+                    <button type="button" @click="showImportModal = false" class="teacher-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir impor guru">✕</button>
                 </div>
 
                 <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800 space-y-1">
@@ -461,8 +490,8 @@ const submitImport = () => {
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Berkas Excel / CSV *</label>
-                        <input type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
+                        <label for="teacher-import-file" class="block text-xs font-semibold text-slate-700 mb-1">Pilih berkas Excel / CSV *</label>
+                        <input id="teacher-import-file" type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
                         <div v-if="importForm.errors.csv_file" class="text-xs text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
@@ -481,6 +510,18 @@ const submitImport = () => {
 </template>
 
 <style scoped>
+.teacher-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.teacher-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.teacher-drawer input:not([type="checkbox"]), .teacher-drawer select { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.teacher-drawer .text-slate-900, .teacher-drawer .text-slate-700 { color: var(--ink); }
+.teacher-drawer .text-slate-600, .teacher-drawer .text-slate-500, .teacher-drawer .text-slate-400 { color: var(--ink-soft); }
+.teacher-drawer button:focus-visible, .teacher-drawer input:focus-visible, .teacher-drawer select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.teacher-close { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 9px; }
+.teacher-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
+.teacher-list-heading h2 { margin: 0; color: var(--ink); font-size: 1rem; font-weight: 700; }
+.teacher-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: .75rem; }
+.teacher-action-excel { color: var(--green); background: var(--green-soft); }
+.teacher-action-excel svg { width: 17px; height: 17px; }
 .teacher-page { min-width: 0; }
 .teacher-page :deep(.page-heading) { margin-bottom: 0; }
 .teacher-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -551,8 +592,10 @@ const submitImport = () => {
     .teacher-filter-controls .secondary-button:first-of-type { grid-column: 1; }
     .teacher-filter-controls .teacher-filter-submit { grid-column: 2; }
     .teacher-table-card :deep(.table-scroll) { display: none; }
-    .teacher-mobile-list { display: grid; }
-    .teacher-mobile-card { padding: 1rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .teacher-list-heading { display: none; }
+    .teacher-table-card { background: transparent; border: 0; box-shadow: none; }
+    .teacher-mobile-list { display: grid; gap: 12px; }
+    .teacher-mobile-card { padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
     .teacher-mobile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .7rem; }
     .teacher-mobile-top h2 { margin: 0; color: var(--ink); font-size: .92rem; font-weight: 800; line-height: 1.35; }
     .teacher-mobile-top p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .72rem; line-height: 1.45; }
@@ -562,7 +605,9 @@ const submitImport = () => {
     .teacher-mobile-details > span:last-child { flex-basis: 100%; }
     .teacher-mobile-password { margin: .7rem 0 0; color: var(--ink-soft); font-size: .72rem; }
     .teacher-mobile-actions { display: flex; gap: .5rem; margin-top: .8rem; }
-    .teacher-mobile-actions button { min-height: 40px; padding: 0 .7rem; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: .55rem; font-size: .72rem; font-weight: 700; }
+    .teacher-mobile-actions button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: .55rem; }
+    .teacher-mobile-actions svg { width: 19px; height: 19px; }
+    .teacher-mobile-actions button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
     .teacher-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
     .teacher-mobile-actions .teacher-mobile-delete { margin-left: auto; color: var(--delete); background: var(--delete-soft); }
     .teacher-mobile-empty { padding: 1.5rem 1rem; color: var(--ink-soft); font-size: .8rem; text-align: center; }
@@ -573,4 +618,5 @@ const submitImport = () => {
     .teacher-filter-controls { grid-template-columns: 1fr; }
     .teacher-filter-controls .teacher-filter-select:last-of-type, .teacher-filter-controls .secondary-button:first-of-type, .teacher-filter-submit { grid-column: 1; }
 }
+@media (max-width: 600px) { .teacher-overlay { align-items: flex-end; }.teacher-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); }.teacher-drawer .grid-cols-2 { grid-template-columns: 1fr; } }
 </style>

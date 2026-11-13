@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { SharedProps } from '../../../types';
@@ -59,6 +59,38 @@ const resetFilters = () => {
     search.value = ''; selectedRole.value = ''; selectedStatus.value = ''; applyFilters();
 };
 const showCreate = ref(false);
+const isEditModalOpen = ref(false);
+const activeOverlay = computed(() => showCreate.value || isEditModalOpen.value);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(activeOverlay, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input:not([type="hidden"]), button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const handleOverlayKeydown = (event: KeyboardEvent) => {
+    if (!activeOverlay.value) return;
+    if (event.key === 'Escape') {
+        if (isEditModalOpen.value) isEditModalOpen.value = false;
+        else showCreate.value = false;
+    }
+    if (event.key !== 'Tab' || !overlayRoot.value) return;
+    const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
 const deletingId = ref<number | null>(null);
 const actionError = ref('');
 const changePage = (url: string | null) => {
@@ -86,7 +118,6 @@ const submitCreate = () => {
 };
 
 // Edit Modal
-const isEditModalOpen = ref(false);
 const editingUser = ref<UserItem | null>(null);
 const editForm = useForm({
     name: '',
@@ -143,7 +174,7 @@ const deleteUser = (user: UserItem) => {
 
 <template>
     <AppLayout title="Manajemen Pengguna">
-        <div class="view space-y-6">
+        <div class="view user-page space-y-6">
             <Head title="Manajemen Pengguna" />
             <!-- Header section -->
             <div class="page-heading compact-heading">
@@ -153,14 +184,10 @@ const deleteUser = (user: UserItem) => {
                         Kelola akses akun sekolah. Tambahkan akun, tentukan peran, lalu bagikan kata sandi awal secara pribadi.
                     </p>
                 </div>
-                <button v-if="can_create" type="button" class="primary-button" @click="showCreate = !showCreate">{{ showCreate ? 'Tutup formulir' : 'Tambah pengguna' }}</button>
+                <button v-if="can_create" type="button" class="primary-button" @click="showCreate = true">Tambah pengguna</button>
             </div>
 
             <!-- Flash message -->
-            <div v-if="page.props.flash?.message" class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-800" role="status">
-                {{ page.props.flash.message }}
-            </div>
-
             <p v-if="actionError" class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700" role="alert">{{ actionError }}</p>
             <form class="panel grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]" @submit.prevent="applyFilters">
                 <label class="user-field">Cari pengguna<input v-model="search" type="search" maxlength="255" placeholder="Nama, email, atau username" /></label>
@@ -169,9 +196,10 @@ const deleteUser = (user: UserItem) => {
                 <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
             </form>
 
-            <section v-if="can_create && showCreate" class="bg-indigo-50/40 border border-indigo-100 rounded-xl p-5">
-                <div class="mb-4"><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 class="text-base font-bold text-slate-900">Pengguna baru</h2></div>
-                <form class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 items-end" @submit.prevent="submitCreate">
+            <section v-if="can_create && showCreate" ref="overlayRoot" class="user-overlay" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+              <div class="user-drawer">
+                <div class="user-drawer-header mb-4"><div><p class="text-[10px] font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 id="create-user-title" class="text-base font-bold text-slate-900">Pengguna baru</h2></div><button type="button" class="user-close" aria-label="Tutup formulir pengguna baru" @click="showCreate = false">×</button></div>
+                <form class="grid gap-3 sm:grid-cols-2 items-end" @submit.prevent="submitCreate">
                     <div v-if="createErrors.length" class="sm:col-span-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700" role="alert" aria-live="polite">
                         <p class="font-semibold">Pengguna belum tersimpan. Periksa kembali:</p>
                         <ul class="mt-1 list-inside list-disc">
@@ -184,12 +212,13 @@ const deleteUser = (user: UserItem) => {
                     <label class="text-xs font-semibold text-slate-700">Peran<select v-model="createForm.role_id" required :aria-invalid="!!createForm.errors.role_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"><option disabled value="">Pilih peran</option><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select><span v-if="createForm.errors.role_id" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.role_id }}</span></label>
                     <label class="text-xs font-semibold text-slate-700">Kata sandi<input v-model="createForm.password" type="password" minlength="8" required :aria-invalid="!!createForm.errors.password" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" /><span v-if="createForm.errors.password" class="mt-1 block text-[11px] font-normal text-rose-600">{{ createForm.errors.password }}</span></label>
                     <p class="text-xs leading-5 text-slate-500 sm:col-span-full">Pengguna wajib mengganti kata sandi awal saat masuk. Akun guru dan siswa juga dapat dibuat melalui menu Data Guru atau Data Siswa.</p>
-                    <div class="flex flex-wrap justify-end gap-2 sm:col-span-full"><button type="button" class="secondary-button" :disabled="createForm.processing" @click="showCreate = false">Batal</button><button type="submit" :disabled="createForm.processing" class="inline-flex justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{{ createForm.processing ? 'Menyimpan…' : 'Simpan pengguna' }}</button></div>
+                    <div class="user-drawer-footer flex flex-wrap justify-end gap-2 sm:col-span-full"><button type="button" class="secondary-button" :disabled="createForm.processing" @click="showCreate = false">Batal</button><button type="submit" :disabled="createForm.processing" class="primary-button">{{ createForm.processing ? 'Menyimpan…' : 'Simpan pengguna' }}</button></div>
                 </form>
+              </div>
             </section>
 
             <!-- Users Table -->
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+            <div class="panel user-table-panel overflow-hidden">
                 <p class="px-4 py-3 text-xs text-slate-500">Geser tabel ke samping pada layar kecil untuk melihat semua kolom dan tindakan.</p>
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Daftar pengguna">
                     <table class="app-table min-w-[680px] w-full text-left border-collapse text-xs">
@@ -248,11 +277,11 @@ const deleteUser = (user: UserItem) => {
                 <div class="flex gap-2"><button type="button" class="secondary-button" :disabled="!users.prev_page_url" @click="changePage(users.prev_page_url)">Sebelumnya</button><button type="button" class="secondary-button" :disabled="!users.next_page_url" @click="changePage(users.next_page_url)">Berikutnya</button></div>
             </nav>
             <!-- Edit Modal -->
-            <div v-if="isEditModalOpen" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
-                <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90dvh] overflow-y-auto p-6 space-y-4 border border-slate-200">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div v-if="isEditModalOpen" ref="overlayRoot" class="user-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+                <div class="user-drawer space-y-4">
+                    <div class="user-drawer-header flex items-center justify-between border-b border-slate-100 pb-3">
                         <h2 id="edit-user-title" class="text-sm font-bold text-slate-900">Ubah Data Pengguna</h2>
-                        <button type="button" @click="isEditModalOpen = false" class="text-slate-400 hover:text-slate-600 text-xs">Batal</button>
+                        <button type="button" @click="isEditModalOpen = false" class="user-close" aria-label="Tutup formulir ubah pengguna">×</button>
                     </div>
 
                     <form @submit.prevent="submitEdit" class="space-y-3">
@@ -263,19 +292,19 @@ const deleteUser = (user: UserItem) => {
                             </ul>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
-                            <input v-model="editForm.name" type="text" required :aria-invalid="!!editForm.errors.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                            <label for="edit-user-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                            <input id="edit-user-name" v-model="editForm.name" type="text" required :aria-invalid="!!editForm.errors.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
                             <p v-if="editForm.errors.name" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.name }}</p>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
-                                <input v-model="editForm.email" type="email" required :aria-invalid="!!editForm.errors.email" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                                <label for="edit-user-email" class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                                <input id="edit-user-email" v-model="editForm.email" type="email" required :aria-invalid="!!editForm.errors.email" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
                                 <p v-if="editForm.errors.email" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.email }}</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Peran Akses</label>
-                                <select v-if="can_manage_roles && editingUser?.id !== current_user_id" v-model="editForm.role_id" :aria-invalid="!!editForm.errors.role_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
+                                <select v-if="can_manage_roles && editingUser?.id !== current_user_id" v-model="editForm.role_id" aria-label="Peran Akses" :aria-invalid="!!editForm.errors.role_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
                                     <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option>
                                 </select>
                                 <p v-else class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">{{ editingUser?.role?.label ?? 'Tanpa Peran' }}</p>
@@ -284,8 +313,8 @@ const deleteUser = (user: UserItem) => {
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div v-if="editingUser?.id !== current_user_id">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi Baru (Kosongkan bila tidak diganti)</label>
-                                <input v-model="editForm.password" type="password" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
+                                <label for="edit-user-password" class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi Baru (Kosongkan bila tidak diganti)</label>
+                                <input id="edit-user-password" v-model="editForm.password" type="password" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs" />
                                 <p v-if="editForm.errors.password" class="text-[11px] text-rose-600 mt-0.5">{{ editForm.errors.password }}</p>
                             </div>
                             <p v-else class="text-xs leading-5 text-slate-500">Untuk mengganti kata sandi Anda, buka menu Ganti Kata Sandi.</p>
@@ -301,9 +330,9 @@ const deleteUser = (user: UserItem) => {
                             <label class="user-field">Nomor telepon<input v-model="editForm.phone" type="tel" maxlength="30" /><small v-if="editForm.errors.phone" class="text-rose-700">{{ editForm.errors.phone }}</small></label>
                         </div>
                         <p class="text-xs leading-5 text-slate-500">Reset kata sandi mewajibkan pengguna menggantinya saat masuk berikutnya. Nonaktifkan akun untuk mencabut akses tanpa menghapus riwayat.</p>
-                        <div class="pt-2 flex justify-end gap-2">
+                        <div class="user-drawer-footer pt-2 flex justify-end gap-2">
                             <button type="button" @click="isEditModalOpen = false" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium text-slate-600">Batal</button>
-                            <button type="submit" :disabled="editForm.processing" class="px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold shadow-xs">Perbarui</button>
+                            <button type="submit" :disabled="editForm.processing" class="primary-button">Perbarui</button>
                         </div>
                     </form>
                 </div>
@@ -313,9 +342,31 @@ const deleteUser = (user: UserItem) => {
 </template>
 
 <style scoped>
-.user-field { display: grid; min-width: 0; gap: .4rem; font-size: .84rem; font-weight: 600; color: #42526b; }
-.user-field input, .user-field select { width: 100%; min-width: 0; min-height: 2.65rem; padding: .6rem .75rem; border: 1px solid #cbd5e1; border-radius: .6rem; background: white; color: #172b4d; font-weight: 400; }
+.user-page .page-heading h1 { color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; }
+.user-page .page-heading p { color: var(--ink-soft); }
+.user-page > form.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
+.user-table-panel > p { color: var(--ink-soft); }
+.user-table-panel thead tr { color: var(--ink-soft); background: var(--surface-subtle); border-color: var(--line); }
+.user-table-panel tbody { color: var(--ink); }
+.user-table-panel tbody tr { border-color: var(--line); }
+.user-table-panel tbody tr:hover { background: var(--primary-soft); }
+.user-table-panel tbody td:first-child { color: var(--ink); }
+.user-table-panel tbody td:nth-child(2) > div:first-child { color: var(--ink); }
+.user-table-panel tbody td :is(.text-slate-400, .text-slate-500) { color: var(--ink-soft); }
+.user-field { display: grid; min-width: 0; gap: .4rem; font-size: .84rem; font-weight: 600; color: var(--ink-soft); }
+.user-field input, .user-field select { width: 100%; min-width: 0; min-height: 2.65rem; padding: .6rem .75rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink); font-weight: 400; }
+.user-table-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
+.user-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.user-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.user-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.user-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding: 1rem 0 clamp(18px, 3vw, 30px); background: var(--surface); border-top: 1px solid var(--line); }
+.user-close { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; color: var(--ink-soft); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: 10px; font-size: 1.5rem; }
+.user-drawer :deep(input), .user-drawer :deep(select) { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.user-drawer :deep(.text-slate-900), .user-drawer :deep(.text-slate-800), .user-drawer :deep(.text-slate-700) { color: var(--ink); }
+.user-drawer :deep(.text-slate-600), .user-drawer :deep(.text-slate-500), .user-drawer :deep(.text-slate-400) { color: var(--ink-soft); }
+.user-drawer :deep(input:focus-visible), .user-drawer :deep(select:focus-visible), .user-drawer button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .page-heading { flex-wrap: wrap; gap: 1rem; }
 .page-heading > div { min-width: 0; }
 button:disabled { cursor: not-allowed; opacity: .5; }
+@media (max-width: 600px) { .user-overlay { align-items: flex-end; } .user-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; } }
 </style>

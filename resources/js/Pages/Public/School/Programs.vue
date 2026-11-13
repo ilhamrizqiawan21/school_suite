@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import PublicSectionLayout from '@/components/PublicSectionLayout.vue';
 
 interface School {
@@ -24,7 +25,7 @@ interface GalleryItem {
     url: string;
 }
 
-defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
+const props = defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
 
 const facilityPhotos = [
     {
@@ -43,6 +44,13 @@ const facilityPhotos = [
         url: '/images/facilities/student-activity-room.png',
     },
 ];
+const facilityGallery = computed(() => props.gallery.length
+    ? props.gallery.slice(0, 3).map((photo) => ({
+        title: photo.title || photo.caption || 'Kegiatan sekolah',
+        description: photo.caption || 'Dokumentasi resmi sekolah.',
+        url: photo.url,
+    }))
+    : facilityPhotos);
 </script>
 
 <template>
@@ -84,10 +92,10 @@ const facilityPhotos = [
                         <span class="section-label">Fasilitas unggulan</span>
                         <h2 id="facility-gallery-title">Ruang yang mendukung proses belajar.</h2>
                     </div>
-                    <p>Contoh visual fasilitas sekolah yang dapat diganti dengan foto resmi melalui pengaturan galeri.</p>
+                    <p>{{ gallery.length ? 'Dokumentasi ruang dan kegiatan yang diterbitkan sekolah.' : 'Contoh visual fasilitas sekolah. Foto resmi dapat diterbitkan melalui galeri.' }}</p>
                 </div>
                 <div class="facility-grid">
-                    <figure v-for="facility in facilityPhotos" :key="facility.title" class="facility-card">
+                    <figure v-for="facility in facilityGallery" :key="facility.url" class="facility-card">
                         <img :src="facility.url" :alt="facility.title" loading="lazy" />
                         <figcaption>
                             <strong>{{ facility.title }}</strong>

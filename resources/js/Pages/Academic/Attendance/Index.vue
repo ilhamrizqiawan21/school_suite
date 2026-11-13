@@ -170,10 +170,10 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
     <AppLayout title="Absensi Siswa">
         <Head title="Absensi Siswa — School Suite" />
         <div class="view attendance-page mx-auto w-full max-w-[1440px] space-y-5">
-            <header class="page-heading compact-heading flex flex-wrap items-center justify-between gap-4">
+            <header class="page-heading compact-heading attendance-heading flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <p class="eyebrow">KEHADIRAN SISWA</p>
-                    <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">Absensi Siswa</h1>
+                    <p class="eyebrow">Akademik · Kehadiran siswa</p>
+                    <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">Presensi siswa</h1>
                     <p class="mt-1 text-sm text-slate-500">Pilih kelas, mata pelajaran, dan bulan. Buka sesi untuk mencatat presensi.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -241,7 +241,7 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                             <div><h3 class="font-bold text-slate-900">Daftar siswa</h3><p class="text-xs text-slate-500">{{ studentList.length }} siswa · {{ selected_subject?.name }}</p></div>
                             <span v-if="selectedSession.attendance_count" class="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">{{ selectedSession.attendance_count }}/{{ selectedSession.student_count }} tercatat</span>
                         </div>
-                        <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
+                        <div class="attendance-table-wrap overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                             <table class="app-table w-full min-w-[720px] border-collapse text-left text-sm">
                                 <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600"><tr><th scope="col" class="w-24 px-4 py-3">No / NIS</th><th scope="col" class="min-w-44 px-4 py-3">Nama siswa</th><th scope="col" class="min-w-64 px-4 py-3">Status</th><th scope="col" class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
                                 <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -256,6 +256,16 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                                     <tr v-if="studentList.length === 0"><td colspan="4" class="px-4 py-10 text-center text-slate-500">Belum ada siswa pada kelas dan semester aktif ini.</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="attendance-mobile-list" aria-label="Daftar presensi siswa">
+                            <article v-for="(student, index) in studentList" :key="student.enrollment_id" class="attendance-mobile-card">
+                                <div><strong>{{ student.name }}</strong><small>No. {{ student.roll_number || index + 1 }} · NIS {{ student.nis }}</small></div>
+                                <div class="attendance-mobile-status" role="group" :aria-label="`Status presensi ${student.name}`">
+                                    <button v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="statusButtonClass(option[0], student.status === option[0])" @click="student.status = option[0]">{{ option[1] }}</button>
+                                </div>
+                                <label>Catatan<input v-model="student.notes" type="text" maxlength="255" placeholder="Opsional" /></label>
+                            </article>
+                            <p v-if="!studentList.length" class="attendance-mobile-empty">Belum ada siswa pada kelas dan semester aktif ini.</p>
                         </div>
                         <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_18px_rgba(15,23,42,0.08)] backdrop-blur">
                             <p class="text-sm" :class="isDirty ? 'font-semibold text-amber-700' : 'text-slate-500'" role="status" aria-live="polite">
@@ -293,3 +303,26 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
         </div>
     </AppLayout>
 </template>
+<style scoped>
+.attendance-page { color: var(--ink); }
+.attendance-heading h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
+.attendance-heading p:not(.eyebrow) { color: var(--ink-soft); }
+.attendance-heading .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+.attendance-mobile-list { display: none; }
+@media (max-width: 720px) {
+    .attendance-heading { align-items: flex-start; }
+    .attendance-heading > div:last-child { width: 100%; }
+    .attendance-table-wrap { display: none; }
+    .attendance-mobile-list { display: grid; gap: 12px; padding: 12px; background: var(--canvas); }
+    .attendance-mobile-card { display: grid; gap: 12px; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+    .attendance-mobile-card strong, .attendance-mobile-card small { display: block; }
+    .attendance-mobile-card strong { color: var(--ink); font-size: .9rem; }
+    .attendance-mobile-card small { margin-top: 3px; color: var(--ink-soft); font-size: .75rem; }
+    .attendance-mobile-status { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+    .attendance-mobile-status button { min-width: 0; min-height: 44px; padding: 0 3px; border-width: 1px; border-radius: 8px; font-size: .72rem; font-weight: 700; }
+    .attendance-mobile-status button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .attendance-mobile-card label { display: grid; gap: 5px; color: var(--ink-soft); font-size: .75rem; font-weight: 600; }
+    .attendance-mobile-card input { width: 100%; min-height: 42px; padding: 8px 10px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; }
+    .attendance-mobile-empty { margin: 0; padding: 1.5rem; color: var(--ink-soft); text-align: center; }
+}
+</style>

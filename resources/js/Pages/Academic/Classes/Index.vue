@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import type { ClassGroup, Teacher, SharedProps } from '../../../types';
 
@@ -36,6 +36,34 @@ const selectedYear = ref(props.active_year?.id ? String(props.active_year.id) : 
 const showAddClassModal = ref(false);
 const showAssignHomeroomModal = ref(false);
 const selectedClassForHomeroom = ref<ClassGroup | null>(null);
+const activeOverlay = computed(() => showAddClassModal.value || showAssignHomeroomModal.value);
+const overlayRoot = ref<HTMLElement | null>(null);
+let overlayTrigger: HTMLElement | null = null;
+watch(activeOverlay, async (open) => {
+    if (open) {
+        overlayTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        overlayRoot.value?.querySelector<HTMLElement>('input, select, button')?.focus();
+    } else {
+        await nextTick();
+        overlayTrigger?.focus();
+        overlayTrigger = null;
+    }
+});
+const handleOverlayKeydown = (event: KeyboardEvent) => {
+    if (!activeOverlay.value) return;
+    if (event.key === 'Escape') { showAddClassModal.value = false; showAssignHomeroomModal.value = false; }
+    if (event.key !== 'Tab' || !overlayRoot.value) return;
+    const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled])'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
 
 const changeYear = () => {
     router.get('/akademik/kelas', { academic_year_id: selectedYear.value });
@@ -104,7 +132,7 @@ const submitAssignHomeroom = () => {
             <div class="page-heading compact-heading">
                 <div>
                     <p class="class-page-kicker">Akademik · Struktur kelas</p>
-                    <h1 class="class-page-title">Rombongan Belajar</h1>
+                    <h1 class="class-page-title">Rombongan belajar</h1>
                     <p class="class-page-summary">Atur rombel, kapasitas siswa, dan penetapan wali kelas untuk setiap tahun ajaran.</p>
                 </div>
 
@@ -122,7 +150,7 @@ const submitAssignHomeroom = () => {
                         </select>
                     </div>
                     <select v-if="terms.length" v-model="selectedTerm" aria-label="Semester" class="rounded-lg border px-3 py-2 text-sm" @change="changeTerm"><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.name }}{{ term.is_active ? ' (Aktif)' : '' }}</option></select>
-                    <button v-if="can_manage" type="button" class="class-action-button class-action-add" :disabled="!selectedYear" @click="openAdd">Tambah rombel</button>
+                    <button v-if="can_manage" type="button" class="class-action-button class-action-add" :disabled="!selectedYear" @click="openAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>Tambah rombel</button>
                 </div>
             </div>
 
@@ -195,8 +223,8 @@ const submitAssignHomeroom = () => {
                         >
                             {{ cls.homeroom_teacher ? 'Ubah Wali Kelas' : 'Tetapkan Wali Kelas' }}
                         </button>
-                        <button v-if="can_manage" type="button" class="class-card-action" :aria-label="`Ubah rombel ${cls.name}`" @click="openEdit(cls)">Ubah</button>
-                        <button v-if="can_manage" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)">Hapus</button>
+                        <button v-if="can_manage" type="button" class="class-card-action class-card-action-edit" :aria-label="`Ubah rombel ${cls.name}`" :title="`Ubah rombel ${cls.name}`" @click="openEdit(cls)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
+                        <button v-if="can_manage" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" :title="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg></button>
                     </div>
                 </article>
 
@@ -207,35 +235,35 @@ const submitAssignHomeroom = () => {
         </div>
 
         <!-- Modal Tambah Rombel -->
-        <div v-if="can_manage && showAddClassModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div role="dialog" aria-modal="true" aria-labelledby="class-form-title" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div v-if="can_manage && showAddClassModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="class-form-title" class="class-overlay">
+            <div class="class-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="class-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Rombongan Belajar' : 'Tambah Rombongan Belajar' }}</h3>
-                    <button type="button" @click="showAddClassModal = false" class="text-slate-400 hover:text-slate-600" aria-label="Tutup formulir rombel">✕</button>
+                    <button type="button" @click="showAddClassModal = false" class="class-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir rombel">✕</button>
                 </div>
 
                 <form @submit.prevent="submitAddClass" class="space-y-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tingkat Kelas (Grade Level) *</label>
-                        <select v-model="classForm.grade_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="class-grade" class="block text-xs font-semibold text-slate-700 mb-1">Tingkat kelas *</label>
+                        <select id="class-grade" v-model="classForm.grade_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option v-for="level in 12" :key="level" :value="level">Kelas {{ level }}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Rombel *</label>
-                        <input v-model="classForm.name" type="text" placeholder="contoh: 7A, 8B, X MIPA 1" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label for="class-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama rombel *</label>
+                        <input id="class-name" v-model="classForm.name" type="text" placeholder="contoh: 7A, 8B, X MIPA 1" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <div v-if="classForm.errors.name" class="text-xs text-red-600 mt-1">{{ classForm.errors.name }}</div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Kapasitas Maksimal Siswa</label>
-                        <input v-model="classForm.capacity" type="number" min="1" max="60" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label for="class-capacity" class="block text-xs font-semibold text-slate-700 mb-1">Kapasitas maksimal siswa</label>
+                        <input id="class-capacity" v-model="classForm.capacity" type="number" min="1" max="60" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
 
                     <div v-if="!editingId">
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Wali Kelas (Opsional)</label>
-                        <select v-model="classForm.homeroom_teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="class-homeroom" class="block text-xs font-semibold text-slate-700 mb-1">Wali kelas (opsional)</label>
+                        <select id="class-homeroom" v-model="classForm.homeroom_teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option value="">(Belum ditetapkan)</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>
                         </select>
@@ -257,17 +285,17 @@ const submitAssignHomeroom = () => {
         </div>
 
         <!-- Modal Tetapkan Wali Kelas -->
-        <div v-if="can_manage && showAssignHomeroomModal && selectedClassForHomeroom" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-            <div role="dialog" aria-modal="true" aria-labelledby="homeroom-form-title" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div v-if="can_manage && showAssignHomeroomModal && selectedClassForHomeroom" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="homeroom-form-title" class="class-overlay">
+            <div class="class-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="homeroom-form-title" class="text-lg font-bold text-slate-900">Tetapkan Wali Kelas {{ selectedClassForHomeroom.name }}</h3>
-                    <button type="button" @click="showAssignHomeroomModal = false" class="text-slate-400 hover:text-slate-600" aria-label="Tutup formulir wali kelas">✕</button>
+                    <button type="button" @click="showAssignHomeroomModal = false" class="class-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir wali kelas">✕</button>
                 </div>
 
                 <form @submit.prevent="submitAssignHomeroom" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Guru sebagai Wali Kelas</label>
-                        <select v-model="homeroomForm.teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="class-homeroom-teacher" class="block text-xs font-semibold text-slate-700 mb-1">Pilih guru sebagai wali kelas</label>
+                        <select id="class-homeroom-teacher" v-model="homeroomForm.teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
                             <option value="">Tanpa wali kelas / lepaskan penetapan</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>
                         </select>
@@ -289,6 +317,13 @@ const submitAssignHomeroom = () => {
 </template>
 
 <style scoped>
+.class-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.class-drawer { width: min(500px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.class-drawer input, .class-drawer select { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
+.class-drawer .text-slate-900, .class-drawer .text-slate-700 { color: var(--ink); }
+.class-drawer .text-slate-600, .class-drawer .text-slate-500, .class-drawer .text-slate-400 { color: var(--ink-soft); }
+.class-drawer button:focus-visible, .class-drawer input:focus-visible, .class-drawer select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.class-close { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 9px; }
 .class-page { min-width: 0; }
 .class-page select { max-width: 100%; }
 .class-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -300,12 +335,16 @@ const submitAssignHomeroom = () => {
 .class-heading-controls { justify-content: flex-end; }
 .class-action-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: .65rem .9rem; border: 1px solid var(--primary); border-radius: .65rem; background: var(--primary); color: #fff; font-size: .8rem; font-weight: 700; white-space: nowrap; box-shadow: 0 5px 12px rgb(50 105 188 / 16%); }
 .class-action-button:hover { background: var(--primary-strong); }
+.class-action-button svg { width: 18px; height: 18px; margin-right: .35rem; }
 .class-action-button:disabled { cursor: not-allowed; opacity: .55; }
 .class-filterbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(160px, .4fr) auto; align-items: center; gap: .65rem; padding: .8rem 1rem; }
 .class-search-field input, .class-filter-select { width: 100%; min-height: 42px; padding: .62rem .72rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: .82rem; }
 .class-search-field input:focus, .class-filter-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
 .class-link-action { min-height: 38px; padding: .45rem .65rem; border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line)); border-radius: .6rem; background: var(--primary-soft); color: var(--primary); font-size: .72rem; font-weight: 800; }
-.class-card-action { min-height: 38px; padding: .45rem .75rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink-soft); font-size: .72rem; font-weight: 800; }
+.class-card-action { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink-soft); }
+.class-card-action svg { width: 19px; height: 19px; }
+.class-card-action-edit { color: var(--primary); background: var(--primary-soft); }
+.class-card-action:focus-visible, .class-link-action:focus-visible, .class-action-button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .class-card-action:hover, .class-link-action:hover { border-color: var(--primary); color: var(--primary-strong); }
 .class-card-action-danger { color: var(--red); }
 .class-stat { display: grid; gap: .35rem; min-width: 0; border-top: 3px solid transparent; }
@@ -330,4 +369,5 @@ const submitAssignHomeroom = () => {
 @media (max-width: 820px) { .class-page .class-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .class-filterbar { grid-template-columns: minmax(0, 1fr) minmax(150px, .55fr); }.class-filterbar > .secondary-button { grid-column: 1 / -1; justify-self: start; }.class-filter-count { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.class-heading-controls { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }.class-heading-controls > div { flex-wrap: wrap; }.class-heading-controls select,.class-heading-controls .class-action-button { width: 100%; }.class-filterbar { grid-template-columns: minmax(0, 1fr); }.class-filterbar > .secondary-button { grid-column: auto; width: 100%; }.class-filter-count { grid-column: auto; } }
+@media (max-width: 600px) { .class-overlay { align-items: flex-end; }.class-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 </style>

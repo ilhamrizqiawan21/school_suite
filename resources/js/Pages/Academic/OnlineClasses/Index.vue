@@ -70,6 +70,7 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
             </section>
 
             <section v-else class="panel online-table-wrap">
+                <div class="online-list-heading"><h2>Daftar pertemuan</h2><span>{{ sessions.length }} sesi</span></div>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table data-table">
                         <thead><tr><th scope="col">Pertemuan</th><th scope="col">Kelas</th><th scope="col">Waktu</th><th scope="col">Status</th><th scope="col">Presensi</th><th scope="col">Aksi</th></tr></thead>
@@ -88,9 +89,9 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
                 </div>
             </section>
 
-            <div v-if="open && can_manage" class="modal-backdrop" @click.self="open = false">
+            <div v-if="open && can_manage" role="dialog" aria-modal="true" aria-labelledby="online-session-title" class="modal-backdrop" @click.self="open = false" @keydown.esc="open = false">
                 <form class="modal-card" @submit.prevent="submit">
-                    <div class="modal-header"><div><p class="eyebrow">Kelas daring</p><h2>Jadwalkan pertemuan</h2></div><button type="button" aria-label="Tutup" @click="open = false">×</button></div>
+                    <div class="modal-header"><div><p class="eyebrow">Kelas daring</p><h2 id="online-session-title">Jadwalkan pertemuan</h2></div><button type="button" aria-label="Tutup formulir pertemuan" @click="open = false">×</button></div>
                     <div class="form-grid">
                         <label class="field span-2">Judul<input v-model="form.title" required></label>
                         <label class="field">Kelas<select v-model="form.class_group_id" required><option value="">Pilih kelas</option><option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option></select></label>
@@ -109,7 +110,13 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
 </template>
 
 <style scoped>
-.online-hero { min-height: 132px; }
+.online-hero { min-height: 0; padding: 0 0 1.25rem; color: var(--ink); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.online-hero h1 { color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
+.online-hero p { color: var(--ink-soft); }
+.online-hero .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; letter-spacing: .03em; text-transform: none; }
+.online-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
+.online-list-heading h2 { margin: 0; color: var(--ink); font-size: 1rem; }
+.online-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: .75rem; }
 .online-session-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .online-session-card { display: flex; min-width: 0; min-height: 210px; flex-direction: column; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 5px; box-shadow: var(--shadow-sm); }
 .online-session-topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 9px; }
@@ -128,16 +135,16 @@ const statusLabel: Record<OnlineSession['status'], string> = { scheduled: 'Terja
 .online-empty p { margin: 6px 0 16px; color: var(--ink-soft); font-size: 13px; }
 .online-table-wrap { overflow: hidden; }
 .table-scroll { overflow-x: auto; }
-.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .58); }
-.modal-card { display: grid; width: min(680px, 100%); max-height: 90vh; gap: 1rem; overflow: auto; padding: 1.35rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / .45); backdrop-filter: blur(3px); }
+.modal-card { display: grid; align-content: start; width: min(560px, 100%); height: 100%; gap: 1rem; overflow: auto; padding: clamp(18px, 3vw, 30px); color: var(--ink); background: var(--surface); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
 .modal-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .modal-header h2 { margin: .25rem 0 0; color: var(--ink); font-size: 1.2rem; font-weight: 800; }
-.modal-header > button { color: var(--ink-soft); font-size: 1.6rem; }
+.modal-header > button { display: grid; place-items: center; width: 44px; height: 44px; color: var(--ink-soft); font-size: 1.6rem; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
 .field { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
 .field input, .field select { min-width: 0; padding: .65rem .75rem; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; }
 .span-2 { grid-column: 1 / -1; }
 .modal-actions { display: flex; justify-content: flex-end; gap: .65rem; }
 .form-error { color: var(--red); font-size: .8rem; }
-@media (max-width: 760px) { .online-session-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.span-2 { grid-column: auto; }.online-session-card { min-height: 0; } }
+@media (max-width: 760px) { .online-session-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.span-2 { grid-column: auto; }.online-session-card { min-height: 0; }.modal-backdrop { align-items: flex-end; }.modal-card { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 </style>

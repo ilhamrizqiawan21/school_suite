@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 interface FileItem { id: number; name: string; url: string }
@@ -25,6 +25,33 @@ const props = defineProps<{
 }>();
 
 const selected = ref<SubmissionRow | null>(null);
+const detailDialog = ref<HTMLElement | null>(null);
+let detailTrigger: HTMLElement | null = null;
+watch(selected, async (row) => {
+    if (row) {
+        detailTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        await nextTick();
+        detailDialog.value?.querySelector<HTMLElement>('button, input, select, textarea')?.focus();
+    } else {
+        await nextTick();
+        detailTrigger?.focus();
+        detailTrigger = null;
+    }
+});
+const handleDetailKeydown = (event: KeyboardEvent) => {
+    if (!selected.value) return;
+    if (event.key === 'Escape') { selected.value = null; return; }
+    if (event.key !== 'Tab' || !detailDialog.value) return;
+    const focusable = Array.from(detailDialog.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+onMounted(() => document.addEventListener('keydown', handleDetailKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleDetailKeydown));
 const search = ref('');
 const statusFilter = ref('all');
 const gradeForm = useForm({ score: null as number | null, feedback: '', review_status: 'approved' as 'approved' | 'needs_revision' });
@@ -80,7 +107,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 <template>
     <AppLayout title="Pengumpulan Tugas">
         <Head :title="`Pengumpulan · ${assignment.title}`" />
-        <main class="view space-y-6 task-submissions-page">
+        <div class="view space-y-6 task-submissions-page">
             <header class="page-heading">
                 <div><p class="eyebrow">Penilaian tugas · {{ assignment.subject }} · Kelas {{ assignment.class_group }}</p><h1>{{ assignment.title }}</h1><p>Periksa jawaban, beri nilai, dan kirim umpan balik kepada siswa.</p></div>
                 <div class="heading-actions"><Link class="secondary-button" :href="back_url">Kembali ke tugas</Link><Link class="primary-button" :href="assignment_url">Detail tugas</Link></div>
@@ -118,11 +145,11 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                     </table>
                 </div>
             </section>
-        </main>
+        </div>
 
-        <div v-if="selected" class="modal-backdrop" @click.self="selected = null">
+        <div v-if="selected" ref="detailDialog" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-detail-title" @click.self="selected = null">
             <form class="modal-card" @submit.prevent="submitGrade">
-                <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2>{{ selected.student.name }}</h2></div><button type="button" aria-label="Tutup detail pengumpulan" @click="selected = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2 id="submission-detail-title">{{ selected.student.name }}</h2></div><button type="button" aria-label="Tutup detail pengumpulan" @click="selected = null">×</button></div>
                 <div class="submission-detail-meta"><span>Status: <strong>{{ statusLabel(selected) }}</strong></span><span>Tanggal kumpul: <strong>{{ formatDate(selected.submitted_at) }}</strong></span></div>
                 <div v-if="selected.content" class="answer-box"><strong>Jawaban teks</strong><p>{{ selected.content }}</p></div>
                 <div v-if="selected.files.length" class="file-list"><strong>Berkas jawaban</strong><a v-for="file in selected.files" :key="file.id" :href="file.url">{{ file.name }}</a></div>
@@ -153,7 +180,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 .submission-tools select { min-height: 36px; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: .55rem; padding: 0 .55rem; font-size: .76rem; }
 .table-scroll { overflow-x: auto; }
 .submission-table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: .83rem; }
-.submission-table th, .submission-table td { padding: .85rem 1rem; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+.submission-table th, .submission-table td { padding: .85rem 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .submission-table th { background: var(--surface-subtle); color: var(--ink-faint); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
 .submission-table td strong, .submission-table td small { display: block; }
 .submission-table td { color: var(--ink-soft); border-bottom-color: var(--line); }
@@ -162,7 +189,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 .status-pill { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: .72rem; font-weight: 700; }
 .status-not_submitted { background: var(--gold-soft); color: var(--gold); }
 .status-late { background: var(--red-soft); color: var(--red); }
-.answer-preview { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #475569; }
+.answer-preview { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-soft); }
 .file-list { display: grid; gap: .2rem; }
 .file-list a { color: var(--primary); text-decoration: underline; }
 .compact { min-height: 32px; padding: .45rem .7rem; font-size: .75rem; }
@@ -174,7 +201,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); }
 .modal-card { width: min(620px, 100%); max-height: 90vh; overflow: auto; display: grid; gap: 1rem; padding: 1.35rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; box-shadow: 0 24px 80px rgb(0 0 0 / .3); }
 .modal-heading h2 { margin: .2rem 0 0; color: var(--ink); font-size: 1.05rem; }
-.modal-heading > button { color: var(--ink-soft); font-size: 1.6rem; }
+.modal-heading > button { min-width: 44px; min-height: 44px; color: var(--ink-soft); font-size: 1.6rem; }
 .modal-card label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .8rem; font-weight: 700; }
 .modal-card input, .modal-card select, .modal-card textarea { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .65rem .75rem; font: inherit; }
 @media (max-width: 980px) { .submission-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .submission-toolbar { align-items: flex-start; flex-direction: column; } .submission-tools { width: 100%; justify-content: flex-start; } }

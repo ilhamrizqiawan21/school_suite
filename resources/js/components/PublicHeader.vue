@@ -42,7 +42,7 @@ const toggleProfileMenu = () => {
 </script>
 
 <template>
-    <header class="public-site-header" @keydown.esc="closeMenu">
+    <header class="public-site-header" :class="{ 'is-home': active === 'home', 'is-menu-open': menuOpen }" @keydown.esc="closeMenu">
         <div class="public-site-header-top">
             <Link href="/" class="brand" aria-label="Beranda sekolah">
                 <span class="brand-mark">
@@ -595,5 +595,37 @@ const toggleProfileMenu = () => {
         padding-inline: .55rem;
         white-space: nowrap;
     }
+}
+
+/* The landing uses the single-row navigation shown in the Calm Academic mockup. */
+.public-site-header.is-home {
+    width: 100%;
+    padding: 0 max(1.5rem, calc((100% - 1180px) / 2));
+    background: #fff;
+    border-bottom: 1px solid var(--public-line, #dce4ee);
+}
+
+@media (min-width: 1041px) {
+    .public-site-header.is-home {
+        display: grid;
+        grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+        align-items: center;
+        gap: 1.25rem;
+    }
+    .public-site-header.is-home .public-site-header-top { display: contents; }
+    .public-site-header.is-home .brand { grid-column: 1; grid-row: 1; }
+    .public-site-header.is-home .public-site-header-actions { grid-column: 3; grid-row: 1; justify-self: end; }
+    .public-site-header.is-home .public-site-header-nav-row { grid-column: 2; grid-row: 1; min-height: 72px; border: 0; }
+    .public-site-header.is-home .public-nav > a[aria-current='page'] { display: none; }
+    .public-site-header.is-home .public-nav > a,
+    .public-site-header.is-home .nav-menu-trigger { min-height: 44px; padding-inline: .55rem; border-radius: 8px; }
+    .public-site-header.is-home .admissions-action { border-radius: 10px; }
+}
+
+@media (max-width: 1040px) {
+    .public-site-header.is-home { padding-inline: 1rem; }
+    .public-site-header.is-home .public-site-header-top { padding: .85rem 0; }
+    .public-site-header.is-home .public-site-header-nav-row { border: 0; }
+    .public-site-header.is-home:not(.is-menu-open) .public-site-header-nav-row { display: none; }
 }
 </style>

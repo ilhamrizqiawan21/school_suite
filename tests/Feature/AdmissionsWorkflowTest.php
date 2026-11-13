@@ -75,6 +75,10 @@ class AdmissionsWorkflowTest extends TestCase
         $principal->forceFill(['must_change_password' => false])->save();
 
         $this->actingAs($operator)->get(route('admissions.index'))->assertOk();
+        $this->actingAs($operator)->get(route('admissions.settings.index'))->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Admissions/Index')
+                ->where('section', 'settings'));
         $this->actingAs($operator)->post(route('admissions.periods.store'), [
             'name' => 'SPMB Operator',
             'academic_year' => '2027/2028',
@@ -82,6 +86,7 @@ class AdmissionsWorkflowTest extends TestCase
         ])->assertRedirect()->assertSessionHasNoErrors();
 
         $this->actingAs($principal)->get(route('admissions.index'))->assertOk();
+        $this->actingAs($principal)->get(route('admissions.settings.index'))->assertOk();
         $this->actingAs($principal)->post(route('admissions.periods.store'), [
             'name' => 'SPMB Principal',
             'academic_year' => '2028/2029',

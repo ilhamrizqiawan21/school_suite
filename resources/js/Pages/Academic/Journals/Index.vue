@@ -478,7 +478,7 @@ const chart = computed(() => {
             <header class="journal-hero">
                 <div>
                     <p class="eyebrow">Aktivitas mengajar</p>
-                    <h1>Jurnal Harian Guru</h1>
+                    <h1>Jurnal harian guru</h1>
                     <p class="hero-copy">Kelola agenda mengajar, presensi sesi, dan catatan pembelajaran dari satu ruang kerja.</p>
                 </div>
                 <div v-if="active_term" class="term-badge">
@@ -680,11 +680,11 @@ const chart = computed(() => {
                 </div>
             </section>
 
-            <div v-if="showSessionModal" class="session-modal-backdrop" @click.self="showSessionModal = false">
+            <div v-if="showSessionModal" role="dialog" aria-modal="true" aria-labelledby="journal-session-title" class="session-modal-backdrop" @click.self="showSessionModal = false" @keydown.esc="showSessionModal = false">
                 <form class="session-modal" @submit.prevent="createSession">
                     <div>
                         <p class="eyebrow">Pertemuan baru</p>
-                        <h2>{{ duplicateTemplate ? 'Duplikat jurnal ke sesi baru' : 'Catat pertemuan' }}</h2>
+                        <h2 id="journal-session-title">{{ duplicateTemplate ? 'Duplikat jurnal ke sesi baru' : 'Catat pertemuan' }}</h2>
                         <p class="hero-copy">Pilih penugasan dan waktu pertemuan. Sesi ini akan masuk agenda dan dapat diisi jurnal lengkap.</p>
                     </div>
                     <label>Mapel dan rombel
@@ -723,10 +723,10 @@ const chart = computed(() => {
 <style scoped>
 .journal-page { max-width: 1440px; margin: 0 auto; padding: 32px clamp(20px, 4vw, 56px) 64px; color: var(--ink); }
 .journal-hero, .journal-section, .chart-card, .recap-table-wrap { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
-.journal-hero { display: flex; justify-content: space-between; gap: 28px; align-items: flex-end; padding: clamp(24px, 4vw, 42px); border-radius: 24px; background: linear-gradient(135deg, var(--surface), var(--primary-soft)); }
+.journal-hero { display: flex; justify-content: space-between; gap: 28px; align-items: flex-end; padding: 0 0 24px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .eyebrow { margin: 0 0 8px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 h1, h2, h3, p { margin-top: 0; }
-h1 { margin-bottom: 12px; font-size: clamp(30px, 4vw, 48px); letter-spacing: -.04em; }
+h1 { margin-bottom: 8px; font-size: clamp(28px, 3vw, 38px); letter-spacing: -.04em; }
 h2 { margin-bottom: 0; font-size: clamp(22px, 3vw, 32px); letter-spacing: -.03em; }
 h3 { margin-bottom: 6px; font-size: 17px; }
 .hero-copy, .session-meta, .history-main p, .empty-state p { color: var(--ink-soft); }
@@ -737,13 +737,13 @@ h3 { margin-bottom: 6px; font-size: 17px; }
 .journal-tabs { display: flex; gap: 8px; margin: 24px 0; padding: 6px; border-bottom: 1px solid var(--line); }
 .journal-tabs button { border: 0; padding: 12px 16px; border-radius: 10px; color: var(--ink-soft); background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
 .journal-tabs button.active { color: var(--primary); background: var(--primary-soft); }
-.journal-section { padding: clamp(20px, 3vw, 32px); border-radius: 20px; }
+.journal-section { padding: clamp(20px, 3vw, 32px); border-radius: 14px; box-shadow: none; }
 .journal-hero { align-items: center; flex-wrap: wrap; }
 .hero-actions, .empty-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .form-section { display: grid; gap: 13px; min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }
 .form-section legend { padding: 0 7px; color: var(--ink); font-size: 13px; font-weight: 800; }
-.session-modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 18px; background: color-mix(in srgb, var(--canvas) 64%, #07111f 36%); backdrop-filter: blur(5px); }
-.session-modal { display: grid; gap: 16px; width: min(620px, 100%); max-height: min(90vh, 760px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: var(--surface); box-shadow: var(--shadow-md); }
+.session-modal-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.session-modal { display: grid; align-content: start; gap: 16px; width: min(560px, 100%); max-height: 100%; height: 100%; overflow: auto; padding: clamp(18px, 3vw, 30px); border: 0; border-radius: 0; color: var(--ink); background: var(--surface); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
 .session-modal h2 { margin: 0 0 8px; color: var(--ink); }
 .session-modal > label, .session-modal .form-grid label { display: grid; gap: 6px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
 .session-modal .form-footer { justify-content: flex-end; }
@@ -786,5 +786,5 @@ input, select, textarea { width: 100%; border: 1px solid var(--line-strong); bor
 .recap-metrics { grid-template-columns: repeat(4, 1fr); }.chart-card { margin-bottom: 20px; padding: 22px; border-radius: 16px; }.card-heading strong { color: var(--primary); font-size: 24px; }.chart-wrap { margin-top: 20px; overflow-x: auto; }.chart-wrap svg { display: block; min-width: 620px; width: 100%; height: 240px; overflow: visible; }.chart-area { fill: var(--primary-soft); }.chart-line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }.chart-point { fill: var(--surface); stroke: var(--primary); stroke-width: 3; }.chart-labels { display: flex; justify-content: space-between; min-width: 620px; margin-top: 8px; color: var(--ink-soft); font-size: 11px; }
 .recap-table-wrap { overflow-x: auto; border-radius: 16px; }table { width: 100%; border-collapse: collapse; }th, td { padding: 15px 16px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }th { color: var(--ink-soft); background: var(--surface-subtle); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }td { color: var(--ink); }.progress-value { color: var(--primary); font-weight: 800; }
 @media (max-width: 900px) { .agenda-grid, .filter-panel { grid-template-columns: 1fr 1fr; }.filter-actions { grid-column: 1 / -1; justify-content: flex-end; }.recap-metrics { grid-template-columns: repeat(2, 1fr); }.history-row { grid-template-columns: 110px 1fr auto; }.history-actions { grid-column: 2 / -1; justify-content: flex-start; } }
-@media (max-width: 600px) { .journal-page { padding: 20px 14px 40px; }.journal-hero, .section-toolbar { align-items: flex-start; flex-direction: column; }.term-badge { width: 100%; }.journal-tabs { overflow-x: auto; }.journal-tabs button { white-space: nowrap; }.date-controls { width: 100%; }.date-controls input { flex: 1; }.agenda-summary, .recap-metrics, .agenda-grid, .filter-panel, .form-section .form-grid { grid-template-columns: 1fr; }.history-row { grid-template-columns: 1fr; gap: 10px; }.history-actions { grid-column: auto; justify-content: flex-start; }.session-actions .secondary-button, .session-actions .primary-button { flex: 1; text-align: center; }.form-footer { align-items: stretch; flex-direction: column; }.form-footer .primary-button { width: 100%; }.empty-actions, .hero-actions { width: 100%; }.empty-actions > *, .hero-actions > * { flex: 1 1 100%; } }
+@media (max-width: 600px) { .journal-page { padding: 20px 14px 40px; }.journal-hero, .section-toolbar { align-items: flex-start; flex-direction: column; }.term-badge { width: 100%; }.journal-tabs { overflow-x: auto; }.journal-tabs button { white-space: nowrap; }.date-controls { width: 100%; }.date-controls input { flex: 1; }.agenda-summary, .recap-metrics, .agenda-grid, .filter-panel, .form-section .form-grid { grid-template-columns: 1fr; }.history-row { grid-template-columns: 1fr; gap: 10px; }.history-actions { grid-column: auto; justify-content: flex-start; }.session-actions .secondary-button, .session-actions .primary-button { flex: 1; text-align: center; }.form-footer { align-items: stretch; flex-direction: column; }.form-footer .primary-button { width: 100%; }.empty-actions, .hero-actions { width: 100%; }.empty-actions > *, .hero-actions > * { flex: 1 1 100%; }.session-modal-backdrop { align-items: flex-end; }.session-modal { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 </style>

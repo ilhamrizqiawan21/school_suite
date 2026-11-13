@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 interface Requirement { id: number; code: string; label: string; is_required: boolean }
 interface Criterion { id: number; code: string; label: string; weight: number; max_score: number }
 interface Track { id: number; code: string; name: string; quota: number; requirements: Requirement[]; criteria: Criterion[] }
 interface Period { id: number; name: string; academic_year: string; level: string | null; status: string; registration_start?: string | null; registration_end?: string | null; verification_start?: string | null; verification_end?: string | null; selection_start?: string | null; selection_end?: string | null; announcement_at?: string | null; re_registration_start?: string | null; re_registration_end?: string | null; tracks: Track[] }
 interface Document { id: number; original_name: string; status: string; requirement?: Requirement }
-interface Applicant { id: number; registration_no: string; name: string; nisn: string | null; gender: 'L' | 'P'; birth_date: string | null; parent_name: string | null; parent_phone: string | null; previous_school: string | null; status: string; notes: string | null; track?: Track; selection_result?: { total_score: number; rank: number | null; decision: string | null }; documents: Document[]; re_registration?: { status: string; student_id: number | null } }
+interface ApplicantScore { id: number; criterion_id: number; score: number | string; notes?: string | null; criterion?: Criterion }
+interface Applicant { id: number; registration_no: string; name: string; nisn: string | null; gender: 'L' | 'P'; birth_date: string | null; parent_name: string | null; parent_phone: string | null; previous_school: string | null; status: string; notes: string | null; track?: Track; selection_result?: { total_score: number; rank: number | null; decision: string | null }; documents: Document[]; scores?: ApplicantScore[]; re_registration?: { status: string; student_id: number | null } }
 interface CommitteeMember { id: number; name: string; email: string; assigned_at: string }
 interface Teacher { id: number; name: string; email: string }
 interface StatusOption { value: string; label: string }
@@ -28,6 +29,74 @@ const props = defineProps<{
 }>();
 
 const selectedPeriod = computed(() => props.periods.find((period) => period.id === props.selected_period_id) ?? null);
+const workspaceMode = computed<'overview' | 'intake' | 'decision' | 'settings'>(() => {
+    if (props.section === 'dashboard' || props.section === 'reports') return 'overview';
+    if (props.section === 'applicants' || props.section === 'documents') return 'intake';
+    if (props.section === 'selection' || props.section === 'announcement' || props.section === 're-registration') return 'decision';
+    return 'settings';
+});
+const activeOverviewTab = ref<'summary' | 'reports'>(props.section === 'reports' ? 'reports' : 'summary');
+const activeIntakeTab = ref<'all' | 'documents'>(props.section === 'documents' ? 'documents' : 'all');
+const activeDecisionTab = ref<'selection' | 'announcement' | 're-registration'>(
+    props.section === 'announcement' ? 'announcement' : (props.section === 're-registration' ? 're-registration' : 'selection'),
+);
+const activeSettingsTab = ref<'periods' | 'tracks' | 'committee'>(
+    props.section === 'tracks' ? 'tracks' : (props.section === 'committee' ? 'committee' : 'periods'),
+);
+const selectedApplicantId = ref<number | null>(null);
+const selectedApplicant = computed(() => props.applicants.find((applicant) => applicant.id === selectedApplicantId.value) ?? null);
+function openApplicantDrawer(applicant: Applicant) {
+    selectedApplicantId.value = applicant.id;
+}
+function closeApplicantDrawer() {
+    selectedApplicantId.value = null;
+}
+
+watch(() => props.section, (nextSection) => {
+    if (nextSection === 'reports') activeOverviewTab.value = 'reports';
+    else if (nextSection === 'dashboard') activeOverviewTab.value = 'summary';
+    else if (nextSection === 'documents') activeIntakeTab.value = 'documents';
+    else if (nextSection === 'applicants') activeIntakeTab.value = 'all';
+    else if (nextSection === 'announcement') activeDecisionTab.value = 'announcement';
+    else if (nextSection === 're-registration') activeDecisionTab.value = 're-registration';
+    else if (nextSection === 'selection') activeDecisionTab.value = 'selection';
+    else if (nextSection === 'tracks') activeSettingsTab.value = 'tracks';
+    else if (nextSection === 'committee') activeSettingsTab.value = 'committee';
+    else if (nextSection === 'periods' || nextSection === 'settings') activeSettingsTab.value = 'periods';
+});
+
+const periodReadiness = computed(() => {
+    const period = selectedPeriod.value;
+    const hasPeriod = Boolean(period);
+    const activeTracks = period?.tracks ?? [];
+    const hasTracks = activeTracks.length > 0 && activeTracks.every((track) => track.quota >= 1);
+    const hasRequirements = activeTracks.length > 0 && activeTracks.every((track) => track.requirements.length >= 1);
+    const hasCriteria = activeTracks.length > 0 && activeTracks.every((track) => track.criteria.length >= 1);
+    const hasCommittee = props.committee.length > 0;
+
+    return {
+        hasPeriod,
+        hasTracks,
+        hasRequirements,
+        hasCriteria,
+        hasCommittee,
+        canOpen: hasPeriod && hasTracks && hasRequirements && hasCriteria,
+    };
+});
+
+const sectionTitle = computed(() => ({
+    dashboard: 'Dashboard & Laporan SPMB',
+    reports: 'Dashboard & Laporan SPMB',
+    applicants: 'Pendaftar & Verifikasi',
+    documents: 'Pendaftar & Verifikasi',
+    selection: 'Seleksi & Daftar Ulang',
+    announcement: 'Seleksi & Daftar Ulang',
+    're-registration': 'Seleksi & Daftar Ulang',
+    settings: 'Pengaturan SPMB',
+    periods: 'Pengaturan SPMB',
+    tracks: 'Pengaturan SPMB',
+    committee: 'Pengaturan SPMB',
+} as Record<string, string>)[props.section] ?? 'Manajemen SPMB');
 const overviewApplicants = computed(() => props.applicants);
 const periodStatusLabels: Record<string, string> = {
     draft: 'Persiapan', registration_open: 'Pendaftaran dibuka', verification: 'Verifikasi berkas',
@@ -252,7 +321,7 @@ function periodHref(path: string) {
 }
 function periodSectionPath() {
     const sections: Record<string, string> = {
-        periods: 'periode', tracks: 'jalur', committee: 'panitia', applicants: 'pendaftar',
+        settings: 'pengaturan', periods: 'periode', tracks: 'jalur', committee: 'panitia', applicants: 'pendaftar',
         documents: 'berkas', selection: 'seleksi', announcement: 'pengumuman',
         're-registration': 'daftar-ulang', reports: 'laporan',
     };
@@ -264,8 +333,6 @@ function changePeriod(event: Event) {
     router.get(periodSectionPath(), periodId ? { period_id: periodId } : {}, { preserveState: true, preserveScroll: true });
 }
 
-const page = usePage();
-const flashMessage = () => (page.props.flash as { message?: string })?.message;
 const periodForm = useForm({ name: '', academic_year: '', level: '', registration_start: '', registration_end: '', verification_start: '', verification_end: '', selection_start: '', selection_end: '', announcement_at: '', re_registration_start: '', re_registration_end: '', guideline_file: null as File | null });
 const trackForm = useForm({ period_id: props.selected_period_id ? String(props.selected_period_id) : '', code: '', name: '', quota: 1 });
 const requirementForm = useForm({ track_id: '', code: '', label: '', is_required: true });
@@ -283,9 +350,29 @@ const decisionForms: Record<number, ReturnType<typeof useForm>> = {};
 const reRegistrationForms: Record<number, ReturnType<typeof useForm>> = {};
 
 function documentForm(applicant: Applicant) { return documentForms[applicant.id] ??= useForm({ requirement_id: '', file: null as File | null }); }
-function scoreForm(applicant: Applicant, criterion: Criterion) { const key = `${applicant.id}-${criterion.id}`; return scoreForms[key] ??= useForm({ criterion_id: String(criterion.id), score: '', notes: '' }); }
+function scoreForm(applicant: Applicant, criterion: Criterion) {
+    const key = `${applicant.id}-${criterion.id}`;
+    const existing = applicant.scores?.find((item) => Number(item.criterion_id) === Number(criterion.id));
+    return scoreForms[key] ??= useForm({ criterion_id: String(criterion.id), score: existing ? String(existing.score) : '', notes: existing?.notes ?? '' });
+}
 function decisionForm(applicant: Applicant) { return decisionForms[applicant.id] ??= useForm({ decision: applicant.selection_result?.decision ?? 'accepted', override_reason: '' }); }
 function reRegistrationForm(applicant: Applicant) { return reRegistrationForms[applicant.id] ??= useForm({ nis: '' }); }
+function suggestNis(applicant: Applicant) {
+    const yearPrefix = (selectedPeriod.value?.academic_year ?? String(new Date().getFullYear())).slice(0, 4).replace(/\D/g, '') || String(new Date().getFullYear());
+    const rankOrId = applicant.selection_result?.rank ?? applicant.id;
+    reRegistrationForm(applicant).nis = `${yearPrefix}${String(rankOrId).padStart(4, '0')}`;
+}
+function applySuggestedDecision(applicant: Applicant) {
+    const quota = applicant.track?.quota ?? 0;
+    const rank = applicant.selection_result?.rank ?? null;
+    const form = decisionForm(applicant);
+    if (rank !== null && quota > 0) {
+        form.decision = rank <= quota ? 'accepted' : 'waitlisted';
+        if (!form.override_reason) {
+            form.override_reason = rank <= quota ? `Masuk kuota jalur (${rank}/${quota}).` : `Melebihi kuota jalur (${rank}/${quota}).`;
+        }
+    }
+}
 function addPeriod() { periodForm.post('/spmb/periode', { forceFormData: true, preserveScroll: true, onSuccess: () => periodForm.reset() }); }
 function addTrack() { trackForm.post('/spmb/jalur', { preserveScroll: true, onSuccess: () => trackForm.reset('code', 'name') }); }
 function addRequirement() { requirementForm.post('/spmb/persyaratan', { preserveScroll: true, onSuccess: () => requirementForm.reset('code', 'label') }); }
@@ -304,157 +391,680 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 </script>
 
 <template>
-    <Head :title="section === 'dashboard' ? 'Dashboard SPMB' : 'Manajemen SPMB'" />
-    <AppLayout :title="section === 'dashboard' ? 'Dashboard SPMB' : 'SPMB'">
+    <Head :title="workspaceMode === 'overview' ? 'Dashboard & Laporan SPMB' : sectionTitle" />
+    <AppLayout :title="workspaceMode === 'overview' ? 'Dashboard & Laporan SPMB' : sectionTitle">
         <div class="view space-y-6 spmb-page">
-            <section v-if="section === 'dashboard'" class="spmb-overview">
+            <!-- 1. WORKSPACE: OVERVIEW & REPORTS -->
+            <section v-if="workspaceMode === 'overview'" class="spmb-overview">
                 <header class="spmb-overview-heading">
-                    <div><p class="spmb-kicker">Sistem Penerimaan Murid Baru</p><h1>Dashboard SPMB</h1><p>Pantau posisi penerimaan dan tindak lanjut untuk periode yang dipilih.</p></div>
-                    <div class="overview-heading-actions"><Link href="/spmb/periode" class="overview-period-link">Kelola periode <span aria-hidden="true">↗</span></Link></div>
+                    <div>
+                        <p class="spmb-kicker">Sistem Penerimaan Murid Baru</p>
+                        <h1>Dashboard & Laporan SPMB</h1>
+                        <p>Pantau posisi penerimaan, kuota per jalur, dan rekapitulasi laporan untuk periode yang dipilih.</p>
+                    </div>
+                    <div class="overview-heading-actions">
+                        <Link :href="periodHref('/spmb/pendaftar')" class="secondary-button">Meja Pendaftar</Link>
+                        <Link :href="periodHref('/spmb/pengaturan')" class="overview-period-link">Pengaturan SPMB <span aria-hidden="true">↗</span></Link>
+                    </div>
                 </header>
 
-                <section class="overview-period-picker" aria-label="Pilih periode untuk ditinjau">
-                    <label for="overview-period">Periode yang ditinjau</label>
-                    <select id="overview-period" :value="selected_period_id ?? ''" @change="changePeriod">
-                        <option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }} · {{ period.academic_year }} · {{ periodStatusLabels[period.status] ?? period.status }}</option>
-                    </select>
-                </section>
+                <div class="spmb-top-bar">
+                    <section class="overview-period-picker" aria-label="Pilih periode untuk ditinjau">
+                        <label for="overview-period">Periode aktif</label>
+                        <select id="overview-period" :value="selected_period_id ?? ''" @change="changePeriod">
+                            <option value="">Pilih periode</option>
+                            <option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }} · {{ period.academic_year }} · {{ periodStatusLabels[period.status] ?? period.status }}</option>
+                        </select>
+                    </section>
+                    <nav class="spmb-workspace-tabs" aria-label="Tampilan Dashboard SPMB">
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeOverviewTab === 'summary' }" @click="activeOverviewTab = 'summary'">Ringkasan & Tindak Lanjut</button>
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeOverviewTab === 'reports' }" @click="activeOverviewTab = 'reports'">Rekapitulasi & Laporan</button>
+                    </nav>
+                </div>
 
                 <template v-if="selectedPeriod">
                     <section class="overview-period-banner">
-                        <div><span class="period-overline">{{ selectedPeriod.academic_year }}<template v-if="selectedPeriod.level"> · {{ selectedPeriod.level }}</template></span><h2>{{ selectedPeriod.name }}</h2></div>
+                        <div>
+                            <span class="period-overline">{{ selectedPeriod.academic_year }}<template v-if="selectedPeriod.level"> · {{ selectedPeriod.level }}</template></span>
+                            <h2>{{ selectedPeriod.name }}</h2>
+                        </div>
                         <span class="period-phase-pill" :class="`phase-${selectedPeriod.status}`"><i aria-hidden="true" />{{ periodStatusLabel }}</span>
                     </section>
 
                     <section class="overview-metrics" aria-label="Ringkasan periode terpilih">
                         <Link :href="periodHref('/spmb/pendaftar')" class="overview-metric metric-total"><span>Total pendaftar</span><strong>{{ overviewCounts.applicants }}</strong><small>Semua pendaftar pada periode ini</small></Link>
-                        <Link :href="periodHref('/spmb/pengumuman')" class="overview-metric"><span>Diterima</span><strong>{{ overviewCounts.accepted }}</strong><small>Termasuk yang sudah daftar ulang</small></Link>
-                        <Link :href="periodHref('/spmb/pengumuman')" class="overview-metric"><span>Cadangan</span><strong>{{ overviewCounts.waitlisted }}</strong><small>Menunggu perubahan kuota</small></Link>
+                        <Link :href="periodHref('/spmb/seleksi')" class="overview-metric"><span>Diterima</span><strong>{{ overviewCounts.accepted }}</strong><small>Termasuk yang sudah daftar ulang</small></Link>
+                        <Link :href="periodHref('/spmb/seleksi')" class="overview-metric"><span>Cadangan</span><strong>{{ overviewCounts.waitlisted }}</strong><small>Menunggu perubahan kuota</small></Link>
                         <Link :href="periodHref('/spmb/daftar-ulang')" class="overview-metric"><span>Daftar ulang selesai</span><strong>{{ overviewCounts.reRegistered }}</strong><small>Sudah tercatat sebagai siswa</small></Link>
                     </section>
 
-                    <div class="overview-columns">
-                        <section class="overview-panel phase-panel">
-                            <header class="overview-panel-heading"><div><h3>Posisi tahapan</h3><p>Alur penerimaan periode ini</p></div><span>{{ periodStatusLabel }}</span></header>
-                            <ol class="phase-track" :class="{ 'phase-archived': selectedPeriod.status === 'archived' }">
-                                <li v-for="(step, index) in phaseSteps" :key="step.status" :class="{ 'is-complete': currentPhaseIndex > index || selectedPeriod.status === 'completed', 'is-current': currentPhaseIndex === index }">
-                                    <i aria-hidden="true" /><span>{{ step.label }}</span>
-                                </li>
-                            </ol>
-                            <dl class="period-date-list">
-                                <div><dt>Pendaftaran</dt><dd>{{ formatDateRange(selectedPeriod.registration_start, selectedPeriod.registration_end) }}</dd></div>
-                                <div><dt>Verifikasi</dt><dd>{{ formatDateRange(selectedPeriod.verification_start, selectedPeriod.verification_end) }}</dd></div>
-                                <div><dt>Seleksi</dt><dd>{{ formatDateRange(selectedPeriod.selection_start, selectedPeriod.selection_end) }}</dd></div>
-                                <div><dt>Pengumuman</dt><dd>{{ formatDate(selectedPeriod.announcement_at) ?? 'Tanggal belum diatur' }}</dd></div>
-                                <div><dt>Daftar ulang</dt><dd>{{ formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) }}</dd></div>
-                            </dl>
-                        </section>
+                    <template v-if="activeOverviewTab === 'summary'">
+                        <div class="overview-columns">
+                            <section class="overview-panel phase-panel">
+                                <header class="overview-panel-heading"><div><h3>Posisi tahapan</h3><p>Alur penerimaan periode ini</p></div><span>{{ periodStatusLabel }}</span></header>
+                                <ol class="phase-track" :class="{ 'phase-archived': selectedPeriod.status === 'archived' }">
+                                    <li v-for="(step, index) in phaseSteps" :key="step.status" :class="{ 'is-complete': currentPhaseIndex > index || selectedPeriod.status === 'completed', 'is-current': currentPhaseIndex === index }">
+                                        <i aria-hidden="true" /><span>{{ step.label }}</span>
+                                    </li>
+                                </ol>
+                                <dl class="period-date-list">
+                                    <div><dt>Pendaftaran</dt><dd>{{ formatDateRange(selectedPeriod.registration_start, selectedPeriod.registration_end) }}</dd></div>
+                                    <div><dt>Verifikasi</dt><dd>{{ formatDateRange(selectedPeriod.verification_start, selectedPeriod.verification_end) }}</dd></div>
+                                    <div><dt>Seleksi</dt><dd>{{ formatDateRange(selectedPeriod.selection_start, selectedPeriod.selection_end) }}</dd></div>
+                                    <div><dt>Pengumuman</dt><dd>{{ formatDate(selectedPeriod.announcement_at) ?? 'Tanggal belum diatur' }}</dd></div>
+                                    <div><dt>Daftar ulang</dt><dd>{{ formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) }}</dd></div>
+                                </dl>
+                            </section>
 
-                        <section class="overview-panel attention-panel">
-                            <header class="overview-panel-heading"><div><h3>Ringkasan tindak lanjut</h3><p>Jumlah yang masih perlu diproses</p></div></header>
-                            <Link :href="periodHref('/spmb/berkas')" class="attention-row"><span class="attention-marker marker-document" /><span><strong>Verifikasi berkas</strong><small>Pendaftar menunggu pemeriksaan dokumen</small></span><b>{{ overviewCounts.documents }}</b></Link>
-                            <Link :href="periodHref('/spmb/seleksi')" class="attention-row"><span class="attention-marker marker-selection" /><span><strong>Keputusan seleksi</strong><small>Pendaftar menunggu keputusan akhir</small></span><b>{{ overviewCounts.decisions }}</b></Link>
-                            <Link :href="periodHref('/spmb/daftar-ulang')" class="attention-row"><span class="attention-marker marker-reregistration" /><span><strong>Daftar ulang</strong><small>Pendaftar diterima belum menyelesaikan daftar ulang</small></span><b>{{ overviewCounts.reRegistration }}</b></Link>
-                        </section>
-                    </div>
-
-                    <section class="overview-panel track-overview-panel">
-                        <header class="overview-panel-heading"><div><h3>Peserta per jalur</h3><p>Pendaftar dan kuota penerimaan pada periode terpilih</p></div><Link :href="periodHref('/spmb/jalur')">Lihat jalur</Link></header>
-                        <div v-if="trackOverview.length" class="track-overview-list">
-                            <article v-for="track in trackOverview" :key="track.id" class="track-overview-row">
-                                <div class="track-overview-name"><strong>{{ track.name }}</strong><span>{{ track.applicants }} pendaftar</span></div>
-                                <div class="quota-progress" role="progressbar" :aria-label="`Kuota terisi jalur ${track.name}`" :aria-valuenow="track.accepted" :aria-valuemin="0" :aria-valuemax="track.quota"><i :style="{ width: `${track.fillRate}%` }" /></div>
-                                <span class="track-overview-quota">{{ track.accepted }} / {{ track.quota }} kuota</span>
-                            </article>
+                            <section class="overview-panel attention-panel">
+                                <header class="overview-panel-heading"><div><h3>Antrean tindak lanjut</h3><p>Klik untuk langsung memproses</p></div></header>
+                                <Link :href="periodHref('/spmb/berkas')" class="attention-row"><span class="attention-marker marker-document" /><span><strong>Verifikasi berkas</strong><small>Pendaftar menunggu pemeriksaan dokumen</small></span><b>{{ overviewCounts.documents }}</b></Link>
+                                <Link :href="periodHref('/spmb/seleksi')" class="attention-row"><span class="attention-marker marker-selection" /><span><strong>Keputusan seleksi</strong><small>Pendaftar menunggu penilaian / keputusan akhir</small></span><b>{{ overviewCounts.decisions }}</b></Link>
+                                <Link :href="periodHref('/spmb/daftar-ulang')" class="attention-row"><span class="attention-marker marker-reregistration" /><span><strong>Daftar ulang</strong><small>Pendaftar diterima belum menyelesaikan daftar ulang</small></span><b>{{ overviewCounts.reRegistration }}</b></Link>
+                            </section>
                         </div>
-                        <p v-else class="overview-empty-inline">Belum ada jalur untuk periode ini. Atur jalur dan kuota melalui halaman Jalur.</p>
-                    </section>
+
+                        <section class="overview-panel track-overview-panel">
+                            <header class="overview-panel-heading"><div><h3>Peserta per jalur</h3><p>Pendaftar dan keterisian kuota penerimaan pada periode terpilih</p></div><Link :href="periodHref('/spmb/jalur')">Atur jalur & kuota</Link></header>
+                            <div v-if="trackOverview.length" class="track-overview-list">
+                                <article v-for="track in trackOverview" :key="track.id" class="track-overview-row">
+                                    <div class="track-overview-name"><strong>{{ track.name }}</strong><span>{{ track.applicants }} pendaftar</span></div>
+                                    <div class="quota-progress" role="progressbar" :aria-label="`Kuota terisi jalur ${track.name}`" :aria-valuenow="track.accepted" :aria-valuemin="0" :aria-valuemax="track.quota"><i :style="{ width: `${track.fillRate}%` }" /></div>
+                                    <span class="track-overview-quota">{{ track.accepted }} / {{ track.quota }} kuota</span>
+                                </article>
+                            </div>
+                            <p v-else class="overview-empty-inline">Belum ada jalur untuk periode ini. Atur jalur dan kuota melalui halaman Pengaturan SPMB.</p>
+                        </section>
+                    </template>
+
+                    <div v-if="activeOverviewTab === 'reports'" class="report-grid">
+                        <article class="panel admissions-panel report-panel">
+                            <div class="table-title"><div><h2>Rekapitulasi per jalur</h2><p>Jumlah pendaftar dan penggunaan kuota periode yang dipilih.</p></div></div>
+                            <div class="report-table-wrap table-scroll" tabindex="0" role="region" aria-label="Rekapitulasi pendaftar per jalur">
+                                <table class="report-table">
+                                    <thead><tr><th scope="col">Jalur</th><th scope="col">Pendaftar</th><th scope="col">Diterima</th><th scope="col">Kuota</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="track in trackOverview" :key="track.id"><th scope="row">{{ track.name }}</th><td>{{ track.applicants }}</td><td>{{ track.accepted }}</td><td>{{ track.accepted }} / {{ track.quota }}</td></tr>
+                                        <tr v-if="!trackOverview.length"><td colspan="4" class="report-empty">Belum ada jalur pada periode ini.</td></tr>
+                                    </tbody>
+                                    <tfoot><tr><th scope="row">Total</th><td>{{ applicants.length }}</td><td>{{ summary.accepted + summary.re_registered }}</td><td>{{ totalQuota }}</td></tr></tfoot>
+                                </table>
+                            </div>
+                        </article>
+                        <article class="panel admissions-panel report-panel">
+                            <div class="table-title"><div><h2>Rekapitulasi status alur</h2><p>Distribusi posisi setiap pendaftar dalam alur penerimaan.</p></div></div>
+                            <div class="status-report-list"><div v-for="status in statusReport" :key="status.value"><span>{{ status.label }}</span><strong>{{ status.count }}</strong></div></div>
+                        </article>
+                    </div>
                 </template>
                 <section v-else class="overview-empty-state">
-                    <span class="empty-state-mark" aria-hidden="true">＋</span><h2>Belum ada periode untuk ditinjau</h2><p>Buat periode SPMB terlebih dahulu. Jadwal dan tanggal penerimaan dikelola di halaman Periode.</p><Link href="/spmb/periode" class="overview-period-link">Buka halaman Periode <span aria-hidden="true">↗</span></Link>
+                    <span class="empty-state-mark" aria-hidden="true">＋</span>
+                    <h2>Belum ada periode untuk ditinjau</h2>
+                    <p>Buat periode SPMB terlebih dahulu melalui Pengaturan SPMB untuk membuka pendaftaran.</p>
+                    <Link href="/spmb/pengaturan" class="overview-period-link">Buka Pengaturan SPMB <span aria-hidden="true">↗</span></Link>
                 </section>
             </section>
 
-            <section v-else class="hero-card">
-                <div><p class="eyebrow">Sistem Penerimaan Murid Baru</p><h1>Manajemen SPMB</h1><p>Kelola periode, jalur, verifikasi, seleksi, pengumuman, dan daftar ulang dalam satu alur.</p></div>
-                <div class="grade-summary admissions-summary"><div><span>Periode</span><strong>{{ summary.periods }}</strong></div><div><span>Pendaftar</span><strong>{{ summary.applicants }}</strong></div><div><span>Diterima</span><strong>{{ summary.accepted }}</strong></div><div><span>Daftar ulang</span><strong>{{ summary.re_registered }}</strong></div></div>
-            </section>
-            <p v-if="flashMessage()" class="notice-success" role="status">{{ flashMessage() }}</p>
-            <section v-if="section !== 'dashboard'" class="panel admissions-panel period-context">
-                <label>Periode yang ditinjau
-                    <select :value="selected_period_id ?? ''" @change="changePeriod">
-                        <option value="">Belum ada periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }} · {{ periodStatusLabels[period.status] ?? period.status }}</option>
-                    </select>
-                </label>
-            </section>
-
-            <section v-if="section === 'periods'" class="panel admissions-panel">
-                <div class="table-title"><div><h2>Periode & Juknis</h2><p>Buat siklus SPMB yang dapat dikonfigurasi per tahun ajaran dan jenjang.</p></div></div>
-                <form v-if="can_manage_committee" class="admissions-form" @submit.prevent="addPeriod"><label>Nama periode<input v-model="periodForm.name" required placeholder="SPMB 2027/2028" /></label><label>Tahun ajaran<input v-model="periodForm.academic_year" required placeholder="2027/2028" /></label><label>Jenjang<input v-model="periodForm.level" placeholder="SMP" /></label><label>Mulai pendaftaran<input v-model="periodForm.registration_start" type="date" /></label><label>Akhir pendaftaran<input v-model="periodForm.registration_end" type="date" /></label><label>Mulai verifikasi<input v-model="periodForm.verification_start" type="date" /></label><label>Akhir verifikasi<input v-model="periodForm.verification_end" type="date" /></label><label>Mulai seleksi<input v-model="periodForm.selection_start" type="date" /></label><label>Akhir seleksi<input v-model="periodForm.selection_end" type="date" /></label><label>Tanggal pengumuman<input v-model="periodForm.announcement_at" type="date" /></label><label>Mulai daftar ulang<input v-model="periodForm.re_registration_start" type="date" /></label><label>Akhir daftar ulang<input v-model="periodForm.re_registration_end" type="date" /></label><label>Juknis<input type="file" accept=".pdf,.doc,.docx" @change="periodForm.guideline_file = ($event.target as HTMLInputElement).files?.[0] || null" /></label><div class="admissions-form-actions"><button class="primary-button" type="submit" :disabled="periodForm.processing">Tambah periode</button></div></form>
-                <div v-for="period in periods" :key="period.id" class="period-row"><div><strong>{{ period.name }}</strong><span>{{ period.academic_year }} · {{ period.level || 'Semua jenjang' }} · {{ period.tracks.length }} jalur</span></div><button v-if="can_manage_committee && period.status === 'draft'" class="secondary-button" type="button" @click="openPeriod(period)">Buka pendaftaran</button><span class="status-pill">{{ periodStatusLabels[period.status] ?? period.status }}</span></div>
-            </section>
-
-            <section v-if="section === 'tracks'" class="panel admissions-panel"><div class="table-title"><div><h2>Jalur, kuota, berkas & kriteria</h2><p>Konfigurasi mengikuti juknis periode, bukan angka hardcode.</p></div></div><form v-if="can_manage_committee && selected_period_id" class="admissions-form" @submit.prevent="addTrack"><label>Jalur<select v-model="trackForm.code"><option value="">Pilih jalur</option><option value="DOMISILI">Domisili</option><option value="AFIRMASI">Afirmasi</option><option value="PRESTASI">Prestasi</option><option value="MUTASI">Mutasi</option></select></label><label>Nama jalur<input v-model="trackForm.name" required /></label><label>Kuota<input v-model.number="trackForm.quota" type="number" min="1" required /></label><div class="admissions-form-actions"><button class="primary-button" type="submit">Tambah jalur</button></div></form><article v-for="track in tracks" :key="track.id" class="track-card"><div><strong>{{ track.name }}</strong><span>{{ track.code }} · kuota {{ track.quota }}</span></div><small>{{ track.requirements.length }} persyaratan · {{ track.criteria.length }} kriteria</small></article><form v-if="can_manage_committee && tracks.length" class="admissions-form compact-form" @submit.prevent="addRequirement"><label>Jalur<select v-model="requirementForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Kode berkas<input v-model="requirementForm.code" required placeholder="KK" /></label><label>Nama berkas<input v-model="requirementForm.label" required placeholder="Kartu Keluarga" /></label><button class="secondary-button" type="submit">Tambah berkas</button></form><form v-if="can_manage_committee && tracks.length" class="admissions-form compact-form" @submit.prevent="addCriterion"><label>Jalur<select v-model="criterionForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Kode kriteria<input v-model="criterionForm.code" required placeholder="NILAI" /></label><label>Nama kriteria<input v-model="criterionForm.label" required placeholder="Nilai seleksi" /></label><label>Bobot<input v-model.number="criterionForm.weight" type="number" min="0.01" step="0.01" /></label><button class="secondary-button" type="submit">Tambah kriteria</button></form></section>
-
-            <template v-if="section === 'committee'">
-                <section class="panel admissions-panel committee-panel">
-                    <div class="table-title committee-heading"><div><span class="section-overline">Penugasan tim</span><h2>Panitia & jadwal</h2><p>Atur guru yang bertugas memverifikasi berkas dan menilai pendaftar pada periode ini.</p></div><span class="committee-count"><strong>{{ committee.length }}</strong> guru ditugaskan</span></div>
-                    <div class="committee-management">
-                        <form v-if="can_manage_committee" class="admissions-assign-form" @submit.prevent="assignTeacher"><label for="committee-teacher">Tambah anggota panitia<select id="committee-teacher" v-model="committeeForm.user_id" required><option value="">Pilih guru</option><option v-for="teacher in available_teachers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</option></select></label><button class="primary-button" type="submit">Tugaskan guru</button></form>
-                        <div class="committee-guidance"><span class="guidance-mark" aria-hidden="true">✓</span><div><strong>Peran panitia</strong><p>Anggota yang ditugaskan dapat membantu proses verifikasi dan penilaian pendaftar.</p></div></div>
+            <!-- HEADER FOR OTHER WORKSPACES -->
+            <template v-else>
+                <section class="admissions-page-header">
+                    <div class="admissions-header-top">
+                        <div>
+                            <p class="eyebrow">Sistem Penerimaan Murid Baru</p>
+                            <h1>{{ sectionTitle }}</h1>
+                            <p v-if="workspaceMode === 'intake'">Meja kerja pendaftar terpadu: tambah calon siswa, periksa kelengkapan berkas, dan perbarui status verifikasi dari satu layar.</p>
+                            <p v-else-if="workspaceMode === 'decision'">Kelola penilaian kriteria seleksi, hitung peringkat otomatis, tetapkan kelulusan, hingga konfirmasi NIS daftar ulang.</p>
+                            <p v-else>Konfigurasi siklus periode, jalur & kuota, syarat berkas, bobot kriteria, serta penugasan tim panitia SPMB.</p>
+                        </div>
+                        <section class="period-context-inline">
+                            <label>Periode aktif
+                                <select :value="selected_period_id ?? ''" @change="changePeriod">
+                                    <option value="">Belum ada periode</option>
+                                    <option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }} · {{ periodStatusLabels[period.status] ?? period.status }}</option>
+                                </select>
+                            </label>
+                        </section>
                     </div>
-                    <div class="committee-list-heading"><div><h3>Panitia aktif</h3><p>Daftar guru yang saat ini menerima penugasan.</p></div><span>{{ committee.length }} anggota</span></div>
-                    <ul class="committee-list"><li v-for="member in committee" :key="member.id"><div class="committee-member-identity"><span class="member-avatar" aria-hidden="true">{{ memberInitials(member.name) }}</span><span class="committee-member-copy"><strong>{{ member.name }}</strong><span>{{ member.email }}</span></span></div><div class="committee-member-actions"><span class="member-status">Aktif</span><button v-if="can_manage_committee" class="secondary-button" type="button" @click="removeMember(member)">Cabut</button></div></li><li v-if="!committee.length" class="committee-empty"><span class="member-avatar" aria-hidden="true">＋</span><div><strong>Belum ada panitia</strong><span>Tugaskan guru untuk memulai proses penerimaan.</span></div></li></ul>
-                </section>
-                <section v-if="selectedPeriod" class="panel admissions-panel committee-schedule-panel">
-                    <div class="table-title committee-heading"><div><span class="section-overline">Kalender kerja</span><h2>Jadwal penerimaan</h2><p>Gunakan tanggal ini sebagai acuan pembagian tugas dan tindak lanjut panitia.</p></div><span class="status-pill">{{ periodStatusLabel }}</span></div>
-                    <div class="schedule-grid"><article class="schedule-item"><span class="schedule-index">01</span><div><strong>Verifikasi berkas</strong><span>{{ formatDateRange(selectedPeriod.verification_start, selectedPeriod.verification_end) }}</span><small>Pemeriksaan kelengkapan dan validitas dokumen.</small></div></article><article class="schedule-item"><span class="schedule-index">02</span><div><strong>Seleksi & penilaian</strong><span>{{ formatDateRange(selectedPeriod.selection_start, selectedPeriod.selection_end) }}</span><small>Penilaian pendaftar dan penetapan peringkat.</small></div></article><article class="schedule-item"><span class="schedule-index">03</span><div><strong>Pengumuman</strong><span>{{ formatDate(selectedPeriod.announcement_at) ?? 'Tanggal belum diatur' }}</span><small>Publikasi hasil seleksi kepada pendaftar.</small></div></article><article class="schedule-item"><span class="schedule-index">04</span><div><strong>Daftar ulang</strong><span>{{ formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) }}</span><small>Konfirmasi pendaftar diterima menjadi siswa.</small></div></article></div>
+                    <div class="grade-summary admissions-summary">
+                        <div><span>Periode</span><strong>{{ summary.periods }}</strong></div>
+                        <div><span>Pendaftar</span><strong>{{ summary.applicants }}</strong></div>
+                        <div><span>Diterima</span><strong>{{ summary.accepted }}</strong></div>
+                        <div><span>Daftar ulang</span><strong>{{ summary.re_registered }}</strong></div>
+                    </div>
                 </section>
             </template>
 
-            <section v-if="section === 'applicants'" class="panel admissions-panel applicants-panel">
-                <div class="applicants-page-heading"><div class="table-title"><div><span class="section-overline">Data penerimaan</span><h2>Pendaftar</h2><p>Kelola data calon siswa dan pantau posisi mereka dalam alur penerimaan.</p></div></div><button v-if="can_manage_applicants" class="primary-button" type="button" :aria-expanded="showApplicantForm" aria-controls="applicant-create-form" @click="showApplicantForm = !showApplicantForm">{{ showApplicantForm ? 'Tutup form' : 'Tambah pendaftar' }}</button></div>
-                <div class="applicant-insights" aria-label="Ringkasan pendaftar"><div class="applicant-insight is-total"><span>Total pendaftar</span><strong>{{ applicants.length }}</strong><small>Pada periode terpilih</small></div><div v-for="status in applicantStatusSummary" :key="status.value" class="applicant-insight"><span>{{ status.label }}</span><strong>{{ applicants.filter((applicant) => applicant.status === status.value).length }}</strong><small>{{ status.hint }}</small></div></div>
-                <form v-if="can_manage_applicants && showApplicantForm" id="applicant-create-form" class="admissions-form applicant-create-form" @submit.prevent="addApplicant"><div class="form-section-intro"><span class="section-overline">Data baru</span><h3>Tambah pendaftar</h3><p>Lengkapi identitas dasar calon siswa, lalu simpan untuk masuk ke alur verifikasi.</p></div><label>Periode<select v-model="applicantForm.period_id" required><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }}</option></select></label><label>Jalur<select v-model="applicantForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label>Nama calon siswa<input v-model="applicantForm.name" required /></label><label>NISN<input v-model="applicantForm.nisn" inputmode="numeric" /></label><label>Jenis kelamin<select v-model="applicantForm.gender"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label><label>Tanggal lahir<input v-model="applicantForm.birth_date" type="date" /></label><label>Nama orang tua/wali<input v-model="applicantForm.parent_name" /></label><label>Kontak orang tua<input v-model="applicantForm.parent_phone" /></label><label>Asal sekolah<input v-model="applicantForm.previous_school" /></label><label class="admissions-form-wide">Catatan<textarea v-model="applicantForm.notes" rows="2" /></label><div class="admissions-form-actions admissions-form-wide"><button class="primary-button" type="submit">Simpan pendaftar</button></div></form>
-                <div class="applicant-list-panel"><div class="applicant-list-heading"><div><h3>Daftar pendaftar</h3><p>{{ filteredApplicants.length }} dari {{ applicants.length }} data ditampilkan</p></div><span v-if="hasApplicantFilters" class="filter-result-label">Filter aktif</span></div><div class="applicant-filters"><label class="applicant-search-field"><span>Cari pendaftar</span><input v-model="applicantSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Status</span><select v-model="applicantStatusFilter"><option value="">Semua status</option><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label><label><span>Jalur</span><select v-model="applicantTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><button v-if="hasApplicantFilters" class="filter-reset-button" type="button" @click="resetApplicantFilters">Reset filter</button></div><div class="admissions-applicants"><article v-for="applicant in filteredApplicants" :key="applicant.id" class="admissions-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3></div><span class="status-pill" :class="`status-${applicant.status}`">{{ applicantStatusLabel(applicant.status) }}</span></div><div class="admissions-applicant-details"><span>{{ applicant.track?.name || 'Belum memilih jalur' }}</span><span>NISN {{ applicant.nisn || '—' }}</span><span>Asal {{ applicant.previous_school || '—' }}</span></div><form v-if="can_manage_applicants" class="admissions-status-form" @submit.prevent="updateApplicant(applicant, $event)"><label>Status<select name="status" :value="applicant.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label><label>Catatan<textarea name="notes" rows="2">{{ applicant.notes }}</textarea></label><button class="secondary-button" type="submit">Simpan perubahan</button></form></article><p v-if="!filteredApplicants.length" class="empty-state">{{ hasApplicantFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar pada periode ini.' }}</p></div></div>
-            </section>
+            <!-- 2. WORKSPACE: INTAKE (PENDAFTAR & VERIFIKASI BERKAS + SLIDE-OVER DRAWER) -->
+            <template v-if="workspaceMode === 'intake'">
+                <div class="spmb-subnav-bar">
+                    <nav class="spmb-workspace-tabs" aria-label="Mode tampilan pendaftar dan verifikasi">
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeIntakeTab === 'all' }" @click="activeIntakeTab = 'all'">
+                            Daftar Pendaftar & Meja Kerja ({{ applicants.length }})
+                        </button>
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeIntakeTab === 'documents' }" @click="activeIntakeTab = 'documents'">
+                            Antrean Verifikasi Berkas ({{ documentSummary.pending + documentSummary.needsRevision }} perlu cek)
+                        </button>
+                    </nav>
+                    <button v-if="can_manage_applicants" class="primary-button" type="button" :aria-expanded="showApplicantForm" aria-controls="applicant-create-form" @click="showApplicantForm = !showApplicantForm">
+                        {{ showApplicantForm ? 'Tutup form pendaftar' : '+ Tambah pendaftar' }}
+                    </button>
+                </div>
 
-            <section v-if="section === 'documents'" class="panel admissions-panel documents-panel">
-                <div class="documents-page-heading"><div class="table-title"><div><span class="section-overline">Pemeriksaan dokumen</span><h2>Verifikasi berkas</h2><p>Periksa kelengkapan dokumen setiap pendaftar sebelum masuk ke tahap berikutnya.</p></div></div></div>
-                <div class="document-insights" aria-label="Ringkasan verifikasi"><div class="document-insight is-total"><span>Pendaftar</span><strong>{{ documentSummary.applicants }}</strong><small>Dalam periode ini</small></div><div class="document-insight"><span>Total berkas</span><strong>{{ documentSummary.total }}</strong><small>Dokumen yang diunggah</small></div><div class="document-insight is-valid"><span>Valid</span><strong>{{ documentSummary.valid }}</strong><small>Sudah terverifikasi</small></div><div class="document-insight is-attention"><span>Perlu perhatian</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div></div>
-                <div class="document-list-panel"><div class="document-list-heading"><div><h3>Daftar berkas</h3><p>{{ filteredDocumentApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan</p></div><span v-if="hasDocumentFilters" class="filter-result-label">Filter aktif</span></div><div class="document-filters"><label class="document-search-field"><span>Cari pendaftar</span><input v-model="documentSearch" type="search" placeholder="Nama atau nomor pendaftaran..." /></label><label><span>Status berkas</span><select v-model="documentStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu verifikasi</option><option value="valid">Valid</option><option value="needs_revision">Perlu perbaikan</option></select></label><button v-if="hasDocumentFilters" class="filter-reset-button" type="button" @click="resetDocumentFilters">Reset filter</button></div><div class="admissions-applicants"><article v-for="applicant in filteredDocumentApplicants" :key="applicant.id" class="admissions-applicant document-applicant"><div class="admissions-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p class="document-applicant-meta">{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.documents.length }} berkas</p></div><span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }}</span></div><div class="document-list"><div v-for="document in applicant.documents" :key="document.id" class="document-row"><div class="document-main"><span class="document-mark" aria-hidden="true">▤</span><div><strong>{{ document.requirement?.label || document.original_name }}</strong><small>{{ document.original_name }}</small></div></div><span class="status-pill document-status-pill" :class="`document-status-${document.status}`">{{ documentStatusLabel(document.status) }}</span><a :href="`/spmb/berkas/${document.id}/unduh`">Unduh</a><div v-if="can_manage_applicants" class="document-actions"><button class="secondary-button" type="button" @click="verifyDocument(document, 'valid')">Tandai valid</button><button class="link-danger" type="button" @click="verifyDocument(document, 'needs_revision')">Minta perbaikan</button></div></div></div><form v-if="can_manage_applicants && applicant.track" class="upload-form" @submit.prevent="uploadDocument(applicant)"><select v-model="documentForm(applicant).requirement_id"><option value="">Berkas umum</option><option v-for="requirement in applicant.track.requirements" :key="requirement.id" :value="requirement.id">{{ requirement.label }}</option></select><label class="document-upload-file"><span>Tambah dokumen</span><span class="document-file-picker"><input class="document-file-input" type="file" accept=".pdf,.jpg,.jpeg,.png" @change="documentForm(applicant).file = ($event.target as HTMLInputElement).files?.[0] || null" required /><span class="document-file-button">Pilih file</span><span class="document-file-name">{{ documentForm(applicant).file?.name || 'Belum ada file dipilih' }}</span></span></label><button class="secondary-button" type="submit">Unggah berkas</button></form></article><p v-if="!filteredDocumentApplicants.length" class="empty-state">{{ hasDocumentFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar untuk diverifikasi.' }}</p></div></div>
-            </section>
+                <form v-if="can_manage_applicants && showApplicantForm" id="applicant-create-form" class="panel admissions-panel admissions-form applicant-create-form" @submit.prevent="addApplicant">
+                    <div class="form-section-intro">
+                        <span class="section-overline">Data baru</span>
+                        <h3>Tambah pendaftar</h3>
+                        <p>Lengkapi identitas dasar calon siswa, lalu simpan untuk masuk ke alur verifikasi berkas.</p>
+                    </div>
+                    <label>Periode<select v-model="applicantForm.period_id" required @change="changeApplicantPeriod"><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="period.id">{{ period.name }}</option></select></label>
+                    <label>Jalur<select v-model="applicantForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in applicantTracks.length ? applicantTracks : tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
+                    <label>Nama calon siswa<input v-model="applicantForm.name" required /></label>
+                    <label>NISN<input v-model="applicantForm.nisn" inputmode="numeric" /></label>
+                    <label>Jenis kelamin<select v-model="applicantForm.gender"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></label>
+                    <label>Tanggal lahir<input v-model="applicantForm.birth_date" type="date" /></label>
+                    <label>Nama orang tua/wali<input v-model="applicantForm.parent_name" /></label>
+                    <label>Kontak orang tua<input v-model="applicantForm.parent_phone" /></label>
+                    <label>Asal sekolah<input v-model="applicantForm.previous_school" /></label>
+                    <label class="admissions-form-wide">Catatan<textarea v-model="applicantForm.notes" rows="2" /></label>
+                    <div class="admissions-form-actions admissions-form-wide"><button class="primary-button" type="submit">Simpan pendaftar</button></div>
+                </form>
 
-            <section v-if="section === 'selection'" class="panel admissions-panel selection-panel">
-                <div class="selection-page-heading"><div class="table-title"><div><span class="section-overline">Penilaian kandidat</span><h2>Seleksi & ranking</h2><p>Nilai setiap kriteria, hitung peringkat, lalu tetapkan keputusan akhir dengan jejak audit yang jelas.</p></div></div><button v-if="can_manage_committee" class="primary-button" type="button" @click="rankPeriod">Hitung ranking</button></div>
-                <div class="selection-insights" aria-label="Ringkasan seleksi"><div class="selection-insight is-total"><span>Pendaftar</span><strong>{{ selectionSummary.applicants }}</strong><small>Dalam periode ini</small></div><div class="selection-insight"><span>Sudah dinilai</span><strong>{{ selectionSummary.evaluated }}</strong><small>Memiliki total skor</small></div><div class="selection-insight is-ranked"><span>Sudah diranking</span><strong>{{ selectionSummary.ranked }}</strong><small>Memiliki peringkat</small></div><div class="selection-insight is-decided"><span>Keputusan</span><strong>{{ selectionSummary.decided }}</strong><small>Sudah difinalisasi</small></div></div>
-                <div class="selection-list-panel"><div class="selection-list-heading"><div><h3>Daftar kandidat</h3><p>{{ filteredSelectionApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasSelectionFilters" class="filter-result-label">Filter aktif</span></div><div class="selection-filters"><label class="selection-search-field"><span>Cari kandidat</span><input v-model="selectionSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Jalur</span><select v-model="selectionTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label><span>Keputusan</span><select v-model="selectionDecisionFilter"><option value="">Semua keputusan</option><option value="pending">Belum diputuskan</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label><button v-if="hasSelectionFilters" class="filter-reset-button" type="button" @click="resetSelectionFilters">Reset filter</button></div><div class="selection-applicants"><article v-for="applicant in filteredSelectionApplicants" :key="applicant.id" class="selection-applicant"><div class="selection-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div><div class="selection-rank"><span>Peringkat</span><strong>#{{ applicant.selection_result?.rank || '—' }}</strong></div></div><div class="selection-score-summary"><span>Total skor</span><strong>{{ Number(applicant.selection_result?.total_score || 0).toFixed(2) }}</strong><span class="status-pill" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span></div><div v-if="can_manage_applicants && applicant.track?.criteria?.length" class="selection-criteria"><div v-for="criterion in applicant.track.criteria" :key="criterion.id" class="selection-criterion"><div><strong>{{ criterion.label }}</strong><small>Maks. {{ criterion.max_score }} poin</small></div><div class="selection-score-action"><input v-model="scoreForm(applicant, criterion).score" type="number" min="0" :max="criterion.max_score" :aria-label="`Nilai ${criterion.label} untuk ${applicant.name}`" /><button class="secondary-button" type="button" @click="saveScore(applicant, criterion)">Simpan nilai</button></div></div></div><p v-else-if="!applicant.track?.criteria?.length" class="selection-empty-note">Kriteria penilaian belum diatur untuk jalur ini.</p><form v-if="can_manage_applicants" class="selection-decision-form" @submit.prevent="finalizeApplicant(applicant)"><div class="selection-decision-heading"><div><strong>Keputusan akhir</strong><span>Tetapkan hasil setelah penilaian selesai.</span></div><span class="selection-decision-state" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span></div><div class="selection-decision-fields"><label>Keputusan<select v-model="decisionForm(applicant).decision"><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label><label class="selection-reason-field">Alasan keputusan<input v-model="decisionForm(applicant).override_reason" placeholder="Tuliskan alasan atau catatan keputusan" required /></label><button class="primary-button" type="submit">Simpan keputusan</button></div></form></article><p v-if="!filteredSelectionApplicants.length" class="empty-state">{{ hasSelectionFilters ? 'Tidak ada kandidat yang cocok dengan filter ini.' : 'Belum ada data seleksi.' }}</p></div></div>
-            </section>
+                <!-- SUB-TAB 2A: DAFTAR PENDAFTAR TERPADU -->
+                <section v-if="activeIntakeTab === 'all'" class="panel admissions-panel applicants-panel">
+                    <div class="applicant-insights" aria-label="Ringkasan pendaftar">
+                        <div class="applicant-insight is-total"><span>Total pendaftar</span><strong>{{ applicants.length }}</strong><small>Pada periode terpilih</small></div>
+                        <div class="applicant-insight"><span>Berkas perlu cek</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div>
+                        <div v-for="status in applicantStatusSummary.slice(1)" :key="status.value" class="applicant-insight"><span>{{ status.label }}</span><strong>{{ applicants.filter((applicant) => applicant.status === status.value).length }}</strong><small>{{ status.hint }}</small></div>
+                    </div>
 
-            <section v-if="section === 'announcement'" class="panel admissions-panel announcement-panel">
-                <div class="announcement-page-heading"><div class="table-title"><div><span class="section-overline">Hasil penerimaan</span><h2>Pengumuman</h2><p>Lihat hasil seleksi berdasarkan peringkat dan keputusan akhir setiap pendaftar.</p></div></div><div class="announcement-date"><span>Tanggal pengumuman</span><strong>{{ selectedPeriod?.announcement_at ? formatDate(selectedPeriod.announcement_at) : 'Belum diatur' }}</strong></div></div>
-                <div class="announcement-notice"><span class="guidance-mark" aria-hidden="true">i</span><div><strong>Hasil seleksi periode ini</strong><p>Gunakan filter untuk menemukan pendaftar dengan cepat. Data di halaman ini mengikuti keputusan yang sudah ditetapkan pada menu Seleksi & ranking.</p></div></div>
-                <div class="announcement-insights" aria-label="Ringkasan pengumuman"><div class="announcement-insight is-accepted"><span>Diterima</span><strong>{{ announcementSummary.accepted }}</strong><small>Masuk tahap daftar ulang</small></div><div class="announcement-insight is-waitlisted"><span>Cadangan</span><strong>{{ announcementSummary.waitlisted }}</strong><small>Menunggu perubahan kuota</small></div><div class="announcement-insight is-rejected"><span>Tidak diterima</span><strong>{{ announcementSummary.rejected }}</strong><small>Keputusan akhir</small></div><div class="announcement-insight is-pending"><span>Belum diputuskan</span><strong>{{ announcementSummary.pending }}</strong><small>Perlu ditinjau</small></div></div>
-                <div class="announcement-list-panel"><div class="announcement-list-heading"><div><h3>Daftar hasil seleksi</h3><p>{{ filteredAnnouncementApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasAnnouncementFilters" class="filter-result-label">Filter aktif</span></div><div class="announcement-filters"><label class="announcement-search-field"><span>Cari pendaftar</span><input v-model="announcementSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Jalur</span><select v-model="announcementTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label><label><span>Hasil</span><select v-model="announcementDecisionFilter"><option value="">Semua hasil</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option><option value="pending">Belum diputuskan</option></select></label><button v-if="hasAnnouncementFilters" class="filter-reset-button" type="button" @click="resetAnnouncementFilters">Reset filter</button></div><div class="announcement-applicants"><article v-for="applicant in filteredAnnouncementApplicants" :key="applicant.id" class="announcement-applicant"><div class="announcement-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div><span class="status-pill" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span></div><div class="announcement-result"><div><span>Hasil seleksi</span><strong :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</strong></div><div><span>Peringkat</span><strong>#{{ applicant.selection_result?.rank || '—' }}</strong></div><div><span>Total skor</span><strong>{{ Number(applicant.selection_result?.total_score || 0).toFixed(2) }}</strong></div></div></article><p v-if="!filteredAnnouncementApplicants.length" class="empty-state">{{ hasAnnouncementFilters ? 'Tidak ada hasil yang cocok dengan filter ini.' : 'Belum ada data pengumuman.' }}</p></div></div>
-            </section>
+                    <div class="applicant-list-panel">
+                        <div class="applicant-list-heading">
+                            <div><h3>Meja kerja pendaftar</h3><p>{{ filteredApplicants.length }} dari {{ applicants.length }} data ditampilkan · Klik "Periksa & Berkas" untuk membuka panel detail 360°</p></div>
+                            <span v-if="hasApplicantFilters" class="filter-result-label">Filter aktif</span>
+                        </div>
+                        <div class="applicant-filters">
+                            <label class="applicant-search-field"><span>Cari pendaftar</span><input v-model="applicantSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN, asal sekolah..." /></label>
+                            <label><span>Status alur</span><select v-model="applicantStatusFilter"><option value="">Semua status</option><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label>
+                            <label><span>Jalur</span><select v-model="applicantTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
+                            <button v-if="hasApplicantFilters" class="filter-reset-button" type="button" @click="resetApplicantFilters">Reset filter</button>
+                        </div>
 
-            <section v-if="section === 'reports'" class="report-grid">
-                <article class="panel admissions-panel report-panel">
-                    <div class="table-title"><div><h2>Rekapitulasi per jalur</h2><p>Jumlah pendaftar dan penggunaan kuota periode yang dipilih.</p></div></div>
-                    <div class="report-table-wrap table-scroll" tabindex="0" role="region" aria-label="Rekapitulasi pendaftar per jalur"><table class="report-table"><thead><tr><th scope="col">Jalur</th><th scope="col">Pendaftar</th><th scope="col">Diterima</th><th scope="col">Kuota</th></tr></thead><tbody><tr v-for="track in trackOverview" :key="track.id"><th scope="row">{{ track.name }}</th><td>{{ track.applicants }}</td><td>{{ track.accepted }}</td><td>{{ track.accepted }} / {{ track.quota }}</td></tr><tr v-if="!trackOverview.length"><td colspan="4" class="report-empty">Belum ada jalur pada periode ini.</td></tr></tbody><tfoot><tr><th scope="row">Total</th><td>{{ applicants.length }}</td><td>{{ summary.accepted + summary.re_registered }}</td><td>{{ totalQuota }}</td></tr></tfoot></table></div>
-                </article>
-                <article class="panel admissions-panel report-panel">
-                    <div class="table-title"><div><h2>Rekapitulasi status</h2><p>Posisi setiap pendaftar dalam alur penerimaan.</p></div></div>
-                    <div class="status-report-list"><div v-for="status in statusReport" :key="status.value"><span>{{ status.label }}</span><strong>{{ status.count }}</strong></div></div>
-                </article>
-            </section>
+                        <div class="admissions-applicants">
+                            <article v-for="applicant in filteredApplicants" :key="applicant.id" class="admissions-applicant">
+                                <div class="admissions-applicant-heading">
+                                    <div>
+                                        <span class="admissions-registration">{{ applicant.registration_no }}</span>
+                                        <h3>{{ applicant.name }}</h3>
+                                    </div>
+                                    <div class="applicant-badge-cluster">
+                                        <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }} ({{ applicant.documents.length }})</span>
+                                        <span class="status-pill" :class="`status-${applicant.status}`">{{ applicantStatusLabel(applicant.status) }}</span>
+                                        <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">
+                                            Periksa & Berkas ({{ applicant.documents.length }})
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="admissions-applicant-details">
+                                    <span>Jalur: <strong>{{ applicant.track?.name || 'Belum memilih jalur' }}</strong></span>
+                                    <span>NISN: <strong>{{ applicant.nisn || '—' }}</strong></span>
+                                    <span>Asal: <strong>{{ applicant.previous_school || '—' }}</strong></span>
+                                    <span v-if="applicant.parent_name">Wali: <strong>{{ applicant.parent_name }} ({{ applicant.parent_phone || '—' }})</strong></span>
+                                </div>
+                                <form v-if="can_manage_applicants" class="admissions-status-form" @submit.prevent="updateApplicant(applicant, $event)">
+                                    <label>Status pendaftar<select name="status" :value="applicant.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label>
+                                    <label>Catatan verifikasi<textarea name="notes" rows="1" placeholder="Tambahkan catatan verifikasi...">{{ applicant.notes }}</textarea></label>
+                                    <button class="secondary-button" type="submit">Simpan perubahan</button>
+                                </form>
+                            </article>
+                            <p v-if="!filteredApplicants.length" class="empty-state">{{ hasApplicantFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar pada periode ini.' }}</p>
+                        </div>
+                    </div>
+                </section>
 
-            <section v-if="section === 're-registration'" class="panel admissions-panel re-registration-panel">
-                <div class="re-registration-page-heading"><div class="table-title"><div><span class="section-overline">Tahap akhir penerimaan</span><h2>Daftar ulang</h2><p>Konfirmasi pendaftar yang diterima menjadi data siswa dengan mencatat NIS mereka.</p></div></div><div class="re-registration-date"><span>Periode daftar ulang</span><strong>{{ selectedPeriod ? formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) : 'Belum diatur' }}</strong></div></div>
-                <div class="re-registration-notice"><span class="guidance-mark" aria-hidden="true">i</span><div><strong>Alur konfirmasi siswa</strong><p>Masukkan NIS untuk membuat hubungan antara pendaftar yang diterima dan data siswa. Pendaftar yang sudah terhubung tidak perlu dikonfirmasi ulang.</p></div></div>
-                <div class="re-registration-insights" aria-label="Ringkasan daftar ulang"><div class="re-registration-insight is-total"><span>Diterima</span><strong>{{ reRegistrationSummary.total }}</strong><small>Masuk tahap daftar ulang</small></div><div class="re-registration-insight is-pending"><span>Menunggu konfirmasi</span><strong>{{ reRegistrationSummary.pending }}</strong><small>Memerlukan NIS</small></div><div class="re-registration-insight is-completed"><span>Selesai</span><strong>{{ reRegistrationSummary.completed }}</strong><small>Sudah terhubung ke siswa</small></div></div>
-                <div class="re-registration-list-panel"><div class="re-registration-list-heading"><div><h3>Daftar calon siswa</h3><p>{{ filteredReRegistrationApplicants.length }} dari {{ reRegistrationApplicants.length }} pendaftar ditampilkan</p></div><span v-if="hasReRegistrationFilters" class="filter-result-label">Filter aktif</span></div><div class="re-registration-filters"><label class="re-registration-search-field"><span>Cari pendaftar</span><input v-model="reRegistrationSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label><label><span>Status</span><select v-model="reRegistrationStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu konfirmasi</option><option value="completed">Selesai</option></select></label><button v-if="hasReRegistrationFilters" class="filter-reset-button" type="button" @click="resetReRegistrationFilters">Reset filter</button></div><div class="re-registration-applicants"><article v-for="applicant in filteredReRegistrationApplicants" :key="applicant.id" class="re-registration-applicant"><div class="re-registration-applicant-heading"><div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div><span class="status-pill" :class="reRegistrationStatusKey(applicant) === 'completed' ? 're-registration-status-completed' : 're-registration-status-pending'">{{ reRegistrationStatusLabel(applicant) }}</span></div><div class="re-registration-details"><div><span>Nomor induk</span><strong>{{ applicant.re_registration?.student_id ? `Data siswa #${applicant.re_registration.student_id}` : 'Belum terhubung' }}</strong></div><div><span>Jalur penerimaan</span><strong>{{ applicant.track?.name || '—' }}</strong></div><div><span>Status pendaftar</span><strong>Diterima</strong></div></div><form v-if="can_manage_applicants && reRegistrationStatusKey(applicant) === 'pending'" class="re-registration-form" @submit.prevent="confirmReRegistration(applicant)"><label>Masukkan NIS siswa<input v-model="reRegistrationForm(applicant).nis" inputmode="numeric" placeholder="Contoh: 2027001" required /></label><button class="primary-button" type="submit">Konfirmasi daftar ulang</button></form><div v-else class="re-registration-complete"><span class="guidance-mark" aria-hidden="true">✓</span><p><strong>Sudah terhubung ke data siswa</strong><span>Nomor data siswa #{{ applicant.re_registration?.student_id || '—' }}</span></p></div></article><p v-if="!filteredReRegistrationApplicants.length" class="empty-state">{{ hasReRegistrationFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar yang masuk tahap daftar ulang.' }}</p></div></div>
-            </section>
+                <!-- SUB-TAB 2B: ANTREAN VERIFIKASI BERKAS -->
+                <section v-if="activeIntakeTab === 'documents'" class="panel admissions-panel documents-panel">
+                    <div class="documents-page-heading"><div class="table-title"><div><span class="section-overline">Pemeriksaan dokumen</span><h2>Verifikasi berkas</h2><p>Periksa kelengkapan dokumen setiap pendaftar secara berurutan atau unggah dokumen susulan.</p></div></div></div>
+                    <div class="document-insights" aria-label="Ringkasan verifikasi">
+                        <div class="document-insight is-total"><span>Pendaftar</span><strong>{{ documentSummary.applicants }}</strong><small>Dalam periode ini</small></div>
+                        <div class="document-insight"><span>Total berkas</span><strong>{{ documentSummary.total }}</strong><small>Dokumen yang diunggah</small></div>
+                        <div class="document-insight is-valid"><span>Valid</span><strong>{{ documentSummary.valid }}</strong><small>Sudah terverifikasi</small></div>
+                        <div class="document-insight is-attention"><span>Perlu perhatian</span><strong>{{ documentSummary.pending + documentSummary.needsRevision }}</strong><small>{{ documentSummary.needsRevision }} perlu perbaikan</small></div>
+                    </div>
+                    <div class="document-list-panel">
+                        <div class="document-list-heading"><div><h3>Daftar berkas pendaftar</h3><p>{{ filteredDocumentApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan</p></div><span v-if="hasDocumentFilters" class="filter-result-label">Filter aktif</span></div>
+                        <div class="document-filters">
+                            <label class="document-search-field"><span>Cari pendaftar</span><input v-model="documentSearch" type="search" placeholder="Nama atau nomor pendaftaran..." /></label>
+                            <label><span>Status berkas</span><select v-model="documentStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu verifikasi</option><option value="valid">Valid</option><option value="needs_revision">Perlu perbaikan</option></select></label>
+                            <button v-if="hasDocumentFilters" class="filter-reset-button" type="button" @click="resetDocumentFilters">Reset filter</button>
+                        </div>
+                        <div class="admissions-applicants">
+                            <article v-for="applicant in filteredDocumentApplicants" :key="applicant.id" class="admissions-applicant document-applicant">
+                                <div class="admissions-applicant-heading">
+                                    <div>
+                                        <span class="admissions-registration">{{ applicant.registration_no }}</span>
+                                        <h3>{{ applicant.name }}</h3>
+                                        <p class="document-applicant-meta">{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.documents.length }} berkas</p>
+                                    </div>
+                                    <div class="applicant-badge-cluster">
+                                        <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }}</span>
+                                        <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">Buka Panel Detail</button>
+                                    </div>
+                                </div>
+                                <div class="document-list">
+                                    <div v-for="document in applicant.documents" :key="document.id" class="document-row">
+                                        <div class="document-main"><span class="document-mark" aria-hidden="true">▤</span><div><strong>{{ document.requirement?.label || document.original_name }}</strong><small>{{ document.original_name }}</small></div></div>
+                                        <span class="status-pill document-status-pill" :class="`document-status-${document.status}`">{{ documentStatusLabel(document.status) }}</span>
+                                        <a :href="`/spmb/berkas/${document.id}/unduh`">Unduh</a>
+                                        <div v-if="can_manage_applicants" class="document-actions">
+                                            <button class="secondary-button" type="button" @click="verifyDocument(document, 'valid')">Tandai valid</button>
+                                            <button class="link-danger" type="button" @click="verifyDocument(document, 'needs_revision')">Minta perbaikan</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <form v-if="can_manage_applicants && applicant.track" class="upload-form" @submit.prevent="uploadDocument(applicant)">
+                                    <select v-model="documentForm(applicant).requirement_id"><option value="">Berkas umum</option><option v-for="requirement in applicant.track.requirements" :key="requirement.id" :value="requirement.id">{{ requirement.label }}</option></select>
+                                    <label class="document-upload-file"><span>Tambah dokumen</span><span class="document-file-picker"><input class="document-file-input" type="file" accept=".pdf,.jpg,.jpeg,.png" @change="documentForm(applicant).file = ($event.target as HTMLInputElement).files?.[0] || null" required /><span class="document-file-button">Pilih file</span><span class="document-file-name">{{ documentForm(applicant).file?.name || 'Belum ada file dipilih' }}</span></span></label>
+                                    <button class="secondary-button" type="submit">Unggah berkas</button>
+                                </form>
+                            </article>
+                            <p v-if="!filteredDocumentApplicants.length" class="empty-state">{{ hasDocumentFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar untuk diverifikasi.' }}</p>
+                        </div>
+                    </div>
+                </section>
+            </template>
+
+            <!-- 3. WORKSPACE: DECISION (SELEKSI & RANKING + PENGUMUMAN + DAFTAR ULANG) -->
+            <template v-if="workspaceMode === 'decision'">
+                <div class="spmb-subnav-bar">
+                    <nav class="spmb-workspace-tabs" aria-label="Tahapan Seleksi dan Daftar Ulang">
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeDecisionTab === 'selection' }" @click="activeDecisionTab = 'selection'">
+                            1. Penilaian & Ranking ({{ selectionSummary.evaluated }}/{{ selectionSummary.applicants }})
+                        </button>
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeDecisionTab === 'announcement' }" @click="activeDecisionTab = 'announcement'">
+                            2. Pengumuman Kelulusan ({{ announcementSummary.accepted }} diterima)
+                        </button>
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeDecisionTab === 're-registration' }" @click="activeDecisionTab = 're-registration'">
+                            3. Daftar Ulang Siswa ({{ reRegistrationSummary.completed }}/{{ reRegistrationSummary.total }})
+                        </button>
+                    </nav>
+                    <button v-if="can_manage_committee && activeDecisionTab === 'selection'" class="primary-button" type="button" @click="rankPeriod">
+                        Hitung ranking
+                    </button>
+                </div>
+
+                <!-- SUB-TAB 3A: SELEKSI & RANKING -->
+                <section v-if="activeDecisionTab === 'selection'" class="panel admissions-panel selection-panel">
+                    <div class="selection-page-heading">
+                        <div class="table-title"><div><span class="section-overline">Penilaian kandidat</span><h2>Seleksi & ranking</h2><p>Nilai setiap kriteria, hitung peringkat otomatis, lalu tetapkan keputusan akhir dengan jejak audit yang jelas.</p></div></div>
+                    </div>
+                    <div class="selection-insights" aria-label="Ringkasan seleksi">
+                        <div class="selection-insight is-total"><span>Pendaftar</span><strong>{{ selectionSummary.applicants }}</strong><small>Dalam periode ini</small></div>
+                        <div class="selection-insight"><span>Sudah dinilai</span><strong>{{ selectionSummary.evaluated }}</strong><small>Memiliki total skor</small></div>
+                        <div class="selection-insight is-ranked"><span>Sudah diranking</span><strong>{{ selectionSummary.ranked }}</strong><small>Memiliki peringkat</small></div>
+                        <div class="selection-insight is-decided"><span>Keputusan</span><strong>{{ selectionSummary.decided }}</strong><small>Sudah difinalisasi</small></div>
+                    </div>
+                    <div class="selection-list-panel">
+                        <div class="selection-list-heading"><div><h3>Daftar kandidat</h3><p>{{ filteredSelectionApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasSelectionFilters" class="filter-result-label">Filter aktif</span></div>
+                        <div class="selection-filters">
+                            <label class="selection-search-field"><span>Cari kandidat</span><input v-model="selectionSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
+                            <label><span>Jalur</span><select v-model="selectionTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
+                            <label><span>Keputusan</span><select v-model="selectionDecisionFilter"><option value="">Semua keputusan</option><option value="pending">Belum diputuskan</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label>
+                            <button v-if="hasSelectionFilters" class="filter-reset-button" type="button" @click="resetSelectionFilters">Reset filter</button>
+                        </div>
+                        <div class="selection-applicants">
+                            <article v-for="applicant in filteredSelectionApplicants" :key="applicant.id" class="selection-applicant">
+                                <div class="selection-applicant-heading">
+                                    <div>
+                                        <span class="admissions-registration">{{ applicant.registration_no }}</span>
+                                        <h3>{{ applicant.name }}</h3>
+                                        <p>{{ applicant.track?.name || 'Belum memilih jalur' }} (Kuota {{ applicant.track?.quota ?? '—' }}) · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p>
+                                    </div>
+                                    <div class="applicant-badge-cluster">
+                                        <button type="button" class="secondary-button btn-compact" @click="openApplicantDrawer(applicant)">Lihat Berkas</button>
+                                        <div class="selection-rank"><span>Peringkat</span><strong>#{{ applicant.selection_result?.rank || '—' }}</strong></div>
+                                    </div>
+                                </div>
+                                <div class="selection-score-summary">
+                                    <span>Total skor</span>
+                                    <strong>{{ Number(applicant.selection_result?.total_score || 0).toFixed(2) }}</strong>
+                                    <span class="status-pill" :class="applicantDocumentSummary(applicant).className">{{ applicantDocumentSummary(applicant).label }}</span>
+                                    <span class="status-pill" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span>
+                                </div>
+                                <div v-if="can_manage_applicants && applicant.track?.criteria?.length" class="selection-criteria">
+                                    <div v-for="criterion in applicant.track.criteria" :key="criterion.id" class="selection-criterion">
+                                        <div><strong>{{ criterion.label }}</strong><small>Bobot {{ criterion.weight }} · Maks. {{ criterion.max_score }} poin</small></div>
+                                        <div class="selection-score-action">
+                                            <input v-model="scoreForm(applicant, criterion).score" type="number" min="0" :max="criterion.max_score" :aria-label="`Nilai ${criterion.label} untuk ${applicant.name}`" />
+                                            <button class="secondary-button" type="button" @click="saveScore(applicant, criterion)">Simpan nilai</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p v-else-if="!applicant.track?.criteria?.length" class="selection-empty-note">Kriteria penilaian belum diatur untuk jalur ini.</p>
+                                <form v-if="can_manage_applicants" class="selection-decision-form" @submit.prevent="finalizeApplicant(applicant)">
+                                    <div class="selection-decision-heading">
+                                        <div>
+                                            <strong>Keputusan akhir</strong>
+                                            <span>Tetapkan hasil setelah penilaian selesai.</span>
+                                        </div>
+                                        <div class="applicant-badge-cluster">
+                                            <button v-if="applicant.selection_result?.rank" type="button" class="filter-reset-button" @click="applySuggestedDecision(applicant)">Isi sesuai kuota</button>
+                                            <span class="selection-decision-state" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="selection-decision-fields">
+                                        <label>Keputusan<select v-model="decisionForm(applicant).decision"><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option></select></label>
+                                        <label class="selection-reason-field">Alasan keputusan<input v-model="decisionForm(applicant).override_reason" placeholder="Tuliskan alasan atau catatan keputusan" required /></label>
+                                        <button class="primary-button" type="submit">Simpan keputusan</button>
+                                    </div>
+                                </form>
+                            </article>
+                            <p v-if="!filteredSelectionApplicants.length" class="empty-state">{{ hasSelectionFilters ? 'Tidak ada kandidat yang cocok dengan filter ini.' : 'Belum ada data seleksi.' }}</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SUB-TAB 3B: PENGUMUMAN -->
+                <section v-if="activeDecisionTab === 'announcement'" class="panel admissions-panel announcement-panel">
+                    <div class="announcement-page-heading"><div class="table-title"><div><span class="section-overline">Hasil penerimaan</span><h2>Pengumuman</h2><p>Lihat hasil seleksi berdasarkan peringkat dan keputusan akhir setiap pendaftar.</p></div></div><div class="announcement-date"><span>Tanggal pengumuman</span><strong>{{ selectedPeriod?.announcement_at ? formatDate(selectedPeriod.announcement_at) : 'Belum diatur' }}</strong></div></div>
+                    <div class="announcement-notice"><span class="guidance-mark" aria-hidden="true">i</span><div><strong>Hasil seleksi periode ini</strong><p>Pendaftar dengan keputusan "Diterima" otomatis masuk ke tab Daftar Ulang Siswa untuk pembuatan data induk Akademik.</p></div></div>
+                    <div class="announcement-insights" aria-label="Ringkasan pengumuman">
+                        <div class="announcement-insight is-accepted"><span>Diterima</span><strong>{{ announcementSummary.accepted }}</strong><small>Masuk tahap daftar ulang</small></div>
+                        <div class="announcement-insight is-waitlisted"><span>Cadangan</span><strong>{{ announcementSummary.waitlisted }}</strong><small>Menunggu perubahan kuota</small></div>
+                        <div class="announcement-insight is-rejected"><span>Tidak diterima</span><strong>{{ announcementSummary.rejected }}</strong><small>Keputusan akhir</small></div>
+                        <div class="announcement-insight is-pending"><span>Belum diputuskan</span><strong>{{ announcementSummary.pending }}</strong><small>Perlu ditinjau</small></div>
+                    </div>
+                    <div class="announcement-list-panel">
+                        <div class="announcement-list-heading"><div><h3>Daftar hasil seleksi</h3><p>{{ filteredAnnouncementApplicants.length }} dari {{ applicants.length }} pendaftar ditampilkan · Urut berdasarkan peringkat</p></div><span v-if="hasAnnouncementFilters" class="filter-result-label">Filter aktif</span></div>
+                        <div class="announcement-filters">
+                            <label class="announcement-search-field"><span>Cari pendaftar</span><input v-model="announcementSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
+                            <label><span>Jalur</span><select v-model="announcementTrackFilter"><option value="">Semua jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
+                            <label><span>Hasil</span><select v-model="announcementDecisionFilter"><option value="">Semua hasil</option><option value="accepted">Diterima</option><option value="waitlisted">Cadangan</option><option value="rejected">Tidak diterima</option><option value="pending">Belum diputuskan</option></select></label>
+                            <button v-if="hasAnnouncementFilters" class="filter-reset-button" type="button" @click="resetAnnouncementFilters">Reset filter</button>
+                        </div>
+                        <div class="announcement-applicants">
+                            <article v-for="applicant in filteredAnnouncementApplicants" :key="applicant.id" class="announcement-applicant">
+                                <div class="announcement-applicant-heading">
+                                    <div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div>
+                                    <span class="status-pill" :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</span>
+                                </div>
+                                <div class="announcement-result">
+                                    <div><span>Hasil seleksi</span><strong :class="selectionDecisionClass(applicant.selection_result?.decision)">{{ selectionDecisionLabel(applicant.selection_result?.decision) }}</strong></div>
+                                    <div><span>Peringkat</span><strong>#{{ applicant.selection_result?.rank || '—' }}</strong></div>
+                                    <div><span>Total skor</span><strong>{{ Number(applicant.selection_result?.total_score || 0).toFixed(2) }}</strong></div>
+                                </div>
+                            </article>
+                            <p v-if="!filteredAnnouncementApplicants.length" class="empty-state">{{ hasAnnouncementFilters ? 'Tidak ada hasil yang cocok dengan filter ini.' : 'Belum ada data pengumuman.' }}</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SUB-TAB 3C: DAFTAR ULANG -->
+                <section v-if="activeDecisionTab === 're-registration'" class="panel admissions-panel re-registration-panel">
+                    <div class="re-registration-page-heading"><div class="table-title"><div><span class="section-overline">Tahap akhir penerimaan</span><h2>Daftar ulang</h2><p>Konfirmasi pendaftar yang diterima menjadi data siswa dengan mencatat NIS mereka.</p></div></div><div class="re-registration-date"><span>Periode daftar ulang</span><strong>{{ selectedPeriod ? formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) : 'Belum diatur' }}</strong></div></div>
+                    <div class="re-registration-notice"><span class="guidance-mark" aria-hidden="true">i</span><div><strong>Alur konfirmasi siswa</strong><p>Masukkan NIS (atau gunakan tombol Buat NIS Otomatis) untuk membuat hubungan antara pendaftar yang diterima dan data siswa Akademik.</p></div></div>
+                    <div class="re-registration-insights" aria-label="Ringkasan daftar ulang">
+                        <div class="re-registration-insight is-total"><span>Diterima</span><strong>{{ reRegistrationSummary.total }}</strong><small>Masuk tahap daftar ulang</small></div>
+                        <div class="re-registration-insight is-pending"><span>Menunggu konfirmasi</span><strong>{{ reRegistrationSummary.pending }}</strong><small>Memerlukan NIS</small></div>
+                        <div class="re-registration-insight is-completed"><span>Selesai</span><strong>{{ reRegistrationSummary.completed }}</strong><small>Sudah terhubung ke siswa</small></div>
+                    </div>
+                    <div class="re-registration-list-panel">
+                        <div class="re-registration-list-heading"><div><h3>Daftar calon siswa</h3><p>{{ filteredReRegistrationApplicants.length }} dari {{ reRegistrationApplicants.length }} pendaftar ditampilkan</p></div><span v-if="hasReRegistrationFilters" class="filter-result-label">Filter aktif</span></div>
+                        <div class="re-registration-filters">
+                            <label class="re-registration-search-field"><span>Cari pendaftar</span><input v-model="reRegistrationSearch" type="search" placeholder="Nama, nomor pendaftaran, NISN..." /></label>
+                            <label><span>Status</span><select v-model="reRegistrationStatusFilter"><option value="">Semua status</option><option value="pending">Menunggu konfirmasi</option><option value="completed">Selesai</option></select></label>
+                            <button v-if="hasReRegistrationFilters" class="filter-reset-button" type="button" @click="resetReRegistrationFilters">Reset filter</button>
+                        </div>
+                        <div class="re-registration-applicants">
+                            <article v-for="applicant in filteredReRegistrationApplicants" :key="applicant.id" class="re-registration-applicant">
+                                <div class="re-registration-applicant-heading">
+                                    <div><span class="admissions-registration">{{ applicant.registration_no }}</span><h3>{{ applicant.name }}</h3><p>{{ applicant.track?.name || 'Belum memilih jalur' }} · {{ applicant.previous_school || 'Asal sekolah belum diisi' }}</p></div>
+                                    <span class="status-pill" :class="reRegistrationStatusKey(applicant) === 'completed' ? 're-registration-status-completed' : 're-registration-status-pending'">{{ reRegistrationStatusLabel(applicant) }}</span>
+                                </div>
+                                <div class="re-registration-details">
+                                    <div><span>Nomor induk</span><strong>{{ applicant.re_registration?.student_id ? `Data siswa #${applicant.re_registration.student_id}` : 'Belum terhubung' }}</strong></div>
+                                    <div><span>Jalur penerimaan</span><strong>{{ applicant.track?.name || '—' }}</strong></div>
+                                    <div><span>Status pendaftar</span><strong>Diterima</strong></div>
+                                </div>
+                                <form v-if="can_manage_applicants && reRegistrationStatusKey(applicant) === 'pending'" class="re-registration-form" @submit.prevent="confirmReRegistration(applicant)">
+                                    <label>Masukkan NIS siswa
+                                        <div class="nis-input-group">
+                                            <input v-model="reRegistrationForm(applicant).nis" inputmode="numeric" placeholder="Contoh: 20270001" required />
+                                            <button type="button" class="secondary-button btn-compact" @click="suggestNis(applicant)">Saran NIS</button>
+                                        </div>
+                                    </label>
+                                    <button class="primary-button" type="submit">Konfirmasi daftar ulang</button>
+                                </form>
+                                <div v-else class="re-registration-complete"><span class="guidance-mark" aria-hidden="true">✓</span><p><strong>Sudah terhubung ke data siswa</strong><span>Nomor data siswa #{{ applicant.re_registration?.student_id || '—' }}</span></p></div>
+                            </article>
+                            <p v-if="!filteredReRegistrationApplicants.length" class="empty-state">{{ hasReRegistrationFilters ? 'Tidak ada pendaftar yang cocok dengan filter ini.' : 'Belum ada pendaftar yang masuk tahap daftar ulang.' }}</p>
+                        </div>
+                    </div>
+                </section>
+            </template>
+
+            <!-- 4. WORKSPACE: SETTINGS (PENGATURAN SPMB TERPADU + SETUP CHECKLIST) -->
+            <template v-if="workspaceMode === 'settings'">
+                <section v-if="selectedPeriod" class="panel admissions-panel setup-checklist-panel" aria-label="Kesiapan pembukaan periode">
+                    <div class="setup-checklist-header">
+                        <div>
+                            <span class="section-overline">Checklist kesiapan periode</span>
+                            <h2>{{ selectedPeriod.name }} ({{ selectedPeriod.academic_year }})</h2>
+                            <p>Pastikan keempat komponen di bawah ini lengkap sebelum membuka pendaftaran periode.</p>
+                        </div>
+                        <div class="setup-checklist-actions">
+                            <span class="status-pill">{{ periodStatusLabels[selectedPeriod.status] ?? selectedPeriod.status }}</span>
+                            <button v-if="can_manage_committee && selectedPeriod.status === 'draft'" class="primary-button" type="button" @click="openPeriod(selectedPeriod)">
+                                Buka pendaftaran
+                            </button>
+                        </div>
+                    </div>
+                    <div class="setup-checklist-grid">
+                        <button type="button" class="setup-check-item" :class="{ 'is-done': periodReadiness.hasPeriod }" @click="activeSettingsTab = 'periods'">
+                            <span class="check-icon">{{ periodReadiness.hasPeriod ? '✓' : '1' }}</span>
+                            <div><strong>Periode & Jadwal</strong><small>Siklus tahun ajaran & tanggal</small></div>
+                        </button>
+                        <button type="button" class="setup-check-item" :class="{ 'is-done': periodReadiness.hasTracks }" @click="activeSettingsTab = 'tracks'">
+                            <span class="check-icon">{{ periodReadiness.hasTracks ? '✓' : '2' }}</span>
+                            <div><strong>Jalur & Kuota</strong><small>{{ tracks.length }} jalur aktif ({{ totalQuota }} kuota)</small></div>
+                        </button>
+                        <button type="button" class="setup-check-item" :class="{ 'is-done': periodReadiness.hasRequirements && periodReadiness.hasCriteria }" @click="activeSettingsTab = 'tracks'">
+                            <span class="check-icon">{{ periodReadiness.hasRequirements && periodReadiness.hasCriteria ? '✓' : '3' }}</span>
+                            <div><strong>Syarat Berkas & Kriteria</strong><small>{{ periodReadiness.hasRequirements && periodReadiness.hasCriteria ? 'Semua jalur lengkap' : 'Wajib ada di tiap jalur' }}</small></div>
+                        </button>
+                        <button type="button" class="setup-check-item" :class="{ 'is-done': periodReadiness.hasCommittee }" @click="activeSettingsTab = 'committee'">
+                            <span class="check-icon">{{ periodReadiness.hasCommittee ? '✓' : '4' }}</span>
+                            <div><strong>Tim Panitia</strong><small>{{ committee.length }} guru ditugaskan</small></div>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="spmb-subnav-bar">
+                    <nav class="spmb-workspace-tabs" aria-label="Bagian Pengaturan SPMB">
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeSettingsTab === 'periods' }" @click="activeSettingsTab = 'periods'">
+                            1. Periode & Juknis ({{ periods.length }})
+                        </button>
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeSettingsTab === 'tracks' }" @click="activeSettingsTab = 'tracks'">
+                            2. Jalur, Kuota, Berkas & Kriteria ({{ tracks.length }})
+                        </button>
+                        <button type="button" class="spmb-tab-btn" :class="{ 'is-active': activeSettingsTab === 'committee' }" @click="activeSettingsTab = 'committee'">
+                            3. Panitia & Jadwal ({{ committee.length }})
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- SUB-TAB 4A: PERIODE & JUKNIS -->
+                <section v-if="activeSettingsTab === 'periods'" class="panel admissions-panel">
+                    <div class="table-title"><div><h2>Periode & Juknis</h2><p>Buat siklus SPMB yang dapat dikonfigurasi per tahun ajaran dan jenjang.</p></div></div>
+                    <form v-if="can_manage_committee" class="admissions-form" @submit.prevent="addPeriod">
+                        <label>Nama periode<input v-model="periodForm.name" required placeholder="SPMB 2027/2028" /></label>
+                        <label>Tahun ajaran<input v-model="periodForm.academic_year" required placeholder="2027/2028" /></label>
+                        <label>Jenjang<input v-model="periodForm.level" placeholder="SMP" /></label>
+                        <label>Mulai pendaftaran<input v-model="periodForm.registration_start" type="date" /></label>
+                        <label>Akhir pendaftaran<input v-model="periodForm.registration_end" type="date" /></label>
+                        <label>Mulai verifikasi<input v-model="periodForm.verification_start" type="date" /></label>
+                        <label>Akhir verifikasi<input v-model="periodForm.verification_end" type="date" /></label>
+                        <label>Mulai seleksi<input v-model="periodForm.selection_start" type="date" /></label>
+                        <label>Akhir seleksi<input v-model="periodForm.selection_end" type="date" /></label>
+                        <label>Tanggal pengumuman<input v-model="periodForm.announcement_at" type="date" /></label>
+                        <label>Mulai daftar ulang<input v-model="periodForm.re_registration_start" type="date" /></label>
+                        <label>Akhir daftar ulang<input v-model="periodForm.re_registration_end" type="date" /></label>
+                        <label>Juknis<input type="file" accept=".pdf,.doc,.docx" @change="periodForm.guideline_file = ($event.target as HTMLInputElement).files?.[0] || null" /></label>
+                        <div class="admissions-form-actions"><button class="primary-button" type="submit" :disabled="periodForm.processing">Tambah periode</button></div>
+                    </form>
+                    <div v-for="period in periods" :key="period.id" class="period-row">
+                        <div><strong>{{ period.name }}</strong><span>{{ period.academic_year }} · {{ period.level || 'Semua jenjang' }} · {{ period.tracks.length }} jalur</span></div>
+                        <button v-if="can_manage_committee && period.status === 'draft'" class="secondary-button" type="button" @click="openPeriod(period)">Buka pendaftaran</button>
+                        <span class="status-pill">{{ periodStatusLabels[period.status] ?? period.status }}</span>
+                    </div>
+                </section>
+
+                <!-- SUB-TAB 4B: JALUR, KUOTA, BERKAS & KRITERIA -->
+                <section v-if="activeSettingsTab === 'tracks'" class="panel admissions-panel">
+                    <div class="table-title"><div><h2>Jalur, kuota, berkas & kriteria</h2><p>Konfigurasi mengikuti juknis periode, bukan angka hardcode.</p></div></div>
+                    <form v-if="can_manage_committee && selected_period_id" class="admissions-form" @submit.prevent="addTrack">
+                        <label>Jalur<select v-model="trackForm.code"><option value="">Pilih jalur</option><option value="DOMISILI">Domisili</option><option value="AFIRMASI">Afirmasi</option><option value="PRESTASI">Prestasi</option><option value="MUTASI">Mutasi</option></select></label>
+                        <label>Nama jalur<input v-model="trackForm.name" required /></label>
+                        <label>Kuota<input v-model.number="trackForm.quota" type="number" min="1" required /></label>
+                        <div class="admissions-form-actions"><button class="primary-button" type="submit">Tambah jalur</button></div>
+                    </form>
+                    <article v-for="track in tracks" :key="track.id" class="track-card track-card-detailed">
+                        <div class="track-card-top">
+                            <div><strong>{{ track.name }}</strong><span>{{ track.code }} · kuota {{ track.quota }}</span></div>
+                            <small>{{ track.requirements.length }} persyaratan · {{ track.criteria.length }} kriteria</small>
+                        </div>
+                        <div v-if="track.requirements.length || track.criteria.length" class="track-meta-pills">
+                            <span v-for="req in track.requirements" :key="`req-${req.id}`" class="meta-chip">Berkas: {{ req.label }}</span>
+                            <span v-for="crit in track.criteria" :key="`crit-${crit.id}`" class="meta-chip is-criterion">Kriteria: {{ crit.label }} (bobot {{ crit.weight }})</span>
+                        </div>
+                    </article>
+                    <form v-if="can_manage_committee && tracks.length" class="admissions-form compact-form" @submit.prevent="addRequirement">
+                        <label>Jalur<select v-model="requirementForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
+                        <label>Kode berkas<input v-model="requirementForm.code" required placeholder="KK" /></label>
+                        <label>Nama berkas<input v-model="requirementForm.label" required placeholder="Kartu Keluarga" /></label>
+                        <button class="secondary-button" type="submit">Tambah berkas</button>
+                    </form>
+                    <form v-if="can_manage_committee && tracks.length" class="admissions-form compact-form" @submit.prevent="addCriterion">
+                        <label>Jalur<select v-model="criterionForm.track_id" required><option value="">Pilih jalur</option><option v-for="track in tracks" :key="track.id" :value="track.id">{{ track.name }}</option></select></label>
+                        <label>Kode kriteria<input v-model="criterionForm.code" required placeholder="NILAI" /></label>
+                        <label>Nama kriteria<input v-model="criterionForm.label" required placeholder="Nilai seleksi" /></label>
+                        <label>Bobot<input v-model.number="criterionForm.weight" type="number" min="0.01" step="0.01" /></label>
+                        <button class="secondary-button" type="submit">Tambah kriteria</button>
+                    </form>
+                </section>
+
+                <!-- SUB-TAB 4C: PANITIA & JADWAL -->
+                <template v-if="activeSettingsTab === 'committee'">
+                    <section class="panel admissions-panel committee-panel">
+                        <div class="table-title committee-heading"><div><span class="section-overline">Penugasan tim</span><h2>Panitia & jadwal</h2><p>Atur guru yang bertugas memverifikasi berkas dan menilai pendaftar pada periode ini.</p></div><span class="committee-count"><strong>{{ committee.length }}</strong> guru ditugaskan</span></div>
+                        <div class="committee-management">
+                            <form v-if="can_manage_committee" class="admissions-assign-form" @submit.prevent="assignTeacher">
+                                <label for="committee-teacher">Tambah anggota panitia<select id="committee-teacher" v-model="committeeForm.user_id" required><option value="">Pilih guru</option><option v-for="teacher in available_teachers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</option></select></label>
+                                <button class="primary-button" type="submit">Tugaskan guru</button>
+                            </form>
+                            <div class="committee-guidance"><span class="guidance-mark" aria-hidden="true">✓</span><div><strong>Peran panitia</strong><p>Anggota yang ditugaskan dapat membantu proses verifikasi dan penilaian pendaftar.</p></div></div>
+                        </div>
+                        <div class="committee-list-heading"><div><h3>Panitia aktif</h3><p>Daftar guru yang saat ini menerima penugasan.</p></div><span>{{ committee.length }} anggota</span></div>
+                        <ul class="committee-list">
+                            <li v-for="member in committee" :key="member.id">
+                                <div class="committee-member-identity"><span class="member-avatar" aria-hidden="true">{{ memberInitials(member.name) }}</span><span class="committee-member-copy"><strong>{{ member.name }}</strong><span>{{ member.email }}</span></span></div>
+                                <div class="committee-member-actions"><span class="member-status">Aktif</span><button v-if="can_manage_committee" class="secondary-button" type="button" @click="removeMember(member)">Cabut</button></div>
+                            </li>
+                            <li v-if="!committee.length" class="committee-empty"><span class="member-avatar" aria-hidden="true">＋</span><div><strong>Belum ada panitia</strong><span>Tugaskan guru untuk memulai proses penerimaan.</span></div></li>
+                        </ul>
+                    </section>
+                    <section v-if="selectedPeriod" class="panel admissions-panel committee-schedule-panel">
+                        <div class="table-title committee-heading"><div><span class="section-overline">Kalender kerja</span><h2>Jadwal penerimaan</h2><p>Gunakan tanggal ini sebagai acuan pembagian tugas dan tindak lanjut panitia.</p></div><span class="status-pill">{{ periodStatusLabel }}</span></div>
+                        <div class="schedule-grid">
+                            <article class="schedule-item"><span class="schedule-index">01</span><div><strong>Verifikasi berkas</strong><span>{{ formatDateRange(selectedPeriod.verification_start, selectedPeriod.verification_end) }}</span><small>Pemeriksaan kelengkapan dan validitas dokumen.</small></div></article>
+                            <article class="schedule-item"><span class="schedule-index">02</span><div><strong>Seleksi & penilaian</strong><span>{{ formatDateRange(selectedPeriod.selection_start, selectedPeriod.selection_end) }}</span><small>Penilaian pendaftar dan penetapan peringkat.</small></div></article>
+                            <article class="schedule-item"><span class="schedule-index">03</span><div><strong>Pengumuman</strong><span>{{ formatDate(selectedPeriod.announcement_at) ?? 'Tanggal belum diatur' }}</span><small>Publikasi hasil seleksi kepada pendaftar.</small></div></article>
+                            <article class="schedule-item"><span class="schedule-index">04</span><div><strong>Daftar ulang</strong><span>{{ formatDateRange(selectedPeriod.re_registration_start, selectedPeriod.re_registration_end) }}</span><small>Konfirmasi pendaftar diterima menjadi siswa.</small></div></article>
+                        </div>
+                    </section>
+                </template>
+            </template>
+
+            <!-- 360° APPLICANT SLIDE-OVER DRAWER -->
+            <div v-if="selectedApplicant" class="applicant-drawer-overlay" role="dialog" aria-modal="true" :aria-label="`Detail pendaftar ${selectedApplicant.name}`" @click.self="closeApplicantDrawer">
+                <aside class="applicant-drawer">
+                    <header class="applicant-drawer-header">
+                        <div>
+                            <span class="admissions-registration">{{ selectedApplicant.registration_no }}</span>
+                            <h2>{{ selectedApplicant.name }}</h2>
+                            <p>{{ selectedApplicant.track?.name || 'Belum memilih jalur' }} · NISN {{ selectedApplicant.nisn || '—' }}</p>
+                        </div>
+                        <button type="button" class="secondary-button btn-compact" aria-label="Tutup panel detail" @click="closeApplicantDrawer">Tutup ×</button>
+                    </header>
+
+                    <div class="applicant-drawer-body">
+                        <!-- 1. Identitas & Status -->
+                        <section class="drawer-section">
+                            <h3>Identitas & Status Pendaftar</h3>
+                            <dl class="drawer-meta-grid">
+                                <div><dt>Jenis Kelamin</dt><dd>{{ selectedApplicant.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}</dd></div>
+                                <div><dt>Tanggal Lahir</dt><dd>{{ formatDate(selectedApplicant.birth_date) || '—' }}</dd></div>
+                                <div><dt>Asal Sekolah</dt><dd>{{ selectedApplicant.previous_school || '—' }}</dd></div>
+                                <div><dt>Orang Tua / Wali</dt><dd>{{ selectedApplicant.parent_name || '—' }} ({{ selectedApplicant.parent_phone || '—' }})</dd></div>
+                            </dl>
+                            <form v-if="can_manage_applicants" class="admissions-status-form drawer-status-form" @submit.prevent="updateApplicant(selectedApplicant, $event)">
+                                <label>Status alur<select name="status" :value="selectedApplicant.status"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select></label>
+                                <label>Catatan panitia<textarea name="notes" rows="2">{{ selectedApplicant.notes }}</textarea></label>
+                                <button class="primary-button" type="submit">Perbarui status</button>
+                            </form>
+                        </section>
+
+                        <!-- 2. Berkas & Verifikasi -->
+                        <section class="drawer-section">
+                            <div class="drawer-section-head">
+                                <h3>Kelengkapan & Verifikasi Berkas</h3>
+                                <span class="status-pill" :class="applicantDocumentSummary(selectedApplicant).className">{{ applicantDocumentSummary(selectedApplicant).label }}</span>
+                            </div>
+                            <div v-if="selectedApplicant.documents.length" class="document-list">
+                                <div v-for="document in selectedApplicant.documents" :key="document.id" class="document-row drawer-document-row">
+                                    <div class="document-main"><span class="document-mark" aria-hidden="true">▤</span><div><strong>{{ document.requirement?.label || document.original_name }}</strong><small>{{ document.original_name }}</small></div></div>
+                                    <span class="status-pill document-status-pill" :class="`document-status-${document.status}`">{{ documentStatusLabel(document.status) }}</span>
+                                    <div class="drawer-doc-actions">
+                                        <a :href="`/spmb/berkas/${document.id}/unduh`" class="secondary-button btn-compact">Unduh</a>
+                                        <template v-if="can_manage_applicants">
+                                            <button class="secondary-button btn-compact" type="button" @click="verifyDocument(document, 'valid')">Valid</button>
+                                            <button class="link-danger btn-compact" type="button" @click="verifyDocument(document, 'needs_revision')">Revisi</button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <p v-else class="empty-state">Belum ada berkas yang diunggah untuk pendaftar ini.</p>
+
+                            <form v-if="can_manage_applicants && selectedApplicant.track" class="upload-form drawer-upload-form" @submit.prevent="uploadDocument(selectedApplicant)">
+                                <select v-model="documentForm(selectedApplicant).requirement_id">
+                                    <option value="">Berkas umum</option>
+                                    <option v-for="requirement in selectedApplicant.track.requirements" :key="requirement.id" :value="requirement.id">{{ requirement.label }}</option>
+                                </select>
+                                <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="documentForm(selectedApplicant).file = ($event.target as HTMLInputElement).files?.[0] || null" required />
+                                <button class="secondary-button" type="submit">Unggah berkas</button>
+                            </form>
+                        </section>
+
+                        <!-- 3. Ringkasan Seleksi -->
+                        <section class="drawer-section">
+                            <div class="drawer-section-head">
+                                <h3>Posisi Seleksi & Nilai</h3>
+                                <span class="status-pill" :class="selectionDecisionClass(selectedApplicant.selection_result?.decision)">
+                                    Peringkat #{{ selectedApplicant.selection_result?.rank || '—' }} · {{ selectionDecisionLabel(selectedApplicant.selection_result?.decision) }}
+                                </span>
+                            </div>
+                            <div v-if="can_manage_applicants && selectedApplicant.track?.criteria?.length" class="selection-criteria drawer-criteria">
+                                <div v-for="criterion in selectedApplicant.track.criteria" :key="criterion.id" class="selection-criterion">
+                                    <div><strong>{{ criterion.label }}</strong><small>Maks. {{ criterion.max_score }} poin</small></div>
+                                    <div class="selection-score-action">
+                                        <input v-model="scoreForm(selectedApplicant, criterion).score" type="number" min="0" :max="criterion.max_score" :aria-label="`Nilai ${criterion.label} untuk ${selectedApplicant.name}`" />
+                                        <button class="secondary-button" type="button" @click="saveScore(selectedApplicant, criterion)">Simpan</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </aside>
+            </div>
         </div>
     </AppLayout>
 </template>
@@ -530,6 +1140,15 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .overview-empty-state h2 { margin: .9rem 0 .35rem; color: var(--ink); font-size: 1.2rem; }
 .overview-empty-state p { max-width: 30rem; margin: 0 0 1rem; color: var(--ink-soft); font-size: .86rem; line-height: 1.55; }
 .admissions-summary { margin: 0; min-width: min(100%, 32rem); }
+.admissions-page-header { display: grid; gap: 1.5rem; padding: .5rem 0 .25rem; }
+.admissions-page-header > div:first-child { min-width: 0; }
+.admissions-page-header .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: none; }
+.admissions-page-header h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.2; }
+.admissions-page-header p:not(.eyebrow) { max-width: 640px; margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.admissions-page-header .admissions-summary { width: 100%; min-width: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; overflow: visible; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.admissions-page-header .admissions-summary > div { min-height: 100px; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.admissions-page-header .admissions-summary span { color: var(--ink-soft); }
+.admissions-page-header .admissions-summary strong { color: var(--ink); }
 .admissions-panel { padding: 1.25rem; color: var(--ink); background: var(--surface); border-color: var(--line); }
 .applicants-panel { padding: clamp(1.1rem, 2vw, 1.5rem); }
 .applicants-page-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
@@ -841,4 +1460,57 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 @media (max-width: 980px) { .re-registration-insights { grid-template-columns: repeat(3, minmax(0, 1fr)); }.re-registration-filters { grid-template-columns: minmax(0, 1fr) minmax(12rem, 1fr); }.re-registration-filters .re-registration-search-field { grid-column: 1 / -1; }.re-registration-filters .filter-reset-button { justify-self: start; } }
 @media (max-width: 820px) { .re-registration-page-heading { align-items: stretch; flex-direction: column; }.re-registration-date { text-align: left; }.re-registration-applicant-heading { display: grid; }.re-registration-details { grid-template-columns: 1fr 1fr; }.re-registration-details div:last-child { grid-column: 1 / -1; }.re-registration-form { grid-template-columns: 1fr; }.re-registration-form .primary-button { width: 100%; } }
 @media (max-width: 560px) { .re-registration-insights { grid-template-columns: 1fr 1fr; }.re-registration-insight { min-height: 5.4rem; padding: .75rem; }.re-registration-list-heading { align-items: start; flex-direction: column; gap: .4rem; }.re-registration-filters { grid-template-columns: 1fr; }.re-registration-filters .re-registration-search-field { grid-column: auto; }.re-registration-filters .filter-reset-button { justify-self: stretch; }.re-registration-details { grid-template-columns: 1fr; }.re-registration-details div:last-child { grid-column: auto; } }
+@media (max-width: 600px) { .admissions-page-header .admissions-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.spmb-top-bar, .spmb-subnav-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.admissions-header-top { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.period-context-inline label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
+.period-context-inline select { min-width: min(22rem, 100%); min-height: 2.6rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); padding: .55rem .75rem; color: var(--ink); font-size: .84rem; }
+.spmb-workspace-tabs { display: inline-flex; flex-wrap: wrap; gap: .35rem; padding: .3rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); }
+.spmb-tab-btn { border: 0; border-radius: .55rem; padding: .52rem .85rem; color: var(--ink-soft); background: transparent; font-size: .8rem; font-weight: 700; cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+.spmb-tab-btn:hover { color: var(--ink); background: color-mix(in srgb, var(--surface) 75%, transparent); }
+.spmb-tab-btn.is-active { color: var(--primary); background: var(--surface); box-shadow: 0 1px 2px rgba(15, 23, 42, .06); }
+.applicant-badge-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.btn-compact { min-height: 2.15rem !important; padding: .38rem .7rem !important; font-size: .74rem !important; }
+.nis-input-group { display: flex; align-items: center; gap: .5rem; }
+.nis-input-group input { flex: 1; }
+.setup-checklist-panel { display: grid; gap: 1rem; border-left: 4px solid var(--primary); }
+.setup-checklist-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.setup-checklist-header h2 { margin: 0; color: var(--ink); font-size: 1.15rem; }
+.setup-checklist-header p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .8rem; }
+.setup-checklist-actions { display: flex; align-items: center; gap: .6rem; }
+.setup-checklist-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; }
+.setup-check-item { display: flex; align-items: center; gap: .7rem; padding: .75rem .85rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); text-align: left; cursor: pointer; }
+.setup-check-item:hover { border-color: var(--primary); }
+.setup-check-item.is-done { border-color: color-mix(in srgb, #138a62 35%, var(--line)); background: #f0faf5; }
+.setup-check-item .check-icon { display: grid; flex: 0 0 1.75rem; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; color: var(--primary); background: var(--primary-soft); font-size: .74rem; font-weight: 800; }
+.setup-check-item.is-done .check-icon { color: #fff; background: #138a62; }
+.setup-check-item div { display: grid; min-width: 0; gap: .12rem; }
+.setup-check-item strong { color: var(--ink); font-size: .78rem; }
+.setup-check-item small { color: var(--ink-soft); font-size: .68rem; }
+.track-card-detailed { display: grid; gap: .6rem; align-items: stretch; }
+.track-card-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.track-meta-pills { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .5rem; border-top: 1px solid var(--line); }
+.meta-chip { border: 1px solid var(--line); border-radius: 999px; padding: .2rem .55rem; color: var(--ink-soft); background: var(--surface-subtle); font-size: .7rem; font-weight: 600; }
+.meta-chip.is-criterion { color: var(--primary); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }
+.applicant-drawer-overlay { position: fixed; inset: 0; z-index: 60; display: flex; justify-content: flex-end; background: rgba(15, 23, 42, .45); backdrop-filter: blur(2px); }
+.applicant-drawer { display: flex; flex-direction: column; width: min(42rem, 100vw); height: 100%; overflow: hidden; background: var(--surface); border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(15, 23, 42, .16); }
+.applicant-drawer-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.35rem; border-bottom: 1px solid var(--line); background: var(--surface-subtle); }
+.applicant-drawer-header h2 { margin: .15rem 0 0; color: var(--ink); font-size: 1.2rem; }
+.applicant-drawer-header p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .78rem; }
+.applicant-drawer-body { flex: 1; overflow-y: auto; display: grid; align-content: start; gap: 1.1rem; padding: 1.25rem 1.35rem; }
+.drawer-section { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); }
+.drawer-section h3 { margin: 0; color: var(--ink); font-size: .92rem; }
+.drawer-section-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.drawer-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem .9rem; margin: 0; }
+.drawer-meta-grid div { display: grid; gap: .12rem; }
+.drawer-meta-grid dt { color: var(--ink-soft); font-size: .7rem; font-weight: 700; }
+.drawer-meta-grid dd { margin: 0; color: var(--ink); font-size: .82rem; font-weight: 600; }
+.drawer-status-form { flex-direction: column; align-items: stretch; }
+.drawer-document-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+.drawer-doc-actions { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+.drawer-upload-form { flex-wrap: wrap; }
+.drawer-criteria { grid-template-columns: 1fr; }
+@media (max-width: 900px) { .setup-checklist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .setup-checklist-grid, .drawer-meta-grid, .drawer-document-row { grid-template-columns: 1fr; } }
 </style>
