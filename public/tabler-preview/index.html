@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="id" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="light dark">
+  <title>Eksperimen Dashboard Tabler — School Suite</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.5/dist/css/tabler.min.css">
+  <style>
+    :root {
+      --tblr-primary: #3366b0;
+      --tblr-primary-rgb: 51, 102, 176;
+      --ss-ink: #203049; --ss-muted: #68788c; --ss-sidebar: #fff; --ss-bg: #f5f7fb;
+      --ss-line: #e7edf4; --ss-brand: #244a8a;
+    }
+    html[data-bs-theme="dark"] { --ss-ink: #f1f5fd; --ss-muted: #a6b4c7; --ss-sidebar: #192235; --ss-bg: #121b2a; --ss-line: #2b3850; --ss-brand: #96baff; }
+    body { background: var(--ss-bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    a { text-decoration: none; }
+    .ss-shell { min-height: 100vh; display: flex; }
+    .ss-sidebar { width: 260px; flex-shrink: 0; position: fixed; inset: 0 auto 0 0; z-index: 30; overflow-y: auto; background: var(--ss-sidebar); border-right: 1px solid var(--ss-line); }
+    .ss-main { margin-left: 260px; flex: 1; min-width: 0; }
+    .ss-brand { height: 77px; padding: 17px 21px; border-bottom: 1px solid var(--ss-line); display: flex; align-items: center; gap: 12px; }
+    .ss-brandmark { height: 42px; width: 42px; display: grid; place-items: center; border-radius: 12px; background: #e8f0ff; color: var(--ss-brand); font-weight: 800; font-size: 20px; }
+    .ss-brand strong { color: var(--ss-ink); display: block; font-size: 17px; letter-spacing: -.04em; }
+    .ss-brand small { display: block; color: var(--ss-muted); font-size: 11px; letter-spacing: .04em; }
+    .ss-section { padding: 22px 15px 7px; text-transform: uppercase; color: var(--ss-muted); font-size: 10px; letter-spacing: .13em; font-weight: 800; }
+    .ss-nav { list-style: none; padding: 0 10px; margin: 0; }
+    .ss-nav a { display: flex; align-items: center; gap: 11px; padding: 11px 12px; margin: 2px 0; border-radius: 9px; font-size: 13px; color: var(--ss-muted); font-weight: 600; }
+    .ss-nav a:hover { background: rgba(51,102,176,.07); color: var(--ss-ink); }
+    .ss-nav a.active { color: #2757a4; background: #eaf1ff; }
+    html[data-bs-theme="dark"] .ss-nav a.active { color: #b6d0ff; background: #273955; }
+    .ss-nav svg { width: 18px; height: 18px; flex-shrink: 0; stroke-width: 1.8; }
+    .ss-nav .ss-arrow { margin-left: auto; font-size: 12px; color: #94a3b8; }
+    .ss-sidebar-bottom { margin: 28px 18px 20px; padding: 15px; background: rgba(51,102,176,.07); border-radius: 12px; color: var(--ss-ink); }
+    .ss-sidebar-bottom strong { font-size: 12px; display: block; }
+    .ss-sidebar-bottom small { display: block; margin-top: 5px; line-height: 1.55; color: var(--ss-muted); }
+    .ss-topbar { height: 77px; background: var(--ss-sidebar); border-bottom: 1px solid var(--ss-line); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; }
+    .ss-topbar-left, .ss-topbar-right { display: flex; align-items: center; gap: 18px; }
+    .ss-search { width: min(340px, 40vw); }
+    .ss-search .form-control { border-radius: 9px; background: var(--ss-bg); border-color: var(--ss-line); }
+    .ss-circle-btn { border: 0; background: transparent; color: var(--ss-muted); padding: 8px; display: grid; place-items: center; cursor: pointer; }
+    .ss-circle-btn:hover { color: var(--ss-ink); }
+    .ss-circle-btn svg { height: 19px; width: 19px; }
+    .ss-user { display: flex; align-items: center; gap: 11px; }
+    .ss-avatar { height: 36px; width: 36px; display: grid; place-items: center; border-radius: 50%; color: #24538f; background: #dceaff; font-size: 12px; font-weight: 800; }
+    .ss-user strong { display: block; color: var(--ss-ink); font-size: 12px; }
+    .ss-user small { font-size: 11px; color: var(--ss-muted); display: block; }
+    .ss-content { max-width: 1530px; padding: 30px 32px 52px; margin: 0 auto; }
+    .ss-crumb { font-size: 12px; color: var(--ss-muted); margin-bottom: 14px; }
+    .ss-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 26px; }
+    .ss-heading h1 { font-weight: 750; font-size: clamp(24px, 2.8vw, 31px); color: var(--ss-ink); letter-spacing: -.055em; margin: 0 0 8px; }
+    .ss-heading p { margin: 0; color: var(--ss-muted); font-size: 13px; }
+    .ss-kicker { color: #4268a0; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: .13em; margin-bottom: 8px; }
+    .ss-heading-actions { display: flex; gap: 8px; align-items: center; }
+    .ss-heading-actions .btn { white-space: nowrap; }
+    .ss-demo-note { background: #eff6ff; border: 1px solid #d6e6fb; padding: 11px 15px; color: #275391; border-radius: 10px; font-size: 12px; margin-bottom: 23px; }
+    html[data-bs-theme="dark"] .ss-demo-note { background: #1d324d; color: #b6d7ff; border-color: #34527b; }
+    .ss-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 23px; }
+    .ss-card { background: var(--tblr-bg-surface); border: 1px solid var(--ss-line); border-radius: 13px; box-shadow: 0 2px 10px rgba(19,39,69,.025); min-width: 0; }
+    .ss-stat { padding: 20px 21px 18px; }
+    .ss-stat-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .ss-stat-label { font-size: 12px; color: var(--ss-muted); font-weight: 600; }
+    .ss-stat-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; background: #edf3ff; color: #4774bf; }
+    .ss-stat-icon.green { background: #e8f7ef; color: #218b60; }
+    .ss-stat-icon.violet { background: #f1edff; color: #7656b5; }
+    .ss-stat-icon.gold { background: #fff4e3; color: #a97525; }
+    .ss-stat-icon svg { width: 19px; height: 19px; }
+    .ss-stat-number { font-weight: 780; font-size: 30px; letter-spacing: -.055em; color: var(--ss-ink); padding-top: 13px; line-height: 1; }
+    .ss-stat-note { color: var(--ss-muted); font-size: 11px; margin-top: 10px; }
+    .ss-tag { font-size: 10px; color: #18845b; font-weight: 700; background: #e6f8ee; border-radius: 5px; padding: 2px 6px; margin-right: 5px; }
+    .ss-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(290px, 1fr); gap: 18px; margin-bottom: 22px; }
+    .ss-panel-head { padding: 20px 22px 14px; display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid var(--ss-line); }
+    .ss-panel-head h2 { margin: 0; font-size: 15px; font-weight: 750; color: var(--ss-ink); letter-spacing: -.02em; }
+    .ss-panel-head small { color: var(--ss-muted); font-size: 11px; }
+    .ss-panel-body { padding: 19px 22px 21px; }
+    .ss-chart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 11px; align-items: end; height: 203px; padding: 16px 0 0; border-bottom: 1px solid var(--ss-line); position: relative; }
+    .ss-chart::before { content: ""; position: absolute; inset: 15px 0 0; background: repeating-linear-gradient(to top, transparent 0, transparent calc(25% - 1px), var(--ss-line) calc(25% - 1px), var(--ss-line) 25%); pointer-events: none; opacity: .55; }
+    .ss-chart-bar { position: relative; height: var(--bar-height); border-radius: 6px 6px 0 0; background: #a5c5ef; margin: 0 5px; z-index: 1; }
+    .ss-chart-bar.active { background: #407ac5; }
+    .ss-chart-bar span { position: absolute; top: -23px; left: 50%; transform: translateX(-50%); color: var(--ss-muted); font-size: 10px; }
+    .ss-chart-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 11px; text-align: center; color: var(--ss-muted); font-size: 11px; padding-top: 11px; }
+    .ss-chart-caption { font-size: 11px; color: var(--ss-muted); margin-top: 18px; }
+    .ss-progress-row { padding: 13px 0; border-bottom: 1px solid var(--ss-line); }
+    .ss-progress-row:last-child { border-bottom: 0; }
+    .ss-progress-label { display: flex; justify-content: space-between; gap: 10px; color: var(--ss-ink); font-weight: 600; font-size: 12px; margin-bottom: 10px; }
+    .ss-progress-label span:last-child { color: var(--ss-muted); font-weight: 650; }
+    .ss-progress-row .progress { height: 7px; border-radius: 6px; background: #eaf0f8; }
+    .ss-apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .ss-app { border: 1px solid var(--ss-line); padding: 14px; border-radius: 10px; display: flex; gap: 12px; align-items: center; color: var(--ss-ink); transition: border-color .15s, transform .15s; }
+    .ss-app:hover { border-color: #9bbce6; transform: translateY(-1px); color: var(--ss-brand); }
+    .ss-app-icon { display: grid; place-items: center; background: #eff4ff; border-radius: 9px; width: 39px; height: 39px; flex-shrink: 0; color: #4879c5; }
+    .ss-app-icon svg { width: 19px; height: 19px; }
+    .ss-app strong { display: block; font-size: 12px; line-height: 1.45; }
+    .ss-app small { display: block; margin-top: 2px; font-size: 10px; color: var(--ss-muted); line-height: 1.3; }
+    .ss-app .ss-arrow { margin-left: auto; color: #8ca0bd; }
+    .ss-activity { padding: 0; margin: 0; list-style: none; }
+    .ss-activity li { display: flex; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--ss-line); }
+    .ss-activity li:last-child { border: 0; }
+    .ss-dot { flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; background: #5d88cb; margin-top: 5px; box-shadow: 0 0 0 4px #eef4ff; }
+    .ss-dot.green { background: #3ba879; box-shadow: 0 0 0 4px #e8f8ee; }
+    .ss-dot.gold { background: #d7a24c; box-shadow: 0 0 0 4px #fff5e7; }
+    .ss-activity strong { font-size: 12px; color: var(--ss-ink); display: block; }
+    .ss-activity small { font-size: 11px; color: var(--ss-muted); display: block; margin-top: 5px; line-height: 1.55; }
+    .ss-footer { padding-top: 12px; font-size: 11px; color: var(--ss-muted); text-align: center; }
+    .ss-overlay { display: none; }
+    .ss-mobile { display: none; }
+    @media(max-width:1180px) { .ss-stats { grid-template-columns: repeat(2, 1fr); } .ss-grid { grid-template-columns: 1fr; } }
+    @media(max-width:900px) {
+      .ss-sidebar { transform: translateX(-100%); transition: transform .2s; box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+      .ss-main { margin-left: 0; }
+      body.nav-open .ss-sidebar { transform: translateX(0); }
+      body.nav-open .ss-overlay { display: block; position: fixed; inset: 0; background: rgba(15,25,40,.45); z-index: 25; }
+      .ss-mobile { display: grid; }
+      .ss-topbar { padding: 0 20px; }
+      .ss-content { padding: 25px 20px; }
+    }
+    @media(max-width:650px) {
+      .ss-search { display: none; } .ss-user div:last-child { display: none; }
+      .ss-heading { display: block; } .ss-heading-actions { margin-top: 16px; }
+      .ss-stats { gap: 10px; } .ss-stat { padding: 16px 14px; } .ss-stat-number { font-size: 25px; }
+      .ss-apps { grid-template-columns: 1fr; }
+      .ss-panel-head, .ss-panel-body { padding-left: 16px; padding-right: 16px; }
+      .ss-content { padding: 23px 14px; }
+      .ss-chart-bar { margin: 0 2px; }
+    }
+  </style>
+</head>
+<body>
+<div class="ss-overlay" id="overlay" aria-hidden="true"></div>
+<div class="ss-shell">
+  <aside class="ss-sidebar" id="sidebar" aria-label="Navigasi School Suite">
+    <div class="ss-brand">
+      <div class="ss-brandmark" aria-hidden="true">S</div>
+      <div><strong>School Suite</strong><small>EDUCATION MANAGEMENT</small></div>
+    </div>
+    <div class="ss-section">Utama</div>
+    <ul class="ss-nav">
+      <li><a class="active" href="/dashboard" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10 12 3l9 7v11H3V10zM9 21v-8h6v8"/></svg>Dashboard <span class="ss-arrow">●</span></a></li>
+      <li><a href="/komunikasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v15H5zM8 8h8M8 12h8M8 16h5"/></svg>Pengumuman</a></li>
+    </ul>
+    <div class="ss-section">Manajemen Akademik</div>
+    <ul class="ss-nav">
+      <li><a href="/akademik/siswa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>Data Siswa</a></li>
+      <li><a href="/akademik/guru"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m3-12a3 3 0 0 1 0 6m0 3a5 5 0 0 1 3 5"/></svg>Data Guru</a></li>
+      <li><a href="/akademik/kelas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 21V5l8-3 8 3v16M4 21h16M9 8h1m4 0h1M9 12h1m4 0h1m-5 9v-5h6v5"/></svg>Rombongan Belajar</a></li>
+      <li><a href="/akademik/jadwal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>Jadwal Pelajaran</a></li>
+      <li><a href="/akademik/presensi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 3 3 5-6"/></svg>Absensi Siswa</a></li>
+    </ul>
+    <div class="ss-section">Pembelajaran & Penilaian</div>
+    <ul class="ss-nav">
+      <li><a href="/pembelajaran/materi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zm0 0v14"/></svg>Materi & LMS</a></li>
+      <li><a href="/penilaian/bank-soal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h5"/></svg>Bank Soal</a></li>
+      <li><a href="/ujian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 9h6M9 13h6m-6 4h4"/></svg>Ujian CBT</a></li>
+      <li><a href="/penilaian/rapor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h11l3 3v15H5zM9 10h7M9 14h7M9 18h4"/></svg>Rapor & Penilaian</a></li>
+    </ul>
+    <div class="ss-section">Administrasi</div>
+    <ul class="ss-nav">
+      <li><a href="/spmb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20h16M5 20V8l7-5 7 5v12M9 11h6m-6 4h6"/></svg>SPMB</a></li>
+      <li><a href="/laporan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V4h16v16H4zm4-4v-4m4 4V8m4 8v-6"/></svg>Pusat Laporan</a></li>
+      <li><a href="/pengaturan/pengguna"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M18 8v6m-3-3h6"/></svg>Pengguna & Hak Akses</a></li>
+      <li><a href="/pengaturan/sekolah"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M4 12h2m12 0h2M12 4v2m0 12v2m-6-6-1 1m13-9-1 1M6 6l1 1m11 11-1-1"/></svg>Pengaturan</a></li>
+    </ul>
+    <div class="ss-sidebar-bottom"><strong>Eksperimen tampilan Tabler</strong><small>Pratinjau terisolasi. Dashboard asli dan database School Suite tetap tidak berubah.</small></div>
+  </aside>
+  <main class="ss-main">
+    <header class="ss-topbar">
+      <div class="ss-topbar-left">
+        <button class="ss-circle-btn ss-mobile" id="menuBtn" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="ss-search"><input id="quickSearch" class="form-control form-control-sm" type="search" placeholder="Cari menu akses cepat..." aria-label="Cari menu akses cepat"></div>
+        <span class="badge bg-blue-lt text-blue d-none d-md-inline">Tahun Pelajaran 2026/2027</span>
+      </div>
+      <div class="ss-topbar-right">
+        <button class="ss-circle-btn" type="button" id="themeBtn" aria-label="Ganti tema terang atau gelap" title="Ganti tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+        <a class="ss-circle-btn" href="/komunikasi" aria-label="Buka pengumuman"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9zM10 21h4"/></svg></a>
+        <div class="ss-user"><div class="ss-avatar">AD</div><div><strong>Administrator</strong><small>Pratinjau desain</small></div></div>
+      </div>
+    </header>
+    <div class="ss-content">
+      <div class="ss-crumb">School Suite / <strong>Dashboard Administrator</strong></div>
+      <div class="ss-heading">
+        <div><div class="ss-kicker">Panel Administrasi Sekolah</div><h1>Selamat datang di School Suite.</h1><p>Pantau aktivitas sekolah dan kelola kebutuhan akademik dari satu tempat.</p></div>
+        <div class="ss-heading-actions"><a class="btn btn-outline-secondary" href="/dashboard">Lihat Dashboard Asli</a><a class="btn btn-primary" href="/laporan">Buka Laporan</a></div>
+      </div>
+      <div class="ss-demo-note" role="note"><strong>Mode pratinjau:</strong> seluruh angka, grafik, dan aktivitas di bawah adalah <strong>data ilustrasi</strong>, bukan hasil query database atau informasi sekolah yang sebenarnya. Navigasi mengarah ke rute School Suite.</div>
+      <div class="ss-stats">
+        <article class="ss-card ss-stat"><div class="ss-stat-top"><span class="ss-stat-label">Total Siswa</span><span class="ss-stat-icon"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span></div><div class="ss-stat-number">1.248</div><div class="ss-stat-note"><span class="ss-tag">Contoh</span> Peserta didik terdaftar</div></article>
+        <article class="ss-card ss-stat"><div class="ss-stat-top"><span class="ss-stat-label">Guru & Tenaga Kependidikan</span><span class="ss-stat-icon green"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m3-12a3 3 0 0 1 0 6m0 3a5 5 0 0 1 3 5"/></svg></span></div><div class="ss-stat-number">68</div><div class="ss-stat-note"><span class="ss-tag">Contoh</span> Akun pendidik dan tendik</div></article>
+        <article class="ss-card ss-stat"><div class="ss-stat-top"><span class="ss-stat-label">Rombongan Belajar</span><span class="ss-stat-icon violet"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M4 21V5l8-3 8 3v16M4 21h16M9 9h1m4 0h1m-5 12v-5h6v5"/></svg></span></div><div class="ss-stat-number">36</div><div class="ss-stat-note"><span class="ss-tag">Contoh</span> Kelas aktif semester ini</div></article>
+        <article class="ss-card ss-stat"><div class="ss-stat-top"><span class="ss-stat-label">Kehadiran Siswa</span><span class="ss-stat-icon gold"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8 12 3 3 5-6"/></svg></span></div><div class="ss-stat-number">96,2%</div><div class="ss-stat-note"><span class="ss-tag">Contoh</span> Rata-rata bulan berjalan</div></article>
+      </div>
+      <div class="ss-grid">
+        <section class="ss-card"><header class="ss-panel-head"><div><h2>Tren Kehadiran Siswa</h2><small>Perbandingan tujuh hari pembelajaran (ilustrasi)</small></div><span class="badge bg-blue-lt text-blue">7 hari</span></header><div class="ss-panel-body"><div class="ss-chart" role="img" aria-label="Ilustrasi kehadiran Senin sampai Minggu: 82, 90, 76, 95, 87, 93, 96 persen."><div class="ss-chart-bar" style="--bar-height:82%"><span>82%</span></div><div class="ss-chart-bar" style="--bar-height:90%"><span>90%</span></div><div class="ss-chart-bar" style="--bar-height:76%"><span>76%</span></div><div class="ss-chart-bar" style="--bar-height:95%"><span>95%</span></div><div class="ss-chart-bar" style="--bar-height:87%"><span>87%</span></div><div class="ss-chart-bar" style="--bar-height:93%"><span>93%</span></div><div class="ss-chart-bar active" style="--bar-height:96%"><span>96%</span></div></div><div class="ss-chart-days"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div><p class="ss-chart-caption">Grafik dekoratif untuk mengevaluasi gaya visual; belum terhubung ke API kehadiran.</p></div></section>
+        <section class="ss-card"><header class="ss-panel-head"><div><h2>Ringkasan Kegiatan</h2><small>Indikator operasional sekolah</small></div><span class="badge bg-green-lt text-green">Contoh</span></header><div class="ss-panel-body"><div class="ss-progress-row"><div class="ss-progress-label"><span>Kehadiran siswa</span><span>96%</span></div><div class="progress"><div class="progress-bar bg-blue" style="width:96%"></div></div></div><div class="ss-progress-row"><div class="ss-progress-label"><span>Pengisian jurnal guru</span><span>82%</span></div><div class="progress"><div class="progress-bar bg-green" style="width:82%"></div></div></div><div class="ss-progress-row"><div class="ss-progress-label"><span>Penilaian terinput</span><span>74%</span></div><div class="progress"><div class="progress-bar bg-indigo" style="width:74%"></div></div></div><div class="ss-progress-row"><div class="ss-progress-label"><span>Persiapan ujian CBT</span><span>91%</span></div><div class="progress"><div class="progress-bar bg-yellow" style="width:91%"></div></div></div></div></section>
+      </div>
+      <div class="ss-grid">
+        <section class="ss-card"><header class="ss-panel-head"><div><h2>Akses Cepat</h2><small>Menu terpenting administrator</small></div><a class="btn btn-sm btn-ghost-primary" href="/dashboard">Kembali ke beranda asli</a></header><div class="ss-panel-body"><div class="ss-apps" id="quickLinks">
+          <a class="ss-app" href="/akademik/siswa"><span class="ss-app-icon">01</span><span><strong>Data Siswa</strong><small>Kelola peserta didik</small></span><span class="ss-arrow">↗</span></a>
+          <a class="ss-app" href="/akademik/guru"><span class="ss-app-icon">02</span><span><strong>Data Guru</strong><small>Kelola pendidik</small></span><span class="ss-arrow">↗</span></a>
+          <a class="ss-app" href="/akademik/kelas"><span class="ss-app-icon">03</span><span><strong>Rombel & Kelas</strong><small>Kelola kelompok belajar</small></span><span class="ss-arrow">↗</span></a>
+          <a class="ss-app" href="/akademik/jadwal"><span class="ss-app-icon">04</span><span><strong>Jadwal Pelajaran</strong><small>Kelola jadwal sekolah</small></span><span class="ss-arrow">↗</span></a>
+          <a class="ss-app" href="/penilaian/bank-soal"><span class="ss-app-icon">05</span><span><strong>Bank Soal</strong><small>Kelola soal & paket</small></span><span class="ss-arrow">↗</span></a>
+          <a class="ss-app" href="/pengaturan/pengguna"><span class="ss-app-icon">06</span><span><strong>Pengguna</strong><small>Hak akses & akun</small></span><span class="ss-arrow">↗</span></a>
+        </div><p class="small text-secondary mt-3 mb-0" id="noResults" hidden>Tidak ada menu yang cocok. Coba kata kunci lain.</p></div></section>
+        <section class="ss-card"><header class="ss-panel-head"><div><h2>Aktivitas Terbaru</h2><small>Simulasi linimasa administrasi</small></div><span class="badge bg-azure-lt text-azure">Demo</span></header><div class="ss-panel-body"><ul class="ss-activity"><li><i class="ss-dot green"></i><div><strong>Data peserta didik diperbarui</strong><small>Contoh aktivitas · 5 menit lalu</small></div></li><li><i class="ss-dot"></i><div><strong>Jadwal pelajaran dipublikasikan</strong><small>Contoh aktivitas · 1 jam lalu</small></div></li><li><i class="ss-dot gold"></i><div><strong>Pengumuman sekolah dibuat</strong><small>Contoh aktivitas · Kemarin</small></div></li></ul></div></section>
+      </div>
+      <div class="ss-footer">School Suite · Eksperimen visual Tabler · Tidak mengubah aplikasi utama · Data ilustrasi</div>
+    </div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.5/dist/js/tabler.min.js"></script>
+<script>
+  (function () {
+    var menuButton = document.getElementById('menuBtn');
+    var overlay = document.getElementById('overlay');
+    function setNavOpen(open) { document.body.classList.toggle('nav-open', open); menuButton.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+    menuButton.addEventListener('click', function () { setNavOpen(!document.body.classList.contains('nav-open')); });
+    overlay.addEventListener('click', function () { setNavOpen(false); });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') setNavOpen(false); });
+    document.getElementById('themeBtn').addEventListener('click', function () {
+      var root = document.documentElement;
+      root.setAttribute('data-bs-theme', root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+    });
+    var links = Array.from(document.querySelectorAll('#quickLinks .ss-app'));
+    var empty = document.getElementById('noResults');
+    document.getElementById('quickSearch').addEventListener('input', function (event) {
+      var query = event.target.value.trim().toLocaleLowerCase('id-ID');
+      var visible = 0;
+      links.forEach(function (link) { var matched = link.textContent.toLocaleLowerCase('id-ID').includes(query); link.hidden = !matched; if (matched) visible++; });
+      empty.hidden = visible > 0;
+    });
+  }());
+</script>
+</body>
+</html>
