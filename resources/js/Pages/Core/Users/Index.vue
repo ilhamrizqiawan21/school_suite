@@ -355,10 +355,10 @@ const deleteUser = (user: UserItem) => {
 .user-field { display: grid; min-width: 0; gap: .4rem; font-size: var(--type-sm); font-weight: var(--weight-semibold); color: var(--ink-soft); }
 .user-field input, .user-field select { width: 100%; min-width: 0; min-height: 2.65rem; padding: .6rem .75rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink); font-weight: var(--weight-regular); }
 .user-table-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
-.user-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
-.user-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
-.user-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
-.user-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding: 1rem 0 clamp(18px, 3vw, 30px); background: var(--surface); border-top: 1px solid var(--line); }
+.user-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.user-drawer { width: min(560px, 100%); max-height: min(90dvh, 860px); height: auto; padding: clamp(18px, 3vw, 28px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
+.user-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 28px)); padding-top: clamp(18px, 3vw, 28px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.user-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 28px)); padding: 1rem 0 clamp(18px, 3vw, 28px); background: var(--surface); border-top: 1px solid var(--line); }
 .user-close { flex: 0 0 44px; }
 .user-drawer :deep(input), .user-drawer :deep(select) { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .user-drawer :deep(.text-slate-900), .user-drawer :deep(.text-slate-800), .user-drawer :deep(.text-slate-700) { color: var(--ink); }
@@ -367,5 +367,5 @@ const deleteUser = (user: UserItem) => {
 .page-heading { flex-wrap: wrap; gap: 1rem; }
 .page-heading > div { min-width: 0; }
 button:disabled { cursor: not-allowed; opacity: .5; }
-@media (max-width: 600px) { .user-overlay { align-items: flex-end; } .user-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; } }
+@media (max-width: 600px) { .user-overlay { padding: .75rem; } .user-drawer { max-height: 92dvh; border-radius: 16px; } }
 </style>

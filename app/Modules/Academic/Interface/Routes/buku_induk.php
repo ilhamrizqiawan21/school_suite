@@ -10,6 +10,9 @@ Route::middleware(['auth', 'role:admin,operator'])
     ->name('academic.student-ledger.')
     ->group(function (): void {
         Route::get('/', [StudentLedgerController::class, 'index'])->name('index');
+        Route::get('/ekspor/xlsx', [StudentLedgerController::class, 'exportExcel'])->middleware('throttle:sensitive')->name('export.xlsx');
+        Route::post('/impor', [StudentLedgerController::class, 'importBulk'])->middleware('throttle:sensitive')->name('import');
+        Route::get('/cetak-massal/pdf', [StudentLedgerController::class, 'exportBatchPdf'])->middleware('throttle:sensitive')->name('batch-pdf');
         Route::put('/{studentId}/detail', [StudentLedgerController::class, 'updateDetails'])->whereNumber('studentId')->name('details.update');
         Route::post('/{studentId}/foto', [StudentLedgerController::class, 'uploadPhoto'])->whereNumber('studentId')->middleware('throttle:sensitive')->name('photo.store');
         Route::get('/{studentId}/foto', [StudentLedgerController::class, 'showPhoto'])->whereNumber('studentId')->middleware('throttle:sensitive')->name('photo.show');

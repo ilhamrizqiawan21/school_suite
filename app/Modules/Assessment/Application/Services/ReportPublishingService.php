@@ -291,6 +291,45 @@ class ReportPublishingService
         ]), JSON_THROW_ON_ERROR));
     }
 
+    /**
+     * Mengambil daftar snapshot rapor terbit (immutable) per siswa untuk Buku Induk.
+     *
+     * @param  list<int>  $studentIds
+     * @return array<int, list<array<string, mixed>>>
+     */
+    public function getPublishedSnapshotsForStudents(int $schoolId, array $studentIds): array
+    {
+        if ($studentIds === []) {
+            return [];
+        }
+
+        $snapshots = ReportSnapshot::query()
+            ->where('school_id', $schoolId)
+            ->whereIn('student_id', $studentIds)
+            ->where('status', ReportStatusEnum::PUBLISHED)
+            ->orderBy('term_id')
+            ->orderBy('id')
+            ->get();
+
+        $grouped = [];
+        foreach ($snapshots as $snapshot) {
+            $grouped[(int) $snapshot->student_id][] = [
+                'id' => (int) $snapshot->id,
+                'enrollment_id' => (int) $snapshot->enrollment_id,
+                'term_id' => (int) $snapshot->term_id,
+                'class_group_id' => (int) $snapshot->class_group_id,
+                'published_at' => $snapshot->published_at?->format('Y-m-d'),
+                'checksum' => $snapshot->checksum,
+                'scheme' => $snapshot->scheme_snapshot ?? [],
+                'grades' => $snapshot->grades_snapshot ?? [],
+                'attendance' => $snapshot->attendance_snapshot ?? [],
+                'notes' => $snapshot->notes_snapshot ?? [],
+            ];
+        }
+
+        return $grouped;
+    }
+
     private function canonicalize(array $value): array
     {
         if (! array_is_list($value)) {

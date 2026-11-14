@@ -700,17 +700,17 @@ const deleteStudent = (student: Student) => {
 
 <style scoped>
 .student-notice { padding: .85rem 1rem; border-radius: var(--radius-sm); font-size: var(--type-sm); overflow-wrap: anywhere; }
-.student-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
-.student-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
-.student-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); background: var(--surface); border-color: var(--line); }
-.student-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding-bottom: clamp(18px, 3vw, 30px); background: var(--surface); border-color: var(--line); }
+.student-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.student-drawer { width: min(640px, 100%); max-height: min(90dvh, 880px); height: auto; padding: clamp(18px, 3vw, 28px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
+.student-drawer-header { position: sticky; top: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; margin-top: calc(-1 * clamp(18px, 3vw, 28px)); padding-top: clamp(18px, 3vw, 28px); background: var(--surface); border-color: var(--line); }
+.student-drawer-footer { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 28px)); padding-bottom: clamp(18px, 3vw, 28px); background: var(--surface); border-color: var(--line); }
 .student-unsaved-note { align-self: center; margin-right: auto; color: var(--ink-soft); font-size: var(--type-meta); }
 .student-drawer :deep(label), .student-drawer :deep(code) { overflow-wrap: anywhere; }
 .student-drawer :deep(input), .student-drawer :deep(select) { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .student-drawer :deep(input:focus-visible), .student-drawer :deep(select:focus-visible), .student-drawer button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .student-drawer :deep(.text-slate-900), .student-drawer :deep(.text-slate-700) { color: var(--ink); }
 .student-drawer :deep(.text-slate-600), .student-drawer :deep(.text-slate-500), .student-drawer :deep(.text-slate-400) { color: var(--ink-soft); }
-@media (max-width: 600px) { .student-overlay { align-items: flex-end; } .student-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
+@media (max-width: 600px) { .student-overlay { padding: .75rem; } .student-drawer { max-height: 92dvh; border-radius: 16px; } }
 .student-notice-success { color: var(--green); background: var(--green-soft); }
 .student-notice-error { color: var(--red); background: var(--red-soft); }
 .student-edit-context { margin: .3rem 0 0; color: var(--ink-soft); font-size: var(--type-meta); }

@@ -221,8 +221,8 @@ const filteredStudentSessions = computed(() => {
 .online-empty p { margin: 6px 0 16px; color: var(--ink-soft); font-size: var(--type-sm); }
 .online-table-wrap { overflow: hidden; }
 .table-scroll { overflow-x: auto; }
-.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / .45); backdrop-filter: blur(3px); }
-.modal-card { display: grid; align-content: start; width: min(560px, 100%); height: 100%; gap: 1rem; overflow: auto; padding: clamp(18px, 3vw, 30px); color: var(--ink); background: var(--surface); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / .45); backdrop-filter: blur(3px); }
+.modal-card { display: grid; align-content: start; width: min(560px, 100%); max-height: min(90dvh, 860px); height: auto; gap: 1rem; overflow: auto; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 16px; color: var(--ink); background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
 .modal-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .modal-header h2 { margin: .25rem 0 0; color: var(--ink); font-size: 1.2rem; font-weight: var(--weight-bold); }
 .modal-header > button { display: grid; place-items: center; width: 44px; height: 44px; color: var(--ink-soft); font-size: 1.6rem; }
@@ -232,7 +232,7 @@ const filteredStudentSessions = computed(() => {
 .span-2 { grid-column: 1 / -1; }
 .modal-actions { display: flex; justify-content: flex-end; gap: .65rem; }
 .form-error { color: var(--red); font-size: var(--type-meta); }
-@media (max-width: 760px) { .online-session-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.span-2 { grid-column: auto; }.online-session-card { min-height: 0; }.modal-backdrop { align-items: flex-end; }.modal-card { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
+@media (max-width: 760px) { .online-session-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.span-2 { grid-column: auto; }.online-session-card { min-height: 0; }.modal-backdrop { padding: .75rem; }.modal-card { max-height: 92dvh; border-radius: 16px; } }
 /* Center schedule metadata, status, attendance, and actions in the session table. */
 .data-table th:nth-child(n+2), .data-table td:nth-child(n+2) { text-align: center; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }

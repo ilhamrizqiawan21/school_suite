@@ -135,7 +135,10 @@ class StudentLedgerControllersTest extends TestCase
 
         $this->actingAs($this->teacher)->get('/akademik/buku-induk')->assertForbidden();
         $this->actingAs($this->admin)->get('/akademik/buku-induk/'.$otherStudent->id)->assertNotFound();
-        $this->actingAs($this->admin)->get('/akademik/buku-induk/'.$student->id.'/pdf')->assertOk()->assertHeader('content-type', 'application/pdf');
+        $pdfResponse = $this->actingAs($this->admin)->get('/akademik/buku-induk/'.$student->id.'/pdf')->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline;', (string) $pdfResponse->headers->get('content-disposition'));
+        $downloadResponse = $this->actingAs($this->admin)->get('/akademik/buku-induk/'.$student->id.'/pdf?download=1')->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('attachment;', (string) $downloadResponse->headers->get('content-disposition'));
 
         $this->assertDatabaseHas('audit_events', [
             'event_type' => 'academic.student_ledger.exported',
@@ -271,6 +274,152 @@ class StudentLedgerControllersTest extends TestCase
         $this->assertDatabaseHas('administration_student_ledger_details', ['student_id' => $student->id, 'photo_path' => null]);
         Storage::disk('local')->assertMissing($photoPath);
         $this->assertDatabaseHas('audit_events', ['event_type' => 'academic.student_ledger.photo_deleted', 'target_id' => (string) $student->id]);
+    }
+
+    public function test_hardcopy_fields_completeness_filter_and_save_next_navigation(): void
+    {
+        $studentA = $this->makeStudent('1010', 'Ahmad Zaki', '0011223344');
+        $studentB = $this->makeStudent('1011', 'Bela Safitri', '0011223345');
+
+        $this->actingAs($this->operator)->put("/akademik/buku-induk/{$studentA->id}/detail", [
+            'update_core_identity' => true,
+            'redirect_student_id' => $studentB->id,
+            'name' => 'Ahmad Zaki Pratama',
+            'nisn' => '0011223344',
+            'gender' => 'L',
+            'birth_place' => 'Jakarta',
+            'birth_date' => '2013-05-12',
+            'religion' => 'Islam',
+            'address' => 'Jl. Merdeka No. 10',
+            'parent_name' => 'H. Zulkifli',
+            'parent_phone' => '081111222333',
+            'nickname' => 'Zaki',
+            'nik' => '3201011205130001',
+            'kk_number' => '3201010101100002',
+            'citizenship' => 'WNI',
+            'child_order' => 2,
+            'siblings_count' => 3,
+            'family_status' => 'Anak Kandung',
+            'daily_language' => 'Bahasa Indonesia',
+            'blood_type' => 'Tidak Tahu',
+            'height_cm' => 152,
+            'weight_kg' => 44,
+            'health_history' => 'Sehat',
+            'address_rt' => '003',
+            'address_rw' => '007',
+            'village' => 'Cempaka',
+            'district' => 'Andir',
+            'city' => 'Kota Bandung',
+            'postal_code' => '40181',
+            'living_with' => 'Orang Tua',
+            'distance_km' => 2.5,
+            'sports_hobby' => 'Renang',
+            'arts_hobby' => 'Musik',
+            'father_name' => 'Zulkifli',
+            'father_nik' => '3201010101800001',
+            'father_education' => 'S1',
+            'father_occupation' => 'Wiraswasta',
+            'father_income' => '5 - 10 Juta',
+            'father_phone' => '081111222333',
+            'mother_name' => 'Siti Aminah',
+            'mother_nik' => '3201010202820002',
+            'mother_education' => 'S1',
+            'mother_occupation' => 'Guru',
+            'mother_income' => '3 - 5 Juta',
+            'mother_phone' => '081111222334',
+            'guardian_relation' => 'Ayah Kandung',
+            'guardian_occupation' => 'Wiraswasta',
+            'guardian_address' => 'Jl. Merdeka No. 10',
+            'previous_school' => 'SDN 1 Bandung',
+            'diploma_number' => 'DN-2025-001',
+            'diploma_date' => '2025-06-15',
+            'study_duration_years' => '6 tahun',
+            'accepted_date' => '2025-07-15',
+            'accepted_grade' => 'VII-A',
+            'admission_type' => 'Siswa Baru',
+            'graduation_date' => '2028-06-10',
+            'graduation_diploma_number' => 'SMP-2028-001',
+            'continuing_to' => 'SMAN 3 Bandung',
+            'leaving_reason' => 'Tamat Belajar',
+        ])->assertRedirect("/akademik/buku-induk/{$studentB->id}");
+
+        $this->assertDatabaseHas('students', [
+            'id' => $studentA->id,
+            'name' => 'Ahmad Zaki Pratama',
+            'birth_place' => 'Jakarta',
+        ]);
+        $this->assertDatabaseHas('administration_student_ledger_details', [
+            'student_id' => $studentA->id,
+            'kk_number' => '3201010101100002',
+            'blood_type' => 'Tidak Tahu',
+            'city' => 'Kota Bandung',
+            'accepted_grade' => 'VII-A',
+            'continuing_to' => 'SMAN 3 Bandung',
+        ]);
+
+        // Filter completeness = complete -> hanya studentA
+        $this->actingAs($this->admin)->get('/akademik/buku-induk?completeness=complete')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.id', $studentA->id)
+                ->where('students.data.0.completeness_status', 'complete')
+                ->where('summary.complete', 1)
+                ->where('summary.incomplete', 1)
+            );
+
+        // Filter completeness = incomplete -> hanya studentB
+        $this->actingAs($this->admin)->get('/akademik/buku-induk?completeness=incomplete')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.id', $studentB->id)
+            );
+    }
+
+    public function test_bulk_excel_export_import_and_batch_pdf_work_with_school_isolation(): void
+    {
+        $student1 = $this->makeStudent('1021', 'Citra Kirana', '0022334455');
+        $student2 = $this->makeStudent('1022', 'Doni Pratama', '0022334456');
+
+        // Export Excel
+        $this->actingAs($this->admin)->get('/akademik/buku-induk/ekspor/xlsx')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertDatabaseHas('audit_events', ['event_type' => 'academic.student_ledger.exported_xlsx', 'school_id' => $this->school->id]);
+
+        // Bulk Import via CSV
+        $csvContent = implode("\n", [
+            'nis,nik,kk_number,father_name,mother_name,previous_school,accepted_grade,blood_type',
+            '1021,3201112223334441,3201112223330001,Hendra,Rina,SDN 2 Bandung,VII-A,A',
+            '1022,3201112223334442,3201112223330002,Bambang,Susi,SDN 3 Bandung,VII-A,Tidak Tahu',
+        ]);
+        $csvFile = UploadedFile::fake()->createWithContent('buku_induk.csv', $csvContent);
+
+        $this->actingAs($this->operator)->post('/akademik/buku-induk/impor', [
+            'file' => $csvFile,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('administration_student_ledger_details', [
+            'student_id' => $student1->id,
+            'nik' => '3201112223334441',
+            'father_name' => 'Hendra',
+            'previous_school' => 'SDN 2 Bandung',
+        ]);
+        $this->assertDatabaseHas('administration_student_ledger_details', [
+            'student_id' => $student2->id,
+            'nik' => '3201112223334442',
+            'blood_type' => 'Tidak Tahu',
+            'previous_school' => 'SDN 3 Bandung',
+        ]);
+        $this->assertDatabaseHas('audit_events', ['event_type' => 'academic.student_ledger.imported_batch', 'school_id' => $this->school->id]);
+
+        // Batch PDF export
+        $batchPdfResponse = $this->actingAs($this->admin)->get('/akademik/buku-induk/cetak-massal/pdf')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline;', (string) $batchPdfResponse->headers->get('content-disposition'));
+        $this->assertDatabaseHas('audit_events', ['event_type' => 'academic.student_ledger.exported_batch_pdf', 'school_id' => $this->school->id]);
     }
 
     private function makeUser(Role $role, string $username, string $email): User

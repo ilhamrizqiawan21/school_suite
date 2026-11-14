@@ -62,4 +62,28 @@ class Student extends Model
     {
         return $this->hasOne(Enrollment::class, 'student_id')->where('term_id', $termId);
     }
+
+    /**
+     * @return HasOne<StudentLedgerDetail, $this>
+     */
+    public function ledgerDetail(): HasOne
+    {
+        return $this->hasOne(StudentLedgerDetail::class, 'student_id');
+    }
+
+    /**
+     * @return HasMany<StudentLedgerDocument, $this>
+     */
+    public function ledgerDocuments(): HasMany
+    {
+        return $this->hasMany(StudentLedgerDocument::class, 'student_id');
+    }
+
+    /**
+     * @return HasMany<StudentLifecycleEvent, $this>
+     */
+    public function lifecycleEvents(): HasMany
+    {
+        return $this->hasMany(StudentLifecycleEvent::class, 'student_id');
+    }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -157,10 +158,28 @@ const submitAssignHomeroom = () => {
 
             <div v-if="page.props.flash?.message" class="panel p-4" role="status">{{ page.props.flash.message }}</div>
             <div v-if="page.props.errors?.class_group" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.class_group }}</div>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div class="panel p-4 class-stat class-stat-classes"><p>Total rombel</p><strong class="text-2xl">{{ stats.classes }}</strong><span>pada tahun ajaran terpilih</span></div>
-                <div class="panel p-4 class-stat class-stat-students"><p>Siswa aktif semester terpilih</p><strong class="text-2xl">{{ stats.students }}</strong><span>penempatan aktif di rombel</span></div>
-                <div class="panel p-4 class-stat class-stat-homeroom"><p>Belum ada wali kelas</p><strong class="text-2xl">{{ stats.without_homeroom }}</strong><span>perlu ditetapkan operator</span></div>
+            <div class="ss-summary-grid ss-summary-grid--3" aria-label="Ringkasan rombongan belajar">
+                <MetricSummaryCard
+                    label="Total rombel"
+                    :value="stats.classes"
+                    note="pada tahun ajaran terpilih"
+                    tone="blue"
+                    icon="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+                <MetricSummaryCard
+                    label="Siswa aktif semester terpilih"
+                    :value="stats.students"
+                    note="penempatan aktif di rombel"
+                    tone="green"
+                    icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+                <MetricSummaryCard
+                    label="Belum ada wali kelas"
+                    :value="stats.without_homeroom"
+                    note="perlu ditetapkan operator"
+                    tone="amber"
+                    icon="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
             </div>
             <p v-if="!active_year" class="panel p-4">Belum ada tahun ajaran. Atur tahun ajaran melalui Pengaturan Akademik terlebih dahulu.</p>
             <p v-else-if="!active_term" class="panel p-4">Tahun ajaran ini belum memiliki semester. Jumlah siswa ditampilkan nol sampai semester tersedia.</p>
@@ -176,16 +195,16 @@ const submitAssignHomeroom = () => {
                 <article
                     v-for="cls in visibleClasses"
                     :key="cls.id"
-                    class="class-card bg-[var(--surface)] rounded-xl border border-[var(--line)] p-5 shadow-xs hover:border-indigo-300 transition-all flex flex-col justify-between"
+                    class="panel class-card p-5 flex flex-col justify-between"
                     :class="{ 'is-over-capacity': enrollmentCount(cls) > cls.capacity }"
                 >
                     <div class="space-y-3">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <span class="inline-block px-2 py-0.5 text-meta font-bold rounded-sm bg-slate-100 text-slate-700 mb-1">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <span class="class-level-badge inline-block px-2 py-0.5 text-meta font-bold rounded-sm mb-1.5">
                                     Tingkat {{ cls.grade_level }}
                                 </span>
-                                <h3 class="text-xl font-bold text-slate-900">Kelas {{ cls.name }}</h3>
+                                <h3 class="class-card-title text-xl font-bold">Kelas {{ cls.name }}</h3>
                             </div>
                             <span class="class-capacity-badge inline-flex items-center px-2.5 py-1 rounded-full text-meta font-semibold">
                                 {{ enrollmentCount(cls) }} dari {{ cls.capacity }} siswa
@@ -193,29 +212,29 @@ const submitAssignHomeroom = () => {
                         </div>
 
                         <!-- Progress Bar Kapasitas -->
-                        <div class="class-capacity-track w-full bg-slate-100 rounded-full h-1.5 overflow-hidden" role="progressbar" :aria-valuemin="0" :aria-valuemax="cls.capacity" :aria-valuenow="Math.min(enrollmentCount(cls), cls.capacity)" :aria-valuetext="`${enrollmentCount(cls)} dari ${cls.capacity} siswa`" :aria-label="`Kapasitas kelas ${cls.name}`">
+                        <div class="class-capacity-track w-full rounded-full h-1.5 overflow-hidden" role="progressbar" :aria-valuemin="0" :aria-valuemax="cls.capacity" :aria-valuenow="Math.min(enrollmentCount(cls), cls.capacity)" :aria-valuetext="`${enrollmentCount(cls)} dari ${cls.capacity} siswa`" :aria-label="`Kapasitas kelas ${cls.name}`">
                             <div
-                                class="class-capacity-fill bg-indigo-600 h-1.5 rounded-full"
+                                class="class-capacity-fill h-1.5 rounded-full"
                                 :style="{ width: `${capacityPercent(cls)}%` }"
                             />
                         </div>
                         <p v-if="enrollmentCount(cls) > cls.capacity" class="class-capacity-warning" role="status">Melebihi kapasitas {{ enrollmentCount(cls) - cls.capacity }} siswa</p>
 
                         <!-- Wali Kelas -->
-                        <div class="pt-2 border-t border-slate-100 text-meta">
-                            <div class="text-slate-600 font-medium">Wali Kelas:</div>
-                            <div v-if="cls.homeroom_teacher" class="font-semibold text-slate-800 mt-0.5 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500" />
+                        <div class="class-homeroom-section pt-2.5 text-meta">
+                            <div class="class-homeroom-label font-medium">Wali Kelas:</div>
+                            <div v-if="cls.homeroom_teacher" class="class-homeroom-value font-semibold mt-0.5 flex items-center gap-1.5">
+                                <span class="class-dot class-dot--assigned" />
                                 {{ cls.homeroom_teacher.name }}
                             </div>
-                            <div v-else class="text-amber-800 italic mt-0.5 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-amber-400" />
+                            <div v-else class="class-homeroom-empty italic mt-0.5 flex items-center gap-1.5">
+                                <span class="class-dot class-dot--empty" />
                                 Belum ditetapkan
                             </div>
                         </div>
                     </div>
 
-                    <div class="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-3 items-center">
+                    <div class="class-card-footer pt-4 mt-4 flex flex-wrap gap-2.5 items-center">
                         <AppButton variant="secondary"
                             v-if="can_manage"
                             type="button"
@@ -229,7 +248,7 @@ const submitAssignHomeroom = () => {
                     </div>
                 </article>
 
-                <div v-if="visibleClasses.length === 0" class="col-span-full bg-[var(--surface)] rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-600">
+                <div v-if="visibleClasses.length === 0" class="panel class-empty-state col-span-full p-12 text-center">
                     {{ classes.length ? 'Tidak ada rombel yang cocok dengan filter.' : 'Belum ada rombel pada tahun ajaran ini.' }}
                 </div>
             </div>
@@ -318,8 +337,8 @@ const submitAssignHomeroom = () => {
 </template>
 
 <style scoped>
-.class-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
-.class-drawer { width: min(500px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.class-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.class-drawer { width: min(520px, 100%); max-height: min(90dvh, 860px); height: auto; padding: clamp(18px, 3vw, 28px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
 .class-drawer input, .class-drawer select { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .class-drawer .text-slate-900, .class-drawer .text-slate-700 { color: var(--ink); }
 .class-drawer .text-slate-600, .class-drawer .text-slate-500, .class-drawer .text-slate-400 { color: var(--ink-soft); }
@@ -338,19 +357,25 @@ const submitAssignHomeroom = () => {
 .class-filterbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(160px, .4fr) auto; align-items: center; gap: .65rem; padding: .8rem 1rem; }
 .class-search-field input, .class-filter-select { width: 100%; min-height: 42px; padding: .62rem .72rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: var(--type-control); }
 .class-search-field input:focus, .class-filter-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
-.class-stat { display: grid; gap: .35rem; min-width: 0; border-top: 3px solid transparent; }
-.class-stat p { margin: 0; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
-.class-stat strong { color: var(--ink); line-height: 1.1; }
-.class-stat span { color: var(--ink-faint); font-size: var(--type-meta); line-height: 1.4; }
-.class-stat-classes { border-top-color: #3269bc; background: color-mix(in srgb, #3269bc 7%, var(--surface)); }
-.class-stat-students { border-top-color: #3d9b78; background: color-mix(in srgb, #3d9b78 7%, var(--surface)); }
-.class-stat-homeroom { border-top-color: #ad7c2b; background: color-mix(in srgb, #ad7c2b 7%, var(--surface)); }
 .class-filter-count { flex: 1 0 100%; margin: 0; color: var(--ink-faint); font-size: var(--type-meta); }
 .class-page .class-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.class-card { min-width: 0; border-radius: 1rem; }
+.class-card { min-width: 0; transition: border-color .16s ease, box-shadow .16s ease; }
+.class-card:hover { border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
+.class-level-badge { background: var(--surface-subtle); border: 1px solid var(--line); color: var(--ink-soft); }
+.class-card-title { margin: 0; color: var(--ink); }
+.class-homeroom-section { border-top: 1px solid var(--line); }
+.class-homeroom-label { color: var(--ink-soft); }
+.class-homeroom-value { color: var(--ink); }
+.class-homeroom-empty { color: var(--gold); }
+.class-dot { width: 8px; height: 8px; border-radius: 999px; flex: 0 0 auto; }
+.class-dot--assigned { background: var(--green); }
+.class-dot--empty { background: var(--gold); }
+.class-card-footer { border-top: 1px solid var(--line); }
+.class-card-footer .class-link-action { margin-right: auto; }
+.class-empty-state { border-style: dashed; border-color: var(--line-strong); color: var(--ink-soft); }
 .class-capacity-badge { flex: 0 0 auto; max-width: 46%; background: var(--primary-soft); color: var(--primary); border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--line)); line-height: 1.35; text-align: center; }
-.class-capacity-track { margin-top: .2rem; }
-.class-capacity-fill { max-width: 100%; background: #3269bc; }
+.class-capacity-track { margin-top: .2rem; background: var(--surface-subtle); }
+.class-capacity-fill { max-width: 100%; background: var(--primary); }
 .class-capacity-warning { margin: -.35rem 0 0; color: var(--red); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .class-card.is-over-capacity { border-color: #e3a29c; background: color-mix(in srgb, #c2473b 3%, var(--surface)); }
 .class-card.is-over-capacity .class-capacity-badge { background: var(--red-soft); border-color: var(--delete-line); color: var(--red); }
@@ -360,5 +385,5 @@ const submitAssignHomeroom = () => {
 @media (max-width: 820px) { .class-page .class-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .class-filterbar { grid-template-columns: minmax(0, 1fr) minmax(150px, .55fr); }.class-filterbar > .secondary-button { grid-column: 1 / -1; justify-self: start; }.class-filter-count { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.class-heading-controls { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }.class-heading-controls > div { flex-wrap: wrap; }.class-heading-controls select { width: 100%; }.class-heading-controls .class-action-button { width: 100%; }.class-filterbar { grid-template-columns: minmax(0, 1fr); }.class-filterbar > .secondary-button { grid-column: auto; width: 100%; }.class-filter-count { grid-column: auto; } }
-@media (max-width: 600px) { .class-overlay { align-items: flex-end; }.class-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
+@media (max-width: 600px) { .class-overlay { padding: .75rem; }.class-drawer { max-height: 92dvh; border-radius: 16px; } }
 </style>

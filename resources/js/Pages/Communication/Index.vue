@@ -256,12 +256,12 @@ const markRead = (notification: NotificationItem) => {
 .communication-page .communication-hero p:not(.eyebrow) { max-width: 600px; margin: .5rem 0 0; color: var(--ink-soft); font-size: var(--type-md); line-height: 1.55; }
 .communication-page > .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
 .communication-page .comm-summary > div { background: var(--surface); border-color: var(--line); }
-.modal-backdrop { display: flex; justify-content: flex-end; padding: 0; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
-.modal-card { align-content: start; width: min(560px, 100%); height: 100%; max-height: none; gap: 1rem; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 0; box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
-.modal-heading { position: sticky; top: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 30px)); padding-top: clamp(18px, 3vw, 30px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
-.modal-actions { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 30px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 30px)); padding: 1rem 0 clamp(18px, 3vw, 30px); background: var(--surface); border-top: 1px solid var(--line); }
+.modal-backdrop { display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.modal-card { align-content: start; width: min(580px, 100%); max-height: min(90dvh, 860px); height: auto; gap: 1rem; padding: clamp(18px, 3vw, 28px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
+.modal-heading { position: sticky; top: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 28px)); padding-top: clamp(18px, 3vw, 28px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.modal-actions { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 28px)); padding: 1rem 0 clamp(18px, 3vw, 28px); background: var(--surface); border-top: 1px solid var(--line); }
 .modal-card :is(input, select, textarea):focus-visible, .modal-card button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-@media (max-width: 600px) { .modal-backdrop { align-items: flex-end; } .modal-card { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; } }
+@media (max-width: 600px) { .modal-backdrop { padding: .75rem; } .modal-card { max-height: 92dvh; border-radius: 16px; } }
 </style>
 
 <style scoped>

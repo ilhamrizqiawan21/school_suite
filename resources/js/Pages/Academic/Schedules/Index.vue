@@ -846,8 +846,8 @@ const deleteSchedule = (id: number) => {
 
 <style scoped>
 /* Overlay & Drawer */
-.schedule-overlay { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
-.schedule-drawer { width: min(560px, 100%); height: 100%; padding: clamp(18px, 3vw, 30px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
+.schedule-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
+.schedule-drawer { width: min(580px, 100%); max-height: min(90dvh, 860px); height: auto; padding: clamp(18px, 3vw, 28px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
 .schedule-drawer input, .schedule-drawer select { max-width: 100%; color: var(--ink); background: var(--surface); border-color: var(--line-strong); }
 .schedule-drawer .text-slate-900, .schedule-drawer .text-slate-700 { color: var(--ink); }
 .schedule-drawer .text-slate-600, .schedule-drawer .text-slate-500, .schedule-drawer .text-slate-400 { color: var(--ink-soft); }
@@ -1001,8 +1001,8 @@ const deleteSchedule = (id: number) => {
 }
 
 @media (max-width: 600px) {
-    .schedule-overlay { align-items: flex-end; }
-    .schedule-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+    .schedule-overlay { padding: .75rem; }
+    .schedule-drawer { max-height: 92dvh; border-radius: 16px; }
     .schedule-drawer .grid-cols-2, .schedule-drawer .grid-cols-3 { grid-template-columns: 1fr; }
 }
 </style>

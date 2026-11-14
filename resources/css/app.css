@@ -685,3 +685,83 @@ body:has(.public-site) {
         gap: 9px;
     }
 }
+
+@keyframes ssOverlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes ssModalPopIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.975);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+:is(
+    .modal-backdrop,
+    .student-overlay,
+    .teacher-overlay,
+    .class-overlay,
+    .schedule-overlay,
+    .user-overlay,
+    .session-modal-backdrop,
+    .applicant-drawer-overlay,
+    .applicant-modal-overlay,
+    .observation-modal,
+    .scheme-backdrop
+) {
+    animation: ssOverlayFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:is(
+    .modal-backdrop,
+    .student-overlay,
+    .teacher-overlay,
+    .class-overlay,
+    .schedule-overlay,
+    .user-overlay,
+    .session-modal-backdrop,
+    .applicant-drawer-overlay,
+    .applicant-modal-overlay,
+    .observation-modal,
+    .scheme-backdrop
+) > * {
+    animation: ssModalPopIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(
+        .modal-backdrop,
+        .student-overlay,
+        .teacher-overlay,
+        .class-overlay,
+        .schedule-overlay,
+        .user-overlay,
+        .session-modal-backdrop,
+        .applicant-drawer-overlay,
+        .applicant-modal-overlay,
+        .observation-modal,
+        .scheme-backdrop
+    ),
+    :is(
+        .modal-backdrop,
+        .student-overlay,
+        .teacher-overlay,
+        .class-overlay,
+        .schedule-overlay,
+        .user-overlay,
+        .session-modal-backdrop,
+        .applicant-drawer-overlay,
+        .applicant-modal-overlay,
+        .observation-modal,
+        .scheme-backdrop
+    ) > * {
+        animation: none !important;
+    }
+}

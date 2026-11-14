@@ -2,6 +2,70 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Audit & Konversi Overlay Modal (Side-Drawer ke Centered Dialog) — 14 November 2026
+
+- **Task & Requirement**: Mengubah dialog tambah/edit/impor data siswa dan seluruh halaman lain yang masih menggunakan pola *side-drawer overlay* dari kanan menjadi *centered modal dialog* di tengah layar.
+- **Ringkasan**:
+  - Mengaudit seluruh halaman Vue di `resources/js/Pages/**` terhadap penggunaan `role="dialog"`, `aria-modal="true"`, `-overlay`, `-drawer`, dan `.modal-backdrop`.
+  - Mengubah 8 halaman yang sebelumnya menampilkan panel formulir dari samping kanan (`justify-content: flex-end; height: 100%`) menjadi dialog terpusat di tengah layar (`display: grid; place-items: center; padding: 1rem; max-height: min(90dvh, 860px–880px); border-radius: 16px`), termasuk pada tampilan *mobile* (`max-width: 600px`/`760px`).
+  - Menambahkan animasi masuk (*motion*) terpadu untuk seluruh *form overlay* dan dialog di `resources/css/app.css` (`ssOverlayFadeIn` 180ms + `ssModalPopIn` 220ms dengan `cubic-bezier(0.16, 1, 0.3, 1)` dan dukungan `prefers-reduced-motion: reduce`).
+- **File yang Diubah**:
+  - `resources/css/app.css`
+  - `resources/js/Pages/Academic/Students/Index.vue`
+  - `resources/js/Pages/Academic/Teachers/Index.vue`
+  - `resources/js/Pages/Academic/Classes/Index.vue`
+  - `resources/js/Pages/Academic/Schedules/Index.vue`
+  - `resources/js/Pages/Academic/OnlineClasses/Index.vue`
+  - `resources/js/Pages/Academic/Journals/Index.vue`
+  - `resources/js/Pages/Core/Users/Index.vue`
+  - `resources/js/Pages/Communication/Index.vue`
+- **Keputusan & Asumsi**:
+  - Nama class DOM (`.student-overlay`, `.student-drawer`, `.teacher-drawer`, dll.) dipertahankan agar tidak memutus selector tes maupun struktur komponen yang ada.
+- **Tes & Hasil**:
+  - Audit CSS via `grep` memastikan tidak ada lagi modal dialog dengan `justify-content: flex-end` di `resources/js/Pages`.
+  - `npm run build` -> lulus (`vite build`, 865 modul ditransformasi dalam 6.20s).
+- **Langkah Review Manual**:
+  1. Jalankan `npm run dev` atau `npm run build`.
+  2. Buka menu Data Siswa, Data Guru, Rombel, Jadwal Pelajaran, Kelas Online, Jurnal Mengajar, Pengguna, dan Pengumuman/Kalender; klik tombol Tambah/Edit untuk memastikan modal tampil tepat di tengah layar.
+- **Rollback**:
+  - Kembalikan perubahan blok `<style scoped>` pada ke-8 file Vue di atas melalui Git.
+
+## Redesign Buku Induk Siswa (Format Hardcopy, Alur Massal & Cetakan Lengkap) — 14 November 2026
+
+- **Task & Requirement**: Redesign Buku Induk Peserta Didik (`SS-F-002`, `SS-F-003`, `SS-F-007` / `SS-D-005`, `SS-F-008`).
+- **Ringkasan**:
+  - Memperluas skema dan formulir Buku Induk sesuai struktur buku induk fisik/hardcopy (A. Pribadi, B. Tempat Tinggal/Kesehatan/Kegemaran, C. Orang Tua/Wali, D. Pendidikan Asal & Penerimaan, E. Tamat Belajar/Keluar) serta memperbaiki panjang kolom `blood_type` (`VARCHAR(15)`) agar opsi `'Tidak Tahu'` tidak terpotong di MySQL strict mode.
+  - Menambahkan indikator & filter kelengkapan data (`complete` / `incomplete`), panel *Isi Cepat* (*Quick Edit*) non-intrusif di tabel daftar, opsi koreksi identitas dasar (`students`) langsung dari halaman detail Buku Induk, serta tombol *Simpan & Lanjut ke Siswa Berikutnya*.
+  - Menambahkan fitur **Ekspor / Template Excel (`.xlsx`)** lengkap (59 kolom dengan format teks eksplisit) dan **Impor / Update Massal Excel/CSV** berbasis pencocokan `NIS` secara transaksional.
+  - Merombak cetakan PDF Buku Induk (per siswa maupun cetak massal per filter/rombel) dengan Kop Sekolah, Pas Foto 3x4, bagian A–F, blok tanda tangan Kepala Sekolah, serta halaman ke-2 **Rekapitulasi Capaian Hasil Belajar (Rapor Terbit per Semester)** melalui `ReportPublishingService` tanpa melanggar batas modular monolith.
+- **File & Migrasi**:
+  - `app/Modules/Academic/Infrastructure/Database/Migrations/2026_11_14_221500_expand_student_ledger_hardcopy_fields.php`
+  - `app/Modules/Academic/Infrastructure/Models/StudentLedgerDetail.php`
+  - `app/Modules/Academic/Infrastructure/Models/Student.php`
+  - `app/Modules/Assessment/Application/Services/ReportPublishingService.php`
+  - `app/Modules/Academic/Interface/Routes/buku_induk.php`
+  - `app/Modules/Academic/Interface/Http/Controllers/StudentLedgerController.php`
+  - `resources/views/academic/student-ledger.blade.php`
+  - `resources/js/Pages/Academic/Students/Ledger/Index.vue`
+  - `resources/js/Pages/Academic/Students/Ledger/Show.vue`
+  - `tests/Feature/StudentLedgerControllersTest.php`
+- **Keputusan & Asumsi**:
+  - Pengambilan snapshot rapor terbit dari modul `Assessment` ke modul `Academic` dilakukan melalui `ReportPublishingService::getPublishedSnapshotsForStudents()` pada layer `Application`.
+  - Seluruh kolom baru bersifat `nullable` agar kompatibel dengan data siswa yang sudah ada.
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/StudentLedgerControllersTest.php tests/Architecture/ModularBoundaryTest.php` -> 13 tes lulus (153 assertions).
+  - `php artisan test --compact` -> 456 tes, 454 lulus, 2 dilewati (4.258 assertions).
+  - `./vendor/bin/pint --test` pada seluruh file PHP yang disentuh -> lulus.
+  - `npm run typecheck` / `npm run build` -> *not verified* (binary `node`/`npm` tidak tersedia pada environment shell saat ini).
+- **Risiko Tersisa**:
+  - Kompilasi aset frontend (`npm run typecheck` dan `npm run build`) serta migrasi database lokal (`php artisan migrate`) perlu dijalankan pada mesin tempat Node.js dan MySQL aktif.
+- **Langkah Review Manual**:
+  1. Jalankan `php artisan migrate` dan `npm run build`.
+  2. Buka `/akademik/buku-induk`, uji filter **Kelengkapan data**, tombol **Isi cepat**, **Ekspor / Template Excel (.xlsx)**, **Impor / Update Massal Excel**, serta **Cetak PDF Massal**.
+  3. Buka detail siswa `/akademik/buku-induk/{id}`, lengkapi bagian A–E, uji tombol **Simpan & Lanjut**, dan unduh PDF Buku Induk.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=1` untuk melepas kolom tambahan `2026_11_14_221500_expand_student_ledger_hardcopy_fields.php` dan kembalikan perubahan file melalui Git.
+
 ## Duplikasi alur soal Jurnal Guru — 13 November 2026
 
 Rujukan dipatok ke `ilhamrizqiawan21/jurnal-harian-guru`, branch `fitur-lisensi-2-0`, commit `27b2eaaf69c1f8e555fb3198c4150a837500322e`.
