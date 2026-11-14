@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -294,10 +295,28 @@ const deleteStudent = (student: Student) => {
             </div>
             <div v-if="page.props.errors?.student" class="student-notice student-notice-error" role="alert">{{ page.props.errors.student }}</div>
 
-            <div class="student-summary-grid" aria-label="Ringkasan siswa seluruh sekolah">
-                <div class="panel student-stat student-stat-active"><span>Siswa aktif</span><strong>{{ stats.active }}</strong><small>terdaftar pada data sekolah</small></div>
-                <div class="panel student-stat student-stat-graduated"><span>Lulus</span><strong>{{ stats.graduated }}</strong><small>riwayat siswa selesai</small></div>
-                <div class="panel student-stat student-stat-exited"><span>Keluar / pindah</span><strong>{{ stats.exited }}</strong><small>perlu ditinjau bila diperlukan</small></div>
+            <div class="ss-summary-grid ss-summary-grid--3 student-summary-grid" aria-label="Ringkasan siswa seluruh sekolah">
+                <MetricSummaryCard
+                    label="Siswa aktif"
+                    :value="stats.active"
+                    note="terdaftar pada data sekolah"
+                    tone="blue"
+                    icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+                <MetricSummaryCard
+                    label="Lulus"
+                    :value="stats.graduated"
+                    note="riwayat siswa selesai"
+                    tone="green"
+                    icon="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                />
+                <MetricSummaryCard
+                    label="Keluar / pindah"
+                    :value="stats.exited"
+                    note="perlu ditinjau bila diperlukan"
+                    tone="amber"
+                    icon="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
             </div>
 
             <!-- Filters -->

@@ -179,10 +179,10 @@ const submit = () => {
                         </div>
                     </section>
                     <section class="panel settings-section">
-                        <div class="section-heading"><h2>Logo & tampilan aplikasi</h2><p>Logo digunakan sebagai identitas sekolah. Favicon adalah ikon kecil pada tab browser.</p></div>
+                        <div class="section-heading"><h2>Logo & tampilan aplikasi</h2><p>Logo digunakan sebagai identitas sekolah. Ikon tab tampil di sudut tab peramban.</p></div>
                         <div class="fields">
                             <label v-for="kind in (['logo', 'favicon'] as const)" :key="kind" class="upload-field">
-                                <span>{{ kind === 'logo' ? 'Logo sekolah' : 'Ikon tab browser (favicon)' }}</span>
+                                <span>{{ kind === 'logo' ? 'Logo sekolah' : 'Ikon tab peramban' }}</span>
                                 <div class="image-preview"><img v-if="preview(kind)" :src="preview(kind)" :alt="kind === 'logo' ? 'Pratinjau logo sekolah' : 'Pratinjau favicon'" /><small v-else>Belum ada gambar</small></div>
                                 <input :key="`${kind}-${uploadVersion}`" type="file" :accept="kind === 'logo' ? 'image/jpeg,image/png,image/webp' : 'image/png'" @change="selectImage(kind, $event)" />
                                 <small>{{ kind === 'logo' ? 'JPG, PNG, atau WebP; maksimal 2 MB.' : 'PNG persegi; maksimal 512 × 512 piksel dan 512 KB.' }} Mengunggah file baru akan mengganti gambar lama setelah disimpan.</small>
@@ -193,10 +193,10 @@ const submit = () => {
                         <div class="color-picker"><span>Warna utama aplikasi</span><div class="theme-options"><label v-for="color in ['#3157a4','#277450','#7255ae','#b87818','#b64a42']" :key="color" class="theme-choice"><input v-model="form.theme_primary" type="radio" :value="color"><i :style="{background: color}"></i><span>{{ color }}</span></label></div><em v-if="form.errors.theme_primary">{{ form.errors.theme_primary }}</em></div>
                     </section>
                     <section class="panel settings-section">
-                        <div class="section-heading"><h2>Tampilan situs publik</h2><p>Sesuaikan karakter halaman depan. Kosongkan copy hero untuk memakai teks bawaan template.</p></div>
+                        <div class="section-heading"><h2>Tampilan situs publik</h2><p>Sesuaikan karakter halaman depan. Kosongkan teks sampul untuk memakai bawaan sistem.</p></div>
                         <div class="fields">
                             <label><span>Preset warna</span><select v-model="form.public_theme_preset"><option v-for="preset in publicThemePresets" :key="preset.value" :value="preset.value">{{ preset.label }}</option></select><small>{{ publicThemePresets.find((item) => item.value === form.public_theme_preset)?.description }}</small><em v-if="form.errors.public_theme_preset">{{ form.errors.public_theme_preset }}</em></label>
-                            <label><span>Gaya foto hero</span><select v-model="form.public_hero_variant"><option v-for="variant in publicHeroVariants" :key="variant.value" :value="variant.value">{{ variant.label }}</option></select><em v-if="form.errors.public_hero_variant">{{ form.errors.public_hero_variant }}</em></label>
+                            <label><span>Gaya foto sampul</span><select v-model="form.public_hero_variant"><option v-for="variant in publicHeroVariants" :key="variant.value" :value="variant.value">{{ variant.label }}</option></select><em v-if="form.errors.public_hero_variant">{{ form.errors.public_hero_variant }}</em></label>
                             <label class="wide"><span>Judul utama</span><input v-model="form.public_hero_title" maxlength="120" placeholder="Tempat belajar yang memberi ruang untuk" /><small>Bagian aksen diatur terpisah agar judul tetap mudah ditata.</small><em v-if="form.errors.public_hero_title">{{ form.errors.public_hero_title }}</em></label>
                             <label><span>Frasa aksen</span><input v-model="form.public_hero_accent" maxlength="80" placeholder="tumbuh bersama." /><em v-if="form.errors.public_hero_accent">{{ form.errors.public_hero_accent }}</em></label>
                             <label><span>Tombol utama</span><input v-model="form.public_hero_primary_label" maxlength="40" placeholder="Kenali sekolah" /><em v-if="form.errors.public_hero_primary_label">{{ form.errors.public_hero_primary_label }}</em></label>

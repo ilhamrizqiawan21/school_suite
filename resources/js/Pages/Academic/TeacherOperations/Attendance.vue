@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -136,11 +137,31 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                 <div class="attendance-heading-actions"><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/absensi-guru/rekap">Rekap bulanan</Link><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/izin-guru">Izin &amp; cuti</Link></div>
             </section>
             <p v-if="message" class="panel p-4" role="status">{{ message }}</p>
-            <section class="grade-summary" aria-label="Ringkasan isian absensi">
-                <div><span>Guru aktif</span><strong>{{ rows.length }}</strong></div>
-                <div><span>Sudah dicatat</span><strong>{{ rows.length - unrecordedCount }}</strong></div>
-                <div><span>Belum dicatat</span><strong>{{ unrecordedCount }}</strong></div>
-                <div><span>Perubahan</span><strong>{{ changedCount }}</strong></div>
+            <section class="ss-summary-grid" aria-label="Ringkasan isian absensi">
+                <MetricSummaryCard
+                    label="Guru aktif"
+                    :value="rows.length"
+                    tone="blue"
+                    icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <MetricSummaryCard
+                    label="Sudah dicatat"
+                    :value="rows.length - unrecordedCount"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Belum dicatat"
+                    :value="unrecordedCount"
+                    tone="amber"
+                    icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Perubahan"
+                    :value="changedCount"
+                    tone="violet"
+                    icon="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
             </section>
             <section class="panel p-5">
                 <form class="flex flex-wrap items-end gap-3" @submit.prevent="showDate()">

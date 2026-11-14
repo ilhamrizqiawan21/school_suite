@@ -18,9 +18,9 @@
     body { background: var(--ss-bg); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
     a { text-decoration: none; }
     [hidden] { display: none !important; }
-    .ss-shell { min-height: 100vh; display: flex; }
-    .ss-sidebar { width: 260px; flex-shrink: 0; position: fixed; inset: 0 auto 0 0; z-index: 30; overflow-y: auto; background: var(--ss-sidebar); border-right: 1px solid var(--ss-line); }
-    .ss-main { margin-left: 260px; flex: 1; min-width: 0; }
+    .ss-shell { min-height: 100vh; display: block; }
+    .ss-sidebar { display: none; }
+    .ss-main { margin-left: 0; min-width: 0; }
     .ss-brand { height: 77px; padding: 17px 21px; border-bottom: 1px solid var(--ss-line); display: flex; align-items: center; gap: 12px; }
     .ss-brandmark { height: 42px; width: 42px; display: grid; place-items: center; border-radius: 12px; background: #e8f0ff; color: var(--ss-brand); font-weight: 800; font-size: 20px; }
     .ss-brand strong { color: var(--ss-ink); display: block; font-size: 17px; letter-spacing: -.04em; }
@@ -36,8 +36,27 @@
     .ss-sidebar-bottom { margin: 28px 18px 20px; padding: 15px; background: rgba(51,102,176,.07); border-radius: 12px; color: var(--ss-ink); }
     .ss-sidebar-bottom strong { font-size: 12px; display: block; }
     .ss-sidebar-bottom small { display: block; margin-top: 5px; line-height: 1.55; color: var(--ss-muted); }
-    .ss-topbar { height: 77px; background: var(--ss-sidebar); border-bottom: 1px solid var(--ss-line); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; }
-    .ss-topbar-left, .ss-topbar-right { display: flex; align-items: center; gap: 18px; }
+    .ss-topbar { min-height: 77px; background: var(--ss-sidebar); border-bottom: 1px solid var(--ss-line); display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 10px 32px 0; }
+    .ss-topbar-main, .ss-topbar-right { display: flex; align-items: center; gap: 18px; }
+    .ss-topbar-main { min-height: 52px; }
+    .ss-topbar-brand { height: auto; padding: 0; border: 0; flex-shrink: 0; }
+    .ss-topbar-brand .ss-brandmark { height: 38px; width: 38px; border-radius: 10px; font-size: 18px; }
+    .ss-topbar-brand strong { font-size: 15px; }
+    .ss-topbar-brand small { font-size: 10px; }
+    .ss-topbar-main .ss-search { margin-left: auto; }
+    .ss-topbar-nav { display: flex; align-items: center; gap: 4px; min-height: 50px; overflow-x: auto; border-top: 1px solid var(--ss-line); }
+    .ss-topbar-nav > a, .ss-menu-group > summary { display: flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 12px; border: 0; border-radius: 8px 8px 0 0; color: var(--ss-muted); font-size: 12px; font-weight: 700; white-space: nowrap; list-style: none; }
+    .ss-topbar-nav > a:hover, .ss-menu-group > summary:hover, .ss-menu-group[open] > summary { background: rgba(51,102,176,.07); color: var(--ss-ink); }
+    .ss-topbar-nav > a.active { color: #2757a4; background: #eaf1ff; }
+    html[data-bs-theme="dark"] .ss-topbar-nav > a.active { color: #b6d0ff; background: #273955; }
+    .ss-menu-group { position: relative; flex-shrink: 0; }
+    .ss-menu-group > summary { cursor: pointer; }
+    .ss-menu-group > summary::-webkit-details-marker { display: none; }
+    .ss-menu-group > summary::after { content: ""; width: 6px; height: 6px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(45deg) translateY(-2px); }
+    .ss-menu-group[open] > summary::after { transform: rotate(225deg) translate(-1px, -1px); }
+    .ss-menu-dropdown { position: absolute; top: calc(100% - 2px); left: 0; z-index: 50; min-width: 220px; padding: 7px; background: var(--ss-sidebar); border: 1px solid var(--ss-line); border-radius: 0 10px 10px 10px; box-shadow: 0 12px 28px rgba(23,43,77,.13); }
+    .ss-menu-dropdown a { display: block; padding: 9px 10px; border-radius: 7px; color: var(--ss-muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .ss-menu-dropdown a:hover { color: var(--ss-ink); background: rgba(51,102,176,.07); }
     .ss-search { width: min(340px, 40vw); }
     .ss-search .form-control { border-radius: 9px; background: var(--ss-bg); border-color: var(--ss-line); }
     .ss-circle-btn { border: 0; background: transparent; color: var(--ss-muted); padding: 8px; display: grid; place-items: center; cursor: pointer; }
@@ -108,16 +127,17 @@
     .ss-mobile { display: none; }
     @media(max-width:1180px) { .ss-stats { grid-template-columns: repeat(2, 1fr); } .ss-grid { grid-template-columns: 1fr; } }
     @media(max-width:900px) {
-      .ss-sidebar { transform: translateX(-100%); transition: transform .2s; box-shadow: 0 8px 20px rgba(0,0,0,.06); }
-      .ss-main { margin-left: 0; }
-      body.nav-open .ss-sidebar { transform: translateX(0); }
-      body.nav-open .ss-overlay { display: block; position: fixed; inset: 0; background: rgba(15,25,40,.45); z-index: 25; }
-      .ss-mobile { display: grid; }
-      .ss-topbar { padding: 0 20px; }
+      .ss-topbar { padding: 10px 20px 0; }
+      .ss-topbar-main { flex-wrap: wrap; }
+      .ss-topbar-main .ss-search { order: 3; flex: 1 1 220px; width: auto; }
+      .ss-topbar-nav { margin: 0 -20px; padding: 0 20px; }
       .ss-content { padding: 25px 20px; }
     }
     @media(max-width:650px) {
       .ss-search { display: none; } .ss-user div:last-child { display: none; }
+      .ss-topbar { padding: 10px 14px 0; }
+      .ss-topbar-main { gap: 10px; }
+      .ss-topbar-nav { margin: 0 -14px; padding: 0 14px; }
       .ss-heading { display: block; } .ss-heading-actions { margin-top: 16px; }
       .ss-stats { gap: 10px; } .ss-stat { padding: 16px 14px; } .ss-stat-number { font-size: 25px; }
       .ss-apps { grid-template-columns: 1fr; }
@@ -128,54 +148,53 @@
   </style>
 </head>
 <body>
-<div class="ss-overlay" id="overlay" aria-hidden="true"></div>
 <div class="ss-shell">
-  <aside class="ss-sidebar" id="sidebar" aria-label="Navigasi School Suite">
-    <div class="ss-brand">
-      <div class="ss-brandmark" aria-hidden="true">S</div>
-      <div><strong>School Suite</strong><small>EDUCATION MANAGEMENT</small></div>
-    </div>
-    <div class="ss-section">Utama</div>
-    <ul class="ss-nav">
-      <li><a class="active" href="/dashboard" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10 12 3l9 7v11H3V10zM9 21v-8h6v8"/></svg>Dashboard <span class="ss-arrow">●</span></a></li>
-      <li><a href="/komunikasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v15H5zM8 8h8M8 12h8M8 16h5"/></svg>Pengumuman</a></li>
-    </ul>
-    <div class="ss-section">Manajemen Akademik</div>
-    <ul class="ss-nav">
-      <li><a href="/akademik/siswa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>Data Siswa</a></li>
-      <li><a href="/akademik/guru"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m3-12a3 3 0 0 1 0 6m0 3a5 5 0 0 1 3 5"/></svg>Data Guru</a></li>
-      <li><a href="/akademik/kelas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 21V5l8-3 8 3v16M4 21h16M9 8h1m4 0h1M9 12h1m4 0h1m-5 9v-5h6v5"/></svg>Rombongan Belajar</a></li>
-      <li><a href="/akademik/jadwal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/></svg>Jadwal Pelajaran</a></li>
-      <li><a href="/akademik/presensi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 12 3 3 5-6"/></svg>Absensi Siswa</a></li>
-    </ul>
-    <div class="ss-section">Pembelajaran & Penilaian</div>
-    <ul class="ss-nav">
-      <li><a href="/pembelajaran/materi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zm0 0v14"/></svg>Materi & LMS</a></li>
-      <li><a href="/penilaian/bank-soal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 4h14v16H5zM8 8h8m-8 4h8m-8 4h5"/></svg>Bank Soal</a></li>
-      <li><a href="/ujian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 9h6M9 13h6m-6 4h4"/></svg>Ujian CBT</a></li>
-      <li><a href="/penilaian/rapor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h11l3 3v15H5zM9 10h7M9 14h7M9 18h4"/></svg>Rapor & Penilaian</a></li>
-    </ul>
-    <div class="ss-section">Administrasi</div>
-    <ul class="ss-nav">
-      <li><a href="/spmb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20h16M5 20V8l7-5 7 5v12M9 11h6m-6 4h6"/></svg>SPMB</a></li>
-      <li><a href="/laporan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 20V4h16v16H4zm4-4v-4m4 4V8m4 8v-6"/></svg>Pusat Laporan</a></li>
-      <li><a href="/pengaturan/pengguna"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M18 8v6m-3-3h6"/></svg>Pengguna & Hak Akses</a></li>
-      <li><a href="/pengaturan/sekolah"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M4 12h2m12 0h2M12 4v2m0 12v2m-6-6-1 1m13-9-1 1M6 6l1 1m11 11-1-1"/></svg>Pengaturan</a></li>
-    </ul>
-    <div class="ss-sidebar-bottom"><strong>Eksperimen tampilan Tabler</strong><small>Pratinjau terisolasi. Dashboard asli dan database School Suite tetap tidak berubah.</small></div>
-  </aside>
   <main class="ss-main">
     <header class="ss-topbar">
-      <div class="ss-topbar-left">
-        <button class="ss-circle-btn ss-mobile" id="menuBtn" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="ss-topbar-main">
+        <a class="ss-brand ss-topbar-brand" href="/dashboard" aria-label="School Suite Dashboard">
+          <div class="ss-brandmark" aria-hidden="true">S</div>
+          <div><strong>School Suite</strong><small>EDUCATION MANAGEMENT</small></div>
+        </a>
         <div class="ss-search"><input id="quickSearch" class="form-control form-control-sm" type="search" placeholder="Cari menu akses cepat..." aria-label="Cari menu akses cepat"></div>
         <span class="badge bg-blue-lt text-blue d-none d-md-inline">Tahun Pelajaran 2026/2027</span>
+        <div class="ss-topbar-right">
+          <button class="ss-circle-btn" type="button" id="themeBtn" aria-label="Ganti tema terang atau gelap" title="Ganti tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+          <a class="ss-circle-btn" href="/komunikasi" aria-label="Buka pengumuman"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9zM10 21h4"/></svg></a>
+          <div class="ss-user"><div class="ss-avatar">AD</div><div><strong>Administrator</strong><small>Pratinjau desain</small></div></div>
+        </div>
       </div>
-      <div class="ss-topbar-right">
-        <button class="ss-circle-btn" type="button" id="themeBtn" aria-label="Ganti tema terang atau gelap" title="Ganti tema"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
-        <a class="ss-circle-btn" href="/komunikasi" aria-label="Buka pengumuman"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9zM10 21h4"/></svg></a>
-        <div class="ss-user"><div class="ss-avatar">AD</div><div><strong>Administrator</strong><small>Pratinjau desain</small></div></div>
-      </div>
+      <nav class="ss-topbar-nav" aria-label="Navigasi utama">
+        <a class="active" href="/dashboard" aria-current="page">Dashboard</a>
+        <details class="ss-menu-group">
+          <summary>Akademik</summary>
+          <div class="ss-menu-dropdown">
+            <a href="/akademik/siswa">Data Siswa</a>
+            <a href="/akademik/guru">Data Guru</a>
+            <a href="/akademik/kelas">Rombongan Belajar</a>
+            <a href="/akademik/jadwal">Jadwal Pelajaran</a>
+            <a href="/akademik/presensi">Absensi Siswa</a>
+          </div>
+        </details>
+        <details class="ss-menu-group">
+          <summary>Pembelajaran & Penilaian</summary>
+          <div class="ss-menu-dropdown">
+            <a href="/pembelajaran/materi">Materi & LMS</a>
+            <a href="/penilaian/bank-soal">Bank Soal</a>
+            <a href="/ujian">Ujian CBT</a>
+            <a href="/penilaian/rapor">Rapor & Penilaian</a>
+          </div>
+        </details>
+        <details class="ss-menu-group">
+          <summary>Administrasi</summary>
+          <div class="ss-menu-dropdown">
+            <a href="/spmb">SPMB</a>
+            <a href="/laporan">Pusat Laporan</a>
+            <a href="/pengaturan/pengguna">Pengguna & Hak Akses</a>
+            <a href="/pengaturan/sekolah">Pengaturan</a>
+          </div>
+        </details>
+      </nav>
     </header>
     <div class="ss-content">
       <div class="ss-crumb">School Suite / <strong>Dashboard Administrator</strong></div>
@@ -212,12 +231,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.5/dist/js/tabler.min.js"></script>
 <script>
   (function () {
-    var menuButton = document.getElementById('menuBtn');
-    var overlay = document.getElementById('overlay');
-    function setNavOpen(open) { document.body.classList.toggle('nav-open', open); menuButton.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-    menuButton.addEventListener('click', function () { setNavOpen(!document.body.classList.contains('nav-open')); });
-    overlay.addEventListener('click', function () { setNavOpen(false); });
-    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') setNavOpen(false); });
     document.getElementById('themeBtn').addEventListener('click', function () {
       var root = document.documentElement;
       root.setAttribute('data-bs-theme', root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');

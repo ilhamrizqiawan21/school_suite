@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { nextTick, reactive, ref } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
@@ -86,10 +87,28 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                 <div v-if="can_manage" class="staff-task-hero-actions"><AppButton variant="primary" icon="plus" type="button" class="primary-button" @click="openCreate">Tambah tugas</AppButton></div>
             </section>
 
-            <section class="task-summary-grid" aria-label="Ringkasan tugas">
-                <div class="task-summary-card task-summary-active"><span>Tugas aktif</span><strong>{{ summary.active }}</strong><small>Menunggu atau sedang dikerjakan</small></div>
-                <div class="task-summary-card task-summary-overdue"><span>Melewati tenggat</span><strong>{{ summary.overdue }}</strong><small>Perlu ditindaklanjuti</small></div>
-                <div class="task-summary-card task-summary-completed"><span>Selesai</span><strong>{{ summary.completed }}</strong><small>Tugas yang sudah ditutup</small></div>
+            <section class="ss-summary-grid ss-summary-grid--3" aria-label="Ringkasan tugas">
+                <MetricSummaryCard
+                    label="Tugas aktif"
+                    :value="summary.active"
+                    note="Menunggu atau sedang dikerjakan"
+                    tone="blue"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+                <MetricSummaryCard
+                    label="Melewati tenggat"
+                    :value="summary.overdue"
+                    note="Perlu ditindaklanjuti"
+                    tone="rose"
+                    icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Selesai"
+                    :value="summary.completed"
+                    note="Tugas yang sudah ditutup"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
             </section>
             <div class="task-guidance"><strong>{{ can_manage ? 'Cara kerja tugas' : 'Perbarui tugas' }}</strong><span>{{ can_manage ? 'Buat tugas, pilih penanggung jawab, lalu pantau sampai selesai.' : 'Buka lampiran bila ada, lalu perbarui progres saat pekerjaan berjalan.' }}</span></div>
             <div v-if="showForm && can_manage" role="dialog" aria-modal="true" aria-labelledby="staff-task-modal-title" class="modal-backdrop" @click.self="showForm = false" @keydown.esc="showForm = false">

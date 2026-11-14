@@ -155,4 +155,42 @@ class AdmissionsControllersTest extends TestCase
             ->put(route('admissions.applicants.update', $applicant), ['status' => 'accepted'])
             ->assertForbidden();
     }
+
+    public function test_store_period_enforces_chronological_phase_dates(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('admissions.periods.store'), [
+                'name' => 'Gelombang 1',
+                'academic_year' => '2026/2027',
+                'registration_start' => '2026-06-10',
+                'registration_end' => '2026-06-05',
+            ])
+            ->assertSessionHasErrors('registration_end');
+
+        $this->actingAs($this->admin)
+            ->post(route('admissions.periods.store'), [
+                'name' => 'Gelombang 1',
+                'academic_year' => '2026/2027',
+                'registration_start' => '2026-06-01',
+                'registration_end' => '2026-06-10',
+                'verification_start' => '2026-06-09',
+            ])
+            ->assertSessionHasErrors('verification_start');
+
+        $this->actingAs($this->admin)
+            ->post(route('admissions.periods.store'), [
+                'name' => 'Gelombang 1',
+                'academic_year' => '2026/2027',
+                'registration_start' => '2026-06-01',
+                'registration_end' => '2026-06-10',
+                'verification_start' => '2026-06-11',
+                'verification_end' => '2026-06-15',
+                'selection_start' => '2026-06-16',
+                'selection_end' => '2026-06-18',
+                'announcement_at' => '2026-06-20',
+                're_registration_start' => '2026-06-21',
+                're_registration_end' => '2026-06-25',
+            ])
+            ->assertSessionHasNoErrors();
+    }
 }

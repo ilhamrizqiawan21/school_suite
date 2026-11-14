@@ -156,12 +156,13 @@ Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard
                     $activeTerm->start_date->toDateString(),
                     $activeTerm->end_date->toDateString(),
                 ])
-                ->select(['attendance_records.date', 'attendance_records.status'])
+                ->selectRaw("SUBSTR(attendance_records.date, 1, 7) as month_key, COUNT(*) as total, SUM(CASE WHEN attendance_records.status = 'present' THEN 1 ELSE 0 END) as present")
+                ->groupByRaw('SUBSTR(attendance_records.date, 1, 7)')
                 ->get()
-                ->groupBy(fn ($record) => substr((string) $record->date, 0, 7))
-                ->map(fn ($records) => [
-                    'total' => $records->count(),
-                    'present' => $records->where('status', 'present')->count(),
+                ->keyBy('month_key')
+                ->map(fn ($record) => [
+                    'total' => (int) $record->total,
+                    'present' => (int) $record->present,
                 ]);
 
             $month = $activeTerm->start_date->copy()->startOfMonth();

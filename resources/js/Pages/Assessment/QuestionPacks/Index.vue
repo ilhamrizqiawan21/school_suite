@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -204,7 +205,7 @@ function typeLabel(type: string) {
         <div class="view pack-page space-y-6">
             <header class="pack-hero">
                 <div>
-                    <p class="eyebrow">Asesmen · Koleksi reusable</p>
+                    <p class="eyebrow">Asesmen · Koleksi soal siap pakai</p>
                     <h1>Paket Soal</h1>
                     <p>Kelompokkan soal, atur urutan dan bobot, lalu simpan sebagai draf atau paket aktif.</p>
                 </div>
@@ -214,10 +215,25 @@ function typeLabel(type: string) {
                 </div>
             </header>
 
-            <section class="pack-stats">
-                <div class="panel stat-card"><span>Paket ditemukan</span><strong>{{ packs.total }}</strong></div>
-                <div class="panel stat-card"><span>Soal yang bisa dipilih</span><strong>{{ question_options.length }}</strong></div>
-                <div class="panel stat-card"><span>Paket aktif</span><strong>{{ packs.data.filter((pack) => pack.status === 'active').length }}</strong></div>
+            <section class="ss-summary-grid ss-summary-grid--3">
+                <MetricSummaryCard
+                    label="Paket ditemukan"
+                    :value="packs.total"
+                    tone="blue"
+                    icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+                <MetricSummaryCard
+                    label="Soal yang bisa dipilih"
+                    :value="question_options.length"
+                    tone="violet"
+                    icon="M4 5h16M4 10h16M4 15h16M4 20h16M7 3v4m5 1v4m5 1v4"
+                />
+                <MetricSummaryCard
+                    label="Paket aktif"
+                    :value="packs.data.filter((pack) => pack.status === 'active').length"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
             </section>
 
             <section class="panel filters-panel">

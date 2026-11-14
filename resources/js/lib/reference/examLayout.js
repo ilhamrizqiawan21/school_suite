@@ -2,8 +2,8 @@
 // Browser adaptation: ES modules, Uint8Array images, Blob output.
 const imageBytes = value => Uint8Array.from(atob(value), c => c.charCodeAt(0));
 
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType,
-  AlignmentType, BorderStyle, PageOrientation, SectionType, Footer, PageNumber, ImageRun, TabStopType } from 'docx';
+let Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType,
+  AlignmentType, BorderStyle, PageOrientation, SectionType, Footer, PageNumber, ImageRun, TabStopType;
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const TYPES = [
@@ -171,6 +171,8 @@ function docxHeader(exam, profile, mode, headerWidth) {
   return head;
 }
 async function buildDocx(exam, questions, profile, mode) {
+  ({ Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType,
+    AlignmentType, BorderStyle, PageOrientation, SectionType, Footer, PageNumber, ImageRun, TabStopType } = await import('docx'));
   const sectionGroups = groups(questions), ordered = sectionGroups.flatMap(g => g.questions);
   const [w] = pageSize(exam.paper), width = twip(w - 28);
   const colWidth = Math.floor((width - twip(8) * (exam.paper.columns - 1)) / exam.paper.columns);

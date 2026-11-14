@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -216,10 +217,28 @@ const submitImport = () => {
                 </div>
             </div>
             <div v-if="page.props.errors?.teacher" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.teacher }}</div>
-            <div class="teacher-summary-grid" aria-label="Ringkasan data guru">
-                <div class="panel teacher-stat teacher-stat-total"><span>Total guru & tenaga kependidikan</span><strong>{{ stats.total }}</strong><small>seluruh data sekolah</small></div>
-                <div class="panel teacher-stat teacher-stat-active"><span>Guru aktif</span><strong>{{ stats.active }}</strong><small>siap menerima penugasan</small></div>
-                <div class="panel teacher-stat teacher-stat-inactive"><span>Nonaktif</span><strong>{{ stats.inactive }}</strong><small>perlu ditinjau bila diperlukan</small></div>
+            <div class="ss-summary-grid ss-summary-grid--3 teacher-summary-grid" aria-label="Ringkasan data guru">
+                <MetricSummaryCard
+                    label="Total guru & tenaga kependidikan"
+                    :value="stats.total"
+                    note="seluruh data sekolah"
+                    tone="blue"
+                    icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <MetricSummaryCard
+                    label="Guru aktif"
+                    :value="stats.active"
+                    note="siap menerima penugasan"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Nonaktif"
+                    :value="stats.inactive"
+                    note="perlu ditinjau bila diperlukan"
+                    tone="amber"
+                    icon="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                />
             </div>
             <div class="teacher-retirement-summary" aria-label="Ringkasan masa pensiun">
                 <div><span>Perlu perhatian masa pensiun</span><strong>{{ retirement_stats.upcoming + retirement_stats.reached + retirement_stats.missing }}</strong></div>

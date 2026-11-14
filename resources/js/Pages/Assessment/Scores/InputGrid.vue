@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -353,11 +354,35 @@ const printScores = () => window.print();
                 </div>
             </section>
 
-            <div class="grade-summary score-summary">
-                <div class="score-summary-card score-summary-blue"><span>Jumlah siswa</span><strong>{{ localRows.length }}</strong><small>pada rombel terpilih</small></div>
-                <div class="score-summary-card score-summary-green"><span>Sudah dinilai</span><strong>{{ gradedCount }}/{{ localRows.length }}</strong><small>{{ localRows.length - gradedCount }} siswa belum dinilai</small></div>
-                <div class="score-summary-card score-summary-red"><span>Di bawah KKTP</span><strong>{{ belowPassingCount }}</strong><small>berdasarkan nilai akhir saat ini</small></div>
-                <div class="score-summary-card score-summary-gold"><span>Aturan remedial</span><strong class="rule-value">Maks. {{ passingGrade }}</strong><small>nilai remedial dibatasi sampai KKTP</small></div>
+            <div class="ss-summary-grid">
+                <MetricSummaryCard
+                    label="Jumlah siswa"
+                    :value="localRows.length"
+                    note="pada rombel terpilih"
+                    tone="blue"
+                    icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+                <MetricSummaryCard
+                    label="Sudah dinilai"
+                    :value="`${gradedCount}/${localRows.length}`"
+                    :note="`${localRows.length - gradedCount} siswa belum diisi`"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Di bawah KKTP"
+                    :value="belowPassingCount"
+                    note="berdasarkan nilai akhir saat ini"
+                    tone="rose"
+                    icon="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Aturan remedial"
+                    :value="`Maks. ${passingGrade}`"
+                    note="dibatasi maksimal KKTP"
+                    tone="amber"
+                    icon="M12 3l8 3v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3z"
+                />
             </div>
 
             <!-- Filter Rombel & Komponen -->

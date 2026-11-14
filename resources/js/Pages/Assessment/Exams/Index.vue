@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -66,12 +67,62 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
     <AppLayout>
         <div class="view exam-page space-y-6">
             <header class="exam-hero"><div><p class="eyebrow">Asesmen · Computer based test</p><h1>{{ can_manage_question_bank ? 'Ujian & bank soal' : 'Ujian CBT' }}</h1><p>{{ is_student ? 'Lihat jadwal ujian kelasmu dan mulai saat periode ujian dibuka.' : 'Kelola jadwal, sumber soal, pengawasan, dan hasil ujian dari satu alur.' }}</p></div><div v-if="can_manage" class="actions"><Link v-if="can_manage_question_bank" class="secondary-button ui-button ui-button--secondary ui-button--md" href="/penilaian/bank-soal">Kelola bank soal</Link><AppButton variant="primary" class="primary-button" type="button" @click="showExamForm = true">+ Buat ujian</AppButton></div><div v-else-if="is_student" class="actions"><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/jadwal">Jadwal saya</Link><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/penilaian/rapor">Rapor saya</Link></div></header>
-            <section v-if="can_manage" class="grade-summary"><div v-if="can_manage_question_bank"><span>Bank soal aktif</span><strong>{{ questions.length }}</strong></div><div><span>Ujian</span><strong>{{ exams.length }}</strong></div><div><span>Terbit</span><strong>{{ exams.filter((exam) => exam.status === 'published').length }}</strong></div><div><span>Attempt</span><strong>{{ totalAttempts }}</strong></div></section>
-            <section v-else-if="is_student" class="grade-summary" aria-label="Ringkasan ujian saya">
-                <div><span>Total ujian</span><strong>{{ studentExamStats.total }}</strong><small>terjadwal untuk kelasmu</small></div>
-                <div><span>Siap dikerjakan</span><strong>{{ studentExamStats.ready }}</strong><small>dapat dimulai sekarang</small></div>
-                <div><span>Akan datang</span><strong>{{ studentExamStats.upcoming }}</strong><small>menunggu jadwal buka</small></div>
-                <div><span>Sudah selesai</span><strong>{{ studentExamStats.done }}</strong><small>jawaban tercatat</small></div>
+            <section v-if="can_manage" class="ss-summary-grid" :class="{ 'ss-summary-grid--3': !can_manage_question_bank }">
+                <MetricSummaryCard
+                    v-if="can_manage_question_bank"
+                    label="Bank soal aktif"
+                    :value="questions.length"
+                    tone="blue"
+                    icon="M4 5h16M4 10h16M4 15h16M4 20h16M7 3v4m5 1v4m5 1v4"
+                />
+                <MetricSummaryCard
+                    label="Ujian"
+                    :value="exams.length"
+                    tone="violet"
+                    icon="M9 12h6m-6 4h6M9 8h6m2 13H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"
+                />
+                <MetricSummaryCard
+                    label="Terbit"
+                    :value="exams.filter((exam) => exam.status === 'published').length"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Attempt"
+                    :value="totalAttempts"
+                    tone="amber"
+                    icon="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8z"
+                />
+            </section>
+            <section v-else-if="is_student" class="ss-summary-grid" aria-label="Ringkasan ujian saya">
+                <MetricSummaryCard
+                    label="Total ujian"
+                    :value="studentExamStats.total"
+                    note="terjadwal untuk kelasmu"
+                    tone="blue"
+                    icon="M9 12h6m-6 4h6M9 8h6m2 13H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"
+                />
+                <MetricSummaryCard
+                    label="Siap dikerjakan"
+                    :value="studentExamStats.ready"
+                    note="dapat dimulai sekarang"
+                    tone="green"
+                    icon="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Akan datang"
+                    :value="studentExamStats.upcoming"
+                    note="menunggu jadwal buka"
+                    tone="amber"
+                    icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Sudah selesai"
+                    :value="studentExamStats.done"
+                    note="jawaban tercatat"
+                    tone="violet"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
             </section>
             <section class="panel exam-list">
                 <div class="list-toolbar">

@@ -225,47 +225,63 @@ const studentPriorities = computed(() => [
     { ...studentActions[3], count: roleMetrics.value.upcoming_exams ?? 0, detail: 'ujian mendatang' },
     { ...studentActions[2], count: undefined, detail: 'Lihat waktu dan ruang belajar' },
 ]);
+const metricIcons = {
+    students: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    teachers: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+    classes: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1',
+    subjects: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6',
+    users: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m6-10a4 4 0 100-8 4 4 0 000 8zm14 10v-2a3 3 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+    tasks: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    exams: 'M9 12h6m-6 4h6M9 8h6m2 13H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z',
+    examsDone: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    reports: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5',
+    questions: 'M4 5h16M4 10h16M4 15h16M4 20h16M7 3v4m5 1v4m5 1v4',
+    scores: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14z',
+    calendar: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    modules: 'M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z',
+    shield: 'M12 3l8 3v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3zm-3 9 2 2 4-4',
+};
 const metricItems = computed(() => {
     if (isAdmin.value) return [
-        { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah' },
-        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pengajar' },
-        { label: 'Kelas aktif', value: roleMetrics.value.active_classes, note: 'periode akademik aktif' },
-        { label: 'Mata pelajaran', value: roleMetrics.value.active_subjects, note: 'aktif di sekolah' },
+        { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah', icon: metricIcons.students },
+        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pengajar', icon: metricIcons.teachers },
+        { label: 'Kelas aktif', value: roleMetrics.value.active_classes, note: 'periode akademik aktif', icon: metricIcons.classes },
+        { label: 'Mata pelajaran', value: roleMetrics.value.active_subjects, note: 'aktif di sekolah', icon: metricIcons.subjects },
     ];
     if (isOperator.value) return [
-        { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah' },
-        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pendidik' },
-        { label: 'Kelas aktif', value: roleMetrics.value.active_classes, note: 'periode berjalan' },
-        { label: 'Pengguna aktif', value: roleMetrics.value.active_users, note: 'akun warga sekolah' },
+        { label: 'Siswa aktif', value: roleMetrics.value.students, note: 'terdaftar di sekolah', icon: metricIcons.students },
+        { label: 'Guru aktif', value: roleMetrics.value.teachers, note: 'tenaga pendidik', icon: metricIcons.teachers },
+        { label: 'Kelas aktif', value: roleMetrics.value.active_classes, note: 'periode berjalan', icon: metricIcons.classes },
+        { label: 'Pengguna aktif', value: roleMetrics.value.active_users, note: 'akun warga sekolah', icon: metricIcons.users },
     ];
     if (isPrincipal.value) return [
-        { label: 'Tugas terkumpul', value: percentLabel(principalSummary.value?.tasks_rate), note: `${principalSummary.value?.tasks_submitted ?? 0} dari ${principalSummary.value?.tasks_total ?? 0} tugas` },
-        { label: 'Ujian berlangsung', value: principalSummary.value?.exams_live, note: 'sesuai jadwal saat ini' },
-        { label: 'Rapor terbit', value: principalSummary.value?.reports_published, note: `dari ${principalSummary.value?.reports_total ?? 0} rapor periode aktif` },
-        { label: 'Siswa / guru aktif', value: principalSummary.value ? `${principalSummary.value.students} / ${principalSummary.value.teachers}` : '—', note: 'jumlah warga sekolah' },
+        { label: 'Tugas terkumpul', value: percentLabel(principalSummary.value?.tasks_rate), note: `${principalSummary.value?.tasks_submitted ?? 0} dari ${principalSummary.value?.tasks_total ?? 0} tugas`, icon: metricIcons.tasks },
+        { label: 'Ujian berlangsung', value: principalSummary.value?.exams_live, note: 'sesuai jadwal saat ini', icon: metricIcons.exams },
+        { label: 'Rapor terbit', value: principalSummary.value?.reports_published, note: `dari ${principalSummary.value?.reports_total ?? 0} rapor periode aktif`, icon: metricIcons.reports },
+        { label: 'Siswa / guru aktif', value: principalSummary.value ? `${principalSummary.value.students} / ${principalSummary.value.teachers}` : '—', note: 'jumlah warga sekolah', icon: metricIcons.students },
     ];
     if (isHomeroom.value) return [
-        { label: 'Kelas binaan/diampu', value: roleMetrics.value.teaching_assignments, note: 'periode aktif' },
-        { label: 'Soal aktif', value: roleMetrics.value.active_questions, note: 'di bank soal' },
-        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'draft dan terbit' },
-        { label: 'Nilai tersimpan', value: roleMetrics.value.recorded_scores, note: 'rekaman Anda' },
+        { label: 'Kelas binaan/diampu', value: roleMetrics.value.teaching_assignments, note: 'periode aktif', icon: metricIcons.classes },
+        { label: 'Soal aktif', value: roleMetrics.value.active_questions, note: 'di bank soal', icon: metricIcons.questions },
+        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'draft dan terbit', icon: metricIcons.exams },
+        { label: 'Nilai tersimpan', value: roleMetrics.value.recorded_scores, note: 'rekaman Anda', icon: metricIcons.scores },
     ];
     if (isTeacher.value) return [
-        { label: 'Kelas diampu', value: roleMetrics.value.classes_count, note: `${roleMetrics.value.teaching_assignments ?? 0} penugasan mapel · periode aktif` },
-        { label: 'Soal aktif', value: roleMetrics.value.active_questions, note: 'di bank soal' },
-        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'draft dan terbit' },
-        { label: 'Nilai tersimpan', value: roleMetrics.value.recorded_scores, note: 'rekaman Anda' },
+        { label: 'Kelas diampu', value: roleMetrics.value.classes_count, note: `${roleMetrics.value.teaching_assignments ?? 0} penugasan mapel · periode aktif`, icon: metricIcons.classes },
+        { label: 'Soal aktif', value: roleMetrics.value.active_questions, note: 'di bank soal', icon: metricIcons.questions },
+        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'draft dan terbit', icon: metricIcons.exams },
+        { label: 'Nilai tersimpan', value: roleMetrics.value.recorded_scores, note: 'rekaman Anda', icon: metricIcons.scores },
     ];
     if (isStudent.value) return [
-        { label: 'Kelas aktif', value: roleMetrics.value.active_enrollments, note: 'periode berjalan' },
-        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'siap dikerjakan' },
-        { label: 'Ujian selesai', value: roleMetrics.value.completed_exams, note: 'sudah dikumpulkan' },
-        { label: 'Nilai tercatat', value: roleMetrics.value.recorded_scores, note: 'periode aktif' },
+        { label: 'Kelas aktif', value: roleMetrics.value.active_enrollments, note: 'periode berjalan', icon: metricIcons.classes },
+        { label: 'Ujian mendatang', value: roleMetrics.value.upcoming_exams, note: 'siap dikerjakan', icon: metricIcons.exams },
+        { label: 'Ujian selesai', value: roleMetrics.value.completed_exams, note: 'sudah dikumpulkan', icon: metricIcons.examsDone },
+        { label: 'Nilai tercatat', value: roleMetrics.value.recorded_scores, note: 'periode aktif', icon: metricIcons.scores },
     ];
     return [
-        { label: 'Periode aktif', value: activePeriod.value, note: 'konteks kerja saat ini' },
-        { label: 'Modul tersedia', value: props.stats?.modules_ready, note: 'siap digunakan' },
-        { label: 'Status akses', value: 'Aktif', note: roleLabel.value },
+        { label: 'Periode aktif', value: activePeriod.value, note: 'konteks kerja saat ini', icon: metricIcons.calendar },
+        { label: 'Modul tersedia', value: props.stats?.modules_ready, note: 'siap digunakan', icon: metricIcons.modules },
+        { label: 'Status akses', value: 'Aktif', note: roleLabel.value, icon: metricIcons.shield },
     ];
 });
 const attendanceChart = computed(() => {
@@ -386,6 +402,17 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 
             </div>
 
+            <section v-if="isAdmin" class="metrics-strip metrics-first" aria-label="Ringkasan metrik">
+                <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
+                    <div class="metric-head">
+                        <span class="metric-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path :d="metric.icon" /></svg></span>
+                        <span class="metric-label">{{ metric.label }}</span>
+                    </div>
+                    <strong>{{ metric.value ?? '—' }}</strong>
+                    <small>{{ metric.note }}</small>
+                </article>
+            </section>
+
             <div v-if="isAdmin" class="admin-priority-grid">
                 <section class="admin-priority-panel" aria-labelledby="admin-priority-title">
                     <h2 id="admin-priority-title">Mulai dari sini</h2>
@@ -402,14 +429,6 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </section>
             </div>
 
-            <section v-if="isAdmin" class="metrics-strip metrics-first" aria-label="Ringkasan metrik">
-                <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
-                    <div class="metric-head"><span>{{ metric.label }}</span></div>
-                    <strong>{{ metric.value ?? '—' }}</strong>
-                    <small>{{ metric.note }}</small>
-                </article>
-            </section>
-
             <section v-if="isAdmin" class="admin-actions-section" aria-labelledby="admin-actions-title">
                 <div class="section-heading">
                     <div><span class="eyebrow">Administrasi sekolah</span><h2 id="admin-actions-title">Akses cepat</h2></div>
@@ -417,10 +436,16 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </div>
                 <div class="admin-action-groups">
                     <article v-for="group in adminActionGroups" :key="group.title" class="admin-action-group">
-                        <header><h3>{{ group.title }}</h3><p>{{ group.description }}</p></header>
+                        <header>
+                            <div class="admin-action-group-head">
+                                <h3>{{ group.title }}</h3>
+                                <span class="admin-action-group-count">{{ group.actions.length }} menu</span>
+                            </div>
+                            <p>{{ group.description }}</p>
+                        </header>
                         <ul class="admin-action-list">
                             <li v-for="action in group.actions" :key="action.href">
-                                <Link :href="action.href" class="admin-action-link ui-button ui-button--secondary ui-button--md">
+                                <Link :href="action.href" class="admin-action-link">
                                     <span class="admin-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path :d="action.icon" /></svg></span>
                                     <span class="admin-action-copy"><strong>{{ action.title }}</strong><small>{{ action.description }}</small></span>
                                     <span class="admin-action-arrow" aria-hidden="true">↗</span>
@@ -474,7 +499,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
             </section>
 
             <section v-if="isStudent" class="student-overview" aria-labelledby="student-overview-title">
-                <div class="section-heading student-section-heading"><div><span class="eyebrow">Ringkasan belajarmu</span><h2 id="student-overview-title">Ringkasan belajar</h2></div></div>
+                <div class="section-heading student-section-heading"><div><h2 id="student-overview-title">Ringkasan belajar</h2></div></div>
                 <div class="student-overview-grid">
                     <article class="student-overview-card assignment-card">
                         <header><span class="student-card-kicker">Tugas</span><Link href="/siswa/tugas">Buka tugas saya ↗</Link></header>
@@ -506,7 +531,10 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 
             <section v-if="!isAdmin" class="metrics-strip" :class="{ 'teacher-metrics': isTeacher, 'student-metrics': isStudent }" aria-label="Ringkasan metrik">
                 <article v-for="(metric, index) in metricItems" :key="metric.label" class="metric-item" :class="`metric-tone-${index + 1}`">
-                    <div class="metric-head"><span>{{ metric.label }}</span></div>
+                    <div class="metric-head">
+                        <span class="metric-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path :d="metric.icon" /></svg></span>
+                        <span class="metric-label">{{ metric.label }}</span>
+                    </div>
                     <strong>{{ metric.value ?? '—' }}</strong>
                     <small>{{ metric.note }}</small>
                 </article>
@@ -627,7 +655,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </div>
             </section>
 
-            <footer class="dashboard-footer"><span class="footer-mark">S</span><span>School Suite</span><span class="footer-line" /><span>Ruang kerja yang mengikuti peranmu.</span></footer>
+            <footer class="dashboard-footer"><span class="footer-mark">S</span><span>School Suite</span><span class="footer-line" /><span>Portal sekolah terpadu.</span></footer>
         </section>
     </AppLayout>
 </template>
@@ -642,36 +670,43 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .intro-row { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-top: 18px; }.intro-row h1 { margin: 0; color: var(--ink); font-size: var(--type-3xl); font-weight: var(--weight-bold); letter-spacing: -.045em; line-height: 1.03; }.intro-row p { max-width: 540px; margin: 12px 0 0; color: var(--ink-soft); font-size: var(--type-sm); line-height: 1.7; }
 .date-stamp { display: flex; max-width: 190px; align-items: center; padding: 7px 9px; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }.date-stamp span { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); line-height: 1.35; text-align: center; text-transform: capitalize; }.orbit-one { width: 390px; height: 390px; right: -145px; bottom: -190px; }.orbit-two { width: 290px; height: 290px; right: -95px; bottom: -140px; }
 .metrics-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
-.metric-item { position: relative; min-width: 0; min-height: 118px; padding: 17px 18px 16px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 5px; box-shadow: var(--shadow-sm); }
-.metric-item::before { position: absolute; top: 0; left: 0; width: 52px; height: 3px; content: ''; background: #3269bc; }
-.metric-tone-2::before { background: #3d9b78; }.metric-tone-3::before { background: #ad7c2b; }.metric-tone-4::before { background: #8264b5; }
-.teacher-metrics .metric-item { border-color: color-mix(in srgb, var(--metric-accent) 36%, var(--line)); background: color-mix(in srgb, var(--metric-accent) 15%, var(--surface)); }
-.teacher-metrics .metric-item::before { width: 4px; height: auto; bottom: 0; }
-.teacher-metrics .metric-item strong { color: color-mix(in srgb, var(--metric-accent) 78%, var(--ink)); }
-.teacher-metrics .metric-tone-1 { --metric-accent: #3269bc; }.teacher-metrics .metric-tone-2 { --metric-accent: #3d9b78; }.teacher-metrics .metric-tone-3 { --metric-accent: #ad7c2b; }.teacher-metrics .metric-tone-4 { --metric-accent: #8264b5; }
-.student-metrics .metric-item { border-color: color-mix(in srgb, var(--metric-accent) 32%, var(--line)); background: color-mix(in srgb, var(--metric-accent) 8%, var(--surface)); }
-.student-metrics .metric-item::before { width: 4px; height: auto; bottom: 0; background: var(--metric-accent); }
-.student-metrics .metric-item strong { color: color-mix(in srgb, var(--metric-accent) 78%, var(--ink)); }
-.student-metrics .metric-tone-1 { --metric-accent: #3269bc; }.student-metrics .metric-tone-2 { --metric-accent: #3d9b78; }.student-metrics .metric-tone-3 { --metric-accent: #ad7c2b; }.student-metrics .metric-tone-4 { --metric-accent: #8264b5; }
-.metric-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.metric-item span, .metric-item small { display: block; color: var(--ink-soft); font-size: var(--type-meta); }.metric-head > span:first-child { color: var(--ink); font-size: var(--type-sm); font-weight: var(--weight-bold); letter-spacing: -.015em; }.metric-arrow { color: var(--ink-faint) !important; font-size: var(--type-md) !important; line-height: 1; }.metric-item strong { display: block; margin: 15px 0 5px; color: var(--ink); font-size: 27px; letter-spacing: -.05em; line-height: 1; }.metric-item small { color: var(--ink-faint); font-size: var(--type-meta); }
+.metric-item { --metric-accent: #2563eb; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .45rem; min-width: 0; min-height: 136px; padding: 1.2rem; overflow: hidden; text-align: center; background: color-mix(in srgb, var(--metric-accent) 17%, var(--surface)); border: 1px solid color-mix(in srgb, var(--metric-accent) 36%, var(--line)); border-radius: 14px; box-shadow: var(--shadow-sm); }
+.metric-item::before { display: none; }
+.metric-tone-1 { --metric-accent: #2563eb; }
+.metric-tone-2 { --metric-accent: #16a34a; }
+.metric-tone-3 { --metric-accent: #d97706; }
+.metric-tone-4 { --metric-accent: #7c3aed; }
+.metric-head { display: inline-flex; align-items: center; justify-content: center; gap: 8px; max-width: 100%; }
+.metric-item-icon { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; color: var(--ink); background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid color-mix(in srgb, var(--metric-accent) 22%, var(--line)); border-radius: 8px; }
+.metric-item-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.metric-item small { display: block; color: var(--ink-soft); font-size: var(--type-meta); }
+.metric-label { color: color-mix(in srgb, var(--metric-accent) 68%, var(--ink)); font-size: var(--type-sm); font-weight: var(--weight-bold); letter-spacing: -.015em; line-height: 1.25; }
+.metric-arrow { color: var(--ink-faint) !important; font-size: var(--type-md) !important; line-height: 1; }
+.metric-item strong { display: block; margin: .15rem 0 0; color: color-mix(in srgb, var(--metric-accent) 76%, var(--ink)); font-size: clamp(1.65rem, 2.5vw, 2.1rem); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1; }
 .workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: var(--type-xl); letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: var(--type-meta); }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: var(--type-caption); }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: var(--weight-bold) var(--type-caption) var(--font-ui); }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
 .attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: var(--type-md); }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: var(--type-caption); line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: var(--type-caption); white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-data-summary { margin: 10px 0 0; color: var(--ink-soft); font-size: var(--type-caption); line-height: 1.5; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: var(--type-caption); }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: var(--type-caption); }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: var(--type-meta); text-align: center; }
 .admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .admin-actions-section { margin-top: 18px; }
-.admin-action-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
-.admin-action-group { min-width: 0; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }
-.admin-action-group > header { min-height: 70px; margin-bottom: 8px; }
+.admin-action-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; align-items: stretch; }
+.admin-action-group { display: flex; flex-direction: column; min-width: 0; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }
+.admin-action-group > header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.admin-action-group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.admin-action-group-count { flex: 0 0 auto; padding: 2px 8px; border-radius: 999px; color: var(--ink-soft); background: var(--surface-subtle); border: 1px solid var(--line); font-size: var(--type-xs); font-weight: var(--weight-semibold); }
 .admin-action-group h3 { margin: 0; color: var(--ink); font-size: var(--type-md); letter-spacing: -.02em; }
 .admin-action-group > header p { margin: 5px 0 0; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.5; }
-.admin-action-list { margin: 0; padding: 0; list-style: none; }
-.admin-action-list li { border-top: 1px solid var(--line); }
-.admin-action-link { grid-template-columns: 36px minmax(0, 1fr) 14px; }
-.admin-action-icon { display: grid; place-items: center; width: 34px; height: 34px; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }
+.admin-action-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.admin-action-list li + li { border-top: 1px solid color-mix(in srgb, var(--line) 75%, transparent); }
+.admin-action-link { display: grid; grid-template-columns: 38px minmax(0, 1fr) 16px; align-items: center; gap: 12px; width: 100%; padding: 10px 8px; border-radius: 10px; color: var(--ink); text-align: left; text-decoration: none; transition: background-color .16s var(--ease), color .16s var(--ease); }
+.admin-action-link:hover { background: var(--primary-soft); }
+.admin-action-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.admin-action-icon { display: grid; place-items: center; width: 38px; height: 38px; color: var(--blue); background: var(--blue-soft); border-radius: 10px 10px 10px 4px; }
 .admin-action-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-.admin-action-copy { display: grid; gap: 3px; min-width: 0; }
-.admin-action-copy strong { color: var(--ink); font-size: var(--type-meta); }
-.admin-action-copy small { color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.35; }
-.admin-action-arrow { color: var(--ink-faint); font-size: var(--type-md); }
+.admin-action-copy { display: grid; gap: 2px; min-width: 0; }
+.admin-action-copy strong { color: var(--ink); font-size: var(--type-meta); font-weight: var(--weight-semibold); line-height: 1.35; }
+.admin-action-link:hover .admin-action-copy strong { color: var(--primary-strong); }
+.admin-action-copy small { color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.4; }
+.admin-action-arrow { justify-self: end; color: var(--ink-faint); font-size: var(--type-md); transition: transform .16s var(--ease), color .16s var(--ease); }
+.admin-action-link:hover .admin-action-arrow { color: var(--primary); transform: translate(2px, -2px); }
 .student-overview { margin-top: 34px; }
 .student-section-heading { align-items: end; margin-bottom: 12px; }
 .student-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
@@ -1105,21 +1140,9 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .is-admin-dashboard .date-stamp { color: var(--ink-soft); background: var(--surface); border-color: var(--line); box-shadow: none; }
 .is-admin-dashboard .date-stamp span { font-size: var(--type-meta); }
 .is-admin-dashboard .metrics-first { margin-top: .5rem; }
-.is-admin-dashboard .metric-item { min-height: 142px; padding: 1.25rem; border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
-.is-admin-dashboard .metric-item::before { display: none; }
-.is-admin-dashboard .metrics-first .metric-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; text-align: center; }
-.is-admin-dashboard .metrics-first .metric-head { justify-content: center; text-align: center; }
-.is-admin-dashboard .metrics-first .metric-arrow { display: none; }
-.is-admin-dashboard .metrics-first .metric-item strong { margin-top: .35rem; }
-.is-admin-dashboard .metrics-first .metric-tone-1 { --metric-accent: #3269bc; color: #244f91; background: #edf4ff; border-color: #c9dcfa; }
-.is-admin-dashboard .metrics-first .metric-tone-2 { --metric-accent: #24845b; color: #176443; background: #eaf7f0; border-color: #c3e6d2; }
-.is-admin-dashboard .metrics-first .metric-tone-3 { --metric-accent: #a86a12; color: #80500d; background: #fff5e5; border-color: #f0d7aa; }
-.is-admin-dashboard .metrics-first .metric-tone-4 { --metric-accent: #7652a8; color: #5d3d8c; background: #f4effb; border-color: #ded0f2; }
-.is-admin-dashboard .metrics-first .metric-item .metric-head > span:first-child,
-.is-admin-dashboard .metrics-first .metric-item strong,
-.is-admin-dashboard .metrics-first .metric-item small { color: inherit; }
-.is-admin-dashboard .metrics-first .metric-item strong { font-weight: var(--weight-bold); }
-.is-admin-dashboard .metric-item strong { color: var(--ink); font-size: clamp(1.7rem, 2.7vw, 2.2rem); }
+.is-admin-dashboard .metric-item { padding: 1.25rem; box-shadow: none; }
+.is-admin-dashboard .metric-arrow { display: none; }
+.is-admin-dashboard .metric-item strong { font-size: clamp(1.7rem, 2.7vw, 2.2rem); }
 .is-admin-dashboard .admin-priority-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr); gap: 1.25rem; margin-top: 1.5rem; }
 .is-admin-dashboard .admin-priority-panel { min-width: 0; padding: 1.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .is-admin-dashboard .admin-priority-panel h2 { margin: 0 0 1.25rem; color: var(--ink); font-size: 1.15rem; }

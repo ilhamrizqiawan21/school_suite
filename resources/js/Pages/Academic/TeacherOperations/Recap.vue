@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
@@ -24,7 +25,32 @@ function changeMonth(event: Event) {
                 <label class="grid gap-1 text-sm font-medium text-slate-700">Bulan rekap<input class="min-h-10 rounded-lg border border-slate-300 bg-[var(--surface)] px-3 text-sm" type="month" :value="month" @change="changeMonth" /></label>
                 <div class="text-sm text-slate-600">{{ summary.teachers }} guru · {{ summary.present + summary.permitted + summary.sick + summary.absent }} catatan</div>
             </section>
-            <section class="grade-summary"><div><span>Hadir</span><strong>{{ summary.present }}</strong></div><div><span>Izin</span><strong>{{ summary.permitted }}</strong></div><div><span>Sakit</span><strong>{{ summary.sick }}</strong></div><div><span>Alpha</span><strong>{{ summary.absent }}</strong></div></section>
+            <section class="ss-summary-grid" aria-label="Ringkasan kehadiran guru">
+                <MetricSummaryCard
+                    label="Hadir"
+                    :value="summary.present"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Izin"
+                    :value="summary.permitted"
+                    tone="blue"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+                <MetricSummaryCard
+                    label="Sakit"
+                    :value="summary.sick"
+                    tone="amber"
+                    icon="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+                <MetricSummaryCard
+                    label="Alpha"
+                    :value="summary.absent"
+                    tone="rose"
+                    icon="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </section>
             <section class="panel overflow-hidden">
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Rekap presensi guru, geser untuk melihat semua kolom"><table class="app-table w-full min-w-[640px] text-left text-sm"><thead class="bg-slate-50 text-meta uppercase tracking-wide text-slate-600"><tr><th scope="col" class="px-5 py-3">Guru</th><th scope="col" class="px-5 py-3 text-center">Hadir</th><th scope="col" class="px-5 py-3 text-center">Izin</th><th scope="col" class="px-5 py-3 text-center">Sakit</th><th scope="col" class="px-5 py-3 text-center">Alpha</th></tr></thead><tbody class="divide-y divide-slate-100"><tr v-for="row in rows" :key="row.teacher_id"><td class="px-5 py-4"><strong class="block font-semibold text-slate-900">{{ row.name }}</strong><small class="text-slate-600">NIP {{ row.nip || '—' }}</small></td><td class="px-5 py-4 text-center">{{ row.present }}</td><td class="px-5 py-4 text-center">{{ row.permitted }}</td><td class="px-5 py-4 text-center">{{ row.sick }}</td><td class="px-5 py-4 text-center">{{ row.absent }}</td></tr><tr v-if="!rows.length"><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-600">Belum ada catatan absensi pada bulan ini.</td></tr></tbody></table></div>
             </section>

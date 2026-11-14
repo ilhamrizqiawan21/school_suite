@@ -59,7 +59,7 @@ const toggleProfileMenu = () => {
                     class="admissions-action ui-button ui-button--primary ui-button--md"
                     :aria-current="props.active === 'admissions' ? 'page' : undefined"
                 >
-                    PPDB
+                    SPMB
                 </Link>
                 <button
                     type="button"

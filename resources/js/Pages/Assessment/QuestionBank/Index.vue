@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -174,10 +175,28 @@ function typeLabel(type: string) {
                 </div>
             </header>
 
-            <section class="bank-stats" aria-label="Ringkasan bank soal">
-                <article class="panel stat-card stat-card-primary"><div class="stat-card-top"><span class="stat-label">Soal sesuai filter</span><span class="stat-index" aria-hidden="true">01</span></div><strong>{{ questions.total }}</strong><small>Butir aktif dalam cakupan Anda</small></article>
-                <article class="panel stat-card"><div class="stat-card-top"><span class="stat-label">Mapel tersedia</span><span class="stat-index" aria-hidden="true">02</span></div><strong>{{ subjects.length }}</strong><small>Siap dipakai untuk asesmen</small></article>
-                <article class="panel stat-card"><div class="stat-card-top"><span class="stat-label">Format soal</span><span class="stat-index" aria-hidden="true">03</span></div><strong>4</strong><small>Pilihan ganda hingga menjodohkan</small></article>
+            <section class="ss-summary-grid ss-summary-grid--3" aria-label="Ringkasan bank soal">
+                <MetricSummaryCard
+                    label="Soal sesuai filter"
+                    :value="questions.total"
+                    note="Butir aktif dalam cakupan Anda"
+                    tone="blue"
+                    icon="M4 5h16M4 10h16M4 15h16M4 20h16M7 3v4m5 1v4m5 1v4"
+                />
+                <MetricSummaryCard
+                    label="Mapel tersedia"
+                    :value="subjects.length"
+                    note="Siap dipakai untuk asesmen"
+                    tone="green"
+                    icon="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6"
+                />
+                <MetricSummaryCard
+                    label="Format soal"
+                    :value="4"
+                    note="Pilihan ganda hingga menjodohkan"
+                    tone="violet"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
             </section>
 
             <section class="taxonomy-summary" aria-label="Ringkasan klasifikasi bank soal">

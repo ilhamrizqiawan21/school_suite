@@ -657,3 +657,31 @@ body:has(.public-site) {
         display: inline-flex !important;
     }
 }
+
+.ss-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.ss-summary-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 960px) {
+    .ss-summary-grid,
+    .ss-summary-grid--3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .ss-summary-grid,
+    .ss-summary-grid--3 {
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+    }
+}

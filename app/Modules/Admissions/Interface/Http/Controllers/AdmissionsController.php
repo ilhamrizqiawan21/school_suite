@@ -108,16 +108,43 @@ class AdmissionsController extends Controller
             'academic_year' => ['required', 'string', 'max:20'],
             'level' => ['nullable', 'string', 'max:10'],
             'registration_start' => ['nullable', 'date'],
-            'registration_end' => ['nullable', 'date', 'after_or_equal:registration_start'],
+            'registration_end' => ['nullable', 'date', Rule::when($request->filled('registration_start'), ['after_or_equal:registration_start'])],
             'verification_start' => ['nullable', 'date'],
-            'verification_end' => ['nullable', 'date', 'after_or_equal:verification_start'],
+            'verification_end' => ['nullable', 'date', Rule::when($request->filled('verification_start'), ['after_or_equal:verification_start'])],
             'selection_start' => ['nullable', 'date'],
-            'selection_end' => ['nullable', 'date', 'after_or_equal:selection_start'],
+            'selection_end' => ['nullable', 'date', Rule::when($request->filled('selection_start'), ['after_or_equal:selection_start'])],
             'announcement_at' => ['nullable', 'date'],
             're_registration_start' => ['nullable', 'date'],
-            're_registration_end' => ['nullable', 'date', 'after_or_equal:re_registration_start'],
+            're_registration_end' => ['nullable', 'date', Rule::when($request->filled('re_registration_start'), ['after_or_equal:re_registration_start'])],
             'guideline_file' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
         ]);
+
+        $orderedSchedule = [
+            'registration_start' => 'Mulai pendaftaran',
+            'registration_end' => 'Akhir pendaftaran',
+            'verification_start' => 'Mulai verifikasi',
+            'verification_end' => 'Akhir verifikasi',
+            'selection_start' => 'Mulai seleksi',
+            'selection_end' => 'Akhir seleksi',
+            'announcement_at' => 'Tanggal pengumuman',
+            're_registration_start' => 'Mulai daftar ulang',
+            're_registration_end' => 'Akhir daftar ulang',
+        ];
+        $lastFieldLabel = null;
+        $lastDate = null;
+        foreach ($orderedSchedule as $field => $label) {
+            $value = $validated[$field] ?? null;
+            if (! $value) {
+                continue;
+            }
+            if ($lastDate !== null && $value < $lastDate) {
+                throw ValidationException::withMessages([
+                    $field => "{$label} tidak boleh lebih awal dari {$lastFieldLabel} ({$lastDate}).",
+                ]);
+            }
+            $lastDate = $value;
+            $lastFieldLabel = $label;
+        }
 
         $file = $validated['guideline_file'] ?? null;
         unset($validated['guideline_file']);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
@@ -370,30 +371,84 @@ const removeResource = (url: string) => {
                 <Link class="ui-tab-button workspace-tab" href="/komunikasi/chat">Diskusi Kelas</Link>
             </nav>
 
-            <section v-if="capabilities.manage && !isTaskSection && !isMaterialSection" class="grade-summary">
-                <div><span>Kelas mapel</span><strong>{{ teaching_assignments.length }}</strong><small>semester aktif</small></div>
-                <div><span>Materi terbit</span><strong>{{ materials.length }}</strong><small>bahan ajar tersedia</small></div>
-                <div v-if="section !== 'materials'"><span>Tugas aktif</span><strong>{{ assignments.length }}</strong><small>{{ pendingCount }} belum dikumpulkan</small></div>
-                <div v-if="section !== 'materials'"><span>Pengumpulan</span><strong>{{ submissionCount }}</strong><small>respons siswa tercatat</small></div>
+            <section v-if="capabilities.manage && !isTaskSection && !isMaterialSection" class="ss-summary-grid" :class="{ 'ss-summary-grid--3': section === 'materials' }">
+                <MetricSummaryCard
+                    label="Kelas mapel"
+                    :value="teaching_assignments.length"
+                    note="semester aktif"
+                    tone="blue"
+                    icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"
+                />
+                <MetricSummaryCard
+                    label="Materi terbit"
+                    :value="materials.length"
+                    note="bahan ajar tersedia"
+                    tone="violet"
+                    icon="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6"
+                />
+                <MetricSummaryCard
+                    v-if="section !== 'materials'"
+                    label="Tugas aktif"
+                    :value="assignments.length"
+                    :note="`${pendingCount} belum dikumpulkan`"
+                    tone="amber"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+                <MetricSummaryCard
+                    v-if="section !== 'materials'"
+                    label="Pengumpulan"
+                    :value="submissionCount"
+                    note="respons siswa tercatat"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
             </section>
 
-            <section v-if="capabilities.submit" class="grade-summary student-learning-summary" :class="{ 'student-task-summary': section === 'assignments' }">
-                <div v-if="section === 'materials'"><span>Materi tersedia</span><strong>{{ studentMaterials.length }}</strong><small>untuk mapel terpilih</small></div>
-                <div v-if="section !== 'materials'"><span>Tugas tersedia</span><strong>{{ studentAssignments.length }}</strong><small>di mapel terpilih</small></div>
-                <div v-if="section !== 'materials'"><span>Sudah dikumpulkan</span><strong>{{ studentAssignments.filter((assignment) => assignment.submissions.length).length }}</strong><small>tugas terkirim</small></div>
-                <div v-if="section !== 'materials'"><span>Belum dikumpulkan</span><strong>{{ studentAssignments.filter((assignment) => !assignment.submissions.length).length }}</strong><small>periksa tenggat</small></div>
+            <section v-if="capabilities.submit" class="ss-summary-grid ss-summary-grid--3">
+                <MetricSummaryCard
+                    v-if="section === 'materials'"
+                    label="Materi tersedia"
+                    :value="studentMaterials.length"
+                    note="untuk mapel terpilih"
+                    tone="violet"
+                    icon="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6"
+                />
+                <MetricSummaryCard
+                    v-if="section !== 'materials'"
+                    label="Tugas tersedia"
+                    :value="studentAssignments.length"
+                    note="di mapel terpilih"
+                    tone="blue"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+                <MetricSummaryCard
+                    v-if="section !== 'materials'"
+                    label="Sudah dikumpulkan"
+                    :value="studentAssignments.filter((assignment) => assignment.submissions.length).length"
+                    note="tugas terkirim"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    v-if="section !== 'materials'"
+                    label="Belum dikumpulkan"
+                    :value="studentAssignments.filter((assignment) => !assignment.submissions.length).length"
+                    note="periksa tenggat"
+                    tone="amber"
+                    icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
             </section>
 
             <template v-if="isMaterialSection && capabilities.manage">
                 <section class="material-upload-panel panel">
-                    <div class="task-panel-heading"><div><p class="eyebrow">Upload materi</p><h2>Bagikan bahan ajar</h2><p>Materi yang diterbitkan hanya dapat dilihat oleh pengguna yang memiliki akses kelas.</p></div><span class="task-panel-icon material-panel-icon">↥</span></div>
+                    <div class="task-panel-heading"><div><p class="eyebrow">Unggah materi</p><h2>Bagikan bahan ajar</h2><p>Materi yang diterbitkan hanya dapat dilihat oleh pengguna yang memiliki akses kelas.</p></div><span class="task-panel-icon material-panel-icon">↥</span></div>
                     <form class="material-inline-form" @submit.prevent="submitMaterial">
                         <label>Kelas dan mata pelajaran<select v-model="materialForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.class_group.name }} · {{ item.subject.name }}</option></select></label>
                         <label>Judul *<input v-model="materialForm.title" required maxlength="180" placeholder="Contoh: Modul pembelajaran minggu ini" /></label>
                         <label>Deskripsi<textarea v-model="materialForm.description" rows="4" placeholder="Tambahkan keterangan singkat untuk siswa." /></label>
                         <label>File materi *<input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" required @change="handleMaterialFile" /><small>PDF, DOCX, JPG, JPEG, PNG · Maks. 10 MB</small></label>
                         <p v-if="materialForm.hasErrors" class="form-error">Periksa kembali data materi dan format file yang dipilih.</p>
-                        <AppButton variant="primary" :loading="materialForm.processing" class="material-upload-button" type="submit" :disabled="materialForm.processing">{{ materialForm.processing ? 'Mengunggah...' : 'Upload materi' }}</AppButton>
+                        <AppButton variant="primary" :loading="materialForm.processing" class="material-upload-button" type="submit" :disabled="materialForm.processing">{{ materialForm.processing ? 'Mengunggah...' : 'Unggah materi' }}</AppButton>
                     </form>
                 </section>
 
@@ -404,7 +459,7 @@ const removeResource = (url: string) => {
                             <div class="material-resource-icon">▤</div><div class="material-resource-body"><small>{{ material.teaching_assignment.class_group.name }} · {{ material.teaching_assignment.subject.name }}</small><h3>{{ material.title }}</h3><p>{{ material.description || 'Tidak ada deskripsi tambahan.' }}</p><span>{{ material.original_filename || 'Berkas materi' }} · {{ formatDate(material.published_at) }}</span></div><div class="material-resource-actions"><AppButton variant="secondary" as="a" class="material-download-button" :href="`/pembelajaran/materi/${material.id}/unduh`">Unduh</AppButton><RowActionButton v-if="capabilities.manage" action="delete" label="Hapus" :aria-label="`Hapus materi ${material.title}`" @click="removeResource(`/pembelajaran/materi/${material.id}`)" /></div>
                         </article>
                     </div>
-                    <div v-else class="material-empty-state"><div class="material-empty-icon">▤</div><strong>Belum ada materi</strong><p>Upload materi pertama untuk kelas dan mata pelajaran ini.</p></div>
+                    <div v-else class="material-empty-state"><div class="material-empty-icon">▤</div><strong>Belum ada materi</strong><p>Unggah materi pertama untuk kelas dan mata pelajaran ini.</p></div>
                 </section>
             </template>
 
