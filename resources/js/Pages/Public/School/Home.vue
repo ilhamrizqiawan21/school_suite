@@ -94,7 +94,7 @@ const formatDate = (value?: string | null) => value
         <section class="audience-pathways" aria-label="Jalur cepat pengunjung">
             <Link href="/ppdb" class="pathway-card">
                 <span class="pathway-tag">Calon Siswa &amp; Orang Tua</span>
-                <strong>Informasi &amp; Pendaftaran PPDB</strong>
+                <strong>Informasi &amp; Pendaftaran SPMB</strong>
                 <small>Lihat jalur masuk, syarat, dan jadwal pendaftaran.</small>
             </Link>
             <Link href="/program" class="pathway-card">
@@ -110,7 +110,7 @@ const formatDate = (value?: string | null) => value
             <Link href="/login" class="pathway-card pathway-portal">
                 <span class="pathway-tag">Warga Sekolah</span>
                 <strong>Masuk Portal Akademik</strong>
-                <small>Akses LMS, jadwal, rapor, dan layanan guru/siswa.</small>
+                <small>Akses materi, tugas, jadwal, rapor, dan layanan guru/siswa.</small>
             </Link>
         </section>
 
@@ -160,7 +160,7 @@ const formatDate = (value?: string | null) => value
             <p v-else class="empty-state">Berita sekolah akan tampil di halaman ini.</p>
         </section>
 
-        <section class="home-admissions" aria-labelledby="admissions-title"><div><h2 id="admissions-title">Langkah awal masa depan dimulai di sini.</h2><p>Pelajari jalur, persyaratan, dan jadwal pendaftaran peserta didik baru.</p></div><Link href="/ppdb" aria-label="Lihat informasi PPDB">Lihat PPDB <span aria-hidden="true">→</span></Link></section>
+        <section class="home-admissions" aria-labelledby="admissions-title"><div><h2 id="admissions-title">Langkah awal masa depan dimulai di sini.</h2><p>Pelajari jalur, persyaratan, dan jadwal pendaftaran peserta didik baru.</p></div><Link href="/ppdb" aria-label="Lihat informasi SPMB">Lihat SPMB <span aria-hidden="true">→</span></Link></section>
 
         <footer class="public-footer">
             <div class="footer-brand">
@@ -173,7 +173,7 @@ const formatDate = (value?: string | null) => value
                 <nav aria-label="Navigasi footer">
                     <Link href="/profil-sekolah">Profil Sekolah</Link>
                     <Link href="/program">Program</Link>
-                    <Link href="/ppdb">PPDB</Link>
+                    <Link href="/ppdb">SPMB</Link>
                     <Link href="/berita">Berita</Link>
                     <Link href="/galeri">Galeri</Link>
                     <Link href="/login">Portal Login</Link>

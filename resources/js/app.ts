@@ -31,10 +31,11 @@ router.visit = ((url: InertiaVisitUrl, options?: Parameters<typeof router.visit>
 }) as typeof router.visit;
 
 const setupTableScrollAffordances = () => {
+    let refreshPending = false;
     const tableScrollers = new Set<HTMLElement>();
     const resizeObserver = typeof ResizeObserver === 'undefined'
         ? null
-        : new ResizeObserver(() => window.requestAnimationFrame(refreshTableScrollers));
+        : new ResizeObserver(() => scheduleRefresh());
 
     const updateTableScroller = (element: HTMLElement) => {
         const maxScrollLeft = element.scrollWidth - element.clientWidth;
@@ -78,7 +79,14 @@ const setupTableScrollAffordances = () => {
         tableScrollers.forEach(updateTableScroller);
     };
 
-    const scheduleRefresh = () => window.requestAnimationFrame(refreshTableScrollers);
+    const scheduleRefresh = () => {
+        if (refreshPending) return;
+        refreshPending = true;
+        window.requestAnimationFrame(() => {
+            refreshPending = false;
+            refreshTableScrollers();
+        });
+    };
 
     window.addEventListener('resize', scheduleRefresh);
     router.on('navigate', scheduleRefresh);

@@ -26,13 +26,6 @@ const fallbackLogoUrl = `${appBasePath}/brand/logos/school-suite-logo-symbol-tra
 const appName = computed(() => !page.props.appName || page.props.appName === 'Laravel' || String(page.props.appName).toLowerCase().includes('e-school') ? 'School Suite' : page.props.appName);
 const currentRole = computed(() => page.props.auth?.user?.role);
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
-const sidebarOpen = ref(false);
-const desktopSidebarRail = ref(false);
-const isMobileViewport = ref(false);
-const sidebarExpanded = computed(() => isMobileViewport.value ? sidebarOpen.value : !desktopSidebarRail.value);
-const sidebarToggleLabel = computed(() => isMobileViewport.value
-    ? (sidebarOpen.value ? 'Tutup navigasi' : 'Buka navigasi')
-    : (desktopSidebarRail.value ? 'Perlebar sidebar' : 'Perkecil sidebar'));
 const { theme, toggleTheme } = useTheme();
 const darkTheme = computed(() => theme.value === 'dark');
 const toastMessage = ref('');
@@ -44,12 +37,10 @@ const searchQuery = ref('');
 const searchFocused = ref(false);
 const activeSearchIndex = ref(0);
 const menuEntries = ref<Array<{ label: string; href: string; section: string }>>([]);
+const sidebarOpen = ref(false);
+const isMobileViewport = ref(false);
 let removeNavigateListener: VoidFunction | null = null;
-let removeBeforeNavigateListener: VoidFunction | null = null;
-let sidebarViewportQuery: MediaQueryList | null = null;
-let syncSidebarViewport: (() => void) | null = null;
-const sidebarScrollStorageKey = 'school-suite-sidebar-scroll-top';
-const sidebarNavScroll = ref<HTMLElement | null>(null);
+let mobileMediaQuery: MediaQueryList | null = null;
 
 const searchResults = computed(() => {
     const query = searchQuery.value.trim().toLocaleLowerCase('id-ID');
@@ -68,7 +59,7 @@ const searchResults = computed(() => {
 const searchOpen = computed(() => searchFocused.value && searchQuery.value.trim().length > 0);
 
 const collectMenuEntries = () => {
-    const entries = Array.from(document.querySelectorAll<HTMLAnchorElement>('#sidebar a.nav-item'))
+    const entries = Array.from(document.querySelectorAll<HTMLAnchorElement>('.topbar-navigation a.nav-item, .sidebar a.nav-item'))
         .map((link) => ({
             label: link.querySelector('span')?.textContent?.trim() || link.textContent?.trim() || '',
             href: link.getAttribute('href') || '',
@@ -136,26 +127,33 @@ const showFlashToast = () => {
     toastTimer = setTimeout(() => { toastMessage.value = ''; }, 5000);
 };
 
-const toggleSidebar = () => {
-    if (isMobileViewport.value) {
-        sidebarOpen.value = !sidebarOpen.value;
-        return;
-    }
+const closeSidebar = () => {
+    sidebarOpen.value = false;
+};
 
-    desktopSidebarRail.value = !desktopSidebarRail.value;
-    try {
-        localStorage.setItem('school-suite-sidebar-mode', desktopSidebarRail.value ? 'rail' : 'full');
-    } catch { /* Storage may be unavailable in private browsing. */ }
+const toggleSidebar = () => {
+    sidebarOpen.value = !sidebarOpen.value;
+};
+
+const handleViewportMediaChange = (event: MediaQueryListEvent | MediaQueryList) => {
+    isMobileViewport.value = event.matches;
+    if (!event.matches) {
+        closeSidebar();
+    }
+    nextTick(collectMenuEntries);
 };
 
 const closeOnEscape = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
+        if (sidebarOpen.value) {
+            closeSidebar();
+            return;
+        }
         if (searchOpen.value) {
             closeMenuSearch();
             searchInput.value?.focus();
             return;
         }
-        sidebarOpen.value = false;
     }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
@@ -165,44 +163,7 @@ const closeOnEscape = (event: KeyboardEvent) => {
     }
 };
 
-const saveSidebarScroll = () => {
-    const scrollTop = sidebarNavScroll.value?.scrollTop;
-    if (typeof scrollTop !== 'number') return;
-
-    try {
-        sessionStorage.setItem(sidebarScrollStorageKey, String(scrollTop));
-    } catch { /* Storage may be unavailable in private browsing. */ }
-};
-
-const restoreSidebarScroll = () => {
-    let savedScrollTop: number;
-    try {
-        savedScrollTop = Number(sessionStorage.getItem(sidebarScrollStorageKey));
-    } catch {
-        return;
-    }
-
-    if (!Number.isFinite(savedScrollTop) || savedScrollTop <= 0) return;
-
-    nextTick(() => {
-        window.requestAnimationFrame(() => {
-            if (sidebarNavScroll.value) sidebarNavScroll.value.scrollTop = savedScrollTop;
-        });
-    });
-};
-
 onMounted(() => {
-    sidebarViewportQuery = window.matchMedia('(max-width: 960px)');
-    syncSidebarViewport = () => {
-        isMobileViewport.value = sidebarViewportQuery?.matches ?? false;
-        if (isMobileViewport.value) sidebarOpen.value = false;
-    };
-    syncSidebarViewport();
-    sidebarViewportQuery.addEventListener('change', syncSidebarViewport);
-    try {
-        desktopSidebarRail.value = localStorage.getItem('school-suite-sidebar-mode') === 'rail';
-    } catch { desktopSidebarRail.value = false; }
-
     applySchoolTheme(page.props.school?.theme_primary);
     showFlashToast();
     // Let the active light/dark token decide --primary. Login branding may
@@ -215,13 +176,14 @@ onMounted(() => {
     }
     document.addEventListener('keydown', closeOnEscape);
     document.addEventListener('pointerdown', handleDocumentPointerdown);
+    mobileMediaQuery = window.matchMedia('(max-width: 960px)');
+    handleViewportMediaChange(mobileMediaQuery);
+    mobileMediaQuery.addEventListener('change', handleViewportMediaChange);
     nextTick(collectMenuEntries);
-    removeBeforeNavigateListener = router.on('before', saveSidebarScroll);
     removeNavigateListener = router.on('navigate', () => {
-        sidebarOpen.value = false;
         closeMenuSearch();
+        closeSidebar();
     });
-    restoreSidebarScroll();
 });
 
 watch(() => page.props.school?.theme_primary, applySchoolTheme);
@@ -229,19 +191,15 @@ watch(() => page.props.flash, showFlashToast, { deep: true });
 
 onBeforeUnmount(() => {
     if (toastTimer) clearTimeout(toastTimer);
-    if (sidebarViewportQuery && syncSidebarViewport) {
-        sidebarViewportQuery.removeEventListener('change', syncSidebarViewport);
-    }
     document.removeEventListener('keydown', closeOnEscape);
     document.removeEventListener('pointerdown', handleDocumentPointerdown);
-    saveSidebarScroll();
-    removeBeforeNavigateListener?.();
+    mobileMediaQuery?.removeEventListener('change', handleViewportMediaChange);
     removeNavigateListener?.();
 });
 </script>
 
 <template>
-    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace, 'is-sidebar-rail': desktopSidebarRail && !isMobileViewport }">
+    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace }">
         <Head :title="title" />
 
         <!-- Accessibility: Skip Link -->
@@ -252,70 +210,104 @@ onBeforeUnmount(() => {
             Lewati ke konten utama
         </a>
 
-        <aside id="sidebar" class="sidebar" :class="{ 'is-open': sidebarOpen }" aria-label="Navigasi utama">
-            <div class="brand">
-                <div class="brand-mark" aria-hidden="true">
-                    <img :src="page.props.school?.logo_url || fallbackLogoUrl" alt="">
+        <template v-if="isMobileViewport">
+            <div class="sidebar-backdrop" :class="{ 'is-visible': sidebarOpen }" aria-hidden="true" @click="closeSidebar" />
+            <aside id="mobile-sidebar" class="sidebar" :class="{ 'is-open': sidebarOpen }" aria-label="Menu navigasi">
+                <div class="sidebar-header">
+                    <Link href="/dashboard" class="brand" aria-label="Buka beranda School Suite" @click="closeSidebar">
+                        <div class="brand-mark" aria-hidden="true">
+                            <img :src="page.props.school?.logo_url || fallbackLogoUrl" alt="">
+                        </div>
+                        <div class="brand-copy">
+                            <strong>{{ appName }}</strong>
+                            <small>{{ page.props.school?.name ?? 'Portal sekolah' }}</small>
+                        </div>
+                    </Link>
+                    <AppButton variant="secondary" icon-only type="button" class="icon-button sidebar-close" aria-label="Tutup menu" @click="closeSidebar">
+                        <template #icon>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                        </template>
+                    </AppButton>
                 </div>
-                <div class="brand-copy">
-                    <strong>{{ appName }}</strong>
-                    <small>{{ page.props.school?.name ?? 'Ruang kerja sekolah' }}</small>
+                <div class="sidebar-nav-scroll">
+                    <SidebarNavigation mode="sidebar" />
                 </div>
-            </div>
-            <div ref="sidebarNavScroll" class="sidebar-nav-scroll flex-1 overflow-y-auto">
-                <SidebarNavigation />
-            </div>
-        </aside>
-            <button v-if="sidebarOpen" type="button" class="sidebar-backdrop is-visible" aria-label="Tutup navigasi" @click="sidebarOpen = false" />
+            </aside>
+        </template>
+
         <div class="workspace">
             <header class="topbar">
-                <AppButton variant="secondary" icon-only type="button" class="icon-button sidebar-toggle" :aria-expanded="sidebarExpanded" aria-controls="sidebar" :aria-label="sidebarToggleLabel" :title="sidebarToggleLabel" @click="toggleSidebar"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></template>
-
-                </AppButton>
-                <div ref="searchRoot" class="global-search" :class="{ 'is-focused': searchFocused }">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    <span class="sr-only">Cari di School Suite</span>
-                    <input
-                        ref="searchInput"
-                        v-model="searchQuery"
-                        type="search"
-                        role="combobox"
-                        aria-autocomplete="list"
-                        aria-controls="global-search-results"
-                        :aria-expanded="searchOpen"
-                        placeholder="Cari menu…"
-                        @focus="searchFocused = true; refreshMenuSearch()"
-                        @input="refreshMenuSearch"
-                        @keydown="handleSearchKeydown"
-                    />
-                    <div v-if="searchOpen" id="global-search-results" class="global-search-results" role="listbox" aria-label="Hasil pencarian menu">
-                        <template v-if="searchResults.length">
-                            <Link
-                                v-for="(entry, index) in searchResults"
-                                :key="`${entry.href}-${entry.label}`"
-                                :href="entry.href"
-                                class="global-search-result"
-                                :class="{ 'is-highlighted': index === activeSearchIndex }"
-                                role="option"
-                                :aria-selected="index === activeSearchIndex"
-                                @click="closeMenuSearch"
-                            >
-                                <span>{{ entry.label }}</span>
-                                <small>{{ entry.section }}</small>
-                            </Link>
+                <div class="topbar-main">
+                    <AppButton
+                        v-if="isMobileViewport"
+                        variant="secondary"
+                        icon-only
+                        type="button"
+                        class="icon-button sidebar-toggle"
+                        aria-controls="mobile-sidebar"
+                        :aria-expanded="sidebarOpen"
+                        aria-label="Buka menu navigasi"
+                        @click="toggleSidebar"
+                    >
+                        <template #icon>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
                         </template>
-                        <p v-else class="global-search-empty">Menu tidak ditemukan.</p>
+                    </AppButton>
+                    <Link href="/dashboard" class="brand topbar-brand" aria-label="Buka dashboard School Suite">
+                        <div class="brand-mark" aria-hidden="true">
+                            <img :src="page.props.school?.logo_url || fallbackLogoUrl" alt="">
+                        </div>
+                        <div class="brand-copy">
+                            <strong>{{ appName }}</strong>
+                            <small>{{ page.props.school?.name ?? 'Ruang kerja sekolah' }}</small>
+                        </div>
+                    </Link>
+                    <div ref="searchRoot" class="global-search" :class="{ 'is-focused': searchFocused }">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <span class="sr-only">Cari di School Suite</span>
+                        <input
+                            ref="searchInput"
+                            v-model="searchQuery"
+                            type="search"
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-controls="global-search-results"
+                            :aria-expanded="searchOpen"
+                            placeholder="Cari menu…"
+                            @focus="searchFocused = true; refreshMenuSearch()"
+                            @input="refreshMenuSearch"
+                            @keydown="handleSearchKeydown"
+                        />
+                        <div v-if="searchOpen" id="global-search-results" class="global-search-results" role="listbox" aria-label="Hasil pencarian menu">
+                            <template v-if="searchResults.length">
+                                <Link
+                                    v-for="(entry, index) in searchResults"
+                                    :key="entry.href + '-' + entry.label"
+                                    :href="entry.href"
+                                    class="global-search-result"
+                                    :class="{ 'is-highlighted': index === activeSearchIndex }"
+                                    role="option"
+                                    :aria-selected="index === activeSearchIndex"
+                                    @click="closeMenuSearch"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <small>{{ entry.section }}</small>
+                                </Link>
+                            </template>
+                            <p v-else class="global-search-empty">Menu tidak ditemukan.</p>
+                        </div>
                     </div>
+                    <div class="context-switcher" aria-label="Periode aktif">
+                        <span class="context-dot" />
+                        <div><small>Tahun ajaran aktif</small><strong>{{ activePeriodLabel }}</strong></div>
+                    </div>
+                    <span class="topbar-spacer" />
+                    <AppButton variant="secondary" icon-only type="button" class="icon-button theme-toggle" :aria-pressed="darkTheme" :aria-label="darkTheme ? 'Gunakan tema terang' : 'Gunakan tema gelap'" @click="toggleTheme"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><template v-if="darkTheme"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></template><path v-else d="M20.9 13.2A9 9 0 0 1 10.8 3.1a9 9 0 1 0 10.1 10.1Z"/></svg></template></AppButton>
+                    <TopNavbar />
                 </div>
-                <div class="context-switcher" aria-label="Periode aktif">
-                    <span class="context-dot" />
-                    <div><small>Tahun ajaran aktif</small><strong>{{ activePeriodLabel }}</strong></div>
+                <div v-if="!isMobileViewport" class="topbar-navigation">
+                    <SidebarNavigation mode="topbar" />
                 </div>
-                <span class="topbar-spacer" />
-                <AppButton variant="secondary" icon-only type="button" class="icon-button theme-toggle" :aria-pressed="darkTheme" :aria-label="darkTheme ? 'Gunakan tema terang' : 'Gunakan tema gelap'" @click="toggleTheme"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><template v-if="darkTheme"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></template><path v-else d="M20.9 13.2A9 9 0 0 1 10.8 3.1a9 9 0 1 0 10.1 10.1Z"/></svg></template>
-
-                </AppButton>
-                <TopNavbar />
             </header>
             <main id="main-content" tabindex="-1" :class="{ 'role-guru-main': isTeacherWorkspace }">
                 <Breadcrumbs :title="layoutProps.title" />

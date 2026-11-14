@@ -65,7 +65,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 </script>
 
 <template>
-    <Head :title="`PPDB — ${school.name}`" />
+    <Head :title="`SPMB — ${school.name}`" />
     <main class="public-site public-admissions" :style="themeStyle">
         <PublicHeader :school="school" active="admissions" />
 
@@ -85,7 +85,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                 <AppButton variant="primary" as="a" v-if="hasContact" class="primary-button" href="#kontak">Hubungi panitia</AppButton>
             </div>
             <aside class="status-panel" aria-label="Status penerimaan siswa baru">
-                <span>Status PPDB</span>
+                <span>Status SPMB</span>
                 <strong>{{ registrationOpen ? 'Dibuka' : 'Belum dibuka' }}</strong>
                 <small>{{ currentPeriod ? 'Tahun ajaran ' + currentPeriod.academic_year : 'Belum ada periode aktif' }}</small>
             </aside>
@@ -96,7 +96,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 
         <section id="periode" class="content-section" aria-labelledby="period-title">
             <div class="section-heading">
-                <div><p class="eyebrow">Informasi PPDB</p><h2 id="period-title">Periode dan jalur penerimaan.</h2></div>
+                <div><p class="eyebrow">Informasi SPMB</p><h2 id="period-title">Periode dan jalur penerimaan.</h2></div>
                 <p v-if="periods.length">{{ periods.length }} periode tersedia.</p>
                 <p v-else>Belum ada periode aktif.</p>
             </div>
@@ -130,7 +130,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         </section>
 
         <footer id="kontak" class="public-footer">
-            <div><p class="eyebrow">Kontak PPDB</p><h2>Hubungi panitia penerimaan.</h2></div>
+            <div><p class="eyebrow">Kontak SPMB</p><h2>Hubungi panitia penerimaan.</h2></div>
             <div class="contact-list"><p v-if="school.address">{{ school.address }}</p><a v-if="school.phone" :href="`tel:${school.phone}`">{{ school.phone }}</a><a v-if="school.email" :href="`mailto:${school.email}`">{{ school.email }}</a><p v-if="!hasContact">Hubungi sekretariat sekolah untuk informasi pendaftaran.</p></div>
         </footer>
     </main>

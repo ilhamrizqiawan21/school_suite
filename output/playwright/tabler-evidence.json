@@ -1,0 +1,24 @@
+{
+  "contract": "Tabler dashboard preview places the primary School Suite navigation in the topbar, keeps grouped navigation keyboard-accessible, and remains usable on desktop and mobile widths.",
+  "targetViewports": ["1440x900", "390x844"],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Browser accessibility snapshots expose a labelled navigation landmark, native details/summary menu groups, named search, theme, announcement, and dashboard controls; the Akademik dropdown opened through its keyboard-compatible summary control."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "At 1440x900 the brand, search, account actions, and topbar navigation fit in the header; at 390x844 the topbar remains usable with horizontally scrollable grouped navigation and no horizontal page overflow."
+  },
+  "contentStates": {
+    "loading": { "status": "not-applicable", "reason": "This isolated static preview has no loading state or asynchronous data request." },
+    "empty": { "status": "not-applicable", "reason": "The preview intentionally renders illustrative dashboard content and does not query a collection that can be empty." },
+    "error": { "status": "not-applicable", "reason": "The preview has no error-producing data boundary; browser console validation reported no errors." },
+    "partial": { "status": "not-applicable", "reason": "The preview is a complete static illustration rather than a partial data response." },
+    "success": { "status": "pass", "evidence": "The dashboard preview rendered with its content, grouped topbar menus, theme control, search field, and responsive layout." },
+    "permission": { "status": "not-applicable", "reason": "The preview does not perform authenticated or permission-gated operations." }
+  },
+  "renderedEvidence": [
+    { "viewport": "1440x900", "artifact": "tabler-desktop.png", "observation": "Desktop screenshot shows the navigation grouped in the topbar beneath the header row, with content beginning below it." },
+    { "viewport": "390x844", "artifact": "tabler-mobile.png", "observation": "Mobile screenshot shows the compact topbar and horizontally scrollable navigation row without the former sidebar." }
+  ]
+}

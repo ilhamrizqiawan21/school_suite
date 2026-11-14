@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -150,11 +151,35 @@ const conditionClass = (condition: string) => `condition-${condition}`;
 
 
 
-            <section class="summary-grid" aria-label="Ringkasan inventaris">
-                <article class="summary-total"><span>Total aset</span><strong>{{ summary.total }}</strong><small>Seluruh inventaris sekolah</small></article>
-                <article class="summary-available"><span>Tersedia</span><strong>{{ summary.available }}</strong><small>Siap digunakan atau dipinjam</small></article>
-                <article class="summary-borrowed"><span>Sedang dipinjam</span><strong>{{ summary.borrowed }}</strong><small>Perlu dipantau batas kembali</small></article>
-                <article class="summary-maintenance"><span>Perawatan</span><strong>{{ summary.maintenance }}</strong><small>Tidak tersedia sementara</small></article>
+            <section class="ss-summary-grid" aria-label="Ringkasan inventaris">
+                <MetricSummaryCard
+                    label="Total aset"
+                    :value="summary.total"
+                    note="Seluruh inventaris sekolah"
+                    tone="blue"
+                    icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+                <MetricSummaryCard
+                    label="Tersedia"
+                    :value="summary.available"
+                    note="Siap digunakan atau dipinjam"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Sedang dipinjam"
+                    :value="summary.borrowed"
+                    note="Perlu dipantau batas kembali"
+                    tone="amber"
+                    icon="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+                <MetricSummaryCard
+                    label="Perawatan"
+                    :value="summary.maintenance"
+                    note="Tidak tersedia sementara"
+                    tone="rose"
+                    icon="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
             </section>
 
             <div v-if="showAssetModal" role="dialog" aria-modal="true" aria-labelledby="asset-modal-title" class="modal-backdrop" @click.self="cancelEdit" @keydown.esc="cancelEdit">

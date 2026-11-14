@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
@@ -183,10 +184,10 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
             <section class="hero-card compact-hero progress-hero">
                 <div class="progress-hero__copy">
                     <div class="progress-hero__eyebrow-row">
-                        <p class="eyebrow">{{ is_student ? 'Ringkasan belajar saya' : 'Monitoring Pembelajaran & LMS' }}</p>
+                        <p class="eyebrow">{{ is_student ? 'Ringkasan belajar saya' : 'Pemantauan Pembelajaran' }}</p>
                         <span v-if="active_term" class="term-pill">{{ active_term.name }}</span>
                     </div>
-                    <h1>{{ is_student ? 'Progress Belajar Saya' : 'Progress Belajar Siswa' }}</h1>
+                    <h1>{{ is_student ? 'Progres Belajar Saya' : 'Progres Belajar Siswa' }}</h1>
                     <p>
                         {{
                             is_student
@@ -241,24 +242,21 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
             </section>
 
             <!-- Summary Metric Cards (Guru / Admin / Wali Kelas / Kepsek) -->
-            <section v-if="!is_student" class="grade-summary progress-kpi-grid" aria-label="Ringkasan progres hasil filter">
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Cakupan Siswa</span>
-                        <span class="kpi-badge kpi-badge--blue">{{ pagination.total }} baris mapel</span>
-                    </div>
-                    <strong>{{ totals.students }}</strong>
-                    <small>siswa aktif pada hasil filter</small>
-                </article>
-
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Keterbacaan Materi</span>
-                        <span class="kpi-badge kpi-badge--purple">
-                            {{ totals.materials_total ? `${ratio(totals.materials_read, totals.materials_total)}%` : '0%' }}
-                        </span>
-                    </div>
-                    <strong>{{ totals.materials_read }} / {{ totals.materials_total }}</strong>
+            <section v-if="!is_student" class="ss-summary-grid" aria-label="Ringkasan progres hasil filter">
+                <MetricSummaryCard
+                    label="Cakupan Siswa"
+                    :value="totals.students"
+                    :note="`${pagination.total} baris mapel · aktif pada hasil filter`"
+                    tone="blue"
+                    icon="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m8-10a4 4 0 100-8 4 4 0 000 8zm10 10v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"
+                />
+                <MetricSummaryCard
+                    label="Keterbacaan Materi"
+                    :value="`${totals.materials_read} / ${totals.materials_total}`"
+                    :note="totals.materials_total ? `${ratio(totals.materials_read, totals.materials_total)}% sudah dibaca` : 'belum ada bahan ajar terbit'"
+                    tone="violet"
+                    icon="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6"
+                >
                     <div class="mini-progress-track" aria-hidden="true">
                         <span
                             class="mini-progress-fill"
@@ -266,17 +264,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             :style="{ width: `${ratio(totals.materials_read, totals.materials_total)}%` }"
                         />
                     </div>
-                    <small>{{ totals.materials_total ? `${ratio(totals.materials_read, totals.materials_total)}% dari aktivitas materi terbit` : 'belum ada materi terbit' }}</small>
-                </article>
-
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Pengumpulan Tugas</span>
-                        <span class="kpi-badge kpi-badge--emerald">
-                            {{ totals.assignments_total ? `${ratio(totals.assignments_submitted, totals.assignments_total)}%` : '0%' }}
-                        </span>
-                    </div>
-                    <strong>{{ totals.assignments_submitted }} / {{ totals.assignments_total }}</strong>
+                </MetricSummaryCard>
+                <MetricSummaryCard
+                    label="Pengumpulan Tugas"
+                    :value="`${totals.assignments_submitted} / ${totals.assignments_total}`"
+                    :note="totals.assignments_total ? `${ratio(totals.assignments_submitted, totals.assignments_total)}% sudah terkumpul` : 'belum ada yang diterbitkan'"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                >
                     <div class="mini-progress-track" aria-hidden="true">
                         <span
                             class="mini-progress-fill"
@@ -284,41 +279,32 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             :style="{ width: `${ratio(totals.assignments_submitted, totals.assignments_total)}%` }"
                         />
                     </div>
-                    <small>{{ totals.assignments_total ? `${ratio(totals.assignments_submitted, totals.assignments_total)}% dari tugas terbit` : 'belum ada tugas terbit' }}</small>
-                </article>
-
-                <article class="kpi-card" :class="{ 'score-summary-red': totals.late > 0 || totals.revisions > 0 }">
-                    <div class="kpi-card__top">
-                        <span>Perlu Tindak Lanjut</span>
-                        <span class="kpi-badge" :class="totals.late > 0 || totals.revisions > 0 ? 'kpi-badge--rose' : 'kpi-badge--slate'">
-                            {{ totals.revisions }} revisi
-                        </span>
-                    </div>
-                    <strong>{{ totals.late }} <small class="kpi-inline-unit">terlambat</small></strong>
-                    <small>
-                        Rerata nilai kelas:
-                        <strong class="kpi-inline-score">{{ totals.average_score === null ? '—' : `${totals.average_score}%` }}</strong>
-                    </small>
-                </article>
+                </MetricSummaryCard>
+                <MetricSummaryCard
+                    label="Perlu Tindak Lanjut"
+                    :value="`${totals.late} terlambat`"
+                    :note="`${totals.revisions} revisi · Rerata nilai kelas: ${totals.average_score === null ? '—' : `${totals.average_score}%`}`"
+                    :tone="totals.late > 0 || totals.revisions > 0 ? 'rose' : 'slate'"
+                    icon="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
             </section>
 
             <!-- Summary Metric Cards (Siswa) -->
-            <section v-else class="grade-summary student-summary progress-kpi-grid" aria-label="Ringkasan progress belajar saya">
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Kehadiran</span>
-                        <span class="kpi-badge kpi-badge--emerald">Presensi</span>
-                    </div>
-                    <strong>{{ personal_attendance ? `${personal_attendance.percentage}%` : '—' }}</strong>
-                    <small>{{ personal_attendance ? `${personal_attendance.present} kali hadir dari ${personal_attendance.total} catatan` : 'belum ada catatan presensi' }}</small>
-                </article>
-
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Materi Dipelajari</span>
-                        <span class="kpi-badge kpi-badge--purple">{{ ratio(totals.materials_read, totals.materials_total) }}%</span>
-                    </div>
-                    <strong>{{ totals.materials_read }} / {{ totals.materials_total }}</strong>
+            <section v-else class="ss-summary-grid" aria-label="Ringkasan progress belajar saya">
+                <MetricSummaryCard
+                    label="Kehadiran"
+                    :value="personal_attendance ? `${personal_attendance.percentage}%` : '—'"
+                    :note="personal_attendance ? `${personal_attendance.present} kali hadir dari ${personal_attendance.total} catatan` : 'belum ada catatan presensi'"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Materi Dipelajari"
+                    :value="`${totals.materials_read} / ${totals.materials_total}`"
+                    :note="totals.materials_total ? `${ratio(totals.materials_read, totals.materials_total)}% sudah dibaca` : 'belum ada bahan ajar terbit'"
+                    tone="violet"
+                    icon="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6"
+                >
                     <div class="mini-progress-track" aria-hidden="true">
                         <span
                             class="mini-progress-fill"
@@ -326,15 +312,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             :style="{ width: `${ratio(totals.materials_read, totals.materials_total)}%` }"
                         />
                     </div>
-                    <small>{{ totals.materials_total ? `${ratio(totals.materials_read, totals.materials_total)}% materi terbit` : 'belum ada materi terbit' }}</small>
-                </article>
-
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Tugas Dikumpulkan</span>
-                        <span class="kpi-badge kpi-badge--emerald">{{ ratio(totals.assignments_submitted, totals.assignments_total) }}%</span>
-                    </div>
-                    <strong>{{ totals.assignments_submitted }} / {{ totals.assignments_total }}</strong>
+                </MetricSummaryCard>
+                <MetricSummaryCard
+                    label="Tugas Dikumpulkan"
+                    :value="`${totals.assignments_submitted} / ${totals.assignments_total}`"
+                    :note="totals.assignments_total ? `${ratio(totals.assignments_submitted, totals.assignments_total)}% sudah terkumpul` : 'belum ada yang diterbitkan'"
+                    tone="amber"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                >
                     <div class="mini-progress-track" aria-hidden="true">
                         <span
                             class="mini-progress-fill"
@@ -342,18 +327,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             :style="{ width: `${ratio(totals.assignments_submitted, totals.assignments_total)}%` }"
                         />
                     </div>
-                    <small>{{ totals.assignments_total ? `${ratio(totals.assignments_submitted, totals.assignments_total)}% tugas terbit` : 'belum ada tugas terbit' }}</small>
-                </article>
-
-                <article class="kpi-card">
-                    <div class="kpi-card__top">
-                        <span>Rerata Nilai</span>
-                        <span v-if="totals.revisions > 0" class="kpi-badge kpi-badge--rose">{{ totals.revisions }} perlu revisi</span>
-                        <span v-else class="kpi-badge kpi-badge--blue">Capaian</span>
-                    </div>
-                    <strong>{{ totals.average_score === null ? '—' : `${totals.average_score}%` }}</strong>
-                    <small>berdasarkan tugas yang dinilai</small>
-                </article>
+                </MetricSummaryCard>
+                <MetricSummaryCard
+                    label="Rerata Nilai"
+                    :value="totals.average_score === null ? '—' : `${totals.average_score}%`"
+                    :note="totals.revisions > 0 ? `${totals.revisions} perlu revisi · berdasarkan tugas yang dinilai` : 'berdasarkan tugas yang dinilai'"
+                    :tone="totals.revisions > 0 ? 'rose' : 'blue'"
+                    icon="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                />
             </section>
 
             <!-- Student Attendance Breakdown -->

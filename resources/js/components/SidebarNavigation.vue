@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+const props = withDefaults(defineProps<{ mode?: 'sidebar' | 'topbar' }>(), { mode: 'sidebar' });
 
 interface NavItem {
     name: string;
@@ -43,7 +45,7 @@ const sections: NavSection[] = [
             { name: 'Dashboard & Laporan', href: '/spmb', key: 'admissions', exact: true, activePrefixes: ['/spmb/laporan'], icon: 'M3 13h4V3H3v10zm7 8h4V3h-4v18zm7-5h4V3h-4v13z' },
             { name: 'Pendaftar & Verifikasi', href: '/spmb/pendaftar', key: 'admissions-applicants', activePrefixes: ['/spmb/pendaftar', '/spmb/berkas'], icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0H5z' },
             { name: 'Seleksi & Daftar Ulang', href: '/spmb/seleksi', key: 'admissions-selection', activePrefixes: ['/spmb/seleksi', '/spmb/pengumuman', '/spmb/daftar-ulang'], icon: 'M4 19h16M7 16V9m5 7V5m5 11v-3' },
-            { name: 'Pengaturan SPMB', href: '/spmb/pengaturan', key: 'admissions-settings', activePrefixes: ['/spmb/pengaturan', '/spmb/periode', '/spmb/jalur', '/spmb/panitia'], icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12' },
+            { name: 'Pengaturan', href: '/spmb/pengaturan', key: 'admissions-settings', activePrefixes: ['/spmb/pengaturan', '/spmb/periode', '/spmb/jalur', '/spmb/panitia'], icon: 'M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12' },
         ],
     },
     {
@@ -281,25 +283,97 @@ const activeSectionKey = computed(() => visibleSections.value.find((section) =>
 )?.title ?? null);
 const expandedGroups = ref<Record<string, boolean>>({});
 const groupsLoaded = ref(false);
+const navRoot = ref<HTMLElement | null>(null);
+const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const onAccordionEnter = (el: Element) => {
+    const htmlEl = el as HTMLElement;
+    if (prefersReducedMotion()) return;
+    htmlEl.style.overflow = 'hidden';
+    htmlEl.style.height = '0px';
+    htmlEl.style.opacity = '0';
+    // Force reflow so the browser registers the starting height.
+    void htmlEl.offsetHeight;
+    htmlEl.style.transition = 'height 220ms var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)), opacity 180ms ease';
+    htmlEl.style.height = `${htmlEl.scrollHeight}px`;
+    htmlEl.style.opacity = '1';
+};
+
+const onAccordionAfterEnter = (el: Element) => {
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.height = '';
+    htmlEl.style.overflow = '';
+    htmlEl.style.opacity = '';
+    htmlEl.style.transition = '';
+};
+
+const onAccordionLeave = (el: Element) => {
+    const htmlEl = el as HTMLElement;
+    if (prefersReducedMotion()) return;
+    htmlEl.style.overflow = 'hidden';
+    htmlEl.style.height = `${htmlEl.scrollHeight}px`;
+    htmlEl.style.opacity = '1';
+    void htmlEl.offsetHeight;
+    htmlEl.style.transition = 'height 190ms var(--ease, cubic-bezier(0.2, 0.8, 0.2, 1)), opacity 150ms ease';
+    htmlEl.style.height = '0px';
+    htmlEl.style.opacity = '0';
+};
+
+const onAccordionAfterLeave = (el: Element) => {
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.height = '';
+    htmlEl.style.overflow = '';
+    htmlEl.style.opacity = '';
+    htmlEl.style.transition = '';
+};
 const isExpanded = (key: string, active = false) => Object.hasOwn(expandedGroups.value, key)
     ? expandedGroups.value[key] === true
-    : active;
+    : props.mode === 'topbar' ? false : active;
 const isSectionActive = (section: NavSection) => section.items.some((item) =>
     isItemActive(item) || item.children?.some((child) => isItemActive(child)),
 );
 const isNestedGroupActive = (item: NavItem) => item.children?.some((child) => isItemActive(child)) ?? false;
 const toggleGroup = (key: string, active: boolean) => {
-    // Replace the record so every toggle is observed consistently, including
-    // after an Inertia navigation or when the stored preference was just read.
-    expandedGroups.value = {
+    const nextOpen = !isExpanded(key, active);
+    const nextGroups = {
         ...expandedGroups.value,
-        [key]: !isExpanded(key, active),
+        [key]: nextOpen,
     };
+
+    if (props.mode === 'topbar' && nextOpen) {
+        const ownerSection = visibleSections.value.find((section) =>
+            section.title === key || section.items.some((item) => item.key === key),
+        );
+
+        for (const section of visibleSections.value) {
+            if (section.title !== ownerSection?.title) delete nextGroups[section.title];
+        }
+        for (const item of ownerSection?.items ?? []) {
+            if (item.key !== key) delete nextGroups[item.key];
+        }
+    }
+
+    expandedGroups.value = nextGroups;
     persistExpandedGroups();
+};
+const closeTopbarGroups = () => {
+    if (props.mode !== 'topbar' || Object.keys(expandedGroups.value).length === 0) return;
+    expandedGroups.value = {};
+};
+const handleTopbarPointerdown = (event: PointerEvent) => {
+    if (props.mode !== 'topbar') return;
+    if (navRoot.value && !navRoot.value.contains(event.target as Node)) {
+        closeTopbarGroups();
+    }
+};
+const handleTopbarKeydown = (event: KeyboardEvent) => {
+    if (props.mode === 'topbar' && event.key === 'Escape') {
+        closeTopbarGroups();
+    }
 };
 const groupId = (key: string) => `nav-group-${key.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 const openActiveGroups = () => {
-    if (!groupsLoaded.value) return;
+    if (!groupsLoaded.value || props.mode === 'topbar') return;
 
     const nextGroups = { ...expandedGroups.value };
     if (activeSectionKey.value) {
@@ -316,6 +390,10 @@ const openActiveGroups = () => {
 const loadExpandedGroups = () => {
     groupsLoaded.value = false;
     expandedGroups.value = {};
+    if (props.mode === 'topbar') {
+        groupsLoaded.value = true;
+        return;
+    }
     try {
         const saved = localStorage.getItem(`school-suite-nav-groups:${userId.value ?? 'guest'}`);
         const parsed = saved ? JSON.parse(saved) : null;
@@ -330,6 +408,7 @@ const loadExpandedGroups = () => {
     persistExpandedGroups();
 };
 const persistExpandedGroups = () => {
+    if (props.mode !== 'sidebar') return;
     try {
         localStorage.setItem(`school-suite-nav-groups:${userId.value ?? 'guest'}`, JSON.stringify(expandedGroups.value));
     } catch { /* Storage may be unavailable in private browsing. */ }
@@ -337,10 +416,27 @@ const persistExpandedGroups = () => {
 
 onMounted(() => {
     loadExpandedGroups();
+    if (props.mode === 'topbar') {
+        document.addEventListener('pointerdown', handleTopbarPointerdown);
+        document.addEventListener('keydown', handleTopbarKeydown);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (props.mode === 'topbar') {
+        document.removeEventListener('pointerdown', handleTopbarPointerdown);
+        document.removeEventListener('keydown', handleTopbarKeydown);
+    }
 });
 
 watch(userId, (nextUserId, previousUserId) => {
     if (nextUserId !== previousUserId) loadExpandedGroups();
+});
+
+watch(currentUrl, () => {
+    if (props.mode === 'topbar') {
+        closeTopbarGroups();
+    }
 });
 
 watch([currentUrl, activeSectionKey, visibleSections], () => {
@@ -351,8 +447,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 </script>
 
 <template>
-    <nav class="nav-stack" aria-label="Navigasi Utama">
-        <span class="sidebar-workspace-label">Ruang kerja</span>
+    <nav ref="navRoot" class="nav-stack" :class="{ 'is-topbar': props.mode === 'topbar' }" aria-label="Navigasi Utama">
         <Link
             :href="resolvedItem(homeItem).href"
             :class="['nav-item', isItemActive(resolvedItem(homeItem)) ? 'is-active' : '']"
@@ -391,6 +486,14 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m6 9 6 6 6-6" />
                     </svg>
                 </button>
+                <Transition
+                    :name="props.mode === 'topbar' ? 'nav-dropdown' : undefined"
+                    :css="props.mode === 'topbar'"
+                    @enter="props.mode === 'sidebar' ? onAccordionEnter($event) : undefined"
+                    @after-enter="props.mode === 'sidebar' ? onAccordionAfterEnter($event) : undefined"
+                    @leave="props.mode === 'sidebar' ? onAccordionLeave($event) : undefined"
+                    @after-leave="props.mode === 'sidebar' ? onAccordionAfterLeave($event) : undefined"
+                >
                 <div :id="groupId(section.title)" v-show="isExpanded(section.title, isSectionActive(section))" class="nav-section-content">
                     <template v-for="item in section.items" :key="item.key">
                         <template v-if="item.children?.length">
@@ -412,6 +515,13 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m6 9 6 6 6-6" />
                                     </svg>
                                 </button>
+                                <Transition
+                                    :css="false"
+                                    @enter="onAccordionEnter"
+                                    @after-enter="onAccordionAfterEnter"
+                                    @leave="onAccordionLeave"
+                                    @after-leave="onAccordionAfterLeave"
+                                >
                                 <div :id="groupId(item.key)" v-show="isExpanded(item.key, isNestedGroupActive(item))" class="nav-submenu" role="group" :aria-label="displayName(item)">
                                     <Link
                                         v-for="child in item.children"
@@ -428,6 +538,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
                                         <span>{{ child.name }}</span>
                                     </Link>
                                 </div>
+                                </Transition>
                             </div>
                         </template>
                         <Link
@@ -445,6 +556,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
                         </Link>
                     </template>
                 </div>
+                </Transition>
             </section>
         </template>
     </nav>
@@ -536,8 +648,100 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 }
 .nav-section-trigger .nav-group-chevron { width: 14px; height: 14px; flex: 0 0 14px; margin-left: auto; }
 
+.nav-stack.is-topbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    flex-wrap: wrap;
+    overflow: visible;
+}
+.nav-stack.is-topbar > .sidebar-workspace-label { display: none; }
+.nav-stack.is-topbar > .nav-item,
+.nav-stack.is-topbar > .nav-section { flex: 0 0 auto; }
+.nav-stack.is-topbar > .nav-item {
+    width: auto;
+    min-height: 42px;
+    padding: 8px 12px;
+    border-radius: 9px 9px 0 0;
+    white-space: nowrap;
+}
+.nav-stack.is-topbar > .nav-item.is-active { box-shadow: inset 0 -3px 0 var(--primary); }
+.nav-stack.is-topbar > .nav-section { position: relative; }
+.nav-stack.is-topbar .nav-section-trigger {
+    width: auto;
+    min-height: 42px;
+    padding: 7px 12px;
+    border-radius: 9px 9px 0 0;
+    white-space: nowrap;
+}
+.nav-stack.is-topbar .nav-section-trigger.is-active { box-shadow: inset 0 -3px 0 var(--primary); }
+.nav-stack.is-topbar .nav-section-content {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    z-index: 70;
+    display: grid;
+    min-width: 245px;
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    gap: 3px;
+    margin: 0;
+    padding: 7px;
+    border: 1px solid var(--line);
+    border-radius: 0 10px 10px 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+}
+.nav-stack.is-topbar .nav-section-content .nav-item {
+    min-height: 38px;
+    padding: 7px 9px;
+    border-radius: 7px;
+}
+.nav-stack.is-topbar .nav-section-content .nav-item.is-active { box-shadow: inset 3px 0 0 var(--primary); }
+.nav-stack.is-topbar .nav-nested-block {
+    margin-left: 0;
+    padding-left: 0;
+    background: transparent;
+}
+.nav-stack.is-topbar .nav-submenu {
+    margin-left: .5rem;
+    padding-left: .45rem;
+}
+@media (max-width: 960px) {
+    .nav-stack.is-topbar {
+        flex-wrap: wrap;
+        width: auto;
+        min-width: 0;
+    }
+    .nav-stack.is-topbar .nav-section-content {
+        position: fixed;
+        top: calc(var(--topbar) + 43px);
+        left: 12px;
+        min-width: min(290px, calc(100vw - 24px));
+        max-height: calc(100vh - var(--topbar) - 24px);
+        border-radius: 10px;
+    }
+}
+.nav-dropdown-enter-active {
+    transform-origin: top left;
+    transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1), transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+.nav-dropdown-leave-active {
+    transform-origin: top left;
+    transition: opacity 170ms cubic-bezier(0.4, 0, 1, 1), transform 170ms cubic-bezier(0.4, 0, 1, 1);
+    will-change: opacity, transform;
+}
+.nav-dropdown-enter-from,
+.nav-dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+}
 @media (prefers-reduced-motion: reduce) {
-    .nav-group-chevron {
+    .nav-group-chevron,
+    .nav-dropdown-enter-active,
+    .nav-dropdown-leave-active {
         transition: none;
     }
 }
