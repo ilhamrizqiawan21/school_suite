@@ -1,0 +1,12 @@
+{
+  "name": "School Suite",
+  "tagline": "Integrated School Management",
+  "colors": {
+    "navy": "#0D3B66",
+    "teal": "#0F766E",
+    "green": "#34D399",
+    "gold": "#D4A017",
+    "surface": "#F3F7FC",
+    "muted": "#6B7280"
+  }
+}

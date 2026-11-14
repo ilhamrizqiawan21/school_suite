@@ -22,7 +22,7 @@ body {
 }
 
 .sidebar {
-    box-shadow: 8px 0 28px rgba(10, 29, 55, .08);
+    box-shadow: none;
 }
 
 .brand {
@@ -40,20 +40,20 @@ body {
 
 .nav-section-trigger {
     min-height: 34px;
-    color: #aebfda;
-    font-size: .72rem;
-    letter-spacing: .075em;
-    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-size: var(--type-control);
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .nav-section-trigger:hover {
-    background: rgba(255, 255, 255, .055);
+    background: var(--surface-strong);
 }
 
 .nav-item {
     min-height: 40px;
     border-radius: 9px;
-    font-size: .8125rem;
+    font-size: var(--type-control);
 }
 
 .nav-item.is-active {
@@ -80,13 +80,7 @@ main {
 }
 
 .page-heading h1 {
-    font-weight: 800;
-}
-
-.primary-button,
-.secondary-button,
-.student-action-button {
-    min-height: var(--control-height);
+    font-weight: var(--weight-bold);
 }
 
 input:not([type='checkbox']):not([type='radio']):not([type='file']),
@@ -168,7 +162,7 @@ select {
 
 .intro-kicker {
     color: var(--primary);
-    font-size: .72rem;
+    font-size: var(--type-meta);
     letter-spacing: .075em;
     text-transform: uppercase;
 }
@@ -470,8 +464,8 @@ select {
 
 .reporting-page .reporting-hero h1 {
     color: var(--ink);
-    font-size: clamp(1.7rem, 3vw, 2.25rem);
-    font-weight: 800;
+    font-size: var(--type-3xl);
+    font-weight: var(--weight-bold);
     letter-spacing: -.04em;
 }
 
@@ -570,7 +564,7 @@ select {
 .student-page-title {
     color: var(--ink);
     font-size: clamp(1.65rem, 2.3vw, 2.1rem);
-    font-weight: 800;
+    font-weight: var(--weight-bold);
     letter-spacing: -.04em;
     line-height: 1.12;
 }
@@ -578,7 +572,7 @@ select {
 .student-page-summary {
     margin-top: .35rem;
     color: var(--ink-soft);
-    font-size: .8125rem;
+    font-size: var(--type-sm);
     line-height: 1.55;
 }
 
@@ -608,7 +602,7 @@ select {
 .student-stat:nth-child(3)::before { background: var(--gold); }
 
 .student-stat span {
-    font-size: .75rem;
+    font-size: var(--type-meta);
 }
 
 .student-stat strong {
@@ -636,7 +630,7 @@ select {
     color: var(--ink-soft);
     background: var(--surface);
     border: 1px solid var(--line-strong);
-    font-size: .8125rem;
+    font-size: var(--type-control);
 }
 
 .student-table-card {
@@ -651,9 +645,9 @@ select {
 
 .student-table thead th {
     height: 45px;
-    font-size: .72rem;
-    letter-spacing: .045em;
-    text-transform: uppercase;
+    font-size: var(--type-sm);
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .student-table tbody tr:hover {
@@ -666,11 +660,6 @@ select {
 
 .student-actions-cell {
     background: var(--surface);
-}
-
-.student-table .student-row-action {
-    width: 36px;
-    height: 36px;
 }
 
 @media (max-width: 720px) {
@@ -701,4 +690,23 @@ select {
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
     }
+}
+
+/* Shared workspace controls and reading rhythm. */
+.app-shell :is(h1, h2, h3, h4) {
+    font-family: var(--font-ui);
+    text-wrap: balance;
+}
+.app-shell :is(h2, h3) { line-height: 1.35; }
+.app-shell .nav-section-trigger .nav-label { text-transform: none; letter-spacing: 0; }
+.app-shell :is(.page-heading, .section-heading, .heading-actions, .hero-actions) { gap: 12px; }
+.app-shell :is(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+.app-shell :is(th, td) { font-variant-numeric: tabular-nums; }
+.app-shell :is(input, select, textarea) { max-width: 100%; }
+@media (max-width: 720px) {
+    .app-shell :is(input:not([type=checkbox]):not([type=radio]), select, textarea) { font-size: var(--type-md); }
+    .app-shell :is(.page-heading, .section-heading) { flex-wrap: wrap; }
 }

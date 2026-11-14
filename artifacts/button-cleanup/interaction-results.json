@@ -1,0 +1,54 @@
+[
+  {
+    "width": 390,
+    "theme": "light",
+    "submitRequests": 1,
+    "focus": {
+      "matches": true,
+      "outline": "solid"
+    },
+    "loadingGuard": true,
+    "errorRecovery": true,
+    "cancel": true,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "submitRequests": 1,
+    "focus": {
+      "matches": true,
+      "outline": "solid"
+    },
+    "loadingGuard": true,
+    "errorRecovery": true,
+    "cancel": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "submitRequests": 1,
+    "focus": {
+      "matches": true,
+      "outline": "solid"
+    },
+    "loadingGuard": true,
+    "errorRecovery": true,
+    "cancel": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "submitRequests": 1,
+    "focus": {
+      "matches": true,
+      "outline": "solid"
+    },
+    "loadingGuard": true,
+    "errorRecovery": true,
+    "cancel": true,
+    "errors": []
+  }
+]

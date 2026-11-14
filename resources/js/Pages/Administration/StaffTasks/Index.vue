@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { nextTick, reactive, ref } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
@@ -80,9 +81,9 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                 <div>
                     <p class="eyebrow">Tata usaha</p>
                     <h1>Tugas staf</h1>
-                    <p>Pantau penanggung jawab, tenggat, progres, dan riwayat tugas sekolah.</p>
+
                 </div>
-                <div v-if="can_manage" class="staff-task-hero-actions"><button type="button" class="primary-button" @click="openCreate">Tambah tugas</button></div>
+                <div v-if="can_manage" class="staff-task-hero-actions"><AppButton variant="primary" icon="plus" type="button" class="primary-button" @click="openCreate">Tambah tugas</AppButton></div>
             </section>
 
             <section class="task-summary-grid" aria-label="Ringkasan tugas">
@@ -93,7 +94,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
             <div class="task-guidance"><strong>{{ can_manage ? 'Cara kerja tugas' : 'Perbarui tugas' }}</strong><span>{{ can_manage ? 'Buat tugas, pilih penanggung jawab, lalu pantau sampai selesai.' : 'Buka lampiran bila ada, lalu perbarui progres saat pekerjaan berjalan.' }}</span></div>
             <div v-if="showForm && can_manage" role="dialog" aria-modal="true" aria-labelledby="staff-task-modal-title" class="modal-backdrop" @click.self="showForm = false" @keydown.esc="showForm = false">
                 <section id="staff-task-form" class="modal-card task-form-panel">
-                    <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2 id="staff-task-modal-title">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><button type="button" class="modal-close" aria-label="Tutup formulir tugas" @click="showForm = false">×</button></div>
+                    <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2 id="staff-task-modal-title">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir tugas" @click="showForm = false">×</AppButton></div>
                 <ul v-if="Object.keys(form.errors).length" class="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                 <form class="task-form-grid" @submit.prevent="save">
                     <label class="field md:col-span-2">Judul<input v-model="form.title" required maxlength="180" /><small v-if="form.errors.title">{{ form.errors.title }}</small></label>
@@ -104,7 +105,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <label class="field">Tenggat<input v-model="form.due_at" type="datetime-local" /></label>
                     <label class="field md:col-span-2">Lampiran<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="selectAttachment" /><small v-if="form.errors.attachment">{{ form.errors.attachment }}</small><small>Maksimal 10 MB; file hanya dapat diunduh oleh admin/operator atau penanggung jawab.</small></label>
                     <label v-if="editingId" class="field">Status<select v-model="form.status"><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
-                    <div class="task-form-actions"><button type="button" class="secondary-button" @click="showForm = false">Batal</button><button type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</button></div>
+                    <div class="task-form-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="showForm = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</AppButton></div>
                 </form>
                 </section>
             </div>
@@ -116,7 +117,7 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     <label class="field">Status<select v-model="filters.status"><option value="">Semua status</option><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
                     <label class="field">Prioritas<select v-model="filters.priority"><option value="">Semua prioritas</option><option value="low">Rendah</option><option value="normal">Normal</option><option value="high">Tinggi</option><option value="urgent">Mendesak</option></select></label>
                     <label v-if="can_manage" class="field">Penanggung jawab<select v-model="filters.assignee_id"><option value="">Semua staf</option><option v-for="person in assignees" :key="person.id" :value="String(person.id)">{{ person.name }}</option></select></label>
-                    <div class="task-filter-actions"><button type="submit" class="primary-button">Terapkan filter</button><button type="button" class="secondary-button" @click="resetFilters">Reset</button></div>
+                    <div class="task-filter-actions"><AppButton variant="primary" type="submit" class="primary-button">Terapkan filter</AppButton><AppButton variant="secondary" type="button" class="secondary-button" @click="resetFilters">Reset</AppButton></div>
                 </form>
             </section>
             <section class="panel task-list-panel">
@@ -128,10 +129,10 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                         </svg>
                     </div>
                     <strong class="text-base font-semibold text-slate-900">{{ filters.search || filters.status || filters.priority || filters.assignee_id ? 'Tidak ada tugas sesuai filter' : 'Belum ada tugas' }}</strong>
-                    <p class="mt-1 max-w-md text-sm leading-6 text-slate-500">
+                    <p class="mt-1 max-w-md text-sm leading-6 text-slate-600">
                         {{ can_manage ? 'Buat tugas untuk membagikan pekerjaan dan tenggat kepada staf sekolah.' : 'Tugas yang diberikan kepada Anda akan muncul di sini.' }}
                     </p>
-                    <button v-if="can_manage" type="button" class="primary-button mt-5" @click="openCreate">Buat tugas pertama</button>
+                    <AppButton variant="primary" v-if="can_manage" type="button" class="primary-button mt-5" @click="openCreate">Buat tugas pertama</AppButton>
                 </div>
                 <div v-else class="task-list">
                     <article v-for="task in tasks" :key="task.id" class="task-item">
@@ -153,9 +154,9 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
                     </article>
                 </div>
             </section>
-            <nav v-if="pagination.total" class="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500" aria-label="Halaman tugas">
+            <nav v-if="pagination.total" class="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600" aria-label="Halaman tugas">
                 <p>{{ pagination.from }}–{{ pagination.to }} dari {{ pagination.total }} tugas · Halaman {{ pagination.current_page }} / {{ pagination.last_page }}</p>
-                <div class="flex gap-2"><button type="button" class="secondary-button" :disabled="!pagination.prev_page_url" @click="pagination.prev_page_url && router.get(pagination.prev_page_url, {}, { preserveState: true, preserveScroll: true })">Sebelumnya</button><button type="button" class="secondary-button" :disabled="!pagination.next_page_url" @click="pagination.next_page_url && router.get(pagination.next_page_url, {}, { preserveState: true, preserveScroll: true })">Berikutnya</button></div>
+                <div class="flex gap-2"><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!pagination.prev_page_url" @click="pagination.prev_page_url && router.get(pagination.prev_page_url, {}, { preserveState: true, preserveScroll: true })">Sebelumnya</AppButton><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!pagination.next_page_url" @click="pagination.next_page_url && router.get(pagination.next_page_url, {}, { preserveState: true, preserveScroll: true })">Berikutnya</AppButton></div>
             </nav>
         </main>
     </AppLayout>
@@ -166,21 +167,21 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
 .staff-task-hero { align-items: center; }
 .staff-task-hero-actions { display: flex; align-items: center; gap: .6rem; }
 .task-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
-.task-summary-card { display: grid; gap: .25rem; min-height: 7.25rem; border: 1px solid var(--task-line); border-radius: 1rem; background: #fff; padding: 1rem 1.1rem; }
-.task-summary-card span { color: var(--task-muted); font-size: .76rem; font-weight: 800; }
+.task-summary-card { display: grid; gap: .25rem; min-height: 7.25rem; border: 1px solid var(--task-line); border-radius: 1rem; background: var(--surface); padding: 1rem 1.1rem; }
+.task-summary-card span { color: var(--task-muted); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .task-summary-card strong { color: var(--task-ink); font-size: 2rem; line-height: 1; }
-.task-summary-card small { color: var(--task-muted); font-size: .74rem; line-height: 1.35; }
+.task-summary-card small { color: var(--task-muted); font-size: var(--type-meta); line-height: 1.35; }
 .task-summary-active { border-color: #c9d7f3; background: #f4f7ff; }
 .task-summary-overdue { border-color: #f2c9c5; background: #fff8f7; }
 .task-summary-overdue strong { color: #b42318; }
 .task-summary-completed { border-color: #b9dec8; background: #f2fcf6; }
 .task-summary-completed strong { color: #067647; }
-.task-guidance { display: flex; align-items: center; gap: .65rem; border: 1px solid #d7e1f2; border-radius: .8rem; background: #f7faff; padding: .8rem 1rem; color: #52637c; font-size: .83rem; line-height: 1.45; }
+.task-guidance { display: flex; align-items: center; gap: .65rem; border: 1px solid #d7e1f2; border-radius: .8rem; background: #f7faff; padding: .8rem 1rem; color: #52637c; font-size: var(--type-sm); line-height: 1.45; }
 .task-guidance strong { color: #3157a4; white-space: nowrap; }
 .task-form-panel, .task-filter-panel { display: grid; gap: 1.25rem; padding: 1.25rem; }
 .task-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .task-panel-heading h2 { margin: .15rem 0 .25rem; color: var(--task-ink); font-size: 1.1rem; }
-.task-panel-heading p:not(.eyebrow) { margin: 0; color: var(--task-muted); font-size: .82rem; line-height: 1.5; }
+.task-panel-heading p:not(.eyebrow) { margin: 0; color: var(--task-muted); font-size: var(--type-sm); line-height: 1.5; }
 .task-panel-heading.compact { margin-bottom: -.15rem; }
 .task-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .task-form-grid .md\:col-span-2 { grid-column: 1 / -1; }
@@ -195,10 +196,10 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
 .task-main { display: grid; align-content: start; gap: .75rem; }
 .task-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .task-title-block { min-width: 0; }
-.task-category { display: block; margin-bottom: .25rem; color: #64748b; font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
-.task-title-block h2 { margin: 0; color: var(--task-ink); font-size: 1rem; line-height: 1.35; overflow-wrap: anywhere; }
+.task-category { display: block; margin-bottom: .25rem; color: #64748b; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .04em; text-transform: uppercase; }
+.task-title-block h2 { margin: 0; color: var(--task-ink); font-size: var(--type-md); line-height: 1.35; overflow-wrap: anywhere; }
 .task-badges { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: .4rem; flex: 0 0 auto; }
-.task-status-pill, .task-priority-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .3rem .6rem; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+.task-status-pill, .task-priority-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: .3rem .6rem; font-size: var(--type-meta); font-weight: var(--weight-bold); white-space: nowrap; }
 .task-status-assigned { background: #eef4ff; color: #3157a4; }
 .task-status-in_progress { background: #fff7e6; color: #a15c00; }
 .task-status-completed { background: #ecfdf3; color: #067647; }
@@ -206,26 +207,26 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
 .task-priority-low, .task-priority-normal { background: #f1f5f9; color: #475569; }
 .task-priority-high { background: #fff7e6; color: #a15c00; }
 .task-priority-urgent { background: #fef3f2; color: #b42318; }
-.task-description { margin: 0; color: #475569; font-size: .84rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
-.task-meta { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; color: var(--task-muted); font-size: .78rem; }
+.task-description { margin: 0; color: #475569; font-size: var(--type-sm); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.task-meta { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; color: var(--task-muted); font-size: var(--type-meta); }
 .task-meta span { display: grid; gap: .15rem; min-width: min(12rem, 100%); }
-.task-meta b { color: #94a3b8; font-size: .68rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
-.task-overdue { margin: 0; color: #b42318; font-size: .76rem; font-weight: 800; }
-.task-history { color: var(--task-muted); font-size: .75rem; }
-.task-history summary { cursor: pointer; font-weight: 700; }
+.task-meta b { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .03em; text-transform: uppercase; }
+.task-overdue { margin: 0; color: #b42318; font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.task-history { color: var(--task-muted); font-size: var(--type-meta); }
+.task-history summary { cursor: pointer; font-weight: var(--weight-bold); }
 .task-history ul { display: grid; gap: .3rem; margin: .5rem 0 0; padding-left: 1rem; line-height: 1.4; }
 .task-side { display: grid; align-content: center; gap: .85rem; border-left: 1px solid #e2e8f0; padding-left: 1.25rem; }
 .task-progress { display: grid; gap: .45rem; }
-.task-progress-heading { display: flex; align-items: center; justify-content: space-between; color: #52637c; font-size: .76rem; font-weight: 700; }
-.task-progress-heading strong { color: var(--task-ink); font-size: .9rem; }
+.task-progress-heading { display: flex; align-items: center; justify-content: space-between; color: #52637c; font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.task-progress-heading strong { color: var(--task-ink); font-size: var(--type-md); }
 .task-progress progress { width: 100%; height: .5rem; }
-.task-progress-editor { display: grid; gap: .35rem; color: #52637c; font-size: .76rem; font-weight: 700; }
+.task-progress-editor { display: grid; gap: .35rem; color: #52637c; font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .task-progress-editor input { width: 100%; accent-color: #315db3; }
 .task-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .4rem; }
-.task-creator { color: var(--task-muted); font-size: .72rem; text-align: right; }
-.field { display: grid; min-width: 0; gap: .4rem; color: #42526b; font-size: .84rem; font-weight: 600; }
-.field input, .field select, .field textarea { width: 100%; min-width: 0; min-height: 2.65rem; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .6rem .75rem; background: white; color: #172b4d; font-weight: 400; }
-.field small { font-weight: 400; line-height: 1.5; }
+.task-creator { color: var(--task-muted); font-size: var(--type-meta); text-align: right; }
+.field { display: grid; min-width: 0; gap: .4rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.field input, .field select, .field textarea { width: 100%; min-width: 0; min-height: 2.65rem; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .6rem .75rem; background: var(--surface); color: #172b4d; font-weight: var(--weight-regular); }
+.field small { font-weight: var(--weight-regular); line-height: 1.5; }
 .hero-card { flex-wrap: wrap; }
 .hero-card > div { min-width: 0; }
 progress { overflow: hidden; border-radius: 999px; background: #e2e8f0; }
@@ -303,8 +304,6 @@ progress::-moz-progress-bar { background: #315db3; }
 :global(html[data-theme='dark'] .staff-tasks-page .task-summary-overdue strong),
 :global(html[data-theme='dark'] .staff-tasks-page .task-overdue) { color: var(--red) !important; }
 :global(html[data-theme='dark'] .staff-tasks-page .task-summary-completed strong) { color: var(--green) !important; }
-:global(html[data-theme='dark'] .staff-tasks-page .secondary-button) { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
 .modal-card { width: min(700px, 100%); max-height: 90dvh; overflow-y: auto; padding: 1.35rem; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
-.modal-close { min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.4rem; line-height: 1; cursor: pointer; }
 </style>

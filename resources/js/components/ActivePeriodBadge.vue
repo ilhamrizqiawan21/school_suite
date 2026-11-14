@@ -23,12 +23,12 @@ const period = computed(() => page.props.activePeriod ?? {
 
 <template>
     <div
-        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white shadow-xs text-xs font-medium text-slate-700"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--line)] bg-[var(--surface)] shadow-xs text-meta font-medium text-slate-700"
         role="status"
         aria-label="Periode Akademik Aktif"
     >
         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
-        <span class="text-slate-500">Periode:</span>
+        <span class="text-slate-600">Periode:</span>
         <span class="font-semibold text-slate-900">{{ period.label }}</span>
     </div>
 </template>

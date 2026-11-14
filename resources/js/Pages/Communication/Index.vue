@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
@@ -113,7 +114,7 @@ const markRead = (notification: NotificationItem) => {
                     <p>Bagikan informasi sekolah, lihat jadwal kegiatan, dan pantau notifikasi Anda.</p>
                 </div>
                 <div class="hero-actions">
-                    <Link v-if="can_chat" class="secondary-button" :href="`${communicationBase}/chat`">Chat kelas</Link>
+                    <Link v-if="can_chat" class="secondary-button ui-button ui-button--secondary ui-button--md" :href="`${communicationBase}/chat`">Chat kelas</Link>
                 </div>
             </header>
 
@@ -131,7 +132,7 @@ const markRead = (notification: NotificationItem) => {
                 </div>
 
                 <div v-if="tab === 'announcements'" class="comm-list">
-                    <div class="list-heading"><div><h2>Pengumuman sekolah</h2><p>Informasi yang masih berlaku untuk Anda dan pengumuman yang Anda buat.</p></div><button v-if="can_manage" type="button" class="primary-button" @click="showAnnouncementForm = true">Buat pengumuman</button></div>
+                    <div class="list-heading"><div><h2>Pengumuman sekolah</h2><p>Informasi yang masih berlaku untuk Anda dan pengumuman yang Anda buat.</p></div><AppButton variant="primary" v-if="can_manage" type="button" class="primary-button" @click="showAnnouncementForm = true">Buat pengumuman</AppButton></div>
                     <article v-for="item in announcements" :key="item.id" class="announcement-card">
                         <div class="announcement-date"><template v-if="item.published_at"><strong>{{ new Date(item.published_at).getDate() }}</strong><span>{{ new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(new Date(item.published_at)) }}</span></template><span v-else>—</span></div>
                         <div class="comm-body">
@@ -141,7 +142,7 @@ const markRead = (notification: NotificationItem) => {
                             <small>{{ item.author.name }} · Terbit {{ formatDate(item.published_at) }}<template v-if="item.expires_at"> · Berlaku sampai {{ formatDate(item.expires_at) }}</template></small>
                         </div>
                         <div class="comm-actions">
-                            <a v-if="item.attachment_name" class="secondary-button" :href="`/komunikasi/pengumuman/${item.id}/lampiran`">Lampiran</a>
+                            <AppButton variant="secondary" as="a" v-if="item.attachment_name" class="secondary-button" :href="`/komunikasi/pengumuman/${item.id}/lampiran`">Lampiran</AppButton>
                             <RowActionButton v-if="can_manage" action="delete" label="Hapus" :aria-label="`Hapus pengumuman ${item.title}`" @click="remove(`/komunikasi/pengumuman/${item.id}`, `pengumuman “${item.title}”`)" />
                         </div>
                     </article>
@@ -149,7 +150,7 @@ const markRead = (notification: NotificationItem) => {
                 </div>
 
                 <div v-else-if="tab === 'calendar'" class="comm-list timeline-list">
-                    <div class="list-heading"><div><h2>Agenda sekolah</h2><p>Kegiatan mulai dari satu bulan terakhir, diurutkan menurut waktu mulai.</p></div><button v-if="can_manage" type="button" class="primary-button" @click="showEventForm = true">Tambah agenda</button></div>
+                    <div class="list-heading"><div><h2>Agenda sekolah</h2><p>Kegiatan mulai dari satu bulan terakhir, diurutkan menurut waktu mulai.</p></div><AppButton variant="primary" icon="plus" v-if="can_manage" type="button" class="primary-button" @click="showEventForm = true">Tambah agenda</AppButton></div>
                     <article v-for="event in events" :key="event.id" class="timeline-event">
                         <div class="timeline-dot" :data-type="event.event_type"></div>
                         <div class="comm-body">
@@ -165,7 +166,7 @@ const markRead = (notification: NotificationItem) => {
 
                 <div v-else class="comm-list">
                     <div class="list-heading"><div><h2>Notifikasi Anda</h2><p>Pilih notifikasi untuk menandainya telah dibaca.</p></div></div>
-                    <div class="notification-toolbar"><span>{{ unreadCount }} belum dibaca</span><button v-if="unreadCount" type="button" class="text-button" @click="router.post('/komunikasi/notifikasi/baca-semua')">Tandai semua dibaca</button></div>
+                    <div class="notification-toolbar"><span>{{ unreadCount }} belum dibaca</span><AppButton variant="ghost" size="sm" v-if="unreadCount" type="button" class="text-button" @click="router.post('/komunikasi/notifikasi/baca-semua')">Tandai semua dibaca</AppButton></div>
                     <button v-for="item in notifications" :key="item.id" type="button" class="notification-item" :class="{ unread: !item.read_at }" @click="markRead(item)">
                         <span class="notification-dot"></span><span><strong>{{ item.title }}</strong><small>{{ item.body }} · {{ formatDate(item.created_at) }}</small></span>
                     </button>
@@ -176,20 +177,20 @@ const markRead = (notification: NotificationItem) => {
 
         <div v-if="showAnnouncementForm" ref="overlayRoot" class="modal-backdrop" @click.self="showAnnouncementForm = false">
             <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="announcement-title" @submit.prevent="submitAnnouncement">
-                <div class="modal-heading"><div><p class="eyebrow">Informasi baru</p><h2 id="announcement-title">Buat pengumuman</h2><p>Pengumuman langsung terbit. Notifikasi dibuat untuk akun aktif yang sesuai sasaran; jumlah penerima ditampilkan setelah terbit.</p></div><button type="button" aria-label="Tutup formulir pengumuman" @click="showAnnouncementForm = false">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Informasi baru</p><h2 id="announcement-title">Buat pengumuman</h2><p>Pengumuman langsung terbit. Notifikasi dibuat untuk akun aktif yang sesuai sasaran; jumlah penerima ditampilkan setelah terbit.</p></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir pengumuman" @click="showAnnouncementForm = false">×</AppButton></div>
                 <label>Judul <input v-model="announcementForm.title" required maxlength="180" placeholder="Contoh: Jadwal pembagian rapor" /><small v-if="announcementForm.errors.title" class="form-error">{{ announcementForm.errors.title }}</small></label>
                 <label>Isi pengumuman <textarea v-model="announcementForm.body" required rows="5" placeholder="Tuliskan informasi yang perlu diketahui penerima." /><small v-if="announcementForm.errors.body" class="form-error">{{ announcementForm.errors.body }}</small></label>
                 <div class="form-grid"><label>Sasaran<select v-model="announcementForm.audience_role"><option v-for="option in audienceOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select><small v-if="announcementForm.errors.audience_role" class="form-error">{{ announcementForm.errors.audience_role }}</small></label><label>Rombel (opsional)<select v-model="announcementForm.class_group_id" :disabled="!classAllowed(announcementForm.audience_role)"><option value="">Semua rombel</option><option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option></select><small v-if="announcementForm.errors.class_group_id" class="form-error">{{ announcementForm.errors.class_group_id }}</small></label></div>
                 <p class="form-hint">Jika memilih rombel, penerima dibatasi pada siswa terdaftar dan guru yang memiliki penugasan mengajar di rombel tersebut. Sasaran orang tua dan kepala sekolah berlaku untuk seluruh sekolah.</p>
                 <div class="form-grid"><label>Berlaku sampai (opsional)<input v-model="announcementForm.expires_at" type="datetime-local" /><small v-if="announcementForm.errors.expires_at" class="form-error">{{ announcementForm.errors.expires_at }}</small></label><label>Lampiran (opsional)<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="handleAttachment" /><small>PDF, Word, Excel, atau gambar · maks. 10 MB</small><small v-if="announcementForm.errors.attachment" class="form-error">{{ announcementForm.errors.attachment }}</small></label></div>
                 <p v-if="announcementForm.hasErrors" class="form-error" role="alert">Periksa kolom yang ditandai sebelum menerbitkan.</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" :disabled="announcementForm.processing" @click="showAnnouncementForm = false">Batal</button><button type="submit" class="primary-button" :disabled="announcementForm.processing">{{ announcementForm.processing ? 'Menerbitkan…' : 'Terbitkan pengumuman' }}</button></div>
+                <div class="modal-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="announcementForm.processing" @click="showAnnouncementForm = false">Batal</AppButton><AppButton variant="primary" :loading="announcementForm.processing" type="submit" class="primary-button" :disabled="announcementForm.processing">{{ announcementForm.processing ? 'Menerbitkan…' : 'Terbitkan pengumuman' }}</AppButton></div>
             </form>
         </div>
 
         <div v-if="showEventForm" ref="overlayRoot" class="modal-backdrop" @click.self="showEventForm = false">
             <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="event-title" @submit.prevent="submitEvent">
-                <div class="modal-heading"><div><p class="eyebrow">Kalender sekolah</p><h2 id="event-title">Tambah agenda</h2><p>Agenda tersimpan di halaman ini. Untuk mengirim notifikasi, buat pengumuman terpisah.</p></div><button type="button" aria-label="Tutup formulir agenda" @click="showEventForm = false">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Kalender sekolah</p><h2 id="event-title">Tambah agenda</h2><p>Agenda tersimpan di halaman ini. Untuk mengirim notifikasi, buat pengumuman terpisah.</p></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir agenda" @click="showEventForm = false">×</AppButton></div>
                 <label>Nama agenda<input v-model="eventForm.title" required maxlength="180" placeholder="Contoh: Rapat orang tua" /><small v-if="eventForm.errors.title" class="form-error">{{ eventForm.errors.title }}</small></label>
                 <label>Keterangan (opsional)<textarea v-model="eventForm.description" rows="3" /><small v-if="eventForm.errors.description" class="form-error">{{ eventForm.errors.description }}</small></label>
                 <div class="form-grid"><label>Jenis<select v-model="eventForm.event_type"><option value="academic">Akademik</option><option value="exam">Ujian</option><option value="holiday">Libur</option><option value="meeting">Rapat</option><option value="activity">Kegiatan</option></select><small v-if="eventForm.errors.event_type" class="form-error">{{ eventForm.errors.event_type }}</small></label><label>Sasaran<select v-model="eventForm.audience_role"><option v-for="option in audienceOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select><small v-if="eventForm.errors.audience_role" class="form-error">{{ eventForm.errors.audience_role }}</small></label></div>
@@ -197,29 +198,29 @@ const markRead = (notification: NotificationItem) => {
                 <label>Rombel (opsional)<select v-model="eventForm.class_group_id" :disabled="!classAllowed(eventForm.audience_role)"><option value="">Semua rombel</option><option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option></select><small v-if="eventForm.errors.class_group_id" class="form-error">{{ eventForm.errors.class_group_id }}</small></label>
                 <p class="form-hint">Sasaran orang tua dan kepala sekolah berlaku untuk seluruh sekolah.</p>
                 <p v-if="eventForm.hasErrors" class="form-error" role="alert">Periksa kolom yang ditandai sebelum menyimpan.</p>
-                <div class="modal-actions"><button type="button" class="secondary-button" :disabled="eventForm.processing" @click="showEventForm = false">Batal</button><button type="submit" class="primary-button" :disabled="eventForm.processing">{{ eventForm.processing ? 'Menyimpan…' : 'Simpan agenda' }}</button></div>
+                <div class="modal-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="eventForm.processing" @click="showEventForm = false">Batal</AppButton><AppButton variant="primary" :loading="eventForm.processing" type="submit" class="primary-button" :disabled="eventForm.processing">{{ eventForm.processing ? 'Menyimpan…' : 'Simpan agenda' }}</AppButton></div>
             </form>
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
-.communication-hero,.hero-actions,.comm-actions,.modal-actions,.notification-toolbar{display:flex;align-items:center}.communication-hero,.notification-toolbar{justify-content:space-between}.communication-hero{gap:1.5rem}.hero-actions,.comm-actions,.modal-actions{gap:.75rem}.comm-tabs{display:flex;gap:.35rem;padding:1rem 1.25rem;border-bottom:1px solid var(--line)}.comm-tabs button{padding:.6rem .9rem;border-radius:.65rem;color:var(--ink-soft);font-size:.82rem;font-weight:800}.comm-tabs button.active{background:var(--primary-soft);color:var(--primary-strong)}.comm-tabs span{margin-left:.25rem;padding:.1rem .4rem;border-radius:999px;background:var(--red);color:#fff;font-size:.65rem}.comm-list{display:grid;gap:.8rem;padding:1.25rem}.announcement-card,.timeline-event{display:flex;align-items:flex-start;gap:1rem;padding:1rem;color:var(--ink);border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.announcement-date{width:3.5rem;flex:0 0 auto;display:grid;place-items:center;padding:.55rem;border-radius:.8rem;background:var(--primary-soft);color:var(--primary-strong)}.announcement-date strong{font-size:1.35rem;line-height:1}.announcement-date span{font-size:.7rem;text-transform:uppercase}.comm-body{min-width:0;flex:1}.comm-body h2,.modal-heading h2{margin:.2rem 0 .35rem;color:var(--ink);font-size:1.05rem;font-weight:800}.comm-body>p{color:var(--ink-soft);font-size:.86rem;white-space:pre-line}.comm-body small{display:block;margin-top:.65rem;color:var(--ink-faint)}.danger-link,.text-button{color:var(--red);font-size:.78rem;font-weight:800}.text-button{color:var(--primary)}.timeline-list{position:relative}.timeline-event{border-left:3px solid var(--primary-soft)}.timeline-dot{width:.75rem;height:.75rem;margin-top:.35rem;border-radius:50%;background:var(--primary)}.timeline-dot[data-type='exam']{background:var(--red)}.timeline-dot[data-type='holiday']{background:var(--green)}.notification-toolbar{padding:.35rem .25rem .8rem;color:var(--ink-soft);font-size:.8rem}.notification-item{width:100%;display:flex;align-items:flex-start;gap:.75rem;padding:1rem;color:var(--ink);border:1px solid var(--line);border-radius:.8rem;text-align:left;background:var(--surface)}.notification-item.unread{border-color:var(--primary);background:var(--primary-soft)}.notification-dot{width:.55rem;height:.55rem;margin-top:.35rem;border-radius:50%;background:var(--line-strong)}.notification-item.unread .notification-dot{background:var(--primary)}.notification-item strong{display:block;color:var(--ink)}.notification-item small{display:block;margin-top:.25rem;color:var(--ink-soft)}.empty-state{padding:3rem 1rem;text-align:center;color:var(--ink-soft)}.empty-state strong{display:block;color:var(--ink)}.modal-backdrop{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:1rem;background:rgb(15 23 42/.56)}.modal-card{width:min(650px,100%);max-height:90vh;overflow:auto;display:grid;gap:1rem;padding:1.35rem;color:var(--ink);border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.modal-heading{display:flex;justify-content:space-between}.modal-heading>button{font-size:1.6rem;color:var(--ink-soft)}.modal-card label{display:grid;gap:.4rem;color:var(--ink-soft);font-size:.8rem;font-weight:700}.modal-card input,.modal-card select,.modal-card textarea{width:100%;padding:.65rem .75rem;color:var(--ink);background:var(--surface-subtle);border:1px solid var(--line-strong);border-radius:.65rem}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.modal-actions{justify-content:flex-end}.form-error{color:var(--red);font-size:.8rem}@media(max-width:760px){.communication-hero,.announcement-card{flex-direction:column}.form-grid{grid-template-columns:1fr}.announcement-date{width:auto;display:flex;gap:.3rem}}
+.communication-hero,.hero-actions,.comm-actions,.modal-actions,.notification-toolbar{display:flex;align-items:center}.communication-hero,.notification-toolbar{justify-content:space-between}.communication-hero{gap:1.5rem}.hero-actions,.comm-actions,.modal-actions{gap:.75rem}.comm-tabs{display:flex;gap:.35rem;padding:1rem 1.25rem;border-bottom:1px solid var(--line)}.comm-tabs button{padding:.6rem .9rem;border-radius:.65rem;color:var(--ink-soft);font-size:var(--type-control);font-weight:var(--weight-bold)}.comm-tabs button.active{background:var(--primary-soft);color:var(--primary-strong)}.comm-tabs span{margin-left:.25rem;padding:.1rem .4rem;border-radius:999px;background:var(--red);color:#fff;font-size:var(--type-meta)}.comm-list{display:grid;gap:.8rem;padding:1.25rem}.announcement-card,.timeline-event{display:flex;align-items:flex-start;gap:1rem;padding:1rem;color:var(--ink);border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.announcement-date{width:3.5rem;flex:0 0 auto;display:grid;place-items:center;padding:.55rem;border-radius:.8rem;background:var(--primary-soft);color:var(--primary-strong)}.announcement-date strong{font-size:1.35rem;line-height:1}.announcement-date span{font-size:var(--type-meta);text-transform:uppercase}.comm-body{min-width:0;flex:1}.comm-body h2,.modal-heading h2{margin:.2rem 0 .35rem;color:var(--ink);font-size:1.05rem;font-weight:var(--weight-bold)}.comm-body>p{color:var(--ink-soft);font-size:var(--type-sm);white-space:pre-line}.comm-body small{display:block;margin-top:.65rem;color:var(--ink-faint)}.danger-link{color:var(--red);font-size:var(--type-control);font-weight:var(--weight-bold)}.timeline-list{position:relative}.timeline-event{border-left:3px solid var(--primary-soft)}.timeline-dot{width:.75rem;height:.75rem;margin-top:.35rem;border-radius:50%;background:var(--primary)}.timeline-dot[data-type='exam']{background:var(--red)}.timeline-dot[data-type='holiday']{background:var(--green)}.notification-toolbar{padding:.35rem .25rem .8rem;color:var(--ink-soft);font-size:var(--type-meta)}.notification-item{width:100%;display:flex;align-items:flex-start;gap:.75rem;padding:1rem;color:var(--ink);border:1px solid var(--line);border-radius:.8rem;text-align:left;background:var(--surface)}.notification-item.unread{border-color:var(--primary);background:var(--primary-soft)}.notification-dot{width:.55rem;height:.55rem;margin-top:.35rem;border-radius:50%;background:var(--line-strong)}.notification-item.unread .notification-dot{background:var(--primary)}.notification-item strong{display:block;color:var(--ink)}.notification-item small{display:block;margin-top:.25rem;color:var(--ink-soft)}.empty-state{padding:3rem 1rem;text-align:center;color:var(--ink-soft)}.empty-state strong{display:block;color:var(--ink)}.modal-backdrop{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:1rem;background:rgb(15 23 42/.56)}.modal-card{width:min(650px,100%);max-height:90vh;overflow:auto;display:grid;gap:1rem;padding:1.35rem;color:var(--ink);border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.modal-heading{display:flex;justify-content:space-between}.modal-card label{display:grid;gap:.4rem;color:var(--ink-soft);font-size:var(--type-meta);font-weight:var(--weight-semibold)}.modal-card input,.modal-card select,.modal-card textarea{width:100%;padding:.65rem .75rem;color:var(--ink);background:var(--surface-subtle);border:1px solid var(--line-strong);border-radius:.65rem}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.modal-actions{justify-content:flex-end}.form-error{color:var(--red);font-size:var(--type-meta)}@media(max-width:760px){.communication-hero,.announcement-card{flex-direction:column}.form-grid{grid-template-columns:1fr}.announcement-date{width:auto;display:flex;gap:.3rem}}
 .comm-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.comm-notice { padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--green-soft); color: var(--ink); font-size: .85rem; }
+.comm-notice { padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--green-soft); color: var(--ink); font-size: var(--type-sm); }
 .comm-tabs { flex-wrap: wrap; }
 .comm-tabs button { min-height: 44px; }
-.comm-tabs b { margin-left: .25rem; color: var(--ink-faint); font-weight: 700; }
+.comm-tabs b { margin-left: .25rem; color: var(--ink-faint); font-weight: var(--weight-bold); }
 .list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .15rem 0 .4rem; }
-.list-heading h2 { color: var(--ink); font-size: 1rem; font-weight: 800; }
-.list-heading p, .modal-heading p:not(.eyebrow), .form-hint { margin-top: .3rem; color: var(--ink-soft); font-size: .8rem; line-height: 1.5; }
+.list-heading h2 { color: var(--ink); font-size: var(--type-md); font-weight: var(--weight-bold); }
+.list-heading p, .modal-heading p:not(.eyebrow), .form-hint { margin-top: .3rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.5; }
 .comm-body h2, .comm-body p, .comm-body small, .notification-item small { overflow-wrap: anywhere; }
 .comm-actions { flex-wrap: wrap; }
 .modal-card input, .modal-card select, .modal-card button { min-height: 44px; }
 .modal-card select:disabled { opacity: .55; }
-.modal-card label small { font-weight: 400; }
+.modal-card label small { font-weight: var(--weight-regular); }
 .modal-card .form-error { color: var(--red); }
-.modal-heading > button { align-self: flex-start; width: 44px; flex: 0 0 44px; }
+.modal-heading > button { align-self: flex-start; flex: 0 0 44px; }
 @media (max-width: 760px) {
     .comm-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .comm-list { padding: 1rem; }
@@ -231,9 +232,9 @@ const markRead = (notification: NotificationItem) => {
 }
 @media (max-width: 440px) { .comm-summary { grid-template-columns: 1fr; } }
 .communication-page .communication-hero { padding: .5rem 0 .75rem; }
-.communication-page .communication-hero .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: none; }
-.communication-page .communication-hero h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.2; }
-.communication-page .communication-hero p:not(.eyebrow) { max-width: 600px; margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.communication-page .communication-hero .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-semibold); letter-spacing: .04em; text-transform: none; }
+.communication-page .communication-hero h1 { margin: 0; color: var(--ink); font-size: var(--type-3xl); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1.2; }
+.communication-page .communication-hero p:not(.eyebrow) { max-width: 600px; margin: .5rem 0 0; color: var(--ink-soft); font-size: var(--type-md); line-height: 1.55; }
 .communication-page > .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
 .communication-page .comm-summary > div { background: var(--surface); border-color: var(--line); }
 .modal-backdrop { display: flex; justify-content: flex-end; padding: 0; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }

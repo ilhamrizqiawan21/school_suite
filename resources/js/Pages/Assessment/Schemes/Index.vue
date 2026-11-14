@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -140,22 +141,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                 <div>
                     <p class="eyebrow">Asesmen · Formula nilai</p>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Skema & Bobot Penilaian</h1>
-                    <p class="text-sm text-slate-500 mt-1">
+                    <p class="text-sm text-slate-600 mt-1">
                         Konfigurasi formula pembobotan, aturan pembulatan, dan batas kelulusan KKTP berversi.
                     </p>
                 </div>
 
                 <div v-if="props.can_manage">
-                    <button
+                    <AppButton variant="primary"
                         type="button"
-                        class="primary-button inline-flex items-center gap-2"
+                        class="primary-button inline-flex items-center"
                         @click="openSchemeForm"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    ><template #icon><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
+                        </svg></template>
+
                         <span>Buat Versi Skema Baru</span>
-                    </button>
+                    </AppButton>
                 </div>
             </header>
 
@@ -164,57 +165,55 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                 <div
                     v-for="scheme in props.schemes"
                     :key="scheme.id"
-                    class="scheme-panel bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden"
+                    class="scheme-panel bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-hidden"
                 >
                     <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50">
                         <div class="space-y-1">
                             <div class="flex items-center gap-3">
                                 <h2 class="text-lg font-bold text-slate-900">{{ scheme.name }}</h2>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-meta font-semibold bg-indigo-100 text-indigo-800">
                                     Versi {{ scheme.version }}
                                 </span>
                                 <span
                                     v-if="scheme.is_active"
-                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800"
+                                    class="inline-flex items-center px-2 py-0.5 rounded text-meta font-medium bg-emerald-100 text-emerald-800"
                                 >
                                     Aktif
                                 </span>
-                                <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">Versi lama</span>
+                                <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-meta font-medium bg-slate-100 text-slate-600">Versi lama</span>
                             </div>
-                            <p class="text-xs text-slate-500 font-mono">Kode: {{ scheme.code }} | {{ roundingLabel(scheme.rounding_rule) }} ({{ scheme.decimal_places }} desimal) | KKTP default: {{ scheme.passing_grade_default }}</p>
+                            <p class="text-meta text-slate-600 font-mono">Kode: {{ scheme.code }} | {{ roundingLabel(scheme.rounding_rule) }} ({{ scheme.decimal_places }} desimal) | KKTP default: {{ scheme.passing_grade_default }}</p>
                         </div>
 
                         <div v-if="props.can_manage">
-                            <button
+                            <AppButton variant="secondary" icon="plus"
                                 type="button"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 hover:bg-white text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                                class="inline-flex items-center transition-colors"
                                 @click="openAddComponentModal(scheme.id)"
                             >
-                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
+
                                 <span>Tambah Komponen</span>
-                            </button>
+                            </AppButton>
                         </div>
                     </div>
 
                     <!-- Komponen Bobot -->
                     <div class="p-5">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            <h3 class="text-meta font-semibold uppercase tracking-wider text-slate-600">
                                 Komponen Penilaian & Bobot Persentase
                             </h3>
-                            <div class="space-y-1 text-xs font-bold text-right">
+                            <div class="space-y-1 text-meta font-bold text-right">
                                 <p v-for="group in weightTotals(scheme.components)" :key="group.assignmentId ?? 'general'">
                                     {{ group.label }}:
-                                    <span :class="Math.abs(group.total - 100) < 0.001 ? 'text-emerald-600' : 'text-amber-600'">{{ group.total.toLocaleString('id-ID') }}%{{ Math.abs(group.total - 100) < 0.001 ? ' · sesuai' : ' · target 100%' }}</span>
+                                    <span :class="Math.abs(group.total - 100) < 0.001 ? 'text-emerald-600' : 'text-amber-800'">{{ group.total.toLocaleString('id-ID') }}%{{ Math.abs(group.total - 100) < 0.001 ? ' · sesuai' : ' · target 100%' }}</span>
                                 </p>
                             </div>
                         </div>
 
                         <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                             <table class="app-table w-full text-left text-sm text-slate-600">
-                                <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-semibold">
+                                <thead class="bg-slate-50 text-slate-700 text-meta uppercase font-semibold">
                                     <tr>
                                         <th scope="col" class="py-2.5 px-3 w-12 text-center">Urutan</th>
                                         <th scope="col" class="py-2.5 px-3 w-28">Kode</th>
@@ -226,18 +225,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     <tr v-for="comp in scheme.components" :key="comp.id" class="hover:bg-slate-50">
-                                        <td class="py-2.5 px-3 text-center text-xs text-slate-400">{{ comp.sequence }}</td>
-                                        <td class="py-2.5 px-3 font-mono text-xs text-slate-700 font-semibold">{{ comp.code }}</td>
+                                        <td class="py-2.5 px-3 text-center text-meta text-slate-600">{{ comp.sequence }}</td>
+                                        <td class="py-2.5 px-3 font-mono text-meta text-slate-700 font-semibold">{{ comp.code }}</td>
                                         <td class="py-2.5 px-4 font-medium text-slate-900">{{ comp.name }}</td>
                                         <td class="py-2.5 px-4">
                                             <span>{{ assignmentLabel(comp.teaching_assignment_id) }}</span>
                                             <button v-if="props.can_manage && comp.teaching_assignment_id === null" type="button" class="block text-sm font-semibold text-indigo-600 hover:text-indigo-700" @click="openBinding(scheme.id, comp)">Pilih mata pelajaran</button>
                                         </td>
                                         <td class="py-2.5 px-3 text-center font-bold text-slate-800">{{ comp.weight_percentage }}%</td>
-                                        <td class="py-2.5 px-3 text-center text-xs font-semibold text-emerald-700">{{ comp.passing_grade }}</td>
+                                        <td class="py-2.5 px-3 text-center text-meta font-semibold text-emerald-700">{{ comp.passing_grade }}</td>
                                     </tr>
                                     <tr v-if="scheme.components.length === 0">
-                                        <td colspan="6" class="py-6 text-center text-slate-400 text-xs">
+                                        <td colspan="6" class="py-6 text-center text-slate-600 text-meta">
                                             {{ props.can_manage ? 'Belum ada komponen penilaian. Tambahkan komponen agar skema dapat digunakan untuk menyusun rapor.' : 'Belum ada komponen penilaian pada skema ini.' }}
                                         </td>
                                     </tr>
@@ -247,8 +246,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                     </div>
                 </div>
 
-                <div v-if="props.schemes.length === 0" class="bg-white p-12 rounded-xl border border-slate-200 text-center">
-                    <p class="text-slate-500 text-sm">Belum ada skema penilaian yang dibuat.</p>
+                <div v-if="props.schemes.length === 0" class="bg-[var(--surface)] p-12 rounded-xl border border-[var(--line)] text-center">
+                    <p class="text-slate-600 text-sm">Belum ada skema penilaian yang dibuat.</p>
                 </div>
             </div>
 
@@ -257,24 +256,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                 v-if="props.can_manage && isCreateSchemeOpen"
                 class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
-                <div class="scheme-dialog bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-scheme-title">
+                <div class="scheme-dialog bg-[var(--surface)] rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-scheme-title">
                     <div class="flex items-center justify-between">
                         <h2 id="new-scheme-title" class="text-lg font-bold text-slate-900">Buat Skema Penilaian Baru</h2>
-                        <button
+                        <AppButton variant="secondary"
                             type="button"
-                            class="text-slate-400 hover:text-slate-600"
+
                             :disabled="schemeForm.processing"
                             aria-label="Tutup formulir skema"
                             @click="closeSchemeForm"
                         >
                             &times;
-                        </button>
+                        </AppButton>
                     </div>
-                    <p class="text-sm text-slate-500">Skema baru akan menjadi skema aktif sekolah. Versi sebelumnya tetap tersimpan untuk riwayat rapor yang sudah diterbitkan.</p>
+                    <p class="text-sm text-slate-600">Skema baru akan menjadi skema aktif sekolah. Versi sebelumnya tetap tersimpan untuk riwayat rapor yang sudah diterbitkan.</p>
 
                     <form @submit.prevent="submitNewScheme" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Skema</label>
+                            <label class="block text-meta font-semibold text-slate-700 mb-1">Nama Skema</label>
                             <input
                                 v-model="schemeForm.name"
                                 type="text"
@@ -286,7 +285,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Skema</label>
+                            <label class="block text-meta font-semibold text-slate-700 mb-1">Kode Skema</label>
                             <input
                                 v-model="schemeForm.code"
                                 type="text"
@@ -294,13 +293,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                 placeholder="KM-2024"
                                 class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
                             />
-                            <p class="text-[11px] text-slate-400 mt-1">Jika kode sama sudah ada, versi akan otomatis dinaikkan (+1).</p>
+                            <p class="text-meta text-slate-600 mt-1">Jika kode sama sudah ada, versi akan otomatis dinaikkan (+1).</p>
                             <p v-if="schemeForm.errors.code" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.code }}</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Aturan Pembulatan</label>
+                                <label class="block text-meta font-semibold text-slate-700 mb-1">Aturan Pembulatan</label>
                                 <select
                                     v-model="schemeForm.rounding_rule"
                                     class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -313,7 +312,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Digit Desimal</label>
+                                <label class="block text-meta font-semibold text-slate-700 mb-1">Digit Desimal</label>
                                 <input
                                     v-model.number="schemeForm.decimal_places"
                                     type="number"
@@ -327,7 +326,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">KKTP Default</label>
+                            <label class="block text-meta font-semibold text-slate-700 mb-1">KKTP Default</label>
                             <input
                                 v-model.number="schemeForm.passing_grade_default"
                                 type="number"
@@ -341,30 +340,30 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                         </div>
 
                         <div class="flex items-center justify-end gap-3 pt-3">
-                            <button
+                            <AppButton variant="secondary"
                                 type="button"
-                                class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+
                                 :disabled="schemeForm.processing"
                                 @click="closeSchemeForm"
                             >
                                 Batal
-                            </button>
-                            <button
+                            </AppButton>
+                            <AppButton variant="primary" :loading="schemeForm.processing"
                                 type="submit"
                                 :disabled="schemeForm.processing"
-                                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-xs"
+
                             >
                                 Simpan Skema
-                            </button>
+                            </AppButton>
                         </div>
                     </form>
                 </div>
             </div>
 
             <div v-if="props.can_manage && bindingComponent" class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                <form class="scheme-dialog bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="binding-title" @submit.prevent="submitBinding">
+                <form class="scheme-dialog bg-[var(--surface)] rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="binding-title" @submit.prevent="submitBinding">
                     <h2 id="binding-title" class="text-lg font-bold text-slate-900">Petakan {{ bindingComponent.component.name }}</h2>
-                    <p class="text-sm text-slate-500">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
+                    <p class="text-sm text-slate-600">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
                     <label for="binding-assignment" class="block text-sm font-semibold text-slate-700">Kelas & Mata Pelajaran</label>
                     <select id="binding-assignment" v-model="bindingForm.teaching_assignment_id" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option :value="null" disabled>Pilih mata pelajaran</option>
@@ -372,8 +371,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                     </select>
                     <p v-if="bindingForm.errors.teaching_assignment_id" class="text-sm text-red-600">{{ bindingForm.errors.teaching_assignment_id }}</p>
                     <div class="flex justify-end gap-3">
-                        <button type="button" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700" :disabled="bindingForm.processing" @click="bindingComponent = null; bindingForm.clearErrors()">Batal</button>
-                        <button type="submit" :disabled="bindingForm.processing" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">Simpan Pemetaan</button>
+                        <AppButton variant="secondary"  type="button"  :disabled="bindingForm.processing" @click="bindingComponent = null; bindingForm.clearErrors()">Batal</AppButton>
+                        <AppButton variant="primary" :loading="bindingForm.processing" type="submit" :disabled="bindingForm.processing" >Simpan Pemetaan</AppButton>
                     </div>
                 </form>
             </div>
@@ -383,22 +382,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                 v-if="props.can_manage && isCreateComponentOpen"
                 class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
             >
-                <div class="scheme-dialog bg-white rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-component-title">
+                <div class="scheme-dialog bg-[var(--surface)] rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-component-title">
                     <div class="flex items-center justify-between">
                         <h2 id="new-component-title" class="text-lg font-bold text-slate-900">Tambah Komponen Penilaian</h2>
-                        <button
+                        <AppButton variant="secondary"
                             type="button"
-                            class="text-slate-400 hover:text-slate-600"
+
                             aria-label="Tutup formulir komponen"
                             @click="isCreateComponentOpen = false"
                         >
                             &times;
-                        </button>
+                        </AppButton>
                     </div>
 
                     <form @submit.prevent="submitNewComponent" class="space-y-4">
                         <div>
-                            <label for="component-assignment" class="block text-xs font-semibold text-slate-700 mb-1">Kelas & Mata Pelajaran</label>
+                            <label for="component-assignment" class="block text-meta font-semibold text-slate-700 mb-1">Kelas & Mata Pelajaran</label>
                             <select id="component-assignment" v-model="componentForm.teaching_assignment_id" class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option :value="null">Umum (hanya untuk kelas dengan satu mapel)</option>
                                 <option v-for="assignment in props.teaching_assignments" :key="assignment.id" :value="assignment.id">{{ assignmentLabel(assignment.id) }}</option>
@@ -406,7 +405,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                             <p v-if="componentForm.errors.teaching_assignment_id" class="mt-1 text-sm text-red-600">{{ componentForm.errors.teaching_assignment_id }}</p>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Komponen</label>
+                            <label class="block text-meta font-semibold text-slate-700 mb-1">Nama Komponen</label>
                             <input
                                 v-model="componentForm.name"
                                 type="text"
@@ -419,7 +418,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Kode Komponen</label>
+                                <label class="block text-meta font-semibold text-slate-700 mb-1">Kode Komponen</label>
                                 <input
                                     v-model="componentForm.code"
                                     type="text"
@@ -431,7 +430,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Urutan</label>
+                                <label class="block text-meta font-semibold text-slate-700 mb-1">Urutan</label>
                                 <input
                                     v-model.number="componentForm.sequence"
                                     type="number"
@@ -444,7 +443,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Bobot Persentase (%)</label>
+                                <label class="block text-meta font-semibold text-slate-700 mb-1">Bobot Persentase (%)</label>
                                 <input
                                     v-model.number="componentForm.weight_percentage"
                                     type="number"
@@ -458,7 +457,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">KKTP / Batas Tuntas</label>
+                                <label class="block text-meta font-semibold text-slate-700 mb-1">KKTP / Batas Tuntas</label>
                                 <input
                                     v-model.number="componentForm.passing_grade"
                                     type="number"
@@ -473,21 +472,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                         </div>
 
                         <div class="flex items-center justify-end gap-3 pt-3">
-                            <button
+                            <AppButton variant="secondary"
                                 type="button"
-                                class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
+
                                 :disabled="componentForm.processing"
                                 @click="isCreateComponentOpen = false; componentForm.clearErrors()"
                             >
                                 Batal
-                            </button>
-                            <button
+                            </AppButton>
+                            <AppButton variant="primary" :loading="componentForm.processing"
                                 type="submit"
                                 :disabled="componentForm.processing"
-                                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-xs"
+
                             >
                                 Simpan Komponen
-                            </button>
+                            </AppButton>
                         </div>
                     </form>
                 </div>
@@ -499,7 +498,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 <style scoped>
 .schemes-page{max-width:1440px;margin-inline:auto}
 .schemes-heading{align-items:flex-start;padding:0 0 .8rem;border-bottom:1px solid var(--line)}
-.schemes-heading h1{margin:.25rem 0;color:var(--ink);font-size:clamp(1.55rem,2.2vw,2rem);font-weight:800;letter-spacing:-.035em}
+.schemes-heading h1{margin:.25rem 0;color:var(--ink);font-size:var(--type-3xl);font-weight:var(--weight-bold);letter-spacing:-.035em}
 .schemes-heading p:not(.eyebrow){color:var(--ink-soft);line-height:1.55}
 .scheme-panel,.schemes-page .bg-white{background:var(--surface)}
 .schemes-page .bg-slate-50\/50,.schemes-page .bg-slate-50{background:var(--surface-subtle)}

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 
@@ -89,24 +90,24 @@ function sizeLabel(bytes: number) {
                     <p>NIS {{ student.nis }}<span v-if="student.nisn"> · NISN {{ student.nisn }}</span></p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <Link href="/akademik/buku-induk" class="secondary-button">Kembali ke daftar</Link>
-                    <a class="primary-button inline-flex min-h-10 items-center" :href="`/akademik/buku-induk/${student.id}/pdf`">Cetak buku induk</a>
+                    <Link href="/akademik/buku-induk" class="secondary-button ui-button ui-button--secondary ui-button--md">Kembali ke daftar</Link>
+                    <AppButton variant="primary" as="a" class="primary-button inline-flex items-center" :href="`/akademik/buku-induk/${student.id}/pdf`">Cetak buku induk</AppButton>
                 </div>
             </section>
 
             <section class="panel flex flex-wrap items-center gap-5 p-5">
                 <img v-if="detail?.photo_url" :src="detail.photo_url" :alt="`Foto ${student.name}`" class="h-28 w-28 rounded-xl border border-slate-200 object-cover">
-                <div v-else class="flex h-28 w-28 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-400">Belum ada foto</div>
+                <div v-else class="flex h-28 w-28 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-600">Belum ada foto</div>
                 <form class="grid min-w-0 flex-1 gap-3 md:grid-cols-[1fr_auto] md:items-end" @submit.prevent="uploadPhoto">
                     <label class="field-label">Foto siswa (JPG/PNG, maks. 2 MB)
                         <input class="field-input file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5" type="file" accept=".jpg,.jpeg,.png" required @input="photoForm.photo = ($event.target as HTMLInputElement).files?.[0] || null">
                         <span v-if="photoForm.errors.photo" class="field-error">{{ photoForm.errors.photo }}</span>
                     </label>
                     <div class="flex gap-2">
-                        <button class="primary-button" type="submit" :disabled="photoForm.processing || !photoForm.photo">{{ photoForm.processing ? 'Menyimpan…' : detail?.photo_url ? 'Ganti foto' : 'Simpan foto' }}</button>
-                        <button v-if="detail?.photo_url" class="danger-button" type="button" @click="deletePhoto">Hapus</button>
+                        <AppButton variant="primary" class="primary-button" type="submit" :disabled="photoForm.processing || !photoForm.photo">{{ photoForm.processing ? 'Menyimpan…' : detail?.photo_url ? 'Ganti foto' : 'Simpan foto' }}</AppButton>
+                        <AppButton variant="danger" v-if="detail?.photo_url" class="danger-button" type="button" @click="deletePhoto">Hapus</AppButton>
                     </div>
-                    <p class="text-xs text-slate-500 md:col-span-2">Foto disimpan privat dan hanya ditampilkan untuk petugas sekolah yang berwenang.</p>
+                    <p class="text-meta text-slate-600 md:col-span-2">Foto disimpan privat dan hanya ditampilkan untuk petugas sekolah yang berwenang.</p>
                 </form>
             </section>
 
@@ -114,7 +115,7 @@ function sizeLabel(bytes: number) {
                 <section class="panel overflow-hidden">
                     <header class="border-b border-slate-200 px-5 py-4">
                         <h2 class="text-base font-bold text-slate-900">Identitas peserta didik</h2>
-                        <p class="mt-1 text-sm text-slate-500">Data ini bersumber dari satu profil akademik School Suite.</p>
+                        <p class="mt-1 text-sm text-slate-600">Data ini bersumber dari satu profil akademik School Suite.</p>
                     </header>
                     <dl class="grid gap-x-8 sm:grid-cols-2">
                         <div v-for="item in [
@@ -131,11 +132,11 @@ function sizeLabel(bytes: number) {
                             { label: 'Hobi olahraga', value: detail?.sports_hobby || 'Belum diisi' },
                             { label: 'Status siswa', value: statusLabels[student.status] || student.status },
                         ]" :key="item.label" class="border-b border-slate-100 px-5 py-3.5">
-                            <dt class="text-xs font-medium text-slate-500">{{ item.label }}</dt>
+                            <dt class="text-meta font-medium text-slate-600">{{ item.label }}</dt>
                             <dd class="mt-1 break-words text-sm font-semibold text-slate-800">{{ item.value }}</dd>
                         </div>
                         <div class="border-b border-slate-100 px-5 py-3.5 sm:col-span-2">
-                            <dt class="text-xs font-medium text-slate-500">Alamat</dt>
+                            <dt class="text-meta font-medium text-slate-600">Alamat</dt>
                             <dd class="mt-1 whitespace-pre-wrap text-sm font-semibold text-slate-800">{{ student.address || 'Belum diisi' }}</dd>
                         </div>
                         <div v-for="item in [
@@ -143,7 +144,7 @@ function sizeLabel(bytes: number) {
                             { label: 'Desa / kelurahan', value: detail?.village || 'Belum diisi' },
                             { label: 'Kecamatan', value: detail?.district || 'Belum diisi' },
                         ]" :key="item.label" class="border-b border-slate-100 px-5 py-3.5">
-                            <dt class="text-xs font-medium text-slate-500">{{ item.label }}</dt>
+                            <dt class="text-meta font-medium text-slate-600">{{ item.label }}</dt>
                             <dd class="mt-1 break-words text-sm font-semibold text-slate-800">{{ item.value }}</dd>
                         </div>
                     </dl>
@@ -152,15 +153,15 @@ function sizeLabel(bytes: number) {
                 <section class="panel overflow-hidden">
                     <header class="border-b border-slate-200 px-5 py-4">
                         <h2 class="text-base font-bold text-slate-900">Orang tua / wali</h2>
-                        <p class="mt-1 text-sm text-slate-500">Informasi kontak yang tersedia pada profil siswa.</p>
+                        <p class="mt-1 text-sm text-slate-600">Informasi kontak yang tersedia pada profil siswa.</p>
                     </header>
                     <dl class="divide-y divide-slate-100">
                         <div class="px-5 py-3.5">
-                            <dt class="text-xs font-medium text-slate-500">Nama orang tua / wali</dt>
+                            <dt class="text-meta font-medium text-slate-600">Nama orang tua / wali</dt>
                             <dd class="mt-1 text-sm font-semibold text-slate-800">{{ student.parent_name || 'Belum diisi' }}</dd>
                         </div>
                         <div class="px-5 py-3.5">
-                            <dt class="text-xs font-medium text-slate-500">Nomor kontak</dt>
+                            <dt class="text-meta font-medium text-slate-600">Nomor kontak</dt>
                             <dd class="mt-1 text-sm font-semibold text-slate-800">{{ student.parent_phone || 'Belum diisi' }}</dd>
                         </div>
                     </dl>
@@ -170,7 +171,7 @@ function sizeLabel(bytes: number) {
             <section class="panel overflow-hidden">
                 <header class="border-b border-slate-200 px-5 py-4">
                     <h2 class="text-base font-bold text-slate-900">Data tambahan buku induk</h2>
-                    <p class="mt-1 text-sm text-slate-500">Lengkapi identitas, rincian alamat, keluarga, hobi, dan pendidikan asal.</p>
+                    <p class="mt-1 text-sm text-slate-600">Lengkapi identitas, rincian alamat, keluarga, hobi, dan pendidikan asal.</p>
                 </header>
                 <form class="grid gap-4 p-5 sm:grid-cols-2" @submit.prevent="saveDetails">
                     <label class="field-label">Nama panggilan<input v-model="detailsForm.nickname" class="field-input" maxlength="100"><span v-if="detailsForm.errors.nickname" class="field-error">{{ detailsForm.errors.nickname }}</span></label>
@@ -188,37 +189,37 @@ function sizeLabel(bytes: number) {
                     <label class="field-label">Sekolah asal<input v-model="detailsForm.previous_school" class="field-input" maxlength="100"><span v-if="detailsForm.errors.previous_school" class="field-error">{{ detailsForm.errors.previous_school }}</span></label>
                     <label class="field-label">Nomor ijazah asal<input v-model="detailsForm.diploma_number" class="field-input" maxlength="50"><span v-if="detailsForm.errors.diploma_number" class="field-error">{{ detailsForm.errors.diploma_number }}</span></label>
                     <label class="field-label">Tanggal ijazah asal<input v-model="detailsForm.diploma_date" type="date" class="field-input"><span v-if="detailsForm.errors.diploma_date" class="field-error">{{ detailsForm.errors.diploma_date }}</span></label>
-                    <div class="flex items-end justify-end sm:col-span-2"><button class="primary-button" type="submit" :disabled="detailsForm.processing">{{ detailsForm.processing ? 'Menyimpan…' : 'Simpan data tambahan' }}</button></div>
+                    <div class="flex items-end justify-end sm:col-span-2"><AppButton variant="primary" :loading="detailsForm.processing" class="primary-button" type="submit" :disabled="detailsForm.processing">{{ detailsForm.processing ? 'Menyimpan…' : 'Simpan data tambahan' }}</AppButton></div>
                 </form>
             </section>
 
             <section class="panel overflow-hidden">
                 <header class="border-b border-slate-200 px-5 py-4">
                     <h2 class="text-base font-bold text-slate-900">Lemari dokumen pribadi</h2>
-                    <p class="mt-1 text-sm text-slate-500">Maksimal 10 dokumen PDF/JPG/PNG, masing-masing hingga 5 MB. Berkas hanya dapat diakses petugas sekolah.</p>
+                    <p class="mt-1 text-sm text-slate-600">Maksimal 10 dokumen PDF/JPG/PNG, masing-masing hingga 5 MB. Berkas hanya dapat diakses petugas sekolah.</p>
                 </header>
                 <form class="grid gap-3 border-b border-slate-100 p-5 md:grid-cols-[1fr_1.5fr_auto] md:items-end" @submit.prevent="uploadDocument">
                     <label class="field-label">Jenis dokumen<input v-model="documentForm.document_type" class="field-input" maxlength="100" placeholder="Contoh: Akta kelahiran, ijazah, foto siswa" required><span v-if="documentForm.errors.document_type" class="field-error">{{ documentForm.errors.document_type }}</span></label>
                     <label class="field-label">Pilih berkas<input class="field-input file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5" type="file" accept=".pdf,.jpg,.jpeg,.png" required @input="documentForm.file = ($event.target as HTMLInputElement).files?.[0] || null"><span v-if="documentForm.errors.file" class="field-error">{{ documentForm.errors.file }}</span></label>
-                    <button class="primary-button" type="submit" :disabled="documentForm.processing || !documentForm.file">{{ documentForm.processing ? 'Mengunggah…' : 'Unggah dokumen' }}</button>
+                    <AppButton variant="primary" class="primary-button" type="submit" :disabled="documentForm.processing || !documentForm.file">{{ documentForm.processing ? 'Mengunggah…' : 'Unggah dokumen' }}</AppButton>
                 </form>
                 <ul class="divide-y divide-slate-100">
                     <li v-for="document in documents" :key="document.id" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                        <div class="min-w-0"><p class="font-semibold text-slate-800">{{ document.document_type }}</p><p class="mt-1 truncate text-sm text-slate-500">{{ document.original_name }} · {{ sizeLabel(document.size_bytes) }}</p></div>
-                        <div class="flex shrink-0 gap-2"><a class="secondary-button" :href="`/akademik/buku-induk/${student.id}/dokumen/${document.id}`">Unduh</a><button class="danger-button" type="button" @click="deleteDocument(document)">Hapus</button></div>
+                        <div class="min-w-0"><p class="font-semibold text-slate-800">{{ document.document_type }}</p><p class="mt-1 truncate text-sm text-slate-600">{{ document.original_name }} · {{ sizeLabel(document.size_bytes) }}</p></div>
+                        <div class="flex shrink-0 gap-2"><AppButton variant="secondary" as="a" class="secondary-button" :href="`/akademik/buku-induk/${student.id}/dokumen/${document.id}`">Unduh</AppButton><AppButton variant="danger" class="danger-button" type="button" @click="deleteDocument(document)">Hapus</AppButton></div>
                     </li>
-                    <li v-if="documents.length === 0" class="px-5 py-10 text-center text-sm text-slate-500">Belum ada dokumen pribadi siswa.</li>
+                    <li v-if="documents.length === 0" class="px-5 py-10 text-center text-sm text-slate-600">Belum ada dokumen pribadi siswa.</li>
                 </ul>
             </section>
 
             <section class="panel overflow-hidden">
                 <header class="border-b border-slate-200 px-5 py-4">
                     <h2 class="text-base font-bold text-slate-900">Riwayat kelas</h2>
-                    <p class="mt-1 text-sm text-slate-500">Penempatan rombel tercatat per semester, termasuk riwayat terdahulu.</p>
+                    <p class="mt-1 text-sm text-slate-600">Penempatan rombel tercatat per semester, termasuk riwayat terdahulu.</p>
                 </header>
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table min-w-[680px] w-full border-collapse text-left text-sm">
-                        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <thead class="bg-slate-50 text-meta uppercase tracking-wide text-slate-600">
                             <tr><th scope="col" class="px-5 py-3">Tahun ajaran</th><th scope="col" class="px-5 py-3">Semester</th><th scope="col" class="px-5 py-3">Kelas</th><th scope="col" class="px-5 py-3">No. absen</th><th scope="col" class="px-5 py-3">Status penempatan</th></tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -229,7 +230,7 @@ function sizeLabel(bytes: number) {
                                 <td class="px-5 py-3.5 text-slate-700">{{ item.roll_number ?? '—' }}</td>
                                 <td class="px-5 py-3.5 text-slate-700">{{ enrollmentLabels[item.status] || item.status }}</td>
                             </tr>
-                            <tr v-if="class_history.length === 0"><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-500">Belum ada riwayat penempatan kelas.</td></tr>
+                            <tr v-if="class_history.length === 0"><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-600">Belum ada riwayat penempatan kelas.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -239,8 +240,7 @@ function sizeLabel(bytes: number) {
 </template>
 
 <style scoped>
-.field-label { display: grid; gap: .4rem; color: #475569; font-size: .8rem; font-weight: 600; }
-.field-input { min-height: 2.5rem; width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .5rem .75rem; color: #1e293b; font-size: .875rem; font-weight: 400; }
-.field-error { color: #b91c1c; font-size: .75rem; font-weight: 500; }
-.danger-button { min-height: 2.5rem; border: 1px solid #fecaca; border-radius: .65rem; padding: .5rem .8rem; color: #b91c1c; font-size: .8rem; font-weight: 700; }
+.field-label { display: grid; gap: .4rem; color: #475569; font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.field-input { min-height: 2.5rem; width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .5rem .75rem; color: #1e293b; font-size: var(--type-control); font-weight: var(--weight-regular); }
+.field-error { color: #b91c1c; font-size: var(--type-meta); font-weight: var(--weight-medium); }
 </style>

@@ -1,0 +1,47 @@
+Use case: ads-marketing.
+Create a polished Indonesian promotional flyer for SCHOOL SUITE, a real web-based school management application. Portrait 4:5 format, ideally 1536x1920 or similar high-resolution. Audience: school principals and school administrators in Indonesia. Professional, restrained, trustworthy, excellent visual hierarchy, editorial typography and lots of intentional breathing room. Deep forest green, warm off-white, subtle muted gold accents matching supplied application. Not flashy.
+
+Input images are supporting screenshot inserts of the actual application:
+1 is public school website; 2 is administrator dashboard; 3 is admissions dashboard.
+Use the supplied screenshots as real product imagery, preserve their look and legible main headings. Compose a large straight-on crisp browser window with administrator dashboard, with a smaller public school website window overlapping its lower right edge. Keep inserts accurate, not fake analytics or fictitious features. Can crop screenshots appropriately. Show the product as flat elegant browser panels, subtle shadows, no bulky laptop mockup. Do not promote demo school's name as the product brand. Screenshots secondary to main readable flyer copy.
+
+Layout: top small brand name SCHOOL SUITE with simple understated book-inspired mark. Large headline on off-white at upper left; concise subline. Central product screenshot composition. Below, six features in clean two-column grid of three rows using delicate line icons, no big separate pill cards. Bottom deep forest green CTA band with price left and WhatsApp ordering right. Number exceptionally clear and large. All text must be accurate Indonesian, high contrast, not tiny. A small scope note should remain legible.
+
+Exact text to typeset, do not add other marketing claims:
+Brand: "SCHOOL SUITE"
+Category: "Sistem Informasi Sekolah"
+Headline, 3 lines:
+"Kelola sekolah"
+"lebih rapi,"
+"dalam satu sistem."
+Subline:
+"Website, akademik, pembelajaran, dan administrasi"
+"terhubung untuk mendukung kegiatan sekolah."
+
+Features, use title and description:
+"Website Sekolah"
+"Profil, berita, dan informasi sekolah"
+"SPMB / PPDB"
+"Pendaftaran hingga daftar ulang"
+"Data & Akademik"
+"Siswa, guru, kelas, dan jadwal"
+"Pembelajaran & CBT"
+"Materi, tugas, dan ujian"
+"Penilaian & Rapor"
+"Kelola nilai dan laporan belajar"
+"Tata Usaha"
+"Persuratan dan inventaris sarpras"
+
+Price block:
+"Mulai dari"
+"Rp800.000"
+CTA block:
+"Konsultasi & pemesanan"
+"WhatsApp"
+"0895802329062"
+
+Small note at bottom:
+"Harga menyesuaikan kebutuhan dan cakupan layanan."
+Tiny caption near screenshots: "Cuplikan tampilan aplikasi"
+
+Constraints: spell phone exactly 0895802329062. Price exactly Rp800.000. Do not write per month or per year, no fabricated included hosting/domain/support guarantees, no limited time offers, no discounts, no testimonials, no excessive promises, no QR code. Avoid gradients, 3D icons, sparkles, overcrowding. Deliver a finished designed flyer, not a photo of a printed flyer.

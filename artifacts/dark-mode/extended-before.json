@@ -1,0 +1,5729 @@
+[
+  {
+    "key": "public/",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 82,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site public-home",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header is-home",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "nav-toggle ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card pathway-portal",
+        "color": "color(srgb 0.955598 0.964333 0.963529)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "home-life",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "home-admissions",
+        "color": "rgb(233, 239, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 95,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site public-home",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header is-home",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "trust-line",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "pathway-card pathway-portal",
+        "color": "color(srgb 0.955598 0.964333 0.963529)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "home-life",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "explore-item",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "home-admissions",
+        "color": "rgb(233, 239, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/login",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 12,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "DIV",
+        "cls": "",
+        "color": "rgb(242, 246, 249)"
+      },
+      {
+        "tag": "MAIN",
+        "cls": "login-page",
+        "color": "rgb(242, 246, 249)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "login-layout",
+        "color": "rgb(251, 253, 255)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "login-panel",
+        "color": "rgb(251, 253, 255)"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/login",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 12,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "DIV",
+        "cls": "",
+        "color": "rgb(242, 246, 249)"
+      },
+      {
+        "tag": "MAIN",
+        "cls": "login-page",
+        "color": "rgb(242, 246, 249)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "login-layout",
+        "color": "rgb(251, 253, 255)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "login-panel",
+        "color": "rgb(251, 253, 255)"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/profil-sekolah",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 46,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site school-profile",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "nav-toggle ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "hero-visual",
+        "color": "color(srgb 0.924706 0.959373 0.942431)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "hero-emblem",
+        "color": "color(srgb 0.844314 0.906824 0.876941)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "hero-note",
+        "color": "rgb(244, 250, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/profil-sekolah",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 52,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site school-profile",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "hero-visual",
+        "color": "color(srgb 0.924706 0.959373 0.942431)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "hero-emblem",
+        "color": "color(srgb 0.844314 0.906824 0.876941)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "hero-note",
+        "color": "rgb(244, 250, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/berita",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 19,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site public-news",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "nav-toggle ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/berita",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 25,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site public-news",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "A",
+        "cls": "news-card",
+        "color": "rgb(244, 250, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/ppdb",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 50,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site public-admissions",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "nav-toggle ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "admissions-status",
+        "color": "color(srgb 0.924706 0.959373 0.942431)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-badge",
+        "color": "color(srgb 0.860392 0.917333 0.890039)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "ASIDE",
+        "cls": "status-panel",
+        "color": "color(srgb 0.924706 0.959373 0.942431)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "period-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "period-status is-progress",
+        "color": "color(srgb 0.860392 0.917333 0.890039)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "public/ppdb",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "light",
+    "checked": 56,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "MAIN",
+        "cls": "public-site public-admissions",
+        "color": "color(srgb 0.936765 0.967255 0.952255)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "public-site-header",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "admissions-status",
+        "color": "color(srgb 0.924706 0.959373 0.942431)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-badge",
+        "color": "color(srgb 0.860392 0.917333 0.890039)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "ASIDE",
+        "cls": "status-panel",
+        "color": "color(srgb 0.924706 0.959373 0.942431)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "period-card",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "period-status is-progress",
+        "color": "color(srgb 0.860392 0.917333 0.890039)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "color": "color(srgb 0.908627 0.948863 0.929333)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "",
+        "color": "rgb(244, 250, 247)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 174,
+    "issues": [
+      {
+        "text": "Berikutnya: Didisposisikan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Selesai",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Diarsipkan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Berikutnya: Terkirim",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 201,
+    "issues": [
+      {
+        "text": "Berikutnya: Didisposisikan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Selesai",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Diarsipkan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Berikutnya: Terkirim",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan/surat-masuk",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 75,
+    "issues": [
+      {
+        "text": "Berikutnya: Selesai",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Diarsipkan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Didisposisikan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan/surat-masuk",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 102,
+    "issues": [
+      {
+        "text": "Berikutnya: Selesai",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Diarsipkan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Berikutnya: Didisposisikan",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan/surat-keluar",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 105,
+    "issues": [
+      {
+        "text": "Berikutnya: Terkirim",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan/surat-keluar",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 132,
+    "issues": [
+      {
+        "text": "Berikutnya: Terkirim",
+        "cls": "next-step-label",
+        "ratio": 2.38,
+        "min": 4.5,
+        "color": "rgb(49, 87, 164)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan/arsip",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 51,
+    "issues": [
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/persuratan/arsip",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 78,
+    "issues": [
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Tersimpan di arsip",
+        "cls": "archived-note",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/sarpras",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 45,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/sarpras",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 71,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/tugas",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 60,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/administrasi/tugas",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 78,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/pembelajaran/progress",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 223,
+    "issues": [
+      {
+        "text": "80%",
+        "cls": "kpi-badge kpi-badge--emerald",
+        "ratio": 4.37,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          22.83529411764706,
+          50.92941176470589,
+          57,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/pembelajaran/progress",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 238,
+    "issues": [
+      {
+        "text": "80%",
+        "cls": "kpi-badge kpi-badge--emerald",
+        "ratio": 4.37,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          22.83529411764706,
+          50.92941176470589,
+          57,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Tuntas",
+        "cls": "status-badge status-badge--emerald",
+        "ratio": 2.4,
+        "min": 4.5,
+        "color": "rgb(4, 120, 87)",
+        "bg": [
+          22.58823529411765,
+          52.6,
+          57.576470588235296,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.14,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          40.23529411764706,
+          50.84313725490196,
+          71.25490196078431,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Perlu Perhatian",
+        "cls": "status-badge status-badge--rose",
+        "ratio": 2.2,
+        "min": 4.5,
+        "color": "rgb(190, 18, 60)",
+        "bg": [
+          62.36470588235294,
+          36.51764705882353,
+          54.21176470588236,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.06,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          45.1764705882353,
+          51.3921568627451,
+          72.3529411764706,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Perlu Perhatian",
+        "cls": "status-badge status-badge--rose",
+        "ratio": 2.2,
+        "min": 4.5,
+        "color": "rgb(190, 18, 60)",
+        "bg": [
+          62.36470588235294,
+          36.51764705882353,
+          54.21176470588236,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "—",
+        "cls": "score-pill score-pill--slate",
+        "ratio": 4.06,
+        "min": 4.5,
+        "color": "rgb(135, 148, 170)",
+        "bg": [
+          45.1764705882353,
+          51.3921568627451,
+          72.3529411764706,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 70,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 89,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/pendaftar",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 92,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/pendaftar",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 165,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/berkas",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 94,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/berkas",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 154,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/seleksi",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 275,
+    "issues": [
+      {
+        "text": "Diterima",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "ratio": 3.85,
+        "min": 4.5,
+        "color": "rgb(19, 138, 98)",
+        "bg": [
+          229,
+          245,
+          238,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Diterima",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "ratio": 3.85,
+        "min": 4.5,
+        "color": "rgb(19, 138, 98)",
+        "bg": [
+          229,
+          245,
+          238,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Diterima",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "ratio": 3.85,
+        "min": 4.5,
+        "color": "rgb(19, 138, 98)",
+        "bg": [
+          229,
+          245,
+          238,
+          1
+        ],
+        "font": "14px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "color": "rgb(229, 245, 238)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "color": "rgb(229, 245, 238)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "color": "rgb(229, 245, 238)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-waitlisted",
+        "color": "rgb(255, 244, 216)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-rejected",
+        "color": "rgb(253, 235, 234)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/seleksi",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 294,
+    "issues": [
+      {
+        "text": "Diterima",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "ratio": 3.85,
+        "min": 4.5,
+        "color": "rgb(19, 138, 98)",
+        "bg": [
+          229,
+          245,
+          238,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Diterima",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "ratio": 3.85,
+        "min": 4.5,
+        "color": "rgb(19, 138, 98)",
+        "bg": [
+          229,
+          245,
+          238,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Diterima",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "ratio": 3.85,
+        "min": 4.5,
+        "color": "rgb(19, 138, 98)",
+        "bg": [
+          229,
+          245,
+          238,
+          1
+        ],
+        "font": "14px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "color": "rgb(229, 245, 238)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "color": "rgb(229, 245, 238)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-accepted",
+        "color": "rgb(229, 245, 238)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-waitlisted",
+        "color": "rgb(255, 244, 216)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "selection-decision-state selection-decision-rejected",
+        "color": "rgb(253, 235, 234)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/daftar-ulang",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 80,
+    "issues": [
+      {
+        "text": "✓",
+        "cls": "guidance-mark",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          19,
+          138,
+          98,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "DIV",
+        "cls": "re-registration-complete",
+        "color": "rgb(240, 250, 245)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/spmb/daftar-ulang",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 99,
+    "issues": [
+      {
+        "text": "✓",
+        "cls": "guidance-mark",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(255, 255, 255)",
+        "bg": [
+          19,
+          138,
+          98,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "DIV",
+        "cls": "re-registration-complete",
+        "color": "rgb(240, 250, 245)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/ujian",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 33,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/ujian",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 48,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/akademik/kelas",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 60,
+    "issues": [
+      {
+        "text": "Melebihi kapasitas 1 siswa",
+        "cls": "class-capacity-warning",
+        "ratio": 2.5,
+        "min": 4.5,
+        "color": "rgb(164, 59, 50)",
+        "bg": [
+          29,
+          32,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "SPAN",
+        "cls": "class-capacity-badge inline-flex items-center px-2.5 py-1 rounded-full text-meta font-semibold",
+        "color": "rgb(255, 240, 238)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/akademik/kelas",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 84,
+    "issues": [
+      {
+        "text": "Melebihi kapasitas 1 siswa",
+        "cls": "class-capacity-warning",
+        "ratio": 2.5,
+        "min": 4.5,
+        "color": "rgb(164, 59, 50)",
+        "bg": [
+          29,
+          32,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "SPAN",
+        "cls": "class-capacity-badge inline-flex items-center px-2.5 py-1 rounded-full text-meta font-semibold",
+        "color": "rgb(255, 240, 238)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/ujian/hasil",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 23,
+    "issues": [
+      {
+        "text": "Total siswa",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Sudah mengumpulkan",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Sudah dinilai",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Rata-rata nilai",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "0 dari 0 siswa ditampilkan",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/ujian/hasil",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 38,
+    "issues": [
+      {
+        "text": "Total siswa",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Sudah mengumpulkan",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Sudah dinilai",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Rata-rata nilai",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "0 dari 0 siswa ditampilkan",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "admin/ujian/monitor",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 153,
+    "issues": [
+      {
+        "text": "14 Nov 2026, 11.58 — 21 Nov 2026, 12.03",
+        "cls": "",
+        "ratio": 2.17,
+        "min": 4.5,
+        "color": "rgb(71, 85, 105)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Jadwal",
+        "cls": "",
+        "ratio": 1.12,
+        "min": 4.5,
+        "color": "rgb(23, 40, 68)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "30 menit",
+        "cls": "",
+        "ratio": 2.17,
+        "min": 4.5,
+        "color": "rgb(71, 85, 105)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Durasi",
+        "cls": "",
+        "ratio": 1.12,
+        "min": 4.5,
+        "color": "rgb(23, 40, 68)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "3 kali",
+        "cls": "",
+        "ratio": 2.17,
+        "min": 4.5,
+        "color": "rgb(71, 85, 105)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Batas pelanggaran",
+        "cls": "",
+        "ratio": 1.12,
+        "min": 4.5,
+        "color": "rgb(23, 40, 68)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Total siswa",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Peserta pada rombel ujian",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Online",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Heartbeat < 45 detik",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Selesai",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "0",
+        "cls": "",
+        "ratio": 2.46,
+        "min": 3,
+        "color": "rgb(29, 78, 216)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "27.2px"
+      },
+      {
+        "text": "Jawaban sudah dikirim",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Terkunci",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "0",
+        "cls": "",
+        "ratio": 2.55,
+        "min": 3,
+        "color": "rgb(185, 28, 28)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "27.2px"
+      },
+      {
+        "text": "Melewati batas pelanggaran",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Status peserta",
+        "cls": "eyebrow",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "30 dari 30 siswa ditampilkan · diperbarui 14 Nov 2026, 12.03",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Siswa",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Status",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26001",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26002",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26003",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26004",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26005",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26006",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26007",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26008",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26009",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26010",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26011",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26012",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26013",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26014",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26015",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26016",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26017",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26018",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26019",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26020",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26021",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26022",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26023",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26024",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26025",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26026",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26027",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26028",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26029",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26030",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "admin/ujian/monitor",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 322,
+    "issues": [
+      {
+        "text": "14 Nov 2026, 11.58 — 21 Nov 2026, 12.03",
+        "cls": "",
+        "ratio": 2.17,
+        "min": 4.5,
+        "color": "rgb(71, 85, 105)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Jadwal",
+        "cls": "",
+        "ratio": 1.12,
+        "min": 4.5,
+        "color": "rgb(23, 40, 68)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "30 menit",
+        "cls": "",
+        "ratio": 2.17,
+        "min": 4.5,
+        "color": "rgb(71, 85, 105)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Durasi",
+        "cls": "",
+        "ratio": 1.12,
+        "min": 4.5,
+        "color": "rgb(23, 40, 68)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "3 kali",
+        "cls": "",
+        "ratio": 2.17,
+        "min": 4.5,
+        "color": "rgb(71, 85, 105)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Batas pelanggaran",
+        "cls": "",
+        "ratio": 1.12,
+        "min": 4.5,
+        "color": "rgb(23, 40, 68)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "14px"
+      },
+      {
+        "text": "Total siswa",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Peserta pada rombel ujian",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Online",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Heartbeat < 45 detik",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Selesai",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "0",
+        "cls": "",
+        "ratio": 2.46,
+        "min": 3,
+        "color": "rgb(29, 78, 216)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "27.2px"
+      },
+      {
+        "text": "Jawaban sudah dikirim",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Terkunci",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "0",
+        "cls": "",
+        "ratio": 2.55,
+        "min": 3,
+        "color": "rgb(185, 28, 28)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "27.2px"
+      },
+      {
+        "text": "Melewati batas pelanggaran",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Status peserta",
+        "cls": "eyebrow",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "30 dari 30 siswa ditampilkan · diperbarui 14 Nov 2026, 12.03",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Siswa",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Status",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Progres",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Pelanggaran",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Sisa sesi",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Aksi",
+        "cls": "",
+        "ratio": 3.23,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          28,
+          37,
+          54,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26001",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26002",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26003",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26004",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26005",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26006",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26007",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26008",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26009",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26010",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26011",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26012",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26013",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26014",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26015",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26016",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26017",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26018",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26019",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26020",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26021",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26022",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26023",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26024",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26025",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26026",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26027",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26028",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26029",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "26030",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum masuk",
+        "cls": "status-pill status-not_started",
+        "ratio": 4.34,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          241,
+          245,
+          249,
+          1
+        ],
+        "font": "13px"
+      },
+      {
+        "text": "Belum ada aktivitas terbaru",
+        "cls": "",
+        "ratio": 3.46,
+        "min": 4.5,
+        "color": "rgb(100, 116, 139)",
+        "bg": [
+          24,
+          31,
+          46,
+          1
+        ],
+        "font": "13px"
+      }
+    ],
+    "bright": [
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      },
+      {
+        "tag": "SPAN",
+        "cls": "status-pill status-not_started",
+        "color": "rgb(241, 245, 249)"
+      }
+    ],
+    "opened": null
+  },
+  {
+    "key": "teacher/dashboard",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 71,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "teacher/dashboard",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 88,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "teacher/pembelajaran",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 139,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "teacher/pembelajaran",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 155,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "teacher/penilaian/bank-soal",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 165,
+    "issues": [],
+    "bright": [],
+    "opened": {
+      "theme": "dark",
+      "checked": 190,
+      "issues": [],
+      "bright": []
+    }
+  },
+  {
+    "key": "teacher/penilaian/bank-soal",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 184,
+    "issues": [],
+    "bright": [],
+    "opened": {
+      "theme": "dark",
+      "checked": 209,
+      "issues": [],
+      "bright": []
+    }
+  },
+  {
+    "key": "student/dashboard",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 63,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "student/dashboard",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 85,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "student/siswa/tugas",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 51,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  },
+  {
+    "key": "student/siswa/tugas",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 70,
+    "issues": [],
+    "bright": [],
+    "opened": null
+  }
+]

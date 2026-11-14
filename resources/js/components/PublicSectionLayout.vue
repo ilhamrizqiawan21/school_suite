@@ -69,8 +69,8 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 .eyebrow {
     margin: 0;
     color: var(--gold);
-    font-size: .8rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     letter-spacing: .09em;
     text-transform: uppercase;
 }
@@ -78,9 +78,9 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 .section-hero h1 {
     max-width: 820px;
     margin: .8rem 0 1.25rem;
-    font-family: var(--font-display);
+    font-family: var(--font-ui);
     font-size: clamp(3rem, 7vw, 6.5rem);
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     letter-spacing: -.065em;
     line-height: .98;
 }
@@ -101,7 +101,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     padding: 1.3rem 0 3rem;
     color: var(--muted);
     border-top: 1px solid var(--public-line-strong);
-    font-size: .82rem;
+    font-size: var(--type-caption);
 }
 
 @media (max-width: 560px) {

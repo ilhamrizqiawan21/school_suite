@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
@@ -151,7 +152,7 @@ const submit = () => {
                 <div v-if="hasErrors" class="notice" role="alert">Profil sekolah belum disimpan. Periksa isian yang ditandai di bawah.</div>
                 <fieldset :disabled="!canUpdate || form.processing">
                     <section class="panel settings-section">
-                        <div class="section-heading"><h2>Identitas resmi</h2><p>Isian bertanda * wajib diisi. Gunakan nama dan data resmi sekolah.</p></div>
+                        <div class="section-heading"><h2>Identitas resmi</h2><p>* Wajib diisi.</p></div>
                         <div class="fields">
                             <label v-for="field in fields" :key="field.key">
                                 <span>{{ field.label }}{{ 'required' in field && field.required ? ' *' : '' }}</span>
@@ -166,7 +167,7 @@ const submit = () => {
                     </section>
                     <section class="panel settings-section">
                         <div class="section-heading"><h2>Konten profil sekolah</h2><p>Konten ini menjadi bahan utama halaman profil publik sekolah dan dapat disempurnakan sebelum landing page diterbitkan.</p></div>
-                        <label><span>Sekilas tentang sekolah</span><textarea v-model="form.about" rows="5" maxlength="10000" placeholder="Ceritakan sejarah singkat, karakter, dan keunggulan sekolah."></textarea><small>Gunakan bahasa yang mudah dipahami calon siswa, orang tua, dan masyarakat.</small><em v-if="form.errors.about">{{ form.errors.about }}</em></label>
+                        <label><span>Sekilas tentang sekolah</span><textarea v-model="form.about" rows="5" maxlength="10000" placeholder="Ceritakan sejarah singkat, karakter, dan keunggulan sekolah."></textarea><em v-if="form.errors.about">{{ form.errors.about }}</em></label>
                         <label><span>Sambutan kepala sekolah</span><textarea v-model="form.principal_message" rows="5" maxlength="10000" placeholder="Tuliskan sambutan singkat kepala sekolah."></textarea><em v-if="form.errors.principal_message">{{ form.errors.principal_message }}</em></label>
                     </section>
                     <section class="panel settings-section">
@@ -186,7 +187,7 @@ const submit = () => {
                                 <input :key="`${kind}-${uploadVersion}`" type="file" :accept="kind === 'logo' ? 'image/jpeg,image/png,image/webp' : 'image/png'" @change="selectImage(kind, $event)" />
                                 <small>{{ kind === 'logo' ? 'JPG, PNG, atau WebP; maksimal 2 MB.' : 'PNG persegi; maksimal 512 × 512 piksel dan 512 KB.' }} Mengunggah file baru akan mengganti gambar lama setelah disimpan.</small>
                                 <em v-if="form.errors[kind]">{{ form.errors[kind] }}</em>
-                                <button v-if="form[kind]" type="button" class="secondary-button" @click="clearImage(kind)">Batalkan gambar baru</button>
+                                <AppButton variant="secondary" v-if="form[kind]" type="button" class="secondary-button" @click="clearImage(kind)">Batalkan gambar baru</AppButton>
                             </label>
                         </div>
                         <div class="color-picker"><span>Warna utama aplikasi</span><div class="theme-options"><label v-for="color in ['#3157a4','#277450','#7255ae','#b87818','#b64a42']" :key="color" class="theme-choice"><input v-model="form.theme_primary" type="radio" :value="color"><i :style="{background: color}"></i><span>{{ color }}</span></label></div><em v-if="form.errors.theme_primary">{{ form.errors.theme_primary }}</em></div>
@@ -213,7 +214,7 @@ const submit = () => {
                         <label><span>Visi</span><textarea v-model="form.vision" rows="3" maxlength="5000"></textarea><em v-if="form.errors.vision">{{ form.errors.vision }}</em></label>
                         <label><span>Misi</span><textarea v-model="form.mission" rows="5" maxlength="10000" placeholder="Tuliskan setiap butir misi pada baris terpisah"></textarea><em v-if="form.errors.mission">{{ form.errors.mission }}</em></label>
                     </section>
-                    <div v-if="canUpdate" class="panel save-bar"><span>{{ form.isDirty ? 'Ada perubahan yang belum disimpan' : 'Profil sekolah sudah tersimpan' }}</span><button type="submit" class="primary-button" :disabled="form.processing || !form.isDirty">{{ form.processing ? 'Menyimpan…' : 'Simpan profil sekolah' }}</button></div>
+                    <div v-if="canUpdate" class="panel save-bar"><span>{{ form.isDirty ? 'Ada perubahan yang belum disimpan' : 'Profil sekolah sudah tersimpan' }}</span><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !form.isDirty">{{ form.processing ? 'Menyimpan…' : 'Simpan profil sekolah' }}</AppButton></div>
                 </fieldset>
             </form>
         </div>
@@ -221,15 +222,15 @@ const submit = () => {
 </template>
 
 <style scoped>
-.settings-section,.save-bar{padding:1.25rem}.section-heading h2{font-weight: 700}.hero-card>div{min-width:0}.notice{padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.85rem;line-height:1.6}.notice.success{background:#ecfdf5;color:#166534}
-.school-page,.school-form,fieldset{display:grid;gap:1.25rem;min-width:0}.school-page{max-width:1100px;margin:auto}fieldset{border:0;padding:0;margin:0}.settings-section{display:grid;gap:1.25rem;min-width:0}.section-heading h2{margin:0;font-size:1rem}.section-heading p{margin:.4rem 0 0;color:var(--ink-soft);font-size:.8rem;line-height:1.6}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.settings-section label{display:grid;align-content:start;gap:.45rem;min-width:0;font-size:.8rem;font-weight:700}.settings-section input:not([type=radio]),.settings-section select,.settings-section textarea{width:100%;min-width:0;min-height:44px;padding:.7rem .8rem;border:1px solid var(--line);border-radius:.7rem;background:var(--surface);color:var(--ink);font:inherit;font-weight:400}.settings-section textarea{resize:vertical;line-height:1.6}.settings-section :is(input,select,textarea):focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 30%,transparent);outline-offset:2px}.wide{grid-column:1/-1}.settings-section small{font-size:.72rem;font-weight:400;color:var(--ink-soft);line-height:1.6;overflow-wrap:anywhere}.settings-section em{font-size:.75rem;font-style:normal;color:var(--red)}.image-preview{display:grid;place-items:center;height:110px;border:1px dashed var(--line);border-radius:.7rem;background:var(--surface-subtle)}.image-preview img{max-width:100%;max-height:90px;object-fit:contain}.color-picker{display:grid;gap:.6rem;font-size:.8rem;font-weight:700}.theme-options{display:flex;flex-wrap:wrap;gap:.6rem}.settings-section .theme-choice{display:flex;align-items:center;gap:.4rem;padding:.65rem;border:1px solid var(--line);border-radius:.65rem;font-size:.75rem}.theme-choice i{width:1.1rem;height:1.1rem;border-radius:50%}.save-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}.save-bar span{font-size:.8rem;color:var(--ink-soft)}button{min-height:44px}.upload-field button{width:fit-content}fieldset:disabled input,fieldset:disabled select,fieldset:disabled textarea{opacity:.7}@media(max-width:640px){.fields{grid-template-columns:1fr}.save-bar{flex-direction:column;align-items:stretch}.save-bar button{width:100%}}
-.section-toggles{display:flex;flex-wrap:wrap;gap:.65rem}.settings-section .section-toggles label{display:flex;align-items:center;gap:.55rem;min-height:44px;padding:.55rem .75rem;border:1px solid var(--line);border-radius:.65rem;font-weight:600}.section-toggles input{width:1.1rem;height:1.1rem;accent-color:var(--primary)}
+.settings-section,.save-bar{padding:1.25rem}.section-heading h2{font-weight: var(--weight-bold)}.hero-card>div{min-width:0}.notice{padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:var(--type-sm);line-height:1.6}.notice.success{background:#ecfdf5;color:#166534}
+.school-page,.school-form,fieldset{display:grid;gap:1.25rem;min-width:0}.school-page{max-width:1100px;margin:auto}fieldset{border:0;padding:0;margin:0}.settings-section{display:grid;gap:1.25rem;min-width:0}.section-heading h2{margin:0;font-size:var(--type-md)}.section-heading p{margin:.4rem 0 0;color:var(--ink-soft);font-size:var(--type-meta);line-height:1.6}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.settings-section label{display:grid;align-content:start;gap:.45rem;min-width:0;font-size:var(--type-meta);font-weight:var(--weight-semibold)}.settings-section input:not([type=radio]),.settings-section select,.settings-section textarea{width:100%;min-width:0;min-height:44px;padding:.7rem .8rem;border:1px solid var(--line);border-radius:.7rem;background:var(--surface);color:var(--ink);font:inherit;font-weight:var(--weight-regular)}.settings-section textarea{resize:vertical;line-height:1.6}.settings-section :is(input,select,textarea):focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 30%,transparent);outline-offset:2px}.wide{grid-column:1/-1}.settings-section small{font-size:var(--type-meta);font-weight:var(--weight-regular);color:var(--ink-soft);line-height:1.6;overflow-wrap:anywhere}.settings-section em{font-size:var(--type-meta);font-style:normal;color:var(--red)}.image-preview{display:grid;place-items:center;height:110px;border:1px dashed var(--line);border-radius:.7rem;background:var(--surface-subtle)}.image-preview img{max-width:100%;max-height:90px;object-fit:contain}.color-picker{display:grid;gap:.6rem;font-size:var(--type-meta);font-weight:var(--weight-bold)}.theme-options{display:flex;flex-wrap:wrap;gap:.6rem}.settings-section .theme-choice{display:flex;align-items:center;gap:.4rem;padding:.65rem;border:1px solid var(--line);border-radius:.65rem;font-size:var(--type-meta)}.theme-choice i{width:1.1rem;height:1.1rem;border-radius:50%}.save-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem}.save-bar span{font-size:var(--type-meta);color:var(--ink-soft)}button{min-height:44px}.upload-field button{width:fit-content}fieldset:disabled input,fieldset:disabled select,fieldset:disabled textarea{opacity:.7}@media(max-width:640px){.fields{grid-template-columns:1fr}.save-bar{flex-direction:column;align-items:stretch}.save-bar button{width:100%}}
+.section-toggles{display:flex;flex-wrap:wrap;gap:.65rem}.settings-section .section-toggles label{display:flex;align-items:center;gap:.55rem;min-height:44px;padding:.55rem .75rem;border:1px solid var(--line);border-radius:.65rem;font-weight:var(--weight-semibold)}.section-toggles input{width:1.1rem;height:1.1rem;accent-color:var(--primary)}
 .settings-section .section-toggles input[type=checkbox]{width:1.1rem;height:1.1rem;min-width:1.1rem;min-height:0;flex:0 0 1.1rem;padding:0;accent-color:var(--primary)}
 .school-page { width: 100%; }
 .school-heading { padding: .5rem 0 .75rem; }
-.school-heading .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: none; }
-.school-heading h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.2; }
-.school-heading p:not(.eyebrow) { max-width: 640px; margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.school-heading .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-semibold); letter-spacing: .04em; text-transform: none; }
+.school-heading h1 { margin: 0; color: var(--ink); font-size: var(--type-3xl); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1.2; }
+.school-heading p:not(.eyebrow) { max-width: 640px; margin: .5rem 0 0; color: var(--ink-soft); font-size: var(--type-md); line-height: 1.55; }
 .settings-section { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
 .settings-section .section-heading { display: block; margin-bottom: .25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--line); }
 .settings-section .section-heading h2 { color: var(--ink); font-size: 1.05rem; }

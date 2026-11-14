@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../layouts/AppLayout.vue';
@@ -110,7 +111,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
         <div class="view space-y-6 task-submissions-page">
             <header class="page-heading">
                 <div><p class="eyebrow">Penilaian tugas · {{ assignment.subject }} · Kelas {{ assignment.class_group }}</p><h1>{{ assignment.title }}</h1><p>Periksa jawaban, beri nilai, dan kirim umpan balik kepada siswa.</p></div>
-                <div class="heading-actions"><Link class="secondary-button" :href="back_url">Kembali ke tugas</Link><Link class="primary-button" :href="assignment_url">Detail tugas</Link></div>
+                <div class="heading-actions"><Link class="secondary-button ui-button ui-button--secondary ui-button--md" :href="back_url">Kembali ke tugas</Link><Link class="primary-button ui-button ui-button--primary ui-button--md" :href="assignment_url">Detail tugas</Link></div>
             </header>
             <section class="submission-stats">
                 <article class="submission-stat submission-stat-blue"><span>Siswa</span><strong>{{ studentsCount }}</strong><small>terdaftar di kelas</small></article>
@@ -122,7 +123,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
             <section class="panel overflow-hidden">
                 <div class="submission-toolbar">
                     <div><p class="eyebrow">Daftar pengumpulan</p><h2>Jawaban siswa</h2></div>
-                    <div class="submission-tools"><label class="table-search search-control-shell"><span>⌕</span><input v-model="search" type="search" placeholder="Cari siswa" /></label><select v-model="statusFilter"><option value="all">Semua status</option><option value="submitted">Terkirim</option><option value="graded">Dinilai</option><option value="needs_revision">Perlu perbaikan</option><option value="not_submitted">Belum mengumpulkan</option></select><button class="file-action-button file-action-button--excel compact" type="button" @click="exportCsv">Excel</button><button class="file-action-button file-action-button--pdf compact" type="button" @click="printPage">PDF</button></div>
+                    <div class="submission-tools"><label class="table-search search-control-shell"><span>⌕</span><input v-model="search" type="search" placeholder="Cari siswa" /></label><select v-model="statusFilter"><option value="all">Semua status</option><option value="submitted">Terkirim</option><option value="graded">Dinilai</option><option value="needs_revision">Perlu perbaikan</option><option value="not_submitted">Belum mengumpulkan</option></select><AppButton variant="secondary" icon="excel" class="file-action-button file-action-button--excel compact" type="button" @click="exportCsv">Excel</AppButton><AppButton variant="secondary" icon="pdf" class="file-action-button file-action-button--pdf compact" type="button" @click="printPage">PDF</AppButton></div>
                 </div>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table submission-table">
@@ -138,7 +139,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                                     <span v-if="!row.content && !row.files.length">-</span>
                                 </td>
                                 <td>{{ row.score ?? '—' }}</td>
-                                <td><button v-if="row.id" class="secondary-button compact" type="button" @click="openDetail(row)">{{ row.score === null || row.score === undefined ? 'Buka' : 'Ubah nilai' }}</button></td>
+                                <td><AppButton variant="secondary" v-if="row.id" class="secondary-button compact" type="button" @click="openDetail(row)">{{ row.score === null || row.score === undefined ? 'Buka' : 'Ubah nilai' }}</AppButton></td>
                             </tr>
                             <tr v-if="filteredSubmissions.length === 0"><td colspan="6" class="empty-state">Tidak ada data yang sesuai dengan filter.</td></tr>
                         </tbody>
@@ -149,7 +150,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 
         <div v-if="selected" ref="detailDialog" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-detail-title" @click.self="selected = null">
             <form class="modal-card" @submit.prevent="submitGrade">
-                <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2 id="submission-detail-title">{{ selected.student.name }}</h2></div><button type="button" aria-label="Tutup detail pengumpulan" @click="selected = null">×</button></div>
+                <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2 id="submission-detail-title">{{ selected.student.name }}</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup detail pengumpulan" @click="selected = null">×</AppButton></div>
                 <div class="submission-detail-meta"><span>Status: <strong>{{ statusLabel(selected) }}</strong></span><span>Tanggal kumpul: <strong>{{ formatDate(selected.submitted_at) }}</strong></span></div>
                 <div v-if="selected.content" class="answer-box"><strong>Jawaban teks</strong><p>{{ selected.content }}</p></div>
                 <div v-if="selected.files.length" class="file-list"><strong>Berkas jawaban</strong><a v-for="file in selected.files" :key="file.id" :href="file.url">{{ file.name }}</a></div>
@@ -157,7 +158,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                 <label>Keputusan<select v-model="gradeForm.review_status"><option value="approved">Setujui & beri nilai</option><option value="needs_revision">Minta perbaikan</option></select></label>
                 <label v-if="gradeForm.review_status === 'approved'">Nilai<input v-model.number="gradeForm.score" type="number" min="0" :max="assignment.max_score" required /></label>
                 <label>Umpan balik<textarea v-model="gradeForm.feedback" rows="5" /></label>
-                <div class="modal-actions"><button type="button" class="secondary-button" @click="selected = null">Batal</button><button type="submit" class="primary-button" :disabled="gradeForm.processing">Simpan</button></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="selected = null">Batal</AppButton><AppButton variant="primary" :loading="gradeForm.processing" type="submit" class="primary-button" :disabled="gradeForm.processing">Simpan</AppButton></div>
             </form>
         </div>
     </AppLayout>
@@ -169,40 +170,39 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
 .heading-actions, .modal-actions { flex-wrap: wrap; }
 .submission-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .8rem; }
 .submission-stat { min-height: 105px; display: grid; align-content: center; gap: .15rem; padding: 1rem; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
-.submission-stat span, .submission-stat small { color: var(--ink-soft); font-size: .72rem; }
+.submission-stat span, .submission-stat small { color: var(--ink-soft); font-size: var(--type-meta); }
 .submission-stat strong { color: var(--ink); font-size: 1.9rem; line-height: 1; }
 .submission-stat-blue { border-top: 3px solid #5c8ff0; } .submission-stat-green { border-top: 3px solid #28b47d; } .submission-stat-teal { border-top: 3px solid #28c3b4; } .submission-stat-red { border-top: 3px solid #e76e73; } .submission-stat-amber { border-top: 3px solid #d9a73e; }
 .submission-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
 .submission-toolbar h2 { margin: .15rem 0 0; color: var(--ink); font-size: 1.12rem; }
 .submission-tools { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; justify-content: flex-end; }
 .table-search { min-height: 36px; width: 190px; display: flex; align-items: center; gap: .45rem; padding: 0 .65rem; color: var(--ink-faint); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: .55rem; }
-.table-search input { min-width: 0; width: 100%; color: var(--ink); background: transparent; border: 0; outline: 0; font-size: .76rem; }
-.submission-tools select { min-height: 36px; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: .55rem; padding: 0 .55rem; font-size: .76rem; }
+.table-search input { min-width: 0; width: 100%; color: var(--ink); background: transparent; border: 0; outline: 0; font-size: var(--type-control); }
+.submission-tools select { min-height: 36px; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line); border-radius: .55rem; padding: 0 .55rem; font-size: var(--type-control); }
 .table-scroll { overflow-x: auto; }
-.submission-table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: .83rem; }
+.submission-table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: var(--type-sm); }
 .submission-table th, .submission-table td { padding: .85rem 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-.submission-table th { background: var(--surface-subtle); color: var(--ink-faint); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+.submission-table th { background: var(--surface-subtle); color: var(--ink-faint); font-size: var(--type-meta); text-transform: uppercase; letter-spacing: .04em; }
 .submission-table td strong, .submission-table td small { display: block; }
 .submission-table td { color: var(--ink-soft); border-bottom-color: var(--line); }
 .submission-table td strong { color: var(--ink); }
 .submission-table td small { margin-top: .2rem; color: var(--ink-faint); }
-.status-pill { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: .72rem; font-weight: 700; }
+.status-pill { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .status-not_submitted { background: var(--gold-soft); color: var(--gold); }
 .status-late { background: var(--red-soft); color: var(--red); }
 .answer-preview { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-soft); }
 .file-list { display: grid; gap: .2rem; }
 .file-list a { color: var(--primary); text-decoration: underline; }
-.compact { min-height: 32px; padding: .45rem .7rem; font-size: .75rem; }
+.compact { min-height: 32px; padding: .45rem .7rem; font-size: var(--type-meta); }
 .empty-state { padding: 2rem; text-align: center; color: var(--ink-faint); }
-.submission-detail-meta { display: flex; flex-wrap: wrap; gap: .65rem; color: var(--ink-soft); font-size: .78rem; }
+.submission-detail-meta { display: flex; flex-wrap: wrap; gap: .65rem; color: var(--ink-soft); font-size: var(--type-meta); }
 .answer-box { padding: .8rem; border-radius: .65rem; background: var(--surface-subtle); color: var(--ink-soft); }
-.answer-box strong { display: block; color: var(--ink); font-size: .78rem; }
+.answer-box strong { display: block; color: var(--ink); font-size: var(--type-meta); }
 .answer-box p { max-height: 240px; margin: .45rem 0 0; overflow: auto; white-space: pre-wrap; line-height: 1.6; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); }
 .modal-card { width: min(620px, 100%); max-height: 90vh; overflow: auto; display: grid; gap: 1rem; padding: 1.35rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; box-shadow: 0 24px 80px rgb(0 0 0 / .3); }
 .modal-heading h2 { margin: .2rem 0 0; color: var(--ink); font-size: 1.05rem; }
-.modal-heading > button { min-width: 44px; min-height: 44px; color: var(--ink-soft); font-size: 1.6rem; }
-.modal-card label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: .8rem; font-weight: 700; }
+.modal-card label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .modal-card input, .modal-card select, .modal-card textarea { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .65rem .75rem; font: inherit; }
 @media (max-width: 980px) { .submission-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .submission-toolbar { align-items: flex-start; flex-direction: column; } .submission-tools { width: 100%; justify-content: flex-start; } }
 @media (max-width: 700px) { .page-heading { align-items: flex-start; flex-direction: column; } .submission-stats { grid-template-columns: 1fr 1fr; } .table-search { width: 100%; } }

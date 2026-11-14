@@ -1,6 +1,9 @@
 import '../css/app.css';
 import { createApp, h, type DefineComponent } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
+import { setPageTheme, setupThemeSync } from './composables/useTheme';
+
+setupThemeSync();
 
 type InertiaVisitUrl = Parameters<typeof router.visit>[0];
 
@@ -26,29 +29,6 @@ const originalVisit = router.visit.bind(router);
 router.visit = ((url: InertiaVisitUrl, options?: Parameters<typeof router.visit>[1]) => {
     originalVisit(normalizeVisitUrl(url), options);
 }) as typeof router.visit;
-
-let themeBeforePublic: string | null = null;
-
-const syncPublicTheme = () => {
-    const isPublicPage = Boolean(document.querySelector('.public-site'));
-
-    if (isPublicPage) {
-        if (themeBeforePublic === null) {
-            themeBeforePublic = document.documentElement.dataset.theme
-                ?? (localStorage.getItem('school-suite-theme') === 'dark' ? 'dark' : 'light');
-        }
-
-        document.documentElement.dataset.theme = 'light';
-        document.documentElement.style.colorScheme = 'light';
-        return;
-    }
-
-    if (themeBeforePublic !== null) {
-        document.documentElement.dataset.theme = themeBeforePublic;
-        document.documentElement.style.removeProperty('color-scheme');
-        themeBeforePublic = null;
-    }
-};
 
 const setupTableScrollAffordances = () => {
     const tableScrollers = new Set<HTMLElement>();
@@ -102,13 +82,13 @@ const setupTableScrollAffordances = () => {
 
     window.addEventListener('resize', scheduleRefresh);
     router.on('navigate', scheduleRefresh);
-    router.on('navigate', () => window.requestAnimationFrame(syncPublicTheme));
     scheduleRefresh();
 };
 
 createInertiaApp({
     title: (title) => (title ? `${title} — School Suite` : 'School Suite'),
     resolve: (name) => {
+        setPageTheme(name);
         const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue');
         const page = pages[`./Pages/${name}.vue`];
         if (!page) {
@@ -121,7 +101,6 @@ createInertiaApp({
             .use(plugin)
             .mount(el);
         setupTableScrollAffordances();
-        syncPublicTheme();
     },
 });
 

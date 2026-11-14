@@ -34,8 +34,8 @@
 .learning-progress-page .eyebrow {
     margin: 0 0 .55rem;
     color: var(--primary) !important;
-    font-size: .72rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     letter-spacing: .1em;
     line-height: 1.3;
     text-transform: uppercase;
@@ -45,8 +45,8 @@
 .learning-progress-page .hero-card h1 {
     margin: 0;
     color: var(--ink) !important;
-    font-size: clamp(1.55rem, 2.6vw, 2.15rem);
-    font-weight: 800;
+    font-size: var(--type-3xl);
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.08;
 }
@@ -56,7 +56,7 @@
     max-width: 680px;
     margin: .55rem 0 0;
     color: var(--ink-soft) !important;
-    font-size: .82rem;
+    font-size: var(--type-sm);
     line-height: 1.55;
 }
 
@@ -81,9 +81,9 @@
     background: var(--surface);
 }
 
-.learning-page .grade-summary span,
+.learning-page .grade-summary span:not(.kpi-badge),
 .learning-page .grade-summary small,
-.learning-progress-page .grade-summary span,
+.learning-progress-page .grade-summary span:not(.kpi-badge),
 .learning-progress-page .grade-summary small {
     color: var(--ink-faint) !important;
 }
@@ -118,7 +118,7 @@
     padding: .5rem .95rem;
     color: var(--ink-soft) !important;
     border-radius: .55rem;
-    font-size: .78rem;
+    font-size: var(--type-control);
 }
 
 .learning-page .segmented-control .is-active {
@@ -129,8 +129,8 @@
 
 .learning-page .muted-copy {
     color: var(--ink-faint) !important;
-    font-size: .74rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
 }
 
 .learning-page .resource-grid,
@@ -189,8 +189,7 @@
     color: var(--ink) !important;
 }
 
-.learning-page .submission-files a,
-.learning-page .text-button {
+.learning-page .submission-files a {
     color: var(--primary) !important;
 }
 

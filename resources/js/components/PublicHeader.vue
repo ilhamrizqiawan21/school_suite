@@ -56,14 +56,14 @@ const toggleProfileMenu = () => {
                 <Link :href="portalHref" class="portal-link">{{ portalLabel }}</Link>
                 <Link
                     href="/ppdb"
-                    class="admissions-action"
+                    class="admissions-action ui-button ui-button--primary ui-button--md"
                     :aria-current="props.active === 'admissions' ? 'page' : undefined"
                 >
                     PPDB
                 </Link>
                 <button
                     type="button"
-                    class="nav-toggle"
+                    class="nav-toggle ui-button ui-button--secondary ui-button--md"
                     aria-controls="public-navigation"
                     :aria-expanded="menuOpen"
                     @click="menuOpen = !menuOpen"
@@ -157,8 +157,8 @@ const toggleProfileMenu = () => {
     align-items: center;
     gap: .7rem;
     color: var(--public-ink, #173044);
-    font-size: .95rem;
-    font-weight: 800;
+    font-size: var(--type-md);
+    font-weight: var(--weight-bold);
     line-height: 1.25;
     text-decoration: none;
 }
@@ -204,40 +204,14 @@ const toggleProfileMenu = () => {
     align-items: center;
     padding: .55rem .65rem;
     color: var(--public-muted-strong, #405762);
-    font-size: .82rem;
-    font-weight: 700;
+    font-size: var(--type-sm);
+    font-weight: var(--weight-bold);
     text-decoration: none;
 }
 
 .portal-link:hover,
 .portal-link:focus-visible {
     color: var(--public-ink, #173044);
-}
-
-.admissions-action {
-    display: inline-flex;
-    min-height: 42px;
-    align-items: center;
-    justify-content: center;
-    padding: .62rem 1rem;
-    color: #fff !important;
-    background: var(--public-primary, #3157a4) !important;
-    border: 1px solid var(--public-primary, #3157a4);
-    border-radius: .5rem;
-    font-size: .82rem;
-    font-weight: 800;
-    line-height: 1;
-    text-decoration: none;
-    transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease;
-}
-
-.admissions-action:hover,
-.admissions-action:focus-visible,
-.admissions-action[aria-current='page'] {
-    color: #fff !important;
-    background: var(--public-deep-hover, #23447f) !important;
-    border-color: var(--public-deep-hover, #23447f);
-    transform: translateY(-1px);
 }
 
 .public-nav {
@@ -261,8 +235,8 @@ const toggleProfileMenu = () => {
     padding: .7rem .7rem .65rem;
     color: var(--public-muted-strong, #405762);
     border-radius: 0;
-    font-size: .78rem;
-    font-weight: 650;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
     line-height: 1.2;
     white-space: nowrap;
     text-decoration: none;
@@ -280,7 +254,7 @@ const toggleProfileMenu = () => {
 .profile-menu.is-active .nav-menu-trigger,
 .nav-menu-trigger[aria-expanded='true'] {
     color: var(--public-ink, #173044);
-    font-weight: 800;
+    font-weight: var(--weight-bold);
 }
 
 .public-nav > a[aria-current='page']::after,
@@ -306,7 +280,7 @@ const toggleProfileMenu = () => {
     border: 0;
     font-family: inherit;
     font-size: inherit;
-    font-weight: 650;
+    font-weight: var(--weight-semibold);
     line-height: inherit;
 }
 
@@ -341,8 +315,8 @@ const toggleProfileMenu = () => {
     padding: .65rem .7rem;
     color: var(--public-muted-strong, #405762);
     border-radius: .45rem;
-    font-size: .8rem;
-    font-weight: 650;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
     line-height: 1.3;
     text-decoration: none;
 }
@@ -366,18 +340,6 @@ const toggleProfileMenu = () => {
 
 .nav-toggle {
     display: none;
-    min-height: 40px;
-    align-items: center;
-    justify-content: space-between;
-    gap: .75rem;
-    padding: .55rem .7rem;
-    color: var(--public-ink, #173044);
-    background: var(--public-surface-alt, #fff);
-    border: 1px solid var(--public-line-strong, #d8dee8);
-    border-radius: .55rem;
-    font: inherit;
-    font-size: .8rem;
-    font-weight: 800;
 }
 
 .nav-toggle i,
@@ -472,11 +434,7 @@ const toggleProfileMenu = () => {
         color: var(--public-ink, #173044) !important;
         border-top: 1px solid var(--public-line, #d8dee8);
         border-radius: 0 !important;
-        font-weight: 800 !important;
-    }
-
-    .nav-toggle {
-        display: inline-flex;
+        font-weight: var(--weight-bold) !important;
     }
 }
 
@@ -502,20 +460,11 @@ const toggleProfileMenu = () => {
         display: none;
     }
 
-    .admissions-action,
-    .nav-toggle {
-        min-height: 38px;
-        padding-inline: .65rem;
-        font-size: .75rem;
-    }
-
     .public-nav { width: 100%; }
 }
 
 @media (max-width: 420px) {
     .brand-name { max-width: 8.5rem; }
-    .admissions-action { padding-inline: .55rem; }
-    .nav-toggle { padding-inline: .55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -535,10 +484,6 @@ const toggleProfileMenu = () => {
 .public-site-header-top {
     padding-bottom: .75rem;
     border-bottom: 0;
-}
-
-.admissions-action {
-    border-radius: 999px;
 }
 
 .public-site-header-nav-row {
@@ -590,7 +535,7 @@ const toggleProfileMenu = () => {
         min-width: 0;
         flex: 1 1 auto;
         gap: .55rem;
-        font-size: .82rem;
+        font-size: var(--type-sm);
     }
 
     .brand-name {
@@ -604,12 +549,6 @@ const toggleProfileMenu = () => {
 
     .public-site-header-actions {
         gap: .2rem;
-    }
-
-    .admissions-action,
-    .nav-toggle {
-        padding-inline: .55rem;
-        white-space: nowrap;
     }
 }
 
@@ -636,12 +575,17 @@ const toggleProfileMenu = () => {
     .public-site-header .public-nav > a[href='/'] { display: none; }
     .public-site-header .public-nav > a,
     .public-site-header .nav-menu-trigger { min-height: 44px; padding-inline: .55rem; border-radius: 8px; }
-    .public-site-header .admissions-action { border-radius: 10px; }
 }
 
 @media (max-width: 1040px) {
     .public-site-header.public-site-header { padding-inline: 1rem; }
     .public-site-header .public-site-header-top { padding: .85rem 0; }
     .public-site-header .public-site-header-nav-row { border: 0; }
+}
+</style>
+
+<style scoped>
+@media (max-width: 1040px) {
+    .nav-toggle { display: inline-flex; }
 }
 </style>

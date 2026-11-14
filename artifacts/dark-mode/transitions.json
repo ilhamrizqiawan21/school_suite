@@ -1,0 +1,113 @@
+[
+  {
+    "width": 320,
+    "mode": "snapshot",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "mode": "reduced",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 320,
+    "mode": "fallback",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "mode": "snapshot",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "mode": "reduced",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 390,
+    "mode": "fallback",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "mode": "snapshot",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "mode": "reduced",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "width": 1440,
+    "mode": "fallback",
+    "toggle": true,
+    "initialPaint": true,
+    "reload": true,
+    "rapidToggle": true,
+    "crossTab": true,
+    "publicRoundtrip": true,
+    "errors": []
+  },
+  {
+    "systemDefault": true,
+    "blockedStorage": false,
+    "toggle": true,
+    "errors": []
+  },
+  {
+    "systemDefault": true,
+    "blockedStorage": true,
+    "toggle": true,
+    "errors": []
+  }
+]

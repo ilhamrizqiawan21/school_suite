@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -64,7 +65,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
     <Head title="Ujian CBT" />
     <AppLayout>
         <div class="view exam-page space-y-6">
-            <header class="exam-hero"><div><p class="eyebrow">Asesmen · Computer based test</p><h1>{{ can_manage_question_bank ? 'Ujian & bank soal' : 'Ujian CBT' }}</h1><p>{{ is_student ? 'Lihat jadwal ujian kelasmu dan mulai saat periode ujian dibuka.' : 'Kelola jadwal, sumber soal, pengawasan, dan hasil ujian dari satu alur.' }}</p></div><div v-if="can_manage" class="actions"><Link v-if="can_manage_question_bank" class="secondary-button" href="/penilaian/bank-soal">Kelola bank soal</Link><button class="primary-button" type="button" @click="showExamForm = true">+ Buat ujian</button></div><div v-else-if="is_student" class="actions"><Link class="secondary-button" href="/akademik/jadwal">Jadwal saya</Link><Link class="secondary-button" href="/penilaian/rapor">Rapor saya</Link></div></header>
+            <header class="exam-hero"><div><p class="eyebrow">Asesmen · Computer based test</p><h1>{{ can_manage_question_bank ? 'Ujian & bank soal' : 'Ujian CBT' }}</h1><p>{{ is_student ? 'Lihat jadwal ujian kelasmu dan mulai saat periode ujian dibuka.' : 'Kelola jadwal, sumber soal, pengawasan, dan hasil ujian dari satu alur.' }}</p></div><div v-if="can_manage" class="actions"><Link v-if="can_manage_question_bank" class="secondary-button ui-button ui-button--secondary ui-button--md" href="/penilaian/bank-soal">Kelola bank soal</Link><AppButton variant="primary" class="primary-button" type="button" @click="showExamForm = true">+ Buat ujian</AppButton></div><div v-else-if="is_student" class="actions"><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/jadwal">Jadwal saya</Link><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/penilaian/rapor">Rapor saya</Link></div></header>
             <section v-if="can_manage" class="grade-summary"><div v-if="can_manage_question_bank"><span>Bank soal aktif</span><strong>{{ questions.length }}</strong></div><div><span>Ujian</span><strong>{{ exams.length }}</strong></div><div><span>Terbit</span><strong>{{ exams.filter((exam) => exam.status === 'published').length }}</strong></div><div><span>Attempt</span><strong>{{ totalAttempts }}</strong></div></section>
             <section v-else-if="is_student" class="grade-summary" aria-label="Ringkasan ujian saya">
                 <div><span>Total ujian</span><strong>{{ studentExamStats.total }}</strong><small>terjadwal untuk kelasmu</small></div>
@@ -86,8 +87,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
                     <button type="button" class="exam-filter-pill" :class="{ 'is-active': studentExamFilter === 'upcoming' }" @click="studentExamFilter = 'upcoming'">Akan datang <b>{{ studentExamStats.upcoming }}</b></button>
                     <button type="button" class="exam-filter-pill" :class="{ 'is-active': studentExamFilter === 'done' }" @click="studentExamFilter = 'done'">Selesai <b>{{ studentExamStats.done }}</b></button>
                 </div>
-                <article v-for="exam in filteredExams" :key="exam.id" class="exam-row"><div class="exam-copy"><div class="exam-meta"><span class="status-badge" :class="`status-${exam.status}`">{{ exam.status === 'results_published' ? 'Hasil diterbitkan' : exam.status === 'published' ? 'Terbit' : 'Draf' }}</span><span v-if="exam.teaching_assignment?.subject?.name">{{ exam.teaching_assignment.subject.name }}</span><span>{{ exam.items_count }} soal</span><span>{{ exam.duration_minutes }} menit</span></div><h3>{{ exam.title }}</h3><p>{{ new Date(exam.starts_at).toLocaleString('id-ID') }} — {{ new Date(exam.ends_at).toLocaleString('id-ID') }}</p></div><div class="actions exam-actions"><button v-if="can_manage && exam.status === 'draft'" class="primary-button" type="button" @click="publishExam(exam.id)">Terbitkan</button><Link v-if="can_manage" class="secondary-button" :href="`/ujian/${exam.id}/monitor`">Pantau siswa</Link><Link v-if="can_manage" class="secondary-button" :href="`/ujian/${exam.id}/hasil`">Lihat hasil</Link><a v-if="can_manage" class="secondary-button" :href="`/ujian/${exam.id}/hasil/export`">Ekspor CSV</a><Link v-if="is_student && attemptsByExam.get(exam.id)" class="primary-button" :href="`/ujian/attempt/${attemptsByExam.get(exam.id).id}`">{{ attemptsByExam.get(exam.id).status === 'in_progress' ? 'Lanjutkan' : 'Lihat pengerjaan' }}</Link><button v-else-if="is_student && canStartExam(exam)" class="primary-button" type="button" @click="router.post(`/ujian/${exam.id}/mulai`)">Mulai ujian</button><span v-else-if="is_student" class="exam-availability">{{ exam.status === 'results_published' ? 'Hasil telah diterbitkan' : new Date(exam.starts_at).getTime() > serverNow ? 'Ujian belum dimulai' : 'Waktu ujian berakhir' }}</span></div></article><p v-if="!filteredExams.length" class="empty-state">Belum ada ujian yang sesuai filter.</p></section>
-            <div v-if="showExamForm" class="modal-backdrop" role="presentation" @click.self="closeForm"><form class="modal-card" aria-labelledby="exam-form-title" @submit.prevent="submitExam"><div class="modal-heading"><div><p class="eyebrow">Draf baru</p><h2 id="exam-form-title">Buat ujian</h2></div><button class="close-button" type="button" aria-label="Tutup" @click="closeForm">×</button></div><label>Kelas dan mata pelajaran<select v-model="e.teaching_assignment_id" required><option v-for="assignment in assignments" :key="assignment.id" :value="assignment.id">{{ assignment.subject?.name }} · {{ assignment.class_group?.name }}</option></select></label><label>Komponen nilai (opsional)<select v-model="e.assessment_component_id"><option value="">Tidak disinkronkan</option><option v-for="component in components.filter((item) => !item.teaching_assignment_id || String(item.teaching_assignment_id) === String(e.teaching_assignment_id))" :key="component.id" :value="component.id">{{ component.name }}</option></select></label><label>Judul<input v-model="e.title" required maxlength="180" placeholder="Contoh: Sumatif IPA Bab Ekosistem" /></label><label>Instruksi<textarea v-model="e.instructions" rows="2" maxlength="5000" placeholder="Petunjuk untuk siswa (opsional)" /></label><div class="grid"><label>Mulai<input v-model="e.starts_at" type="datetime-local" required /></label><label>Selesai<input v-model="e.ends_at" type="datetime-local" required /></label><label>Durasi (menit)<input v-model.number="e.duration_minutes" type="number" min="1" max="480" required /></label><label>Batas pelanggaran<input v-model.number="e.max_violations" type="number" min="3" max="3" readonly aria-describedby="violation-policy" required /><small id="violation-policy">Ujian berakhir otomatis setelah 3 pelanggaran.</small></label></div><label>Sumber soal<select v-model="e.question_pack_id" @change="sourceChanged"><option value="">Pilih soal manual</option><option v-for="pack in packs" :key="pack.id" :value="pack.id">{{ pack.name }} · {{ pack.items_count }} soal</option></select></label><fieldset v-if="selectedPack"><legend>Snapshot paket: {{ selectedPack.name }}</legend><p class="helper">Versi, urutan, dan bobot soal disalin ke draf; perubahan paket sesudahnya tidak mengubah ujian ini.</p><div class="selected-summary">{{ selectedPack.items_count }} soal · {{ selectedPack.items.reduce((sum: number, item: any) => sum + Number(item.points ?? 0), 0) }} poin</div></fieldset><fieldset v-else><legend>Pilih soal manual</legend><div class="picker-toolbar"><input v-model="questionSearch" placeholder="Cari teks soal" aria-label="Cari soal" /><select v-model="questionType" aria-label="Filter jenis soal"><option value="all">Semua jenis</option><option value="multiple_choice">Pilihan ganda</option><option value="true_false">Benar / salah</option><option value="matching">Menjodohkan</option><option value="essay">Esai</option></select><button type="button" class="secondary-button" @click="toggleAllQuestions">{{ filteredQuestions.length && filteredQuestions.every((question) => e.question_ids.includes(Number(question.id))) ? 'Batalkan semua' : 'Pilih semua hasil' }}</button></div><div class="selected-summary">{{ selectedQuestionCount }} soal dipilih · {{ selectedQuestionPoints }} poin</div><div class="question-picker"><label v-for="question in filteredQuestions" :key="question.id" class="check"><input v-model="e.question_ids" type="checkbox" :value="Number(question.id)" /><span><b>{{ question.prompt }}</b><small>{{ question.type }} · {{ question.points }} poin</small></span></label><p v-if="!filteredQuestions.length" class="empty-picker">Tidak ada soal yang cocok.</p></div><p v-if="e.errors.question_ids" class="error">{{ e.errors.question_ids }}</p></fieldset><label class="check inline"><input v-model="e.randomize_questions" type="checkbox" /> Acak urutan soal</label><label class="check inline"><input v-model="e.randomize_options" type="checkbox" /> Acak pilihan jawaban</label><p v-if="e.hasErrors" class="error">{{ Object.values(e.errors)[0] }}</p><div class="modal-actions"><button class="secondary-button" type="button" @click="closeForm">Batal</button><button class="primary-button" type="submit" :disabled="e.processing">{{ e.processing ? 'Menyimpan…' : 'Simpan draf' }}</button></div></form></div>
+                <article v-for="exam in filteredExams" :key="exam.id" class="exam-row"><div class="exam-copy"><div class="exam-meta"><span class="status-badge" :class="`status-${exam.status}`">{{ exam.status === 'results_published' ? 'Hasil diterbitkan' : exam.status === 'published' ? 'Terbit' : 'Draf' }}</span><span v-if="exam.teaching_assignment?.subject?.name">{{ exam.teaching_assignment.subject.name }}</span><span>{{ exam.items_count }} soal</span><span>{{ exam.duration_minutes }} menit</span></div><h3>{{ exam.title }}</h3><p>{{ new Date(exam.starts_at).toLocaleString('id-ID') }} — {{ new Date(exam.ends_at).toLocaleString('id-ID') }}</p></div><div class="actions exam-actions"><AppButton variant="primary" v-if="can_manage && exam.status === 'draft'" class="primary-button" type="button" @click="publishExam(exam.id)">Terbitkan</AppButton><Link v-if="can_manage" class="secondary-button ui-button ui-button--secondary ui-button--md" :href="`/ujian/${exam.id}/monitor`">Pantau siswa</Link><Link v-if="can_manage" class="secondary-button ui-button ui-button--secondary ui-button--md" :href="`/ujian/${exam.id}/hasil`">Lihat hasil</Link><AppButton variant="secondary" as="a" v-if="can_manage" class="secondary-button" :href="`/ujian/${exam.id}/hasil/export`">Ekspor CSV</AppButton><Link v-if="is_student && attemptsByExam.get(exam.id)" class="primary-button ui-button ui-button--primary ui-button--md" :href="`/ujian/attempt/${attemptsByExam.get(exam.id).id}`">{{ attemptsByExam.get(exam.id).status === 'in_progress' ? 'Lanjutkan' : 'Lihat pengerjaan' }}</Link><AppButton variant="primary" v-else-if="is_student && canStartExam(exam)" class="primary-button" type="button" @click="router.post(`/ujian/${exam.id}/mulai`)">Mulai ujian</AppButton><span v-else-if="is_student" class="exam-availability">{{ exam.status === 'results_published' ? 'Hasil telah diterbitkan' : new Date(exam.starts_at).getTime() > serverNow ? 'Ujian belum dimulai' : 'Waktu ujian berakhir' }}</span></div></article><p v-if="!filteredExams.length" class="empty-state">Belum ada ujian yang sesuai filter.</p></section>
+            <div v-if="showExamForm" class="modal-backdrop" role="presentation" @click.self="closeForm"><form class="modal-card" aria-labelledby="exam-form-title" @submit.prevent="submitExam"><div class="modal-heading"><div><p class="eyebrow">Draf baru</p><h2 id="exam-form-title">Buat ujian</h2></div><AppButton variant="ghost" icon-only icon="close" class="close-button" type="button" aria-label="Tutup" @click="closeForm">×</AppButton></div><label>Kelas dan mata pelajaran<select v-model="e.teaching_assignment_id" required><option v-for="assignment in assignments" :key="assignment.id" :value="assignment.id">{{ assignment.subject?.name }} · {{ assignment.class_group?.name }}</option></select></label><label>Komponen nilai (opsional)<select v-model="e.assessment_component_id"><option value="">Tidak disinkronkan</option><option v-for="component in components.filter((item) => !item.teaching_assignment_id || String(item.teaching_assignment_id) === String(e.teaching_assignment_id))" :key="component.id" :value="component.id">{{ component.name }}</option></select></label><label>Judul<input v-model="e.title" required maxlength="180" placeholder="Contoh: Sumatif IPA Bab Ekosistem" /></label><label>Instruksi<textarea v-model="e.instructions" rows="2" maxlength="5000" placeholder="Petunjuk untuk siswa (opsional)" /></label><div class="grid"><label>Mulai<input v-model="e.starts_at" type="datetime-local" required /></label><label>Selesai<input v-model="e.ends_at" type="datetime-local" required /></label><label>Durasi (menit)<input v-model.number="e.duration_minutes" type="number" min="1" max="480" required /></label><label>Batas pelanggaran<input v-model.number="e.max_violations" type="number" min="3" max="3" readonly aria-describedby="violation-policy" required /><small id="violation-policy">Ujian berakhir otomatis setelah 3 pelanggaran.</small></label></div><label>Sumber soal<select v-model="e.question_pack_id" @change="sourceChanged"><option value="">Pilih soal manual</option><option v-for="pack in packs" :key="pack.id" :value="pack.id">{{ pack.name }} · {{ pack.items_count }} soal</option></select></label><fieldset v-if="selectedPack"><legend>Snapshot paket: {{ selectedPack.name }}</legend><p class="helper">Versi, urutan, dan bobot soal disalin ke draf; perubahan paket sesudahnya tidak mengubah ujian ini.</p><div class="selected-summary">{{ selectedPack.items_count }} soal · {{ selectedPack.items.reduce((sum: number, item: any) => sum + Number(item.points ?? 0), 0) }} poin</div></fieldset><fieldset v-else><legend>Pilih soal manual</legend><div class="picker-toolbar"><input v-model="questionSearch" placeholder="Cari teks soal" aria-label="Cari soal" /><select v-model="questionType" aria-label="Filter jenis soal"><option value="all">Semua jenis</option><option value="multiple_choice">Pilihan ganda</option><option value="true_false">Benar / salah</option><option value="matching">Menjodohkan</option><option value="essay">Esai</option></select><AppButton variant="secondary" type="button" class="secondary-button" @click="toggleAllQuestions">{{ filteredQuestions.length && filteredQuestions.every((question) => e.question_ids.includes(Number(question.id))) ? 'Batalkan semua' : 'Pilih semua hasil' }}</AppButton></div><div class="selected-summary">{{ selectedQuestionCount }} soal dipilih · {{ selectedQuestionPoints }} poin</div><div class="question-picker"><label v-for="question in filteredQuestions" :key="question.id" class="check"><input v-model="e.question_ids" type="checkbox" :value="Number(question.id)" /><span><b>{{ question.prompt }}</b><small>{{ question.type }} · {{ question.points }} poin</small></span></label><p v-if="!filteredQuestions.length" class="empty-picker">Tidak ada soal yang cocok.</p></div><p v-if="e.errors.question_ids" class="error">{{ e.errors.question_ids }}</p></fieldset><label class="check inline"><input v-model="e.randomize_questions" type="checkbox" /> Acak urutan soal</label><label class="check inline"><input v-model="e.randomize_options" type="checkbox" /> Acak pilihan jawaban</label><p v-if="e.hasErrors" class="error">{{ Object.values(e.errors)[0] }}</p><div class="modal-actions"><AppButton variant="secondary" class="secondary-button" type="button" @click="closeForm">Batal</AppButton><AppButton variant="primary" :loading="e.processing" class="save-button" type="submit" :disabled="e.processing">{{ e.processing ? 'Menyimpan…' : 'Simpan draf' }}</AppButton></div></form></div>
         </div>
     </AppLayout>
 </template>
@@ -128,7 +129,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 .helper,
 .selected-summary {
     color: var(--ink-soft);
-    font-size: .8rem;
+    font-size: var(--type-control);
 }
 
 .grade-summary strong {
@@ -147,7 +148,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 }
 
 .list-toolbar h2 {
-    font-weight: 800;
+    font-weight: var(--weight-bold);
 }
 
 .toolbar-fields,
@@ -185,7 +186,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 
 .exam-copy h3 {
     margin: .45rem 0 .2rem;
-    font-weight: 800;
+    font-weight: var(--weight-bold);
     overflow-wrap: anywhere;
 }
 
@@ -195,28 +196,28 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
     gap: .5rem;
     flex-wrap: wrap;
     color: var(--ink-soft);
-    font-size: .75rem;
+    font-size: var(--type-meta);
 }
 
 .status-badge {
     padding: .2rem .55rem;
     border-radius: 999px;
-    font-weight: 700;
+    font-weight: var(--weight-semibold);
 }
 
 .status-draft {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--gold-soft);
+    color: var(--gold);
 }
 
 .status-published {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--green-soft);
+    color: var(--green);
 }
 
 .status-results_published {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--primary-soft);
+    color: var(--primary);
 }
 
 .exam-actions {
@@ -252,8 +253,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 .modal-card label {
     display: grid;
     gap: .35rem;
-    font-size: .82rem;
-    font-weight: 700;
+    font-size: var(--type-sm);
+    font-weight: var(--weight-semibold);
     color: var(--ink-soft) !important;
 }
 
@@ -284,7 +285,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 
 .modal-card legend {
     color: var(--ink);
-    font-weight: 800;
+    font-weight: var(--weight-bold);
 }
 
 .grid {
@@ -297,7 +298,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
     display: flex !important;
     align-items: flex-start;
     gap: .55rem;
-    font-weight: 500 !important;
+    font-weight: var(--weight-medium) !important;
 }
 
 .check input {
@@ -333,14 +334,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 }
 
 .question-picker b {
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     line-height: 1.35;
 }
 
 .empty-picker,
 .exam-availability {
     color: var(--ink-soft);
-    font-size: .8rem;
+    font-size: var(--type-meta);
 }
 
 .modal-actions {
@@ -350,20 +351,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 }
 
 .error {
-    color: #b91c1c;
-    font-size: .82rem;
-}
-
-.close-button {
-    border: 0;
-    background: transparent;
-    color: var(--ink-soft);
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: var(--ink);
+    color: var(--red);
+    font-size: var(--type-sm);
 }
 
 .modal-card .helper,
@@ -417,13 +406,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 }
 .exam-page{max-width:1440px;margin-inline:auto}
 .exam-hero{align-items:flex-start;padding:0 0 .8rem;border-bottom:1px solid var(--line)}
-.exam-hero h1{margin:.25rem 0;color:var(--ink);font-size:clamp(1.55rem,2.2vw,2rem);font-weight:800;letter-spacing:-.035em}
-.exam-hero>div>p:last-child{max-width:62ch;color:var(--ink-soft);font-size:.85rem;line-height:1.55}
+.exam-hero h1{margin:.25rem 0;color:var(--ink);font-size:var(--type-3xl);font-weight:var(--weight-bold);letter-spacing:-.035em}
+.exam-hero>div>p:last-child{max-width:62ch;color:var(--ink-soft);font-size:var(--type-sm);line-height:1.55}
 .grade-summary>div{position:relative;border-radius:var(--radius-md);box-shadow:var(--shadow-sm)}
 .grade-summary>div::before{position:absolute;inset:0 auto 0 0;width:3px;background:var(--primary);content:''}
 .grade-summary>div:nth-child(2)::before{background:var(--green)}
 .grade-summary>div:nth-child(3)::before{background:var(--gold)}
-.grade-summary strong{color:var(--ink);font-weight:800}
+.grade-summary strong{color:var(--ink);font-weight:var(--weight-bold)}
 .exam-list{gap:0;padding:0;overflow:hidden}
 .list-toolbar{padding:1.15rem 1.3rem}
 .exam-row{border:0;border-top:1px solid var(--line);border-radius:0;padding:1.1rem 1.3rem}
@@ -436,11 +425,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onEscape));
 .modal-heading{position:sticky;top:-1.3rem;z-index:1;padding:.35rem 0 .75rem;background:var(--surface);border-bottom:1px solid var(--line)}
 .modal-actions{position:sticky;bottom:-1.3rem;z-index:1;padding:.75rem 0 .35rem;background:var(--surface);border-top:1px solid var(--line)}
 .student-exam-pills{display:flex;flex-wrap:wrap;gap:.5rem}
-.exam-filter-pill{display:inline-flex;align-items:center;gap:.45rem;min-height:36px;padding:.4rem .82rem;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s ease}
-.exam-filter-pill:hover{border-color:#c6dbce;color:var(--ink)}
-.exam-filter-pill.is-active{border-color:#155e43;background:#edf6f0;color:#155e43}
-.exam-filter-pill b{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 .35rem;border-radius:999px;background:rgba(15,23,42,.07);font-size:.73rem;font-weight:800}
-.exam-filter-pill.is-active b{background:#155e43;color:#fff}
+.exam-filter-pill{display:inline-flex;align-items:center;gap:.45rem;min-height:36px;padding:.4rem .82rem;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:var(--type-sm);font-weight:var(--weight-bold);cursor:pointer;transition:all .15s ease}
+.exam-filter-pill:hover{border-color:var(--line-strong);color:var(--ink)}
+.exam-filter-pill.is-active{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.exam-filter-pill b{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 .35rem;border-radius:999px;background:rgba(15,23,42,.07);font-size:var(--type-meta);font-weight:var(--weight-bold)}
+.exam-filter-pill.is-active b{background:var(--primary-action);color:#fff}
 @media(max-width:620px){.exam-row{padding:1rem}.modal-backdrop{padding:0}.modal-card{width:100vw;max-height:100dvh;height:100dvh;border-radius:0;padding:1rem}.modal-heading{top:-1rem}.modal-actions{bottom:-1rem}}
 </style>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
@@ -533,15 +534,15 @@ function submitApproval(record: CorrespondenceRecord) {
                     <button type="button" :class="{ 'is-selected': activeSection === 'approval' }" @click="activeSection = 'approval'"><span>Persetujuan</span><strong>{{ queueCounts.approval }}</strong><small>Sudah diajukan</small></button>
                     <button type="button" :class="{ 'is-selected': activeSection === 'signature' }" @click="activeSection = 'signature'"><span>Tanda tangan</span><strong>{{ queueCounts.signature }}</strong><small>Manual atau BSrE</small></button>
                     <button type="button" :class="{ 'is-selected': activeSection === 'ready' }" @click="activeSection = 'ready'"><span>Siap dikirim</span><strong>{{ queueCounts.ready }}</strong><small>Dokumen final</small></button>
-                    <button type="button" :class="{ 'is-selected': activeSection === 'archived' }" @click="activeSection = 'archived'"><span>Arsip</span><strong>{{ queueCounts.archived }}</strong><small>Tersimpan</small></button>
+                    <AppButton variant="secondary" type="button" :class="{ 'is-selected': activeSection === 'archived' }" @click="activeSection = 'archived'"><span>Arsip</span><strong>{{ queueCounts.archived }}</strong><small>Tersimpan</small></AppButton>
                 </div>
             </section>
 
             <section v-if="props.filter !== 'archived'" class="panel correspondence-panel workflow">
                 <div class="table-title"><div><p class="eyebrow">Meja kerja TU</p><h2>{{ props.filter === 'incoming' ? 'Catat surat yang baru diterima' : props.filter === 'outgoing' ? 'Buat surat keluar' : 'Mulai dari sini' }}</h2><p>{{ props.filter === 'incoming' ? 'Masukkan data pokok terlebih dahulu. Disposisi dilakukan dari antrean setelah surat tersimpan.' : props.filter === 'outgoing' ? 'Mulai dari template, isi naskah, pilih penandatangan, lalu simpan sebagai draf.' : 'Pilih jenis pekerjaan. Sistem akan menjaga urutan tahap berikutnya.' }}</p></div></div>
                 <div v-if="can_manage" class="workflow-actions">
-                    <button v-if="props.filter !== 'outgoing'" type="button" class="primary-button" @click="startNew('incoming')">Catat surat masuk</button>
-                    <button v-if="props.filter !== 'incoming'" type="button" class="secondary-button" @click="startNew('outgoing')">Buat surat keluar</button>
+                    <AppButton variant="primary" v-if="props.filter !== 'outgoing'" type="button" class="primary-button" @click="startNew('incoming')">Catat surat masuk</AppButton>
+                    <AppButton variant="secondary" v-if="props.filter !== 'incoming'" type="button" class="secondary-button" @click="startNew('outgoing')">Buat surat keluar</AppButton>
                 </div>
                 <p v-if="props.filter === 'incoming'" class="workflow-help">Setelah tersimpan, gunakan tindakan pada baris surat untuk meneruskan disposisi, menandai selesai, lalu mengarsipkan.</p>
                 <p v-else-if="props.filter === 'outgoing'" class="workflow-help">Draf belum dikirim sebelum persetujuan, tanda tangan, dan penerbitan selesai. Gunakan tombol tindakan sesuai tahapnya.</p>
@@ -553,7 +554,7 @@ function submitApproval(record: CorrespondenceRecord) {
 
             <div v-if="can_manage && creating" role="dialog" aria-modal="true" class="modal-backdrop" @click.self="creating = false" @keydown.esc="creating = false">
             <section id="form-surat" class="panel correspondence-panel wizard-panel modal-card" tabindex="-1">
-                <div class="wizard-heading"><div><p class="eyebrow">{{ form.letter_type === 'incoming' ? 'Surat masuk' : 'Surat keluar' }}</p><h2>{{ editingType === 'incoming' ? 'Koreksi data surat masuk' : editingType === 'outgoing' ? 'Perbaiki draf surat keluar' : form.letter_type === 'incoming' ? 'Catat surat masuk' : 'Buat surat keluar' }}</h2></div><button type="button" class="wizard-close" aria-label="Tutup formulir" @click="creating = false">×</button></div>
+                <div class="wizard-heading"><div><p class="eyebrow">{{ form.letter_type === 'incoming' ? 'Surat masuk' : 'Surat keluar' }}</p><h2>{{ editingType === 'incoming' ? 'Koreksi data surat masuk' : editingType === 'outgoing' ? 'Perbaiki draf surat keluar' : form.letter_type === 'incoming' ? 'Catat surat masuk' : 'Buat surat keluar' }}</h2></div><AppButton variant="ghost" type="button" class="wizard-close" aria-label="Tutup formulir" @click="creating = false">×</AppButton></div>
                 <ol class="stepper" :aria-label="`Langkah ${wizardStep} dari ${maxStep}`">
                     <li v-for="(label, index) in stepLabels" :key="label" :class="{ active: wizardStep === index + 1, done: wizardStep > index + 1 }"><span>{{ index + 1 }}</span><small>{{ label }}</small></li>
                 </ol>
@@ -568,12 +569,12 @@ function submitApproval(record: CorrespondenceRecord) {
                         <div v-if="wizardStep === 1" class="template-choices"><label v-for="item in [{v:'official_school',l:'Surat resmi',d:'Korespondensi umum sekolah'},{v:'invitation',l:'Undangan',d:'Rapat atau kegiatan'},{v:'assignment',l:'Surat tugas',d:'Penugasan resmi'},{v:'statement',l:'Surat pernyataan',d:'Pernyataan resmi sekolah'}]" :key="item.v" :class="{ selected: form.letter_template === item.v }"><input v-model="form.letter_template" type="radio" :value="item.v" /><span><strong>{{ item.l }}</strong><small>{{ item.d }}</small></span></label></div>
                         <div v-else-if="wizardStep === 2" class="wizard-grid"><label>Nomor surat <b>*</b><input v-model="form.letter_number" maxlength="100" placeholder="001/TU/X/2026" /></label><label>Tanggal surat <b>*</b><input v-model="form.letter_date" type="date" /></label><label>Tujuan surat <b>*</b><input v-model="form.recipient" maxlength="180" /></label><label>Sifat<select v-model="form.urgency"><option value="ordinary">Biasa</option><option value="urgent">Segera</option><option value="immediate">Sangat segera</option></select></label><label class="wide">Alamat tujuan<textarea v-model="form.recipient_address" rows="2" /></label><label class="wide">Perihal <b>*</b><input v-model="form.subject" maxlength="200" /></label><label>Klasifikasi<input v-model="form.classification" maxlength="40" /></label><label>Keterangan lampiran<input v-model="form.attachment_note" maxlength="180" placeholder="Contoh: 1 berkas" /></label><label class="wide">Berkas lampiran <span class="field-hint">PDF, DOCX, XLSX, JPG/PNG; maksimal 10 MB</span><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="setAttachment" /></label></div>
                         <div v-else-if="wizardStep === 3" class="wizard-grid"><label class="wide">Salam pembuka<input v-model="form.opening_greeting" maxlength="250" /></label><label class="wide">Isi surat <b>*</b><textarea v-model="form.letter_body" rows="10" maxlength="20000" placeholder="Tulis isi dalam paragraf yang singkat dan jelas." /></label><label class="wide">Penutup<textarea v-model="form.closing_text" rows="3" /></label><label class="wide">Tembusan<textarea v-model="form.carbon_copy" rows="2" placeholder="Satu penerima per baris" /></label></div>
-                        <div v-else-if="wizardStep === 4" class="wizard-grid"><label v-if="availableSignatories.length" class="wide">Pejabat penandatangan<select v-model="form.signatory_id" @change="selectSignatory"><option :value="null">Pilih pejabat</option><option v-for="signer in availableSignatories" :key="signer.id" :value="signer.id">{{ signer.name }} — {{ signer.title }}{{ signer.employee_number ? ` · NIP ${signer.employee_number}` : '' }}{{ signer.provider_configured ? ' · TTE terhubung' : ' · TTE belum terhubung' }}</option></select></label><p v-else class="form-note wide">Belum ada pejabat aktif yang berwenang untuk template ini. Tambahkan profil pejabat atau pilih template lain.</p><p v-if="form.signature_method === 'bsre' && selectedSignatory && !selectedSignatory.provider_configured" class="form-note warning-note wide">Pejabat ini belum memiliki identitas provider BSrE. Minta administrator melengkapinya sebelum mengirim surat.</p><button class="secondary-button signatory-toggle" type="button" @click="creatingSignatory = !creatingSignatory">{{ creatingSignatory ? 'Tutup profil pejabat' : 'Tambah profil pejabat' }}</button><div v-if="creatingSignatory" class="signatory-form wide"><label>Nama lengkap<input v-model="signatoryForm.name" /></label><label>Jabatan<input v-model="signatoryForm.title" /></label><label>NIP<input v-model="signatoryForm.employee_number" /></label><label>Pangkat/golongan<input v-model="signatoryForm.rank" /></label><label class="wide">ID identitas provider BSrE <span class="field-hint">Diisi dari akun/sertifikat BSrE, bukan NIP.</span><input v-model="signatoryForm.provider_reference" maxlength="190" placeholder="Contoh: akun-bsre-kepala-sekolah" /></label><label class="wide">Kewenangan template<select v-model="signatoryForm.template_scopes" multiple><option value="official_school">Surat resmi</option><option value="invitation">Undangan</option><option value="assignment">Surat tugas</option><option value="statement">Surat keterangan</option></select></label><button class="primary-button" type="button" :disabled="signatoryForm.processing" @click="saveSignatory">Simpan profil pejabat</button><p v-if="Object.keys(signatoryForm.errors).length" class="field-error">Periksa nama, jabatan, identitas BSrE, dan kewenangan penandatangan.</p></div><label>Nama penandatangan <b>*</b><input v-model="form.signer_name" maxlength="180" /></label><label>Jabatan <b>*</b><input v-model="form.signer_title" maxlength="180" /></label><label>Jenis nomor identitas<select v-model="form.signer_identifier_type"><option value="nip">NIP</option><option value="nuptk">NUPTK</option><option value="npk">NPK</option></select></label><label>Nomor identitas<input v-model="form.signer_identifier" maxlength="80" /></label><fieldset class="signature-options wide"><legend>Metode tanda tangan</legend><label :class="{ selected: form.signature_method === 'manual' }"><input v-model="form.signature_method" type="radio" value="manual" /><span><strong>Tanda tangan basah</strong><small>Cetak dan unggah kembali hasil pindai PDF.</small></span></label><label :class="{ selected: form.signature_method === 'bsre', 'is-disabled': !tteConfigured }"><input v-model="form.signature_method" type="radio" value="bsre" :disabled="!tteConfigured" /><span><strong>TTE BSrE</strong><small>{{ tteConfigured ? 'Ditandatangani melalui layanan BSrE resmi.' : 'Belum tersedia sampai provider BSrE dikonfigurasi.' }}</small></span></label></fieldset><label class="wide checkbox-label"><input v-model="form.approval_required" type="checkbox" /> Minta persetujuan kepala sekolah</label></div>
+                        <div v-else-if="wizardStep === 4" class="wizard-grid"><label v-if="availableSignatories.length" class="wide">Pejabat penandatangan<select v-model="form.signatory_id" @change="selectSignatory"><option :value="null">Pilih pejabat</option><option v-for="signer in availableSignatories" :key="signer.id" :value="signer.id">{{ signer.name }} — {{ signer.title }}{{ signer.employee_number ? ` · NIP ${signer.employee_number}` : '' }}{{ signer.provider_configured ? ' · TTE terhubung' : ' · TTE belum terhubung' }}</option></select></label><p v-else class="form-note wide">Belum ada pejabat aktif yang berwenang untuk template ini. Tambahkan profil pejabat atau pilih template lain.</p><p v-if="form.signature_method === 'bsre' && selectedSignatory && !selectedSignatory.provider_configured" class="form-note warning-note wide">Pejabat ini belum memiliki identitas provider BSrE. Minta administrator melengkapinya sebelum mengirim surat.</p><AppButton variant="secondary" class="secondary-button signatory-toggle" type="button" @click="creatingSignatory = !creatingSignatory">{{ creatingSignatory ? 'Tutup profil pejabat' : 'Tambah profil pejabat' }}</AppButton><div v-if="creatingSignatory" class="signatory-form wide"><label>Nama lengkap<input v-model="signatoryForm.name" /></label><label>Jabatan<input v-model="signatoryForm.title" /></label><label>NIP<input v-model="signatoryForm.employee_number" /></label><label>Pangkat/golongan<input v-model="signatoryForm.rank" /></label><label class="wide">ID identitas provider BSrE <span class="field-hint">Diisi dari akun/sertifikat BSrE, bukan NIP.</span><input v-model="signatoryForm.provider_reference" maxlength="190" placeholder="Contoh: akun-bsre-kepala-sekolah" /></label><label class="wide">Kewenangan template<select v-model="signatoryForm.template_scopes" multiple><option value="official_school">Surat resmi</option><option value="invitation">Undangan</option><option value="assignment">Surat tugas</option><option value="statement">Surat keterangan</option></select></label><AppButton variant="primary" :loading="signatoryForm.processing" class="primary-button" type="button" :disabled="signatoryForm.processing" @click="saveSignatory">Simpan profil pejabat</AppButton><p v-if="Object.keys(signatoryForm.errors).length" class="field-error">Periksa nama, jabatan, identitas BSrE, dan kewenangan penandatangan.</p></div><label>Nama penandatangan <b>*</b><input v-model="form.signer_name" maxlength="180" /></label><label>Jabatan <b>*</b><input v-model="form.signer_title" maxlength="180" /></label><label>Jenis nomor identitas<select v-model="form.signer_identifier_type"><option value="nip">NIP</option><option value="nuptk">NUPTK</option><option value="npk">NPK</option></select></label><label>Nomor identitas<input v-model="form.signer_identifier" maxlength="80" /></label><fieldset class="signature-options wide"><legend>Metode tanda tangan</legend><label :class="{ selected: form.signature_method === 'manual' }"><input v-model="form.signature_method" type="radio" value="manual" /><span><strong>Tanda tangan basah</strong><small>Cetak dan unggah kembali hasil pindai PDF.</small></span></label><label :class="{ selected: form.signature_method === 'bsre', 'is-disabled': !tteConfigured }"><input v-model="form.signature_method" type="radio" value="bsre" :disabled="!tteConfigured" /><span><strong>TTE BSrE</strong><small>{{ tteConfigured ? 'Ditandatangani melalui layanan BSrE resmi.' : 'Belum tersedia sampai provider BSrE dikonfigurasi.' }}</small></span></label></fieldset><label class="wide checkbox-label"><input v-model="form.approval_required" type="checkbox" /> Minta persetujuan kepala sekolah</label></div>
                     </template>
                     <div v-if="wizardStep === maxStep" class="review-card"><div><span>Nomor</span><strong>{{ form.letter_number || 'Nomor agenda otomatis' }}</strong></div><div><span>Perihal</span><strong>{{ form.subject }}</strong></div><div><span>{{ form.letter_type === 'incoming' ? 'Asal' : 'Tujuan' }}</span><strong>{{ form.sender || form.recipient }}</strong></div><div v-if="form.letter_type === 'outgoing'"><span>Penandatangan</span><strong>{{ form.signer_name }} · {{ form.signature_method === 'bsre' ? 'TTE BSrE' : 'Tanda tangan basah' }}</strong></div><a v-if="editingId && form.letter_type === 'outgoing'" :href="`/administrasi/persuratan/surat/${editingId}/pdf`" target="_blank" rel="noopener">Buka preview PDF</a><p v-else-if="form.letter_type === 'outgoing'">Simpan draf terlebih dahulu untuk membuka preview PDF.</p></div>
                     <p v-if="wizardError" class="wizard-error" role="alert">{{ wizardError }}</p>
                     <div v-if="Object.keys(form.errors).length" class="wizard-error" role="alert"><strong>Periksa kembali isian:</strong><ul><li v-for="(message, field) in form.errors" :key="field">{{ message }}</li></ul></div>
-                    <div class="wizard-actions"><button v-if="wizardStep > 1" class="secondary-button" type="button" @click="previousStep">← Sebelumnya</button><span></span><button class="secondary-button" type="button" @click="creating = false">Batal</button><button v-if="wizardStep < maxStep" class="primary-button" type="button" @click="nextStep">Lanjutkan →</button><button v-else class="primary-button" type="submit" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editingId ? 'Simpan perubahan' : form.letter_type === 'incoming' ? 'Catat surat' : 'Simpan draf' }}</button></div>
+                    <div class="wizard-actions"><AppButton variant="secondary" v-if="wizardStep > 1" class="secondary-button" type="button" @click="previousStep">← Sebelumnya</AppButton><span></span><AppButton variant="secondary" class="secondary-button" type="button" @click="creating = false">Batal</AppButton><AppButton variant="primary" v-if="wizardStep < maxStep" class="primary-button" type="button" @click="nextStep">Lanjutkan →</AppButton><AppButton variant="primary" :loading="form.processing" v-else class="primary-button" type="submit" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editingId ? 'Simpan perubahan' : form.letter_type === 'incoming' ? 'Catat surat' : 'Simpan draf' }}</AppButton></div>
                 </form>
             </section>
             </div>
@@ -613,28 +614,28 @@ function submitApproval(record: CorrespondenceRecord) {
                             <td data-label="Status"><span class="status-chip" :class="`status-${record.status}`">{{ labelForStatus(record) }}</span><small v-if="record.signature_verified" class="signature-verified-note">TTE terverifikasi<span v-if="record.signature_signed_at"> · {{ record.signature_signed_at }}</span></small><small v-else-if="record.signature_method === 'bsre' && ['pending', 'processing'].includes(record.signature_status || '')">Sedang diproses melalui BSrE</small><small v-if="record.signature_error_message" class="signature-error-note">{{ record.signature_error_message }}</small></td>
                             <td data-label="Tindakan berikutnya" class="action-cell"><div class="record-actions">
                                 <div class="primary-action-group">
-                                    <button v-if="can_manage && record.status === 'draft' && record.approval_required && ['pending', 'rejected'].includes(record.approval_status)" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="submitApproval(record)">{{ record.approval_status === 'rejected' ? 'Ajukan ulang' : 'Ajukan persetujuan' }}</button>
-                                    <button v-if="can_manage && record.signature_method === 'manual' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'manual-prepare')">Siapkan tanda tangan</button>
+                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.status === 'draft' && record.approval_required && ['pending', 'rejected'].includes(record.approval_status)" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="submitApproval(record)">{{ record.approval_status === 'rejected' ? 'Ajukan ulang' : 'Ajukan persetujuan' }}</AppButton>
+                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'manual' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'manual-prepare')">Siapkan tanda tangan</AppButton>
                                     <label v-if="can_manage && record.signature_method === 'manual' && record.status === 'awaiting_signature'" class="row-action-button primary-row-action upload-action" :class="{ disabled: actionBusy[record.id] }">Unggah hasil tanda tangan<input class="sr-only" type="file" accept="application/pdf,.pdf" :disabled="actionBusy[record.id]" @change="uploadManualSignature(record, $event)" /></label>
-                                    <button v-if="can_manage && record.signature_method === 'bsre' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id] || !tteConfigured" :title="tteConfigured ? 'Kirim ke antrean TTE BSrE' : 'TTE BSrE belum dikonfigurasi'" @click="signatureAction(record, 'bsre')">{{ tteConfigured ? 'Kirim untuk TTE' : 'TTE belum siap' }}</button>
-                                    <button v-if="can_manage && record.signature_method === 'bsre' && record.status === 'signature_failed' && record.signature_request_id" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'bsre-retry')">Ulangi TTE</button>
+                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'bsre' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id] || !tteConfigured" :title="tteConfigured ? 'Kirim ke antrean TTE BSrE' : 'TTE BSrE belum dikonfigurasi'" @click="signatureAction(record, 'bsre')">{{ tteConfigured ? 'Kirim untuk TTE' : 'TTE belum siap' }}</AppButton>
+                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'bsre' && record.status === 'signature_failed' && record.signature_request_id" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'bsre-retry')">Ulangi TTE</AppButton>
                                     <template v-if="!can_manage && record.approval_required && record.status === 'pending_approval' && record.approval_status === 'pending'">
                                         <textarea v-model="approvalNotes[record.id]" class="approval-note-input" rows="2" placeholder="Catatan keputusan (opsional)" aria-label="Catatan keputusan" />
-                                        <button class="primary-button approval-approve-button" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'approve')">Setujui</button>
-                                        <button class="secondary-button approval-reject-button" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'reject')">Tolak</button>
+                                        <AppButton variant="primary" class="primary-button approval-approve-button" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'approve')">Setujui</AppButton>
+                                        <AppButton variant="secondary" class="secondary-button approval-reject-button" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'reject')">Tolak</AppButton>
                                     </template>
                                 </div>
                                 <div class="secondary-action-group">
-                                    <button v-if="can_manage && record.letter_type === 'incoming' && ['received', 'disposition'].includes(record.status)" class="row-action-button secondary-row-action" type="button" @click="editIncoming(record)">Koreksi data</button>
-                                    <button v-if="can_manage && record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="row-action-button secondary-row-action" type="button" @click="editDraft(record)">Ubah draf</button>
-                                    <a v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" class="row-action-link pdf-action-link"><span aria-hidden="true">PDF</span>{{ record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat' }}</a>
-                                    <a v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="row-action-link">Unduh lampiran</a>
+                                    <AppButton variant="secondary" size="sm" v-if="can_manage && record.letter_type === 'incoming' && ['received', 'disposition'].includes(record.status)" class="row-action-button secondary-row-action" type="button" @click="editIncoming(record)">Koreksi data</AppButton>
+                                    <AppButton variant="secondary" size="sm" v-if="can_manage && record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="row-action-button secondary-row-action" type="button" @click="editDraft(record)">Ubah draf</AppButton>
+                                    <AppButton variant="secondary" size="sm" as="a" v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" class="row-action-link pdf-action-link"><span aria-hidden="true">PDF</span>{{ record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat' }}</AppButton>
+                                    <AppButton variant="secondary" size="sm" as="a" v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="row-action-link">Unduh lampiran</AppButton>
                                 </div>
                             </div>
                             <form v-if="can_manage && nextStatuses(record).length" class="status-update-form" @submit.prevent="updateStatus(record)">
                                 <span class="next-step-label">Berikutnya: {{ nextStatuses(record)[0]?.label }}</span>
                                 <input v-if="record.letter_type === 'incoming' && (targets[record.id] || nextStatuses(record)[0]?.value) === 'disposition'" v-model="dispositions[record.id]" maxlength="3000" placeholder="Isi disposisi" required />
-                                <button class="primary-button status-action-button" type="submit">{{ nextActionLabel(record) }}</button>
+                                <AppButton variant="primary" class="primary-button status-action-button" type="submit">{{ nextActionLabel(record) }}</AppButton>
                                 <span v-if="statusErrors[record.id]" class="field-error" role="alert">{{ statusErrors[record.id] }}</span>
                             </form>
                             <span v-if="actionErrors[record.id]" class="field-error action-error" role="alert">{{ actionErrors[record.id] }}</span>
@@ -646,9 +647,9 @@ function submitApproval(record: CorrespondenceRecord) {
                 </div>
                 <p v-else class="empty-state">{{ search ? 'Tidak ada surat yang cocok dengan pencarian.' : 'Belum ada surat pada filter ini. Surat yang dicatat akan muncul di sini.' }}</p>
                 <div v-if="pageCount > 1" class="pagination">
-                    <button type="button" class="secondary-button" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</button>
+                    <AppButton variant="secondary" type="button" class="secondary-button" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</AppButton>
                     <span>Halaman {{ currentPage }} dari {{ pageCount }}</span>
-                    <button type="button" class="secondary-button" :disabled="currentPage === pageCount" @click="currentPage++">Berikutnya</button>
+                    <AppButton variant="secondary" type="button" class="secondary-button" :disabled="currentPage === pageCount" @click="currentPage++">Berikutnya</AppButton>
                 </div>
             </section>
         </main>
@@ -663,78 +664,77 @@ function submitApproval(record: CorrespondenceRecord) {
 .correspondence-hero-metrics > div:nth-child(1) { border-color: #2f64c6; background: linear-gradient(145deg, #1d4ed8, #2563eb); }
 .correspondence-hero-metrics > div:nth-child(2) { border-color: #21865a; background: linear-gradient(145deg, #047857, #16a34a); }
 .correspondence-hero-metrics > div:nth-child(3) { border-color: #b7791f; background: linear-gradient(145deg, #b45309, #d97706); }
-.correspondence-hero-metrics span, .correspondence-hero-metrics small { color: rgb(255 255 255 / 82%); font-size: .72rem; }
+.correspondence-hero-metrics span, .correspondence-hero-metrics small { color: rgb(255 255 255 / 82%); font-size: var(--type-meta); }
 .correspondence-hero-metrics strong { color: white; font-size: 1.7rem; line-height: 1; }
 .archive-hero-summary { display: grid; flex: 1 1 28rem; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; min-width: 0; }
 .archive-hero-summary > div { display: grid; align-content: center; gap: .2rem; min-height: 6.5rem; border: 1px solid #d6c7a3; border-radius: .9rem; background: #fffaf0; padding: .8rem; }
 .archive-hero-summary > div:nth-child(2) { border-color: #c9d7f3; background: #eff5ff; }
 .archive-hero-summary > div:nth-child(3) { border-color: #b9dec8; background: #ecfdf3; }
 .archive-hero-summary strong { color: #172b4d; font-size: 1.7rem; line-height: 1; }
-.archive-hero-summary span { color: #52637c; font-size: .76rem; font-weight: 800; }
-.archive-hero-summary small { color: #64748b; font-size: .72rem; }
+.archive-hero-summary span { color: #52637c; font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.archive-hero-summary small { color: var(--ink-soft); font-size: var(--type-meta); }
 .incoming-hero-summary { display: grid; flex: 0 0 14rem; align-content: center; gap: .15rem; min-height: 7rem; border: 1px solid #2f64c6; border-radius: 1rem; background: linear-gradient(145deg, #1d4ed8, #2563eb); padding: 1rem 1.2rem; box-shadow: 0 12px 22px rgb(15 23 42 / 12%); }
 .incoming-hero-summary strong { color: white; font-size: 2rem; line-height: 1; }
-.incoming-hero-summary span, .incoming-hero-summary small { color: rgb(255 255 255 / 84%); font-size: .78rem; }
+.incoming-hero-summary span, .incoming-hero-summary small { color: rgb(255 255 255 / 84%); font-size: var(--type-meta); }
 .outgoing-hero-summary { display: grid; flex: 1 1 28rem; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; min-width: 0; }
 .outgoing-hero-summary > div { display: grid; align-content: center; gap: .2rem; min-height: 6.5rem; border: 1px solid #3157a4; border-radius: .9rem; background: #eff5ff; padding: .8rem; }
 .outgoing-hero-summary > div:nth-child(2) { border-color: #d5a03a; background: #fff7e6; }
 .outgoing-hero-summary > div:nth-child(3) { border-color: #8b6cc7; background: #f4efff; }
 .outgoing-hero-summary > div:nth-child(4) { border-color: #21865a; background: #ecfdf3; }
 .outgoing-hero-summary strong { color: #172b4d; font-size: 1.7rem; line-height: 1; }
-.outgoing-hero-summary span { color: #52637c; font-size: .72rem; font-weight: 800; }
-.incoming-flow-panel { display: grid; gap: 1rem; border: 1px solid #dbe3ef; border-radius: 1rem; background: #fff; padding: 1.25rem; }
+.outgoing-hero-summary span { color: #52637c; font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.incoming-flow-panel { display: grid; gap: 1rem; border: 1px solid #dbe3ef; border-radius: 1rem; background: var(--surface); padding: 1.25rem; }
 .incoming-flow-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.incoming-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid #dbe3ef; padding: .75rem .25rem 0; color: #64748b; }
+.incoming-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid #dbe3ef; padding: .75rem .25rem 0; color: var(--ink-soft); }
 .incoming-flow-list li.is-current { border-top-color: #3157a4; color: #3157a4; }
-.incoming-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #eef2f7; color: #64748b; font-size: .75rem; font-weight: 800; }
+.incoming-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #eef2f7; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .incoming-flow-list li.is-current > span { background: #3157a4; color: white; }
 .incoming-flow-list strong, .incoming-flow-list small { display: block; }
-.incoming-flow-list strong { color: #172b4d; font-size: .82rem; }
-.incoming-flow-list small { margin-top: .2rem; color: #64748b; font-size: .72rem; line-height: 1.35; }
-.outgoing-flow-panel { display: grid; gap: 1rem; border: 1px solid #dbe3ef; border-radius: 1rem; background: #fff; padding: 1.25rem; }
+.incoming-flow-list strong { color: #172b4d; font-size: var(--type-sm); }
+.incoming-flow-list small { margin-top: .2rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.35; }
+.outgoing-flow-panel { display: grid; gap: 1rem; border: 1px solid #dbe3ef; border-radius: 1rem; background: var(--surface); padding: 1.25rem; }
 .outgoing-flow-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.outgoing-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid #dbe3ef; padding: .75rem .25rem 0; color: #64748b; }
+.outgoing-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid #dbe3ef; padding: .75rem .25rem 0; color: var(--ink-soft); }
 .outgoing-flow-list li.is-current { border-top-color: #3157a4; color: #3157a4; }
-.outgoing-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #eef2f7; color: #64748b; font-size: .75rem; font-weight: 800; }
+.outgoing-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #eef2f7; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .outgoing-flow-list li.is-current > span { background: #3157a4; color: white; }
 .outgoing-flow-list strong, .outgoing-flow-list small { display: block; }
-.outgoing-flow-list strong { color: #172b4d; font-size: .82rem; }
-.outgoing-flow-list small { margin-top: .2rem; color: #64748b; font-size: .72rem; line-height: 1.35; }
+.outgoing-flow-list strong { color: #172b4d; font-size: var(--type-sm); }
+.outgoing-flow-list small { margin-top: .2rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.35; }
 .queue-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
-.queue-grid button { display: grid; gap: .2rem; min-width: 0; border: 1px solid #dbe3ef; border-radius: .8rem; background: white; padding: 1rem; color: #334155; text-align: left; }
+.queue-grid button { display: grid; gap: .2rem; min-width: 0; border: 1px solid #dbe3ef; border-radius: .8rem; background: var(--surface); padding: 1rem; color: #334155; text-align: left; }
 .queue-grid button:hover, .queue-grid button.is-selected { border-color: #3157a4; box-shadow: 0 4px 14px rgb(49 87 164 / 10%); }
 .queue-grid button.is-selected { background: #eff5ff; }
-.queue-grid span, .queue-grid small { color: #64748b; font-size: .74rem; }
+.queue-grid span, .queue-grid small { color: var(--ink-soft); font-size: var(--type-meta); }
 .queue-grid strong { color: #172b4d; font-size: 1.65rem; }
 .wizard-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .wizard-heading h2 { margin: .15rem 0 0; color: #172b4d; }
-.wizard-close { border: 0; background: transparent; color: #64748b; font-size: 1.6rem; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
 .modal-card { width: min(760px, 100%); max-height: 90dvh; overflow-y: auto; border-radius: 16px; box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
 .stepper { display: grid; grid-template-columns: repeat(5, 1fr); margin: 1.2rem 0; padding: 0; list-style: none; }
 .stepper li { position: relative; display: grid; justify-items: center; gap: .3rem; color: #94a3b8; }
 .stepper li:not(:last-child)::after { position: absolute; top: .85rem; left: calc(50% + 1.15rem); width: calc(100% - 2.3rem); height: 2px; background: #e2e8f0; content: ''; }
-.stepper span { z-index: 1; display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border: 2px solid #cbd5e1; border-radius: 50%; background: white; font-size: .72rem; font-weight: 800; }
+.stepper span { z-index: 1; display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border: 2px solid #cbd5e1; border-radius: 50%; background: var(--surface); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .stepper .active, .stepper .done { color: #3157a4; }
 .stepper .active span, .stepper .done span { border-color: #3157a4; background: #3157a4; color: white; }
 .stepper .done:not(:last-child)::after { background: #3157a4; }
-.wizard-step-hint { margin: -.35rem 0 .2rem; color: #52637c; font-size: .82rem; line-height: 1.5; }
+.wizard-step-hint { margin: -.35rem 0 .2rem; color: #52637c; font-size: var(--type-sm); line-height: 1.5; }
 .wizard-form { display: grid; gap: 1rem; }
 .wizard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.wizard-grid label { display: grid; gap: .4rem; color: #42526b; font-size: .84rem; font-weight: 700; }
+.wizard-grid label { display: grid; gap: .4rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
 .wizard-grid .wide { grid-column: 1 / -1; }
-.wizard-grid input, .wizard-grid select, .wizard-grid textarea { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .6rem .75rem; color: #172b4d; font: inherit; }
+.wizard-grid input, .wizard-grid select, .wizard-grid textarea { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: var(--surface); padding: .6rem .75rem; color: #172b4d; font: inherit; }
 .wizard-grid b { color: #b42318; }
-.incoming-review-note { display: grid; gap: .35rem; border: 1px solid #c9d7f3; border-radius: .75rem; background: #eff5ff; padding: .85rem; color: #3157a4; font-size: .84rem; line-height: 1.5; }
+.incoming-review-note { display: grid; gap: .35rem; border: 1px solid #c9d7f3; border-radius: .75rem; background: #eff5ff; padding: .85rem; color: #3157a4; font-size: var(--type-sm); line-height: 1.5; }
 .tte-readiness-panel { display: flex; align-items: flex-start; gap: .9rem; border: 1px solid #c9d7f3; border-radius: .85rem; background: #eff5ff; padding: 1rem 1.1rem; }
 .tte-readiness-panel.is-ready { border-color: #b7e4cf; background: #effaf4; }
 .tte-readiness-panel.is-blocked { border-color: #f1d19a; background: #fff8eb; }
-.tte-readiness-mark { display: grid; flex: 0 0 2rem; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: #3157a4; color: white; font-weight: 800; }
+.tte-readiness-mark { display: grid; flex: 0 0 2rem; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: #3157a4; color: white; font-weight: var(--weight-bold); }
 .tte-readiness-panel.is-ready .tte-readiness-mark { background: #087a55; }
 .tte-readiness-panel.is-blocked .tte-readiness-mark { background: #a15c00; }
-.tte-readiness-panel h2 { margin: .15rem 0 .25rem; color: #172b4d; font-size: 1rem; }
-.tte-readiness-panel p:not(.eyebrow) { margin: 0; max-width: 72ch; color: #52637c; font-size: .84rem; line-height: 1.55; }
-.tte-readiness-panel small { display: block; margin-top: .45rem; color: #64748b; font-size: .75rem; }
+.tte-readiness-panel h2 { margin: .15rem 0 .25rem; color: #172b4d; font-size: var(--type-md); }
+.tte-readiness-panel p:not(.eyebrow) { margin: 0; max-width: 72ch; color: #52637c; font-size: var(--type-sm); line-height: 1.55; }
+.tte-readiness-panel small { display: block; margin-top: .45rem; color: var(--ink-soft); font-size: var(--type-meta); }
 .warning-note { border: 1px solid #f1d19a; background: #fff8eb; color: #92500a; }
 .signature-options label.is-disabled { cursor: not-allowed; opacity: .58; }
 .signatory-toggle { justify-self: start; }
@@ -745,98 +745,82 @@ function submitApproval(record: CorrespondenceRecord) {
 .template-choices label.selected, .signature-options label.selected { border-color: #3157a4; background: #eff5ff; }
 .template-choices input, .signature-options input, .checkbox-label input { width: auto; min-height: auto; }
 .template-choices span, .signature-options span { display: grid; gap: .2rem; }
-.template-choices small, .signature-options small { color: #64748b; font-weight: 500; }
+.template-choices small, .signature-options small { color: var(--ink-soft); font-weight: var(--weight-medium); }
 .signature-options { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin: 0; border: 0; padding: 0; }
-.signature-options legend { margin-bottom: .5rem; color: #42526b; font-weight: 700; }
+.signature-options legend { margin-bottom: .5rem; color: #42526b; font-weight: var(--weight-bold); }
 .checkbox-label { display: flex !important; align-items: center; }
 .review-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; border: 1px solid #dbe3ef; border-radius: .8rem; background: #f8fafc; padding: 1rem; }
 .review-card div { display: grid; gap: .15rem; }
-.review-card span { color: #64748b; font-size: .74rem; }
-.review-card a, .review-card p { grid-column: 1 / -1; margin: 0; color: #3157a4; font-size: .84rem; font-weight: 700; }
-.wizard-error { margin: 0; border: 1px solid #fda29b; border-radius: .65rem; background: #fef3f2; padding: .75rem; color: #b42318; font-size: .82rem; }
+.review-card span { color: var(--ink-soft); font-size: var(--type-meta); }
+.review-card a, .review-card p { grid-column: 1 / -1; margin: 0; color: #3157a4; font-size: var(--type-sm); font-weight: var(--weight-bold); }
+.wizard-error { margin: 0; border: 1px solid #fda29b; border-radius: .65rem; background: #fef3f2; padding: .75rem; color: #b42318; font-size: var(--type-sm); }
 .wizard-actions { display: flex; align-items: center; gap: .5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
 .wizard-actions > span { flex: 1; }
 .upload-action { cursor: pointer; }
 .upload-action.disabled { cursor: wait; opacity: .55; }
-.approval-note-input { width: min(19rem, 100%); min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .55rem .7rem; color: #172b4d; font: inherit; font-size: .8rem; }
+.approval-note-input { width: min(19rem, 100%); min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .55rem .7rem; color: #172b4d; font: inherit; font-size: var(--type-control); }
 .hero-card { flex-wrap: wrap; }
 .hero-card > div:first-child { min-width: 0; }
 .correspondence-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.correspondence-form label { display: grid; gap: .4rem; color: #42526b; font-size: .85rem; font-weight: 600; }
-.correspondence-form input, .correspondence-form select, .correspondence-form textarea, .status-update-form select, .status-update-form input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .6rem .75rem; color: #172b4d; }
+.correspondence-form label { display: grid; gap: .4rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.correspondence-form input, .correspondence-form select, .correspondence-form textarea, .status-update-form select, .status-update-form input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: var(--surface); padding: .6rem .75rem; color: #172b4d; }
 .correspondence-form input[type=file] { padding: .4rem; }
 .correspondence-wide { grid-column: 1 / -1; }
 .correspondence-actions { display: flex; justify-content: end; gap: .5rem; flex-wrap: wrap; }
 .workflow-actions, .pagination { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
-.workflow-help, .form-note { margin: .8rem 0 0; color: #52637c; font-size: .85rem; line-height: 1.55; }
+.workflow-help, .form-note { margin: .8rem 0 0; color: #52637c; font-size: var(--type-sm); line-height: 1.55; }
 .form-note { margin: 0; padding: .75rem; background: #eff5ff; border-radius: .6rem; }
 .dashboard-filter-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; border: 1px solid #dbe3ef; border-radius: .8rem; background: #f8fafc; padding: .85rem; }
-.dashboard-filter-bar label { display: grid; gap: .35rem; color: #42526b; font-size: .76rem; font-weight: 700; }
-.dashboard-filter-bar input, .dashboard-filter-bar select { width: 100%; min-height: 2.5rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: white; padding: .5rem .65rem; color: #172b4d; font: inherit; font-size: .8rem; }
-.search-label { display: grid; gap: .35rem; margin-top: 1rem; max-width: 26rem; color: #42526b; font-size: .85rem; font-weight: 600; }
-.search-label input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; padding: .6rem .75rem; background: white; color: #172b4d; }
-.pagination { justify-content: end; margin-top: 1rem; color: #52637c; font-size: .85rem; }
-.secondary-button:disabled { opacity: .5; cursor: not-allowed; }
+.dashboard-filter-bar label { display: grid; gap: .35rem; color: #42526b; font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.dashboard-filter-bar input, .dashboard-filter-bar select { width: 100%; min-height: 2.5rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: var(--surface); padding: .5rem .65rem; color: #172b4d; font: inherit; font-size: var(--type-control); }
+.search-label { display: grid; gap: .35rem; margin-top: 1rem; max-width: 26rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.search-label input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; padding: .6rem .75rem; background: var(--surface); color: #172b4d; }
+.pagination { justify-content: end; margin-top: 1rem; color: #52637c; font-size: var(--type-sm); }
 .correspondence-card, .correspondence-card-heading > div { min-width: 0; overflow-wrap: anywhere; }
-.primary-button, .secondary-button { border: 1px solid #3157a4; border-radius: .65rem; background: #3157a4; padding: .65rem 1rem; color: white; font-weight: 700; }
-.secondary-button { background: white; color: #3157a4; white-space: nowrap; }
-.primary-button:disabled { cursor: wait; opacity: .6; }
 .required-mark, .field-error { color: #b42318; }
-.field-hint, .approval-option small { color: #64748b; font-size: .76rem; font-weight: 500; line-height: 1.4; }
+.field-hint, .approval-option small { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-medium); line-height: 1.4; }
 .approval-option { gap: .25rem !important; }
 .approval-option input { width: auto; min-height: auto; margin-right: .35rem; }
 .approval-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; border-top: 1px solid #e2e8f0; padding-top: .75rem; }
-.approval-pending { color: #92500a; font-size: .82rem; font-weight: 700; }
-.field-error { font-size: .78rem; font-weight: 500; }
+.approval-pending { color: #92500a; font-size: var(--type-sm); font-weight: var(--weight-bold); }
+.field-error { font-size: var(--type-meta); font-weight: var(--weight-medium); }
 .action-error { flex-basis: 100%; }
 .correspondence-tabs { display: flex; flex-wrap: wrap; gap: .5rem; border-bottom: 1px solid #dbe3ef; padding: 0 0 .8rem; }
-.correspondence-tab { border: 1px solid #dbe3ef; border-radius: 999px; background: white; padding: .45rem .85rem; color: #42526b; font-size: .85rem; font-weight: 600; text-decoration: none; }
+.correspondence-tab { border: 1px solid #dbe3ef; border-radius: 999px; background: var(--surface); padding: .45rem .85rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); text-decoration: none; }
 .correspondence-tab.is-active { border-color: #3157a4; background: #eaf0ff; color: #214991; }
 .table-scroll { margin-top: 1rem; overflow-x: auto; border: 1px solid #dbe3ef; border-radius: .85rem; }
 .correspondence-table { width: 100%; min-width: 920px; border-collapse: collapse; }
-.correspondence-table th { background: #f8fafc; color: #52637c; font-size: .72rem; letter-spacing: .03em; text-align: left; text-transform: uppercase; }
+.correspondence-table th { background: #f8fafc; color: #52637c; font-size: var(--type-meta); letter-spacing: .03em; text-align: left; text-transform: uppercase; }
 .correspondence-table th, .correspondence-table td { border-bottom: 1px solid #e2e8f0; padding: .8rem; vertical-align: top; }
 .correspondence-table tbody tr:last-child td { border-bottom: 0; }
-.correspondence-table td { color: #334155; font-size: .84rem; }
-.correspondence-table td > small { display: block; margin-top: .25rem; color: #64748b; line-height: 1.35; }
+.correspondence-table td { color: #334155; font-size: var(--type-sm); }
+.correspondence-table td > small { display: block; margin-top: .25rem; color: var(--ink-soft); line-height: 1.35; }
 .correspondence-table td:nth-child(1) { width: 17%; }
 .correspondence-table td:nth-child(2) { width: 18%; }
 .correspondence-table td:nth-child(3) { width: 25%; }
 .correspondence-table td:nth-child(4) { width: 13%; }
 .party-cell-content { display: grid; align-content: start; justify-items: start; gap: .25rem; min-width: 0; }
 .party-cell-content strong { max-width: 100%; color: #172b4d; line-height: 1.35; overflow-wrap: anywhere; }
-.party-cell-content small { margin-top: 0; color: #64748b; font-size: .74rem; line-height: 1.3; }
+.party-cell-content small { margin-top: 0; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.3; }
 .party-cell-content .correspondence-kind { margin-bottom: .05rem; }
 .action-cell { width: 30%; min-width: 18rem; }
 .action-cell .record-actions { display: grid; align-items: start; gap: .45rem; }
 .primary-action-group, .secondary-action-group { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; width: 100%; }
 .secondary-action-group { border-top: 1px solid #edf1f7; padding-top: .45rem; }
-.primary-row-action, .secondary-row-action { min-width: 0; min-height: 34px; padding: .42rem .62rem; border-radius: .55rem; font-size: .74rem; line-height: 1.25; white-space: normal; text-align: left; }
-.primary-action-group > .row-action-button, .primary-action-group > .primary-button, .primary-action-group > .secondary-button { flex: 1 1 10rem; justify-content: center; text-align: center; }
+.primary-row-action, .secondary-row-action { text-align: left; }
+.primary-action-group > .row-action-button, .primary-action-group > .primary-button, .primary-action-group > .secondary-button { flex: 1 1 10rem; text-align: center; }
 .primary-action-group > .approval-note-input { flex: 1 1 100%; width: 100%; }
-.secondary-action-group > .row-action-button { flex: 1 1 10rem; justify-content: center; text-align: center; }
-.primary-row-action { border-color: #3157a4; background: #3157a4; color: white; }
-.primary-row-action:hover { border-color: #214991; background: #214991; color: white; }
-.primary-row-action:disabled { cursor: wait; opacity: .6; }
-.secondary-row-action { background: white; }
-.row-action-link { display: inline-flex; align-items: center; min-height: 30px; padding: .25rem .15rem; color: #3157a4; font-size: .74rem; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
-.pdf-action-link { flex: 1 1 10rem; justify-content: center; gap: .4rem; min-height: 34px; border: 1px solid #f2b8c0; border-radius: .55rem; background: #fff1f2; padding: .42rem .62rem; color: #be123c; text-align: center; text-decoration: none; }
-.pdf-action-link:hover { border-color: #e88a99; background: #ffe4e8; color: #9f1239; }
-.pdf-action-link > span { display: inline-grid; min-width: 1.75rem; min-height: 1.25rem; place-items: center; border-radius: .25rem; background: #e11d48; color: white; font-size: .57rem; font-weight: 800; letter-spacing: .02em; line-height: 1; }
-.approval-approve-button, .approval-reject-button, .status-action-button { min-height: 34px; padding: .42rem .7rem; border-radius: .55rem; font-size: .76rem; }
-.approval-approve-button { border-color: #087a55; background: #087a55; box-shadow: none; }
-.approval-approve-button:hover { border-color: #066044; background: #066044; }
-.approval-reject-button { border-color: #f0b7b1; background: #fff7f6; color: #b42318; }
-.approval-reject-button:hover { border-color: #e58b82; background: #fef0ee; color: #941f16; }
+.secondary-action-group > .row-action-button { flex: 1 1 10rem; text-align: center; }
+.row-action-link { text-underline-offset: 2px; }
+.pdf-action-link { flex: 1 1 10rem; text-align: center; }
+.pdf-action-link > span { display: inline-grid; min-width: 1.75rem; min-height: 1.25rem; place-items: center; border-radius: .25rem; background: #e11d48; color: white; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .02em; line-height: 1; }
 .status-update-form { margin-top: .05rem; border-top: 1px solid #edf1f7; padding-top: .55rem; }
-.status-action-button { box-shadow: none; }
-.status-action-button:hover { box-shadow: 0 5px 12px color-mix(in srgb, var(--primary) 20%, transparent); }
 .correspondence-list { display: grid; gap: .85rem; padding-top: 1rem; }
 .correspondence-card { border: 1px solid #dbe3ef; border-radius: .85rem; padding: 1rem; }
 .correspondence-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
-.correspondence-card h3 { margin: .3rem 0 .2rem; color: #172b4d; font-size: 1.05rem; font-weight: 700; }
-.correspondence-card-heading p, .muted-note, .archived-note { margin: 0; color: #64748b; font-size: .82rem; }
-.correspondence-kind, .status-chip { display: inline-flex; border-radius: 999px; padding: .2rem .55rem; font-size: .75rem; font-weight: 700; }
+.correspondence-card h3 { margin: .3rem 0 .2rem; color: #172b4d; font-size: 1.05rem; font-weight: var(--weight-bold); }
+.correspondence-card-heading p, .muted-note, .archived-note { margin: 0; color: var(--ink-soft); font-size: var(--type-sm); }
+.correspondence-kind, .status-chip { display: inline-flex; border-radius: 999px; padding: .2rem .55rem; font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .kind-incoming { background: #eaf0ff; color: #3157a4; }
 .kind-outgoing { background: #f1f5f9; color: #475569; }
 .status-chip { background: #ecfdf3; color: #067647; white-space: nowrap; }
@@ -846,26 +830,26 @@ function submitApproval(record: CorrespondenceRecord) {
 .status-chip.status-draft, .status-chip.status-approved { background: #eef4ff; color: #3157a4; }
 .status-chip.status-pending_approval, .status-chip.status-awaiting_signature, .status-chip.status-signature_pending { background: #fff7e6; color: #a15c00; }
 .status-chip.status-signature_failed { background: #fef3f2; color: #b42318; }
-.signature-verified-note { color: #087a55 !important; font-weight: 700; }
+.signature-verified-note { color: #087a55 !important; font-weight: var(--weight-bold); }
 .signature-error-note { color: #b42318 !important; }
 .status-chip.status-issued, .status-chip.status-sent { background: #ecfdf3; color: #067647; }
 .correspondence-meta { display: flex; flex-wrap: wrap; gap: .65rem 1.5rem; margin: .9rem 0; }
 .correspondence-meta div { display: grid; gap: .1rem; }
-.correspondence-meta dt { color: #64748b; font-size: .72rem; }
-.correspondence-meta dd { margin: 0; color: #334155; font-size: .82rem; font-weight: 600; }
-.correspondence-summary-text, .correspondence-disposition { margin: .5rem 0; color: #475569; font-size: .86rem; white-space: pre-wrap; }
+.correspondence-meta dt { color: var(--ink-soft); font-size: var(--type-meta); }
+.correspondence-meta dd { margin: 0; color: #334155; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.correspondence-summary-text, .correspondence-disposition { margin: .5rem 0; color: #475569; font-size: var(--type-sm); white-space: pre-wrap; }
 .correspondence-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid #e2e8f0; padding-top: .8rem; }
 .status-update-form { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: .45rem; }
-.next-step-label { flex: 1 1 100%; color: #3157a4; font-size: .75rem; font-weight: 800; }
+.next-step-label { flex: 1 1 100%; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .status-update-form select { width: auto; min-width: 9rem; }
 .status-update-form input { width: min(22rem, 100%); flex: 1 1 14rem; }
-.row-action-button { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; border: 1px solid #c9d7f3; border-radius: .55rem; background: #eff5ff; padding: .42rem .62rem; color: #3157a4; font-size: .74rem; font-weight: 700; line-height: 1.25; text-align: center; text-decoration: none; white-space: normal; }
-.empty-state { padding: 1.25rem 0; color: #64748b; }
+.row-action-button { text-align: center; }
+.empty-state { padding: 1.25rem 0; color: var(--ink-soft); }
 @media (min-width: 761px) { .hero-card > div:first-child { flex: 1 1 18rem; } }
 @media (max-width: 1100px) { .queue-grid { grid-template-columns: repeat(3, 1fr); } .template-choices { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 800px) { .correspondence-hero-metrics, .archive-hero-summary { width: 100%; } .dashboard-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .outgoing-hero-summary { width: 100%; } .queue-grid { grid-template-columns: repeat(2, 1fr); } .stepper small { display: none; } .wizard-grid, .signature-options, .review-card, .signatory-form { grid-template-columns: 1fr; } .wizard-grid .wide, .signatory-form .wide { grid-column: auto; } .correspondence-form { grid-template-columns: 1fr; } .correspondence-wide { grid-column: auto; } .correspondence-footer { align-items: stretch; flex-direction: column; } .status-update-form { justify-content: stretch; } .status-update-form select, .status-update-form input, .status-update-form button { width: 100%; } .correspondence-card-heading { align-items: start; } .correspondence-table { min-width: 0; } .correspondence-table thead { display: none; } .correspondence-table tr { display: grid; border-bottom: 1px solid #dbe3ef; padding: .75rem; } .correspondence-table tr:last-child { border-bottom: 0; } .correspondence-table td { display: grid; grid-template-columns: 7.5rem minmax(0,1fr); width: 100% !important; border: 0; padding: .35rem 0; } .correspondence-table td::before { color: #64748b; content: attr(data-label); font-size: .72rem; } .action-cell { min-width: 0; } .action-cell .record-actions, .action-cell > .status-update-form, .action-cell > .field-error, .action-cell > .archived-note { grid-column: 1 / -1; } .action-cell .record-actions { padding-top: .35rem; } }
+@media (max-width: 800px) { .correspondence-hero-metrics, .archive-hero-summary { width: 100%; } .dashboard-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .outgoing-hero-summary { width: 100%; } .queue-grid { grid-template-columns: repeat(2, 1fr); } .stepper small { display: none; } .wizard-grid, .signature-options, .review-card, .signatory-form { grid-template-columns: 1fr; } .wizard-grid .wide, .signatory-form .wide { grid-column: auto; } .correspondence-form { grid-template-columns: 1fr; } .correspondence-wide { grid-column: auto; } .correspondence-footer { align-items: stretch; flex-direction: column; } .status-update-form { justify-content: stretch; } .status-update-form select, .status-update-form input, .status-update-form button { width: 100%; } .correspondence-card-heading { align-items: start; } .correspondence-table { min-width: 0; } .correspondence-table thead { display: none; } .correspondence-table tr { display: grid; border-bottom: 1px solid #dbe3ef; padding: .75rem; } .correspondence-table tr:last-child { border-bottom: 0; } .correspondence-table td { display: grid; grid-template-columns: 7.5rem minmax(0,1fr); width: 100% !important; border: 0; padding: .35rem 0; } .correspondence-table td::before { color: var(--ink-soft); content: attr(data-label); font-size: var(--type-meta); } .action-cell { min-width: 0; } .action-cell .record-actions, .action-cell > .status-update-form, .action-cell > .field-error, .action-cell > .archived-note { grid-column: 1 / -1; } .action-cell .record-actions { padding-top: .35rem; } }
 @media (max-width: 800px) { .incoming-flow-list, .outgoing-flow-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incoming-hero-summary { width: 100%; } }
-@media (max-width: 480px) { .correspondence-hero-metrics > div, .archive-hero-summary > div { min-height: 78px; padding: .75rem; } .correspondence-hero-metrics span, .correspondence-hero-metrics small { font-size: .65rem; } .correspondence-hero-metrics strong { font-size: 1.35rem; } .dashboard-filter-bar { grid-template-columns: 1fr; } .outgoing-hero-summary, .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incoming-flow-list, .outgoing-flow-list { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .correspondence-hero-metrics > div, .archive-hero-summary > div { min-height: 78px; padding: .75rem; } .correspondence-hero-metrics span, .correspondence-hero-metrics small { font-size: var(--type-meta); } .correspondence-hero-metrics strong { font-size: 1.35rem; } .dashboard-filter-bar { grid-template-columns: 1fr; } .outgoing-hero-summary, .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incoming-flow-list, .outgoing-flow-list { grid-template-columns: 1fr; } }
 /* Shared card rhythm: workflow and form surfaces use the application tokens. */
 .incoming-flow-panel, .outgoing-flow-panel, .correspondence-panel { border-radius: var(--card-radius); background: var(--surface); border-color: var(--line); }
 .queue-grid button { border-color: var(--line); border-radius: var(--card-radius-compact); background: var(--surface); color: var(--ink); }
@@ -1015,11 +999,6 @@ function submitApproval(record: CorrespondenceRecord) {
 :global(html[data-theme='dark'] .status-chip.status-issued) ,
 :global(html[data-theme='dark'] .status-chip.status-sent) { background: var(--green-soft) !important; color: var(--green) !important; }
 :global(html[data-theme='dark'] .status-chip.status-signature_failed) { background: var(--red-soft) !important; color: var(--red) !important; }
-:global(html[data-theme='dark'] .pdf-action-link) { background: var(--pdf-soft) !important; border-color: var(--pdf-line) !important; color: var(--pdf) !important; }
-:global(html[data-theme='dark'] .primary-row-action) { background: var(--primary-action) !important; border-color: var(--primary-action) !important; color: #fff !important; }
-:global(html[data-theme='dark'] .primary-row-action:hover) { background: var(--primary-action-strong) !important; border-color: var(--primary-action-strong) !important; }
-:global(html[data-theme='dark'] .secondary-row-action) ,
-:global(html[data-theme='dark'] .row-action-button) { background: var(--surface-subtle) !important; border-color: var(--line) !important; color: var(--primary) !important; }
 :global(html[data-theme='dark'] .correspondence-page .correspondence-tabs) { border-color: var(--line) !important; }
 :global(html[data-theme='dark'] .correspondence-page .correspondence-tab) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink-soft) !important; }
 :global(html[data-theme='dark'] .correspondence-page .correspondence-tab.is-active) { background: var(--primary-soft) !important; border-color: var(--primary) !important; color: var(--primary) !important; }
@@ -1045,14 +1024,10 @@ function submitApproval(record: CorrespondenceRecord) {
 :global(html[data-theme='dark'] .correspondence-page .empty-state) { color: var(--ink-soft) !important; }
 :global(html[data-theme='dark'] .correspondence-page .field-hint) ,
 :global(html[data-theme='dark'] .correspondence-page .approval-option small) { color: var(--ink-faint) !important; }
-:global(html[data-theme='dark'] .correspondence-page .secondary-button) { background: var(--surface) !important; border-color: var(--line-strong) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark'] .correspondence-page .secondary-button:hover) { background: var(--primary-soft) !important; border-color: var(--primary) !important; color: var(--primary) !important; }
-:global(html[data-theme='dark'] .correspondence-page .approval-reject-button) { background: var(--red-soft) !important; border-color: var(--delete-line) !important; color: var(--red) !important; }
 :global(html[data-theme='dark'] .correspondence-page .secondary-action-group) ,
 :global(html[data-theme='dark'] .correspondence-page .status-update-form) ,
 :global(html[data-theme='dark'] .correspondence-page .approval-actions) ,
 :global(html[data-theme='dark'] .correspondence-page .correspondence-footer) { border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .correspondence-page .row-action-link) { color: var(--primary) !important; }
 .correspondence-page .hero-card, .correspondence-page .panel, .correspondence-page .incoming-flow-panel, .correspondence-page .outgoing-flow-panel { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
 .correspondence-page .correspondence-hero-metrics > div, .correspondence-page .incoming-hero-summary, .correspondence-page .outgoing-hero-summary > div, .correspondence-page .archive-hero-summary > div { color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: none; }
 .correspondence-page .correspondence-hero-metrics > div:first-child, .correspondence-page .incoming-hero-summary { border-top: 3px solid var(--primary); }
@@ -1067,7 +1042,6 @@ function submitApproval(record: CorrespondenceRecord) {
 .correspondence-page button:focus-visible, .correspondence-page input:focus-visible, .correspondence-page select:focus-visible, .correspondence-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 @media (max-width: 600px) { .correspondence-page .correspondence-hero-metrics, .correspondence-page .outgoing-hero-summary, .correspondence-page .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .correspondence-page .incoming-hero-summary { flex-basis: 100%; } .correspondence-page .workflow-actions { align-items: stretch; flex-direction: column; } .correspondence-page .workflow-actions > * { width: 100%; } }
 :global(html[data-theme='dark'] .correspondence-page .queue-grid button.is-selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark'] .correspondence-page .primary-row-action) { background: var(--primary-action) !important; border-color: var(--primary-action) !important; color: #fff !important; }
 :global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel h2),
 :global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel p),
 :global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel small) { color: #fff !important; }

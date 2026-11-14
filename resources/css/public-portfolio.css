@@ -11,8 +11,9 @@
     --public-line: color-mix(in srgb, var(--public-ink) 14%, transparent);
     --public-line-strong: color-mix(in srgb, var(--public-ink) 22%, transparent);
     --public-focus: color-mix(in srgb, var(--public-accent) 68%, white);
-    --public-deep: var(--public-primary);
-    --public-deep-hover: color-mix(in srgb, var(--public-primary) 78%, #173044);
+    --public-deep: color-mix(in srgb, var(--public-primary) 45%, #14263c);
+    --public-deep-hover: color-mix(in srgb, var(--public-primary) 30%, #14263c);
+    --public-link: color-mix(in srgb, var(--public-primary) 40%, #14263c);
     --public-gold: var(--public-accent);
     --public-radius-sm: 10px;
     --public-radius-md: 18px;
@@ -22,7 +23,7 @@
     --public-transition: cubic-bezier(.2, .8, .2, 1);
     color: var(--public-ink);
     background-color: var(--public-paper);
-    font-size: 16px;
+    font-size: var(--type-md);
     line-height: 1.6;
     text-rendering: optimizeLegibility;
 }
@@ -34,7 +35,7 @@
 
 .public-site .brand {
     color: var(--public-ink);
-    font-size: 1rem;
+    font-size: var(--type-md);
     line-height: 1.25;
 }
 
@@ -42,13 +43,13 @@
 .public-site .site-nav,
 .public-site .public-header nav {
     gap: 1.2rem;
-    font-size: .92rem;
+    font-size: var(--type-md);
 }
 
 .public-site nav a {
     color: var(--public-muted-strong) !important;
     font-size: inherit !important;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     line-height: 1.35;
     text-decoration: none;
     transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease;
@@ -61,7 +62,7 @@
 }
 
 .public-site nav a[aria-current='page'] {
-    font-weight: 800;
+    font-weight: var(--weight-bold);
 }
 
 .public-site .header-action,
@@ -75,8 +76,8 @@
     background: var(--public-deep) !important;
     border: 1px solid var(--public-deep);
     border-radius: .55rem;
-    font-size: .92rem !important;
-    font-weight: 800;
+    font-size: var(--type-md) !important;
+    font-weight: var(--weight-bold);
     line-height: 1;
     box-shadow: 0 6px 16px rgb(18 50 71 / 14%);
 }
@@ -91,24 +92,6 @@
     background: var(--public-deep-hover) !important;
     border-color: var(--public-deep-hover);
     transform: translateY(-1px);
-}
-
-.public-site .primary-button {
-    min-height: 46px !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: .78rem 1.15rem;
-    color: #fff !important;
-    background: var(--public-deep) !important;
-    border: 1px solid var(--public-deep);
-    border-radius: .55rem;
-    font-size: .94rem !important;
-    font-weight: 800;
-    line-height: 1.2;
-    text-decoration: none;
-    box-shadow: 0 7px 18px rgb(18 50 71 / 14%);
-    transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease;
 }
 
 .public-site .brand-mark {
@@ -127,21 +110,11 @@
     background: var(--public-deep) !important;
 }
 
-.public-site .primary-button:hover,
-.public-site .primary-button:focus-visible,
-.public-site .primary-button:active {
-    color: #fff !important;
-    background: var(--public-deep-hover) !important;
-    border-color: var(--public-deep-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgb(18 50 71 / 20%);
-}
-
 .public-site .eyebrow,
 .public-site .kicker {
     color: var(--public-gold) !important;
-    font-size: .8rem !important;
-    font-weight: 800;
+    font-size: var(--type-meta) !important;
+    font-weight: var(--weight-bold);
     letter-spacing: .09em;
 }
 
@@ -162,20 +135,17 @@
     line-height: 1.8;
 }
 
-.public-site .text-link,
-.public-site .read-link,
-.public-site .quiet-link,
-.public-site .back-link {
+.public-site .text-link, .public-site .read-link, .public-site .quiet-link {
     color: var(--public-gold);
-    font-size: .92rem;
-    font-weight: 800;
+    font-size: var(--type-md);
+    font-weight: var(--weight-bold);
 }
 
 .public-site .section-heading > p,
 .public-site .explore-item span,
 .public-site .news-body p,
 .public-site .service-card p {
-    font-size: .92rem;
+    font-size: var(--type-md);
 }
 
 .public-site .news-body small,
@@ -183,7 +153,7 @@
 .public-site .trust-line,
 .public-site .hero-meta {
     color: var(--public-muted-strong);
-    font-size: .82rem;
+    font-size: var(--type-sm);
 }
 
 .public-site a:focus-visible {
@@ -196,38 +166,17 @@
     .public-site .site-nav,
     .public-site .public-header nav {
         gap: .8rem;
-        font-size: .9rem;
+        font-size: var(--type-md);
     }
 
-    .public-site .header-action,
-    .public-site .login-link,
-    .public-site .primary-button {
+    .public-site .header-action, .public-site .login-link {
         min-height: 46px;
     }
 }
 
 /* Rendered accent colors stay derived from the school's base color. */
-body .public-site .eyebrow,
-body .public-site .kicker,
-body .public-site .card-number,
-body .public-site .card-label,
-body .public-site .section-label,
-body .public-site .service-number,
-body .public-site .service-link,
-body .public-site .quiet-link,
-body .public-site .read-more,
-body .public-site .back-link,
-body .public-site .card-link,
-body .public-site .resource-strip a,
-body .public-site .album-copy small,
-body .public-site .album-meta,
-body .public-site .date-grid span,
-body .public-site .flow-grid span,
-body .public-site .node-position,
-body .public-site .news-arrow,
-body .public-site .direction-grid article > span,
-body .public-site .article-page .back {
-    color: var(--public-primary) !important;
+body .public-site .eyebrow, body .public-site .kicker, body .public-site .card-number, body .public-site .card-label, body .public-site .section-label, body .public-site .service-number, body .public-site .service-link, body .public-site .quiet-link, body .public-site .read-more, body .public-site .card-link, body .public-site .resource-strip a, body .public-site .album-copy small, body .public-site .album-meta, body .public-site .date-grid span, body .public-site .flow-grid span, body .public-site .node-position, body .public-site .news-arrow, body .public-site .direction-grid article > span, body .public-site .article-page .back {
+    color: var(--public-link) !important;
 }
 
 body .public-site.public-home .home-hero .eyebrow,
@@ -292,7 +241,7 @@ body .public-site .track-summary span {
 body .public-site .hero-title-accent,
 body .public-site .hero-emblem,
 body .public-site .node-avatar {
-    color: var(--public-primary) !important;
+    color: var(--public-link) !important;
 }
 
 body .public-site .hero-emblem,
@@ -307,18 +256,18 @@ body .public-site .orbit {
 }
 
 body .public-site .organization-card {
-    border-top-color: var(--public-primary) !important;
+    border-top-color: var(--public-link) !important;
 }
 
 body .public-site .period-status,
 body .public-site .status-badge {
-    color: var(--public-primary) !important;
+    color: var(--public-link) !important;
     background: color-mix(in srgb, var(--public-primary) 12%, var(--public-surface)) !important;
 }
 
 body .public-site .period-status.is-open,
 body .public-site .status-badge.is-open {
-    color: var(--public-primary) !important;
+    color: var(--public-link) !important;
     background: color-mix(in srgb, var(--public-primary) 16%, var(--public-surface)) !important;
 }
 
@@ -412,7 +361,7 @@ body .public-site .status-badge.is-open {
 .public-site.public-news .news-card:focus-visible,
 .public-site.public-gallery .album-card:hover,
 .public-site.public-gallery .album-card:focus-within {
-    border-color: var(--public-primary);
+    border-color: var(--public-link);
     box-shadow: var(--public-shadow-deep);
     transform: translateY(-4px);
 }
@@ -423,11 +372,7 @@ body .public-site .status-badge.is-open {
     background: var(--public-surface-alt);
 }
 
-.public-site.public-news .read-more,
-.public-site.public-gallery .back-link,
-.public-site.public-organization .back-link,
-.public-site.public-section-page .card-link,
-.public-site.public-section-page .resource-strip a {
+.public-site.public-news .read-more, .public-site.public-section-page .card-link, .public-site.public-section-page .resource-strip a {
     color: var(--public-accent);
 }
 
@@ -493,14 +438,14 @@ body .public-site.public-gallery .gallery-intro h1 {
     color: var(--public-ink);
     font-family: var(--font-ui);
     font-size: clamp(2.1rem, 4vw, 3.5rem);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.15;
 }
 
 body .public-site.public-section-page .section-hero .eyebrow,
 body .public-site.public-news .intro p,
-body .public-site.public-gallery .gallery-intro .kicker { color: var(--public-primary) !important; }
+body .public-site.public-gallery .gallery-intro .kicker { color: var(--public-link) !important; }
 
 body .public-site.public-section-page .section-hero > p:last-child,
 body .public-site.public-news .intro span,
@@ -531,7 +476,7 @@ body .public-site.public-section-page .contact-card-main p { color: var(--public
 body .public-site.public-section-page .life-card-feature .card-number,
 body .public-site.public-section-page .life-card-feature .card-link,
 body .public-site.public-section-page .contact-card-main .card-label,
-body .public-site.public-section-page .contact-card-main .card-link { color: var(--public-primary) !important; }
+body .public-site.public-section-page .contact-card-main .card-link { color: var(--public-link) !important; }
 
 body .public-site.public-section-page .info-card h2,
 body .public-site.public-section-page .life-card h2,
@@ -539,7 +484,7 @@ body .public-site.public-news .card-body h2,
 body .public-site.public-gallery .album-copy h2,
 body .public-site.school-profile .service-card strong {
     font-family: var(--font-ui);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -.025em;
 }
 
@@ -556,23 +501,28 @@ body .public-site.school-profile .section-heading h2,
 body .public-site.school-profile .service-intro h2,
 body .public-site.school-profile .contact-footer h2 {
     font-family: var(--font-ui);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.15;
 }
 body .public-site.school-profile .hero h1 { font-size: clamp(2.2rem, 4vw, 3.8rem); }
 body .public-site.school-profile .hero-title-accent { color: var(--public-ink) !important; }
 body .public-site.school-profile .hero-visual { background: var(--public-surface-alt) !important; border: 1px solid var(--public-line); border-radius: 18px; }
-body .public-site.school-profile .hero-note { color: var(--public-ink); }
-body .public-site.school-profile .hero-note span { color: var(--public-primary) !important; }
+body .public-site.school-profile .hero-note { max-width: min(260px, 75%); padding: 1rem; color: var(--public-ink); background: var(--public-surface) !important; border: 1px solid var(--public-line); border-radius: 12px; }
+body .public-site.school-profile .hero-note span { color: var(--public-link) !important; }
 body .public-site.school-profile .hero-note small { color: var(--public-muted); }
+body .public-site.school-profile .hero-note strong { color: var(--public-ink); }
+body .public-site.school-profile .message-section { color: #fff; background: var(--public-deep); }
+body .public-site.school-profile .message-section .kicker,
+body .public-site.school-profile .message-section blockquote,
+body .public-site.school-profile .message-section cite { color: #fff !important; }
 body .public-site.school-profile .orbit { border-color: var(--public-line) !important; }
 
 body .public-site.public-admissions .admissions-status h1,
 body .public-site.public-admissions .section-heading h2,
 body .public-site.public-admissions .public-footer h2 {
     font-family: var(--font-ui);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.15;
 }
@@ -584,7 +534,7 @@ body .public-site.public-admissions .school-building-art img { opacity: .2; }
 body .public-site.public-admissions .status-panel { background: var(--public-surface-alt) !important; border: 1px solid var(--public-line); box-shadow: none; }
 body .public-site.public-admissions .status-panel strong { color: var(--public-ink); }
 body .public-site.public-admissions .status-panel small { color: var(--public-muted); }
-body .public-site.public-admissions .status-panel > span { color: var(--public-primary) !important; }
+body .public-site.public-admissions .status-panel > span { color: var(--public-link) !important; }
 
 @media (max-width: 600px) {
     body .public-site.public-section-page .section-hero,
@@ -610,11 +560,11 @@ body .public-site.public-organization .page-intro h1 {
     color: var(--public-ink);
     font-family: var(--font-ui);
     font-size: clamp(2.1rem, 4vw, 3.5rem);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.15;
 }
-body .public-site.public-organization .page-intro .eyebrow { color: var(--public-primary) !important; }
+body .public-site.public-organization .page-intro .eyebrow { color: var(--public-link) !important; }
 body .public-site.public-organization .page-intro > p:last-child { color: var(--public-muted) !important; line-height: 1.65; }
 body .public-site.public-organization .organization-tree { margin-top: 1rem; }
 body .public-site.public-organization .tree-flow { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
@@ -626,7 +576,7 @@ body .public-site.public-organization .organization-card {
     border-radius: 14px;
     box-shadow: none;
 }
-body .public-site.public-organization .organization-card h2 { font-family: var(--font-ui); font-weight: 700; letter-spacing: -.02em; }
+body .public-site.public-organization .organization-card h2 { font-family: var(--font-ui); font-weight: var(--weight-bold); letter-spacing: -.02em; }
 body .public-site.public-organization .organization-card p { color: var(--public-muted); }
 
 body .public-site.article-page .public-site-header { max-width: 1180px; }
@@ -638,21 +588,27 @@ body .public-site.article-page article {
     border: 1px solid var(--public-line);
     border-radius: 18px;
 }
-body .public-site.article-page .back { color: var(--public-primary); }
+body .public-site.article-page .back { color: var(--public-link); }
 body .public-site.article-page article > small { color: var(--public-muted); }
 body .public-site.article-page h1 {
     color: var(--public-ink);
     font-family: var(--font-ui);
     font-size: clamp(2rem, 4vw, 3.4rem);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.16;
 }
-body .public-site.article-page .article-body { max-width: 76ch; color: var(--public-ink); font-size: 1rem; line-height: 1.8; }
+body .public-site.article-page .article-body { max-width: 76ch; color: var(--public-ink); font-size: var(--type-md); line-height: 1.8; }
 body .public-site.article-page .article-gallery img { border-radius: 12px; }
 body .public-site.article-page .article-gallery figcaption { color: var(--public-muted); }
 @media (max-width: 600px) {
     body .public-site.public-organization .page-intro { padding: 1.7rem 0 1.4rem; }
     body .public-site.public-organization .page-intro h1 { font-size: clamp(1.85rem, 8vw, 2.6rem); }
     body .public-site.article-page article { margin-top: 1.5rem; }
+}
+
+body .public-site.public-admissions :is(.period-card h3, .flow-grid h3) {
+    font-family: var(--font-ui);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-snug);
 }

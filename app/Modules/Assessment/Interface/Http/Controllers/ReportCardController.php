@@ -91,6 +91,7 @@ class ReportCardController extends Controller
 
         return Inertia::render('Assessment/Reports/Show', [
             'report' => $reportData,
+            'can_publish' => ! $request->user()->hasRole('student') && Gate::allows('publishReports', $report),
         ]);
     }
 
@@ -139,6 +140,36 @@ class ReportCardController extends Controller
         $this->publishingService->publishReport($report, $request->user());
 
         return back()->with('message', 'Rapor berhasil diterbitkan dan dikunci permanen.');
+    }
+
+    public function publishBatch(Request $request): RedirectResponse
+    {
+        Gate::authorize('publishReports', ReportSnapshot::class);
+
+        $validated = $request->validate([
+            'class_group_id' => ['required', 'exists:class_groups,id'],
+            'term_id' => ['required', 'exists:terms,id'],
+        ]);
+
+        $schoolId = (int) $request->user()->school_id;
+        $classGroupId = (int) $validated['class_group_id'];
+        $termId = (int) $validated['term_id'];
+
+        abort_unless($this->access->canPublishClass($request->user(), $termId, $classGroupId), 403);
+
+        $drafts = ReportSnapshot::where('school_id', $schoolId)
+            ->where('term_id', $termId)
+            ->where('class_group_id', $classGroupId)
+            ->where('status', '!=', 'published')
+            ->get();
+
+        $count = 0;
+        foreach ($drafts as $report) {
+            $this->publishingService->publishReport($report, $request->user());
+            $count++;
+        }
+
+        return back()->with('message', "Berhasil menerbitkan {$count} rapor kelas.");
     }
 
     public function ledger(Request $request): JsonResponse|InertiaResponse|RedirectResponse

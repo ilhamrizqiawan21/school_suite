@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -185,23 +186,21 @@ const submitImport = () => {
                 <div>
                     <p class="teacher-page-kicker">Akademik · Sumber daya sekolah</p>
                     <h1 class="teacher-page-title">Data guru</h1>
-                    <p class="teacher-page-summary">
-                        Kelola profil pendidik, status kepegawaian, akun login, dan penugasan wali kelas.
-                    </p>
+
                 </div>
                 <div class="teacher-header-actions">
-                    <button v-if="can_manage" type="button" class="teacher-action-button teacher-action-add" @click="openAdd">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" /></svg>
+                    <AppButton variant="primary" icon="plus" v-if="can_manage" type="button" class="teacher-action-button teacher-action-add" @click="openAdd">
+
                         Tambah guru
-                    </button>
-                    <button v-if="can_manage" type="button" @click="showImportModal = true" class="teacher-action-button teacher-action-import">
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </AppButton>
+                    <AppButton variant="secondary" v-if="can_manage" type="button" @click="showImportModal = true" class="teacher-action-button teacher-action-import"><template #icon><svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
+                        </svg></template>
+
                         Impor data
-                    </button>
-                    <a :href="exportUrl()" class="teacher-action-button teacher-action-excel" aria-label="Ekspor Excel" title="Ekspor Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 3h10l4 4v14H5zM15 3v5h4M8 13h8m-8 4h8" /></svg><span>Ekspor Excel</span></a>
-                    <a v-if="can_manage" href="/akademik/guru/template?format=xlsx" class="teacher-action-button">Unduh template</a>
+                    </AppButton>
+                    <AppButton variant="secondary" icon="excel" as="a" :href="exportUrl()" class="teacher-action-button teacher-action-excel" aria-label="Ekspor Excel" title="Ekspor Excel"><span>Ekspor Excel</span></AppButton>
+                    <AppButton variant="secondary" as="a" v-if="can_manage" href="/akademik/guru/template?format=xlsx" class="teacher-action-button">Unduh template</AppButton>
                 </div>
             </div>
 
@@ -211,9 +210,9 @@ const submitImport = () => {
                     <div>
                         <strong>Sandi sementara untuk {{ temporaryCredential.subject }}</strong>
                         <p class="mt-1 text-sm">Tampilan ini hanya muncul sekali selama 5 menit. Sampaikan melalui kanal aman, lalu tutup panel ini.</p>
-                        <code class="mt-3 inline-block rounded bg-white px-3 py-2 text-base font-semibold tracking-wide">{{ temporaryCredential.password }}</code>
+                        <code class="mt-3 inline-block rounded bg-[var(--surface)] px-3 py-2 text-base font-semibold tracking-wide">{{ temporaryCredential.password }}</code>
                     </div>
-                    <button type="button" class="text-sm font-semibold underline" @click="hideTemporaryCredential = true">Tutup</button>
+                    <AppButton variant="ghost" icon-only icon="close" type="button" class="underline" @click="hideTemporaryCredential = true">Tutup</AppButton>
                 </div>
             </div>
             <div v-if="page.props.errors?.teacher" class="panel p-4 text-red-700" role="alert">{{ page.props.errors.teacher }}</div>
@@ -258,8 +257,8 @@ const submitImport = () => {
                         <option value="reached">Sudah mencapai 60 tahun</option>
                         <option value="missing">Tanggal lahir belum diisi</option>
                     </select>
-                    <button type="button" class="secondary-button" @click="resetFilters">Reset filter</button>
-                    <button type="button" class="secondary-button teacher-filter-submit" @click="applyFilters">Terapkan</button>
+                    <AppButton variant="secondary" type="button" class="secondary-button" @click="resetFilters">Reset filter</AppButton>
+                    <AppButton variant="secondary" type="button" class="secondary-button teacher-filter-submit" @click="applyFilters">Terapkan</AppButton>
                 </div>
             </div>
 
@@ -283,58 +282,58 @@ const submitImport = () => {
                             <tr v-for="t in teachers.data" :key="t.id" class="teacher-data-row">
                                 <td class="px-5 py-3.5 font-medium text-slate-900">
                                     <div>{{ t.name }}</div>
-                                    <div class="text-xs text-slate-400 font-normal">{{ t.nip || '-' }}</div>
+                                    <div class="text-meta text-slate-600 font-normal">{{ t.nip || '-' }}</div>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span :class="t.gender === 'L' ? 'text-blue-700 bg-blue-50 px-2 py-0.5 rounded-sm font-semibold' : 'text-pink-700 bg-pink-50 px-2 py-0.5 rounded-sm font-semibold'">
                                         {{ t.gender }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3.5 text-xs">
+                                <td class="px-5 py-3.5 text-meta">
                                     <div class="font-medium text-slate-700">{{ dateLabel(t.retirement_date) }}</div>
                                     <span :class="`inline-flex mt-1 items-center px-2 py-0.5 rounded-full font-medium ${retirementClasses[t.retirement_status ?? 'missing']}`">
                                         {{ retirementLabels[t.retirement_status ?? 'missing'] }}
                                     </span>
                                 </td>
-                                <td class="px-5 py-3.5 text-xs text-slate-500">
+                                <td class="px-5 py-3.5 text-meta text-slate-600">
                                     <div>{{ t.email || '-' }}</div>
-                                    <div class="text-slate-400">{{ t.phone || '' }}</div>
+                                    <div class="text-slate-600">{{ t.phone || '' }}</div>
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-meta font-medium bg-slate-100 text-slate-700">
                                         {{ t.employment_status || '-' }}
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <span v-if="t.homeroom_class_groups && t.homeroom_class_groups.length > 0" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    <span v-if="t.homeroom_class_groups && t.homeroom_class_groups.length > 0" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-meta font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
                                         Kelas {{ t.homeroom_class_groups.map(group => group.name).join(', ') }}
                                     </span>
-                                    <span v-else class="text-xs text-slate-400">
+                                    <span v-else class="text-meta text-slate-600">
                                         -
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <span :class="t.is_active ? 'text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-medium' : 'text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full text-xs'">
+                                    <span :class="t.is_active ? 'text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-meta font-medium' : 'text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full text-meta'">
                                         {{ t.is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
                                 <td v-if="can_manage" class="teacher-actions-cell px-5 py-3.5">
                                     <span class="teacher-account-status" :class="`is-${t.account_status ?? 'unavailable'}`">{{ accountLabels[t.account_status ?? 'unavailable'] }}</span>
                                     <div class="teacher-row-actions">
-                                        <button type="button" class="teacher-row-action teacher-row-action-edit" :aria-label="`Ubah ${t.name}`" title="Ubah data guru" @click="openEdit(t)">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></svg><span class="sr-only">Ubah</span>
-                                        </button>
-                                        <button type="button" class="teacher-row-action teacher-row-action-reset" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" title="Reset sandi" @click="resetPassword(t)">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10V7a4 4 0 118 0v3" /></svg><span class="sr-only">Reset sandi</span>
-                                        </button>
-                                        <button type="button" class="teacher-row-action teacher-row-action-delete" :aria-label="`Hapus ${t.name}`" title="Hapus data guru" @click="deleteTeacher(t)">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg><span class="sr-only">Hapus</span>
-                                        </button>
+                                        <AppButton variant="secondary" size="sm" icon-only icon="edit" type="button" class="teacher-row-action teacher-row-action-edit" :aria-label="`Ubah ${t.name}`" title="Ubah data guru" @click="openEdit(t)">
+                                            <span class="sr-only">Ubah</span>
+                                        </AppButton>
+                                        <AppButton variant="secondary" size="sm" icon-only type="button" class="teacher-row-action teacher-row-action-reset" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" title="Reset sandi" @click="resetPassword(t)"><template #icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10V7a4 4 0 118 0v3" /></svg></template>
+                                            <span class="sr-only">Reset sandi</span>
+                                        </AppButton>
+                                        <AppButton variant="danger" size="sm" icon-only icon="delete" type="button" class="teacher-row-action teacher-row-action-delete" :aria-label="`Hapus ${t.name}`" title="Hapus data guru" @click="deleteTeacher(t)">
+                                            <span class="sr-only">Hapus</span>
+                                        </AppButton>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="teachers.data.length === 0">
-                                <td :colspan="can_manage ? 8 : 7" class="px-5 py-12 text-center text-slate-400">
+                                <td :colspan="can_manage ? 8 : 7" class="px-5 py-12 text-center text-slate-600">
                                     Tidak ada data guru yang cocok dengan filter.
                                 </td>
                             </tr>
@@ -355,15 +354,15 @@ const submitImport = () => {
                         </div>
                         <p v-if="can_manage" class="teacher-mobile-password">Status akun: <span class="teacher-account-status" :class="`is-${t.account_status ?? 'unavailable'}`">{{ accountLabels[t.account_status ?? 'unavailable'] }}</span></p>
                         <div v-if="can_manage" class="teacher-mobile-actions">
-                            <button type="button" :aria-label="`Ubah data ${t.name}`" :title="`Ubah data ${t.name}`" @click="openEdit(t)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
-                            <button type="button" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" :title="`Reset sandi ${t.name}`" @click="resetPassword(t)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-width="2" stroke-linecap="round" d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></button>
-                            <button type="button" class="teacher-mobile-delete" :aria-label="`Hapus data ${t.name}`" :title="`Hapus data ${t.name}`" @click="deleteTeacher(t)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg></button>
+                            <AppButton variant="secondary" icon-only icon="edit" type="button" :aria-label="`Ubah data ${t.name}`" :title="`Ubah data ${t.name}`" @click="openEdit(t)"></AppButton>
+                            <AppButton variant="secondary" icon-only type="button" :disabled="!['default', 'changed'].includes(t.account_status ?? '')" :aria-label="`Reset sandi ${t.name}`" :title="`Reset sandi ${t.name}`" @click="resetPassword(t)"><template #icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" stroke-width="2" /><path stroke-width="2" stroke-linecap="round" d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></template></AppButton>
+                            <AppButton variant="danger" icon-only icon="delete" type="button" class="teacher-mobile-delete" :aria-label="`Hapus data ${t.name}`" :title="`Hapus data ${t.name}`" @click="deleteTeacher(t)"></AppButton>
                         </div>
                     </article>
                     <p v-if="teachers.data.length === 0" class="teacher-mobile-empty">Tidak ada data guru yang cocok dengan filter.</p>
                 </div>
 
-                <div class="px-5 py-3.5 border-t border-slate-100 flex flex-wrap gap-3 items-center justify-between text-xs text-slate-500">
+                <div class="px-5 py-3.5 border-t border-slate-100 flex flex-wrap gap-3 items-center justify-between text-meta text-slate-600">
                     <div>Total {{ teachers.total }} guru</div>
                     <div class="flex flex-wrap gap-1">
                         <template v-for="(link, i) in teachers.links" :key="i">
@@ -390,19 +389,19 @@ const submitImport = () => {
             <div class="teacher-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="teacher-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Data Guru' : 'Tambah Guru Baru' }}</h3>
-                    <button type="button" @click="showAddModal = false" class="teacher-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir guru">✕</button>
+                    <AppButton variant="ghost" type="button" @click="showAddModal = false" class="teacher-close" aria-label="Tutup formulir guru">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="teacher-form-nip" class="block text-xs font-semibold text-slate-700 mb-1">NIP</label>
+                            <label for="teacher-form-nip" class="block text-meta font-semibold text-slate-700 mb-1">NIP</label>
                             <input id="teacher-form-nip" v-model="form.nip" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
-                            <div v-if="form.errors.nip" class="text-xs text-red-600 mt-1">{{ form.errors.nip }}</div>
+                            <div v-if="form.errors.nip" class="text-meta text-red-600 mt-1">{{ form.errors.nip }}</div>
                         </div>
                         <div>
-                            <label for="teacher-form-gender" class="block text-xs font-semibold text-slate-700 mb-1">Jenis kelamin *</label>
-                            <select id="teacher-form-gender" v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="teacher-form-gender" class="block text-meta font-semibold text-slate-700 mb-1">Jenis kelamin *</label>
+                            <select id="teacher-form-gender" v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="L">Laki-laki (L)</option>
                                 <option value="P">Perempuan (P)</option>
                             </select>
@@ -410,32 +409,32 @@ const submitImport = () => {
                     </div>
 
                     <div>
-                        <label for="teacher-form-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama lengkap & gelar *</label>
+                        <label for="teacher-form-name" class="block text-meta font-semibold text-slate-700 mb-1">Nama lengkap & gelar *</label>
                         <input id="teacher-form-name" v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
-                        <div v-if="form.errors.name" class="text-xs text-red-600 mt-1">{{ form.errors.name }}</div>
+                        <div v-if="form.errors.name" class="text-meta text-red-600 mt-1">{{ form.errors.name }}</div>
                     </div>
 
                     <div>
-                        <label for="teacher-form-birth-date" class="block text-xs font-semibold text-slate-700 mb-1">Tanggal lahir</label>
+                        <label for="teacher-form-birth-date" class="block text-meta font-semibold text-slate-700 mb-1">Tanggal lahir</label>
                         <input id="teacher-form-birth-date" v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" />
-                        <p class="mt-1 text-xs text-slate-500">Tanggal pensiun dihitung pada ulang tahun ke-60.</p>
-                        <div v-if="form.errors.birth_date" class="text-xs text-red-600 mt-1">{{ form.errors.birth_date }}</div>
+                        <p class="mt-1 text-meta text-slate-600">Tanggal pensiun dihitung pada ulang tahun ke-60.</p>
+                        <div v-if="form.errors.birth_date" class="text-meta text-red-600 mt-1">{{ form.errors.birth_date }}</div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="teacher-form-email" class="block text-xs font-semibold text-slate-700 mb-1">Email</label>
+                            <label for="teacher-form-email" class="block text-meta font-semibold text-slate-700 mb-1">Email</label>
                             <input id="teacher-form-email" v-model="form.email" type="email" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label for="teacher-form-phone" class="block text-xs font-semibold text-slate-700 mb-1">No. HP / WhatsApp</label>
+                            <label for="teacher-form-phone" class="block text-meta font-semibold text-slate-700 mb-1">No. HP / WhatsApp</label>
                             <input id="teacher-form-phone" v-model="form.phone" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
                     <div>
-                        <label for="teacher-form-employment" class="block text-xs font-semibold text-slate-700 mb-1">Status kepegawaian</label>
-                        <select id="teacher-form-employment" v-model="form.employment_status" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="teacher-form-employment" class="block text-meta font-semibold text-slate-700 mb-1">Status kepegawaian</label>
+                        <select id="teacher-form-employment" v-model="form.employment_status" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Belum diisi</option>
                             <option v-for="status in employmentOptions" :key="status" :value="status">{{ status }}</option>
                         </select>
@@ -443,8 +442,8 @@ const submitImport = () => {
 
                     <label class="flex items-center gap-2 text-sm"><input v-model="form.is_active" type="checkbox" /> Data guru aktif</label>
                     <div v-if="can_link_accounts" class="space-y-1">
-                        <label for="teacher-form-account" class="block text-xs font-semibold text-slate-700">Akun login (opsional)</label>
-                        <select id="teacher-form-account" v-model="form.user_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="teacher-form-account" class="block text-meta font-semibold text-slate-700">Akun login (opsional)</label>
+                        <select id="teacher-form-account" v-model="form.user_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option :value="null">Tidak ditautkan</option>
                             <option
                                 v-for="account in account_candidates"
@@ -455,18 +454,18 @@ const submitImport = () => {
                                 {{ account.name }} · {{ account.role_label || account.role }}{{ account.linked_teacher_id && account.linked_teacher_id !== editingId ? ' · sudah ditautkan' : '' }}
                             </option>
                         </select>
-                        <p class="text-xs text-slate-500">Staf TU/operator yang ditautkan tetap mempertahankan akses TU dan memperoleh akses guru.</p>
-                        <div v-if="form.errors.user_id" class="text-xs text-red-600 mt-1">{{ form.errors.user_id }}</div>
+                        <p class="text-meta text-slate-600">Staf TU/operator yang ditautkan tetap mempertahankan akses TU dan memperoleh akses guru.</p>
+                        <div v-if="form.errors.user_id" class="text-meta text-red-600 mt-1">{{ form.errors.user_id }}</div>
                     </div>
-                    <p v-else class="text-xs text-slate-500">Status ini berlaku untuk data guru. Penautan akun login hanya dapat dilakukan admin.</p>
+                    <p v-else class="text-meta text-slate-600">Status ini berlaku untuk data guru. Penautan akun login hanya dapat dilakukan admin.</p>
                     <ul v-if="Object.keys(form.errors).length" class="text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                     <div class="flex justify-end gap-2 pt-3 border-t">
-                        <button type="button" @click="showAddModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
+                        <AppButton variant="secondary" type="button" @click="showAddModal = false" >
                             Batal
-                        </button>
-                        <button type="submit" :disabled="form.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        </AppButton>
+                        <AppButton variant="primary" :loading="form.processing" type="submit" :disabled="form.processing" >
                             Simpan Data
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -477,12 +476,12 @@ const submitImport = () => {
             <div class="teacher-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="teacher-import-title" class="text-lg font-bold text-slate-900">Impor Massal Pendidik</h3>
-                    <button type="button" @click="showImportModal = false" class="teacher-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir impor guru">✕</button>
+                    <AppButton variant="ghost" type="button" @click="showImportModal = false" class="teacher-close" aria-label="Tutup formulir impor guru">✕</AppButton>
                 </div>
 
-                <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-800 space-y-1">
+                <div class="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-meta text-indigo-800 space-y-1">
                     <div class="font-semibold">Format Kolom Header:</div>
-                    <code class="block font-mono text-[11px] text-indigo-900">nip,name,gender,birth_date,phone,email,employment_status</code>
+                    <code class="block font-mono text-meta text-indigo-900">nip,name,gender,birth_date,phone,email,employment_status</code>
                     <p>Maksimal 5 MB dan 1.000 guru per berkas. Data diperiksa sebelum disimpan. Impor tidak membuat akun login.</p>
                     <a href="/akademik/guru/template?format=xlsx" class="inline-block mt-2 font-medium text-indigo-600 underline">Template Excel</a>
                     <a href="/akademik/guru/template" class="inline-block mt-2 font-medium text-indigo-600 underline">Unduh Berkas Template CSV</a>
@@ -490,18 +489,18 @@ const submitImport = () => {
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label for="teacher-import-file" class="block text-xs font-semibold text-slate-700 mb-1">Pilih berkas Excel / CSV *</label>
+                        <label for="teacher-import-file" class="block text-meta font-semibold text-slate-700 mb-1">Pilih berkas Excel / CSV *</label>
                         <input id="teacher-import-file" type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
-                        <div v-if="importForm.errors.csv_file" class="text-xs text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
+                        <div v-if="importForm.errors.csv_file" class="text-meta text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
                     <div class="flex justify-end gap-2 pt-3 border-t">
-                        <button type="button" @click="showImportModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
+                        <AppButton variant="secondary" type="button" @click="showImportModal = false" >
                             Batal
-                        </button>
-                        <button type="submit" :disabled="importForm.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        </AppButton>
+                        <AppButton variant="primary" :loading="importForm.processing" type="submit" :disabled="importForm.processing" >
                             Lanjut ke preview
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -516,45 +515,36 @@ const submitImport = () => {
 .teacher-drawer .text-slate-900, .teacher-drawer .text-slate-700 { color: var(--ink); }
 .teacher-drawer .text-slate-600, .teacher-drawer .text-slate-500, .teacher-drawer .text-slate-400 { color: var(--ink-soft); }
 .teacher-drawer button:focus-visible, .teacher-drawer input:focus-visible, .teacher-drawer select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-.teacher-close { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 9px; }
+.teacher-close { flex: 0 0 auto; }
 .teacher-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
-.teacher-list-heading h2 { margin: 0; color: var(--ink); font-size: 1rem; font-weight: 700; }
-.teacher-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: .75rem; }
-.teacher-action-excel { color: var(--green); background: var(--green-soft); }
-.teacher-action-excel svg { width: 17px; height: 17px; }
+.teacher-list-heading h2 { margin: 0; color: var(--ink); font-size: var(--type-md); font-weight: var(--weight-bold); }
+.teacher-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: var(--type-meta); }
 .teacher-page { min-width: 0; }
 .teacher-page :deep(.page-heading) { margin-bottom: 0; }
-.teacher-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.teacher-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
-.teacher-page-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.55; }
+.teacher-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; text-transform: uppercase; }
+.teacher-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: var(--weight-bold); letter-spacing: -.035em; line-height: 1.12; }
+.teacher-page-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: var(--type-md); line-height: 1.55; }
 .teacher-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
-.teacher-action-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .45rem; padding: .65rem .9rem; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: .65rem; font-size: .8rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, border-color .16s ease, color .16s ease; }
-.teacher-action-button:hover { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }
-.teacher-action-add { color: #fff; background: var(--primary); border-color: var(--primary); box-shadow: 0 5px 12px rgb(50 105 188 / 16%); }
-.teacher-action-add:hover { color: #fff; background: var(--primary-strong); }
-.teacher-action-import { color: var(--primary); border-color: var(--primary); }
 .teacher-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
 .teacher-stat { display: grid; gap: .3rem; min-width: 0; padding: 1rem 1.2rem; border-top: 3px solid transparent; }
-.teacher-stat span { color: var(--ink-soft); font-size: .82rem; font-weight: 600; }
-.teacher-stat strong { color: var(--ink); font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
-.teacher-stat small { color: var(--ink-faint); font-size: .72rem; line-height: 1.4; }
+.teacher-stat span { color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.teacher-stat strong { color: var(--ink); font-size: var(--type-2xl); font-weight: var(--weight-bold); line-height: 1.1; }
+.teacher-stat small { color: var(--ink-faint); font-size: var(--type-meta); line-height: 1.4; }
 .teacher-stat-total { border-top-color: #3269bc; background: color-mix(in srgb, #3269bc 7%, var(--surface)); }
 .teacher-stat-active { border-top-color: #3d9b78; background: color-mix(in srgb, #3d9b78 7%, var(--surface)); }
 .teacher-stat-inactive { border-top-color: #ad7c2b; background: color-mix(in srgb, #ad7c2b 7%, var(--surface)); }
 .teacher-retirement-summary { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }
 .teacher-retirement-summary > div { display: grid; gap: .2rem; padding: .78rem 1rem; background: var(--surface); }
-.teacher-retirement-summary span { color: var(--ink-soft); font-size: .76rem; }
+.teacher-retirement-summary span { color: var(--ink-soft); font-size: var(--type-meta); }
 .teacher-retirement-summary strong { color: var(--ink); font-size: 1.15rem; line-height: 1.1; }
-.teacher-retirement-summary strong.is-warning { color: #9a6508; }
+.teacher-retirement-summary strong.is-warning { color: var(--gold); }
 .teacher-filterbar { gap: .75rem; }
 .teacher-filterbar :deep(.table-search) { flex: 1 1 280px; min-width: 230px; }
 .teacher-filter-controls { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: .5rem; }
-.teacher-filter-select { min-height: 44px; flex: 1 1 160px; min-width: 150px; padding: .65rem .75rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); color: var(--ink); font-size: .8rem; }
-.teacher-filter-submit { color: #fff; background: var(--primary); border-color: var(--primary); }
-.teacher-filter-submit:hover { color: #fff; background: var(--primary-strong); }
+.teacher-filter-select { min-height: 44px; flex: 1 1 160px; min-width: 150px; padding: .65rem .75rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); color: var(--ink); font-size: var(--type-control); }
 .teacher-table { min-width: 1160px; }
 .teacher-table thead { background: var(--surface-subtle); color: var(--ink-faint); }
-.teacher-table thead th { border-bottom: 1px solid var(--line); font-size: .72rem; font-weight: 800; letter-spacing: .04em; line-height: 1.3; white-space: nowrap; }
+.teacher-table thead th { border-bottom: 1px solid var(--line); font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .04em; line-height: 1.3; white-space: nowrap; }
 .teacher-table tbody tr { background: var(--surface); border-bottom: 1px solid var(--line); transition: background-color .18s ease, box-shadow .18s ease; }
 .teacher-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface)); box-shadow: inset 3px 0 0 var(--primary); }
 .teacher-table td { vertical-align: middle; }
@@ -562,19 +552,11 @@ const submitImport = () => {
 .teacher-actions-heading { z-index: 3; background: var(--surface-subtle); box-shadow: -8px 0 14px rgb(17 38 64 / 12%); }
 .teacher-actions-cell { z-index: 2; background: var(--surface); box-shadow: -8px 0 14px rgb(24 48 78 / 8%); }
 .teacher-table tbody tr:hover .teacher-actions-cell { background: var(--surface-subtle) !important; }
-.teacher-account-status { display: inline-block; padding: .25rem .55rem; border-radius: 999px; color: var(--ink-soft); background: var(--surface-strong); font-size: .72rem; line-height: 1.25; white-space: nowrap; }
+.teacher-account-status { display: inline-block; padding: .25rem .55rem; border-radius: 999px; color: var(--ink-soft); background: var(--surface-strong); font-size: var(--type-meta); line-height: 1.25; white-space: nowrap; }
 .teacher-account-status.is-changed { color: var(--green); background: var(--green-soft); }
 .teacher-account-status.is-default { color: #9a6508; background: #fff7dc; }
 .teacher-account-status.is-no_account, .teacher-account-status.is-unavailable { color: var(--ink-soft); background: var(--surface-strong); }
-.teacher-row-actions { display: flex; align-items: center; gap: .4rem; margin-top: .55rem; white-space: nowrap; }
-.teacher-row-action { display: inline-grid; width: 36px; height: 36px; place-items: center; border: 1px solid transparent; border-radius: .55rem; transition: background .16s ease, box-shadow .16s ease, transform .16s ease; }
-.teacher-row-action svg { width: 15px; height: 15px; stroke-width: 2; }
-.teacher-row-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 10px rgb(24 48 78 / 12%); }
-.teacher-row-action:disabled { cursor: not-allowed; opacity: .42; }
-.teacher-row-action:focus-visible, .teacher-action-button:focus-visible { outline: 3px solid rgb(50 105 188 / 28%); outline-offset: 2px; }
-.teacher-row-action-edit { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }.teacher-row-action-edit svg { color: var(--edit); }
-.teacher-row-action-reset { color: #9a6508; background: #fff7dc; border-color: #ecd594; }
-.teacher-row-action-delete { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
+.teacher-row-actions { margin-top: .55rem; }
 .teacher-mobile-list { display: none; }
 @media (max-width: 1100px) { .teacher-table { min-width: 1040px; } .teacher-filter-controls { flex-basis: 100%; } }
 @media (max-width: 720px) {
@@ -586,9 +568,10 @@ const submitImport = () => {
     .teacher-filterbar { align-items: stretch; }
     .teacher-filterbar :deep(.table-search) { min-width: 0; }
     .teacher-filter-controls { display: grid; grid-template-columns: 1fr 1fr; }
-    .teacher-filter-select, .teacher-filter-controls .secondary-button { width: 100%; min-width: 0; }
-    .teacher-filter-controls .teacher-filter-select:last-of-type, .teacher-filter-submit { grid-column: 1 / -1; }
-    .teacher-filter-controls .secondary-button { justify-content: center; }
+    .teacher-filter-select { width: 100%; min-width: 0; }
+    .teacher-filter-controls .secondary-button { width: 100%; }
+    .teacher-filter-controls .teacher-filter-select:last-of-type { grid-column: 1 / -1; }
+    .teacher-filter-submit { grid-column: 1 / -1; }
     .teacher-filter-controls .secondary-button:first-of-type { grid-column: 1; }
     .teacher-filter-controls .teacher-filter-submit { grid-column: 2; }
     .teacher-table-card :deep(.table-scroll) { display: none; }
@@ -597,29 +580,27 @@ const submitImport = () => {
     .teacher-mobile-list { display: grid; gap: 12px; }
     .teacher-mobile-card { padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
     .teacher-mobile-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .7rem; }
-    .teacher-mobile-top h2 { margin: 0; color: var(--ink); font-size: .92rem; font-weight: 800; line-height: 1.35; }
-    .teacher-mobile-top p { margin: .25rem 0 0; color: var(--ink-soft); font-size: .72rem; line-height: 1.45; }
-    .teacher-mobile-status { flex: 0 0 auto; padding: .25rem .5rem; color: var(--ink-soft); background: var(--surface-strong); border-radius: 999px; font-size: .68rem; font-weight: 700; }
+    .teacher-mobile-top h2 { margin: 0; color: var(--ink); font-size: var(--type-md); font-weight: var(--weight-bold); line-height: 1.35; }
+    .teacher-mobile-top p { margin: .25rem 0 0; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.45; }
+    .teacher-mobile-status { flex: 0 0 auto; padding: .25rem .5rem; color: var(--ink-soft); background: var(--surface-strong); border-radius: 999px; font-size: var(--type-meta); font-weight: var(--weight-semibold); }
     .teacher-mobile-status.is-active { color: var(--green); background: var(--green-soft); }
-    .teacher-mobile-details { display: flex; flex-wrap: wrap; gap: .3rem .75rem; margin-top: .75rem; color: var(--ink-soft); font-size: .72rem; line-height: 1.45; }
+    .teacher-mobile-details { display: flex; flex-wrap: wrap; gap: .3rem .75rem; margin-top: .75rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.45; }
     .teacher-mobile-details > span:last-child { flex-basis: 100%; }
-    .teacher-mobile-password { margin: .7rem 0 0; color: var(--ink-soft); font-size: .72rem; }
+    .teacher-mobile-password { margin: .7rem 0 0; color: var(--ink-soft); font-size: var(--type-meta); }
     .teacher-mobile-actions { display: flex; gap: .5rem; margin-top: .8rem; }
-    .teacher-mobile-actions button { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--line); border-radius: .55rem; }
-    .teacher-mobile-actions svg { width: 19px; height: 19px; }
-    .teacher-mobile-actions button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-    .teacher-mobile-actions button:disabled { cursor: not-allowed; opacity: .45; }
-    .teacher-mobile-actions .teacher-mobile-delete { margin-left: auto; color: var(--delete); background: var(--delete-soft); }
-    .teacher-mobile-empty { padding: 1.5rem 1rem; color: var(--ink-soft); font-size: .8rem; text-align: center; }
+    .teacher-mobile-actions .teacher-mobile-delete { margin-left: auto; }
+    .teacher-mobile-empty { padding: 1.5rem 1rem; color: var(--ink-soft); font-size: var(--type-meta); text-align: center; }
 }
 @media (max-width: 640px) {
     .teacher-page :deep(.page-heading) { align-items: stretch; flex-direction: column; gap: 1rem; }
     .teacher-summary-grid { grid-template-columns: 1fr 1fr; }
     .teacher-filter-controls { grid-template-columns: 1fr; }
-    .teacher-filter-controls .teacher-filter-select:last-of-type, .teacher-filter-controls .secondary-button:first-of-type, .teacher-filter-submit { grid-column: 1; }
+    .teacher-filter-controls .teacher-filter-select:last-of-type { grid-column: 1; }
+    .teacher-filter-controls .secondary-button:first-of-type, .teacher-filter-submit { grid-column: 1; }
 }
 @media (max-width: 600px) { .teacher-overlay { align-items: flex-end; }.teacher-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); }.teacher-drawer .grid-cols-2 { grid-template-columns: 1fr; } }
 /* Center employment, homeroom, account status, and action columns. */
 .teacher-table th:nth-child(n+5), .teacher-table td:nth-child(n+5) { text-align: center; }
-.teacher-table td:nth-child(n+5) > span, .teacher-table td:nth-child(n+5) > .teacher-row-actions { margin-inline: auto; }
+.teacher-table td:nth-child(n+5) > span { margin-inline: auto; }
+.teacher-table td:nth-child(n+5) > .teacher-row-actions { margin-inline: auto; }
 </style>

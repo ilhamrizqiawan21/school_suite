@@ -51,18 +51,18 @@ defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
 .life-grid { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 1rem; }
 .life-card { display: grid; align-content: start; gap: .7rem; min-height: 230px; padding: 1.35rem; background: #fffdf8; border: 1px solid #ded7c9; border-radius: .8rem; }
 .life-card-feature { color: #f5efe2; background: #123247; border-color: #123247; }.life-card-feature p { color: #c1d0d2; }.life-card-feature .card-number, .life-card-feature .card-link { color: #d4a74b; }
-.card-number { color: #9a7329; font-size: .75rem; font-weight: 800; letter-spacing: .08em; }.life-card h2 { margin: 0; font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; }.life-card p { margin: 0; color: #526673; font-size: .9rem; line-height: 1.65; }.card-link { align-self: end; margin-top: auto; color: #9a7329; font-size: .85rem; font-weight: 800; text-decoration: none; }
+.card-number { color: #9a7329; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; }.life-card h2 { margin: 0; font-family: var(--font-ui); font-size: 1.6rem; font-weight: var(--weight-regular); }.life-card p { margin: 0; color: #526673; font-size: var(--type-md); line-height: 1.65; }.card-link { align-self: end; margin-top: auto; color: #9a7329; font-size: var(--type-sm); font-weight: var(--weight-bold); text-decoration: none; }
 @media (max-width: 800px) { .life-grid { grid-template-columns: 1fr 1fr; }.life-card-feature { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .life-grid { grid-template-columns: 1fr; }.life-card-feature { grid-column: auto; } }
 .life-gallery { margin-top: clamp(2.5rem, 6vw, 5rem); }
 .life-gallery-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }
-.life-gallery-heading span { color: var(--public-primary); font-size: .8rem; font-weight: 700; }
+.life-gallery-heading span { color: var(--public-primary); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .life-gallery-heading h2 { margin: .5rem 0 0; color: var(--public-ink); font-size: clamp(1.5rem, 2.6vw, 2.4rem); letter-spacing: -.035em; }
-.life-gallery-heading a { color: var(--public-primary); font-size: .85rem; font-weight: 700; }
+.life-gallery-heading a { color: var(--public-primary); font-size: var(--type-sm); font-weight: var(--weight-bold); }
 .life-gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
 .life-gallery-grid figure { min-width: 0; margin: 0; }
 .life-gallery-grid img { width: 100%; aspect-ratio: 1.5; object-fit: cover; border-radius: 12px; }
-.life-gallery-grid figcaption { margin-top: .6rem; color: var(--public-ink); font-size: .85rem; font-weight: 600; }
+.life-gallery-grid figcaption { margin-top: .6rem; color: var(--public-ink); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
 @media (max-width: 800px) { .life-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .life-gallery-heading { align-items: start; flex-direction: column; }.life-gallery-grid { grid-template-columns: 1fr; } }
 </style>

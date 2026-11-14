@@ -18,8 +18,8 @@
 .settings-hero .eyebrow {
     margin: 0 0 .55rem;
     color: var(--primary) !important;
-    font-size: .72rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -27,8 +27,8 @@
 .settings-hero h1 {
     margin: 0;
     color: var(--ink) !important;
-    font-size: clamp(1.55rem, 2.6vw, 2.15rem);
-    font-weight: 800;
+    font-size: var(--type-3xl);
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.08;
 }
@@ -37,7 +37,7 @@
     max-width: 650px;
     margin: .55rem 0 0;
     color: var(--ink-soft) !important;
-    font-size: .82rem;
+    font-size: var(--type-sm);
     line-height: 1.55;
 }
 
@@ -78,9 +78,7 @@
     background: var(--surface-subtle) !important;
 }
 
-.settings-grid .term-list button,
-.settings-grid .term-list strong,
-.settings-grid .text-button {
+.settings-grid .term-list button, .settings-grid .term-list strong {
     color: var(--primary) !important;
 }
 

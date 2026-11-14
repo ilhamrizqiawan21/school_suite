@@ -6,11 +6,13 @@
 @import './teacher.css';
 @import './modern-ui.css';
 @import './public-portfolio.css';
+@import './buttons.css';
+@import './theme.css';
 
-.app-toast { position: fixed; z-index: 100; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: flex-start; gap: 12px; width: min(440px, calc(100vw - 32px)); padding: 14px 16px; color: #fff; background: #26344d; border: 1px solid #26344d; border-radius: 12px; box-shadow: var(--shadow-md); font-size: .875rem; overflow-wrap: anywhere; }
-.app-toast--error { color: #a43743; background: #fff0f1; border-color: #f3d6da; }
-.app-toast-mark { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; color: #bde2d1; font-weight: 800; }
-.app-toast--error .app-toast-mark { color: #a43743; }
+.app-toast { position: fixed; z-index: 100; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: flex-start; gap: 12px; width: min(440px, calc(100vw - 32px)); padding: 14px 16px; color: #fff; background: #26344d; border: 1px solid #26344d; border-radius: 12px; box-shadow: var(--shadow-md); font-size: var(--type-md); overflow-wrap: anywhere; }
+.app-toast--error { color: var(--red); background: var(--red-soft); border-color: var(--delete-line); }
+.app-toast-mark { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; color: #bde2d1; font-weight: var(--weight-bold); }
+.app-toast--error .app-toast-mark { color: var(--red); }
 .app-toast button { margin-left: auto; padding: 0 4px; color: inherit; background: none; border: 0; font-size: 22px; line-height: 1; }
 .app-toast button:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
 @media (max-width: 600px) { .app-toast { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); left: 16px; width: auto; } }
@@ -118,6 +120,8 @@ input.search-control::placeholder,
     --text-2xs--line-height: var(--leading-tight);
     --text-xs: var(--type-xs);
     --text-xs--line-height: var(--leading-tight);
+    --text-meta: var(--type-meta);
+    --text-meta--line-height: var(--leading-normal);
     --text-sm: var(--type-sm);
     --text-sm--line-height: var(--leading-normal);
     --text-base: var(--type-md);
@@ -198,26 +202,7 @@ html[data-theme='dark'] .bg-red-100 { background-color: var(--red-soft) !importa
 html[data-theme='dark'] .bg-pink-50,
 html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !important; }
 
-.row-action-button {
-    display: inline-flex;
-    min-width: 44px;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    gap: .4rem;
-    padding: .45rem .7rem;
-    border: 1px solid transparent;
-    border-radius: .6rem;
-    font: inherit;
-    font-size: .75rem;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
-}
-
-.row-action-button svg { width: 14px; height: 14px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.row-action-button svg { stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
 .row-action-button--edit { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }
 .row-action-button--edit svg { color: var(--edit); }
 .row-action-button--delete { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
@@ -225,52 +210,6 @@ html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !impor
 .row-action-button--edit:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-soft) 72%, var(--primary) 28%); }
 .row-action-button--delete:hover:not(:disabled) { color: color-mix(in srgb, var(--delete) 78%, var(--ink) 22%); background: color-mix(in srgb, var(--delete-soft) 70%, var(--delete) 30%); }
 .row-action-button--archive:hover:not(:disabled) { background: color-mix(in srgb, var(--gold-soft) 72%, var(--gold) 28%); }
-.row-action-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgb(24 48 78 / 12%); }
-.row-action-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 38%, transparent); outline-offset: 2px; }
-.row-action-button:disabled { cursor: not-allowed; opacity: .48; }
-.row-action-icon { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
-.action-button { min-height: 38px; }
-
-.file-action-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .45rem;
-    min-height: 38px;
-    padding: .5rem .75rem;
-    border: 1px solid;
-    border-radius: .6rem;
-    font: inherit;
-    font-size: var(--type-sm);
-    font-weight: var(--weight-bold);
-    line-height: var(--leading-tight);
-    text-decoration: none;
-    cursor: pointer;
-    transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
-}
-
-.file-action-button::before {
-    display: inline-grid;
-    width: 1.45rem;
-    height: 1.45rem;
-    place-items: center;
-    border-radius: .3rem;
-    color: #fff;
-    font-size: .58rem;
-    font-weight: var(--weight-heavy);
-    letter-spacing: -.02em;
-    line-height: 1;
-}
-
-.file-action-button--excel { color: var(--excel); background: var(--excel-soft); border-color: var(--excel-line); }
-.file-action-button--excel::before { background: var(--excel); content: 'X'; }
-.file-action-button--excel:hover { background: color-mix(in srgb, var(--excel-soft) 70%, var(--excel) 30%); }
-.file-action-button--pdf { color: var(--pdf); background: var(--pdf-soft); border-color: var(--pdf-line); }
-.file-action-button--pdf::before { background: var(--pdf); content: 'PDF'; font-size: .42rem; }
-.file-action-button--pdf:hover { background: color-mix(in srgb, var(--pdf-soft) 70%, var(--pdf) 30%); }
-.file-action-button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgb(24 48 78 / 10%); }
-.file-action-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 38%, transparent); outline-offset: 2px; }
-.file-action-button:disabled { cursor: not-allowed; opacity: .48; }
 
 html[data-theme='dark'] .text-slate-950,
 html[data-theme='dark'] .text-slate-900,
@@ -362,23 +301,11 @@ html[data-theme='dark'] .shadow-xl { --tw-shadow-color: rgba(0, 0, 0, .28); }
 
 /* Primary is a readable link/accent in dark mode; action buttons need a
  * darker fill so their white labels keep sufficient contrast. */
-html[data-theme='dark'] .primary-button,
-html[data-theme='dark'] .button.primary,
-html[data-theme='dark'] .action-primary,
-html[data-theme='dark'] .button-primary,
-html[data-theme='dark'] .save-button,
-html[data-theme='dark'] .download-button,
 html[data-theme='dark'] .page-link.active {
     background: var(--primary-action) !important;
     border-color: var(--primary-action) !important;
     color: #fff !important;
 }
-html[data-theme='dark'] .primary-button:hover,
-html[data-theme='dark'] .button.primary:hover,
-html[data-theme='dark'] .action-primary:hover,
-html[data-theme='dark'] .button-primary:hover,
-html[data-theme='dark'] .save-button:hover,
-html[data-theme='dark'] .download-button:hover,
 html[data-theme='dark'] .page-link.active:hover { background: var(--primary-action-strong) !important; }
 
 /* Scoped page styles need a small set of semantic fallbacks too. */
@@ -412,9 +339,6 @@ html[data-theme='dark'] .student-actions-cell { background: var(--surface) !impo
 html[data-theme='dark'] .student-table tbody tr:hover .student-actions-cell { background: var(--surface-subtle) !important; }
 
 /* Keep primary actions readable when component or utility styles overlap. */
-.primary-button {
-    color: #ffffff !important;
-}
 
 /* Shared shell for page headers that use the hero-card pattern. */
 .hero-card {
@@ -483,11 +407,6 @@ html[data-theme='dark'] .student-table tbody tr:hover .student-actions-cell { ba
     background: var(--primary-soft) !important;
 }
 
-.security-page .badge.danger {
-    color: var(--red) !important;
-    background: var(--red-soft) !important;
-}
-
 .security-page .badge.success {
     color: var(--green) !important;
     background: var(--green-soft) !important;
@@ -513,8 +432,8 @@ html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card textarea {
 .hero-card h1 {
     margin: .35rem 0 .4rem;
     color: var(--ink);
-    font-size: clamp(1.65rem, 2.8vw, 2.25rem);
-    font-weight: 800;
+    font-size: var(--type-3xl);
+    font-weight: var(--weight-bold);
     letter-spacing: -.045em;
     line-height: 1.1;
 }
@@ -523,7 +442,7 @@ html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card textarea {
     max-width: 68ch;
     margin: 0;
     color: var(--ink-soft);
-    font-size: .84rem;
+    font-size: var(--type-sm);
     line-height: 1.6;
 }
 
@@ -559,8 +478,8 @@ html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card textarea {
 .page-heading h1,
 .compact-heading h1 {
     color: var(--ink);
-    font-size: clamp(1.65rem, 2.6vw, 2.15rem);
-    font-weight: 800;
+    font-size: var(--type-3xl);
+    font-weight: var(--weight-bold);
 }
 
 .page-heading p:not(.eyebrow) {
@@ -709,7 +628,7 @@ body:has(.public-site) {
 .identity-watermark span {
     font-family: var(--font-display);
     font-size: clamp(12rem, 24vw, 22rem);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     line-height: 1;
 }
 

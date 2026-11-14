@@ -43,7 +43,7 @@ const userInitials = computed(() => {
                 href="/logout"
                 method="post"
                 as="button"
-                class="icon-button"
+                class="icon-button ui-button ui-button--secondary ui-button--md ui-button--icon-only"
                 title="Keluar / Logout"
                 aria-label="Keluar / Logout"
             >
@@ -53,7 +53,7 @@ const userInitials = computed(() => {
             </Link>
         </div>
         <div v-else>
-            <Link href="/login" class="primary-button">Masuk</Link>
+            <Link href="/login" class="primary-button ui-button ui-button--primary ui-button--md">Masuk</Link>
         </div>
     </div>
 </template>

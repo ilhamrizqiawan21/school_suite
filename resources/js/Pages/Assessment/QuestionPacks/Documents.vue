@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -28,7 +29,7 @@ function print() { frame.value?.contentWindow?.focus(); frame.value?.contentWind
     <Head :title="`Dokumen · ${pack.name}`" />
     <AppLayout title="Dokumen Paket Soal">
         <div class="documents-page">
-            <header><div><Link href="/penilaian/paket-soal">← Paket soal</Link><h1>{{ pack.name }}</h1><p>{{ exam.paper.ukuran }} · {{ exam.paper.orientasi }} · {{ exam.paper.columns }} kolom</p></div><div class="actions"><button :disabled="busy" @click="word">{{ busy ? 'Menyiapkan…' : 'Unduh Word' }}</button><button @click="print">Cetak / Simpan PDF</button></div></header>
+            <header><div><Link href="/penilaian/paket-soal">← Paket soal</Link><h1>{{ pack.name }}</h1><p>{{ exam.paper.ukuran }} · {{ exam.paper.orientasi }} · {{ exam.paper.columns }} kolom</p></div><div class="actions"><button :disabled="busy" @click="word">{{ busy ? 'Menyiapkan…' : 'Unduh Word' }}</button><AppButton variant="secondary" @click="print">Cetak / Simpan PDF</AppButton></div></header>
             <nav aria-label="Jenis dokumen"><button v-for="(label, key) in labels" :key="key" :aria-pressed="mode === key" @click="mode = key">{{ label }}</button></nav>
             <p>Untuk PDF, pilih “Simpan sebagai PDF” pada dialog cetak, ukuran {{ exam.paper.ukuran }}, orientasi {{ exam.paper.orientasi }}. Gunakan skala 100% dan nonaktifkan header/footer browser.</p>
             <p v-if="error" role="alert">{{ error }}</p>
@@ -37,5 +38,5 @@ function print() { frame.value?.contentWindow?.focus(); frame.value?.contentWind
     </AppLayout>
 </template>
 <style scoped>
-.documents-page{display:grid;gap:1rem;padding:1.5rem;color:var(--ink)}header{display:flex;justify-content:space-between;gap:1rem;align-items:center}h1{font-size:1.4rem;font-weight:700}p{font-size:.85rem;color:var(--muted)}nav,.actions{display:flex;gap:.5rem;flex-wrap:wrap}button{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:.5rem;padding:.6rem 1rem}button[aria-pressed=true]{background:var(--primary);color:white}iframe{width:100%;height:75vh;border:1px solid var(--line);border-radius:.5rem;background:#e8ebf0}@media(max-width:700px){header{align-items:start;flex-direction:column}.documents-page{padding:1rem}}
+.documents-page{display:grid;gap:1rem;padding:1.5rem;color:var(--ink)}header{display:flex;justify-content:space-between;gap:1rem;align-items:center}h1{font-size:var(--type-3xl);font-weight:var(--weight-bold)}p{font-size:var(--type-sm);color:var(--muted)}nav,.actions{display:flex;gap:.5rem;flex-wrap:wrap}button{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:.5rem;padding:.6rem 1rem}button[aria-pressed=true]{background:var(--primary-action);color:white}iframe{width:100%;height:75vh;border:1px solid var(--line);border-radius:.5rem;background:#e8ebf0}@media(max-width:700px){header{align-items:start;flex-direction:column}.documents-page{padding:1rem}}
 </style>

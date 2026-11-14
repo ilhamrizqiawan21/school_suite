@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -76,7 +77,7 @@ const submit = () => form.put('/ganti-password', { onSuccess: () => form.reset()
                 <span v-if="form.password_confirmation" :class="form.password === form.password_confirmation ? 'feedback-valid' : 'criterion'">{{ form.password === form.password_confirmation ? 'Kata sandi cocok.' : 'Kata sandi belum cocok.' }}</span>
                 <small v-if="form.errors.password_confirmation">{{ form.errors.password_confirmation }}</small>
             </label>
-            <button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan dan lanjutkan' }}</button>
+            <AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan dan lanjutkan' }}</AppButton>
         </form>
     </main>
 </template>
@@ -87,10 +88,10 @@ const submit = () => form.put('/ganti-password', { onSuccess: () => form.reset()
 .shield { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; border-radius: 1rem; background: var(--primary-soft); color: var(--primary-strong); }
 .shield svg { width: 1.75rem; height: 1.75rem; }
 .password-intro { display: grid; gap: .35rem; }
-.password-card h1 { font-size: clamp(1.6rem, 4vw, 2rem); line-height: 1.15; font-weight: 800; color: var(--ink); }
+.password-card h1 { font-size: var(--type-3xl); line-height: 1.15; font-weight: var(--weight-bold); color: var(--ink); }
 .password-card p { color: var(--ink-soft); line-height: 1.6; }
 .password-card .eyebrow { color: var(--primary-strong); }
-.password-card label { display: grid; gap: .45rem; color: var(--ink); font-size: .85rem; font-weight: 700; }
+.password-card label { display: grid; gap: .45rem; color: var(--ink); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
 .password-card input { min-height: 48px; padding: .7rem .85rem; border: 1px solid var(--line-strong); border-radius: .7rem; color: var(--ink); background: var(--surface); }
 .password-input-wrap { display: flex; align-items: center; position: relative; }
 .password-input-wrap input { width: 100%; padding-right: 3rem; }
@@ -99,8 +100,8 @@ const submit = () => form.put('/ganti-password', { onSuccess: () => form.reset()
 .eye-toggle svg { width: 1.25rem; height: 1.25rem; }
 .password-card input:focus-visible, .password-card button:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; }
 .password-card small { color: var(--delete); }
-.feedback-valid { color: #16803c; font-size: .8rem; }
-.criterion { color: var(--ink-soft); font-size: .8rem; }
+.feedback-valid { color: #16803c; font-size: var(--type-meta); }
+.criterion { color: var(--ink-soft); font-size: var(--type-meta); }
 .password-card button { min-height: 48px; background: var(--primary-action); }
 .password-card button:hover:not(:disabled) { background: var(--primary-action-strong); }
 .password-card button:disabled { opacity: .55; cursor: not-allowed; }

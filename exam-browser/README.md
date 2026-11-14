@@ -5,6 +5,7 @@ APK shell Android untuk membuka CBT lama di `https://cbtdn.itstore.my.id/`.
 ## Fitur v1
 
 - WebView dengan JavaScript dan DOM storage karena halaman CBT membutuhkannya.
+- Pinch zoom untuk memperbesar teks soal, tanpa tombol zoom yang menutupi konten.
 - Cookie sesi diaktifkan agar login dan navigasi ujian tetap bekerja.
 - Navigasi top-level hanya mengizinkan HTTPS pada host `cbtdn.itstore.my.id`.
 - `intent://`, popup, upload file, geolocation, kamera/mikrofon, dan unduhan diblokir.

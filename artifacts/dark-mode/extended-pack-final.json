@@ -1,0 +1,625 @@
+[
+  {
+    "key": "teacher/penilaian/paket-soal",
+    "width": 390,
+    "requested": "light",
+    "errors": [],
+    "theme": "light",
+    "checked": 37,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "HEADER",
+        "cls": "topbar",
+        "color": "color(srgb 1 1 1 / 0.9)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "global-search",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "panel stat-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "panel stat-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "panel stat-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "panel filters-panel",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "search-control",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SELECT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SELECT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SELECT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "panel pack-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "row-action-button row-action-button--edit ui-button ui-button--secondary ui-button--sm",
+        "color": "color(srgb 0.898353 0.934588 0.917647)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "row-action-button row-action-button--archive ui-button ui-button--warning ui-button--sm",
+        "color": "rgb(255, 241, 213)"
+      }
+    ],
+    "opened": {
+      "theme": "light",
+      "checked": 76,
+      "issues": [],
+      "bright": [
+        {
+          "tag": "HEADER",
+          "cls": "topbar",
+          "color": "color(srgb 1 1 1 / 0.9)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "global-search",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "A",
+          "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "panel stat-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "panel stat-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "panel stat-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SECTION",
+          "cls": "panel filters-panel",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "search-control",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "ARTICLE",
+          "cls": "panel pack-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "row-action-button row-action-button--edit ui-button ui-button--secondary ui-button--sm",
+          "color": "color(srgb 0.898353 0.934588 0.917647)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "row-action-button row-action-button--archive ui-button ui-button--warning ui-button--sm",
+          "color": "rgb(255, 241, 213)"
+        },
+        {
+          "tag": "FORM",
+          "cls": "modal-card pack-form",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "form-heading",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "TEXTAREA",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "search-control",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "modal-actions",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+          "color": "rgb(255, 255, 255)"
+        }
+      ]
+    }
+  },
+  {
+    "key": "teacher/penilaian/paket-soal",
+    "width": 390,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 37,
+    "issues": [],
+    "bright": [],
+    "opened": {
+      "theme": "dark",
+      "checked": 76,
+      "issues": [],
+      "bright": []
+    }
+  },
+  {
+    "key": "teacher/penilaian/paket-soal",
+    "width": 1440,
+    "requested": "light",
+    "errors": [],
+    "theme": "light",
+    "checked": 56,
+    "issues": [],
+    "bright": [
+      {
+        "tag": "ASIDE",
+        "cls": "sidebar",
+        "color": "rgb(251, 252, 254)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "nav-section-trigger is-active",
+        "color": "color(srgb 0.898353 0.934588 0.917647)"
+      },
+      {
+        "tag": "A",
+        "cls": "nav-item is-active",
+        "color": "color(srgb 0.805176 0.869961 0.880314)"
+      },
+      {
+        "tag": "HEADER",
+        "cls": "topbar",
+        "color": "color(srgb 1 1 1 / 0.9)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "global-search",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "A",
+        "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "panel stat-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "panel stat-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "DIV",
+        "cls": "panel stat-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SECTION",
+        "cls": "panel filters-panel",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "INPUT",
+        "cls": "search-control",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SELECT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SELECT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "SELECT",
+        "cls": "",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "ARTICLE",
+        "cls": "panel pack-card",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "row-action-button row-action-button--archive ui-button ui-button--warning ui-button--sm",
+        "color": "rgb(255, 241, 213)"
+      }
+    ],
+    "opened": {
+      "theme": "light",
+      "checked": 101,
+      "issues": [],
+      "bright": [
+        {
+          "tag": "ASIDE",
+          "cls": "sidebar",
+          "color": "rgb(251, 252, 254)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "nav-section-trigger is-active",
+          "color": "color(srgb 0.898353 0.934588 0.917647)"
+        },
+        {
+          "tag": "A",
+          "cls": "nav-item is-active",
+          "color": "color(srgb 0.805176 0.869961 0.880314)"
+        },
+        {
+          "tag": "HEADER",
+          "cls": "topbar",
+          "color": "color(srgb 1 1 1 / 0.9)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "global-search",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "A",
+          "cls": "secondary-button ui-button ui-button--secondary ui-button--md",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "panel stat-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "panel stat-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "panel stat-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SECTION",
+          "cls": "panel filters-panel",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "search-control",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "ARTICLE",
+          "cls": "panel pack-card",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "row-action-button row-action-button--archive ui-button ui-button--warning ui-button--sm",
+          "color": "rgb(255, 241, 213)"
+        },
+        {
+          "tag": "FORM",
+          "cls": "modal-card pack-form",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "form-heading",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "TEXTAREA",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "search-control",
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "question-option",
+          "color": "rgb(248, 250, 255)"
+        },
+        {
+          "tag": "DIV",
+          "cls": "modal-actions",
+          "color": "rgb(255, 255, 255)"
+        }
+      ]
+    }
+  },
+  {
+    "key": "teacher/penilaian/paket-soal",
+    "width": 1440,
+    "requested": "dark",
+    "errors": [],
+    "theme": "dark",
+    "checked": 56,
+    "issues": [],
+    "bright": [],
+    "opened": {
+      "theme": "dark",
+      "checked": 101,
+      "issues": [],
+      "bright": []
+    }
+  }
+]

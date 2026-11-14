@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SharedProps } from '../../../types';
@@ -292,7 +293,7 @@ const deleteSchedule = (id: number) => {
                     <div class="schedule-view-toggle" role="group" aria-label="Mode tampilan jadwal">
                         <button
                             type="button"
-                            class="schedule-view-btn"
+                            class="ui-tab-button schedule-view-btn"
                             :class="{ 'is-active': viewMode === 'board' }"
                             :aria-pressed="viewMode === 'board'"
                             @click="viewMode = 'board'"
@@ -302,11 +303,11 @@ const deleteSchedule = (id: number) => {
                                 <rect x="10" y="4" width="5" height="16" rx="1.5" stroke-width="1.8" />
                                 <rect x="17" y="4" width="4" height="16" rx="1.5" stroke-width="1.8" />
                             </svg>
-                            <span>Papan Mingguan</span>
+                            <span>Kalender</span>
                         </button>
                         <button
                             type="button"
-                            class="schedule-view-btn"
+                            class="ui-tab-button schedule-view-btn"
                             :class="{ 'is-active': viewMode === 'table' }"
                             :aria-pressed="viewMode === 'table'"
                             @click="viewMode = 'table'"
@@ -314,11 +315,11 @@ const deleteSchedule = (id: number) => {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
-                            <span>Tabel Daftar</span>
+                            <span>Daftar</span>
                         </button>
                     </div>
 
-                    <a
+                    <AppButton variant="secondary" icon="pdf" as="a"
                         v-if="active_term"
                         :href="exportPdfUrl"
                         class="file-action-button file-action-button--pdf schedule-export-pdf"
@@ -326,9 +327,9 @@ const deleteSchedule = (id: number) => {
                         title="Unduh jadwal pelajaran dalam format PDF"
                     >
                         <span>Ekspor PDF</span>
-                    </a>
+                    </AppButton>
 
-                    <button
+                    <AppButton variant="secondary"
                         v-if="can_manage && draft_count > 0"
                         type="button"
                         @click="publishAll"
@@ -336,19 +337,17 @@ const deleteSchedule = (id: number) => {
                     >
                         <span class="schedule-status-dot is-draft" aria-hidden="true" />
                         Terbitkan {{ draft_count }} Draf
-                    </button>
-                    <button
+                    </AppButton>
+                    <AppButton variant="primary" icon="plus"
                         v-if="can_manage"
                         type="button"
                         :disabled="!active_term"
                         @click="openAdd()"
                         class="schedule-action-button schedule-action-add"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
+
                         Tambah Slot Jadwal
-                    </button>
+                    </AppButton>
                 </div>
             </div>
 
@@ -452,14 +451,14 @@ const deleteSchedule = (id: number) => {
                             />
                         </div>
                     </label>
-                    <button
+                    <AppButton variant="secondary"
                         type="button"
                         class="secondary-button schedule-reset"
                         :disabled="!hasActiveLocalFilters"
                         @click="resetFilters"
                     >
                         Reset filter
-                    </button>
+                    </AppButton>
                 </div>
             </div>
 
@@ -470,7 +469,7 @@ const deleteSchedule = (id: number) => {
                         type="button"
                         role="tab"
                         :aria-selected="selectedDay === 'all'"
-                        class="schedule-day-pill"
+                        class="ui-tab-button schedule-day-pill"
                         :class="{ 'is-active': selectedDay === 'all' }"
                         @click="selectedDay = 'all'"
                     >
@@ -483,7 +482,7 @@ const deleteSchedule = (id: number) => {
                         type="button"
                         role="tab"
                         :aria-selected="selectedDay === d.id"
-                        class="schedule-day-pill"
+                        class="ui-tab-button schedule-day-pill"
                         :class="{ 'is-active': selectedDay === d.id, 'is-empty': totalSchedulesForDay(d.id) === 0 }"
                         @click="selectedDay = selectedDay === d.id ? 'all' : d.id"
                     >
@@ -496,7 +495,7 @@ const deleteSchedule = (id: number) => {
                     <div v-if="!is_student" class="schedule-status-pills" role="group" aria-label="Filter status jadwal">
                         <button
                             type="button"
-                            class="schedule-status-pill"
+                            class="ui-tab-button schedule-status-pill"
                             :class="{ 'is-active': statusFilter === 'all' }"
                             @click="statusFilter = 'all'"
                         >
@@ -504,7 +503,7 @@ const deleteSchedule = (id: number) => {
                         </button>
                         <button
                             type="button"
-                            class="schedule-status-pill"
+                            class="ui-tab-button schedule-status-pill"
                             :class="{ 'is-active': statusFilter === 'published' }"
                             @click="statusFilter = 'published'"
                         >
@@ -512,7 +511,7 @@ const deleteSchedule = (id: number) => {
                         </button>
                         <button
                             type="button"
-                            class="schedule-status-pill"
+                            class="ui-tab-button schedule-status-pill"
                             :class="{ 'is-active': statusFilter === 'draft' }"
                             @click="statusFilter = 'draft'"
                         >
@@ -527,7 +526,7 @@ const deleteSchedule = (id: number) => {
                 </div>
             </div>
 
-            <!-- Tampilan 1: Papan Mingguan (Board View) -->
+            <!-- Tampilan 1: Kalender (Board View) -->
             <template v-if="schedules.length && filteredSchedules.length">
                 <div
                     v-if="viewMode === 'board'"
@@ -556,18 +555,18 @@ const deleteSchedule = (id: number) => {
                                         {{ schedulesForDay(d.id).length }} Sesi
                                     </span>
                                 </div>
-                                <button
+                                <AppButton variant="secondary" icon-only
                                     v-if="can_manage && active_term"
                                     type="button"
                                     class="schedule-day-add-btn"
                                     :aria-label="`Tambah jadwal hari ${d.name}`"
                                     :title="`Tambah jadwal hari ${d.name}`"
                                     @click="openAdd(d.id)"
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                ><template #icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" />
-                                    </svg>
-                                </button>
+                                    </svg></template>
+
+                                </AppButton>
                             </header>
 
                             <div class="schedule-day-body">
@@ -615,13 +614,13 @@ const deleteSchedule = (id: number) => {
                                             {{ s.teacher.name }}
                                         </span>
                                         <div v-if="can_manage" class="schedule-session-actions">
-                                            <RowActionButton
+                                            <RowActionButton icon-only
                                                 action="edit"
                                                 label="Ubah"
                                                 :aria-label="`Ubah jadwal ${s.subject.name} ${s.start_time}`"
                                                 @click="openEdit(s)"
                                             />
-                                            <RowActionButton
+                                            <RowActionButton icon-only
                                                 action="delete"
                                                 label="Hapus"
                                                 :aria-label="`Hapus jadwal ${s.subject.name} ${s.start_time}`"
@@ -636,14 +635,13 @@ const deleteSchedule = (id: number) => {
                                     class="schedule-empty"
                                 >
                                     <span>Tidak ada sesi terjadwal</span>
-                                    <button
+                                    <AppButton variant="secondary" icon="plus"
                                         v-if="can_manage && active_term"
                                         type="button"
                                         class="schedule-empty-add"
                                         @click="openAdd(d.id)"
-                                    >
-                                        + Tambah sesi {{ d.name }}
-                                    </button>
+                                    >  Tambah sesi {{ d.name }}
+                                    </AppButton>
                                 </div>
                             </div>
                         </section>
@@ -684,7 +682,7 @@ const deleteSchedule = (id: number) => {
                                     </td>
                                     <td>
                                         <div class="font-bold text-slate-900">{{ s.subject.name }}</div>
-                                        <div class="text-xs text-slate-500 font-mono">{{ s.subject.code }}</div>
+                                        <div class="text-meta text-slate-600 font-mono">{{ s.subject.code }}</div>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <span class="schedule-class-chip">Kelas {{ s.class_group.name }}</span>
@@ -694,7 +692,7 @@ const deleteSchedule = (id: number) => {
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <span v-if="s.room" class="schedule-room">{{ s.room }}</span>
-                                        <span v-else class="text-xs text-slate-400">—</span>
+                                        <span v-else class="text-meta text-slate-600">—</span>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <span
@@ -732,9 +730,9 @@ const deleteSchedule = (id: number) => {
                 <strong>Tidak ada sesi yang cocok dengan filter</strong>
                 <span>Ubah kata kunci pencarian, pilihan hari, atau status untuk menampilkan jadwal kembali.</span>
                 <div>
-                    <button type="button" class="secondary-button mt-2" @click="resetFilters">
+                    <AppButton variant="secondary" type="button" class="secondary-button mt-2" @click="resetFilters">
                         Tampilkan semua sesi
-                    </button>
+                    </AppButton>
                 </div>
             </div>
 
@@ -759,21 +757,21 @@ const deleteSchedule = (id: number) => {
             <div class="schedule-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-wider text-indigo-600">
+                        <p class="text-meta font-bold uppercase tracking-wider text-indigo-600">
                             {{ active_term?.academic_year?.name }} · {{ active_term?.name }}
                         </p>
                         <h3 id="schedule-form-title" class="text-lg font-bold text-slate-900">
                             {{ editingId ? 'Ubah Jadwal Pelajaran' : 'Tambah Slot Jadwal Pelajaran' }}
                         </h3>
                     </div>
-                    <button
+                    <AppButton variant="ghost"
                         type="button"
                         @click="showAddModal = false"
-                        class="schedule-close text-slate-400 hover:text-slate-600"
+                        class="schedule-close"
                         aria-label="Tutup formulir jadwal"
                     >
                         ✕
-                    </button>
+                    </AppButton>
                 </div>
 
                 <ul v-if="Object.keys(form.errors).length" role="alert" class="schedule-form-errors">
@@ -786,14 +784,14 @@ const deleteSchedule = (id: number) => {
                 <form @submit.prevent="submitAdd" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="schedule-day" class="block text-xs font-semibold text-slate-700 mb-1">Hari *</label>
-                            <select id="schedule-day" v-model="form.day_of_week" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-day" class="block text-meta font-semibold text-slate-700 mb-1">Hari *</label>
+                            <select id="schedule-day" v-model="form.day_of_week" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <label for="schedule-class" class="block text-xs font-semibold text-slate-700 mb-1">Rombel (kelas) *</label>
-                            <select id="schedule-class" v-model="form.class_group_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-class" class="block text-meta font-semibold text-slate-700 mb-1">Rombel (kelas) *</label>
+                            <select id="schedule-class" v-model="form.class_group_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">Pilih rombel...</option>
                                 <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
                             </select>
@@ -802,15 +800,15 @@ const deleteSchedule = (id: number) => {
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="schedule-subject" class="block text-xs font-semibold text-slate-700 mb-1">Mata pelajaran *</label>
-                            <select id="schedule-subject" v-model="form.subject_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-subject" class="block text-meta font-semibold text-slate-700 mb-1">Mata pelajaran *</label>
+                            <select id="schedule-subject" v-model="form.subject_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">Pilih mapel...</option>
                                 <option v-for="s in subjects" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.code }})</option>
                             </select>
                         </div>
                         <div>
-                            <label for="schedule-teacher" class="block text-xs font-semibold text-slate-700 mb-1">Guru pengajar *</label>
-                            <select id="schedule-teacher" v-model="form.teacher_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                            <label for="schedule-teacher" class="block text-meta font-semibold text-slate-700 mb-1">Guru pengajar *</label>
+                            <select id="schedule-teacher" v-model="form.teacher_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">Pilih guru...</option>
                                 <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
                             </select>
@@ -819,26 +817,26 @@ const deleteSchedule = (id: number) => {
 
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label for="schedule-start" class="block text-xs font-semibold text-slate-700 mb-1">Mulai *</label>
+                            <label for="schedule-start" class="block text-meta font-semibold text-slate-700 mb-1">Mulai *</label>
                             <input id="schedule-start" v-model="form.start_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label for="schedule-end" class="block text-xs font-semibold text-slate-700 mb-1">Selesai *</label>
+                            <label for="schedule-end" class="block text-meta font-semibold text-slate-700 mb-1">Selesai *</label>
                             <input id="schedule-end" v-model="form.end_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label for="schedule-room" class="block text-xs font-semibold text-slate-700 mb-1">Ruang / lab</label>
+                            <label for="schedule-room" class="block text-meta font-semibold text-slate-700 mb-1">Ruang / lab</label>
                             <input id="schedule-room" v-model="form.room" type="text" placeholder="contoh: Lab IPA" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
                     <div class="flex justify-end gap-2 pt-3 border-t">
-                        <button type="button" @click="showAddModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
+                        <AppButton variant="secondary" type="button" @click="showAddModal = false" >
                             Batal
-                        </button>
-                        <button type="submit" :disabled="form.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        </AppButton>
+                        <AppButton variant="primary" :loading="form.processing" type="submit" :disabled="form.processing" >
                             {{ form.processing ? 'Menyimpan…' : 'Simpan Jadwal' }}
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -854,34 +852,27 @@ const deleteSchedule = (id: number) => {
 .schedule-drawer .text-slate-900, .schedule-drawer .text-slate-700 { color: var(--ink); }
 .schedule-drawer .text-slate-600, .schedule-drawer .text-slate-500, .schedule-drawer .text-slate-400 { color: var(--ink-soft); }
 .schedule-drawer button:focus-visible, .schedule-drawer input:focus-visible, .schedule-drawer select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-.schedule-close { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; border-radius: 9px; }
-.schedule-form-errors { margin: 0; padding: .75rem 1rem; list-style: disc inside; border-radius: .65rem; border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line)); background: var(--red-soft); color: var(--red); font-size: .82rem; font-weight: 600; }
-.schedule-form-notice { margin: 0; padding: .65rem .85rem; border-radius: .65rem; border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--line)); background: var(--gold-soft); color: var(--ink-soft); font-size: .78rem; line-height: 1.45; }
+.schedule-close { flex: 0 0 auto; }
+.schedule-form-errors { margin: 0; padding: .75rem 1rem; list-style: disc inside; border-radius: .65rem; border: 1px solid color-mix(in srgb, var(--red) 30%, var(--line)); background: var(--red-soft); color: var(--red); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.schedule-form-notice { margin: 0; padding: .65rem .85rem; border-radius: .65rem; border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--line)); background: var(--gold-soft); color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.45; }
 
 /* Page Header & Actions */
 .schedule-page { min-width: 0; }
 .schedule-page :deep(.page-heading) { margin-bottom: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; align-items: center; }
 .schedule-page :deep(.page-heading > div:first-child) { min-width: 0; }
-.schedule-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.schedule-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
-.schedule-page-summary { max-width: 65ch; margin: .4rem 0 0; color: var(--ink-soft); font-size: .86rem; line-height: 1.55; }
+.schedule-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; text-transform: uppercase; }
+.schedule-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: var(--weight-bold); letter-spacing: -.035em; line-height: 1.12; }
+.schedule-page-summary { max-width: 65ch; margin: .4rem 0 0; color: var(--ink-soft); font-size: var(--type-sm); line-height: 1.55; }
 .schedule-heading-actions { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; flex-wrap: wrap; }
 
 /* View Mode Switcher */
 .schedule-view-toggle { display: inline-flex; align-items: center; padding: 3px; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface-subtle); }
-.schedule-view-btn { display: inline-flex; align-items: center; gap: .4rem; min-height: 36px; padding: .35rem .7rem; border: 0; border-radius: .5rem; background: transparent; color: var(--ink-soft); font-size: .78rem; font-weight: 700; transition: background-color .16s ease, color .16s ease, box-shadow .16s ease; }
-.schedule-view-btn svg { width: 15px; height: 15px; flex: 0 0 15px; }
+.schedule-view-btn { display: inline-flex; border: 0; background: transparent; color: var(--ink-soft); transition: background-color .16s ease, color .16s ease, box-shadow .16s ease; }
+.schedule-view-btn svg { width: 15px; flex: 0 0 15px; }
 .schedule-view-btn:hover { color: var(--ink); }
 .schedule-view-btn.is-active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
 
 /* Action Buttons */
-.schedule-action-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: .45rem; padding: .6rem .95rem; border: 1px solid var(--line-strong); border-radius: .65rem; color: var(--ink-soft); background: var(--surface); font-size: .8rem; font-weight: 700; white-space: nowrap; transition: background-color .16s ease, border-color .16s ease, color .16s ease; }
-.schedule-action-button:hover:not(:disabled) { color: var(--primary); background: var(--primary-soft); border-color: var(--primary); }
-.schedule-action-publish { color: var(--green); background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 28%, var(--line)); }
-.schedule-action-publish:hover:not(:disabled) { color: var(--green); background: color-mix(in srgb, var(--green-soft) 75%, var(--green) 25%); border-color: var(--green); }
-.schedule-action-add { color: #fff; background: var(--primary); border-color: var(--primary); box-shadow: 0 4px 12px rgb(50 105 188 / 16%); }
-.schedule-action-add:hover:not(:disabled) { color: #fff; background: var(--primary-strong); border-color: var(--primary-strong); }
-.schedule-action-button:disabled { cursor: not-allowed; opacity: .55; }
 .schedule-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
 
 /* Metrics Strip */
@@ -889,20 +880,20 @@ const deleteSchedule = (id: number) => {
 .schedule-metrics-manager { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .schedule-metric { display: grid; gap: .25rem; min-width: 0; padding: .95rem 1.15rem; border-top: 3px solid var(--metric-tone); background: var(--surface); }
 .schedule-metric-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
-.schedule-metric p { margin: 0; color: var(--ink-soft); font-size: .78rem; font-weight: 700; }
-.schedule-metric-badge { display: inline-flex; align-items: center; padding: .15rem .5rem; border-radius: 999px; background: var(--surface-subtle); border: 1px solid var(--line); color: var(--ink-soft); font-size: .68rem; font-weight: 700; white-space: nowrap; }
+.schedule-metric p { margin: 0; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.schedule-metric-badge { display: inline-flex; align-items: center; padding: .15rem .5rem; border-radius: 999px; background: var(--surface-subtle); border: 1px solid var(--line); color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); white-space: nowrap; }
 .schedule-metric-badge.is-published { color: var(--green); background: var(--green-soft); border-color: transparent; }
 .schedule-metric-badge.is-draft { color: var(--gold); background: var(--gold-soft); border-color: transparent; }
-.schedule-metric strong { color: var(--ink); font-size: 1.65rem; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.schedule-metric span { color: var(--ink-faint); font-size: .73rem; line-height: 1.4; }
+.schedule-metric strong { color: var(--ink); font-size: 1.65rem; font-weight: var(--weight-bold); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.schedule-metric span { color: var(--ink-faint); font-size: var(--type-meta); line-height: 1.4; }
 .schedule-metric-slots { --metric-tone: var(--primary); }
 .schedule-metric-published { --metric-tone: var(--green); }
 .schedule-metric-drafts { --metric-tone: var(--gold); }
 
 /* Student Context Bar */
 .schedule-student-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; flex-wrap: wrap; }
-.schedule-student-context { display: flex; align-items: center; gap: .5rem; color: var(--ink-soft); font-size: .84rem; font-weight: 600; flex-wrap: wrap; }
-.schedule-student-context strong { color: var(--ink); font-weight: 800; }
+.schedule-student-context { display: flex; align-items: center; gap: .5rem; color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); flex-wrap: wrap; }
+.schedule-student-context strong { color: var(--ink); font-weight: var(--weight-bold); }
 .schedule-student-context::before { content: ''; width: .55rem; height: .55rem; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
 .schedule-context-sep { color: var(--line-strong); }
 .schedule-student-search { flex: 0 1 280px; min-width: 220px; }
@@ -910,35 +901,30 @@ const deleteSchedule = (id: number) => {
 /* Filter Controls (Non-Student) */
 .schedule-controls-card { padding: 1rem 1.15rem; }
 .schedule-controls { display: grid; grid-template-columns: minmax(190px, 1.15fr) minmax(160px, 1fr) minmax(160px, 1fr) minmax(180px, 1.1fr) auto; align-items: end; gap: .75rem; }
-.schedule-term-control, .schedule-filter-control { display: grid; gap: .35rem; min-width: 0; color: var(--ink-soft); font-size: .76rem; font-weight: 700; }
-.schedule-term-control select, .schedule-filter-control select { display: block; width: 100%; max-width: 100%; min-width: 0; height: var(--control-height, 40px); padding: 0 .75rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink); font-size: .82rem; font-weight: 500; }
+.schedule-term-control, .schedule-filter-control { display: grid; gap: .35rem; min-width: 0; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.schedule-term-control select, .schedule-filter-control select { display: block; width: 100%; max-width: 100%; min-width: 0; height: var(--control-height, 40px); padding: 0 .75rem; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink); font-size: var(--type-control); font-weight: var(--weight-medium); }
 .schedule-term-control select:disabled { cursor: not-allowed; opacity: .65; }
 .schedule-search-input { width: 100%; }
-.schedule-reset { height: var(--control-height, 40px); white-space: nowrap; }
 
 /* Subbar: Day Pills & Status Toggle */
 .schedule-subbar { display: flex; align-items: center; justify-content: space-between; gap: .85rem; padding: .6rem .85rem; flex-wrap: wrap; }
-.schedule-day-pills { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
-.schedule-day-pill { display: inline-flex; align-items: center; gap: .4rem; min-height: 34px; padding: .3rem .65rem; border: 1px solid transparent; border-radius: .55rem; background: transparent; color: var(--ink-soft); font-size: .78rem; font-weight: 700; transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
+.schedule-day-pills { display: flex; flex-wrap: wrap; }
+.schedule-day-pill { display: inline-flex; border: 1px solid transparent; background: transparent; color: var(--ink-soft); transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
 .schedule-day-pill:hover { color: var(--ink); background: var(--surface-subtle); border-color: var(--line); }
 .schedule-day-pill.is-active { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 30%, var(--line)); }
 .schedule-day-pill.is-empty:not(.is-active) { opacity: .65; }
-.schedule-pill-count { display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--surface-strong); color: var(--ink-soft); font-style: normal; font-size: .68rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.schedule-day-pill.is-active .schedule-pill-count { background: var(--primary); color: #fff; }
+.schedule-pill-count { display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--surface-strong); color: var(--ink-soft); font-style: normal; font-size: var(--type-meta); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.schedule-day-pill.is-active .schedule-pill-count { background: var(--primary-action); color: #fff; }
 
 .schedule-subbar-right { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-left: auto; }
-.schedule-status-pills { display: inline-flex; align-items: center; padding: 2px; border-radius: .55rem; background: var(--surface-subtle); border: 1px solid var(--line); }
-.schedule-status-pill { min-height: 28px; padding: .2rem .6rem; border: 0; border-radius: .4rem; background: transparent; color: var(--ink-soft); font-size: .74rem; font-weight: 700; transition: background-color .15s ease, color .15s ease; }
+.schedule-status-pills { display: inline-flex; background: var(--surface-subtle); border: 1px solid var(--line); }
+.schedule-status-pill { border: 0; background: transparent; color: var(--ink-soft); transition: background-color .15s ease, color .15s ease; }
 .schedule-status-pill.is-active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
-.schedule-sunday-toggle { display: inline-flex; align-items: center; gap: .4rem; color: var(--ink-soft); font-size: .76rem; font-weight: 600; cursor: pointer; user-select: none; }
+.schedule-sunday-toggle { display: inline-flex; align-items: center; gap: .4rem; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); cursor: pointer; user-select: none; }
 
 /* Weekly Timetable Grid */
-.schedule-week-scroll { max-width: 100%; overflow-x: auto; padding-bottom: .25rem; scrollbar-color: var(--line-strong) transparent; }
+.schedule-week-scroll { min-width: 0; width: 100%; max-width: 100%; overflow-x: auto; padding-bottom: .25rem; scrollbar-color: var(--line-strong) transparent; }
 .schedule-week-grid { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(240px, 1fr)); align-items: stretch; gap: .9rem; }
-@media (min-width: 1400px) {
-    .schedule-week-grid { grid-template-columns: repeat(6, minmax(195px, 1fr)); }
-    .schedule-week-grid.is-seven-days { grid-template-columns: repeat(7, minmax(185px, 1fr)); }
-}
 .schedule-week-grid.is-single-day { grid-template-columns: minmax(0, 1fr); }
 .schedule-week-grid.is-single-day .schedule-day-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .75rem; }
 
@@ -946,12 +932,9 @@ const deleteSchedule = (id: number) => {
 .schedule-day-card { min-width: 0; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-sm); overflow: hidden; }
 .schedule-day-header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .75rem .9rem; background: var(--surface-subtle); border-bottom: 1px solid var(--line); }
 .schedule-day-title { display: flex; align-items: center; gap: .5rem; min-width: 0; }
-.schedule-day-title h3 { margin: 0; color: var(--ink); font-size: .88rem; font-weight: 800; letter-spacing: -.01em; }
-.schedule-day-count { display: inline-flex; align-items: center; padding: .15rem .5rem; border-radius: 999px; background: var(--surface-strong); color: var(--ink-faint); font-size: .7rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.schedule-day-title h3 { margin: 0; color: var(--ink); font-size: var(--type-md); font-weight: var(--weight-bold); letter-spacing: -.01em; }
+.schedule-day-count { display: inline-flex; align-items: center; padding: .15rem .5rem; border-radius: 999px; background: var(--surface-strong); color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
 .schedule-day-count.has-sessions { color: var(--primary-strong); background: var(--primary-soft); }
-.schedule-day-add-btn { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid var(--line-strong); border-radius: .45rem; background: var(--surface); color: var(--ink-soft); transition: color .15s ease, border-color .15s ease, background-color .15s ease; }
-.schedule-day-add-btn svg { width: 14px; height: 14px; }
-.schedule-day-add-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
 
 /* Session Card inside Day Column */
 .schedule-day-body { padding: .7rem; display: flex; flex-direction: column; gap: .6rem; flex: 1; }
@@ -960,45 +943,39 @@ const deleteSchedule = (id: number) => {
 .schedule-session:hover { background: var(--surface); border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); box-shadow: var(--shadow-sm); }
 
 .schedule-session-top { display: flex; align-items: center; justify-content: space-between; gap: .4rem; flex-wrap: wrap; }
-.schedule-time-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .5rem; border-radius: .4rem; background: var(--primary-soft); color: var(--primary-strong); font-size: .72rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.schedule-time-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .5rem; border-radius: .4rem; background: var(--primary-soft); color: var(--primary-strong); font-size: var(--type-meta); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .schedule-time-badge svg { width: 12px; height: 12px; flex: 0 0 12px; }
-.schedule-status-badge { display: inline-flex; align-items: center; padding: .15rem .45rem; border-radius: .35rem; font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.schedule-status-badge { display: inline-flex; align-items: center; padding: .15rem .45rem; border-radius: .35rem; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
 .schedule-status-badge.is-published { color: var(--green); background: var(--green-soft); }
 .schedule-status-badge.is-draft { color: var(--gold); background: var(--gold-soft); }
 
 .schedule-session-subject { display: flex; flex-direction: column; gap: .1rem; min-width: 0; margin-top: .1rem; }
-.schedule-subject-name { color: var(--ink); font-size: .84rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
-.schedule-subject-code { color: var(--ink-faint); font-family: var(--font-mono); font-size: .68rem; font-weight: 600; }
+.schedule-subject-name { color: var(--ink); font-size: var(--type-sm); font-weight: var(--weight-bold); line-height: 1.3; overflow-wrap: anywhere; }
+.schedule-subject-code { color: var(--ink-faint); font-family: var(--font-mono); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 
-.schedule-meta { display: flex; align-items: center; justify-content: space-between; gap: .4rem; flex-wrap: wrap; margin-top: .1rem; padding-top: .4rem; border-top: 1px dashed var(--line); font-size: .74rem; }
-.schedule-class-chip { display: inline-flex; align-items: center; padding: .15rem .45rem; border-radius: .35rem; background: var(--surface); border: 1px solid var(--line); color: var(--ink); font-size: .72rem; font-weight: 700; white-space: nowrap; }
-.schedule-room { color: var(--ink-soft); font-family: var(--font-mono); font-size: .71rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
-.schedule-room.is-muted { color: var(--ink-faint); font-family: var(--font-sans); font-weight: 400; font-style: italic; }
+.schedule-meta { display: flex; align-items: center; justify-content: space-between; gap: .4rem; flex-wrap: wrap; margin-top: .1rem; padding-top: .4rem; border-top: 1px dashed var(--line); font-size: var(--type-meta); }
+.schedule-class-chip { display: inline-flex; align-items: center; padding: .15rem .45rem; border-radius: .35rem; background: var(--surface); border: 1px solid var(--line); color: var(--ink); font-size: var(--type-meta); font-weight: var(--weight-bold); white-space: nowrap; }
+.schedule-room { color: var(--ink-soft); font-family: var(--font-mono); font-size: var(--type-meta); font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+.schedule-room.is-muted { color: var(--ink-faint); font-family: var(--font-sans); font-weight: var(--weight-regular); font-style: italic; }
 
 .schedule-session-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .1rem; }
-.schedule-teacher { min-width: 0; flex: 1; color: var(--ink-soft); font-size: .75rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.schedule-teacher { min-width: 0; flex: 1; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .schedule-session-actions { display: inline-flex; align-items: center; gap: .25rem; flex: 0 0 auto; }
-
-.schedule-session :deep(.row-action-button) { display: inline-grid; width: 28px; min-width: 28px; height: 28px; min-height: 28px; place-items: center; padding: 0; border-radius: .45rem; }
 .schedule-session :deep(.row-action-button span) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.schedule-session :deep(.row-action-button svg) { width: 13px; height: 13px; }
 
 /* Empty Day State */
-.schedule-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .45rem; flex: 1; min-height: 110px; padding: 1rem .5rem; border: 1px dashed var(--line); border-radius: .65rem; color: var(--ink-faint); text-align: center; font-size: .76rem; }
-.schedule-empty-add { padding: .3rem .65rem; border: 1px solid var(--line-strong); border-radius: .45rem; background: var(--surface); color: var(--primary); font-size: .72rem; font-weight: 700; transition: background-color .15s ease, border-color .15s ease; }
-.schedule-empty-add:hover { background: var(--primary-soft); border-color: var(--primary); }
+.schedule-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .45rem; flex: 1; min-height: 110px; padding: 1rem .5rem; border: 1px dashed var(--line); border-radius: .65rem; color: var(--ink-faint); text-align: center; font-size: var(--type-meta); }
 
 /* Table View */
 .schedule-table-card { overflow: hidden; }
 .schedule-table-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
-.schedule-table-header h2 { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 800; }
-.schedule-table-header p { margin: .15rem 0 0; color: var(--ink-soft); font-size: .78rem; }
-.schedule-table :deep(.row-action-button) { min-height: 32px; min-width: 32px; padding: .35rem .6rem; }
+.schedule-table-header h2 { margin: 0; color: var(--ink); font-size: var(--type-md); font-weight: var(--weight-bold); }
+.schedule-table-header p { margin: .15rem 0 0; color: var(--ink-soft); font-size: var(--type-meta); }
 
 /* Empty All State */
 .schedule-no-results { display: grid; gap: .35rem; padding: 2.25rem 1.5rem; border: 1px dashed var(--line-strong); border-radius: 1rem; background: var(--surface); color: var(--ink-soft); text-align: center; }
-.schedule-no-results strong { color: var(--ink); font-size: 1rem; }
-.schedule-no-results span { font-size: .85rem; line-height: 1.5; }
+.schedule-no-results strong { color: var(--ink); font-size: var(--type-md); }
+.schedule-no-results span { font-size: var(--type-sm); line-height: 1.5; }
 
 /* Responsive Breakpoints */
 @media (max-width: 1180px) {
@@ -1012,12 +989,11 @@ const deleteSchedule = (id: number) => {
 @media (max-width: 720px) {
     .schedule-heading-actions { width: 100%; }
     .schedule-view-toggle { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
-    .schedule-view-btn { justify-content: center; }
     .schedule-action-button { flex: 1 1 auto; }
     .schedule-controls, .schedule-metrics, .schedule-metrics-manager { grid-template-columns: minmax(0, 1fr); }
     .schedule-reset { width: 100%; justify-self: stretch; }
     .schedule-week-grid { grid-template-columns: minmax(0, 1fr); }
-    .schedule-day-pills { overflow-x: auto; flex-wrap: nowrap; width: 100%; padding-bottom: 2px; scrollbar-width: none; }
+    .schedule-day-pills { overflow-x: auto; flex-wrap: nowrap; width: 100%; scrollbar-width: none; }
     .schedule-day-pills::-webkit-scrollbar { display: none; }
     .schedule-day-pill { flex: 0 0 auto; }
     .schedule-subbar-right { width: 100%; justify-content: space-between; }

@@ -451,7 +451,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 </template>
 
 <style scoped>
-.sidebar-workspace-label { display: block; margin: 12px 11px 7px; color: var(--ink-faint); font-size: 11px; }
+.sidebar-workspace-label { display: block; margin: 12px 11px 7px; color: var(--ink-faint); font-size: var(--type-meta); }
 :global(.is-sidebar-rail) .sidebar-workspace-label { display: none; }
 .nav-group-trigger {
     width: 100%;
@@ -483,7 +483,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 .nav-section-trigger.is-active { color: var(--primary-strong); background: var(--primary-soft); box-shadow: inset 3px 0 0 var(--primary); }
 .nav-section-trigger:focus-visible { outline: 2px solid var(--sidebar-focus-token); outline-offset: 2px; }
 .nav-section-trigger > svg:first-child { width: 18px; height: 18px; flex: 0 0 18px; }
-.nav-section-trigger .nav-label { flex: 1; margin: 0; color: inherit; font-size: 12px; font-weight: 700; letter-spacing: .025em; }
+.nav-section-trigger .nav-label { flex: 1; margin: 0; color: inherit; font-size: var(--type-control); font-weight: var(--weight-semibold); letter-spacing: .025em; }
 .nav-section-trigger .nav-label,
 .nav-group-trigger > span,
 .nav-subitem > span { min-width: 0; }

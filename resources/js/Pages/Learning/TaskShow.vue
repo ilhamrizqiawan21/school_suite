@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '../../layouts/AppLayout.vue';
@@ -68,8 +69,8 @@ const formatDate = (value?: string | null) => value
                     <p>{{ assignment.teacher ? `Pengajar: ${assignment.teacher}` : 'Detail tugas pembelajaran' }}</p>
                 </div>
                 <div class="heading-actions">
-                    <Link class="secondary-button" :href="back_url">Kembali ke tugas</Link>
-                    <Link v-if="can_manage" class="primary-button" :href="submissions_url">Lihat pengumpulan</Link>
+                    <Link class="secondary-button ui-button ui-button--secondary ui-button--md" :href="back_url">Kembali ke tugas</Link>
+                    <Link v-if="can_manage" class="primary-button ui-button ui-button--primary ui-button--md" :href="submissions_url">Lihat pengumpulan</Link>
                 </div>
             </header>
 
@@ -100,7 +101,7 @@ const formatDate = (value?: string | null) => value
                     <label>Lampiran (maksimal 5 file)<input :key="fileInputKey" type="file" multiple accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" @change="handleFiles" /></label>
                     <p class="form-hint">Format pengumpulan: PDF, JPG, JPEG. Maksimal 5 MB per file dan 20 MB total.</p>
                     <p v-if="form.hasErrors" class="form-error">Isi jawaban teks atau pilih minimal satu berkas.</p>
-                    <div class="form-actions"><button type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim...' : 'Kirim tugas' }}</button></div>
+                    <div class="form-actions"><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim...' : 'Kirim tugas' }}</AppButton></div>
                 </form>
             </section>
             <section v-else-if="!can_manage" class="panel empty-state"><strong>Pengumpulan terkunci</strong><p>Jawaban sudah dikirim dan menunggu pemeriksaan guru.</p></section>
@@ -118,27 +119,27 @@ const formatDate = (value?: string | null) => value
 .task-detail-card { padding: 1.25rem; }
 .task-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
 .task-meta-grid div { padding: .9rem; border-radius: .75rem; background: var(--surface-subtle); }
-.task-meta-grid span, .task-instructions > span { display: block; color: var(--ink-soft); font-size: .75rem; font-weight: 700; }
+.task-meta-grid span, .task-instructions > span { display: block; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .task-meta-grid strong { display: block; margin-top: .25rem; color: var(--ink); }
 .task-instructions { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
 .task-instructions p, .submission-content { margin: .45rem 0 0; white-space: pre-wrap; color: var(--ink-soft); line-height: 1.6; }
 .section-heading { padding: 1.2rem 1.25rem 0; }
 .section-heading h2 { margin: .2rem 0; color: var(--ink); font-size: 1.1rem; }
-.status-pill, .task-status-pill { display: inline-flex; width: fit-content; padding: .35rem .65rem; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: .75rem; font-weight: 800; }
+.status-pill, .task-status-pill { display: inline-flex; width: fit-content; padding: .35rem .65rem; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .status-pill { margin-right: 1.25rem; }
 .status-pill.is-success, .task-status-pill.is-success { color: var(--green); background: var(--green-soft); }
 .status-pill.is-warning, .task-status-pill.is-warning { color: var(--gold); background: var(--gold-soft); }
 .status-pill.is-danger, .task-status-pill.is-danger { color: var(--red); background: var(--red-soft); }
-.submission-date { margin: .9rem 1.25rem 0; color: var(--ink-faint); font-size: .75rem; }
+.submission-date { margin: .9rem 1.25rem 0; color: var(--ink-faint); font-size: var(--type-meta); }
 .submission-content, .file-list, .feedback-box { margin: 1rem 1.25rem 0; }
 .file-list { display: flex; flex-wrap: wrap; gap: .5rem; }
 .file-list a { color: var(--primary); text-decoration: underline; }
 .feedback-box { display: grid; gap: .25rem; padding: .8rem; border-radius: .75rem; background: var(--green-soft); color: var(--green); }
 .submission-form { display: grid; gap: 1rem; padding: 1.25rem; }
-.submission-form label { display: grid; gap: .45rem; color: var(--ink-soft); font-size: .8rem; font-weight: 700; }
-.submission-form textarea, .submission-form input[type='file'] { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .7rem .8rem; font: inherit; font-weight: 500; }
-.form-hint { margin: -.5rem 0 0; color: var(--ink-faint); font-size: .75rem; }
-.form-error { color: var(--red); font-size: .8rem; }
+.submission-form label { display: grid; gap: .45rem; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.submission-form textarea, .submission-form input[type='file'] { width: 100%; color: var(--ink); background: var(--surface-subtle); border: 1px solid var(--line-strong); border-radius: .65rem; padding: .7rem .8rem; font: inherit; font-weight: var(--weight-medium); }
+.form-hint { margin: -.5rem 0 0; color: var(--ink-faint); font-size: var(--type-meta); }
+.form-error { color: var(--red); font-size: var(--type-meta); }
 .empty-state { padding: 2rem; color: var(--ink-soft); text-align: center; }
 @media (max-width: 700px) { .page-heading, .section-heading { align-items: flex-start; flex-direction: column; } .page-heading { padding: 1.2rem; } .page-heading > div:first-child { flex-basis: auto; } .task-meta-grid { grid-template-columns: 1fr; } .status-pill { margin-right: 0; } }
 </style>

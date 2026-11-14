@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref } from 'vue';
@@ -60,9 +61,9 @@ const submit = () => form.post('/profil', {
                 <div>
                     <p class="eyebrow">Akun pribadi</p>
                     <h1>Profil saya</h1>
-                    <p>Kelola foto, identitas kontak, dan keamanan akun Anda.</p>
+
                 </div>
-                <a class="secondary-button" href="/ganti-password">Ganti kata sandi</a>
+                <AppButton variant="secondary" as="a" class="secondary-button" href="/ganti-password">Ganti kata sandi</AppButton>
             </header>
 
             <section class="panel profile-panel">
@@ -91,13 +92,13 @@ const submit = () => form.post('/profil', {
                         <small>JPG, PNG, atau WebP; maksimum 2 MB.</small>
                         <em v-if="form.errors.avatar">{{ form.errors.avatar }}</em>
                     </label>
-                    <button v-if="form.avatar" type="button" class="secondary-button" :disabled="form.processing" @click="cancelPhoto">Batalkan foto baru</button>
+                    <AppButton variant="secondary"  v-if="form.avatar" type="button" class="secondary-button" :disabled="form.processing" @click="cancelPhoto">Batalkan foto baru</AppButton>
                 </aside>
 
                 <form class="profile-form" @submit.prevent="submit">
                     <div class="form-heading">
                         <h2>Informasi akun</h2>
-                        <p>Pastikan nama dan kontak yang digunakan selalu terbaru.</p>
+
                     </div>
 
                     <div v-if="Object.keys(form.errors).length" class="notice" role="alert">Profil belum disimpan. Periksa isian yang ditandai di bawah.</div>
@@ -129,9 +130,9 @@ const submit = () => form.post('/profil', {
 
                     <div class="form-actions">
                         <span v-if="form.isDirty" class="change-indicator">Ada perubahan yang belum disimpan</span>
-                        <button class="primary-button" type="submit" :disabled="form.processing || !form.isDirty">
+                        <AppButton variant="primary" class="primary-button" type="submit" :disabled="form.processing || !form.isDirty">
                             {{ form.processing ? 'Menyimpan…' : 'Simpan profil' }}
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </section>
@@ -154,9 +155,9 @@ const submit = () => form.post('/profil', {
     gap: 2rem;
     padding: .5rem 0 .75rem;
 }
-.profile-header .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: .72rem; letter-spacing: .04em; text-transform: none; }
-.profile-header h1 { margin: 0; color: var(--ink); font-size: clamp(1.8rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -.04em; }
-.profile-header p:not(.eyebrow) { margin: .5rem 0 0; color: var(--ink-soft); font-size: .9rem; }
+.profile-header .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: var(--type-meta); letter-spacing: .04em; text-transform: none; }
+.profile-header h1 { margin: 0; color: var(--ink); font-size: var(--type-3xl); font-weight: var(--weight-bold); letter-spacing: -.04em; }
+.profile-header p:not(.eyebrow) { margin: .5rem 0 0; color: var(--ink-soft); font-size: var(--type-md); }
 
 .profile-panel {
     display: grid;
@@ -202,15 +203,15 @@ const submit = () => form.post('/profil', {
 .form-heading h2 {
     margin: 0;
     color: var(--ink);
-    font-size: 1rem;
-    font-weight: 800;
+    font-size: var(--type-md);
+    font-weight: var(--weight-bold);
 }
 
 .identity-copy p,
 .form-heading p {
     margin: .3rem 0 0;
     color: var(--ink-soft);
-    font-size: .78rem;
+    font-size: var(--type-meta);
     line-height: 1.5;
 }
 
@@ -219,8 +220,8 @@ const submit = () => form.post('/profil', {
     width: 100%;
     gap: .45rem;
     color: var(--ink);
-    font-size: .78rem;
-    font-weight: 800;
+    font-size: var(--type-caption);
+    font-weight: var(--weight-bold);
     text-align: left;
 }
 
@@ -249,23 +250,23 @@ const submit = () => form.post('/profil', {
     border-radius: .5rem;
     background: var(--primary-soft);
     color: var(--primary);
-    font-size: .75rem;
-    font-weight: 800;
+    font-size: var(--type-control);
+    font-weight: var(--weight-bold);
 }
 
 .avatar-control small,
 .profile-form small,
 .file-picker small {
     color: var(--ink-soft);
-    font-size: .7rem;
-    font-weight: 500;
+    font-size: var(--type-caption);
+    font-weight: var(--weight-medium);
     overflow-wrap: anywhere;
 }
 
 .avatar-control em,
 .profile-form em {
     color: var(--red);
-    font-size: .72rem;
+    font-size: var(--type-caption);
     font-style: normal;
 }
 
@@ -292,8 +293,8 @@ const submit = () => form.post('/profil', {
     align-content: start;
     gap: .4rem;
     color: var(--ink);
-    font-size: .78rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
 }
 
 .profile-form input {
@@ -329,7 +330,7 @@ const submit = () => form.post('/profil', {
 
 .change-indicator {
     color: var(--ink-soft);
-    font-size: .75rem;
+    font-size: var(--type-meta);
 }
 
 @media (max-width: 900px) {
@@ -363,7 +364,6 @@ const submit = () => form.post('/profil', {
 
     .profile-header .secondary-button {
         width: 100%;
-        justify-content: center;
     }
 
     .profile-identity {
@@ -393,7 +393,6 @@ const submit = () => form.post('/profil', {
 
     .form-actions .primary-button {
         width: 100%;
-        justify-content: center;
     }
 }
 </style>

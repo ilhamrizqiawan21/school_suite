@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
@@ -198,40 +199,40 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                 <div class="progress-hero__actions">
                     <!-- View Mode Switcher (Non-Student) -->
                     <div v-if="!is_student" class="view-mode-switch" role="tablist" aria-label="Mode tampilan progress belajar">
-                        <button
+                        <AppButton variant="secondary"
                             type="button"
                             role="tab"
                             :aria-selected="viewMode === 'table'"
                             class="view-mode-btn"
                             :class="{ 'is-active': viewMode === 'table' }"
                             @click="viewMode = 'table'"
-                        >
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        ><template #icon><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h14M3 10h14M3 15h14" />
-                            </svg>
+                            </svg></template>
+
                             <span>Tabel Analitik</span>
-                        </button>
-                        <button
+                        </AppButton>
+                        <AppButton variant="secondary"
                             type="button"
                             role="tab"
                             :aria-selected="viewMode === 'students'"
                             class="view-mode-btn"
                             :class="{ 'is-active': viewMode === 'students' }"
                             @click="viewMode = 'students'"
-                        >
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        ><template #icon><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
                                 <rect x="3" y="3.5" width="6" height="6" rx="1.2" />
                                 <rect x="11" y="3.5" width="6" height="6" rx="1.2" />
                                 <rect x="3" y="11" width="6" height="5.5" rx="1.2" />
                                 <rect x="11" y="11" width="6" height="5.5" rx="1.2" />
-                            </svg>
+                            </svg></template>
+
                             <span>Kartu per Siswa</span>
-                        </button>
+                        </AppButton>
                     </div>
 
                     <Link
                         v-if="can_manage_lms ?? is_student"
-                        class="secondary-button progress-back-link"
+                        class="secondary-button progress-back-link ui-button ui-button--secondary ui-button--md"
                         :href="is_student ? '/siswa/materi' : '/pembelajaran'"
                     >
                         {{ is_student ? 'Buka Materi & Tugas' : 'Ruang Pembelajaran' }}
@@ -481,10 +482,10 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             </select>
                         </label>
 
-                        <button class="primary-button progress-apply" type="submit">Terapkan</button>
-                        <button v-if="hasActiveFilter" class="secondary-button progress-reset" type="button" @click="clearFilters">
+                        <AppButton variant="primary" class="primary-button progress-apply" type="submit">Terapkan</AppButton>
+                        <AppButton variant="secondary" v-if="hasActiveFilter" class="secondary-button progress-reset" type="button" @click="clearFilters">
                             Reset
-                        </button>
+                        </AppButton>
                     </form>
                 </div>
 
@@ -509,7 +510,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                     <div v-else-if="!rows.length" class="progress-empty" role="status">
                         <strong>Tidak ada hasil yang cocok</strong>
                         <p>Ubah filter status, kelas, mata pelajaran, atau kata kunci pencarian Anda.</p>
-                        <button type="button" class="secondary-button" @click="clearFilters">Tampilkan Semua Data</button>
+                        <AppButton variant="secondary" type="button" class="secondary-button" @click="clearFilters">Tampilkan Semua Data</AppButton>
                     </div>
 
                     <!-- MODE 1: TABEL ANALITIK -->
@@ -618,7 +619,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                         <td v-if="can_manage_lms ?? is_student" class="td-action">
                                             <div class="row-actions">
                                                 <Link
-                                                    class="row-action-link"
+                                                    class="row-action-link ui-button ui-button--secondary ui-button--sm"
                                                     :href="
                                                         is_student
                                                             ? `/siswa/materi?subject=${row.subject_id}`
@@ -628,7 +629,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                                     Materi
                                                 </Link>
                                                 <Link
-                                                    class="row-action-link row-action-link--primary"
+                                                    class="row-action-link row-action-link--primary ui-button ui-button--primary ui-button--sm"
                                                     :href="
                                                         is_student
                                                             ? `/siswa/tugas?subject=${row.subject_id}`
@@ -701,13 +702,13 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                     </span>
                                     <div class="row-actions">
                                         <Link
-                                            class="row-action-link"
+                                            class="row-action-link ui-button ui-button--secondary ui-button--sm"
                                             :href="is_student ? `/siswa/materi?subject=${row.subject_id}` : `/pembelajaran/materi?class=${row.class_group_id ?? ''}&subject=${row.subject_id}`"
                                         >
                                             Materi
                                         </Link>
                                         <Link
-                                            class="row-action-link row-action-link--primary"
+                                            class="row-action-link row-action-link--primary ui-button ui-button--primary ui-button--sm"
                                             :href="is_student ? `/siswa/tugas?subject=${row.subject_id}` : `/pembelajaran/tugas?class=${row.class_group_id ?? ''}&subject=${row.subject_id}`"
                                         >
                                             Tugas
@@ -798,7 +799,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                         </span>
                                         <Link
                                             v-if="can_manage_lms"
-                                            class="row-action-link"
+                                            class="row-action-link ui-button ui-button--secondary ui-button--sm"
                                             :href="`/pembelajaran/tugas?class=${sub.class_group_id ?? student.class_group_id}&subject=${sub.subject_id}`"
                                         >
                                             Buka
@@ -806,7 +807,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                     </div>
                                 </div>
 
-                                <button
+                                <AppButton variant="secondary"
                                     v-if="student.subjects.length > 3"
                                     type="button"
                                     class="expand-subjects-btn"
@@ -817,7 +818,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                             ? 'Sembunyikan sebagian mata pelajaran'
                                             : `Lihat semua ${student.subjects.length} mata pelajaran`
                                     }}
-                                </button>
+                                </AppButton>
                             </div>
                         </article>
                     </div>
@@ -858,8 +859,8 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     display: inline-flex;
     align-items: center;
     padding: 0.18rem 0.6rem;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     color: var(--primary);
     background: color-mix(in srgb, var(--primary) 12%, var(--surface));
     border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--line));
@@ -883,34 +884,9 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     gap: 0.2rem;
 }
 
-.view-mode-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.42rem 0.75rem;
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: var(--ink-soft);
-    background: transparent;
-    border: 0;
-    border-radius: 0.52rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.view-mode-btn svg {
-    width: 0.95rem;
-    height: 0.95rem;
-}
-
 .view-mode-btn.is-active {
     color: var(--primary);
     background: var(--surface);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-}
-
-.progress-back-link {
-    white-space: nowrap;
 }
 
 /* KPI Summary Cards */
@@ -958,10 +934,10 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     gap: 0.5rem;
 }
 
-.kpi-card__top > span:first-child {
+.kpi-card__top > span:first-child:not(.kpi-badge) {
     color: var(--ink-faint);
-    font-size: 0.73rem;
-    font-weight: 600;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
 }
 
 .kpi-card > strong {
@@ -974,14 +950,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .kpi-inline-unit {
     display: inline !important;
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: var(--type-sm);
+    font-weight: var(--weight-semibold);
     color: var(--ink-soft);
 }
 
 .kpi-inline-score {
     display: inline !important;
-    font-size: 0.82rem !important;
+    font-size: var(--type-sm) !important;
     color: var(--ink);
 }
 
@@ -989,7 +965,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     display: block;
     margin-top: 0.1rem;
     color: var(--ink-soft);
-    font-size: 0.72rem;
+    font-size: var(--type-meta);
 }
 
 .kpi-badge {
@@ -997,29 +973,29 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     align-items: center;
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
     white-space: nowrap;
 }
 
 .kpi-badge--blue {
-    color: #1d4ed8;
-    background: rgba(59, 130, 246, 0.12);
+    color: var(--blue);
+    background: var(--blue-soft);
 }
 
 .kpi-badge--purple {
-    color: #6d28d9;
-    background: rgba(139, 92, 246, 0.12);
+    color: var(--violet);
+    background: var(--violet-soft);
 }
 
 .kpi-badge--emerald {
-    color: #047857;
-    background: rgba(16, 185, 129, 0.13);
+    color: var(--green);
+    background: var(--green-soft);
 }
 
 .kpi-badge--rose {
-    color: #be123c;
-    background: rgba(244, 63, 94, 0.13);
+    color: var(--red);
+    background: var(--red-soft);
 }
 
 .kpi-badge--slate {
@@ -1058,7 +1034,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 .personal-attendance__lead span {
     display: block;
     color: var(--ink-soft);
-    font-size: 0.76rem;
+    font-size: var(--type-meta);
 }
 
 .personal-attendance__lead strong {
@@ -1076,7 +1052,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 .att-chip {
     padding: 0.3rem 0.65rem;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: var(--type-meta);
     background: var(--surface);
     border: 1px solid var(--line);
 }
@@ -1106,8 +1082,8 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     align-items: center;
     gap: 0.38rem;
     padding: 0.36rem 0.72rem;
-    font-size: 0.74rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
     color: var(--ink-soft);
     background: var(--surface);
     border: 1px solid var(--line-strong);
@@ -1123,13 +1099,13 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .status-pill.is-active {
     color: #fff;
-    background: var(--primary);
-    border-color: var(--primary);
+    background: var(--primary-action);
+    border-color: var(--primary-action);
 }
 
 .status-pill b {
     padding: 0.05rem 0.38rem;
-    font-size: 0.68rem;
+    font-size: var(--type-meta);
     border-radius: 999px;
     background: color-mix(in srgb, currentColor 14%, transparent);
 }
@@ -1156,8 +1132,8 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 .progress-result-count {
     margin-left: auto;
     color: var(--ink-faint);
-    font-size: 0.73rem;
-    font-weight: 600;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
     white-space: nowrap;
 }
 
@@ -1183,7 +1159,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     background: var(--surface);
     border: 1px solid var(--line-strong);
     border-radius: 0.6rem;
-    font-size: 0.8rem;
+    font-size: var(--type-control);
 }
 
 .progress-toolbar input::placeholder {
@@ -1200,11 +1176,6 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .progress-sort-filter {
     width: min(220px, 100%);
-}
-
-.progress-reset,
-.progress-apply {
-    min-height: 38px;
 }
 
 /* Table Analytic View */
@@ -1224,14 +1195,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 .identity-cell strong {
     display: block;
     color: var(--ink);
-    font-size: 0.84rem;
+    font-size: var(--type-sm);
 }
 
 .identity-cell small {
     display: block;
     margin-top: 0.15rem;
     color: var(--ink-faint);
-    font-size: 0.72rem;
+    font-size: var(--type-meta);
 }
 
 .class-subject-cell {
@@ -1244,15 +1215,15 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     display: inline-flex;
     align-items: center;
     padding: 0.12rem 0.48rem;
-    font-size: 0.68rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     color: var(--primary);
     background: color-mix(in srgb, var(--primary) 11%, transparent);
     border-radius: 0.38rem;
 }
 
 .subject-title {
-    font-size: 0.82rem;
+    font-size: var(--type-sm);
     color: var(--ink);
 }
 
@@ -1270,13 +1241,13 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 }
 
 .metric-bar-cell__head strong {
-    font-size: 0.82rem;
+    font-size: var(--type-sm);
     color: var(--ink);
 }
 
 .metric-bar-cell__head span {
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     color: var(--ink-soft);
 }
 
@@ -1309,7 +1280,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .metric-bar-cell small {
     color: var(--ink-faint);
-    font-size: 0.69rem;
+    font-size: var(--type-meta);
 }
 
 /* Status & Score Badges */
@@ -1324,24 +1295,24 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     align-items: center;
     padding: 0.22rem 0.58rem;
     border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
     white-space: nowrap;
 }
 
 .status-badge--emerald {
-    color: #047857;
-    background: rgba(16, 185, 129, 0.14);
+    color: var(--green);
+    background: var(--green-soft);
 }
 
 .status-badge--amber {
-    color: #b45309;
-    background: rgba(245, 158, 11, 0.15);
+    color: var(--gold);
+    background: var(--gold-soft);
 }
 
 .status-badge--rose {
-    color: #be123c;
-    background: rgba(244, 63, 94, 0.14);
+    color: var(--red);
+    background: var(--red-soft);
 }
 
 .status-badge--slate {
@@ -1356,25 +1327,25 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 }
 
 .sub-chip {
-    font-size: 0.67rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     padding: 0.1rem 0.42rem;
     border-radius: 0.35rem;
 }
 
 .sub-chip--amber {
-    color: #b45309;
-    background: rgba(245, 158, 11, 0.13);
+    color: var(--gold);
+    background: var(--gold-soft);
 }
 
 .sub-chip--rose {
-    color: #be123c;
-    background: rgba(244, 63, 94, 0.13);
+    color: var(--red);
+    background: var(--red-soft);
 }
 
 .progress-attention {
     color: var(--red);
-    font-weight: 800;
+    font-weight: var(--weight-bold);
 }
 
 .th-score,
@@ -1389,40 +1360,40 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     min-width: 3.1rem;
     padding: 0.26rem 0.6rem;
     border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
 }
 
 .score-pill--sm {
     min-width: 2.6rem;
     padding: 0.18rem 0.48rem;
-    font-size: 0.72rem;
+    font-size: var(--type-meta);
 }
 
 .score-pill--emerald {
-    color: #047857;
-    background: rgba(16, 185, 129, 0.15);
+    color: var(--green);
+    background: var(--green-soft);
 }
 
 .score-pill--amber {
-    color: #b45309;
-    background: rgba(245, 158, 11, 0.16);
+    color: var(--gold);
+    background: var(--gold-soft);
 }
 
 .score-pill--rose {
-    color: #be123c;
-    background: rgba(244, 63, 94, 0.15);
+    color: var(--red);
+    background: var(--red-soft);
 }
 
 .score-pill--slate {
-    color: var(--ink-faint);
+    color: var(--ink-soft);
     background: color-mix(in srgb, var(--line-strong) 45%, transparent);
 }
 
 .graded-note {
     display: block;
     margin-top: 0.18rem;
-    font-size: 0.66rem;
+    font-size: var(--type-meta);
     color: var(--ink-faint);
 }
 
@@ -1436,31 +1407,6 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-}
-
-.row-action-link {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.28rem 0.58rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 0.45rem;
-    text-decoration: none;
-    transition: all 0.15s ease;
-}
-
-.row-action-link:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.row-action-link--primary {
-    color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 10%, var(--surface));
-    border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
 }
 
 /* Mode 2: Kartu Ringkas per Siswa */
@@ -1503,7 +1449,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 }
 
 .student-group-card__title-row strong {
-    font-size: 0.92rem;
+    font-size: var(--type-md);
     color: var(--ink);
 }
 
@@ -1511,7 +1457,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     display: block;
     margin-top: 0.2rem;
     color: var(--ink-faint);
-    font-size: 0.72rem;
+    font-size: var(--type-meta);
 }
 
 .student-group-card__score {
@@ -1521,7 +1467,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 .student-group-card__score small {
     display: block;
     margin-top: 0.15rem;
-    font-size: 0.65rem;
+    font-size: var(--type-meta);
     color: var(--ink-faint);
 }
 
@@ -1538,7 +1484,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 .group-bar-item__label {
     display: flex;
     justify-content: space-between;
-    font-size: 0.74rem;
+    font-size: var(--type-meta);
 }
 
 .group-bar-item__label span {
@@ -1565,23 +1511,23 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .counter-box span {
     display: block;
-    font-size: 0.63rem;
+    font-size: var(--type-meta);
     color: var(--ink-faint);
 }
 
 .counter-box strong {
     display: block;
     margin-top: 0.1rem;
-    font-size: 0.78rem;
+    font-size: var(--type-meta);
     color: var(--ink);
 }
 
 .counter-box--warn strong {
-    color: #b45309;
+    color: var(--gold);
 }
 
 .counter-box--danger strong {
-    color: #be123c;
+    color: var(--red);
 }
 
 .student-group-card__subjects {
@@ -1604,39 +1550,28 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .student-subject-row__info strong {
     display: block;
-    font-size: 0.78rem;
+    font-size: var(--type-meta);
     color: var(--ink);
 }
 
 .student-subject-row__info small {
     display: block;
-    font-size: 0.68rem;
+    font-size: var(--type-meta);
     color: var(--ink-soft);
 }
 
 .text-rose {
-    color: #be123c;
+    color: var(--red);
 }
 
 .text-amber {
-    color: #b45309;
+    color: var(--gold);
 }
 
 .student-subject-row__right {
     display: flex;
     align-items: center;
     gap: 0.35rem;
-}
-
-.expand-subjects-btn {
-    padding: 0.35rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--primary);
-    background: transparent;
-    border: 1px dashed color-mix(in srgb, var(--primary) 35%, var(--line));
-    border-radius: 0.45rem;
-    cursor: pointer;
 }
 
 /* Empty & Mobile Cards */
@@ -1650,14 +1585,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .progress-empty strong {
     color: var(--ink);
-    font-size: 0.95rem;
+    font-size: var(--type-md);
 }
 
 .progress-empty p {
     max-width: 480px;
     margin: 0;
     color: var(--ink-soft);
-    font-size: 0.8rem;
+    font-size: var(--type-meta);
     line-height: 1.55;
 }
 
@@ -1692,13 +1627,13 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 }
 
 .progress-row-heading strong {
-    font-size: 0.88rem;
+    font-size: var(--type-md);
 }
 
 .progress-row-heading small {
     margin-top: 0.2rem;
     color: var(--ink-faint);
-    font-size: 0.68rem;
+    font-size: var(--type-meta);
     line-height: 1.4;
 }
 
@@ -1716,12 +1651,12 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 .progress-row-metrics span {
     color: var(--ink-faint);
-    font-size: 0.65rem;
+    font-size: var(--type-meta);
 }
 
 .progress-row-metrics strong {
     color: var(--ink);
-    font-size: 0.78rem;
+    font-size: var(--type-meta);
 }
 
 .progress-row-card__footer {
@@ -1747,14 +1682,14 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
     color: var(--ink);
     border: 1px solid var(--line);
     border-radius: 0.4rem;
-    font-size: 0.8rem;
+    font-size: var(--type-meta);
     text-decoration: none;
 }
 
 .progress-pagination :deep(a.current) {
     color: #fff;
-    background: var(--primary);
-    border-color: var(--primary);
+    background: var(--primary-action);
+    border-color: var(--primary-action);
 }
 
 .progress-pagination :deep(a.disabled) {

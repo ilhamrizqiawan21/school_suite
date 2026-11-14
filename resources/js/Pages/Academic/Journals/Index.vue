@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -479,7 +480,7 @@ const chart = computed(() => {
                 <div>
                     <p class="eyebrow">Aktivitas mengajar</p>
                     <h1>Jurnal harian guru</h1>
-                    <p class="hero-copy">Kelola agenda mengajar, presensi sesi, dan catatan pembelajaran dari satu ruang kerja.</p>
+
                 </div>
                 <div v-if="active_term" class="term-badge">
                     <span>Periode aktif</span>
@@ -487,9 +488,9 @@ const chart = computed(() => {
                     <small>{{ formatShortDate(active_term.start_date) }} — {{ formatShortDate(active_term.end_date) }}</small>
                 </div>
                 <div class="hero-actions">
-                    <button class="primary-button" type="button" :disabled="!assignments.length" @click="openNewSession()">
+                    <AppButton variant="primary" class="primary-button" type="button" :disabled="!assignments.length" @click="openNewSession()">
                         + Catat pertemuan
-                    </button>
+                    </AppButton>
                 </div>
             </header>
 
@@ -506,10 +507,10 @@ const chart = computed(() => {
                         <h2>{{ formatDate(agendaDate) }}</h2>
                     </div>
                     <div class="date-controls">
-                        <button type="button" class="icon-button" aria-label="Hari sebelumnya" @click="shiftDate(-1)">‹</button>
-                        <button type="button" class="secondary-button" @click="goToToday">Hari ini</button>
+                        <AppButton variant="secondary" icon-only type="button" class="icon-button" aria-label="Hari sebelumnya" @click="shiftDate(-1)">‹</AppButton>
+                        <AppButton variant="secondary" type="button" class="secondary-button" @click="goToToday">Hari ini</AppButton>
                         <input v-model="agendaDate" type="date" aria-label="Pilih tanggal" @change="navigateAgenda()" />
-                        <button type="button" class="icon-button" aria-label="Hari berikutnya" @click="shiftDate(1)">›</button>
+                        <AppButton variant="secondary" icon-only type="button" class="icon-button" aria-label="Hari berikutnya" @click="shiftDate(1)">›</AppButton>
                     </div>
                 </div>
 
@@ -535,10 +536,10 @@ const chart = computed(() => {
                             <span><b>{{ session.attendance_summary.absent }}</b> alpa</span>
                         </div>
                         <div class="session-actions">
-                            <Link class="secondary-button" :href="'/akademik/presensi?session_id=' + session.id + '&date=' + session.date">Presensi sesi</Link>
-                            <button type="button" class="primary-button" @click="toggleJournal(session)">
+                            <Link class="secondary-button ui-button ui-button--secondary ui-button--md" :href="'/akademik/presensi?session_id=' + session.id + '&date=' + session.date">Presensi sesi</Link>
+                            <AppButton variant="primary" type="button" class="primary-button" @click="toggleJournal(session)">
                                 {{ session.journal_status === 'completed' ? 'Edit jurnal' : 'Isi jurnal' }}
-                            </button>
+                            </AppButton>
                         </div>
                         <form v-if="expandedSessionId === session.id" class="journal-form" @input="queueDraftSave(session)" @submit.prevent="saveJournal(session)">
                             <fieldset class="form-section" :disabled="processingSessionId === session.id">
@@ -577,7 +578,7 @@ const chart = computed(() => {
                                     <span><b>{{ session.attendance_summary.sick }}</b> sakit</span>
                                     <span><b>{{ session.attendance_summary.permitted }}</b> izin</span>
                                     <span><b>{{ session.attendance_summary.absent }}</b> alpa</span>
-                                    <Link class="secondary-button" :href="'/akademik/presensi?session_id=' + session.id + '&date=' + session.date">Kelola presensi</Link>
+                                    <Link class="secondary-button ui-button ui-button--secondary ui-button--md" :href="'/akademik/presensi?session_id=' + session.id + '&date=' + session.date">Kelola presensi</Link>
                                 </div>
                                 <label>Keterangan presensi (opsional)
                                     <textarea v-model="ensureDraft(session).attendance_notes" rows="2" placeholder="Catatan siswa sakit, izin, atau alpa" />
@@ -599,9 +600,9 @@ const chart = computed(() => {
                                 <span class="draft-note" role="status">
                                     {{ draftStorageStates[session.id] === 'saving' ? 'Menyimpan draft…' : draftStorageStates[session.id] === 'unavailable' ? 'Draft lokal tidak dapat disimpan di browser ini.' : storedDrafts[session.id] ? 'Draft tersimpan di browser selama 7 hari.' : 'Perubahan akan tersimpan otomatis di browser.' }}
                                 </span>
-                                <button class="primary-button" type="submit" :disabled="processingSessionId === session.id">
+                                <AppButton variant="primary" class="primary-button" type="submit" :disabled="processingSessionId === session.id">
                                     {{ processingSessionId === session.id ? 'Menyimpan…' : 'Simpan jurnal' }}
-                                </button>
+                                </AppButton>
                             </div>
                         </form>
                     </article>
@@ -611,8 +612,8 @@ const chart = computed(() => {
                     <h3>Belum ada pertemuan di tanggal ini</h3>
                     <p>Pilih tanggal lain, atau catat pertemuan dari penugasan mapel dan rombel Anda.</p>
                     <div class="empty-actions">
-                        <button class="primary-button" type="button" :disabled="!assignments.length" @click="openNewSession()">Catat pertemuan</button>
-                        <Link class="secondary-button" href="/akademik/jadwal">Lihat jadwal pelajaran</Link>
+                        <AppButton variant="primary" class="primary-button" type="button" :disabled="!assignments.length" @click="openNewSession()">Catat pertemuan</AppButton>
+                        <Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/jadwal">Lihat jadwal pelajaran</Link>
                     </div>
                 </div>
             </section>
@@ -631,7 +632,7 @@ const chart = computed(() => {
                     <label>Mata pelajaran<select v-model="selectedSubject"><option value="">Semua mata pelajaran</option><option v-for="item in subjects" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
                     <label>Status<select v-model="journalStatus"><option value="all">Semua status</option><option value="completed">Selesai</option><option value="pending">Belum diisi</option></select></label>
                     <label>Urutan<select v-model="historySort"><option value="latest">Terbaru</option><option value="oldest">Terlama</option></select></label>
-                    <div class="filter-actions"><button type="button" class="secondary-button" @click="resetHistoryFilters">Reset</button><button type="button" class="primary-button" @click="applyHistoryFilters">Terapkan</button></div>
+                    <div class="filter-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="resetHistoryFilters">Reset</AppButton><AppButton variant="primary" type="button" class="primary-button" @click="applyHistoryFilters">Terapkan</AppButton></div>
                 </div>
                 <div v-if="journal_sessions.data.length" class="history-list">
                     <article v-for="session in journal_sessions.data" :key="session.id" class="history-row">
@@ -639,11 +640,11 @@ const chart = computed(() => {
                         <div class="history-main"><h3>{{ session.subject.name }}</h3><p>{{ session.class_group.name }} · {{ session.subject.code }} · Pertemuan {{ session.meeting_number ?? '—' }}</p><p v-if="session.journal" class="topic">{{ session.journal.topic }}</p><p v-else class="muted">Jurnal belum diisi</p></div>
                         <span class="status-badge" :class="statusClass(session)">{{ session.journal_status === 'completed' ? 'Selesai' : 'Belum diisi' }}</span>
                         <div class="history-actions">
-                            <button type="button" class="secondary-button" @click="openHistorySession(session)">{{ session.journal ? 'Buka / edit' : 'Isi jurnal' }}</button>
-                            <button v-if="session.journal" type="button" class="secondary-button" @click="openNewSession(session)">Duplikat</button>
-                            <a v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/word`" :download="`Jurnal_${session.id}.docx`">Unduh Word</a>
-                            <a v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/pdf`" :download="`Jurnal_${session.id}.pdf`">Unduh PDF</a>
-                            <button v-if="session.journal" class="secondary-button danger-action" type="button" @click="deleteJournal(session)">Hapus</button>
+                            <AppButton variant="secondary" type="button" class="secondary-button" @click="openHistorySession(session)">{{ session.journal ? 'Buka / edit' : 'Isi jurnal' }}</AppButton>
+                            <AppButton variant="secondary" v-if="session.journal" type="button" class="secondary-button" @click="openNewSession(session)">Duplikat</AppButton>
+                            <AppButton variant="secondary" as="a" v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/word`" :download="`Jurnal_${session.id}.docx`">Unduh Word</AppButton>
+                            <AppButton variant="secondary" as="a" v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/pdf`" :download="`Jurnal_${session.id}.pdf`">Unduh PDF</AppButton>
+                            <AppButton variant="danger" v-if="session.journal" class="secondary-button danger-action" type="button" @click="deleteJournal(session)">Hapus</AppButton>
                         </div>
                     </article>
                 </div>
@@ -709,10 +710,10 @@ const chart = computed(() => {
                         {{ newSessionForm.errors.teaching_assignment_id || newSessionForm.errors.date }}
                     </p>
                     <div class="form-footer">
-                        <button class="secondary-button" type="button" @click="showSessionModal = false">Batal</button>
-                        <button class="primary-button" type="submit" :disabled="newSessionForm.processing || !assignments.length">
+                        <AppButton variant="secondary" class="secondary-button" type="button" @click="showSessionModal = false">Batal</AppButton>
+                        <AppButton variant="primary" class="primary-button" type="submit" :disabled="newSessionForm.processing || !assignments.length">
                             {{ newSessionForm.processing ? 'Menyimpan…' : 'Buat sesi' }}
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -724,67 +725,61 @@ const chart = computed(() => {
 .journal-page { max-width: 1440px; margin: 0 auto; padding: 32px clamp(20px, 4vw, 56px) 64px; color: var(--ink); }
 .journal-hero, .journal-section, .chart-card, .recap-table-wrap { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
 .journal-hero { display: flex; justify-content: space-between; gap: 28px; align-items: flex-end; padding: 0 0 24px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.eyebrow { margin: 0 0 8px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 8px; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .12em; text-transform: uppercase; }
 h1, h2, h3, p { margin-top: 0; }
-h1 { margin-bottom: 8px; font-size: clamp(28px, 3vw, 38px); letter-spacing: -.04em; }
+h1 { margin-bottom: 8px; font-size: var(--type-3xl); letter-spacing: -.04em; }
 h2 { margin-bottom: 0; font-size: clamp(22px, 3vw, 32px); letter-spacing: -.03em; }
 h3 { margin-bottom: 6px; font-size: 17px; }
 .hero-copy, .session-meta, .history-main p, .empty-state p { color: var(--ink-soft); }
 .hero-copy { max-width: 580px; margin-bottom: 0; line-height: 1.7; }
 .term-badge { min-width: 190px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
-.term-badge span, .term-badge small { display: block; color: var(--ink-soft); font-size: 12px; }
+.term-badge span, .term-badge small { display: block; color: var(--ink-soft); font-size: var(--type-meta); }
 .term-badge strong { display: block; margin: 4px 0; }
 .journal-tabs { display: flex; gap: 8px; margin: 24px 0; padding: 6px; border-bottom: 1px solid var(--line); }
-.journal-tabs button { border: 0; padding: 12px 16px; border-radius: 10px; color: var(--ink-soft); background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
+.journal-tabs button { border: 0; padding: 12px 16px; border-radius: 10px; color: var(--ink-soft); background: transparent; font: inherit; font-weight: var(--weight-semibold); cursor: pointer; }
 .journal-tabs button.active { color: var(--primary); background: var(--primary-soft); }
 .journal-section { padding: clamp(20px, 3vw, 32px); border-radius: 14px; box-shadow: none; }
 .journal-hero { align-items: center; flex-wrap: wrap; }
 .hero-actions, .empty-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .form-section { display: grid; gap: 13px; min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }
-.form-section legend { padding: 0 7px; color: var(--ink); font-size: 13px; font-weight: 800; }
+.form-section legend { padding: 0 7px; color: var(--ink); font-size: var(--type-caption); font-weight: var(--weight-bold); }
 .session-modal-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; justify-content: flex-end; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
 .session-modal { display: grid; align-content: start; gap: 16px; width: min(560px, 100%); max-height: 100%; height: 100%; overflow: auto; padding: clamp(18px, 3vw, 30px); border: 0; border-radius: 0; color: var(--ink); background: var(--surface); box-shadow: -18px 0 40px rgb(19 32 51 / 15%); }
 .session-modal h2 { margin: 0 0 8px; color: var(--ink); }
-.session-modal > label, .session-modal .form-grid label { display: grid; gap: 6px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
+.session-modal > label, .session-modal .form-grid label { display: grid; gap: 6px; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .session-modal .form-footer { justify-content: flex-end; }
 .session-modal .hero-copy { margin-bottom: 0; }
 .section-toolbar { display: flex; justify-content: space-between; gap: 20px; align-items: center; margin-bottom: 24px; }
 .date-controls, .session-actions, .form-footer, .filter-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 button, input, select, textarea { font: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 40%, transparent); outline-offset: 2px; }
-.icon-button, .secondary-button, .primary-button { border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
-.icon-button { width: 40px; padding: 9px; font-size: 18px; color: var(--ink); background: var(--surface-subtle); }
-.secondary-button { color: var(--ink); background: var(--surface-subtle); }
-.primary-button { color: #fff; border-color: var(--primary); background: var(--primary); }
-.primary-button:disabled { opacity: .6; cursor: wait; }
 input, select, textarea { width: 100%; border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 12px; color: var(--ink); background: var(--surface); }
 .date-controls input { width: auto; }
 .agenda-summary, .recap-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
 .agenda-summary > div, .recap-metrics > div { padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-subtle); }
-.agenda-summary span, .recap-metrics span, .recap-metrics small { display: block; color: var(--ink-soft); font-size: 12px; }
+.agenda-summary span, .recap-metrics span, .recap-metrics small { display: block; color: var(--ink-soft); font-size: var(--type-meta); }
 .agenda-summary strong, .recap-metrics strong { display: block; margin-top: 5px; font-size: 26px; }
 .accent-gold { color: var(--gold); }.accent-green { color: var(--green); }
 .agenda-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .session-card { padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-subtle); }
 .session-topline, .card-heading { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-.session-time { color: var(--primary); font-weight: 800; }
+.session-time { color: var(--primary); font-weight: var(--weight-bold); }
 .session-card h3 { margin-top: 18px; font-size: 21px; }
-.session-code { margin-bottom: 12px; color: var(--primary); font-weight: 700; }
-.session-meta { font-size: 13px; }
-.status-badge { display: inline-flex; border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 800; }
+.session-code { margin-bottom: 12px; color: var(--primary); font-weight: var(--weight-bold); }
+.session-meta { font-size: var(--type-sm); }
+.status-badge { display: inline-flex; border-radius: 999px; padding: 5px 10px; font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .status-completed { color: var(--green); background: var(--green-soft); }.status-pending { color: var(--gold); background: var(--gold-soft); }.status-draft { color: var(--violet); background: color-mix(in srgb, var(--violet) 14%, transparent); }.status-cancelled { color: var(--red); background: var(--red-soft); }
-.attendance-strip { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: 12px; }
+.attendance-strip { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--ink-soft); font-size: var(--type-meta); }
 .attendance-strip b { color: var(--ink); }
 .journal-form { display: grid; gap: 13px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
-.journal-form label, .filter-panel label { display: grid; gap: 6px; color: var(--ink-soft); font-size: 12px; font-weight: 700; }
-.form-footer { justify-content: space-between; }.draft-note { color: var(--ink-faint); font-size: 12px; }
+.journal-form label, .filter-panel label { display: grid; gap: 6px; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.form-footer { justify-content: space-between; }.draft-note { color: var(--ink-faint); font-size: var(--type-meta); }
 .empty-state { display: grid; justify-items: center; padding: 56px 20px; text-align: center; }.empty-state.compact { padding: 30px 20px; }.empty-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 16px; border-radius: 50%; color: var(--primary); background: var(--primary-soft); font-size: 28px; }
 .filter-panel { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 20px; padding: 16px; border-radius: 14px; background: var(--surface-subtle); }
-.history-list { display: grid; gap: 10px; }.history-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 12px 18px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }.history-date { display: grid; gap: 4px; }.history-date span, .history-main p { margin: 0; color: var(--ink-soft); font-size: 12px; }.history-main h3 { margin-bottom: 3px; }.history-main .topic { margin-top: 8px; color: var(--ink); font-weight: 600; }.muted { color: var(--ink-faint) !important; }.history-actions { grid-column: 2 / -1; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }.history-actions .secondary-button { padding: 8px 10px; font-size: 11px; }
-.danger-action { color: var(--red); border-color: color-mix(in srgb, var(--red) 28%, var(--line)); }
-.pagination { display: flex; gap: 6px; justify-content: center; margin-top: 22px; }.pagination a { padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); text-decoration: none; }.pagination a.active { color: #fff; border-color: var(--primary); background: var(--primary); }.pagination a.disabled { opacity: .45; pointer-events: none; }
-.recap-metrics { grid-template-columns: repeat(4, 1fr); }.chart-card { margin-bottom: 20px; padding: 22px; border-radius: 16px; }.card-heading strong { color: var(--primary); font-size: 24px; }.chart-wrap { margin-top: 20px; overflow-x: auto; }.chart-wrap svg { display: block; min-width: 620px; width: 100%; height: 240px; overflow: visible; }.chart-area { fill: var(--primary-soft); }.chart-line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }.chart-point { fill: var(--surface); stroke: var(--primary); stroke-width: 3; }.chart-labels { display: flex; justify-content: space-between; min-width: 620px; margin-top: 8px; color: var(--ink-soft); font-size: 11px; }
-.recap-table-wrap { overflow-x: auto; border-radius: 16px; }table { width: 100%; border-collapse: collapse; }th, td { padding: 15px 16px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }th { color: var(--ink-soft); background: var(--surface-subtle); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }td { color: var(--ink); }.progress-value { color: var(--primary); font-weight: 800; }
+.history-list { display: grid; gap: 10px; }.history-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 12px 18px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }.history-date { display: grid; gap: 4px; }.history-date span, .history-main p { margin: 0; color: var(--ink-soft); font-size: var(--type-meta); }.history-main h3 { margin-bottom: 3px; }.history-main .topic { margin-top: 8px; color: var(--ink); font-weight: var(--weight-semibold); }.muted { color: var(--ink-faint) !important; }.history-actions { grid-column: 2 / -1; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
+.pagination { display: flex; gap: 6px; justify-content: center; margin-top: 22px; }.pagination a { padding: 8px 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); text-decoration: none; }.pagination a.active { color: #fff; border-color: var(--primary-action); background: var(--primary-action); }.pagination a.disabled { opacity: .45; pointer-events: none; }
+.recap-metrics { grid-template-columns: repeat(4, 1fr); }.chart-card { margin-bottom: 20px; padding: 22px; border-radius: 16px; }.card-heading strong { color: var(--primary); font-size: 24px; }.chart-wrap { margin-top: 20px; overflow-x: auto; }.chart-wrap svg { display: block; min-width: 620px; width: 100%; height: 240px; overflow: visible; }.chart-area { fill: var(--primary-soft); }.chart-line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }.chart-point { fill: var(--surface); stroke: var(--primary); stroke-width: 3; }.chart-labels { display: flex; justify-content: space-between; min-width: 620px; margin-top: 8px; color: var(--ink-soft); font-size: var(--type-caption); }
+.recap-table-wrap { overflow-x: auto; border-radius: 16px; }table { width: 100%; border-collapse: collapse; }th, td { padding: 15px 16px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }th { color: var(--ink-soft); background: var(--surface-subtle); font-size: var(--type-meta); letter-spacing: .08em; text-transform: uppercase; }td { color: var(--ink); }.progress-value { color: var(--primary); font-weight: var(--weight-bold); }
 @media (max-width: 900px) { .agenda-grid, .filter-panel { grid-template-columns: 1fr 1fr; }.filter-actions { grid-column: 1 / -1; justify-content: flex-end; }.recap-metrics { grid-template-columns: repeat(2, 1fr); }.history-row { grid-template-columns: 110px 1fr auto; }.history-actions { grid-column: 2 / -1; justify-content: flex-start; } }
 @media (max-width: 600px) { .journal-page { padding: 20px 14px 40px; }.journal-hero, .section-toolbar { align-items: flex-start; flex-direction: column; }.term-badge { width: 100%; }.journal-tabs { overflow-x: auto; }.journal-tabs button { white-space: nowrap; }.date-controls { width: 100%; }.date-controls input { flex: 1; }.agenda-summary, .recap-metrics, .agenda-grid, .filter-panel, .form-section .form-grid { grid-template-columns: 1fr; }.history-row { grid-template-columns: 1fr; gap: 10px; }.history-actions { grid-column: auto; justify-content: flex-start; }.session-actions .secondary-button, .session-actions .primary-button { flex: 1; text-align: center; }.form-footer { align-items: stretch; flex-direction: column; }.form-footer .primary-button { width: 100%; }.empty-actions, .hero-actions { width: 100%; }.empty-actions > *, .hero-actions > * { flex: 1 1 100%; }.session-modal-backdrop { align-items: flex-end; }.session-modal { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 </style>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
+import { useTheme } from '@/composables/useTheme';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import TopNavbar from '../components/TopNavbar.vue';
@@ -18,9 +20,10 @@ interface PageProps {
 }
 
 const page = usePage<PageProps>();
+const activePeriodLabel = computed(() => (page.props.activePeriod?.label ?? 'Periode belum diatur').replace(/Semester\s+Semester/gi, 'Semester'));
 const appBasePath = document.querySelector<HTMLMetaElement>('meta[name="app-base-path"]')?.content?.replace(/\/+$/, '') ?? '';
-const fallbackLogoUrl = `${appBasePath}/icon-192.png`;
-const appName = computed(() => !page.props.appName || page.props.appName === 'Laravel' ? 'School Suite' : page.props.appName);
+const fallbackLogoUrl = `${appBasePath}/brand/logos/school-suite-logo-symbol-transparent.png`;
+const appName = computed(() => !page.props.appName || page.props.appName === 'Laravel' || String(page.props.appName).toLowerCase().includes('e-school') ? 'School Suite' : page.props.appName);
 const currentRole = computed(() => page.props.auth?.user?.role);
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
 const sidebarOpen = ref(false);
@@ -30,7 +33,8 @@ const sidebarExpanded = computed(() => isMobileViewport.value ? sidebarOpen.valu
 const sidebarToggleLabel = computed(() => isMobileViewport.value
     ? (sidebarOpen.value ? 'Tutup navigasi' : 'Buka navigasi')
     : (desktopSidebarRail.value ? 'Perlebar sidebar' : 'Perkecil sidebar'));
-const darkTheme = ref(false);
+const { theme, toggleTheme } = useTheme();
+const darkTheme = computed(() => theme.value === 'dark');
 const toastMessage = ref('');
 const toastKind = ref<'success' | 'error'>('success');
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
@@ -144,26 +148,6 @@ const toggleSidebar = () => {
     } catch { /* Storage may be unavailable in private browsing. */ }
 };
 
-const readStoredTheme = () => {
-    try {
-        return localStorage.getItem('school-suite-theme') === 'dark';
-    } catch { /* Storage may be unavailable in private browsing. */
-        return false;
-    }
-};
-
-const persistTheme = (isDark: boolean) => {
-    try {
-        localStorage.setItem('school-suite-theme', isDark ? 'dark' : 'light');
-    } catch { /* Storage may be unavailable in private browsing. */ }
-};
-
-const toggleTheme = () => {
-    darkTheme.value = !darkTheme.value;
-    document.documentElement.dataset.theme = darkTheme.value ? 'dark' : 'light';
-    persistTheme(darkTheme.value);
-};
-
 const closeOnEscape = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
         if (searchOpen.value) {
@@ -229,8 +213,6 @@ onMounted(() => {
         if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
         link.href = page.props.school.favicon_url;
     }
-    darkTheme.value = readStoredTheme();
-    document.documentElement.dataset.theme = darkTheme.value ? 'dark' : 'light';
     document.addEventListener('keydown', closeOnEscape);
     document.addEventListener('pointerdown', handleDocumentPointerdown);
     nextTick(collectMenuEntries);
@@ -287,9 +269,9 @@ onBeforeUnmount(() => {
             <button v-if="sidebarOpen" type="button" class="sidebar-backdrop is-visible" aria-label="Tutup navigasi" @click="sidebarOpen = false" />
         <div class="workspace">
             <header class="topbar">
-                <button type="button" class="icon-button sidebar-toggle" :aria-expanded="sidebarExpanded" aria-controls="sidebar" :aria-label="sidebarToggleLabel" :title="sidebarToggleLabel" @click="toggleSidebar">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-                </button>
+                <AppButton variant="secondary" icon-only type="button" class="icon-button sidebar-toggle" :aria-expanded="sidebarExpanded" aria-controls="sidebar" :aria-label="sidebarToggleLabel" :title="sidebarToggleLabel" @click="toggleSidebar"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></template>
+
+                </AppButton>
                 <div ref="searchRoot" class="global-search" :class="{ 'is-focused': searchFocused }">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                     <span class="sr-only">Cari di School Suite</span>
@@ -327,12 +309,12 @@ onBeforeUnmount(() => {
                 </div>
                 <div class="context-switcher" aria-label="Periode aktif">
                     <span class="context-dot" />
-                    <div><small>Tahun ajaran aktif</small><strong>{{ page.props.activePeriod?.label ?? 'Periode belum diatur' }}</strong></div>
+                    <div><small>Tahun ajaran aktif</small><strong>{{ activePeriodLabel }}</strong></div>
                 </div>
                 <span class="topbar-spacer" />
-                <button type="button" class="icon-button" :aria-label="darkTheme ? 'Gunakan tema terang' : 'Gunakan tema gelap'" @click="toggleTheme">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
-                </button>
+                <AppButton variant="secondary" icon-only type="button" class="icon-button theme-toggle" :aria-pressed="darkTheme" :aria-label="darkTheme ? 'Gunakan tema terang' : 'Gunakan tema gelap'" @click="toggleTheme"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><template v-if="darkTheme"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></template><path v-else d="M20.9 13.2A9 9 0 0 1 10.8 3.1a9 9 0 1 0 10.1 10.1Z"/></svg></template>
+
+                </AppButton>
                 <TopNavbar />
             </header>
             <main id="main-content" tabindex="-1" :class="{ 'role-guru-main': isTeacherWorkspace }">
@@ -343,7 +325,7 @@ onBeforeUnmount(() => {
         <div v-if="toastMessage" class="app-toast" :class="`app-toast--${toastKind}`" role="status" aria-live="polite">
             <span class="app-toast-mark" aria-hidden="true">{{ toastKind === 'success' ? '✓' : '!' }}</span>
             <span>{{ toastMessage }}</span>
-            <button type="button" aria-label="Tutup notifikasi" @click="toastMessage = ''">×</button>
+            <AppButton variant="secondary" type="button" aria-label="Tutup notifikasi" @click="toastMessage = ''">×</AppButton>
         </div>
     </div>
 </template>

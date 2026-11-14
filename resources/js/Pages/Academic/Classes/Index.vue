@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -138,11 +139,11 @@ const submitAssignHomeroom = () => {
 
                 <div class="class-heading-controls flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <label class="text-xs font-semibold text-slate-600">Tahun Ajaran:</label>
+                        <label class="text-meta font-semibold text-slate-600">Tahun Ajaran:</label>
                         <select
                             aria-label="Tahun ajaran" v-model="selectedYear"
                             @change="changeYear"
-                            class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"
+                            class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"
                         >
                             <option v-for="y in academic_years" :key="y.id" :value="String(y.id)">
                                 {{ y.name }} {{ y.is_active ? '(Aktif)' : '' }}
@@ -150,7 +151,7 @@ const submitAssignHomeroom = () => {
                         </select>
                     </div>
                     <select v-if="terms.length" v-model="selectedTerm" aria-label="Semester" class="rounded-lg border px-3 py-2 text-sm" @change="changeTerm"><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.name }}{{ term.is_active ? ' (Aktif)' : '' }}</option></select>
-                    <button v-if="can_manage" type="button" class="class-action-button class-action-add" :disabled="!selectedYear" @click="openAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>Tambah rombel</button>
+                    <AppButton variant="primary" icon="plus" v-if="can_manage" type="button" class="class-action-button class-action-add" :disabled="!selectedYear" @click="openAdd">Tambah rombel</AppButton>
                 </div>
             </div>
 
@@ -166,7 +167,7 @@ const submitAssignHomeroom = () => {
             <div class="panel class-filterbar">
                 <label class="class-search-field search-control-shell"><span class="sr-only">Cari nama rombel</span><input v-model="search" aria-label="Cari nama rombel" placeholder="Cari nama rombel..." type="search" /></label>
                 <select v-model="grade" aria-label="Filter tingkat" class="class-filter-select"><option value="">Semua tingkat</option><option v-for="level in 12" :key="level" :value="String(level)">Kelas {{ level }}</option></select>
-                <button type="button" class="secondary-button" @click="search = ''; grade = ''">Reset filter</button>
+                <AppButton variant="secondary" type="button" class="secondary-button" @click="search = ''; grade = ''">Reset filter</AppButton>
                 <p class="class-filter-count" role="status">Menampilkan {{ visibleClasses.length }} dari {{ classes.length }} rombel</p>
             </div>
 
@@ -175,18 +176,18 @@ const submitAssignHomeroom = () => {
                 <article
                     v-for="cls in visibleClasses"
                     :key="cls.id"
-                    class="class-card bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 transition-all flex flex-col justify-between"
+                    class="class-card bg-[var(--surface)] rounded-xl border border-[var(--line)] p-5 shadow-xs hover:border-indigo-300 transition-all flex flex-col justify-between"
                     :class="{ 'is-over-capacity': enrollmentCount(cls) > cls.capacity }"
                 >
                     <div class="space-y-3">
                         <div class="flex items-start justify-between">
                             <div>
-                                <span class="inline-block px-2 py-0.5 text-xs font-bold rounded-sm bg-slate-100 text-slate-700 mb-1">
+                                <span class="inline-block px-2 py-0.5 text-meta font-bold rounded-sm bg-slate-100 text-slate-700 mb-1">
                                     Tingkat {{ cls.grade_level }}
                                 </span>
                                 <h3 class="text-xl font-bold text-slate-900">Kelas {{ cls.name }}</h3>
                             </div>
-                            <span class="class-capacity-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold">
+                            <span class="class-capacity-badge inline-flex items-center px-2.5 py-1 rounded-full text-meta font-semibold">
                                 {{ enrollmentCount(cls) }} dari {{ cls.capacity }} siswa
                             </span>
                         </div>
@@ -201,13 +202,13 @@ const submitAssignHomeroom = () => {
                         <p v-if="enrollmentCount(cls) > cls.capacity" class="class-capacity-warning" role="status">Melebihi kapasitas {{ enrollmentCount(cls) - cls.capacity }} siswa</p>
 
                         <!-- Wali Kelas -->
-                        <div class="pt-2 border-t border-slate-100 text-xs">
-                            <div class="text-slate-500 font-medium">Wali Kelas:</div>
+                        <div class="pt-2 border-t border-slate-100 text-meta">
+                            <div class="text-slate-600 font-medium">Wali Kelas:</div>
                             <div v-if="cls.homeroom_teacher" class="font-semibold text-slate-800 mt-0.5 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500" />
                                 {{ cls.homeroom_teacher.name }}
                             </div>
-                            <div v-else class="text-amber-600 italic mt-0.5 flex items-center gap-1.5">
+                            <div v-else class="text-amber-800 italic mt-0.5 flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-amber-400" />
                                 Belum ditetapkan
                             </div>
@@ -215,20 +216,20 @@ const submitAssignHomeroom = () => {
                     </div>
 
                     <div class="pt-4 mt-4 border-t border-slate-100 flex flex-wrap gap-3 items-center">
-                        <button
+                        <AppButton variant="secondary"
                             v-if="can_manage"
                             type="button"
                             @click="openHomeroomModal(cls)"
                             class="class-link-action"
                         >
                             {{ cls.homeroom_teacher ? 'Ubah Wali Kelas' : 'Tetapkan Wali Kelas' }}
-                        </button>
-                        <button v-if="can_manage" type="button" class="class-card-action class-card-action-edit" :aria-label="`Ubah rombel ${cls.name}`" :title="`Ubah rombel ${cls.name}`" @click="openEdit(cls)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
-                        <button v-if="can_manage" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" :title="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg></button>
+                        </AppButton>
+                        <AppButton variant="secondary" icon-only icon="edit" v-if="can_manage" type="button" class="class-card-action class-card-action-edit" :aria-label="`Ubah rombel ${cls.name}`" :title="`Ubah rombel ${cls.name}`" @click="openEdit(cls)"></AppButton>
+                        <AppButton variant="danger" icon-only icon="delete" v-if="can_manage" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" :title="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)"></AppButton>
                     </div>
                 </article>
 
-                <div v-if="visibleClasses.length === 0" class="col-span-full bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
+                <div v-if="visibleClasses.length === 0" class="col-span-full bg-[var(--surface)] rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-600">
                     {{ classes.length ? 'Tidak ada rombel yang cocok dengan filter.' : 'Belum ada rombel pada tahun ajaran ini.' }}
                 </div>
             </div>
@@ -239,46 +240,46 @@ const submitAssignHomeroom = () => {
             <div class="class-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="class-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Rombongan Belajar' : 'Tambah Rombongan Belajar' }}</h3>
-                    <button type="button" @click="showAddClassModal = false" class="class-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir rombel">✕</button>
+                    <AppButton variant="ghost" type="button" @click="showAddClassModal = false" class="class-close" aria-label="Tutup formulir rombel">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitAddClass" class="space-y-3">
                     <div>
-                        <label for="class-grade" class="block text-xs font-semibold text-slate-700 mb-1">Tingkat kelas *</label>
-                        <select id="class-grade" v-model="classForm.grade_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="class-grade" class="block text-meta font-semibold text-slate-700 mb-1">Tingkat kelas *</label>
+                        <select id="class-grade" v-model="classForm.grade_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option v-for="level in 12" :key="level" :value="level">Kelas {{ level }}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label for="class-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama rombel *</label>
+                        <label for="class-name" class="block text-meta font-semibold text-slate-700 mb-1">Nama rombel *</label>
                         <input id="class-name" v-model="classForm.name" type="text" placeholder="contoh: 7A, 8B, X MIPA 1" required class="w-full px-3 py-2 text-sm border rounded-lg" />
-                        <div v-if="classForm.errors.name" class="text-xs text-red-600 mt-1">{{ classForm.errors.name }}</div>
+                        <div v-if="classForm.errors.name" class="text-meta text-red-600 mt-1">{{ classForm.errors.name }}</div>
                     </div>
 
                     <div>
-                        <label for="class-capacity" class="block text-xs font-semibold text-slate-700 mb-1">Kapasitas maksimal siswa</label>
+                        <label for="class-capacity" class="block text-meta font-semibold text-slate-700 mb-1">Kapasitas maksimal siswa</label>
                         <input id="class-capacity" v-model="classForm.capacity" type="number" min="1" max="60" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
 
                     <div v-if="!editingId">
-                        <label for="class-homeroom" class="block text-xs font-semibold text-slate-700 mb-1">Wali kelas (opsional)</label>
-                        <select id="class-homeroom" v-model="classForm.homeroom_teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="class-homeroom" class="block text-meta font-semibold text-slate-700 mb-1">Wali kelas (opsional)</label>
+                        <select id="class-homeroom" v-model="classForm.homeroom_teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">(Belum ditetapkan)</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>
                         </select>
-                        <div v-if="classForm.errors.homeroom_teacher_id" class="text-xs text-red-600 mt-1">{{ classForm.errors.homeroom_teacher_id }}</div>
+                        <div v-if="classForm.errors.homeroom_teacher_id" class="text-meta text-red-600 mt-1">{{ classForm.errors.homeroom_teacher_id }}</div>
                     </div>
 
                     <ul v-if="Object.keys(classForm.errors).length" role="alert" class="text-sm text-red-700"><li v-for="(error, field) in classForm.errors" :key="field">{{ error }}</li></ul>
-                    <p v-if="editingId" class="text-xs text-slate-500">Tahun ajaran tetap. Tingkat kelas dengan siswa atau penugasan tidak dapat diubah.</p>
+                    <p v-if="editingId" class="text-meta text-slate-600">Tahun ajaran tetap. Tingkat kelas dengan siswa atau penugasan tidak dapat diubah.</p>
                     <div class="flex justify-end gap-2 pt-3 border-t">
-                        <button type="button" @click="showAddClassModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
+                        <AppButton variant="secondary" type="button" @click="showAddClassModal = false" >
                             Batal
-                        </button>
-                        <button type="submit" :disabled="classForm.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        </AppButton>
+                        <AppButton variant="primary" :loading="classForm.processing" type="submit" :disabled="classForm.processing" >
                             {{ classForm.processing ? 'Menyimpan…' : 'Simpan Rombel' }}
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -289,26 +290,26 @@ const submitAssignHomeroom = () => {
             <div class="class-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
                     <h3 id="homeroom-form-title" class="text-lg font-bold text-slate-900">Tetapkan Wali Kelas {{ selectedClassForHomeroom.name }}</h3>
-                    <button type="button" @click="showAssignHomeroomModal = false" class="class-close text-slate-400 hover:text-slate-600" aria-label="Tutup formulir wali kelas">✕</button>
+                    <AppButton variant="ghost" type="button" @click="showAssignHomeroomModal = false" class="class-close" aria-label="Tutup formulir wali kelas">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitAssignHomeroom" class="space-y-4">
                     <div>
-                        <label for="class-homeroom-teacher" class="block text-xs font-semibold text-slate-700 mb-1">Pilih guru sebagai wali kelas</label>
-                        <select id="class-homeroom-teacher" v-model="homeroomForm.teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-white">
+                        <label for="class-homeroom-teacher" class="block text-meta font-semibold text-slate-700 mb-1">Pilih guru sebagai wali kelas</label>
+                        <select id="class-homeroom-teacher" v-model="homeroomForm.teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Tanpa wali kelas / lepaskan penetapan</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>
                         </select>
-                        <div v-if="homeroomForm.errors.teacher_id" class="text-xs text-red-600 mt-1">{{ homeroomForm.errors.teacher_id }}</div>
+                        <div v-if="homeroomForm.errors.teacher_id" class="text-meta text-red-600 mt-1">{{ homeroomForm.errors.teacher_id }}</div>
                     </div>
 
                     <div class="flex justify-end gap-2 pt-3 border-t">
-                        <button type="button" @click="showAssignHomeroomModal = false" class="px-4 py-2 text-sm border rounded-lg text-slate-600 hover:bg-slate-50">
+                        <AppButton variant="secondary" type="button" @click="showAssignHomeroomModal = false" >
                             Batal
-                        </button>
-                        <button type="submit" :disabled="homeroomForm.processing" class="px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        </AppButton>
+                        <AppButton variant="primary" :loading="homeroomForm.processing" type="submit" :disabled="homeroomForm.processing" >
                             {{ homeroomForm.processing ? 'Menyimpan…' : 'Simpan Penetapan' }}
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -323,51 +324,41 @@ const submitAssignHomeroom = () => {
 .class-drawer .text-slate-900, .class-drawer .text-slate-700 { color: var(--ink); }
 .class-drawer .text-slate-600, .class-drawer .text-slate-500, .class-drawer .text-slate-400 { color: var(--ink-soft); }
 .class-drawer button:focus-visible, .class-drawer input:focus-visible, .class-drawer select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-.class-close { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 9px; }
+.class-close { flex: 0 0 auto; }
 .class-page { min-width: 0; }
 .class-page select { max-width: 100%; }
-.class-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.class-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
-.class-page-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.55; }
+.class-page-kicker { margin: 0 0 .3rem; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; text-transform: uppercase; }
+.class-page-title { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 2.4vw, 2rem); font-weight: var(--weight-bold); letter-spacing: -.035em; line-height: 1.12; }
+.class-page-summary { max-width: 620px; margin: .45rem 0 0; color: var(--ink-soft); font-size: var(--type-md); line-height: 1.55; }
 .class-page .page-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.25rem; }
 .class-page .page-heading > div:first-child { min-width: 0; }
 .class-page .page-heading h1 { max-width: 23ch; }
 .class-heading-controls { justify-content: flex-end; }
-.class-action-button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: .65rem .9rem; border: 1px solid var(--primary); border-radius: .65rem; background: var(--primary); color: #fff; font-size: .8rem; font-weight: 700; white-space: nowrap; box-shadow: 0 5px 12px rgb(50 105 188 / 16%); }
-.class-action-button:hover { background: var(--primary-strong); }
-.class-action-button svg { width: 18px; height: 18px; margin-right: .35rem; }
-.class-action-button:disabled { cursor: not-allowed; opacity: .55; }
+.class-action-button svg { margin-right: .35rem; }
 .class-filterbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(160px, .4fr) auto; align-items: center; gap: .65rem; padding: .8rem 1rem; }
-.class-search-field input, .class-filter-select { width: 100%; min-height: 42px; padding: .62rem .72rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: .82rem; }
+.class-search-field input, .class-filter-select { width: 100%; min-height: 42px; padding: .62rem .72rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: var(--type-control); }
 .class-search-field input:focus, .class-filter-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
-.class-link-action { min-height: 38px; padding: .45rem .65rem; border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--line)); border-radius: .6rem; background: var(--primary-soft); color: var(--primary); font-size: .72rem; font-weight: 800; }
-.class-card-action { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 1px solid var(--line-strong); border-radius: .6rem; background: var(--surface); color: var(--ink-soft); }
-.class-card-action svg { width: 19px; height: 19px; }
-.class-card-action-edit { color: var(--primary); background: var(--primary-soft); }
-.class-card-action:focus-visible, .class-link-action:focus-visible, .class-action-button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-.class-card-action:hover, .class-link-action:hover { border-color: var(--primary); color: var(--primary-strong); }
-.class-card-action-danger { color: var(--red); }
 .class-stat { display: grid; gap: .35rem; min-width: 0; border-top: 3px solid transparent; }
-.class-stat p { margin: 0; color: var(--ink-soft); font-size: .8rem; font-weight: 600; }
+.class-stat p { margin: 0; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .class-stat strong { color: var(--ink); line-height: 1.1; }
-.class-stat span { color: var(--ink-faint); font-size: .72rem; line-height: 1.4; }
+.class-stat span { color: var(--ink-faint); font-size: var(--type-meta); line-height: 1.4; }
 .class-stat-classes { border-top-color: #3269bc; background: color-mix(in srgb, #3269bc 7%, var(--surface)); }
 .class-stat-students { border-top-color: #3d9b78; background: color-mix(in srgb, #3d9b78 7%, var(--surface)); }
 .class-stat-homeroom { border-top-color: #ad7c2b; background: color-mix(in srgb, #ad7c2b 7%, var(--surface)); }
-.class-filter-count { flex: 1 0 100%; margin: 0; color: var(--ink-faint); font-size: .75rem; }
+.class-filter-count { flex: 1 0 100%; margin: 0; color: var(--ink-faint); font-size: var(--type-meta); }
 .class-page .class-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .class-card { min-width: 0; border-radius: 1rem; }
 .class-capacity-badge { flex: 0 0 auto; max-width: 46%; background: var(--primary-soft); color: var(--primary); border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--line)); line-height: 1.35; text-align: center; }
 .class-capacity-track { margin-top: .2rem; }
 .class-capacity-fill { max-width: 100%; background: #3269bc; }
-.class-capacity-warning { margin: -.35rem 0 0; color: #a43b32; font-size: .75rem; font-weight: 700; }
+.class-capacity-warning { margin: -.35rem 0 0; color: var(--red); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .class-card.is-over-capacity { border-color: #e3a29c; background: color-mix(in srgb, #c2473b 3%, var(--surface)); }
-.class-card.is-over-capacity .class-capacity-badge { background: #fff0ee; border-color: #edc0bb; color: #a43b32; }
+.class-card.is-over-capacity .class-capacity-badge { background: var(--red-soft); border-color: var(--delete-line); color: var(--red); }
 .class-card.is-over-capacity .class-capacity-fill { background: #c2473b; }
 @media (max-width: 1200px) { .class-page .page-heading { grid-template-columns: minmax(0, 1fr); }.class-heading-controls { justify-content: flex-start; } }
 @media (max-width: 1200px) { .class-page .class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 820px) { .class-page .class-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .class-filterbar { grid-template-columns: minmax(0, 1fr) minmax(150px, .55fr); }.class-filterbar > .secondary-button { grid-column: 1 / -1; justify-self: start; }.class-filter-count { grid-column: 1 / -1; } }
-@media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.class-heading-controls { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }.class-heading-controls > div { flex-wrap: wrap; }.class-heading-controls select,.class-heading-controls .class-action-button { width: 100%; }.class-filterbar { grid-template-columns: minmax(0, 1fr); }.class-filterbar > .secondary-button { grid-column: auto; width: 100%; }.class-filter-count { grid-column: auto; } }
+@media (max-width: 640px) { .class-page .page-heading { align-items: stretch; flex-direction: column; gap: 1rem; }.class-heading-controls { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; }.class-heading-controls > div { flex-wrap: wrap; }.class-heading-controls select { width: 100%; }.class-heading-controls .class-action-button { width: 100%; }.class-filterbar { grid-template-columns: minmax(0, 1fr); }.class-filterbar > .secondary-button { grid-column: auto; width: 100%; }.class-filter-count { grid-column: auto; } }
 @media (max-width: 600px) { .class-overlay { align-items: flex-end; }.class-drawer { height: min(92dvh, 900px); border-radius: 18px 18px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); } }
 </style>

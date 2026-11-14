@@ -12,10 +12,10 @@ defineProps<{
                 SS
             </div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">School Suite</h1>
-            <p class="text-sm text-slate-500">
+            <p class="text-sm text-slate-600">
                 Satu ruang kerja sekolah terpadu untuk akademik, pembelajaran, penilaian, dan tata kelola.
             </p>
-            <div class="pt-4 border-t border-slate-100 flex justify-between text-xs text-slate-400">
+            <div class="pt-4 border-t border-slate-100 flex justify-between text-meta text-slate-600">
                 <span>Laravel {{ version }}</span>
                 <span>PHP {{ phpVersion }}</span>
             </div>

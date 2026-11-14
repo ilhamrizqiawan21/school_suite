@@ -1,0 +1,81 @@
+:root {
+    --button-height: 40px;
+    --button-height-sm: 32px;
+    --button-height-lg: 48px;
+    --button-touch-size: 44px;
+    --button-radius: 10px;
+    --button-icon-size: 18px;
+    --button-gap: 8px;
+}
+
+.ui-button {
+    --button-size: var(--button-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    gap: var(--button-gap);
+    box-sizing: border-box;
+    min-width: var(--button-size);
+    min-height: var(--button-size);
+    height: auto;
+    padding: 8px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--button-radius);
+    background: var(--surface);
+    color: var(--ink);
+    font: var(--weight-semibold) var(--type-control)/var(--leading-snug) var(--font-ui);
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+    vertical-align: middle;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.ui-button--sm { --button-size: var(--button-height-sm); --button-icon-size: 16px; padding: 5px 10px; }
+.ui-button--lg { --button-size: var(--button-height-lg); padding: 12px 18px; }
+.ui-button--primary { color: #fff; background: var(--primary-action); border-color: var(--primary-action); }
+.ui-button--primary:hover:not(:disabled):not([aria-disabled='true']) { color: #fff; background: var(--primary-action-strong); border-color: var(--primary-action-strong); }
+.ui-button--secondary:hover:not(:disabled):not([aria-disabled='true']) { color: var(--primary-strong); background: var(--primary-soft); border-color: var(--primary-strong); }
+.ui-button--danger { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
+.ui-button--danger:hover:not(:disabled):not([aria-disabled='true']) { color: var(--delete); background: color-mix(in srgb, var(--delete-soft) 92%, var(--delete)); border-color: var(--delete); }
+.ui-button--warning { color: var(--gold); background: var(--gold-soft); border-color: color-mix(in srgb, var(--gold) 35%, var(--line)); }
+.ui-button--warning:hover:not(:disabled):not([aria-disabled='true']) { background: color-mix(in srgb, var(--gold-soft) 92%, var(--gold)); border-color: var(--gold); }
+.ui-button--ghost { color: var(--primary-strong); background: transparent; border-color: transparent; }
+.ui-button--ghost:hover:not(:disabled):not([aria-disabled='true']) { background: var(--primary-soft); }
+.ui-button--icon-only { width: var(--button-size); padding: 0; }
+.ui-button-label { min-width: 0; overflow-wrap: anywhere; }
+.ui-button--icon-only .ui-button-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ui-button .ui-button-icon,
+.ui-button svg,
+.ui-button > svg,
+.ui-button-label > svg { flex: 0 0 var(--button-icon-size); width: var(--button-icon-size); height: var(--button-icon-size); stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ui-button-label:has(> svg) { display: inline-flex; align-items: center; justify-content: center; gap: var(--button-gap); }
+.ui-tab-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--button-gap); min-height: var(--button-height); padding: 8px 12px; border-radius: var(--button-radius); font: var(--weight-semibold) var(--type-control)/var(--leading-snug) var(--font-ui); text-align: center; }
+.ui-tab-button svg { flex: 0 0 18px; width: 18px; height: 18px; }
+.schedule-view-toggle { align-items: stretch; }
+.schedule-view-btn { flex: 1; }
+.profile-button { min-height: var(--button-height); border-radius: var(--button-radius); }
+.profile-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.ui-button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.ui-button:disabled,
+.ui-button[aria-disabled='true'] { opacity: .5; cursor: not-allowed; }
+.ui-button.is-loading { cursor: progress; }
+.ui-button.is-loading .ui-button-label > svg { display: none; }
+.ui-button-spinner { animation: button-spin .8s linear infinite; }
+.ui-button-spinner circle { fill: none; stroke-dasharray: 42 16; }
+.ui-button svg path { stroke-width: inherit; }
+@keyframes button-spin { to { transform: rotate(360deg); } }
+@media (max-width: 720px), (pointer: coarse) {
+    .ui-button { --button-size: var(--button-touch-size); }
+    .ui-button--lg { --button-size: var(--button-height-lg); }
+    .ui-tab-button { min-height: var(--button-touch-size); }
+    .profile-button { min-width: var(--button-touch-size); min-height: var(--button-touch-size); }
+    .ui-button--mobile-icon { width: var(--button-size); padding: 0; }
+    .ui-button--mobile-icon .ui-button-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ui-button { transition: none; }
+    .ui-button-spinner { animation: none; }
+}

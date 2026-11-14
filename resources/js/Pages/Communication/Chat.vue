@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -62,9 +63,9 @@ const moderate = (id: number) => {
 
                 <div class="hero-actions">
                     <span class="chat-room-count">{{ rooms.length }} ruang aktif</span>
-                    <button v-if="can_manage" class="btn btn-primary" type="button" @click="showRoom = true">
+                    <AppButton variant="primary" v-if="can_manage" class="btn btn-primary" type="button" @click="showRoom = true">
                         + Buat ruang
-                    </button>
+                    </AppButton>
                 </div>
             </section>
 
@@ -102,7 +103,7 @@ const moderate = (id: number) => {
                             <div>
                                 <p class="eyebrow">Ruang terpilih</p>
                                 <h2>{{ roomName(selected_room) }}</h2>
-                                <p>Gunakan ruang ini untuk koordinasi pembelajaran bersama kelas.</p>
+
                             </div>
                             <span class="chat-status">Aktif</span>
                         </header>
@@ -133,9 +134,9 @@ const moderate = (id: number) => {
                                 placeholder="Tulis pesan untuk ruang ini..."
                                 aria-label="Isi pesan"
                             />
-                            <button class="btn btn-primary" type="submit" :disabled="messageForm.processing">
+                            <AppButton variant="primary" :loading="messageForm.processing" class="btn btn-primary" type="submit" :disabled="messageForm.processing">
                                 {{ messageForm.processing ? 'Mengirim…' : 'Kirim' }}
-                            </button>
+                            </AppButton>
                         </form>
                     </template>
 
@@ -156,7 +157,7 @@ const moderate = (id: number) => {
                             <p class="eyebrow">Ruang baru</p>
                             <h2>Buat ruang chat</h2>
                         </div>
-                        <button class="close-button" type="button" aria-label="Tutup" @click="showRoom = false">×</button>
+                        <AppButton variant="ghost" icon-only icon="close" class="close-button" type="button" aria-label="Tutup" @click="showRoom = false">×</AppButton>
                     </div>
 
                     <label>
@@ -174,10 +175,10 @@ const moderate = (id: number) => {
                     </label>
 
                     <div class="modal-actions">
-                        <button class="btn btn-secondary" type="button" @click="showRoom = false">Batal</button>
-                        <button class="btn btn-primary" type="submit" :disabled="roomForm.processing">
+                        <AppButton variant="secondary" class="btn btn-secondary" type="button" @click="showRoom = false">Batal</AppButton>
+                        <AppButton variant="primary" :loading="roomForm.processing" class="btn btn-primary" type="submit" :disabled="roomForm.processing">
                             {{ roomForm.processing ? 'Menyimpan…' : 'Buat ruang' }}
-                        </button>
+                        </AppButton>
                     </div>
                 </form>
             </div>
@@ -201,8 +202,8 @@ const moderate = (id: number) => {
     border-radius: 999px;
     color: var(--ink-soft);
     background: var(--surface-subtle);
-    font-size: .72rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     white-space: nowrap;
 }
 
@@ -268,8 +269,8 @@ const moderate = (id: number) => {
 }
 
 .room-option span {
-    font-size: .82rem;
-    font-weight: 800;
+    font-size: var(--type-sm);
+    font-weight: var(--weight-bold);
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
@@ -278,7 +279,7 @@ const moderate = (id: number) => {
 .chat-panel-head p,
 .message-meta small {
     color: var(--ink-soft);
-    font-size: .72rem;
+    font-size: var(--type-meta);
 }
 
 .chat-panel {
@@ -333,7 +334,7 @@ const moderate = (id: number) => {
 
 .message-meta strong {
     color: var(--ink);
-    font-size: .8rem;
+    font-size: var(--type-meta);
 }
 
 .message-meta small {
@@ -349,8 +350,8 @@ const moderate = (id: number) => {
 
 .message-moderate {
     color: var(--red);
-    font-size: .72rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
 }
 
 .send-box {

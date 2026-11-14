@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 const props = defineProps<{ session: any; students: any[] }>();
@@ -11,7 +12,7 @@ const submit = () => form.put(`/akademik/kelas-daring/${props.session.id}/presen
         <div class="view online-attendance-page space-y-5">
             <header class="page-heading online-attendance-heading">
                 <div><p class="eyebrow">Kelas daring · Presensi</p><h1>{{ session.title }}</h1><p>{{ session.class_group?.name }} · {{ new Date(session.starts_at).toLocaleString('id-ID') }}</p></div>
-                <Link class="secondary-button" href="/akademik/kelas-daring">Kembali ke kelas daring</Link>
+                <Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/kelas-daring">Kembali ke kelas daring</Link>
             </header>
             <form @submit.prevent="submit">
                 <section class="panel online-attendance-panel">
@@ -30,7 +31,7 @@ const submit = () => form.put(`/akademik/kelas-daring/${props.session.id}/presen
                         </article>
                         <p v-if="!students.length">Tidak ada siswa aktif.</p>
                     </div>
-                    <div class="online-attendance-actions"><span v-if="form.recentlySuccessful" role="status">Presensi tersimpan</span><button type="submit" class="primary-button" :disabled="form.processing || !students.length">{{ form.processing ? 'Menyimpan…' : 'Simpan presensi' }}</button></div>
+                    <div class="online-attendance-actions"><span v-if="form.recentlySuccessful" role="status">Presensi tersimpan</span><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !students.length">{{ form.processing ? 'Menyimpan…' : 'Simpan presensi' }}</AppButton></div>
                 </section>
             </form>
         </div>
@@ -38,21 +39,20 @@ const submit = () => form.put(`/akademik/kelas-daring/${props.session.id}/presen
 </template>
 
 <style scoped>
-.online-attendance-heading h1 { margin: .3rem 0; color: var(--ink); font-size: clamp(1.7rem, 3vw, 2.2rem); }
+.online-attendance-heading h1 { margin: .3rem 0; color: var(--ink); font-size: var(--type-3xl); }
 .online-attendance-heading p { color: var(--ink-soft); }
-.online-attendance-heading .eyebrow { color: var(--primary); font-size: .75rem; font-weight: 700; }
+.online-attendance-heading .eyebrow { color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .online-attendance-panel { overflow: hidden; border-radius: 14px; }
 .online-attendance-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
-.online-attendance-panel-heading h2 { margin: 0; color: var(--ink); font-size: 1rem; }
-.online-attendance-panel-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: .75rem; }
+.online-attendance-panel-heading h2 { margin: 0; color: var(--ink); font-size: var(--type-md); }
+.online-attendance-panel-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: var(--type-meta); }
 .online-attendance-table select, .online-attendance-table input, .online-attendance-cards select, .online-attendance-cards input { width: 100%; min-height: 42px; padding: .5rem .65rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; }
 .online-attendance-table td { padding: .8rem 1rem; }
 .online-attendance-table small { color: var(--ink-soft); }
 .online-attendance-cards { display: none; }
 .online-attendance-actions { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; padding: 1rem 1.25rem; border-top: 1px solid var(--line); }
-.online-attendance-actions span { color: var(--green); font-size: .8rem; }
-.online-attendance-actions button { min-height: 44px; }
-@media (max-width: 700px) { .online-attendance-heading { align-items: flex-start; flex-direction: column; }.online-attendance-table, .online-attendance-panel-heading { display: none; }.online-attendance-panel { background: transparent; border: 0; box-shadow: none; }.online-attendance-cards { display: grid; gap: 12px; }.online-attendance-cards article { display: grid; gap: .8rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }.online-attendance-cards strong, .online-attendance-cards small { display: block; }.online-attendance-cards strong { color: var(--ink); }.online-attendance-cards small { margin-top: .2rem; color: var(--ink-soft); font-size: .75rem; }.online-attendance-cards label { display: grid; gap: .3rem; color: var(--ink-soft); font-size: .75rem; font-weight: 700; }.online-attendance-cards > p { color: var(--ink-soft); }.online-attendance-actions { padding: 1rem 0; border: 0; }.online-attendance-actions button { width: 100%; } }
+.online-attendance-actions span { color: var(--green); font-size: var(--type-meta); }
+@media (max-width: 700px) { .online-attendance-heading { align-items: flex-start; flex-direction: column; }.online-attendance-table, .online-attendance-panel-heading { display: none; }.online-attendance-panel { background: transparent; border: 0; box-shadow: none; }.online-attendance-cards { display: grid; gap: 12px; }.online-attendance-cards article { display: grid; gap: .8rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }.online-attendance-cards strong, .online-attendance-cards small { display: block; }.online-attendance-cards strong { color: var(--ink); }.online-attendance-cards small { margin-top: .2rem; color: var(--ink-soft); font-size: var(--type-meta); }.online-attendance-cards label { display: grid; gap: .3rem; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }.online-attendance-cards > p { color: var(--ink-soft); }.online-attendance-actions { padding: 1rem 0; border: 0; }.online-attendance-actions button { width: 100%; } }
 /* Center attendance status controls while leaving student names and notes left aligned. */
 .data-table th:nth-child(2), .data-table td:nth-child(2) { text-align: center; }
 .data-table td:nth-child(2) select { text-align: center; text-align-last: center; }

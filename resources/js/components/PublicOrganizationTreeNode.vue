@@ -76,7 +76,7 @@ const initial = computed(() => props.member.name.trim().charAt(0).toUpperCase() 
     color: #173044;
     background: #e7d39e;
     border-radius: 50%;
-    font-family: var(--font-display);
+    font-family: var(--font-ui);
     font-size: 1.3rem;
 }
 
@@ -94,8 +94,8 @@ const initial = computed(() => props.member.name.trim().charAt(0).toUpperCase() 
     display: block;
     overflow: hidden;
     color: #9a7329;
-    font-size: .65rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     letter-spacing: .05em;
     text-overflow: ellipsis;
     text-transform: uppercase;
@@ -104,16 +104,16 @@ const initial = computed(() => props.member.name.trim().charAt(0).toUpperCase() 
 
 .node-content h2 {
     margin: .25rem 0 0;
-    font-family: var(--font-display);
+    font-family: var(--font-ui);
     font-size: 1.18rem;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1.15;
 }
 
 .node-content p {
     margin: .25rem 0 0;
     color: #6d7c82;
-    font-size: .74rem;
+    font-size: var(--type-meta);
     line-height: 1.35;
 }
 

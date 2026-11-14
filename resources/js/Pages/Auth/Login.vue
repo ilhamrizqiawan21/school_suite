@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -14,8 +15,6 @@ const showPassword = ref(false);
 const schoolName = computed(() => props.branding?.school_name || 'Portal Sekolah');
 const schoolInitial = computed(() => schoolName.value.trim().charAt(0).toUpperCase() || 'S');
 onMounted(() => {
-    // Keep the branded login surface light; the saved preference is restored by AppLayout after sign-in.
-    document.documentElement.dataset.theme = 'light';
     document.documentElement.classList.add('login-page-active');
 
     if (props.branding?.theme_primary) {
@@ -61,9 +60,9 @@ const submit = () => {
                 <div class="welcome-copy">
                     <p class="welcome-kicker">Portal sekolah</p>
                     <h1>Selamat datang kembali.</h1>
-                    <p>Masuk untuk melanjutkan aktivitas dan layanan sekolah Anda.</p>
+
                 </div>
-                <p class="welcome-footnote">Akses resmi untuk warga sekolah</p>
+
                 <span class="welcome-orbit orbit-one" aria-hidden="true"></span>
                 <span class="welcome-orbit orbit-two" aria-hidden="true"></span>
             </aside>
@@ -72,7 +71,7 @@ const submit = () => {
                 <header class="login-heading">
                     <p class="login-kicker">Akun sekolah</p>
                     <h2 id="login-title">Masuk ke portal</h2>
-                    <p>Gunakan email atau nama pengguna Anda.</p>
+
                 </header>
 
                 <div v-if="status" class="status-message" role="status">{{ status }}</div>
@@ -134,13 +133,13 @@ const submit = () => {
                         <span>Ingat saya di perangkat ini</span>
                     </label>
 
-                    <button type="submit" class="submit-button" :disabled="form.processing">
-                        <svg v-if="form.processing" class="spinner" aria-hidden="true" fill="none" viewBox="0 0 24 24">
+                    <AppButton variant="primary" size="lg" :loading="form.processing" type="submit" class="submit-button" :disabled="form.processing"><template #icon><svg v-if="form.processing" class="spinner" aria-hidden="true" fill="none" viewBox="0 0 24 24">
                             <circle opacity=".25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                             <path opacity=".8" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                        </svg>
+                        </svg></template>
+
                         <span>{{ form.processing ? 'Memproses…' : 'Masuk' }}</span>
-                    </button>
+                    </AppButton>
                 </form>
                 <p class="system-note">Layanan digital {{ schoolName }}</p>
             </section>
@@ -191,35 +190,34 @@ const submit = () => {
     overflow: hidden;
     padding: clamp(2rem, 5vw, 4rem);
     color: #f8fbff;
-    background: var(--login-primary);
-    background: color-mix(in srgb, var(--login-primary) 92%, #102d52);
+    background: color-mix(in srgb, var(--login-primary) 45%, #14263c);
 }
 
 .school-brand { position: relative; z-index: 1; display: flex; align-items: center; gap: .85rem; min-width: 0; }
 .school-brand img, .brand-fallback { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; flex: 0 0 auto; padding: .35rem; object-fit: contain; color: var(--login-ink); background: #f8fbff; border-radius: 1rem 1rem 1rem .35rem; }
-.brand-fallback { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; }
+.brand-fallback { font-family: var(--font-display); font-size: 1.5rem; font-weight: var(--weight-bold); }
 .brand-copy { display: grid; gap: .2rem; min-width: 0; }
-.brand-copy strong { overflow-wrap: anywhere; font-size: .95rem; line-height: 1.35; }
-.brand-copy small { color: rgb(248 251 255 / 75%); font-size: .75rem; }
+.brand-copy strong { overflow-wrap: anywhere; font-size: var(--type-md); line-height: 1.35; }
+.brand-copy small { color: #fff; font-size: var(--type-meta); }
 .welcome-copy { position: relative; z-index: 1; max-width: 470px; margin: 4rem 0; }
-.welcome-kicker, .login-kicker { margin: 0; color: #f0d28a; font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.welcome-copy h1 { max-width: 9ch; margin: 1rem 0 1.2rem; font-family: var(--font-display); font-size: clamp(3rem, 5.5vw, 5.4rem); font-weight: 400; letter-spacing: -.065em; line-height: .98; }
-.welcome-copy > p:last-child { max-width: 330px; margin: 0; color: rgb(248 251 255 / 82%); font-size: 1rem; line-height: 1.75; }
-.welcome-footnote { position: relative; z-index: 1; margin: 0; color: rgb(248 251 255 / 76%); font-size: .78rem; }
+.welcome-kicker, .login-kicker { margin: 0; color: #fff; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; text-transform: uppercase; }
+.welcome-copy h1 { max-width: 15ch; margin: 1rem 0 1.2rem; font-family: var(--font-ui); font-size: clamp(2rem, 3vw, 3.25rem); font-weight: var(--weight-bold); letter-spacing: -.035em; line-height: 1.2; }
+.welcome-copy > p:last-child { max-width: 330px; margin: 0; color: rgb(248 251 255 / 82%); font-size: var(--type-md); line-height: 1.75; }
+.welcome-footnote { position: relative; z-index: 1; margin: 0; color: rgb(248 251 255 / 76%); font-size: var(--type-caption); }
 .welcome-orbit { position: absolute; right: -11rem; bottom: -13rem; width: 29rem; height: 29rem; border: 1px solid rgb(248 251 255 / 20%); border-radius: 50%; pointer-events: none; }
 .orbit-two { right: -6rem; bottom: -17rem; width: 25rem; height: 25rem; border-color: rgb(240 210 138 / 35%); }
 
 .login-panel { align-self: center; width: 100%; max-width: 470px; margin-inline: auto; padding: clamp(2rem, 5vw, 4rem); background: #fbfdff; }
 .login-heading { margin-bottom: 2rem; }
-.login-kicker { color: var(--login-primary); }
-.login-heading h2 { margin: .65rem 0 .45rem; font-family: var(--font-display); font-size: clamp(2rem, 3vw, 2.8rem); font-weight: 400; letter-spacing: -.045em; line-height: 1.08; }
-.login-heading > p:last-child { margin: 0; color: var(--login-muted); font-size: .92rem; line-height: 1.6; }
-.status-message { margin-bottom: 1.25rem; padding: .85rem 1rem; color: #17613c; background: #edf8f1; border: 1px solid #b9e3c8; border-radius: .7rem; font-size: .85rem; line-height: 1.5; }
+.login-kicker { color: color-mix(in srgb, var(--login-primary) 40%, #14263c); }
+.login-heading h2 { margin: .65rem 0 .45rem; font-family: var(--font-ui); font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: var(--weight-bold); letter-spacing: -.035em; line-height: 1.25; }
+.login-heading > p:last-child { margin: 0; color: var(--login-muted); font-size: var(--type-md); line-height: 1.6; }
+.status-message { margin-bottom: 1.25rem; padding: .85rem 1rem; color: #17613c; background: #edf8f1; border: 1px solid #b9e3c8; border-radius: .7rem; font-size: var(--type-sm); line-height: 1.5; }
 .login-form { display: grid; gap: 1.25rem; }
 .form-field { display: grid; gap: .5rem; min-width: 0; }
-.form-field label { color: var(--login-ink); font-size: .85rem; font-weight: 700; }
-.form-field input { width: 100%; min-height: 3.15rem; padding: .8rem .9rem; color: var(--login-ink); background: #f8fbff; border: 1px solid #c7d4e3; border-radius: .7rem; font: inherit; font-size: .92rem; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
-.form-field input::placeholder { color: #718197; }
+.form-field label { color: var(--login-ink); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.form-field input { width: 100%; min-height: 3.15rem; padding: .8rem .9rem; color: var(--login-ink); background: #f8fbff; border: 1px solid #c7d4e3; border-radius: .7rem; font: inherit; font-size: var(--type-md); transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+.form-field input::placeholder { color: #536174; }
 .form-field input:focus-visible { outline: 3px solid color-mix(in srgb, var(--login-primary) 28%, transparent); outline-offset: 1px; border-color: var(--login-primary); }
 .form-field input:focus { background: #fff; }
 .form-field input[aria-invalid='true'] { border-color: #b42318; }
@@ -238,15 +236,14 @@ const submit = () => {
 .password-toggle { position: absolute; top: 50%; right: .4rem; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; color: #60738a; background: transparent; border: 0; border-radius: .55rem; cursor: pointer; transform: translateY(-50%); }
 .password-toggle:hover { color: var(--login-primary); background: color-mix(in srgb, var(--login-primary) 10%, #f8fbff); }
 .eye-icon { width: 1.25rem; height: 1.25rem; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-.password-toggle:focus-visible, .remember-option input:focus-visible, .submit-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--login-primary) 35%, transparent); outline-offset: 3px; }
-.field-error { margin: 0; color: #a32118; font-size: .8rem; line-height: 1.5; }
-.remember-option { display: inline-flex; align-items: center; gap: .65rem; width: fit-content; min-height: 44px; color: var(--login-muted); font-size: .84rem; cursor: pointer; }
+.password-toggle:focus-visible, .remember-option input:focus-visible { outline: 3px solid color-mix(in srgb, var(--login-primary) 35%, transparent); outline-offset: 3px; }
+.field-error { margin: 0; color: #a32118; font-size: var(--type-meta); line-height: 1.5; }
+.remember-option { display: inline-flex; align-items: center; gap: .65rem; width: fit-content; min-height: 44px; color: var(--login-muted); font-size: var(--type-sm); cursor: pointer; }
 .remember-option input { width: 1.1rem; height: 1.1rem; accent-color: var(--login-primary); }
-.submit-button { display: flex; align-items: center; justify-content: center; gap: .6rem; width: 100%; min-height: 3.2rem; margin-top: .15rem; padding: .8rem 1rem; color: #fff; background: var(--login-primary); border: 1px solid var(--login-primary); border-radius: .7rem; font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; transition: filter .15s ease, transform .15s ease; }
-.submit-button:hover:not(:disabled) { filter: brightness(.92); transform: translateY(-1px); }
-.submit-button:disabled { opacity: .65; cursor: wait; }
+.submit-button { width: 100%; margin-top: .15rem; }
+.submit-button:hover:not(:disabled) { filter: brightness(.92); }
 .spinner { width: 1.1rem; height: 1.1rem; animation: spin 1s linear infinite; }
-.system-note { margin: 1.8rem 0 0; padding-top: 1rem; color: #718197; border-top: 1px solid #dce5ef; font-size: .76rem; }
+.system-note { margin: 1.8rem 0 0; padding-top: 1rem; color: #536174; border-top: 1px solid #dce5ef; font-size: var(--type-meta); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 760px) {
@@ -255,9 +252,9 @@ const submit = () => {
     .welcome-panel { min-height: 250px; padding: 1.5rem; }
     .school-brand img, .brand-fallback { width: 2.75rem; height: 2.75rem; }
     .welcome-copy { margin: 2.4rem 0 1.25rem; }
-    .welcome-copy h1 { max-width: 12ch; margin: .65rem 0 .55rem; font-size: clamp(2.5rem, 11vw, 3.5rem); }
-    .welcome-copy > p:last-child { max-width: 34ch; font-size: .9rem; }
-    .welcome-footnote { font-size: .72rem; }
+    .welcome-copy h1 { max-width: 12ch; margin: .65rem 0 .55rem; font-size: clamp(1.75rem, 8vw, 2.25rem); }
+    .welcome-copy > p:last-child { max-width: 34ch; font-size: var(--type-md); }
+    .welcome-footnote { font-size: var(--type-caption); }
     .welcome-orbit { right: -14rem; bottom: -19rem; }
     .orbit-two { right: -11rem; bottom: -22rem; }
     .login-panel { max-width: none; padding: 1.75rem 1.5rem 1.5rem; }

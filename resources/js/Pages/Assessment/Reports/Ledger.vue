@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
@@ -55,9 +56,9 @@ const printLedger = () => {
                 <div class="flex items-center gap-3">
                     <Link
                         href="/penilaian/rapor"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-[var(--surface)] text-meta font-semibold text-slate-700 hover:bg-slate-50 shadow-xs"
                     >
-                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         <span>Kembali ke Rapor</span>
@@ -67,43 +68,54 @@ const printLedger = () => {
                         <h1 class="text-xl font-bold tracking-tight text-slate-900">
                             Buku Ledger Nilai — {{ props.ledger.class_group?.name }}
                         </h1>
-                        <p class="text-xs text-slate-500">
+                        <p class="text-meta text-slate-600">
                             Semester: {{ props.ledger.term?.name }}
                         </p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors"
-                        @click="printLedger"
+                    <a
+                        v-if="props.ledger.class_group?.id && props.ledger.term?.id"
+                        :href="`/laporan/nilai?class_group_id=${props.ledger.class_group.id}&term_id=${props.ledger.term.id}`"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-sm font-semibold shadow-xs transition-colors"
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M8 13l4 4m0-4l-4 4" />
                         </svg>
+                        <span>Export Excel</span>
+                    </a>
+                    <AppButton variant="primary"
+                        type="button"
+                        class="inline-flex items-center transition-colors"
+                        @click="printLedger"
+                    ><template #icon><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg></template>
+
                         <span>Cetak Ledger</span>
-                    </button>
+                    </AppButton>
                 </div>
             </div>
 
             <!-- Tabel Matriks Ledger -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden print:border-none print:shadow-none">
+            <div class="bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-hidden print:border-none print:shadow-none">
                 <div class="p-4 border-b border-slate-200 flex items-center justify-between">
                     <div>
                         <h2 class="font-bold text-slate-800 text-base">Rekapitulasi Nilai Seluruh Mata Pelajaran</h2>
-                        <p class="text-xs text-slate-500">
+                        <p class="text-meta text-slate-600">
                             Menampilkan nilai akhir tiap mata pelajaran, nilai rerata, dan ketidakhadiran (S, I, A).
                         </p>
                     </div>
-                    <span class="text-xs font-semibold text-slate-500">
+                    <span class="text-meta font-semibold text-slate-600">
                         {{ props.ledger.students.length }} Siswa | {{ props.ledger.subjects.length }} Mata Pelajaran
                     </span>
                 </div>
 
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
-                    <table class="app-table w-full text-left text-xs text-slate-700 border-collapse border border-slate-200">
-                        <thead class="bg-slate-50 text-slate-800 font-bold uppercase text-[11px]">
+                    <table class="app-table w-full text-left text-meta text-slate-700 border-collapse border border-slate-200">
+                        <thead class="bg-slate-50 text-slate-800 font-bold uppercase text-meta">
                             <tr>
                                 <th scope="col" class="border border-slate-200 py-2.5 px-2 w-10 text-center" rowspan="2">No</th>
                                 <th scope="col" class="border border-slate-200 py-2.5 px-3 w-24" rowspan="2">NIS</th>
@@ -123,7 +135,7 @@ const printLedger = () => {
                                 <th
                                     v-for="sub in props.ledger.subjects"
                                     :key="sub.id"
-                                    class="border border-slate-200 py-2 px-2 text-center w-16 font-mono text-[10px]"
+                                    class="border border-slate-200 py-2 px-2 text-center w-16 font-mono text-meta"
                                     :title="sub.name"
                                 >
                                     {{ sub.code }}
@@ -139,7 +151,7 @@ const printLedger = () => {
                                 :key="stu.student_id"
                                 class="hover:bg-slate-50 transition-colors"
                             >
-                                <td class="border border-slate-200 py-2 px-2 text-center text-slate-500 font-mono">
+                                <td class="border border-slate-200 py-2 px-2 text-center text-slate-600 font-mono">
                                     {{ idx + 1 }}
                                 </td>
                                 <td class="border border-slate-200 py-2 px-3 font-mono text-slate-600">
@@ -177,7 +189,7 @@ const printLedger = () => {
                             <tr v-if="props.ledger.students.length === 0">
                                 <td
                                     :colspan="5 + props.ledger.subjects.length"
-                                    class="border border-slate-200 py-8 text-center text-slate-400 text-xs"
+                                    class="border border-slate-200 py-8 text-center text-slate-600 text-meta"
                                 >
                                     Tidak ada data nilai atau siswa ditemukan untuk rombel ini.
                                 </td>

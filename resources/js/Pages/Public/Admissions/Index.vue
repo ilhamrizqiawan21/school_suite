@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppButton from '@/components/AppButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -81,7 +82,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                     <span>{{ currentPeriod.name }}</span>
                     <span>{{ currentPeriod.level || school.level || 'Jenjang sekolah' }}</span>
                 </div>
-                <a v-if="hasContact" class="primary-button" href="#kontak">Hubungi panitia</a>
+                <AppButton variant="primary" as="a" v-if="hasContact" class="primary-button" href="#kontak">Hubungi panitia</AppButton>
             </div>
             <aside class="status-panel" aria-label="Status penerimaan siswa baru">
                 <span>Status PPDB</span>
@@ -124,7 +125,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                 <article><span>01</span><h3>Siapkan berkas</h3><p>Periksa dokumen yang diminta sesuai jalur pendaftaran.</p></article>
                 <article><span>02</span><h3>Daftarkan diri</h3><p>Ikuti arahan panitia sekolah selama periode pendaftaran.</p></article>
                 <article><span>03</span><h3>Verifikasi & seleksi</h3><p>Berkas dan kriteria diperiksa sesuai juknis yang berlaku.</p></article>
-                <article><span>04</span><h3>Pengumuman & daftar ulang</h3><p>Pantau hasil dan konfirmasi kursi sesuai jadwal.</p></article>
+                <article><span>04</span><h3>Pengumuman & daftar ulang</h3></article>
             </div>
         </section>
 
@@ -140,39 +141,39 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 .public-admissions { min-height: 100vh; padding: 1.4rem clamp(1rem, 4vw, 3rem); color: #173044; background: #fffdf8; }
 .public-header, .admissions-hero, .content-section, .public-footer { width: min(1120px, 100%); margin-inline: auto; }
 .admissions-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(240px, .8fr); gap: 3rem; align-items: end; padding: clamp(4rem, 9vw, 7rem) 0 4rem; }
-.admissions-hero h1 { max-width: 760px; margin: .9rem 0 1.2rem; font-family: var(--font-display); font-size: clamp(2.8rem, 6vw, 5.7rem); font-weight: 400; letter-spacing: -.065em; line-height: .98; }
+.admissions-hero h1 { max-width: 760px; margin: .9rem 0 1.2rem; font-family: var(--font-ui); font-size: clamp(2.8rem, 6vw, 5.7rem); font-weight: var(--weight-regular); letter-spacing: -.065em; line-height: .98; }
 .hero-actions { display: flex; align-items: center; gap: 1.1rem; margin-top: 2rem; }
 .hero-note { display: grid; gap: .45rem; padding: 1.4rem; color: #f5efe2; background: #123247; border-radius: 1rem 1rem 1rem 4.5rem; box-shadow: 0 16px 35px #183b5d1c; }
-.hero-note span, .period-status { color: #d4a74b; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.hero-note strong { font-family: var(--font-display); font-size: 2.1rem; font-weight: 400; line-height: 1; }
-.hero-note small { color: #c7d5d9; font-size: .88rem; }
+.hero-note span, .period-status { color: #d4a74b; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; text-transform: uppercase; }
+.hero-note strong { font-family: var(--font-ui); font-size: 2.1rem; font-weight: var(--weight-regular); line-height: 1; }
+.hero-note small { color: #c7d5d9; font-size: var(--type-md); }
 .content-section { padding: 4rem 0 1rem; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 1.8rem; }
-.section-heading h2, .public-footer h2 { max-width: 650px; margin: .6rem 0 0; font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 400; letter-spacing: -.05em; line-height: 1.03; }
+.section-heading h2, .public-footer h2 { max-width: 650px; margin: .6rem 0 0; font-family: var(--font-ui); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: var(--weight-regular); letter-spacing: -.05em; line-height: 1.03; }
 .section-heading > p { margin: 0; }
 .period-grid { display: grid; gap: 1rem; }
 .period-card { padding: 1.3rem; background: #fff; border: 1px solid #ded7c9; border-radius: .85rem; box-shadow: 0 12px 30px #183b5d0a; }
 .period-card-head { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
-.period-card h3 { margin: .4rem 0 .2rem; font-family: var(--font-display); font-size: 1.55rem; font-weight: 400; }
-.period-card-head p { margin: 0; color: #526673; font-size: .92rem; }
-.period-card-head > strong { display: grid; color: #123247; font-family: var(--font-display); font-size: 2.4rem; font-weight: 400; line-height: .9; text-align: right; }
-.period-card-head > strong small { margin-top: .3rem; color: #526673; font-family: var(--font-ui); font-size: .78rem; font-weight: 700; }
-.period-status { display: inline-flex; padding: .3rem .55rem; color: #80601f; background: #f7ecd0; border-radius: 999px; font-size: .7rem; letter-spacing: .04em; }
+.period-card h3 { margin: .4rem 0 .2rem; font-family: var(--font-ui); font-size: 1.55rem; font-weight: var(--weight-regular); }
+.period-card-head p { margin: 0; color: #526673; font-size: var(--type-md); }
+.period-card-head > strong { display: grid; color: #123247; font-family: var(--font-ui); font-size: 2.4rem; font-weight: var(--weight-regular); line-height: .9; text-align: right; }
+.period-card-head > strong small { margin-top: .3rem; color: #526673; font-family: var(--font-ui); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.period-status { display: inline-flex; padding: .3rem .55rem; color: #80601f; background: #f7ecd0; border-radius: 999px; font-size: var(--type-meta); letter-spacing: .04em; }
 .period-status.is-open { color: #176c4b; background: #e6f5eb; }
 .date-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e5ded2; }
 .date-grid div { display: grid; gap: .25rem; }
-.date-grid span { color: #9a7329; font-size: .75rem; font-weight: 800; }
-.date-grid b { color: #405762; font-size: .86rem; font-weight: 600; line-height: 1.4; }
+.date-grid span { color: #9a7329; font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.date-grid b { color: #405762; font-size: var(--type-sm); font-weight: var(--weight-semibold); line-height: 1.4; }
 .track-summary { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
-.track-summary span { padding: .4rem .6rem; color: #405762; background: #f4f0e7; border-radius: .45rem; font-size: .8rem; font-weight: 700; }
+.track-summary span { padding: .4rem .6rem; color: #405762; background: #f4f0e7; border-radius: .45rem; font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .empty-state { padding: 3rem 1rem; color: #526673; border: 1px dashed #cfc8ba; border-radius: .85rem; text-align: center; }
-.empty-state strong { display: block; color: #173044; font-family: var(--font-display); font-size: 1.45rem; font-weight: 400; }
-.empty-state p { margin: .45rem 0 0; font-size: .94rem; }
+.empty-state strong { display: block; color: #173044; font-family: var(--font-ui); font-size: 1.45rem; font-weight: var(--weight-regular); }
+.empty-state p { margin: .45rem 0 0; font-size: var(--type-md); }
 .flow-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
 .flow-grid article { min-height: 180px; padding: 1.1rem; background: #f8f4ec; border: 1px solid #ded7c9; border-radius: .75rem; }
-.flow-grid span { color: #9a7329; font-size: .78rem; font-weight: 800; letter-spacing: .08em; }
-.flow-grid h3 { margin: 1.5rem 0 .4rem; font-family: var(--font-display); font-size: 1.3rem; font-weight: 400; }
-.flow-grid p { margin: 0; color: #526673; font-size: .9rem; line-height: 1.6; }
+.flow-grid span { color: #9a7329; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; }
+.flow-grid h3 { margin: 1.5rem 0 .4rem; font-family: var(--font-ui); font-size: 1.3rem; font-weight: var(--weight-regular); }
+.flow-grid p { margin: 0; color: #526673; font-size: var(--type-md); line-height: 1.6; }
 .public-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 5rem; padding: 3.5rem 0 4rem; border-top: 1px solid #cfc8ba; }
 .contact-list { display: grid; align-content: start; gap: .45rem; }
 .contact-list p { margin: 0; }
@@ -202,8 +203,8 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     align-items: center;
     gap: .7rem;
     color: #173044;
-    font-size: .95rem;
-    font-weight: 800;
+    font-size: var(--type-md);
+    font-weight: var(--weight-bold);
     text-decoration: none;
 }
 
@@ -231,7 +232,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     display: flex;
     align-items: center;
     gap: 1.1rem;
-    font-size: .78rem;
+    font-size: var(--type-meta);
 }
 
 .public-header nav a {
@@ -312,9 +313,9 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 .status-copy h1 {
     max-width: 760px;
     margin: 1rem 0 1.2rem;
-    font-family: var(--font-display);
+    font-family: var(--font-ui);
     font-size: clamp(2.8rem, 6vw, 5.7rem);
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     letter-spacing: -.065em;
     line-height: .98;
 }
@@ -333,8 +334,8 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     color: #80601f;
     background: #f7ecd0;
     border-radius: 999px;
-    font-size: .72rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     letter-spacing: .06em;
     text-transform: uppercase;
 }
@@ -356,12 +357,11 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     color: #405762;
     background: #f4f0e7;
     border-radius: .45rem;
-    font-size: .8rem;
-    font-weight: 700;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-semibold);
 }
 
 .status-copy .primary-button {
-    display: inline-flex;
     margin-top: .25rem;
 }
 
@@ -377,22 +377,22 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 
 .status-panel span {
     color: #d4a74b;
-    font-size: .76rem;
-    font-weight: 800;
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
     letter-spacing: .08em;
     text-transform: uppercase;
 }
 
 .status-panel strong {
-    font-family: var(--font-display);
+    font-family: var(--font-ui);
     font-size: 2.5rem;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1;
 }
 
 .status-panel small {
     color: #c7d5d9;
-    font-size: .88rem;
+    font-size: var(--type-md);
 }
 
 @media (max-width: 800px) {

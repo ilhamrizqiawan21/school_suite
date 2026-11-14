@@ -1,0 +1,1172 @@
+[
+  {
+    "key": "admin/akademik/jadwal",
+    "width": 1440,
+    "requestedTheme": "light",
+    "component": "Academic/Schedules/Index",
+    "errors": [],
+    "theme": "light",
+    "rootFont": "16px",
+    "bodyFont": "16px",
+    "total": 208,
+    "familyCounts": {
+      "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif": 183,
+      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace": 25
+    },
+    "small": [],
+    "controls": [
+      {
+        "tag": "INPUT",
+        "type": "search",
+        "size": 16,
+        "label": "Cari menu…"
+      },
+      {
+        "tag": "SELECT",
+        "type": "select-one",
+        "size": 14,
+        "label": ""
+      },
+      {
+        "tag": "SELECT",
+        "type": "select-one",
+        "size": 14,
+        "label": ""
+      },
+      {
+        "tag": "SELECT",
+        "type": "select-one",
+        "size": 14,
+        "label": ""
+      },
+      {
+        "tag": "INPUT",
+        "type": "search",
+        "size": 13,
+        "label": "Mapel, kode, ruang..."
+      }
+    ],
+    "contrastCandidates": [],
+    "headings": [
+      {
+        "tag": "H1",
+        "selector": "h1.schedule-page-title",
+        "text": "Jadwal pelajaran",
+        "size": 32,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "35.84px",
+        "letterSpacing": "-1.12px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          255,
+          255,
+          255
+        ],
+        "contrast": 16.27,
+        "contrastThreshold": 3,
+        "clipped": false,
+        "nowrap": false
+      },
+      {
+        "tag": "H3",
+        "selector": "h3.",
+        "text": "Senin",
+        "size": 16,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.6px",
+        "letterSpacing": "-0.16px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          248,
+          250,
+          255
+        ],
+        "contrast": 15.58,
+        "contrastThreshold": 4.5,
+        "clipped": false,
+        "nowrap": false
+      },
+      {
+        "tag": "H3",
+        "selector": "h3.",
+        "text": "Selasa",
+        "size": 16,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.6px",
+        "letterSpacing": "-0.16px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          248,
+          250,
+          255
+        ],
+        "contrast": 15.58,
+        "contrastThreshold": 4.5,
+        "clipped": false,
+        "nowrap": false
+      },
+      {
+        "tag": "H3",
+        "selector": "h3.",
+        "text": "Rabu",
+        "size": 16,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.6px",
+        "letterSpacing": "-0.16px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          248,
+          250,
+          255
+        ],
+        "contrast": 15.58,
+        "contrastThreshold": 4.5,
+        "clipped": false,
+        "nowrap": false
+      },
+      {
+        "tag": "H3",
+        "selector": "h3.",
+        "text": "Kamis",
+        "size": 16,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.6px",
+        "letterSpacing": "-0.16px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          248,
+          250,
+          255
+        ],
+        "contrast": 15.58,
+        "contrastThreshold": 4.5,
+        "clipped": false,
+        "nowrap": false
+      },
+      {
+        "tag": "H3",
+        "selector": "h3.",
+        "text": "Jumat",
+        "size": 16,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.6px",
+        "letterSpacing": "-0.16px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          248,
+          250,
+          255
+        ],
+        "contrast": 15.58,
+        "contrastThreshold": 4.5,
+        "clipped": false,
+        "nowrap": false
+      },
+      {
+        "tag": "H3",
+        "selector": "h3.",
+        "text": "Sabtu",
+        "size": 16,
+        "weight": 700,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.6px",
+        "letterSpacing": "-0.16px",
+        "color": "rgb(23, 32, 51)",
+        "background": [
+          248,
+          250,
+          255
+        ],
+        "contrast": 15.58,
+        "contrastThreshold": 4.5,
+        "clipped": false,
+        "nowrap": false
+      }
+    ],
+    "clipped": [
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Budi Hartono, S.Pd.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Budi Hartono, S.Pd.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Siti Aminah, S.Pd.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Siti Aminah, S.Pd.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Agus Setiawan, M.Pd.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Agus Setiawan, M.Pd.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Fajar Nugraha, S.Kom.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Fajar Nugraha, S.Kom.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.schedule-teacher",
+        "text": "Dewi Lestari, S.Si.",
+        "size": 13,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "21.45px",
+        "letterSpacing": "normal",
+        "color": "rgb(83, 97, 116)",
+        "background": [
+          254,
+          254,
+          255
+        ],
+        "contrast": 6.26,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Ubah",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "color(srgb 0.127608 0.350902 0.287059)",
+        "background": [
+          229,
+          238,
+          234
+        ],
+        "contrast": 6.85,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      },
+      {
+        "tag": "SPAN",
+        "selector": "span.",
+        "text": "Hapus",
+        "size": 14,
+        "weight": 600,
+        "family": "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+        "lineHeight": "14px",
+        "letterSpacing": "normal",
+        "color": "rgb(168, 47, 67)",
+        "background": [
+          255,
+          240,
+          242
+        ],
+        "contrast": 6.03,
+        "contrastThreshold": 4.5,
+        "clipped": true,
+        "nowrap": true
+      }
+    ],
+    "overflow": true,
+    "overflowElements": [
+      {
+        "tag": "SECTION",
+        "cls": "schedule-day-card",
+        "width": 185,
+        "right": 1453.953125
+      },
+      {
+        "tag": "HEADER",
+        "cls": "schedule-day-header",
+        "width": 183,
+        "right": 1452.953125
+      },
+      {
+        "tag": "DIV",
+        "cls": "schedule-day-body",
+        "width": 183,
+        "right": 1452.953125
+      },
+      {
+        "tag": "SECTION",
+        "cls": "schedule-day-card",
+        "width": 185,
+        "right": 1653.34375
+      },
+      {
+        "tag": "HEADER",
+        "cls": "schedule-day-header",
+        "width": 183,
+        "right": 1652.34375
+      },
+      {
+        "tag": "DIV",
+        "cls": "schedule-day-title",
+        "width": 118.609375,
+        "right": 1602.34375
+      },
+      {
+        "tag": "H3",
+        "cls": "",
+        "width": 60.296875,
+        "right": 1544.03125
+      },
+      {
+        "tag": "SPAN",
+        "cls": "schedule-day-count has-sessions",
+        "width": 50.3125,
+        "right": 1602.34375
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "schedule-day-add-btn",
+        "width": 27.609375,
+        "right": 1637.953125
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "width": 14,
+        "right": 1631.140625
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "width": 8.166748046875,
+        "right": 1628.2239990234375
+      },
+      {
+        "tag": "DIV",
+        "cls": "schedule-day-body",
+        "width": 183,
+        "right": 1652.34375
+      }
+    ],
+    "stress": null,
+    "examScale": null
+  }
+]

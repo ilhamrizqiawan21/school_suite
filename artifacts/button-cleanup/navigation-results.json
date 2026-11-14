@@ -1,0 +1,30 @@
+[
+  {
+    "key": "public/",
+    "width": 390,
+    "theme": "light",
+    "navigationToggle": true,
+    "errors": []
+  },
+  {
+    "key": "public/",
+    "width": 390,
+    "theme": "dark",
+    "navigationToggle": true,
+    "errors": []
+  },
+  {
+    "key": "admin/pengaturan/pengguna",
+    "width": 390,
+    "theme": "light",
+    "navigationToggle": true,
+    "errors": []
+  },
+  {
+    "key": "admin/pengaturan/pengguna",
+    "width": 390,
+    "theme": "dark",
+    "navigationToggle": true,
+    "errors": []
+  }
+]
