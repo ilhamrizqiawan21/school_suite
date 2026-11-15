@@ -126,7 +126,10 @@ class RoleMatrixAccessTest extends TestCase
         $teacher = $this->usersByRole[RoleEnum::TEACHER->value];
         $this->actingAs($teacher)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->where('navigation.visible_keys', fn ($keys) => $keys->contains('journals')
-                && $keys->contains('learning-resources')
+                && ! $keys->contains('learning-resources')
+                && ! $keys->contains('learning-atp')
+                && ! $keys->contains('learning-documents')
+                && ! $keys->contains('learning-module-ajar')
                 && ! $keys->contains('student-ledger')
                 && ! $keys->contains('security')
                 && ! $keys->contains('admissions'))
@@ -151,6 +154,21 @@ class RoleMatrixAccessTest extends TestCase
                 && ! $keys->contains('scores')
                 && ! $keys->contains('security'))
         );
+    }
+
+    public function test_teaching_planning_routes_are_unavailable(): void
+    {
+        $this->actingAs($this->usersByRole[RoleEnum::TEACHER->value]);
+
+        foreach (['atp', 'dokumen', 'modul-ajar', 'paket-administrasi', 'paket-administrasi/unduh'] as $path) {
+            $this->get('/akademik/perangkat/'.$path)->assertNotFound();
+        }
+
+        foreach (['atp', 'dokumen', 'modul-ajar'] as $path) {
+            $this->post('/akademik/perangkat/'.$path, [])->assertNotFound();
+            $this->put('/akademik/perangkat/'.$path.'/1', [])->assertNotFound();
+            $this->delete('/akademik/perangkat/'.$path.'/1')->assertNotFound();
+        }
     }
 
     public function test_spmb_submenus_are_visible_when_admissions_is_allowed(): void

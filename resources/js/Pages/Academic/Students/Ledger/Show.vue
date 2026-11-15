@@ -2,7 +2,7 @@
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface StudentProfile {
     id: number;
@@ -24,6 +24,7 @@ interface ClassHistory { id: number; academic_year: string | null; term: string 
 interface LifecycleHistory { id: number; action: string; effective_date: string | null; source_class: string | null; target_class: string | null; notes: string | null }
 interface ReportHistoryItem {
     id: number;
+    term_id?: number;
     academic_year: string;
     term_name: string;
     class_name: string;
@@ -101,6 +102,18 @@ const props = defineProps<{
 const statusLabels: Record<string, string> = { active: 'Aktif', graduated: 'Lulus', transferred: 'Pindah', dropped_out: 'Keluar' };
 const enrollmentLabels: Record<string, string> = { active: 'Aktif', promoted: 'Naik kelas', retained: 'Tinggal kelas', graduated: 'Lulus', transferred: 'Pindah', withdrawn: 'Keluar' };
 const editCoreIdentity = ref(false);
+const selectedReportTermId = ref('');
+
+const visibleReports = computed(() => {
+    const all = props.report_history ?? [];
+    if (!selectedReportTermId.value) return all;
+    return all.filter((r) => String(r.term_id ?? r.id) === selectedReportTermId.value);
+});
+
+const ledgerPdfUrl = computed(() => {
+    if (!selectedReportTermId.value) return `/akademik/buku-induk/${props.student.id}/pdf`;
+    return `/akademik/buku-induk/${props.student.id}/pdf?term_id=${encodeURIComponent(selectedReportTermId.value)}`;
+});
 
 const detailsForm = useForm({
     update_core_identity: false,
@@ -244,7 +257,7 @@ function sizeLabel(bytes: number) {
                         Berikutnya →
                     </Link>
                     <Link href="/akademik/buku-induk" class="secondary-button ui-button ui-button--secondary ui-button--md">Kembali ke daftar</Link>
-                    <AppButton variant="primary" as="a" class="primary-button inline-flex items-center" target="_blank" rel="noopener noreferrer" :href="`/akademik/buku-induk/${student.id}/pdf`">Pratinjau / Cetak PDF</AppButton>
+                    <AppButton variant="secondary" icon="pdf" as="a" class="file-action-button file-action-button--pdf inline-flex items-center" target="_blank" rel="noopener noreferrer" :href="ledgerPdfUrl">Pratinjau / Cetak PDF</AppButton>
                 </div>
             </section>
 
@@ -258,7 +271,7 @@ function sizeLabel(bytes: number) {
                     </label>
                     <div class="flex gap-2">
                         <AppButton variant="primary" class="primary-button" type="submit" :disabled="photoForm.processing || !photoForm.photo">{{ photoForm.processing ? 'Menyimpan…' : detail?.photo_url ? 'Ganti foto' : 'Simpan foto' }}</AppButton>
-                        <AppButton variant="danger" v-if="detail?.photo_url" class="danger-button" type="button" @click="deletePhoto">Hapus</AppButton>
+                        <AppButton variant="danger" size="sm" icon="delete" v-if="detail?.photo_url" class="danger-button" type="button" @click="deletePhoto">Hapus</AppButton>
                     </div>
                     <p class="text-meta text-slate-600 md:col-span-2">Foto disimpan privat, ditampilkan untuk petugas berwenang, dan otomatis disertakan pada cetakan PDF Buku Induk.</p>
                 </form>
@@ -504,7 +517,7 @@ function sizeLabel(bytes: number) {
                 <ul class="divide-y divide-slate-100">
                     <li v-for="document in documents" :key="document.id" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                         <div class="min-w-0"><p class="font-semibold text-slate-800">{{ document.document_type }}</p><p class="mt-1 truncate text-sm text-slate-600">{{ document.original_name }} · {{ sizeLabel(document.size_bytes) }}</p></div>
-                        <div class="flex shrink-0 gap-2"><AppButton variant="secondary" as="a" class="secondary-button" :href="`/akademik/buku-induk/${student.id}/dokumen/${document.id}`">Unduh</AppButton><AppButton variant="danger" class="danger-button" type="button" @click="deleteDocument(document)">Hapus</AppButton></div>
+                        <div class="flex shrink-0 gap-2"><AppButton variant="secondary" as="a" class="secondary-button" :href="`/akademik/buku-induk/${student.id}/dokumen/${document.id}`">Unduh</AppButton><AppButton variant="danger" size="sm" icon="delete" class="danger-button" type="button" @click="deleteDocument(document)">Hapus</AppButton></div>
                     </li>
                     <li v-if="documents.length === 0" class="px-5 py-10 text-center text-sm text-slate-600">Belum ada dokumen pribadi siswa.</li>
                 </ul>
@@ -535,17 +548,67 @@ function sizeLabel(bytes: number) {
             </section>
 
             <section v-if="report_history && report_history.length > 0" class="panel overflow-hidden">
-                <header class="border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-base font-bold text-slate-900">Rekapitulasi nilai rapor terbit per semester</h2>
-                    <p class="mt-1 text-sm text-slate-600">Data diambil otomatis dari snapshot rapor terbit dan ikut dicetak pada halaman ke-2 Buku Induk PDF.</p>
+                <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Rekapitulasi nilai rapor per semester</h2>
+                        <p class="mt-1 text-sm text-slate-600">Pilih tahun ajaran &amp; semester tertentu untuk melihat atau mencetak rapor spesifik tanpa mencetak seluruh semester sekaligus.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select v-model="selectedReportTermId" aria-label="Pilih semester rapor" class="field-input !w-auto min-w-[220px]">
+                            <option value="">Semua Semester ({{ report_history.length }})</option>
+                            <option v-for="rep in report_history" :key="rep.id" :value="String(rep.term_id ?? rep.id)">
+                                {{ rep.academic_year }} · {{ rep.term_name }} (Kelas {{ rep.class_name }})
+                            </option>
+                        </select>
+                    </div>
                 </header>
                 <div class="divide-y divide-slate-200 p-5 space-y-4">
-                    <div v-for="rep in report_history" :key="rep.id" class="pt-4 first:pt-0">
+                    <div v-for="rep in visibleReports" :key="rep.id" class="pt-4 first:pt-0">
                         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-                            <strong class="text-sm text-slate-900">{{ rep.academic_year }} · {{ rep.term_name }} · Kelas {{ rep.class_name }}</strong>
-                            <span class="text-xs text-slate-600">
-                                Hadir: {{ rep.attendance?.present ?? 0 }} · Sakit: {{ rep.attendance?.sick ?? 0 }} · Izin: {{ rep.attendance?.permitted ?? 0 }} · Alpa: {{ rep.attendance?.absent ?? 0 }}
-                            </span>
+                            <div>
+                                <strong class="text-sm text-slate-900">{{ rep.academic_year }} · {{ rep.term_name }} · Kelas {{ rep.class_name }}</strong>
+                                <span class="ml-2 text-xs text-slate-600">
+                                    Hadir: {{ rep.attendance?.present ?? 0 }} · Sakit: {{ rep.attendance?.sick ?? 0 }} · Izin: {{ rep.attendance?.permitted ?? 0 }} · Alpa: {{ rep.attendance?.absent ?? 0 }}
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <a
+                                    :href="`/penilaian/rapor/${rep.id}/pdf?report_mode=sas&cover=0&identity_only=1`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex h-7.5 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-semibold text-blue-700 transition hover:border-blue-500 hover:bg-blue-100"
+                                    title="Cetak PDF Identitas Siswa"
+                                >
+                                    Identitas
+                                </a>
+                                <a
+                                    :href="`/penilaian/rapor/${rep.id}/pdf?report_mode=sas&cover=0&grades_only=1`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex h-7.5 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 px-2.5 text-xs font-semibold text-amber-800 transition hover:border-amber-500 hover:bg-amber-100"
+                                    title="Cetak PDF Nilai Siswa"
+                                >
+                                    Nilai
+                                </a>
+                                <a
+                                    :href="`/penilaian/rapor/${rep.id}/pdf?report_mode=sts&cover=0`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex h-7.5 items-center justify-center rounded-lg border border-violet-200 bg-violet-50 px-2.5 text-xs font-semibold text-violet-700 transition hover:border-violet-500 hover:bg-violet-100"
+                                    title="Cetak PDF Rapor Tengah Semester (STS)"
+                                >
+                                    Rapor STS
+                                </a>
+                                <a
+                                    :href="`/penilaian/rapor/${rep.id}/pdf?report_mode=sas&cover=1`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex h-7.5 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:border-red-500 hover:bg-red-100"
+                                    title="Cetak PDF Rapor Akhir Semester (SAS)"
+                                >
+                                    Rapor SAS
+                                </a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="app-table w-full border-collapse text-left text-xs">

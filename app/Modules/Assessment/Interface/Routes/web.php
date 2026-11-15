@@ -67,7 +67,10 @@ Route::middleware(['auth'])->prefix('penilaian')->name('assessment.')->group(fun
     Route::post('rapor/generate-batch', [ReportCardController::class, 'generateBatch'])->name('reports.generate');
     Route::post('rapor/publish-batch', [ReportCardController::class, 'publishBatch'])->name('reports.publish-batch');
     Route::post('rapor/{report}/publish', [ReportCardController::class, 'publish'])->name('reports.publish');
+    Route::post('rapor/{report}/pelengkap', [ReportCardController::class, 'updateSupplements'])->name('reports.supplements');
     Route::get('ledger', [ReportCardController::class, 'ledger'])->name('reports.ledger');
+    Route::get('ledger/excel', [ReportingController::class, 'ledgerExcel'])->middleware('throttle:sensitive')->name('reports.ledger.excel');
+    Route::get('ledger/pdf', [ReportingController::class, 'ledgerPdf'])->middleware('throttle:sensitive')->name('reports.ledger.pdf');
 });
 
 Route::middleware(['auth', 'throttle:sensitive'])->prefix('laporan')->name('reporting.')->group(function () {
@@ -77,6 +80,7 @@ Route::middleware(['auth', 'throttle:sensitive'])->prefix('laporan')->name('repo
     Route::get('/tugas', [ReportingController::class, 'assignments'])->name('assignments');
     Route::get('/sikap', [ReportingController::class, 'attitudes'])->name('attitudes');
 });
+Route::middleware(['auth', 'throttle:sensitive'])->get('/penilaian/rapor/cetak-massal/pdf', [ReportingController::class, 'reportBatchPdf'])->name('assessment.reports.batch-pdf');
 Route::middleware(['auth', 'throttle:sensitive'])->get('/penilaian/rapor/{report}/pdf', [ReportingController::class, 'reportPdf'])->name('assessment.reports.pdf');
 
 Route::middleware(['auth', 'role:principal'])->prefix('kepsek')->name('principal.')->group(function () {

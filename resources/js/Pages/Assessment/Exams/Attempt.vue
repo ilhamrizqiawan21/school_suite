@@ -91,7 +91,7 @@ function finishSubmitWhenReady() {
     if (pendingSubmit.value && isOnline.value && pendingAnswers.size === 0 && inFlight.size === 0) {
         pendingSubmit.value = false;
         isSubmitting.value = true;
-        router.post(`/ujian/attempt/${props.attempt.id}/kirim`, {}, { onSuccess: () => { try { window.localStorage.removeItem(localKey); window.localStorage.removeItem(reviewKey); } catch { /* noop */ } }, onFinish: () => { isSubmitting.value = false; } });
+        router.post(`/ujian/attempt/${props.attempt.id}/kirim`, {}, { onSuccess: () => { try { window.localStorage.removeItem(localKey); window.localStorage.removeItem(reviewKey); } catch { /* noop */ } }, onFinish: () => { isSubmitting.value = false; submitted.value = false; } });
     }
 }
 function submitExam(force = false) {

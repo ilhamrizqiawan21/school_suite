@@ -225,7 +225,6 @@ const markRead = (notification: NotificationItem) => {
 
 <style scoped>
 .communication-hero,.hero-actions,.comm-actions,.modal-actions,.notification-toolbar{display:flex;align-items:center}.communication-hero,.notification-toolbar{justify-content:space-between}.communication-hero{gap:1.5rem}.hero-actions,.comm-actions,.modal-actions{gap:.75rem}.comm-tabs{display:flex;gap:.35rem;padding:1rem 1.25rem;border-bottom:1px solid var(--line)}.comm-tabs button{padding:.6rem .9rem;border-radius:.65rem;color:var(--ink-soft);font-size:var(--type-control);font-weight:var(--weight-bold)}.comm-tabs button.active{background:var(--primary-soft);color:var(--primary-strong)}.comm-tabs span{margin-left:.25rem;padding:.1rem .4rem;border-radius:999px;background:var(--red);color:#fff;font-size:var(--type-meta)}.comm-list{display:grid;gap:.8rem;padding:1.25rem}.announcement-card,.timeline-event{display:flex;align-items:flex-start;gap:1rem;padding:1rem;color:var(--ink);border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.announcement-date{width:3.5rem;flex:0 0 auto;display:grid;place-items:center;padding:.55rem;border-radius:.8rem;background:var(--primary-soft);color:var(--primary-strong)}.announcement-date strong{font-size:1.35rem;line-height:1}.announcement-date span{font-size:var(--type-meta);text-transform:uppercase}.comm-body{min-width:0;flex:1}.comm-body h2,.modal-heading h2{margin:.2rem 0 .35rem;color:var(--ink);font-size:1.05rem;font-weight:var(--weight-bold)}.comm-body>p{color:var(--ink-soft);font-size:var(--type-sm);white-space:pre-line}.comm-body small{display:block;margin-top:.65rem;color:var(--ink-faint)}.danger-link{color:var(--red);font-size:var(--type-control);font-weight:var(--weight-bold)}.timeline-list{position:relative}.timeline-event{border-left:3px solid var(--primary-soft)}.timeline-dot{width:.75rem;height:.75rem;margin-top:.35rem;border-radius:50%;background:var(--primary)}.timeline-dot[data-type='exam']{background:var(--red)}.timeline-dot[data-type='holiday']{background:var(--green)}.notification-toolbar{padding:.35rem .25rem .8rem;color:var(--ink-soft);font-size:var(--type-meta)}.notification-item{width:100%;display:flex;align-items:flex-start;gap:.75rem;padding:1rem;color:var(--ink);border:1px solid var(--line);border-radius:.8rem;text-align:left;background:var(--surface)}.notification-item.unread{border-color:var(--primary);background:var(--primary-soft)}.notification-dot{width:.55rem;height:.55rem;margin-top:.35rem;border-radius:50%;background:var(--line-strong)}.notification-item.unread .notification-dot{background:var(--primary)}.notification-item strong{display:block;color:var(--ink)}.notification-item small{display:block;margin-top:.25rem;color:var(--ink-soft)}.empty-state{padding:3rem 1rem;text-align:center;color:var(--ink-soft)}.empty-state strong{display:block;color:var(--ink)}.modal-backdrop{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:1rem;background:rgb(15 23 42/.56)}.modal-card{width:min(650px,100%);max-height:90vh;overflow:auto;display:grid;gap:1rem;padding:1.35rem;color:var(--ink);border:1px solid var(--line);border-radius:1rem;background:var(--surface)}.modal-heading{display:flex;justify-content:space-between}.modal-card label{display:grid;gap:.4rem;color:var(--ink-soft);font-size:var(--type-meta);font-weight:var(--weight-semibold)}.modal-card input,.modal-card select,.modal-card textarea{width:100%;padding:.65rem .75rem;color:var(--ink);background:var(--surface-subtle);border:1px solid var(--line-strong);border-radius:.65rem}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.modal-actions{justify-content:flex-end}.form-error{color:var(--red);font-size:var(--type-meta)}@media(max-width:760px){.communication-hero,.announcement-card{flex-direction:column}.form-grid{grid-template-columns:1fr}.announcement-date{width:auto;display:flex;gap:.3rem}}
-.comm-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .comm-notice { padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--green-soft); color: var(--ink); font-size: var(--type-sm); }
 .comm-tabs { flex-wrap: wrap; }
 .comm-tabs button { min-height: 44px; }
@@ -241,38 +240,23 @@ const markRead = (notification: NotificationItem) => {
 .modal-card .form-error { color: var(--red); }
 .modal-heading > button { align-self: flex-start; flex: 0 0 44px; }
 @media (max-width: 760px) {
-    .comm-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .comm-list { padding: 1rem; }
     .list-heading { align-items: stretch; flex-direction: column; }
     .list-heading button { width: 100%; }
     .comm-actions { width: 100%; }
     .timeline-event { flex-wrap: wrap; }
     .modal-actions { flex-wrap: wrap; }
+    .communication-page .communication-hero { align-items: stretch; padding: 1.1rem 1.15rem; }
 }
-@media (max-width: 440px) { .comm-summary { grid-template-columns: 1fr; } }
-.communication-page .communication-hero { padding: .5rem 0 .75rem; }
+.communication-page .communication-hero { padding: 1.25rem 1.5rem; background: linear-gradient(135deg, var(--surface) 0%, var(--surface-subtle) 100%); border: 1px solid var(--line); border-radius: var(--card-radius, 14px); box-shadow: var(--shadow-sm); }
 .communication-page .communication-hero .eyebrow { margin: 0 0 .5rem; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-semibold); letter-spacing: .04em; text-transform: none; }
 .communication-page .communication-hero h1 { margin: 0; color: var(--ink); font-size: var(--type-3xl); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1.2; }
 .communication-page .communication-hero p:not(.eyebrow) { max-width: 600px; margin: .5rem 0 0; color: var(--ink-soft); font-size: var(--type-md); line-height: 1.55; }
 .communication-page > .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
-.communication-page .comm-summary > div { background: var(--surface); border-color: var(--line); }
 .modal-backdrop { display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
 .modal-card { align-content: start; width: min(580px, 100%); max-height: min(90dvh, 860px); height: auto; gap: 1rem; padding: clamp(18px, 3vw, 28px); overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
 .modal-heading { position: sticky; top: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; gap: 1rem; margin-top: calc(-1 * clamp(18px, 3vw, 28px)); padding-top: clamp(18px, 3vw, 28px); padding-bottom: .75rem; background: var(--surface); border-bottom: 1px solid var(--line); }
 .modal-actions { position: sticky; bottom: calc(-1 * clamp(18px, 3vw, 28px)); z-index: 2; margin-bottom: calc(-1 * clamp(18px, 3vw, 28px)); padding: 1rem 0 clamp(18px, 3vw, 28px); background: var(--surface); border-top: 1px solid var(--line); }
 .modal-card :is(input, select, textarea):focus-visible, .modal-card button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 @media (max-width: 600px) { .modal-backdrop { padding: .75rem; } .modal-card { max-height: 92dvh; border-radius: 16px; } }
-</style>
-
-<style scoped>
-/* Summary metrics share the same quiet card treatment across menus. */
-.grade-summary { gap: .75rem; overflow: visible; background: transparent; border: 0; box-shadow: none; }
-.grade-summary > div, .grade-summary > article { display: grid; align-content: center; gap: .25rem; min-width: 0; text-align: center; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid #3157a4; border-radius: .8rem; box-shadow: none; }
-.grade-summary > div:nth-child(2), .grade-summary > article:nth-child(2) { border-top-color: #7952a3; }
-.grade-summary > div:nth-child(3), .grade-summary > article:nth-child(3) { border-top-color: #138a62; }
-.grade-summary > div:nth-child(4), .grade-summary > article:nth-child(4) { border-top-color: #168782; }
-.grade-summary > div::before, .grade-summary > article::before { content: none; }
-.grade-summary > .score-summary-green { border-top-color: #138a62; }
-.grade-summary > .score-summary-red { border-top-color: #b42318; }
-.grade-summary > .score-summary-gold { border-top-color: #c28a27; }
 </style>

@@ -1,35 +1,118 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Rekap Absensi Guru {{ $period }}</title>
+    <title>Rekap Kehadiran Guru {{ $period }}</title>
     <style>
-        @page { margin: 28px 32px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #1e293b; font-size: 11px; }
-        h1 { margin: 0 0 5px; font-size: 20px; color: #17376d; }
-        p { margin: 0 0 18px; color: #64748b; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 9px 10px; border: 1px solid #dbe3ee; text-align: left; }
-        th { background: #eff4fb; color: #42536d; font-size: 9px; text-transform: uppercase; }
-        td.number, th.number { width: 10%; text-align: center; }
-        tfoot td { background: #f8fafc; font-weight: bold; }
+        @page {
+            size: A4 portrait;
+            margin: 15mm 16mm;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 9.5pt;
+            color: #0f172a;
+            line-height: 1.4;
+            margin: 0;
+        }
+        .header {
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0 0 3px;
+        }
+        .subtitle {
+            color: #475569;
+            font-size: 9.5pt;
+            margin: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #64748b;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        th {
+            background: #e2e8f0;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 8pt;
+            letter-spacing: 0.03em;
+            color: #0f172a;
+        }
+        .num {
+            text-align: center;
+            width: 58px;
+        }
+        .no-col {
+            text-align: center;
+            width: 36px;
+        }
+        .footer {
+            margin-top: 16px;
+            font-size: 8pt;
+            color: #64748b;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
-    <h1>Rekap Absensi Guru</h1>
-    <p>Periode {{ $period }}</p>
+    <div class="header">
+        <h1>Rekapitulasi Kehadiran Guru</h1>
+        <p class="subtitle">Periode Laporan: {{ $period }}</p>
+    </div>
+
     <table>
-        <thead><tr><th>Nama guru</th><th>NIP</th><th class="number">Hadir</th><th class="number">Izin</th><th class="number">Sakit</th><th class="number">Alpha</th></tr></thead>
+        <thead>
+            <tr>
+                <th class="no-col">No.</th>
+                <th>Nama Guru</th>
+                <th style="width: 140px;">NIP / NUPTK</th>
+                <th class="num">Hadir</th>
+                <th class="num">Izin</th>
+                <th class="num">Sakit</th>
+                <th class="num">Alpa</th>
+                <th class="num">Total</th>
+            </tr>
+        </thead>
         <tbody>
-            @forelse($rows as $row)
-                <tr><td>{{ $row['name'] }}</td><td>{{ $row['nip'] ?: '—' }}</td><td class="number">{{ $row['present'] }}</td><td class="number">{{ $row['permitted'] }}</td><td class="number">{{ $row['sick'] }}</td><td class="number">{{ $row['absent'] }}</td></tr>
+            @forelse ($rows as $index => $row)
+                @php
+                    $total = (int) ($row['present'] ?? 0) + (int) ($row['permitted'] ?? 0) + (int) ($row['sick'] ?? 0) + (int) ($row['absent'] ?? 0);
+                @endphp
+                <tr>
+                    <td class="no-col">{{ $index + 1 }}</td>
+                    <td><strong>{{ $row['name'] }}</strong></td>
+                    <td>{{ $row['nip'] ?: '-' }}</td>
+                    <td class="num">{{ $row['present'] }}</td>
+                    <td class="num">{{ $row['permitted'] }}</td>
+                    <td class="num">{{ $row['sick'] }}</td>
+                    <td class="num">{{ $row['absent'] }}</td>
+                    <td class="num"><strong>{{ $total }}</strong></td>
+                </tr>
             @empty
-                <tr><td colspan="6" style="text-align:center;color:#64748b">Belum ada catatan absensi pada bulan ini.</td></tr>
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 14px;">Belum ada data kehadiran pada periode ini.</td>
+                </tr>
             @endforelse
         </tbody>
-        @if($rows->isNotEmpty())
-            <tfoot><tr><td colspan="2">Total</td><td class="number">{{ $rows->sum('present') }}</td><td class="number">{{ $rows->sum('permitted') }}</td><td class="number">{{ $rows->sum('sick') }}</td><td class="number">{{ $rows->sum('absent') }}</td></tr></tfoot>
-        @endif
     </table>
+
+    <div class="footer">
+        Dicetak pada {{ now()->format('d/m/Y H:i') }}
+    </div>
 </body>
 </html>

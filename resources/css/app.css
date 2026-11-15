@@ -203,12 +203,13 @@ html[data-theme='dark'] .bg-pink-50,
 html[data-theme='dark'] .bg-pink-100 { background-color: var(--pink-soft) !important; }
 
 .row-action-button svg { stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-.row-action-button--edit { color: var(--primary-strong); background: var(--primary-soft); border-color: color-mix(in srgb, var(--primary) 22%, var(--line)); }
-.row-action-button--edit svg { color: var(--edit); }
-.row-action-button--delete { color: var(--delete); background: var(--delete-soft); border-color: var(--delete-line); }
-.row-action-button--archive { color: var(--gold); background: var(--gold-soft); border-color: color-mix(in srgb, var(--gold) 24%, var(--line)); }
-.row-action-button--edit:hover:not(:disabled) { background: color-mix(in srgb, var(--primary-soft) 72%, var(--primary) 28%); }
-.row-action-button--delete:hover:not(:disabled) { color: color-mix(in srgb, var(--delete) 78%, var(--ink) 22%); background: color-mix(in srgb, var(--delete-soft) 70%, var(--delete) 30%); }
+.row-action-button--edit { color: var(--ink); background: var(--surface, #ffffff); border-color: var(--line-strong); }
+.row-action-button--edit svg { color: var(--green, #15803d); }
+.row-action-button--delete { color: var(--ink); background: var(--surface, #ffffff); border-color: var(--line-strong); }
+.row-action-button--delete svg { color: var(--delete, #dc2626); }
+.row-action-button--archive { color: var(--gold); background: var(--surface, #ffffff); border-color: var(--line-strong); }
+.row-action-button--edit:hover:not(:disabled) { background: var(--surface-soft, #f8fafc); border-color: var(--green, #16a34a); }
+.row-action-button--delete:hover:not(:disabled) { background: var(--surface-soft, #f8fafc); border-color: var(--delete, #dc2626); }
 .row-action-button--archive:hover:not(:disabled) { background: color-mix(in srgb, var(--gold-soft) 72%, var(--gold) 28%); }
 
 html[data-theme='dark'] .text-slate-950,
@@ -468,10 +469,11 @@ html[data-theme='dark'] .security-page ~ .modal-backdrop .modal-card textarea {
 }
 
 .page-heading > div:first-child {
+    flex: 1 1 auto;
     min-width: 0;
 }
 
-.page-heading > :last-child {
+.page-heading > :last-child:not(:first-child) {
     flex: 0 0 auto;
 }
 

@@ -19,7 +19,7 @@ function changeMonth(event: Event) {
         <main class="view teacher-recap-page space-y-6">
             <section class="hero-card teacher-recap-hero">
                 <div><p class="eyebrow">Administrasi akademik</p><h1>Rekap absensi guru</h1><p>Ringkasan kehadiran bulanan berdasarkan catatan sekolah.</p></div>
-                <div class="flex flex-wrap gap-2"><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/absensi-guru">Kembali ke absensi</Link><AppButton variant="primary" as="a" class="primary-button" :href="`/akademik/absensi-guru/rekap/pdf?month=${month}`">Unduh PDF</AppButton></div>
+                <div class="flex flex-wrap gap-2"><Link class="secondary-button ui-button ui-button--secondary ui-button--md" href="/akademik/absensi-guru">Kembali ke absensi</Link><AppButton variant="secondary" icon="pdf" as="a" class="file-action-button file-action-button--pdf" target="_blank" rel="noopener noreferrer" :href="`/akademik/absensi-guru/rekap/pdf?month=${month}`">Unduh PDF</AppButton></div>
             </section>
             <section class="panel flex flex-wrap items-end justify-between gap-4 p-5">
                 <label class="grid gap-1 text-sm font-medium text-slate-700">Bulan rekap<input class="min-h-10 rounded-lg border border-slate-300 bg-[var(--surface)] px-3 text-sm" type="month" :value="month" @change="changeMonth" /></label>

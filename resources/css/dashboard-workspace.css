@@ -13,8 +13,8 @@
 .dashboard-workspace .intro-row { margin-top: .65rem; align-items: center; gap: 1rem; }
 .dashboard-workspace .intro-row h1 { font-size: var(--type-3xl); line-height: 1.2; color: var(--ink); letter-spacing: -.035em; }
 .dashboard-workspace .intro-row p { margin-top: .4rem; font-size: var(--type-md); line-height: 1.5; }
-.dashboard-workspace .date-stamp { flex-shrink: 0; background: transparent; border: 0; padding: 0; }
-.dashboard-workspace .date-stamp span { font-size: var(--type-meta); font-weight: var(--weight-medium); text-align: right; }
+.dashboard-workspace .date-stamp { flex-shrink: 0; display: inline-flex; align-items: center; padding: .35rem .75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; box-shadow: var(--shadow-sm); }
+.dashboard-workspace .date-stamp span { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); white-space: nowrap; text-align: right; }
 
 .workspace-today { padding: 1.25rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 .workspace-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
@@ -85,6 +85,11 @@
 .dashboard-workspace .principal-alert-list p { font-size: var(--type-meta); }
 .dashboard-workspace .principal-alert-list a { min-width: 36px; min-height: 44px; }
 .dashboard-workspace .principal-attention-empty { margin: 1rem 0; }
+.dashboard-workspace .principal-chart { max-height: 210px; overflow: visible; }
+.dashboard-workspace .principal-chart .chart-grid text,
+.dashboard-workspace .principal-chart .chart-point text { font-size: 10.5px; font-weight: 500; }
+.dashboard-workspace .principal-chart .chart-line,
+.dashboard-workspace .principal-chart .chart-point circle { stroke-width: 2; }
 .dashboard-workspace .dashboard-footer { margin-top: 2rem; }
 
 @media (max-width: 1080px) {

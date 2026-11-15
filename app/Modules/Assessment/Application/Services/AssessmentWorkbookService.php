@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assessment\Application\Services;
 
+use App\Shared\Exports\SpreadsheetStyler;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
@@ -80,7 +81,12 @@ class AssessmentWorkbookService
                     $sheet->setCellValueExplicit([$c + 1, $r + 1], (string) ($value ?? ''), DataType::TYPE_STRING);
                 }
             }
-            $sheet->freezePane($name === 'Jawaban' ? 'B7' : 'A2');
+            SpreadsheetStyler::styleWorksheet(
+                $sheet,
+                $name === 'Jawaban' ? 'B7' : 'A2',
+                headerRow: $name === 'Jawaban' ? 6 : 1
+            );
+            $sheet->getColumnDimension('A')->setAutoSize(false);
             $sheet->getColumnDimension('A')->setWidth(24);
         }
         $book->setActiveSheetIndex(0);

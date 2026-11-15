@@ -158,7 +158,9 @@ class LearningController extends Controller
             $submission = $enrollment
                 ? AssignmentSubmission::with('files')->where('learning_assignment_id', $assignment->id)->where('enrollment_id', $enrollment->id)->first()
                 : null;
-            $canSubmit = $submission === null || $submission->review_status === 'needs_revision';
+            $canSubmit = $enrollment !== null
+                && ($submission === null || $submission->review_status === 'needs_revision')
+                && (! $assignment->due_at?->isPast() || $assignment->allow_late);
         }
 
         $isStudent = $request->user()->hasRole('student');

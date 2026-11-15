@@ -13,6 +13,7 @@ interface BreadcrumbItem {
 }
 
 interface PageProps {
+    auth?: { user?: { role?: string | null } };
     assignment?: { title?: string | null };
     exam?: { title?: string | null };
     report?: { student?: { name?: string | null } };
@@ -25,14 +26,15 @@ interface PageProps {
 
 const props = defineProps<BreadcrumbProps>();
 const page = usePage<PageProps>();
+const currentRole = computed(() => page.props.auth?.user?.role ?? null);
 
 const segmentLabels: Record<string, string> = {
     akademik: 'Akademik',
     administrasi: 'Tata Usaha',
     analisis: 'Analisis',
-    atp: 'ATP / Silabus',
     absensi: 'Absensi Siswa',
     'absensi-guru': 'Absensi Guru',
+    arsip: 'Arsip',
     'bank-soal': 'Bank Soal',
     'berbagi-soal': 'Berbagi Soal',
     'buku-induk': 'Buku Induk',
@@ -40,6 +42,7 @@ const segmentLabels: Record<string, string> = {
     catatan: 'Catatan Observasi & BK',
     'kelas-daring': 'Kelas Daring',
     kelas: 'Rombel / Kelas',
+    kalender: 'Kalender',
     komunikasi: 'Komunikasi',
     'dokumen': 'Dokumen Perencanaan',
     'guru': 'Data Guru',
@@ -48,18 +51,20 @@ const segmentLabels: Record<string, string> = {
     'kedisiplinan': 'Kedisiplinan & Prestasi',
     'kepsek': 'Dashboard Kepala Sekolah',
     'laporan': 'Pusat Laporan',
+    ledger: 'Ledger Nilai',
     materi: 'Materi',
-    'modul-ajar': 'Modul Ajar',
-    'paket-administrasi': 'Paket Administrasi Pembelajaran',
+    nilai: 'Rapor Siswa',
     'paket-soal': 'Paket Soal',
+    pelajaran: 'Pelajaran',
     pembelajaran: 'Pembelajaran',
     penilaian: 'Penilaian & Rapor',
     pengaturan: 'Pengaturan',
     pengumpulan: 'Pengumpulan Tugas',
     'pengumuman': 'Pengumuman',
     pengguna: 'Pengguna',
-    perangkat: 'Perangkat Pembelajaran',
     perfil: 'Profil Saya',
+    'performa-guru': 'Kinerja Guru',
+    persuratan: 'Persuratan',
     profil: 'Profil Saya',
     progress: 'Progress Belajar',
     presensi: 'Absensi Siswa',
@@ -70,8 +75,13 @@ const segmentLabels: Record<string, string> = {
     sekolah: 'Profil Sekolah',
     sikap: 'Penilaian Sikap',
     'siklus-siswa': 'Siklus Siswa',
+    siswa: 'Data Siswa',
+    skema: 'Skema Penilaian',
     skor: 'Input Nilai',
     spmb: 'SPMB',
+    statistik: 'Statistik',
+    'surat-keluar': 'Surat Keluar',
+    'surat-masuk': 'Surat Masuk',
     tugas: 'Tugas',
     ujian: 'Ujian / CBT',
     wali: 'Ruang Wali Kelas',
@@ -84,7 +94,7 @@ const rootLinks: Record<string, string> = {
     akademik: '/akademik/siswa',
     administrasi: '/administrasi/persuratan',
     komunikasi: '/komunikasi',
-    kepsek: '/',
+    kepsek: '/dashboard',
     laporan: '/laporan',
     pembelajaran: '/pembelajaran',
     penilaian: '/penilaian/rapor',
@@ -97,8 +107,8 @@ const rootLinks: Record<string, string> = {
 
 const linkOverrides: Record<string, string> = {
     '/akademik': '/akademik/siswa',
-    '/akademik/perangkat': '/akademik/perangkat/atp',
     '/administrasi': '/administrasi/persuratan',
+    '/kepsek/laporan': '/laporan',
     '/penilaian': '/penilaian/rapor',
     '/pengaturan': '/pengaturan/pengguna',
     '/siswa': '/siswa/materi',
@@ -137,7 +147,7 @@ const dynamicLeafTitle = computed(() => {
     const resourceName = nestedString(propsRecord.resource, 'name')
         ?? nestedString(asRecord(propsRecord.share)?.resource, 'name');
 
-    if (path.startsWith('/pembelajaran/tugas/') && assignmentTitle) {
+    if ((path.startsWith('/pembelajaran/tugas/') || path.startsWith('/siswa/tugas/')) && assignmentTitle) {
         return path.endsWith('/pengumpulan') ? `Pengumpulan · ${assignmentTitle}` : assignmentTitle;
     }
     if (path.startsWith('/akademik/buku-induk/') && studentName) return `Buku Induk · ${studentName}`;
@@ -165,6 +175,9 @@ const labelForSegment = (segment: string, index: number) => {
 };
 
 const hrefFor = (prefix: string, segment: string, index: number) => {
+    if (currentRole.value === 'student' && (prefix === '/akademik' || (index === 0 && segment === 'akademik'))) {
+        return '/akademik/jadwal';
+    }
     if (index === 0 && rootLinks[segment]) return rootLinks[segment];
     return linkOverrides[prefix] ?? prefix;
 };

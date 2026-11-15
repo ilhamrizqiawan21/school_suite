@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+const validationPage = usePage();
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -1407,7 +1409,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                             <h2>Edit Data Pendaftar</h2>
                             <p>Perbarui identitas calon siswa, jalur pendaftaran, atau status verifikasi.</p>
                         </div>
-                        <AppButton variant="ghost" icon-only icon="edit" type="button" class="secondary-button btn-compact" aria-label="Tutup form edit" @click="closeEditApplicantModal">Tutup ×</AppButton>
+                        <AppButton variant="ghost" icon-only icon="close" type="button" class="secondary-button btn-compact" aria-label="Tutup form edit" @click="closeEditApplicantModal">Tutup ×</AppButton>
                     </header>
                     <form class="admissions-form applicant-edit-form" @submit.prevent="submitEditApplicant">
                         <label>Periode<select v-model="editApplicantForm.period_id" required @change="changeEditApplicantPeriod"><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="String(period.id)">{{ period.name }}</option></select></label>
@@ -1493,6 +1495,10 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
             </div>
         </div>
     </AppLayout>
+    <div v-if="Object.keys(validationPage.props.errors || {}).length" role="alert" class="fixed bottom-4 right-4 z-[100] max-w-sm rounded-lg border border-red-300 bg-white p-4 text-red-800">
+        <strong>Periksa data yang diisi</strong>
+        <ul><li v-for="(error, field) in validationPage.props.errors" :key="field">{{ error }}</li></ul>
+    </div>
 </template>
 
 <style scoped>

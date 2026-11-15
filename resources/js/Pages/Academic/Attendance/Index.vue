@@ -107,12 +107,12 @@ function resetChanges() {
 }
 
 function statusButtonClass(status: AttendanceStatus, selected: boolean): string {
-    if (!selected) return 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50';
+    if (!selected) return 'attendance-status-btn';
     return {
-        present: 'border-emerald-600 bg-emerald-600 text-white',
-        sick: 'border-amber-500 bg-amber-500 text-white',
-        permitted: 'border-blue-600 bg-blue-600 text-white',
-        absent: 'border-rose-600 bg-rose-600 text-white',
+        present: 'attendance-status-btn is-present',
+        sick: 'attendance-status-btn is-sick',
+        permitted: 'attendance-status-btn is-permitted',
+        absent: 'attendance-status-btn is-absent',
     }[status];
 }
 
@@ -224,10 +224,10 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 
                     <div class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-meta font-semibold text-slate-600" aria-label="Legenda status">
                         <span class="font-bold text-slate-800">Legenda:</span>
-                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-emerald-500"/>Hadir</span>
-                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-amber-500"/>Sakit</span>
-                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-blue-500"/>Izin</span>
-                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-rose-500"/>Alpa</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-emerald-600"/>Hadir</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-amber-600"/>Sakit</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-blue-600"/>Izin</span>
+                        <span class="inline-flex items-center gap-2"><i class="h-2.5 w-2.5 rounded-full bg-rose-600"/>Alpa</span>
                     </div>
 
                     <div v-if="selectedSession" class="grid grid-cols-2 gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 sm:grid-cols-4">
@@ -244,23 +244,24 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                         </div>
                         <div class="attendance-table-wrap overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                             <table class="app-table w-full min-w-[720px] border-collapse text-left text-sm">
-                                <thead class="bg-slate-50 text-meta uppercase tracking-wide text-slate-600"><tr><th scope="col" class="w-24 px-4 py-3">No / NIS</th><th scope="col" class="min-w-44 px-4 py-3">Nama siswa</th><th scope="col" class="min-w-64 px-4 py-3 text-center">Status</th><th scope="col" class="min-w-40 px-4 py-3">Catatan</th></tr></thead>
+                                <thead class="bg-slate-50 text-meta uppercase tracking-wide text-slate-600"><tr class="text-center"><th scope="col" class="w-24 px-4 py-3 text-center">NIS</th><th scope="col" class="min-w-44 px-4 py-3 text-center">Nama siswa</th><th scope="col" class="w-16 px-3 py-3 text-center">L/P</th><th scope="col" class="min-w-64 px-4 py-3 text-center">Status</th><th scope="col" class="min-w-40 px-4 py-3 text-center">Catatan</th></tr></thead>
                                 <tbody class="divide-y divide-slate-100 text-slate-700">
-                                    <tr v-for="(student, index) in studentList" :key="student.enrollment_id" class="hover:bg-slate-50">
-                                        <td class="whitespace-nowrap px-4 py-3 text-meta"><span class="block font-semibold text-slate-700">{{ student.roll_number || index + 1 }}</span><span class="text-slate-600">{{ student.nis }}</span></td>
-                                        <td class="px-4 py-3"><span class="font-semibold text-slate-900">{{ student.name }}</span><span class="ml-2 text-meta text-slate-600">{{ student.gender }}</span></td>
+                                    <tr v-for="student in studentList" :key="student.enrollment_id" class="hover:bg-slate-50">
+                                        <td class="whitespace-nowrap px-4 py-3 text-meta font-medium text-slate-700">{{ student.nis }}</td>
+                                        <td class="px-4 py-3 font-semibold text-slate-900">{{ student.name }}</td>
+                                        <td class="whitespace-nowrap px-3 py-3 text-center text-meta font-medium text-slate-600">{{ student.gender }}</td>
                                         <td class="px-4 py-3 text-center"><div class="flex flex-wrap justify-center gap-1.5">
-                                            <AppButton variant="secondary" v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="statusButtonClass(option[0], student.status === option[0])"  @click="student.status = option[0]">{{ option[1] }}</AppButton>
+                                            <button v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="statusButtonClass(option[0], student.status === option[0])" @click="student.status = option[0]">{{ option[1] }}</button>
                                         </div></td>
                                         <td class="px-4 py-3"><input v-model="student.notes" type="text" maxlength="255" placeholder="Opsional" class="w-full min-w-40 rounded-md border border-slate-300 bg-[var(--surface)] px-2.5 py-2 text-meta text-slate-800 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></td>
                                     </tr>
-                                    <tr v-if="studentList.length === 0"><td colspan="4" class="px-4 py-10 text-center text-slate-600">Belum ada siswa pada kelas dan semester aktif ini.</td></tr>
+                                    <tr v-if="studentList.length === 0"><td colspan="5" class="px-4 py-10 text-center text-slate-600">Belum ada siswa pada kelas dan semester aktif ini.</td></tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="attendance-mobile-list" aria-label="Daftar presensi siswa">
-                            <article v-for="(student, index) in studentList" :key="student.enrollment_id" class="attendance-mobile-card">
-                                <div><strong>{{ student.name }}</strong><small>No. {{ student.roll_number || index + 1 }} · NIS {{ student.nis }}</small></div>
+                            <article v-for="student in studentList" :key="student.enrollment_id" class="attendance-mobile-card">
+                                <div><strong>{{ student.name }}</strong><small>NIS {{ student.nis }} · {{ student.gender }}</small></div>
                                 <div class="attendance-mobile-status" role="group" :aria-label="`Status presensi ${student.name}`">
                                     <button v-for="option in ([['present','Hadir'],['sick','Sakit'],['permitted','Izin'],['absent','Alpa']] as [AttendanceStatus,string][])" :key="option[0]" type="button" :aria-pressed="student.status === option[0]" :class="statusButtonClass(option[0], student.status === option[0])" @click="student.status = option[0]">{{ option[1] }}</button>
                                 </div>
@@ -309,17 +310,23 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
 .attendance-heading h1 { color: var(--ink); font-size: var(--type-3xl); }
 .attendance-heading p:not(.eyebrow) { color: var(--ink-soft); }
 .attendance-heading .eyebrow { color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-semibold); letter-spacing: .03em; text-transform: none; }
+.attendance-page .app-table thead th { text-align: center; }
 :global(html[data-theme='dark'] .attendance-page .attendance-save-bar) { background: var(--surface) !important; border-color: var(--line) !important; }
 :global(html[data-theme='dark'] .attendance-page .text-emerald-900) { color: var(--green) !important; }
 :global(html[data-theme='dark'] .attendance-page .text-amber-900) { color: var(--gold) !important; }
 :global(html[data-theme='dark'] .attendance-page .text-blue-900) { color: var(--blue) !important; }
 :global(html[data-theme='dark'] .attendance-page .text-rose-900) { color: var(--red) !important; }
-:global(html[data-theme='dark'] .attendance-page button[aria-pressed='false']) { background: var(--surface) !important; border-color: var(--line-strong) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true']) { color: #fff !important; }
-:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-emerald-600) { background: #087a55 !important; border-color: #087a55 !important; }
-:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-amber-500) { background: #8a5000 !important; border-color: #8a5000 !important; }
-:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-blue-600) { background: #1d4ed8 !important; border-color: #1d4ed8 !important; }
-:global(html[data-theme='dark'] .attendance-page button[aria-pressed='true'].bg-rose-600) { background: #be123c !important; border-color: #be123c !important; }
+.attendance-status-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink-soft); font-size: var(--type-control); font-weight: var(--weight-semibold); cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; }
+.attendance-status-btn:hover { background: var(--surface-subtle); color: var(--ink); }
+.attendance-status-btn.is-present, .attendance-status-btn.is-present:hover { background: #059669; border-color: #059669; color: #fff; }
+.attendance-status-btn.is-sick, .attendance-status-btn.is-sick:hover { background: #d97706; border-color: #d97706; color: #fff; }
+.attendance-status-btn.is-permitted, .attendance-status-btn.is-permitted:hover { background: #2563eb; border-color: #2563eb; color: #fff; }
+.attendance-status-btn.is-absent, .attendance-status-btn.is-absent:hover { background: #e11d48; border-color: #e11d48; color: #fff; }
+:global(html[data-theme='dark'] .attendance-page .attendance-status-btn) { background: var(--surface); border-color: var(--line-strong); color: var(--ink-soft); }
+:global(html[data-theme='dark'] .attendance-page .attendance-status-btn.is-present) { background: #047857; border-color: #047857; color: #fff; }
+:global(html[data-theme='dark'] .attendance-page .attendance-status-btn.is-sick) { background: #b45309; border-color: #b45309; color: #fff; }
+:global(html[data-theme='dark'] .attendance-page .attendance-status-btn.is-permitted) { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+:global(html[data-theme='dark'] .attendance-page .attendance-status-btn.is-absent) { background: #be123c; border-color: #be123c; color: #fff; }
 .attendance-mobile-list { display: none; }
 @media (max-width: 720px) {
     .attendance-heading { align-items: flex-start; }

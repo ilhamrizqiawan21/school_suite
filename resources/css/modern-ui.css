@@ -75,6 +75,13 @@ main {
     padding-left: var(--content-gutter);
 }
 
+main main {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
 .panel {
     border-radius: var(--card-radius);
 }

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Buku Induk Peserta Didik</title>
     <style>
-        @page { margin: 16mm 15mm; }
+        @page { size: A4 portrait; margin: 16mm 15mm; }
         body { color: #1e293b; font-family: DejaVu Sans, sans-serif; font-size: 9pt; line-height: 1.38; }
         .student-sheet { page-break-after: always; }
         .student-sheet:last-child { page-break-after: auto; }

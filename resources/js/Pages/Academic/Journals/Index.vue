@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 type Tab = 'agenda' | 'history' | 'recap';
@@ -42,7 +42,7 @@ interface SessionItem {
     journal_status: JournalStatus;
     journal: JournalData | null;
     attendance_summary: AttendanceSummary;
-    class_group: { id: number | null; name: string };
+    class_group: { id: number | null; name: string; grade_level?: number | null };
     subject: { id: number | null; name: string; code: string };
 }
 
@@ -223,6 +223,12 @@ const parseLocalDate = (value: string | null | undefined) => {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+const toDateInputValue = (date: Date) => [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+].join('-');
+
 const formatDate = (value: string | null | undefined) => {
     const date = parseLocalDate(value);
     if (!date) return 'Tanggal tidak tersedia';
@@ -268,6 +274,45 @@ props.agenda_sessions.forEach((session) => ensureDraft(session));
 const agendaPending = computed(() => props.agenda_sessions.filter((session) => session.journal_status === 'pending').length);
 const agendaCompleted = computed(() => props.agenda_sessions.filter((session) => session.journal_status === 'completed').length);
 const recapHasData = computed(() => props.recap.months.some((month) => month.total_sessions > 0));
+const activeJournalSession = computed(() =>
+    props.agenda_sessions.find((session) => session.id === expandedSessionId.value)
+    ?? props.journal_sessions.data.find((session) => session.id === expandedSessionId.value)
+    ?? null,
+);
+
+const journalEditorRef = ref<HTMLElement | null>(null);
+const newSessionModalRef = ref<HTMLElement | null>(null);
+const activeModalRoot = computed(() => journalEditorRef.value ?? newSessionModalRef.value);
+
+const handleJournalModalKeydown = (event: KeyboardEvent) => {
+    if (event.key !== 'Tab' || !activeModalRoot.value) return;
+
+    const focusable = Array.from(activeModalRoot.value.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]',
+    ));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!first || !last) return;
+
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+};
+
+watch([activeJournalSession, showSessionModal], async (values) => {
+    if (!values.some(Boolean)) return;
+    await nextTick();
+    activeModalRoot.value?.querySelector<HTMLElement>(
+        'textarea:not([disabled]), input:not([disabled]), select:not([disabled]), button:not([disabled])',
+    )?.focus();
+});
+
+onMounted(() => document.addEventListener('keydown', handleJournalModalKeydown));
+onBeforeUnmount(() => document.removeEventListener('keydown', handleJournalModalKeydown));
 
 const attendanceTotal = (session: SessionItem) => Object.values(session.attendance_summary).reduce((sum, value) => sum + value, 0);
 
@@ -337,14 +382,16 @@ const navigateAgenda = (value = agendaDate.value) => navigate({
 });
 
 const shiftDate = (offset: number) => {
-    const date = new Date(agendaDate.value + 'T00:00:00');
+    const date = parseLocalDate(agendaDate.value);
+    if (!date) return;
+
     date.setDate(date.getDate() + offset);
-    agendaDate.value = date.toISOString().slice(0, 10);
+    agendaDate.value = toDateInputValue(date);
     navigateAgenda();
 };
 
 const goToToday = () => {
-    agendaDate.value = new Date().toISOString().slice(0, 10);
+    agendaDate.value = toDateInputValue(new Date());
     navigateAgenda();
 };
 
@@ -397,9 +444,8 @@ const saveJournal = (session: SessionItem) => {
 };
 
 const openHistorySession = (session: SessionItem) => {
-    activeTab.value = 'agenda';
-    agendaDate.value = session.date;
-    navigateAgenda(session.date);
+    ensureDraft(session);
+    expandedSessionId.value = session.id;
 };
 
 const openNewSession = (source?: SessionItem) => {
@@ -415,9 +461,11 @@ const openNewSession = (source?: SessionItem) => {
     newSessionForm.start_time = source?.start_time ?? '07:00';
     newSessionForm.end_time = source?.end_time ?? '08:30';
     if (source) {
-        const nextDate = new Date(source.date + 'T00:00:00');
-        nextDate.setDate(nextDate.getDate() + 7);
-        newSessionForm.date = nextDate.toISOString().slice(0, 10);
+        const nextDate = parseLocalDate(source.date);
+        if (nextDate) {
+            nextDate.setDate(nextDate.getDate() + 7);
+            newSessionForm.date = toDateInputValue(nextDate);
+        }
     }
     showSessionModal.value = true;
 };
@@ -541,70 +589,6 @@ const chart = computed(() => {
                                 {{ session.journal_status === 'completed' ? 'Edit jurnal' : 'Isi jurnal' }}
                             </AppButton>
                         </div>
-                        <form v-if="expandedSessionId === session.id" class="journal-form" @input="queueDraftSave(session)" @submit.prevent="saveJournal(session)">
-                            <fieldset class="form-section" :disabled="processingSessionId === session.id">
-                                <legend>Materi dan tujuan</legend>
-                                <label>Materi pokok
-                                    <textarea v-model="ensureDraft(session).topic" required rows="2" placeholder="Materi yang dibahas pada pertemuan ini" />
-                                </label>
-                                <div class="form-grid">
-                                    <label>Topik / tema (opsional)
-                                        <input v-model="ensureDraft(session).theme" placeholder="Contoh: Panca Cinta" />
-                                    </label>
-                                    <label>Alokasi waktu (JP)
-                                        <input v-model.number="ensureDraft(session).period_count" type="number" min="1" max="10" required />
-                                    </label>
-                                </div>
-                                <label>Tujuan pembelajaran
-                                    <textarea v-model="ensureDraft(session).learning_objectives" rows="3" placeholder="Kompetensi yang diharapkan dicapai siswa" />
-                                </label>
-                            </fieldset>
-                            <fieldset class="form-section" :disabled="processingSessionId === session.id">
-                                <legend>Kegiatan pembelajaran</legend>
-                                <label>Kegiatan pendahuluan
-                                    <textarea v-model="ensureDraft(session).opening_activity" rows="2" placeholder="Pembukaan, apersepsi, dan persiapan belajar" />
-                                </label>
-                                <label>Kegiatan inti
-                                    <textarea v-model="ensureDraft(session).main_activity" rows="3" placeholder="Aktivitas utama dan metode pembelajaran" />
-                                </label>
-                                <label>Kegiatan penutup
-                                    <textarea v-model="ensureDraft(session).closing_activity" rows="2" placeholder="Rangkuman, refleksi bersama, dan penutup" />
-                                </label>
-                            </fieldset>
-                            <fieldset class="form-section" :disabled="processingSessionId === session.id">
-                                <legend>Kehadiran dan refleksi</legend>
-                                <div class="attendance-strip">
-                                    <span><b>{{ session.attendance_summary.present }}</b> hadir</span>
-                                    <span><b>{{ session.attendance_summary.sick }}</b> sakit</span>
-                                    <span><b>{{ session.attendance_summary.permitted }}</b> izin</span>
-                                    <span><b>{{ session.attendance_summary.absent }}</b> alpa</span>
-                                    <Link class="secondary-button ui-button ui-button--secondary ui-button--md" :href="'/akademik/presensi?session_id=' + session.id + '&date=' + session.date">Kelola presensi</Link>
-                                </div>
-                                <label>Keterangan presensi (opsional)
-                                    <textarea v-model="ensureDraft(session).attendance_notes" rows="2" placeholder="Catatan siswa sakit, izin, atau alpa" />
-                                </label>
-                                <label>Hasil pengamatan
-                                    <textarea v-model="ensureDraft(session).observations" rows="2" placeholder="Partisipasi dan pemahaman siswa selama belajar" />
-                                </label>
-                                <label>Refleksi guru
-                                    <textarea v-model="ensureDraft(session).reflection" rows="2" placeholder="Evaluasi jalannya pembelajaran" />
-                                </label>
-                                <label>Tindak lanjut
-                                    <textarea v-model="ensureDraft(session).follow_up" rows="2" placeholder="Penguatan, remedial, atau rencana pertemuan berikutnya" />
-                                </label>
-                                <label>Catatan tambahan
-                                    <textarea v-model="ensureDraft(session).notes" rows="2" placeholder="Catatan lain yang perlu disimpan" />
-                                </label>
-                            </fieldset>
-                            <div class="form-footer">
-                                <span class="draft-note" role="status">
-                                    {{ draftStorageStates[session.id] === 'saving' ? 'Menyimpan draft…' : draftStorageStates[session.id] === 'unavailable' ? 'Draft lokal tidak dapat disimpan di browser ini.' : storedDrafts[session.id] ? 'Draft tersimpan di browser selama 7 hari.' : 'Perubahan akan tersimpan otomatis di browser.' }}
-                                </span>
-                                <AppButton variant="primary" class="primary-button" type="submit" :disabled="processingSessionId === session.id">
-                                    {{ processingSessionId === session.id ? 'Menyimpan…' : 'Simpan jurnal' }}
-                                </AppButton>
-                            </div>
-                        </form>
                     </article>
                 </div>
                 <div v-else class="empty-state">
@@ -644,7 +628,7 @@ const chart = computed(() => {
                             <AppButton variant="secondary" v-if="session.journal" type="button" class="secondary-button" @click="openNewSession(session)">Duplikat</AppButton>
                             <AppButton variant="secondary" as="a" v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/word`" :download="`Jurnal_${session.id}.docx`">Unduh Word</AppButton>
                             <AppButton variant="secondary" as="a" v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/pdf`" :download="`Jurnal_${session.id}.pdf`">Unduh PDF</AppButton>
-                            <AppButton variant="danger" v-if="session.journal" class="secondary-button danger-action" type="button" @click="deleteJournal(session)">Hapus</AppButton>
+                            <AppButton variant="danger" size="sm" icon="delete" v-if="session.journal" class="secondary-button danger-action" type="button" @click="deleteJournal(session)">Hapus</AppButton>
                         </div>
                     </article>
                 </div>
@@ -681,8 +665,86 @@ const chart = computed(() => {
                 </div>
             </section>
 
+            <div v-if="activeJournalSession" role="dialog" aria-modal="true" aria-labelledby="journal-editor-title" class="session-modal-backdrop" @click.self="expandedSessionId = null" @keydown.esc="expandedSessionId = null">
+                <form ref="journalEditorRef" class="session-modal journal-editor-modal" @input="queueDraftSave(activeJournalSession)" @submit.prevent="saveJournal(activeJournalSession)">
+                    <div class="journal-modal-header">
+                        <div>
+                            <p class="eyebrow">{{ activeJournalSession.subject.code }} · {{ activeJournalSession.class_group.name }} · Pertemuan {{ activeJournalSession.meeting_number ?? '—' }}</p>
+                            <h2 id="journal-editor-title">{{ activeJournalSession.subject.name }}</h2>
+                            <p class="hero-copy">{{ formatDate(activeJournalSession.date) }} · {{ activeJournalSession.start_time }}–{{ activeJournalSession.end_time }}</p>
+                        </div>
+                        <AppButton variant="ghost" type="button" class="modal-close-btn" aria-label="Tutup formulir jurnal" @click="expandedSessionId = null">×</AppButton>
+                    </div>
+                    <fieldset class="form-section" :disabled="processingSessionId === activeJournalSession.id">
+                        <legend>Materi dan tujuan</legend>
+                        <label>Materi pokok
+                            <textarea v-model="ensureDraft(activeJournalSession).topic" required rows="2" placeholder="Materi yang dibahas pada pertemuan ini" />
+                        </label>
+                        <div class="form-grid">
+                            <label>Topik / tema (opsional)
+                                <input v-model="ensureDraft(activeJournalSession).theme" placeholder="Contoh: Panca Cinta" />
+                            </label>
+                            <label>Alokasi waktu (JP)
+                                <input v-model.number="ensureDraft(activeJournalSession).period_count" type="number" min="1" max="10" required />
+                            </label>
+                        </div>
+                        <label>Tujuan pembelajaran
+                            <textarea v-model="ensureDraft(activeJournalSession).learning_objectives" rows="3" placeholder="Kompetensi yang diharapkan dicapai siswa" />
+                        </label>
+                    </fieldset>
+                    <fieldset class="form-section" :disabled="processingSessionId === activeJournalSession.id">
+                        <legend>Kegiatan pembelajaran</legend>
+                        <label>Kegiatan pendahuluan
+                            <textarea v-model="ensureDraft(activeJournalSession).opening_activity" rows="2" placeholder="Pembukaan, apersepsi, dan persiapan belajar" />
+                        </label>
+                        <label>Kegiatan inti
+                            <textarea v-model="ensureDraft(activeJournalSession).main_activity" rows="3" placeholder="Aktivitas utama dan metode pembelajaran" />
+                        </label>
+                        <label>Kegiatan penutup
+                            <textarea v-model="ensureDraft(activeJournalSession).closing_activity" rows="2" placeholder="Rangkuman, refleksi bersama, dan penutup" />
+                        </label>
+                    </fieldset>
+                    <fieldset class="form-section" :disabled="processingSessionId === activeJournalSession.id">
+                        <legend>Kehadiran dan refleksi</legend>
+                        <div class="attendance-strip">
+                            <span><b>{{ activeJournalSession.attendance_summary.present }}</b> hadir</span>
+                            <span><b>{{ activeJournalSession.attendance_summary.sick }}</b> sakit</span>
+                            <span><b>{{ activeJournalSession.attendance_summary.permitted }}</b> izin</span>
+                            <span><b>{{ activeJournalSession.attendance_summary.absent }}</b> alpa</span>
+                            <Link class="secondary-button ui-button ui-button--secondary ui-button--md" :href="'/akademik/presensi?session_id=' + activeJournalSession.id + '&date=' + activeJournalSession.date">Kelola presensi</Link>
+                        </div>
+                        <label>Keterangan presensi (opsional)
+                            <textarea v-model="ensureDraft(activeJournalSession).attendance_notes" rows="2" placeholder="Catatan siswa sakit, izin, atau alpa" />
+                        </label>
+                        <label>Hasil pengamatan
+                            <textarea v-model="ensureDraft(activeJournalSession).observations" rows="2" placeholder="Partisipasi dan pemahaman siswa selama belajar" />
+                        </label>
+                        <label>Refleksi guru
+                            <textarea v-model="ensureDraft(activeJournalSession).reflection" rows="2" placeholder="Evaluasi jalannya pembelajaran" />
+                        </label>
+                        <label>Tindak lanjut
+                            <textarea v-model="ensureDraft(activeJournalSession).follow_up" rows="2" placeholder="Penguatan, remedial, atau rencana pertemuan berikutnya" />
+                        </label>
+                        <label>Catatan tambahan
+                            <textarea v-model="ensureDraft(activeJournalSession).notes" rows="2" placeholder="Catatan lain yang perlu disimpan" />
+                        </label>
+                    </fieldset>
+                    <div class="form-footer journal-modal-footer">
+                        <span class="draft-note" role="status">
+                            {{ draftStorageStates[activeJournalSession.id] === 'saving' ? 'Menyimpan draft…' : draftStorageStates[activeJournalSession.id] === 'unavailable' ? 'Draft lokal tidak dapat disimpan di browser ini.' : storedDrafts[activeJournalSession.id] ? 'Draft tersimpan di browser selama 7 hari.' : 'Perubahan akan tersimpan otomatis di browser.' }}
+                        </span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <AppButton variant="secondary" class="secondary-button" type="button" @click="expandedSessionId = null">Tutup</AppButton>
+                            <AppButton variant="primary" class="primary-button" type="submit" :disabled="processingSessionId === activeJournalSession.id">
+                                {{ processingSessionId === activeJournalSession.id ? 'Menyimpan…' : 'Simpan jurnal' }}
+                            </AppButton>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <div v-if="showSessionModal" role="dialog" aria-modal="true" aria-labelledby="journal-session-title" class="session-modal-backdrop" @click.self="showSessionModal = false" @keydown.esc="showSessionModal = false">
-                <form class="session-modal" @submit.prevent="createSession">
+                <form ref="newSessionModalRef" class="session-modal" @submit.prevent="createSession">
                     <div>
                         <p class="eyebrow">Pertemuan baru</p>
                         <h2 id="journal-session-title">{{ duplicateTemplate ? 'Duplikat jurnal ke sesi baru' : 'Catat pertemuan' }}</h2>
@@ -745,6 +807,12 @@ h3 { margin-bottom: 6px; font-size: 17px; }
 .form-section legend { padding: 0 7px; color: var(--ink); font-size: var(--type-caption); font-weight: var(--weight-bold); }
 .session-modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(19 32 51 / 45%); backdrop-filter: blur(3px); }
 .session-modal { display: grid; align-content: start; gap: 16px; width: min(560px, 100%); max-height: min(90dvh, 860px); height: auto; overflow: auto; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 16px; color: var(--ink); background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / 25%); }
+.journal-editor-modal { width: min(860px, 100%); max-height: 90dvh; }
+.journal-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.modal-close-btn { font-size: 22px; line-height: 1; min-width: 36px; min-height: 36px; }
+.journal-editor-modal .form-section label { display: grid; gap: 6px; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.journal-editor-modal .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.journal-modal-footer { justify-content: space-between !important; padding-top: 12px; border-top: 1px solid var(--line); }
 .session-modal h2 { margin: 0 0 8px; color: var(--ink); }
 .session-modal > label, .session-modal .form-grid label { display: grid; gap: 6px; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
 .session-modal .form-footer { justify-content: flex-end; }

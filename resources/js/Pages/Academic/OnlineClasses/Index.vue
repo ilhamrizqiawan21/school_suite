@@ -54,7 +54,7 @@ const filteredStudentSessions = computed(() => {
 <template>
     <AppLayout title="Kelas Daring">
         <Head title="Kelas Daring" />
-        <main class="view space-y-6 online-classes-page">
+        <div class="view space-y-6 online-classes-page">
             <section class="hero-card online-hero" :class="{ 'student-online-hero': is_student }">
                 <div>
                     <p class="eyebrow">{{ is_student ? 'Kelas saya' : 'Operasi akademik' }} · {{ term?.name ?? 'Belum ada semester aktif' }}</p>
@@ -188,18 +188,17 @@ const filteredStudentSessions = computed(() => {
                     <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="open = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">Simpan jadwal</AppButton></div>
                 </form>
             </div>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
 <style scoped>
 .online-hero { min-height: 0; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; padding: 1.35rem 1.5rem; color: var(--ink); }
 .online-hero > div { flex: 1 1 20rem; min-width: 0; }
-.student-online-hero > div { padding-left: .75rem; }
 .online-hero h1 { color: var(--ink); font-size: var(--type-3xl); overflow-wrap: anywhere; }
 .online-hero p { color: var(--ink-soft); }
 .online-hero .eyebrow { color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-semibold); letter-spacing: .03em; text-transform: none; }
-@media (max-width: 560px) { .online-hero { padding: 1.2rem; } .student-online-hero > div { padding-left: .5rem; } .online-hero .primary-button { max-width: 100%; } }
+@media (max-width: 560px) { .online-hero { padding: 1.2rem; } .online-hero .primary-button { max-width: 100%; } }
 .online-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.15rem 1.25rem; border-bottom: 1px solid var(--line); }
 .online-list-heading h2 { margin: 0; color: var(--ink); font-size: var(--type-md); }
 .online-list-heading span { padding: .25rem .65rem; color: var(--primary); background: var(--primary-soft); border-radius: 8px; font-size: var(--type-meta); }
@@ -238,13 +237,13 @@ const filteredStudentSessions = computed(() => {
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .grade-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .summary-card { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
-.summary-card span { color: var(--ink-3); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.summary-card span { color: var(--ink-faint); font-size: var(--type-meta); font-weight: var(--weight-bold); }
 .summary-card strong { color: var(--ink); font-size: 24px; line-height: 1.15; letter-spacing: -.03em; }
 .online-filter-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-.online-filter-pill { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: var(--type-sm); font-weight: var(--weight-bold); cursor: pointer; transition: all .15s ease; }
-.online-filter-pill:hover { border-color: #c6dbce; color: var(--ink); }
-.online-filter-pill.is-active { border-color: #155e43; background: #edf6f0; color: #155e43; }
-.online-filter-pill b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: rgba(15, 23, 42, .07); font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.online-filter-pill.is-active b { background: #155e43; color: #fff; }
+.online-filter-pill { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-bold); cursor: pointer; transition: all .15s ease; }
+.online-filter-pill:hover { border-color: var(--line-strong); color: var(--ink); }
+.online-filter-pill.is-active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.online-filter-pill b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, currentColor 12%, transparent); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.online-filter-pill.is-active b { background: var(--primary-action); color: #fff; }
 @media (max-width: 760px) { .grade-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

@@ -128,7 +128,7 @@ const remove = (album: GalleryAlbum) => {
                 <div v-if="albums.length" class="album-grid">
                     <article v-for="album in albums" :key="album.id" class="album-card">
                         <div class="album-cover"><div class="cover-grid"><img v-for="photo in album.photos" :key="photo.id" :src="photo.url" :alt="photo.name || album.title" /></div><span :class="['visibility-badge', album.is_published ? 'published' : 'hidden']">{{ album.is_published ? 'Tampil' : 'Disembunyikan' }}</span><span class="photo-count">{{ album.photos.length }} foto</span></div>
-                        <div class="album-body"><div><h3>{{ album.title }}</h3><p v-if="album.caption">{{ album.caption }}</p></div><div class="album-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="edit(album)">Ubah grup</AppButton><AppButton variant="danger" size="sm" type="button" class="text-button danger" @click="remove(album)">Hapus</AppButton></div></div>
+                        <div class="album-body"><div><h3>{{ album.title }}</h3><p v-if="album.caption">{{ album.caption }}</p></div><div class="album-actions"><AppButton variant="secondary" size="sm" icon="edit" type="button" @click="edit(album)">Ubah grup</AppButton><AppButton variant="danger" size="sm" icon="delete" type="button" @click="remove(album)">Hapus</AppButton></div></div>
                     </article>
                 </div>
                 <div v-else class="empty-state"><strong>Belum ada grup foto</strong><p>Tambahkan satu momen dengan beberapa foto untuk mulai membangun portofolio sekolah.</p></div>

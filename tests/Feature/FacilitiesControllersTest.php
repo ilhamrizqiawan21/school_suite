@@ -124,6 +124,10 @@ class FacilitiesControllersTest extends TestCase
         }
         $this->actingAs($this->admin)->get('/administrasi/sarpras')->assertOk()
             ->assertInertia(fn ($page) => $page->has('loans', 10)->where('loans.0.id', $open->id)->where('loan_pages.total', 13));
+        $this->actingAs($this->admin)->get('/administrasi/sarpras?loan_status=active')->assertOk()
+            ->assertInertia(fn ($page) => $page->has('loans', 1)->where('loans.0.id', $open->id)->where('loan_pages.total', 1));
+        $this->actingAs($this->admin)->get('/administrasi/sarpras?loan_status=returned')->assertOk()
+            ->assertInertia(fn ($page) => $page->has('loans', 10)->where('loan_pages.total', 12)->where('loan_pages.last', 2));
     }
 
     public function test_asset_loan_return_workflow_updates_availability_and_records_audit(): void

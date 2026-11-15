@@ -10,6 +10,7 @@ use App\Modules\Academic\Infrastructure\Models\Subject;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
+use App\Modules\Assessment\Infrastructure\Models\AssessmentComponent;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\Exam;
 use App\Modules\Assessment\Infrastructure\Models\ExamAnswer;
@@ -432,20 +433,67 @@ class DemoAssessmentContentSeeder extends Seeder
         }
 
         $scheme = AssessmentScheme::query()->where('school_id', $user->school_id)->where('is_active', true)->first();
-        $component = $scheme?->components()->where('code', 'F1')->first();
-        if ($component) {
-            $scores = [86, 92, 78, 88, 95, 81, 90, 84];
-            foreach ($enrollments as $index => $enrollment) {
-                Score::query()->firstOrCreate(
-                    ['enrollment_id' => $enrollment->id, 'assessment_component_id' => $component->id],
-                    [
-                        'school_id' => $user->school_id,
-                        'raw_score' => $scores[$index],
-                        'final_score' => $scores[$index],
-                        'notes' => 'Contoh input nilai formatif IPA oleh Guru Dewi.',
-                        'recorded_by_user_id' => $user->id,
-                    ]
-                );
+        if ($scheme) {
+            $componentTemplates = [
+                ['code' => 'F1', 'name' => 'Formatif Harian 1', 'weight_percentage' => 30.0, 'passing_grade' => 75.0, 'sequence' => 1],
+                ['code' => 'TUGAS', 'name' => 'Tugas & Portofolio', 'weight_percentage' => 20.0, 'passing_grade' => 75.0, 'sequence' => 2],
+                ['code' => 'STS', 'name' => 'Sumatif Tengah Semester', 'weight_percentage' => 25.0, 'passing_grade' => 75.0, 'sequence' => 3],
+                ['code' => 'SAS', 'name' => 'Sumatif Akhir Semester', 'weight_percentage' => 25.0, 'passing_grade' => 75.0, 'sequence' => 4],
+            ];
+
+            $sampleScores = [86, 92, 72, 88, 95, 81, 90, 70, 84, 79, 91, 74, 87, 83, 93, 77];
+
+            foreach ($assignments as $assignmentIndex => $assignment) {
+                $classEnrollments = Enrollment::query()
+                    ->where('term_id', $term->id)
+                    ->where('status', 'active')
+                    ->where('class_group_id', $assignment->class_group_id)
+                    ->orderBy('roll_number')
+                    ->get();
+
+                if ($classEnrollments->isEmpty()) {
+                    continue;
+                }
+
+                foreach ($componentTemplates as $compIndex => $template) {
+                    $component = AssessmentComponent::query()->firstOrCreate(
+                        [
+                            'scheme_id' => $scheme->id,
+                            'teaching_assignment_id' => $assignment->id,
+                            'code' => $template['code'],
+                        ],
+                        [
+                            'name' => $template['name'],
+                            'weight_percentage' => $template['weight_percentage'],
+                            'passing_grade' => $template['passing_grade'],
+                            'max_score' => 100.0,
+                            'sequence' => $template['sequence'],
+                        ]
+                    );
+
+                    // Seed F1, TUGAS, STS for all students; leave SAS partially filled for realistic workflow.
+                    $limit = $template['code'] === 'SAS'
+                        ? (int) ceil($classEnrollments->count() * 0.5)
+                        : $classEnrollments->count();
+
+                    foreach ($classEnrollments->take($limit) as $studentIndex => $enrollment) {
+                        $raw = $sampleScores[($studentIndex + $assignmentIndex + $compIndex) % count($sampleScores)];
+                        $remedial = $raw < 75 ? 75 : null;
+                        $final = $remedial !== null ? min(75, $remedial) : $raw;
+
+                        Score::query()->firstOrCreate(
+                            ['enrollment_id' => $enrollment->id, 'assessment_component_id' => $component->id],
+                            [
+                                'school_id' => $user->school_id,
+                                'raw_score' => $raw,
+                                'remedial_score' => $remedial,
+                                'final_score' => $final,
+                                'notes' => $raw < 75 ? 'Remedial tuntas sesuai KKTP.' : null,
+                                'recorded_by_user_id' => $user->id,
+                            ]
+                        );
+                    }
+                }
             }
         }
 

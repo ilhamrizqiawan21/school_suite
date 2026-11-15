@@ -1,104 +1,156 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Jadwal Pelajaran — {{ $school->name }}</title>
+    <title>Jadwal Pelajaran</title>
     <style>
-        @page { margin: 26px 30px; }
-        body { font-family: DejaVu Sans, sans-serif; color: #17233a; font-size: 9.5px; line-height: 1.4; }
-        .header { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #183b70; }
-        .school { margin: 0 0 2px; color: #334155; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.03em; }
-        h1 { margin: 0 0 4px; color: #183b70; font-size: 18px; }
-        .meta { margin: 0; color: #475569; font-size: 9px; line-height: 1.5; }
-        .day-section { margin-top: 12px; page-break-inside: avoid; }
-        .day-title { margin: 0 0 5px; padding: 5px 8px; background: #183b70; color: #ffffff; font-size: 10px; font-weight: bold; border-radius: 3px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        thead { display: table-header-group; }
-        tr { page-break-inside: avoid; }
-        th, td { padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; vertical-align: middle; }
-        th { background: #edf3fb; color: #1e3a5f; font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.03em; }
-        tbody tr:nth-child(even) { background: #f8fafc; }
-        .col-no { width: 32px; text-align: center; }
-        .col-day { width: 78px; font-weight: bold; }
-        .col-time { width: 92px; font-weight: bold; color: #1e3a5f; }
-        .col-code { width: 72px; font-family: DejaVu Sans Mono, monospace; font-size: 8.5px; color: #475569; }
-        .col-class { width: 88px; font-weight: bold; }
-        .col-room { width: 95px; }
-        .col-status { width: 68px; text-align: center; }
-        .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 7.5px; font-weight: bold; text-transform: uppercase; }
-        .badge-published { background: #dcfce7; color: #166534; }
-        .badge-draft { background: #fef3c7; color: #92400e; }
-        .empty { padding: 22px; color: #64748b; text-align: center; font-style: italic; }
-        .footer { margin-top: 12px; padding-top: 6px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 8px; text-align: right; }
+        @page {
+            size: A4 landscape;
+            margin: 12mm 15mm;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 9pt;
+            color: #0f172a;
+            line-height: 1.35;
+            margin: 0;
+        }
+        .header {
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .school-name {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0;
+        }
+        .title {
+            font-size: 10.5pt;
+            font-weight: bold;
+            margin: 2px 0 0;
+            color: #1e293b;
+        }
+        .meta {
+            margin: 4px 0 0;
+            color: #475569;
+            font-size: 8.5pt;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #64748b;
+            padding: 5px 7px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 8.5pt;
+        }
+        th {
+            background: #e2e8f0;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 8pt;
+            letter-spacing: 0.03em;
+            color: #0f172a;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .muted {
+            color: #475569;
+            font-size: 8pt;
+        }
+        .footer {
+            margin-top: 12px;
+            font-size: 8pt;
+            color: #64748b;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
     @php
-        $dayNames = [
-            1 => 'Senin',
-            2 => 'Selasa',
-            3 => 'Rabu',
-            4 => 'Kamis',
-            5 => 'Jumat',
-            6 => 'Sabtu',
-            7 => 'Minggu',
+        $dayMap = [
+            'monday' => 'Senin',
+            'tuesday' => 'Selasa',
+            'wednesday' => 'Rabu',
+            'thursday' => 'Kamis',
+            'friday' => 'Jumat',
+            'saturday' => 'Sabtu',
         ];
     @endphp
-
     <div class="header">
-        <p class="school">{{ $school->name }}</p>
-        <h1>Daftar Jadwal Pelajaran</h1>
+        <p class="school-name">{{ $school?->name ?? 'School Suite' }}</p>
+        <p class="title">Daftar Jadwal Pelajaran</p>
         <p class="meta">
-            Periode: <strong>{{ $term?->academicYear?->name ? $term->academicYear->name . ' — ' : '' }}{{ $term?->name ?? 'Belum ada semester aktif' }}</strong>
-            @if($selectedClass) · Rombel: <strong>Kelas {{ $selectedClass->name }}</strong> @endif
-            @if($selectedTeacher) · Guru: <strong>{{ $selectedTeacher->name }}</strong> @endif
-            @if($selectedDay && isset($dayNames[$selectedDay])) · Hari: <strong>{{ $dayNames[$selectedDay] }}</strong> @endif
-            @if($selectedStatus) · Status: <strong>{{ $selectedStatus === 'published' ? 'Terbit' : 'Draf' }}</strong> @endif
-            @if($search) · Pencarian: “{{ $search }}” @endif
-            · Total: <strong>{{ $schedules->count() }} sesi</strong>
-            · Dicetak {{ $generatedAt->format('d/m/Y H:i') }} WIB
+            Semester: {{ $term ? ($term->academicYear?->name . ' · ' . $term->name) : 'Semua Semester' }}
+            @if($selectedClass)
+                &bull; Rombel: {{ $selectedClass->name }}
+            @endif
+            @if($selectedTeacher)
+                &bull; Guru: {{ $selectedTeacher->full_name }}
+            @endif
+            @if($selectedDay)
+                &bull; Hari: {{ $dayMap[$selectedDay] ?? $selectedDay }}
+            @endif
+            @if($selectedStatus)
+                &bull; Status: {{ $selectedStatus === 'active' ? 'Aktif' : 'Nonaktif' }}
+            @endif
+            @if($search)
+                &bull; Kata Kunci: "{{ $search }}"
+            @endif
         </p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th class="col-no">No.</th>
-                <th class="col-day">Hari</th>
-                <th class="col-time">Waktu</th>
-                <th class="col-code">Kode</th>
+                <th class="text-center" style="width: 34px;">No.</th>
+                <th style="width: 68px;">Hari</th>
+                <th class="text-center" style="width: 88px;">Jam</th>
+                <th style="width: 85px;">Rombel</th>
                 <th>Mata Pelajaran</th>
-                <th class="col-class">Rombel</th>
-                <th>Guru Pengajar</th>
-                <th class="col-room">Ruang / Lab</th>
-                <th class="col-status">Status</th>
+                <th style="width: 165px;">Guru Pengampu</th>
+                <th style="width: 85px;">Ruang</th>
+                <th class="text-center" style="width: 68px;">Status</th>
+                <th style="width: 130px;">Catatan</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($schedules as $index => $slot)
+            @forelse($schedules as $index => $schedule)
                 <tr>
-                    <td class="col-no">{{ $index + 1 }}</td>
-                    <td class="col-day">{{ $dayNames[$slot->day_of_week] ?? 'Hari ' . $slot->day_of_week }}</td>
-                    <td class="col-time">{{ substr((string) $slot->start_time, 0, 5) }} – {{ substr((string) $slot->end_time, 0, 5) }}</td>
-                    <td class="col-code">{{ $slot->subject?->code ?? '—' }}</td>
-                    <td><strong>{{ $slot->subject?->name ?? '—' }}</strong></td>
-                    <td class="col-class">Kelas {{ $slot->classGroup?->name ?? '—' }}</td>
-                    <td>{{ $slot->teacher?->name ?? '—' }}</td>
-                    <td class="col-room">{{ $slot->room ?: '—' }}</td>
-                    <td class="col-status">
-                        <span class="badge {{ $slot->status === 'published' ? 'badge-published' : 'badge-draft' }}">
-                            {{ $slot->status === 'published' ? 'Terbit' : 'Draf' }}
-                        </span>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td><strong>{{ $dayMap[$schedule->day_of_week] ?? $schedule->day_of_week }}</strong></td>
+                    <td class="text-center">{{ substr((string) $schedule->start_time, 0, 5) }} - {{ substr((string) $schedule->end_time, 0, 5) }}</td>
+                    <td>{{ $schedule->teachingAssignment?->classGroup?->name ?? '-' }}</td>
+                    <td>
+                        <strong>{{ $schedule->teachingAssignment?->subject?->name ?? '-' }}</strong>
+                        @if($schedule->teachingAssignment?->subject?->code)
+                            <div class="muted">{{ $schedule->teachingAssignment->subject->code }}</div>
+                        @endif
                     </td>
+                    <td>{{ $schedule->teachingAssignment?->teacher?->full_name ?? '-' }}</td>
+                    <td>{{ $schedule->room ?: '-' }}</td>
+                    <td class="text-center">{{ $schedule->is_active ? 'Aktif' : 'Nonaktif' }}</td>
+                    <td>{{ $schedule->notes ?: '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="empty">Tidak ada jadwal pelajaran yang sesuai dengan filter.</td>
+                    <td colspan="9" class="text-center" style="padding: 14px;">Belum ada jadwal pelajaran yang sesuai filter.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    <p class="footer">Dokumen resmi internal · {{ $school->name }} · School Suite</p>
+    <div class="footer">
+        Dicetak pada {{ $generatedAt->format('d/m/Y H:i') }}
+    </div>
 </body>
 </html>

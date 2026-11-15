@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+
+defineProps<{ must_change_password?: boolean }>();
 
 const form = useForm({ current_password: '', password: '', password_confirmation: '' });
 const showCurrent = ref(false);
@@ -48,11 +50,14 @@ const submit = () => form.put('/ganti-password', { onSuccess: () => form.reset()
     <Head title="Ganti Kata Sandi" />
     <main class="password-page">
         <form class="password-card" @submit.prevent="submit">
-            <div class="shield" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4" />
-                </svg>
+            <div class="password-top">
+                <div class="shield" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4" />
+                    </svg>
+                </div>
+                <Link v-if="!must_change_password" href="/profil" class="back-link">← Kembali ke Profil</Link>
             </div>
             <div class="password-intro">
                 <p class="eyebrow">Keamanan akun</p>
@@ -87,6 +92,10 @@ const submit = () => form.put('/ganti-password', { onSuccess: () => form.reset()
 .password-card { width: min(480px, 100%); display: grid; gap: 1.1rem; padding: clamp(1.5rem, 4vw, 2.5rem); border: 1px solid var(--line); border-radius: 1.25rem; background: var(--surface); box-shadow: 0 20px 60px rgb(15 23 42 / .08); }
 .shield { width: 3.25rem; height: 3.25rem; display: grid; place-items: center; border-radius: 1rem; background: var(--primary-soft); color: var(--primary-strong); }
 .shield svg { width: 1.75rem; height: 1.75rem; }
+.password-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.back-link { color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); text-decoration: none; }
+.back-link:hover { color: var(--primary); text-decoration: underline; }
+.back-link:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 42%, transparent); outline-offset: 2px; border-radius: .35rem; }
 .password-intro { display: grid; gap: .35rem; }
 .password-card h1 { font-size: var(--type-3xl); line-height: 1.15; font-weight: var(--weight-bold); color: var(--ink); }
 .password-card p { color: var(--ink-soft); line-height: 1.6; }

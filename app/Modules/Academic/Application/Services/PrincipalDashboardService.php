@@ -158,13 +158,13 @@ class PrincipalDashboardService
 
         $attention = [];
         if ($attendanceTotal > 0 && $this->rate($attendancePresent, $attendanceTotal) < 90) {
-            $attention[] = ['key' => 'attendance', 'title' => 'Kehadiran perlu perhatian', 'detail' => 'Kehadiran tercatat di bawah 90%.', 'href' => '/laporan/presensi', 'level' => 'high'];
+            $attention[] = ['key' => 'attendance', 'title' => 'Kehadiran perlu perhatian', 'detail' => 'Kehadiran tercatat di bawah 90%.', 'href' => '/kepsek/laporan/rekap-absensi', 'level' => 'high'];
         }
         if ($sessionsTotal > $journalsCompleted) {
             $attention[] = ['key' => 'journals', 'title' => 'Jurnal belum lengkap', 'detail' => ($sessionsTotal - $journalsCompleted).' sesi belum memiliki jurnal.', 'href' => '/laporan', 'level' => 'medium'];
         }
         if ($tasksTotal > $tasksSubmitted) {
-            $attention[] = ['key' => 'tasks', 'title' => 'Tugas belum terkumpul', 'detail' => ($tasksTotal - $tasksSubmitted).' pengumpulan belum tercatat.', 'href' => '/laporan/tugas', 'level' => 'medium'];
+            $attention[] = ['key' => 'tasks', 'title' => 'Tugas belum terkumpul', 'detail' => ($tasksTotal - $tasksSubmitted).' pengumpulan belum tercatat.', 'href' => '/pembelajaran/progress', 'level' => 'medium'];
         }
         if ($missingHomeroom > 0) {
             $attention[] = ['key' => 'homeroom', 'title' => 'Wali kelas belum ditetapkan', 'detail' => $missingHomeroom.' rombel belum memiliki wali kelas.', 'href' => '/akademik/kelas', 'level' => 'info'];

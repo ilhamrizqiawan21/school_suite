@@ -27,7 +27,7 @@ class StudentLifecycleController extends Controller
         $activeTerm = $terms->firstWhere('is_active', true);
         $classes = ClassGroup::where('school_id', $schoolId)->with('academicYear:id,name')->orderBy('grade_level')->orderBy('name')->get(['id', 'academic_year_id', 'name', 'grade_level']);
         $enrollments = $activeTerm ? Enrollment::with(['student:id,nis,name,status', 'classGroup:id,name'])->where('term_id', $activeTerm->id)->where('status', 'active')->orderBy('class_group_id')->orderBy('roll_number')->get() : collect();
-        $events = StudentLifecycleEvent::with(['student:id,nis,name', 'sourceEnrollment.classGroup:id,name', 'targetEnrollment.classGroup:id,name'])->where('school_id', $schoolId)->latest('effective_date')->limit(100)->get();
+        $events = StudentLifecycleEvent::with(['student:id,nis,name', 'sourceEnrollment.classGroup:id,name', 'targetEnrollment.classGroup:id,name'])->where('school_id', $schoolId)->latest('effective_date')->get();
 
         return Inertia::render('Academic/Lifecycle/Index', [
             'terms' => $terms,

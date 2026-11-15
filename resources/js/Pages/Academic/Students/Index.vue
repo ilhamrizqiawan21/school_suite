@@ -581,7 +581,7 @@ const deleteStudent = (student: Student) => {
                         <h3 id="student-edit-title" class="text-lg font-bold text-slate-900">Edit data siswa</h3>
                         <p v-if="editingStudent" class="student-edit-context">{{ editingStudent.name }} · NIS {{ editingStudent.nis }}</p>
                     </div>
-                    <AppButton variant="ghost" icon-only icon="edit" type="button" @click="closeEdit()" class="modal-close-button" aria-label="Tutup formulir edit siswa">✕</AppButton>
+                    <AppButton variant="ghost" icon-only icon="close" type="button" @click="closeEdit()" class="modal-close-button" aria-label="Tutup formulir edit siswa">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitEdit" class="space-y-4">

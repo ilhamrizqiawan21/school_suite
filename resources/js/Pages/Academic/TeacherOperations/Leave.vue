@@ -116,7 +116,7 @@ function setStartDate() {
             </form>
             <p class="leave-result-count">{{ leaves.total }} pengajuan sesuai filter. Ringkasan menampilkan seluruh pengajuan yang dapat Anda akses.</p>
             <nav class="flex flex-wrap gap-2" aria-label="Filter status pengajuan">
-                <Link v-for="tab in statusTabs" :key="tab.value" class="rounded-full border px-4 py-2 text-sm font-semibold transition" :class="filter === tab.value ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'" :href="filterUrl(tab.value)" :aria-current="filter === tab.value ? 'page' : undefined">{{ tab.label }} ({{ summary[tab.value] }})</Link>
+                <Link v-for="tab in statusTabs" :key="tab.value" class="rounded-full border px-4 py-2 text-sm font-semibold transition" :class="filter === tab.value ? 'border-[var(--primary-action)] bg-[var(--primary-action)] text-white' : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink-soft)] hover:bg-[var(--surface-subtle)]'" :href="filterUrl(tab.value)" :aria-current="filter === tab.value ? 'page' : undefined">{{ tab.label }} ({{ summary[tab.value] }})</Link>
             </nav>
 
             <section class="panel overflow-hidden">
@@ -140,7 +140,7 @@ function setStartDate() {
                 </div>
                 <nav v-if="leaves.links.length > 3" class="flex flex-wrap justify-end gap-1 border-t border-slate-200 px-5 py-4" aria-label="Halaman pengajuan">
                     <template v-for="link in leaves.links" :key="link.label">
-                        <Link v-if="link.url" :href="link.url" class="rounded-md border px-3 py-2 text-sm" :class="link.active ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 text-slate-600'" v-html="link.label" />
+                        <Link v-if="link.url" :href="link.url" class="rounded-md border px-3 py-2 text-sm" :class="link.active ? 'border-[var(--primary-action)] bg-[var(--primary-action)] text-white' : 'border-[var(--line)] text-[var(--ink-soft)]'" v-html="link.label" />
                         <span v-else class="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-600" v-html="link.label" />
                     </template>
                 </nav>

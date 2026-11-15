@@ -406,7 +406,7 @@ const removeResource = (url: string) => {
 
             <section v-if="capabilities.submit" class="ss-summary-grid ss-summary-grid--3">
                 <MetricSummaryCard
-                    v-if="section === 'materials'"
+                    v-if="activeTab === 'materials'"
                     label="Materi tersedia"
                     :value="studentMaterials.length"
                     note="untuk mapel terpilih"
@@ -414,7 +414,7 @@ const removeResource = (url: string) => {
                     icon="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6"
                 />
                 <MetricSummaryCard
-                    v-if="section !== 'materials'"
+                    v-if="activeTab !== 'materials'"
                     label="Tugas tersedia"
                     :value="studentAssignments.length"
                     note="di mapel terpilih"
@@ -422,7 +422,7 @@ const removeResource = (url: string) => {
                     icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                 />
                 <MetricSummaryCard
-                    v-if="section !== 'materials'"
+                    v-if="activeTab !== 'materials'"
                     label="Sudah dikumpulkan"
                     :value="studentAssignments.filter((assignment) => assignment.submissions.length).length"
                     note="tugas terkirim"
@@ -430,7 +430,7 @@ const removeResource = (url: string) => {
                     icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
                 <MetricSummaryCard
-                    v-if="section !== 'materials'"
+                    v-if="activeTab !== 'materials'"
                     label="Belum dikumpulkan"
                     :value="studentAssignments.filter((assignment) => !assignment.submissions.length).length"
                     note="periksa tenggat"
@@ -528,6 +528,12 @@ const removeResource = (url: string) => {
             </template>
 
             <template v-else-if="capabilities.submit">
+                <div v-if="section !== 'materials' && section !== 'assignments'" class="student-tab-bar">
+                    <div class="segmented-control" role="tablist" aria-label="Jenis konten pembelajaran">
+                        <button type="button" role="tab" :aria-selected="activeTab === 'materials'" :class="{ 'is-active': activeTab === 'materials' }" @click="activeTab = 'materials'">Materi</button>
+                        <button type="button" role="tab" :aria-selected="activeTab === 'assignments'" :class="{ 'is-active': activeTab === 'assignments' }" @click="activeTab = 'assignments'">Tugas</button>
+                    </div>
+                </div>
                 <section class="student-course-picker panel">
                     <div class="student-course-picker-heading">
                         <div>
@@ -537,7 +543,7 @@ const removeResource = (url: string) => {
                         </div>
                         <div class="student-filter-controls">
                             <label class="task-search search-control-shell student-search-input">
-                                <span aria-hidden="true">⌕</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
                                 <input v-model="studentSearch" type="search" :placeholder="activeTab === 'materials' ? 'Cari judul materi atau mapel…' : 'Cari judul tugas atau mapel…'" />
                             </label>
                             <label class="student-course-select">
@@ -924,7 +930,7 @@ const removeResource = (url: string) => {
 .student-empty-state p { margin: 0; font-size: var(--type-meta); }
 .student-task-open { white-space: nowrap; }
 .student-empty-row { padding: 2rem 1rem; color: var(--ink-faint); text-align: center; }
-.student-learning-page .compact-hero > div:first-child { padding-left: .5rem; }
+.student-tab-bar { display: flex; align-items: center; justify-content: flex-start; }
 .student-learning-page .compact-hero h1, .student-material-body h3, .student-material-body p { overflow-wrap: anywhere; }
 .student-course-picker-heading > div, .student-panel-heading > div { min-width: 0; }
 .student-course-chip { max-width: 100%; overflow-wrap: anywhere; }

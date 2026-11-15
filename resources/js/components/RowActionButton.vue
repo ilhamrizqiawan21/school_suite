@@ -8,7 +8,7 @@ withDefaults(defineProps<{
     iconOnly?: boolean;
 }>(), {
     disabled: false,
-    iconOnly: false,
+    iconOnly: true,
 });
 </script>
 

@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 
 interface StatusOption { value: string; label: string }
+const expandedActions = reactive<Record<number, boolean>>({});
 interface Signatory { id: number; name: string; title: string; employee_number?: string | null; rank?: string | null; template_scopes?: string[] | null; provider_configured?: boolean }
 interface CorrespondenceRecord {
     id: number;
@@ -123,8 +126,7 @@ const dashboardDateTo = ref('');
 const dashboardType = ref<'all' | 'incoming' | 'outgoing'>('all');
 const dashboardStorage = ref<'all' | 'saved' | 'archived'>('all');
 const archiveType = ref<'all' | 'incoming' | 'outgoing'>('all');
-const archiveLetterDateFrom = ref('');
-const archiveLetterDateTo = ref('');
+const archiveDateBasis = ref<'letter' | 'archived'>('archived');
 const archiveDateFrom = ref('');
 const archiveDateTo = ref('');
 const currentPage = ref(1);
@@ -137,10 +139,6 @@ const availableSignatories = computed(() => (props.signatories ?? []).filter((si
 }));
 const selectedSignatory = computed(() => availableSignatories.value.find((signer) => signer.id === form.signatory_id));
 const tteConfigured = computed(() => props.tte_status?.configured === true);
-const tteReadinessTitle = computed(() => tteConfigured.value ? 'TTE BSrE siap digunakan' : 'TTE BSrE belum siap digunakan');
-const tteReadinessMessage = computed(() => tteConfigured.value
-    ? 'Dokumen akan diproses melalui antrean tanda tangan elektronik. Pastikan pejabat sudah memiliki identitas BSrE yang terhubung.'
-    : 'Hubungkan endpoint dan kredensial BSrE di server sebelum mengirim surat untuk TTE. Pilihan ini akan tetap aman dan tidak mengirim dokumen sebelum konfigurasi lengkap.');
 const sectionRecords = computed(() => props.records.filter((record) => {
     if (activeSection.value === 'all') return true;
     if (activeSection.value === 'archived') return record.status === 'archived';
@@ -168,11 +166,9 @@ const filteredRecords = computed(() => {
             const letterDate = record.letter_date || record.received_at || '';
             const archivedDate = record.archived_at?.slice(0, 10) || '';
             const matchesType = archiveType.value === 'all' || record.letter_type === archiveType.value;
-            const matchesLetterFrom = !archiveLetterDateFrom.value || letterDate >= archiveLetterDateFrom.value;
-            const matchesLetterTo = !archiveLetterDateTo.value || letterDate <= archiveLetterDateTo.value;
-            const matchesArchiveFrom = !archiveDateFrom.value || archivedDate >= archiveDateFrom.value;
-            const matchesArchiveTo = !archiveDateTo.value || archivedDate <= archiveDateTo.value;
-            return matchesType && matchesLetterFrom && matchesLetterTo && matchesArchiveFrom && matchesArchiveTo;
+            const date = archiveDateBasis.value === 'letter' ? letterDate : archivedDate;
+            return matchesType && (!archiveDateFrom.value || date >= archiveDateFrom.value)
+                && (!archiveDateTo.value || date <= archiveDateTo.value);
         });
     }
     return query ? records.filter((record) => [record.subject, record.letter_number, record.agenda_number, record.sender, record.recipient].some((value) => value?.toLocaleLowerCase().includes(query))) : records;
@@ -187,7 +183,7 @@ const archiveCounts = computed(() => {
         outgoing: records.filter((record) => record.letter_type === 'outgoing').length,
     };
 });
-watch([search, activeSection, dashboardDateFrom, dashboardDateTo, dashboardType, dashboardStorage, archiveType, archiveLetterDateFrom, archiveLetterDateTo, archiveDateFrom, archiveDateTo, () => props.filter, filteredRecords], () => {
+watch([search, activeSection, dashboardDateFrom, dashboardDateTo, dashboardType, dashboardStorage, archiveType, archiveDateBasis, archiveDateFrom, archiveDateTo, () => props.filter, filteredRecords], () => {
     currentPage.value = Math.min(currentPage.value, pageCount.value);
     if (search.value || activeSection.value) currentPage.value = 1;
 });
@@ -458,99 +454,150 @@ function submitApproval(record: CorrespondenceRecord) {
         onError: (errors) => { actionErrors[record.id] = errors.approval || 'Surat belum siap diajukan untuk persetujuan.'; },
     });
 }
+
+let dialogTrigger: HTMLElement | null = null;
+let activeDialog: HTMLElement | null = null;
+const dialogControls = () => Array.from(activeDialog?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], summary') ?? []).filter(element => element.getClientRects().length > 0);
+const trapDialogFocus = (event: KeyboardEvent) => {
+    if (!activeDialog || event.key !== 'Tab') return;
+    const controls = dialogControls();
+    const first = controls[0];
+    const last = controls.at(-1);
+    if (first && last && (!activeDialog.contains(document.activeElement) || (event.shiftKey ? document.activeElement === first : document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+watchPostEffect(() => {
+    const open = creating.value;
+    if (open && !activeDialog) {
+        dialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        activeDialog = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]')).at(-1) ?? null;
+        dialogControls()[0]?.focus();
+        document.addEventListener('keydown', trapDialogFocus);
+    } else if (!open && activeDialog) {
+        document.removeEventListener('keydown', trapDialogFocus);
+        activeDialog = null;
+        if (dialogTrigger?.isConnected) dialogTrigger.focus();
+    }
+});
+onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
+
 </script>
 
 <template>
     <Head :title="pageTitle" />
     <AppLayout :title="pageTitle">
-        <main :class="['view', 'space-y-6', 'correspondence-page', { 'incoming-page': props.filter === 'incoming', 'outgoing-page': props.filter === 'outgoing', 'archive-page': props.filter === 'archived' }]">
-            <section class="hero-card">
+        <div :class="['view', 'space-y-6', 'correspondence-page', { 'incoming-page': props.filter === 'incoming', 'outgoing-page': props.filter === 'outgoing', 'archive-page': props.filter === 'archived' }]">
+            <nav class="module-tabs" aria-label="Submenu Persuratan">
+                <Link href="/administrasi/persuratan" class="module-tab" :class="{ 'is-active': props.filter === 'all' }">Dashboard Persuratan</Link>
+                <Link href="/administrasi/persuratan/surat-masuk" class="module-tab" :class="{ 'is-active': props.filter === 'incoming' }">Surat Masuk</Link>
+                <Link href="/administrasi/persuratan/surat-keluar" class="module-tab" :class="{ 'is-active': props.filter === 'outgoing' }">Surat Keluar</Link>
+                <Link href="/administrasi/persuratan/arsip" class="module-tab" :class="{ 'is-active': props.filter === 'archived' }">Arsip Surat</Link>
+            </nav>
+
+            <header class="correspondence-heading">
                 <div>
-                    <p class="eyebrow">Administrasi sekolah</p>
+                    <p class="eyebrow">Administrasi sekolah · Tata Usaha</p>
                     <h1>{{ pageTitle }}</h1>
-                    <p>{{ pageDescription }}</p>
                 </div>
-                <div v-if="props.filter === 'incoming'" class="incoming-hero-summary"><strong>{{ queueCounts.incoming + queueCounts.disposition }}</strong><span>surat masuk aktif</span><small>{{ queueCounts.incoming }} baru · {{ queueCounts.disposition }} menunggu disposisi</small></div>
-                <div v-else-if="props.filter === 'outgoing'" class="outgoing-hero-summary">
-                    <div><strong>{{ queueCounts.draft }}</strong><span>Draf</span></div>
-                    <div><strong>{{ queueCounts.approval }}</strong><span>Persetujuan</span></div>
-                    <div><strong>{{ queueCounts.signature }}</strong><span>Tanda tangan</span></div>
-                    <div><strong>{{ queueCounts.ready }}</strong><span>Siap dikirim</span></div>
-                </div>
-                <div v-else-if="props.filter === 'archived'" class="archive-hero-summary">
-                    <div><strong>{{ archiveCounts.total }}</strong><span>Total arsip</span><small>surat tersimpan</small></div>
-                    <div><strong>{{ archiveCounts.incoming }}</strong><span>Surat masuk</span><small>arsip diterima</small></div>
-                    <div><strong>{{ archiveCounts.outgoing }}</strong><span>Surat keluar</span><small>arsip diterbitkan</small></div>
-                </div>
-                <div v-else class="correspondence-hero-metrics">
-                    <div><span>Perlu dikerjakan</span><strong>{{ queueCounts.incoming + queueCounts.draft + queueCounts.approval + queueCounts.signature }}</strong><small>surat dalam antrean</small></div>
-                    <div><span>Siap dikirim</span><strong>{{ queueCounts.ready }}</strong><small>menunggu pengiriman</small></div>
-                    <div><span>Arsip</span><strong>{{ queueCounts.archived }}</strong><small>tersimpan aman</small></div>
-                </div>
-            </section>
-
-            <section v-if="props.filter === 'incoming'" class="incoming-flow-panel" aria-labelledby="incoming-flow-heading">
-                <div class="table-title"><div><p class="eyebrow">Cara kerja surat masuk</p><h2 id="incoming-flow-heading">Surat masuk, satu langkah jelas</h2><p>Pastikan setiap surat punya catatan, penerima disposisi, dan keputusan akhir.</p></div></div>
-                <ol class="incoming-flow-list">
-                    <li :class="{ 'is-current': incomingCurrentStage === 'recorded' }"><span>1</span><div><strong>Catat</strong><small>Identitas pengirim dan tanggal diterima</small></div></li>
-                    <li :class="{ 'is-current': incomingCurrentStage === 'complete' }"><span>2</span><div><strong>Lengkapi</strong><small>Ringkasan dan lampiran surat</small></div></li>
-                    <li :class="{ 'is-current': incomingCurrentStage === 'disposition' }"><span>3</span><div><strong>Disposisi</strong><small>Arahan dan tujuan tindak lanjut</small></div></li>
-                    <li :class="{ 'is-current': incomingCurrentStage === 'done' }"><span>4</span><div><strong>Selesaikan</strong><small>Tandai pekerjaan sudah ditutup</small></div></li>
-                    <li :class="{ 'is-current': incomingCurrentStage === 'archived' }"><span>5</span><div><strong>Arsipkan</strong><small>Simpan sebagai rekam sekolah</small></div></li>
-                </ol>
-            </section>
-
-            <section v-if="props.filter === 'outgoing'" class="outgoing-flow-panel" aria-labelledby="outgoing-flow-heading">
-                <div class="table-title"><div><p class="eyebrow">Cara kerja surat keluar</p><h2 id="outgoing-flow-heading">Dari draf sampai terkirim</h2><p>Setiap tahap diperiksa agar surat tidak langsung terbit sebelum siap.</p></div></div>
-                <ol class="outgoing-flow-list">
-                    <li :class="{ 'is-current': outgoingCurrentStage === 'draft' }"><span>1</span><div><strong>Draf</strong><small>{{ queueCounts.draft }} surat perlu dilengkapi</small></div></li>
-                    <li :class="{ 'is-current': outgoingCurrentStage === 'approval' }"><span>2</span><div><strong>Persetujuan</strong><small>{{ queueCounts.approval }} surat diajukan</small></div></li>
-                    <li :class="{ 'is-current': outgoingCurrentStage === 'signature' }"><span>3</span><div><strong>Tanda tangan</strong><small>{{ queueCounts.signature }} surat menunggu proses</small></div></li>
-                    <li :class="{ 'is-current': outgoingCurrentStage === 'issued' }"><span>4</span><div><strong>Terbit</strong><small>{{ queueCounts.ready }} dokumen final</small></div></li>
-                    <li :class="{ 'is-current': outgoingCurrentStage === 'sent' }"><span>5</span><div><strong>Terkirim</strong><small>Catat setelah dikirim</small></div></li>
-                </ol>
-            </section>
-
-            <section v-if="props.filter === 'outgoing'" class="tte-readiness-panel" :class="{ 'is-ready': tteConfigured, 'is-blocked': !tteConfigured }" aria-labelledby="tte-readiness-heading">
-                <div class="tte-readiness-mark" aria-hidden="true">{{ tteConfigured ? '✓' : '!' }}</div>
-                <div>
-                    <p class="eyebrow">Kesiapan tanda tangan</p>
-                    <h2 id="tte-readiness-heading">{{ tteReadinessTitle }}</h2>
-                    <p>{{ tteReadinessMessage }}</p>
-                    <small v-if="!tteConfigured">Status server: {{ props.tte_status?.enabled ? 'provider aktif, kredensial belum lengkap' : 'provider belum diaktifkan' }} · Queue: {{ props.tte_status?.queue || 'belum diketahui' }}</small>
-                    <small v-else>Gunakan identitas BSrE pejabat yang benar. Sistem tidak menyimpan token BSrE di browser.</small>
-                </div>
-            </section>
-
-                <p v-if="flashMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
-                {{ flashMessage }}
-            </p>
-
-            <section v-if="props.filter === 'all'" class="queue-section" aria-labelledby="queue-heading">
-                <div class="table-title"><div><p class="eyebrow">Perlu ditindaklanjuti</p><h2 id="queue-heading">Antrean persuratan</h2><p>Pilih kartu untuk melihat surat yang membutuhkan tindakan.</p></div></div>
-                <div class="queue-grid">
-                    <button type="button" :class="{ 'is-selected': activeSection === 'incoming' }" @click="activeSection = 'incoming'"><span>Surat masuk aktif</span><strong>{{ queueCounts.incoming }}</strong><small>{{ queueCounts.disposition }} perlu disposisi</small></button>
-                    <button type="button" :class="{ 'is-selected': activeSection === 'outgoing' }" @click="activeSection = 'outgoing'"><span>Draf surat</span><strong>{{ queueCounts.draft }}</strong><small>Perlu dilengkapi</small></button>
-                    <button type="button" :class="{ 'is-selected': activeSection === 'approval' }" @click="activeSection = 'approval'"><span>Persetujuan</span><strong>{{ queueCounts.approval }}</strong><small>Sudah diajukan</small></button>
-                    <button type="button" :class="{ 'is-selected': activeSection === 'signature' }" @click="activeSection = 'signature'"><span>Tanda tangan</span><strong>{{ queueCounts.signature }}</strong><small>Manual atau BSrE</small></button>
-                    <button type="button" :class="{ 'is-selected': activeSection === 'ready' }" @click="activeSection = 'ready'"><span>Siap dikirim</span><strong>{{ queueCounts.ready }}</strong><small>Dokumen final</small></button>
-                    <AppButton variant="secondary" type="button" :class="{ 'is-selected': activeSection === 'archived' }" @click="activeSection = 'archived'"><span>Arsip</span><strong>{{ queueCounts.archived }}</strong><small>Tersimpan</small></AppButton>
-                </div>
-            </section>
-
-            <section v-if="props.filter !== 'archived'" class="panel correspondence-panel workflow">
-                <div class="table-title"><div><p class="eyebrow">Meja kerja TU</p><h2>{{ props.filter === 'incoming' ? 'Catat surat yang baru diterima' : props.filter === 'outgoing' ? 'Buat surat keluar' : 'Mulai dari sini' }}</h2><p>{{ props.filter === 'incoming' ? 'Masukkan data pokok terlebih dahulu. Disposisi dilakukan dari antrean setelah surat tersimpan.' : props.filter === 'outgoing' ? 'Mulai dari template, isi naskah, pilih penandatangan, lalu simpan sebagai draf.' : 'Pilih jenis pekerjaan. Sistem akan menjaga urutan tahap berikutnya.' }}</p></div></div>
-                <div v-if="can_manage" class="workflow-actions">
+                <div v-if="can_manage && props.filter !== 'archived'" class="correspondence-header-actions">
                     <AppButton variant="primary" v-if="props.filter !== 'outgoing'" type="button" class="primary-button" @click="startNew('incoming')">Catat surat masuk</AppButton>
                     <AppButton variant="secondary" v-if="props.filter !== 'incoming'" type="button" class="secondary-button" @click="startNew('outgoing')">Buat surat keluar</AppButton>
                 </div>
-                <p v-if="props.filter === 'incoming'" class="workflow-help">Setelah tersimpan, gunakan tindakan pada baris surat untuk meneruskan disposisi, menandai selesai, lalu mengarsipkan.</p>
-                <p v-else-if="props.filter === 'outgoing'" class="workflow-help">Draf belum dikirim sebelum persetujuan, tanda tangan, dan penerbitan selesai. Gunakan tombol tindakan sesuai tahapnya.</p>
-                <template v-else>
-                    <p class="workflow-help">Surat masuk: catat → disposisi → selesai → arsip. Surat keluar: draf → persetujuan → tanda tangan → terbit → terkirim → arsip.</p>
-                    <p class="workflow-help">QR memeriksa metadata dan integritas berkas final. Pada jalur manual, QR bukan tanda tangan elektronik tersertifikasi.</p>
-                </template>
+            </header>
+
+            <section v-if="props.filter === 'incoming'" class="ss-summary-grid ss-summary-grid--3" aria-label="Ringkasan surat masuk">
+                <MetricSummaryCard
+                    label="Surat masuk aktif"
+                    :value="queueCounts.incoming + queueCounts.disposition"
+                    note="total sedang berjalan"
+                    tone="blue"
+                    icon="M4 4h16v16H4zM7 8h10M7 12h7M7 16h5"
+                />
+                <MetricSummaryCard
+                    label="Baru diterima"
+                    :value="queueCounts.incoming"
+                    note="perlu dilengkapi"
+                    tone="violet"
+                    icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Menunggu disposisi"
+                    :value="queueCounts.disposition"
+                    note="dalam tindak lanjut"
+                    tone="amber"
+                    icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
             </section>
+            <section v-else-if="props.filter === 'outgoing'" class="ss-summary-grid" aria-label="Ringkasan surat keluar">
+                <MetricSummaryCard
+                    label="Draf"
+                    :value="queueCounts.draft"
+                    note="perlu dilengkapi"
+                    tone="blue"
+                    icon="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+                <MetricSummaryCard
+                    label="Persetujuan"
+                    :value="queueCounts.approval"
+                    note="sudah diajukan"
+                    tone="amber"
+                    icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <MetricSummaryCard
+                    label="Tanda tangan"
+                    :value="queueCounts.signature"
+                    note="manual atau BSrE"
+                    tone="violet"
+                    icon="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+                <MetricSummaryCard
+                    label="Siap dikirim"
+                    :value="queueCounts.ready"
+                    note="dokumen final"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </section>
+            <section v-else-if="props.filter === 'archived'" class="ss-summary-grid ss-summary-grid--3" aria-label="Ringkasan arsip surat">
+                <MetricSummaryCard
+                    label="Total arsip"
+                    :value="archiveCounts.total"
+                    note="surat tersimpan"
+                    tone="amber"
+                    icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                />
+                <MetricSummaryCard
+                    label="Surat masuk"
+                    :value="archiveCounts.incoming"
+                    note="arsip diterima"
+                    tone="blue"
+                    icon="M4 4h16v16H4zM7 8h10M7 12h7M7 16h5"
+                />
+                <MetricSummaryCard
+                    label="Surat keluar"
+                    :value="archiveCounts.outgoing"
+                    note="arsip diterbitkan"
+                    tone="green"
+                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+            </section>
+
+
+
+
+            <p v-if="flashMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
+                {{ flashMessage }}
+            </p>
+
+
+            <details v-if="props.filter !== 'archived'" class="panel correspondence-panel">
+                <summary>Panduan persuratan</summary>
+                <p class="workflow-help">Surat masuk: catat → disposisi → selesai → arsip.</p>
+                <p class="workflow-help">Surat keluar: draf → persetujuan → tanda tangan → terbit → terkirim → arsip.</p>
+                <p class="workflow-help">Verifikasi QR memeriksa metadata dan integritas berkas final. Pada jalur manual, QR bukan tanda tangan elektronik tersertifikasi.</p>
+            </details>
 
             <div v-if="can_manage && creating" role="dialog" aria-modal="true" class="modal-backdrop" @click.self="creating = false" @keydown.esc="creating = false">
             <section id="form-surat" class="panel correspondence-panel wizard-panel modal-card" tabindex="-1">
@@ -569,7 +616,7 @@ function submitApproval(record: CorrespondenceRecord) {
                         <div v-if="wizardStep === 1" class="template-choices"><label v-for="item in [{v:'official_school',l:'Surat resmi',d:'Korespondensi umum sekolah'},{v:'invitation',l:'Undangan',d:'Rapat atau kegiatan'},{v:'assignment',l:'Surat tugas',d:'Penugasan resmi'},{v:'statement',l:'Surat pernyataan',d:'Pernyataan resmi sekolah'}]" :key="item.v" :class="{ selected: form.letter_template === item.v }"><input v-model="form.letter_template" type="radio" :value="item.v" /><span><strong>{{ item.l }}</strong><small>{{ item.d }}</small></span></label></div>
                         <div v-else-if="wizardStep === 2" class="wizard-grid"><label>Nomor surat <b>*</b><input v-model="form.letter_number" maxlength="100" placeholder="001/TU/X/2026" /></label><label>Tanggal surat <b>*</b><input v-model="form.letter_date" type="date" /></label><label>Tujuan surat <b>*</b><input v-model="form.recipient" maxlength="180" /></label><label>Sifat<select v-model="form.urgency"><option value="ordinary">Biasa</option><option value="urgent">Segera</option><option value="immediate">Sangat segera</option></select></label><label class="wide">Alamat tujuan<textarea v-model="form.recipient_address" rows="2" /></label><label class="wide">Perihal <b>*</b><input v-model="form.subject" maxlength="200" /></label><label>Klasifikasi<input v-model="form.classification" maxlength="40" /></label><label>Keterangan lampiran<input v-model="form.attachment_note" maxlength="180" placeholder="Contoh: 1 berkas" /></label><label class="wide">Berkas lampiran <span class="field-hint">PDF, DOCX, XLSX, JPG/PNG; maksimal 10 MB</span><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="setAttachment" /></label></div>
                         <div v-else-if="wizardStep === 3" class="wizard-grid"><label class="wide">Salam pembuka<input v-model="form.opening_greeting" maxlength="250" /></label><label class="wide">Isi surat <b>*</b><textarea v-model="form.letter_body" rows="10" maxlength="20000" placeholder="Tulis isi dalam paragraf yang singkat dan jelas." /></label><label class="wide">Penutup<textarea v-model="form.closing_text" rows="3" /></label><label class="wide">Tembusan<textarea v-model="form.carbon_copy" rows="2" placeholder="Satu penerima per baris" /></label></div>
-                        <div v-else-if="wizardStep === 4" class="wizard-grid"><label v-if="availableSignatories.length" class="wide">Pejabat penandatangan<select v-model="form.signatory_id" @change="selectSignatory"><option :value="null">Pilih pejabat</option><option v-for="signer in availableSignatories" :key="signer.id" :value="signer.id">{{ signer.name }} — {{ signer.title }}{{ signer.employee_number ? ` · NIP ${signer.employee_number}` : '' }}{{ signer.provider_configured ? ' · TTE terhubung' : ' · TTE belum terhubung' }}</option></select></label><p v-else class="form-note wide">Belum ada pejabat aktif yang berwenang untuk template ini. Tambahkan profil pejabat atau pilih template lain.</p><p v-if="form.signature_method === 'bsre' && selectedSignatory && !selectedSignatory.provider_configured" class="form-note warning-note wide">Pejabat ini belum memiliki identitas provider BSrE. Minta administrator melengkapinya sebelum mengirim surat.</p><AppButton variant="secondary" class="secondary-button signatory-toggle" type="button" @click="creatingSignatory = !creatingSignatory">{{ creatingSignatory ? 'Tutup profil pejabat' : 'Tambah profil pejabat' }}</AppButton><div v-if="creatingSignatory" class="signatory-form wide"><label>Nama lengkap<input v-model="signatoryForm.name" /></label><label>Jabatan<input v-model="signatoryForm.title" /></label><label>NIP<input v-model="signatoryForm.employee_number" /></label><label>Pangkat/golongan<input v-model="signatoryForm.rank" /></label><label class="wide">ID identitas provider BSrE <span class="field-hint">Diisi dari akun/sertifikat BSrE, bukan NIP.</span><input v-model="signatoryForm.provider_reference" maxlength="190" placeholder="Contoh: akun-bsre-kepala-sekolah" /></label><label class="wide">Kewenangan template<select v-model="signatoryForm.template_scopes" multiple><option value="official_school">Surat resmi</option><option value="invitation">Undangan</option><option value="assignment">Surat tugas</option><option value="statement">Surat keterangan</option></select></label><AppButton variant="primary" :loading="signatoryForm.processing" class="primary-button" type="button" :disabled="signatoryForm.processing" @click="saveSignatory">Simpan profil pejabat</AppButton><p v-if="Object.keys(signatoryForm.errors).length" class="field-error">Periksa nama, jabatan, identitas BSrE, dan kewenangan penandatangan.</p></div><label>Nama penandatangan <b>*</b><input v-model="form.signer_name" maxlength="180" /></label><label>Jabatan <b>*</b><input v-model="form.signer_title" maxlength="180" /></label><label>Jenis nomor identitas<select v-model="form.signer_identifier_type"><option value="nip">NIP</option><option value="nuptk">NUPTK</option><option value="npk">NPK</option></select></label><label>Nomor identitas<input v-model="form.signer_identifier" maxlength="80" /></label><fieldset class="signature-options wide"><legend>Metode tanda tangan</legend><label :class="{ selected: form.signature_method === 'manual' }"><input v-model="form.signature_method" type="radio" value="manual" /><span><strong>Tanda tangan basah</strong><small>Cetak dan unggah kembali hasil pindai PDF.</small></span></label><label :class="{ selected: form.signature_method === 'bsre', 'is-disabled': !tteConfigured }"><input v-model="form.signature_method" type="radio" value="bsre" :disabled="!tteConfigured" /><span><strong>TTE BSrE</strong><small>{{ tteConfigured ? 'Ditandatangani melalui layanan BSrE resmi.' : 'Belum tersedia sampai provider BSrE dikonfigurasi.' }}</small></span></label></fieldset><label class="wide checkbox-label"><input v-model="form.approval_required" type="checkbox" /> Minta persetujuan kepala sekolah</label></div>
+                        <div v-else-if="wizardStep === 4" class="wizard-grid"><p v-if="form.signature_method === 'bsre' && !tteConfigured" class="form-note warning-note wide" role="status">TTE BSrE belum tersedia. Hubungi administrator atau pilih tanda tangan manual.</p><label v-if="availableSignatories.length" class="wide">Pejabat penandatangan<select v-model="form.signatory_id" @change="selectSignatory"><option :value="null">Pilih pejabat</option><option v-for="signer in availableSignatories" :key="signer.id" :value="signer.id">{{ signer.name }} — {{ signer.title }}{{ signer.employee_number ? ` · NIP ${signer.employee_number}` : '' }}{{ signer.provider_configured ? ' · TTE terhubung' : ' · TTE belum terhubung' }}</option></select></label><p v-else class="form-note wide">Belum ada pejabat aktif yang berwenang untuk template ini. Tambahkan profil pejabat atau pilih template lain.</p><p v-if="form.signature_method === 'bsre' && selectedSignatory && !selectedSignatory.provider_configured" class="form-note warning-note wide">Pejabat ini belum memiliki identitas provider BSrE. Minta administrator melengkapinya sebelum mengirim surat.</p><AppButton variant="secondary" class="secondary-button signatory-toggle" type="button" @click="creatingSignatory = !creatingSignatory">{{ creatingSignatory ? 'Tutup profil pejabat' : 'Tambah profil pejabat' }}</AppButton><div v-if="creatingSignatory" class="signatory-form wide"><label>Nama lengkap<input v-model="signatoryForm.name" /></label><label>Jabatan<input v-model="signatoryForm.title" /></label><label>NIP<input v-model="signatoryForm.employee_number" /></label><label>Pangkat/golongan<input v-model="signatoryForm.rank" /></label><label class="wide">ID identitas provider BSrE <span class="field-hint">Diisi dari akun/sertifikat BSrE, bukan NIP.</span><input v-model="signatoryForm.provider_reference" maxlength="190" placeholder="Contoh: akun-bsre-kepala-sekolah" /></label><label class="wide">Kewenangan template<select v-model="signatoryForm.template_scopes" multiple><option value="official_school">Surat resmi</option><option value="invitation">Undangan</option><option value="assignment">Surat tugas</option><option value="statement">Surat keterangan</option></select></label><AppButton variant="primary" :loading="signatoryForm.processing" class="primary-button" type="button" :disabled="signatoryForm.processing" @click="saveSignatory">Simpan profil pejabat</AppButton><p v-if="Object.keys(signatoryForm.errors).length" class="field-error">Periksa nama, jabatan, identitas BSrE, dan kewenangan penandatangan.</p></div><label>Nama penandatangan <b>*</b><input v-model="form.signer_name" maxlength="180" /></label><label>Jabatan <b>*</b><input v-model="form.signer_title" maxlength="180" /></label><label>Jenis nomor identitas<select v-model="form.signer_identifier_type"><option value="nip">NIP</option><option value="nuptk">NUPTK</option><option value="npk">NPK</option></select></label><label>Nomor identitas<input v-model="form.signer_identifier" maxlength="80" /></label><fieldset class="signature-options wide"><legend>Metode tanda tangan</legend><label :class="{ selected: form.signature_method === 'manual' }"><input v-model="form.signature_method" type="radio" value="manual" /><span><strong>Tanda tangan basah</strong><small>Cetak dan unggah kembali hasil pindai PDF.</small></span></label><label :class="{ selected: form.signature_method === 'bsre', 'is-disabled': !tteConfigured }"><input v-model="form.signature_method" type="radio" value="bsre" :disabled="!tteConfigured" /><span><strong>TTE BSrE</strong><small>{{ tteConfigured ? 'Ditandatangani melalui layanan BSrE resmi.' : 'Belum tersedia sampai provider BSrE dikonfigurasi.' }}</small></span></label></fieldset><label class="wide checkbox-label"><input v-model="form.approval_required" type="checkbox" /> Minta persetujuan kepala sekolah</label></div>
                     </template>
                     <div v-if="wizardStep === maxStep" class="review-card"><div><span>Nomor</span><strong>{{ form.letter_number || 'Nomor agenda otomatis' }}</strong></div><div><span>Perihal</span><strong>{{ form.subject }}</strong></div><div><span>{{ form.letter_type === 'incoming' ? 'Asal' : 'Tujuan' }}</span><strong>{{ form.sender || form.recipient }}</strong></div><div v-if="form.letter_type === 'outgoing'"><span>Penandatangan</span><strong>{{ form.signer_name }} · {{ form.signature_method === 'bsre' ? 'TTE BSrE' : 'Tanda tangan basah' }}</strong></div><a v-if="editingId && form.letter_type === 'outgoing'" :href="`/administrasi/persuratan/surat/${editingId}/pdf`" target="_blank" rel="noopener">Buka preview PDF</a><p v-else-if="form.letter_type === 'outgoing'">Simpan draf terlebih dahulu untuk membuka preview PDF.</p></div>
                     <p v-if="wizardError" class="wizard-error" role="alert">{{ wizardError }}</p>
@@ -580,469 +627,621 @@ function submitApproval(record: CorrespondenceRecord) {
             </div>
 
             <section class="panel correspondence-panel">
-                <div class="table-title">
-                    <div><h2>{{ props.filter === 'all' ? 'Surat tersimpan & arsip' : props.filter === 'incoming' ? 'Antrean surat masuk' : props.filter === 'outgoing' ? 'Antrean surat keluar' : 'Arsip surat sekolah' }}</h2><p>{{ props.filter === 'all' ? 'Cari surat yang sudah dicatat atau diarsipkan dari satu tabel.' : props.filter === 'incoming' ? 'Kerjakan baris dari atas ke bawah. Setiap tindakan membuka tahap berikutnya.' : props.filter === 'outgoing' ? 'Lengkapi draf, minta persetujuan, lalu selesaikan tanda tangan.' : 'Cari kembali surat yang sudah selesai berdasarkan jenis dan tanggal.' }}</p></div>
+                <div class="section-head">
+                    <div>
+                        <p class="eyebrow">Daftar &amp; penelusuran</p>
+                        <h2>{{ props.filter === 'all' ? 'Surat tersimpan & arsip' : props.filter === 'incoming' ? 'Antrean surat masuk' : props.filter === 'outgoing' ? 'Antrean surat keluar' : 'Arsip surat sekolah' }}</h2>
+                    </div>
                 </div>
-                <div v-if="props.filter === 'all'" class="dashboard-filter-bar" aria-label="Filter surat tersimpan dan arsip">
+                <details v-if="props.filter === 'all'" class="advanced-filters"><summary>Filter lanjutan</summary><div class="dashboard-filter-bar" aria-label="Filter surat tersimpan dan arsip">
                     <label>Status penyimpanan<select v-model="dashboardStorage"><option value="all">Semua tersimpan</option><option value="saved">Belum diarsipkan</option><option value="archived">Sudah diarsipkan</option></select></label>
                     <label>Jenis surat<select v-model="dashboardType"><option value="all">Semua jenis</option><option value="incoming">Surat masuk</option><option value="outgoing">Surat keluar</option></select></label>
                     <label>Dari tanggal<input v-model="dashboardDateFrom" type="date" /></label>
                     <label>Sampai tanggal<input v-model="dashboardDateTo" type="date" /></label>
-                </div>
+                </div></details>
                 <div v-if="props.filter === 'archived'" class="dashboard-filter-bar archive-filter-bar" aria-label="Filter arsip surat">
                     <label>Jenis surat<select v-model="archiveType"><option value="all">Semua jenis</option><option value="incoming">Surat masuk</option><option value="outgoing">Surat keluar</option></select></label>
-                    <label>Tanggal surat dari<input v-model="archiveLetterDateFrom" type="date" /></label>
-                    <label>Tanggal surat sampai<input v-model="archiveLetterDateTo" type="date" /></label>
-                    <label>Diarsipkan dari<input v-model="archiveDateFrom" type="date" /></label>
-                    <label>Diarsipkan sampai<input v-model="archiveDateTo" type="date" /></label>
+                    <label>Dasar tanggal<select v-model="archiveDateBasis"><option value="archived">Tanggal pengarsipan</option><option value="letter">Tanggal surat</option></select></label>
+                    <label>Dari tanggal<input v-model="archiveDateFrom" type="date" /></label>
+                    <label>Sampai tanggal<input v-model="archiveDateTo" type="date" /></label>
                 </div>
-                <nav v-if="props.filter === 'all'" class="correspondence-tabs" aria-label="Filter surat">
-                    <button v-for="tab in [{ value: 'all', label: 'Semua Surat' }, { value: 'incoming', label: 'Surat Masuk' }, { value: 'outgoing', label: 'Surat Keluar' }, { value: 'approval', label: 'Persetujuan' }, { value: 'signature', label: 'Tanda tangan' }, { value: 'ready', label: 'Siap Dikirim' }, { value: 'archived', label: 'Arsip' }]" :key="tab.value" type="button" class="correspondence-tab" :class="{ 'is-active': activeSection === tab.value }" @click="activeSection = tab.value as typeof activeSection">{{ tab.label }}</button>
-                </nav>
+                <div class="table-toolbar">
+                    <nav v-if="props.filter === 'all'" class="correspondence-tabs" aria-label="Filter surat">
+                        <button v-for="tab in [{ value: 'all', label: 'Semua Surat' }, { value: 'incoming', label: 'Surat Masuk' }, { value: 'outgoing', label: 'Surat Keluar' }, { value: 'approval', label: 'Persetujuan' }, { value: 'signature', label: 'Tanda tangan' }, { value: 'ready', label: 'Siap Dikirim' }, { value: 'archived', label: 'Arsip' }]" :key="tab.value" type="button" class="correspondence-tab" :class="{ 'is-active': activeSection === tab.value }" @click="activeSection = tab.value as typeof activeSection">{{ tab.label }} · {{ tab.value === 'all' ? props.records.length : tab.value === 'incoming' || tab.value === 'outgoing' ? props.records.filter(record => record.letter_type === tab.value && record.status !== 'archived').length : queueCounts[tab.value as 'approval' | 'signature' | 'ready' | 'archived'] }}</button>
+                    </nav>
 
-                <label class="search-label">Cari surat
-                    <input v-model="search" class="search-control" type="search" placeholder="Perihal, nomor, asal, atau tujuan" />
-                </label>
+                    <label class="search-label" aria-label="Cari surat">
+                        <input v-model="search" class="search-control" type="search" placeholder="Cari perihal, nomor, asal, atau tujuan…" />
+                    </label>
+                </div>
                 <div v-if="visibleRecords.length" class="table-scroll" tabindex="0" role="region" aria-label="Daftar surat tersimpan">
                     <table class="app-table correspondence-table">
-                        <thead><tr><th scope="col">Nomor & tanggal</th><th scope="col">Pihak terkait</th><th scope="col">Perihal</th><th scope="col">Status</th><th scope="col">Tindakan berikutnya</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th scope="col">Surat</th>
+                                <th scope="col">Pengirim / Tujuan</th>
+                                <th scope="col">Perihal</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Aksi</th>
+                            </tr>
+                        </thead>
                         <tbody>
                         <tr v-for="record in visibleRecords" :key="record.id">
-                            <td data-label="Nomor & tanggal"><strong>{{ record.letter_number || record.agenda_number || '—' }}</strong><small>{{ record.letter_date || record.received_at || 'Tanggal belum diisi' }}</small><small v-if="props.filter === 'archived'">Diarsipkan {{ record.archived_at?.slice(0, 16) || '—' }}</small></td>
-                            <td data-label="Pihak terkait"><div class="party-cell-content"><span class="correspondence-kind" :class="record.letter_type === 'incoming' ? 'kind-incoming' : 'kind-outgoing'">{{ record.letter_type === 'incoming' ? 'Masuk' : 'Keluar' }}</span><strong>{{ record.letter_type === 'incoming' ? record.sender : record.recipient }}</strong><small>{{ record.letter_type === 'incoming' ? 'Pengirim' : 'Penerima' }}</small></div></td>
-                            <td data-label="Perihal"><strong>{{ record.subject }}</strong><small v-if="record.summary">{{ record.summary }}</small><small v-if="record.disposition"><b>Disposisi:</b> {{ record.disposition }}</small></td>
-                            <td data-label="Status"><span class="status-chip" :class="`status-${record.status}`">{{ labelForStatus(record) }}</span><small v-if="record.signature_verified" class="signature-verified-note">TTE terverifikasi<span v-if="record.signature_signed_at"> · {{ record.signature_signed_at }}</span></small><small v-else-if="record.signature_method === 'bsre' && ['pending', 'processing'].includes(record.signature_status || '')">Sedang diproses melalui BSrE</small><small v-if="record.signature_error_message" class="signature-error-note">{{ record.signature_error_message }}</small></td>
-                            <td data-label="Tindakan berikutnya" class="action-cell"><div class="record-actions">
-                                <div class="primary-action-group">
-                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.status === 'draft' && record.approval_required && ['pending', 'rejected'].includes(record.approval_status)" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="submitApproval(record)">{{ record.approval_status === 'rejected' ? 'Ajukan ulang' : 'Ajukan persetujuan' }}</AppButton>
-                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'manual' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'manual-prepare')">Siapkan tanda tangan</AppButton>
-                                    <label v-if="can_manage && record.signature_method === 'manual' && record.status === 'awaiting_signature'" class="row-action-button primary-row-action upload-action" :class="{ disabled: actionBusy[record.id] }">Unggah hasil tanda tangan<input class="sr-only" type="file" accept="application/pdf,.pdf" :disabled="actionBusy[record.id]" @change="uploadManualSignature(record, $event)" /></label>
-                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'bsre' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id] || !tteConfigured" :title="tteConfigured ? 'Kirim ke antrean TTE BSrE' : 'TTE BSrE belum dikonfigurasi'" @click="signatureAction(record, 'bsre')">{{ tteConfigured ? 'Kirim untuk TTE' : 'TTE belum siap' }}</AppButton>
-                                    <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'bsre' && record.status === 'signature_failed' && record.signature_request_id" class="row-action-button primary-row-action" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'bsre-retry')">Ulangi TTE</AppButton>
-                                    <template v-if="!can_manage && record.approval_required && record.status === 'pending_approval' && record.approval_status === 'pending'">
-                                        <textarea v-model="approvalNotes[record.id]" class="approval-note-input" rows="2" placeholder="Catatan keputusan (opsional)" aria-label="Catatan keputusan" />
-                                        <AppButton variant="primary" class="primary-button approval-approve-button" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'approve')">Setujui</AppButton>
-                                        <AppButton variant="secondary" class="secondary-button approval-reject-button" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'reject')">Tolak</AppButton>
-                                    </template>
+                            <td data-label="Nomor & tanggal" class="col-number">
+                                <strong class="doc-number">{{ record.letter_number || record.agenda_number || 'Belum bernomor' }}</strong>
+                                <small v-if="record.letter_number && record.agenda_number" class="doc-agenda">Agenda: {{ record.agenda_number }}</small>
+                                <small class="doc-date">{{ record.letter_date || record.received_at || 'Tanggal belum diisi' }}</small>
+                                <small v-if="props.filter === 'archived'" class="doc-archived-at">Diarsipkan {{ record.archived_at?.slice(0, 16) || '—' }}</small>
+                            </td>
+                            <td data-label="Jenis & pihak terkait" class="col-party">
+                                <div class="party-cell-content">
+                                    <strong>{{ (record.letter_type === 'incoming' ? record.sender : record.recipient) || '—' }}</strong>
+                                    <span class="correspondence-kind" :class="record.letter_type === 'incoming' ? 'kind-incoming' : 'kind-outgoing'">
+                                        {{ record.letter_type === 'incoming' ? 'Surat Masuk' : 'Surat Keluar' }}
+                                    </span>
                                 </div>
-                                <div class="secondary-action-group">
-                                    <AppButton variant="secondary" size="sm" v-if="can_manage && record.letter_type === 'incoming' && ['received', 'disposition'].includes(record.status)" class="row-action-button secondary-row-action" type="button" @click="editIncoming(record)">Koreksi data</AppButton>
-                                    <AppButton variant="secondary" size="sm" v-if="can_manage && record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" class="row-action-button secondary-row-action" type="button" @click="editDraft(record)">Ubah draf</AppButton>
-                                    <AppButton variant="secondary" size="sm" as="a" v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" class="row-action-link pdf-action-link"><span aria-hidden="true">PDF</span>{{ record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat' }}</AppButton>
-                                    <AppButton variant="secondary" size="sm" as="a" v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="row-action-link">Unduh lampiran</AppButton>
+                            </td>
+                            <td data-label="Perihal & ringkasan" class="col-subject">
+                                <strong class="subject-title">{{ record.subject }}</strong>
+                                <p v-if="record.summary" class="subject-summary" :title="record.summary">{{ record.summary }}</p>
+                                <p v-if="record.disposition" class="subject-disposition"><span>Disposisi:</span> {{ record.disposition }}</p>
+                            </td>
+                            <td data-label="Status" class="col-status">
+                                <span class="status-chip" :class="`status-${record.status}`">{{ labelForStatus(record) }}</span>
+                                <small v-if="record.signature_verified" class="signature-verified-note">TTE terverifikasi<span v-if="record.signature_signed_at"> · {{ record.signature_signed_at }}</span></small>
+                                <small v-else-if="record.signature_method === 'bsre' && ['pending', 'processing'].includes(record.signature_status || '')" class="signature-pending-note">Diproses BSrE…</small>
+                                <small v-if="record.signature_error_message" class="signature-error-note">{{ record.signature_error_message }}</small>
+                            </td>
+                            <td data-label="Aksi & tindak lanjut" class="action-cell">
+                                <form v-if="can_manage && nextStatuses(record).length" class="action-stack" @submit.prevent="updateStatus(record)">
+                                    <input
+                                        v-if="expandedActions[record.id] && record.letter_type === 'incoming' && (targets[record.id] || nextStatuses(record)[0]?.value) === 'disposition'"
+                                        v-model="dispositions[record.id]"
+                                        class="disposition-inline-input"
+                                        maxlength="3000"
+                                        placeholder="Isi arahan disposisi…"
+                                        aria-label="Arahan disposisi"
+                                        required
+                                    />
+                                    <div class="action-bar">
+                                        <AppButton v-if="!expandedActions[record.id] && record.letter_type === 'incoming' && (targets[record.id] || nextStatuses(record)[0]?.value) === 'disposition'" variant="primary" size="sm" type="button" :aria-expanded="false" @click="expandedActions[record.id] = true">Disposisi</AppButton>
+                                        <AppButton v-else variant="primary" size="sm" type="submit">{{ nextActionLabel(record) }}</AppButton>
+                                        <div class="utility-icon-group">
+                                            <AppButton variant="secondary" size="sm" icon="edit" v-if="record.letter_type === 'incoming' && ['received', 'disposition'].includes(record.status)" type="button" title="Koreksi data surat" @click="editIncoming(record)">Koreksi data</AppButton>
+                                            <AppButton variant="secondary" size="sm" icon="pdf" as="a" v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" :title="record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat'">{{ record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat' }}</AppButton>
+                                            <a v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="ui-button ui-button--sm ui-button--secondary ui-button--icon-only" title="Unduh lampiran" aria-label="Unduh lampiran">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <span v-if="statusErrors[record.id]" class="field-error" role="alert">{{ statusErrors[record.id] }}</span>
+                                </form>
+                                <div v-else class="action-stack">
+                                    <div class="action-bar">
+                                        <div class="primary-action-group">
+                                            <AppButton variant="primary" size="sm" v-if="can_manage && record.status === 'draft' && record.approval_required && ['pending', 'rejected'].includes(record.approval_status)" type="button" :disabled="actionBusy[record.id]" @click="submitApproval(record)">{{ record.approval_status === 'rejected' ? 'Ajukan ulang' : 'Ajukan persetujuan' }}</AppButton>
+                                            <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'manual' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'manual-prepare')">Siapkan TTD</AppButton>
+                                            <label v-if="can_manage && record.signature_method === 'manual' && record.status === 'awaiting_signature'" class="ui-button ui-button--sm ui-button--primary upload-action" :class="{ disabled: actionBusy[record.id] }">Unggah TTD<input class="sr-only" type="file" accept="application/pdf,.pdf" :disabled="actionBusy[record.id]" @change="uploadManualSignature(record, $event)" /></label>
+                                            <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'bsre' && ['draft', 'approved'].includes(record.status) && (!record.approval_required || record.approval_status === 'approved')" type="button" :disabled="actionBusy[record.id] || !tteConfigured" :title="tteConfigured ? 'Kirim ke antrean TTE BSrE' : 'TTE BSrE belum dikonfigurasi'" @click="signatureAction(record, 'bsre')">{{ tteConfigured ? 'Kirim TTE' : 'TTE belum siap' }}</AppButton>
+                                            <AppButton variant="primary" size="sm" v-if="can_manage && record.signature_method === 'bsre' && record.status === 'signature_failed' && record.signature_request_id" type="button" :disabled="actionBusy[record.id]" @click="signatureAction(record, 'bsre-retry')">Ulangi TTE</AppButton>
+                                            <details v-if="!can_manage && record.approval_required && record.status === 'pending_approval' && record.approval_status === 'pending'" class="approval-details">
+                                                <summary>Tinjau</summary>
+                                                <textarea v-model="approvalNotes[record.id]" class="approval-note-input" rows="2" placeholder="Catatan keputusan (opsional)" aria-label="Catatan keputusan" />
+                                                <div class="approval-btn-pair">
+                                                    <AppButton variant="primary" size="sm" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'approve')">Setujui</AppButton>
+                                                    <AppButton variant="secondary" size="sm" type="button" :disabled="actionBusy[record.id]" @click="approveRecord(record, 'reject')">Tolak</AppButton>
+                                                </div>
+                                            </details>
+                                        </div>
+                                        <div class="utility-icon-group">
+                                            <AppButton variant="secondary" size="sm" icon="edit" v-if="can_manage && record.letter_type === 'incoming' && ['received', 'disposition'].includes(record.status)" type="button" title="Koreksi data surat" @click="editIncoming(record)">Koreksi data</AppButton>
+                                            <AppButton variant="secondary" size="sm" icon="edit" v-if="can_manage && record.letter_type === 'outgoing' && record.status === 'draft' && record.has_document" type="button" title="Ubah draf surat" @click="editDraft(record)">Ubah draf</AppButton>
+                                            <AppButton variant="secondary" size="sm" icon="pdf" as="a" v-if="record.has_document" :href="`/administrasi/persuratan/surat/${record.id}/pdf`" target="_blank" rel="noopener" :title="record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat'">{{ record.status === 'draft' ? 'Lihat PDF draf' : 'Buka PDF surat' }}</AppButton>
+                                            <a v-if="record.has_attachment" :href="`/administrasi/persuratan/surat/${record.id}/lampiran`" class="ui-button ui-button--sm ui-button--secondary ui-button--icon-only" title="Unduh lampiran" aria-label="Unduh lampiran">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <form v-if="can_manage && nextStatuses(record).length" class="status-update-form" @submit.prevent="updateStatus(record)">
-                                <span class="next-step-label">Berikutnya: {{ nextStatuses(record)[0]?.label }}</span>
-                                <input v-if="record.letter_type === 'incoming' && (targets[record.id] || nextStatuses(record)[0]?.value) === 'disposition'" v-model="dispositions[record.id]" maxlength="3000" placeholder="Isi disposisi" required />
-                                <AppButton variant="primary" class="primary-button status-action-button" type="submit">{{ nextActionLabel(record) }}</AppButton>
-                                <span v-if="statusErrors[record.id]" class="field-error" role="alert">{{ statusErrors[record.id] }}</span>
-                            </form>
-                            <span v-if="actionErrors[record.id]" class="field-error action-error" role="alert">{{ actionErrors[record.id] }}</span>
-                            <span v-if="record.status === 'archived'" class="archived-note">Tersimpan di arsip</span>
+                                <span v-if="actionErrors[record.id]" class="field-error action-error" role="alert">{{ actionErrors[record.id] }}</span>
                             </td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
                 <p v-else class="empty-state">{{ search ? 'Tidak ada surat yang cocok dengan pencarian.' : 'Belum ada surat pada filter ini. Surat yang dicatat akan muncul di sini.' }}</p>
-                <div v-if="pageCount > 1" class="pagination">
-                    <AppButton variant="secondary" type="button" class="secondary-button" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</AppButton>
-                    <span>Halaman {{ currentPage }} dari {{ pageCount }}</span>
-                    <AppButton variant="secondary" type="button" class="secondary-button" :disabled="currentPage === pageCount" @click="currentPage++">Berikutnya</AppButton>
+                <div v-if="filteredRecords.length" class="table-footer">
+                    <span class="table-count">Menampilkan {{ visibleRecords.length }} dari {{ filteredRecords.length }} surat</span>
+                    <div v-if="pageCount > 1" class="pagination">
+                        <AppButton variant="secondary" size="sm" type="button" :disabled="currentPage === 1" @click="currentPage--">Sebelumnya</AppButton>
+                        <span>Halaman {{ currentPage }} / {{ pageCount }}</span>
+                        <AppButton variant="secondary" size="sm" type="button" :disabled="currentPage === pageCount" @click="currentPage++">Berikutnya</AppButton>
+                    </div>
                 </div>
             </section>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
 <style scoped>
-.correspondence-panel { padding: 1.25rem; }
-.queue-section { display: grid; gap: .75rem; }
-.correspondence-hero-metrics { display: grid; flex: 1 1 24rem; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; min-width: 0; }
-.correspondence-hero-metrics > div { display: grid; gap: .2rem; min-width: 0; border: 1px solid transparent; border-radius: 1rem; padding: 1rem; box-shadow: 0 12px 22px rgb(15 23 42 / 12%); }
-.correspondence-hero-metrics > div:nth-child(1) { border-color: #2f64c6; background: linear-gradient(145deg, #1d4ed8, #2563eb); }
-.correspondence-hero-metrics > div:nth-child(2) { border-color: #21865a; background: linear-gradient(145deg, #047857, #16a34a); }
-.correspondence-hero-metrics > div:nth-child(3) { border-color: #b7791f; background: linear-gradient(145deg, #b45309, #d97706); }
-.correspondence-hero-metrics span, .correspondence-hero-metrics small { color: rgb(255 255 255 / 82%); font-size: var(--type-meta); }
-.correspondence-hero-metrics strong { color: white; font-size: 1.7rem; line-height: 1; }
-.archive-hero-summary { display: grid; flex: 1 1 28rem; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; min-width: 0; }
-.archive-hero-summary > div { display: grid; align-content: center; gap: .2rem; min-height: 6.5rem; border: 1px solid #d6c7a3; border-radius: .9rem; background: #fffaf0; padding: .8rem; }
-.archive-hero-summary > div:nth-child(2) { border-color: #c9d7f3; background: #eff5ff; }
-.archive-hero-summary > div:nth-child(3) { border-color: #b9dec8; background: #ecfdf3; }
-.archive-hero-summary strong { color: #172b4d; font-size: 1.7rem; line-height: 1; }
-.archive-hero-summary span { color: #52637c; font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.archive-hero-summary small { color: var(--ink-soft); font-size: var(--type-meta); }
-.incoming-hero-summary { display: grid; flex: 0 0 14rem; align-content: center; gap: .15rem; min-height: 7rem; border: 1px solid #2f64c6; border-radius: 1rem; background: linear-gradient(145deg, #1d4ed8, #2563eb); padding: 1rem 1.2rem; box-shadow: 0 12px 22px rgb(15 23 42 / 12%); }
-.incoming-hero-summary strong { color: white; font-size: 2rem; line-height: 1; }
-.incoming-hero-summary span, .incoming-hero-summary small { color: rgb(255 255 255 / 84%); font-size: var(--type-meta); }
-.outgoing-hero-summary { display: grid; flex: 1 1 28rem; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; min-width: 0; }
-.outgoing-hero-summary > div { display: grid; align-content: center; gap: .2rem; min-height: 6.5rem; border: 1px solid #3157a4; border-radius: .9rem; background: #eff5ff; padding: .8rem; }
-.outgoing-hero-summary > div:nth-child(2) { border-color: #d5a03a; background: #fff7e6; }
-.outgoing-hero-summary > div:nth-child(3) { border-color: #8b6cc7; background: #f4efff; }
-.outgoing-hero-summary > div:nth-child(4) { border-color: #21865a; background: #ecfdf3; }
-.outgoing-hero-summary strong { color: #172b4d; font-size: 1.7rem; line-height: 1; }
-.outgoing-hero-summary span { color: #52637c; font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.incoming-flow-panel { display: grid; gap: 1rem; border: 1px solid #dbe3ef; border-radius: 1rem; background: var(--surface); padding: 1.25rem; }
-.incoming-flow-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.incoming-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid #dbe3ef; padding: .75rem .25rem 0; color: var(--ink-soft); }
-.incoming-flow-list li.is-current { border-top-color: #3157a4; color: #3157a4; }
-.incoming-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #eef2f7; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.incoming-flow-list li.is-current > span { background: #3157a4; color: white; }
+.correspondence-page {
+    max-width: 1370px;
+    margin-inline: auto;
+}
+
+.module-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    padding: .3rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm);
+}
+
+.module-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: .45rem 1rem;
+    color: var(--ink-soft);
+    border-radius: 999px;
+    font-size: var(--type-sm);
+    font-weight: var(--weight-bold);
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.module-tab:hover {
+    color: var(--ink);
+    background: var(--surface-subtle);
+}
+
+.module-tab.is-active {
+    color: var(--primary-strong);
+    background: var(--primary-soft);
+}
+
+.correspondence-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding-bottom: .9rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.correspondence-heading .eyebrow {
+    margin: 0;
+    color: var(--primary);
+    font-size: var(--type-xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+}
+
+.correspondence-heading h1 {
+    margin: .25rem 0 .3rem;
+    color: var(--ink);
+    font-size: var(--type-3xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -.04em;
+    line-height: 1.12;
+}
+
+.correspondence-heading p:not(.eyebrow) {
+    margin: 0;
+    max-width: 66ch;
+    color: var(--ink-soft);
+    font-size: var(--type-sm);
+    line-height: 1.55;
+}
+
+.correspondence-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .6rem;
+    flex-shrink: 0;
+}
+
+.correspondence-panel {
+    padding: 1.35rem 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.section-head .eyebrow {
+    margin: 0 0 .2rem;
+    color: var(--primary);
+    font-size: var(--type-xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+}
+
+.section-head h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1.15rem;
+    font-weight: var(--weight-bold);
+    letter-spacing: -.02em;
+}
+
+.section-head p:not(.eyebrow) {
+    margin: .25rem 0 0;
+    color: var(--ink-soft);
+    font-size: var(--type-sm);
+    line-height: 1.5;
+}
+
+.reset-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: .4rem .85rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface-subtle);
+    color: var(--ink-soft);
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+}
+
+.reset-filter-pill:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.queue-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: .85rem;
+}
+
+.queue-card {
+    --queue-accent: var(--blue);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 0;
+    min-height: 126px;
+    padding: 1.1rem .85rem;
+    border: 1px solid color-mix(in srgb, var(--queue-accent) 26%, var(--line));
+    border-top: 3px solid var(--queue-accent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--queue-accent) 7%, var(--surface));
+    color: var(--ink);
+    text-align: center;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background-color .15s ease;
+}
+
+.queue-card--blue { --queue-accent: var(--blue); }
+.queue-card--indigo { --queue-accent: var(--primary); }
+.queue-card--amber { --queue-accent: var(--gold); }
+.queue-card--violet { --queue-accent: var(--violet); }
+.queue-card--green { --queue-accent: var(--green); }
+.queue-card--slate { --queue-accent: var(--ink-soft); }
+
+.queue-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--queue-accent) 55%, var(--line));
+    box-shadow: 0 8px 20px -12px rgba(15, 23, 42, .22);
+}
+
+.queue-card.is-selected {
+    border-color: var(--queue-accent);
+    background: color-mix(in srgb, var(--queue-accent) 16%, var(--surface));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--queue-accent) 22%, transparent);
+}
+
+.queue-card span {
+    color: var(--ink-soft);
+    font-size: var(--type-meta);
+    font-weight: var(--weight-bold);
+    line-height: 1.3;
+}
+
+.queue-card strong {
+    color: var(--ink);
+    font-size: 1.85rem;
+    font-weight: var(--weight-bold);
+    line-height: 1.05;
+    letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.queue-card small {
+    display: inline-block;
+    padding: .18rem .55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--queue-accent) 20%, var(--line));
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    font-weight: var(--weight-semibold);
+    line-height: 1.3;
+}
+
+.workflow-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.workflow-top .section-head {
+    margin-bottom: 0;
+}
+
+.workflow-pipelines {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+    margin-top: 1.1rem;
+}
+
+.pipeline-box {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding: .9rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--surface-subtle);
+}
+
+.pipeline-badge {
+    align-self: flex-start;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: var(--weight-bold);
+    letter-spacing: .02em;
+}
+
+.pipeline-badge--blue {
+    background: var(--blue-soft);
+    color: var(--blue);
+}
+
+.pipeline-badge--green {
+    background: var(--green-soft);
+    color: var(--green);
+}
+
+.pipeline-steps {
+    margin: 0;
+    color: var(--ink);
+    font-size: var(--type-sm);
+    font-weight: var(--weight-semibold);
+    line-height: 1.5;
+}
+
+.pipeline-steps span {
+    margin-inline: .25rem;
+    color: var(--ink-faint);
+}
+
+.pipeline-note {
+    grid-column: 1 / -1;
+    padding: .7rem .95rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-size: var(--type-meta);
+    line-height: 1.5;
+}
+
+.pipeline-note strong {
+    color: var(--ink);
+}
+
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .85rem;
+    margin-top: 1rem;
+    padding-bottom: .85rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.incoming-flow-panel { display: grid; gap: 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 1.35rem 1.5rem; box-shadow: var(--shadow-sm); }
+.incoming-flow-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.incoming-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid var(--line); padding: .75rem .25rem 0; color: var(--ink-soft); }
+.incoming-flow-list li.is-current { border-top-color: var(--primary); color: var(--primary); }
+.incoming-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: var(--surface-strong); color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.incoming-flow-list li.is-current > span { background: var(--primary); color: white; }
 .incoming-flow-list strong, .incoming-flow-list small { display: block; }
-.incoming-flow-list strong { color: #172b4d; font-size: var(--type-sm); }
+.incoming-flow-list strong { color: var(--ink); font-size: var(--type-sm); }
 .incoming-flow-list small { margin-top: .2rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.35; }
-.outgoing-flow-panel { display: grid; gap: 1rem; border: 1px solid #dbe3ef; border-radius: 1rem; background: var(--surface); padding: 1.25rem; }
-.outgoing-flow-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
-.outgoing-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid #dbe3ef; padding: .75rem .25rem 0; color: var(--ink-soft); }
-.outgoing-flow-list li.is-current { border-top-color: #3157a4; color: #3157a4; }
-.outgoing-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: #eef2f7; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.outgoing-flow-list li.is-current > span { background: #3157a4; color: white; }
+.outgoing-flow-panel { display: grid; gap: 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 1.35rem 1.5rem; box-shadow: var(--shadow-sm); }
+.outgoing-flow-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.outgoing-flow-list li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: start; gap: .55rem; min-width: 0; border-top: 3px solid var(--line); padding: .75rem .25rem 0; color: var(--ink-soft); }
+.outgoing-flow-list li.is-current { border-top-color: var(--primary); color: var(--primary); }
+.outgoing-flow-list li > span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; background: var(--surface-strong); color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.outgoing-flow-list li.is-current > span { background: var(--primary); color: white; }
 .outgoing-flow-list strong, .outgoing-flow-list small { display: block; }
-.outgoing-flow-list strong { color: #172b4d; font-size: var(--type-sm); }
+.outgoing-flow-list strong { color: var(--ink); font-size: var(--type-sm); }
 .outgoing-flow-list small { margin-top: .2rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.35; }
-.queue-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
-.queue-grid button { display: grid; gap: .2rem; min-width: 0; border: 1px solid #dbe3ef; border-radius: .8rem; background: var(--surface); padding: 1rem; color: #334155; text-align: left; }
-.queue-grid button:hover, .queue-grid button.is-selected { border-color: #3157a4; box-shadow: 0 4px 14px rgb(49 87 164 / 10%); }
-.queue-grid button.is-selected { background: #eff5ff; }
-.queue-grid span, .queue-grid small { color: var(--ink-soft); font-size: var(--type-meta); }
-.queue-grid strong { color: #172b4d; font-size: 1.65rem; }
 .wizard-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
-.wizard-heading h2 { margin: .15rem 0 0; color: #172b4d; }
+.wizard-heading h2 { margin: .15rem 0 0; color: var(--ink); }
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
 .modal-card { width: min(760px, 100%); max-height: 90dvh; overflow-y: auto; border-radius: 16px; box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
 .stepper { display: grid; grid-template-columns: repeat(5, 1fr); margin: 1.2rem 0; padding: 0; list-style: none; }
-.stepper li { position: relative; display: grid; justify-items: center; gap: .3rem; color: #94a3b8; }
-.stepper li:not(:last-child)::after { position: absolute; top: .85rem; left: calc(50% + 1.15rem); width: calc(100% - 2.3rem); height: 2px; background: #e2e8f0; content: ''; }
-.stepper span { z-index: 1; display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border: 2px solid #cbd5e1; border-radius: 50%; background: var(--surface); font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.stepper .active, .stepper .done { color: #3157a4; }
-.stepper .active span, .stepper .done span { border-color: #3157a4; background: #3157a4; color: white; }
-.stepper .done:not(:last-child)::after { background: #3157a4; }
-.wizard-step-hint { margin: -.35rem 0 .2rem; color: #52637c; font-size: var(--type-sm); line-height: 1.5; }
+.stepper li { position: relative; display: grid; justify-items: center; gap: .3rem; color: var(--ink-faint); }
+.stepper li:not(:last-child)::after { position: absolute; top: .85rem; left: calc(50% + 1.15rem); width: calc(100% - 2.3rem); height: 2px; background: var(--line); content: ''; }
+.stepper span { z-index: 1; display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border: 2px solid var(--line-strong); border-radius: 50%; background: var(--surface); font-size: var(--type-meta); font-weight: var(--weight-bold); }
+.stepper .active, .stepper .done { color: var(--primary); }
+.stepper .active span, .stepper .done span { border-color: var(--primary); background: var(--primary); color: white; }
+.stepper .done:not(:last-child)::after { background: var(--primary); }
+.wizard-step-hint { margin: -.35rem 0 .2rem; color: var(--ink-soft); font-size: var(--type-sm); line-height: 1.5; }
 .wizard-form { display: grid; gap: 1rem; }
 .wizard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.wizard-grid label { display: grid; gap: .4rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.wizard-grid label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
 .wizard-grid .wide { grid-column: 1 / -1; }
-.wizard-grid input, .wizard-grid select, .wizard-grid textarea { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: var(--surface); padding: .6rem .75rem; color: #172b4d; font: inherit; }
-.wizard-grid b { color: #b42318; }
-.incoming-review-note { display: grid; gap: .35rem; border: 1px solid #c9d7f3; border-radius: .75rem; background: #eff5ff; padding: .85rem; color: #3157a4; font-size: var(--type-sm); line-height: 1.5; }
-.tte-readiness-panel { display: flex; align-items: flex-start; gap: .9rem; border: 1px solid #c9d7f3; border-radius: .85rem; background: #eff5ff; padding: 1rem 1.1rem; }
-.tte-readiness-panel.is-ready { border-color: #b7e4cf; background: #effaf4; }
-.tte-readiness-panel.is-blocked { border-color: #f1d19a; background: #fff8eb; }
-.tte-readiness-mark { display: grid; flex: 0 0 2rem; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: #3157a4; color: white; font-weight: var(--weight-bold); }
-.tte-readiness-panel.is-ready .tte-readiness-mark { background: #087a55; }
-.tte-readiness-panel.is-blocked .tte-readiness-mark { background: #a15c00; }
-.tte-readiness-panel h2 { margin: .15rem 0 .25rem; color: #172b4d; font-size: var(--type-md); }
-.tte-readiness-panel p:not(.eyebrow) { margin: 0; max-width: 72ch; color: #52637c; font-size: var(--type-sm); line-height: 1.55; }
+.wizard-grid input, .wizard-grid select, .wizard-grid textarea { width: 100%; min-height: 2.7rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); padding: .6rem .75rem; color: var(--ink); font: inherit; }
+.wizard-grid b { color: var(--red); }
+.incoming-review-note { display: grid; gap: .35rem; border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line)); border-radius: .75rem; background: var(--primary-soft); padding: .85rem; color: var(--primary-strong); font-size: var(--type-sm); line-height: 1.5; }
+.tte-readiness-panel { display: flex; align-items: flex-start; gap: .9rem; border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line)); border-radius: .85rem; background: var(--primary-soft); padding: 1rem 1.1rem; }
+.tte-readiness-panel.is-ready { border-color: color-mix(in srgb, var(--green) 30%, var(--line)); background: var(--green-soft); }
+.tte-readiness-panel.is-blocked { border-color: color-mix(in srgb, var(--gold) 30%, var(--line)); background: var(--gold-soft); }
+.tte-readiness-mark { display: grid; flex: 0 0 2rem; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: var(--primary); color: white; font-weight: var(--weight-bold); }
+.tte-readiness-panel.is-ready .tte-readiness-mark { background: var(--green); }
+.tte-readiness-panel.is-blocked .tte-readiness-mark { background: var(--gold); }
+.tte-readiness-panel h2 { margin: .15rem 0 .25rem; color: var(--ink); font-size: var(--type-md); }
+.tte-readiness-panel p:not(.eyebrow) { margin: 0; max-width: 72ch; color: var(--ink-soft); font-size: var(--type-sm); line-height: 1.55; }
 .tte-readiness-panel small { display: block; margin-top: .45rem; color: var(--ink-soft); font-size: var(--type-meta); }
-.warning-note { border: 1px solid #f1d19a; background: #fff8eb; color: #92500a; }
+.warning-note { border: 1px solid color-mix(in srgb, var(--gold) 32%, var(--line)); background: var(--gold-soft); color: var(--gold); }
 .signature-options label.is-disabled { cursor: not-allowed; opacity: .58; }
 .signatory-toggle { justify-self: start; }
-.signatory-form { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; border: 1px solid #dbe3ef; border-radius: .75rem; background: #f8fafc; padding: 1rem; }
+.signatory-form { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface-subtle); padding: 1rem; }
 .signatory-form .wide { grid-column: 1 / -1; }
 .template-choices { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
-.template-choices label, .signature-options label { display: flex; gap: .65rem; border: 1px solid #dbe3ef; border-radius: .75rem; padding: 1rem; color: #334155; }
-.template-choices label.selected, .signature-options label.selected { border-color: #3157a4; background: #eff5ff; }
+.template-choices label, .signature-options label { display: flex; gap: .65rem; border: 1px solid var(--line); border-radius: .75rem; padding: 1rem; color: var(--ink); }
+.template-choices label.selected, .signature-options label.selected { border-color: var(--primary); background: var(--primary-soft); }
 .template-choices input, .signature-options input, .checkbox-label input { width: auto; min-height: auto; }
 .template-choices span, .signature-options span { display: grid; gap: .2rem; }
 .template-choices small, .signature-options small { color: var(--ink-soft); font-weight: var(--weight-medium); }
 .signature-options { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin: 0; border: 0; padding: 0; }
-.signature-options legend { margin-bottom: .5rem; color: #42526b; font-weight: var(--weight-bold); }
+.signature-options legend { margin-bottom: .5rem; color: var(--ink-soft); font-weight: var(--weight-bold); }
 .checkbox-label { display: flex !important; align-items: center; }
-.review-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; border: 1px solid #dbe3ef; border-radius: .8rem; background: #f8fafc; padding: 1rem; }
+.review-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface-subtle); padding: 1rem; }
 .review-card div { display: grid; gap: .15rem; }
 .review-card span { color: var(--ink-soft); font-size: var(--type-meta); }
-.review-card a, .review-card p { grid-column: 1 / -1; margin: 0; color: #3157a4; font-size: var(--type-sm); font-weight: var(--weight-bold); }
-.wizard-error { margin: 0; border: 1px solid #fda29b; border-radius: .65rem; background: #fef3f2; padding: .75rem; color: #b42318; font-size: var(--type-sm); }
-.wizard-actions { display: flex; align-items: center; gap: .5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
+.review-card a, .review-card p { grid-column: 1 / -1; margin: 0; color: var(--primary); font-size: var(--type-sm); font-weight: var(--weight-bold); }
+.wizard-error { margin: 0; border: 1px solid color-mix(in srgb, var(--red) 35%, var(--line)); border-radius: .65rem; background: var(--red-soft); padding: .75rem; color: var(--red); font-size: var(--type-sm); }
+.wizard-actions { display: flex; align-items: center; gap: .5rem; border-top: 1px solid var(--line); padding-top: 1rem; }
 .wizard-actions > span { flex: 1; }
 .upload-action { cursor: pointer; }
 .upload-action.disabled { cursor: wait; opacity: .55; }
-.approval-note-input { width: min(19rem, 100%); min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .6rem; padding: .55rem .7rem; color: #172b4d; font: inherit; font-size: var(--type-control); }
-.hero-card { flex-wrap: wrap; }
-.hero-card > div:first-child { min-width: 0; }
+.approval-note-input { width: min(19rem, 100%); min-height: 2.7rem; border: 1px solid var(--line-strong); border-radius: .6rem; padding: .55rem .7rem; color: var(--ink); background: var(--surface); font: inherit; font-size: var(--type-control); }
 .correspondence-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.correspondence-form label { display: grid; gap: .4rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
-.correspondence-form input, .correspondence-form select, .correspondence-form textarea, .status-update-form select, .status-update-form input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; background: var(--surface); padding: .6rem .75rem; color: #172b4d; }
+.correspondence-form label { display: grid; gap: .4rem; color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.correspondence-form input, .correspondence-form select, .correspondence-form textarea, .status-update-form select, .status-update-form input { width: 100%; min-height: 2.7rem; border: 1px solid var(--line-strong); border-radius: .65rem; background: var(--surface); padding: .6rem .75rem; color: var(--ink); }
 .correspondence-form input[type=file] { padding: .4rem; }
 .correspondence-wide { grid-column: 1 / -1; }
 .correspondence-actions { display: flex; justify-content: end; gap: .5rem; flex-wrap: wrap; }
 .workflow-actions, .pagination { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
-.workflow-help, .form-note { margin: .8rem 0 0; color: #52637c; font-size: var(--type-sm); line-height: 1.55; }
-.form-note { margin: 0; padding: .75rem; background: #eff5ff; border-radius: .6rem; }
-.dashboard-filter-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; border: 1px solid #dbe3ef; border-radius: .8rem; background: #f8fafc; padding: .85rem; }
-.dashboard-filter-bar label { display: grid; gap: .35rem; color: #42526b; font-size: var(--type-meta); font-weight: var(--weight-semibold); }
-.dashboard-filter-bar input, .dashboard-filter-bar select { width: 100%; min-height: 2.5rem; border: 1px solid #cbd5e1; border-radius: .55rem; background: var(--surface); padding: .5rem .65rem; color: #172b4d; font: inherit; font-size: var(--type-control); }
-.search-label { display: grid; gap: .35rem; margin-top: 1rem; max-width: 26rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
-.search-label input { width: 100%; min-height: 2.7rem; border: 1px solid #cbd5e1; border-radius: .65rem; padding: .6rem .75rem; background: var(--surface); color: #172b4d; }
-.pagination { justify-content: end; margin-top: 1rem; color: #52637c; font-size: var(--type-sm); }
+.workflow-help, .form-note { margin: .8rem 0 0; color: var(--ink-soft); font-size: var(--type-sm); line-height: 1.55; }
+.form-note { margin: 0; padding: .75rem; background: var(--primary-soft); border-radius: .6rem; }
+.dashboard-filter-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: .25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-subtle); padding: .9rem 1rem; }
+.dashboard-filter-bar label { display: grid; gap: .35rem; color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.dashboard-filter-bar input, .dashboard-filter-bar select { width: 100%; min-height: 2.5rem; border: 1px solid var(--line-strong); border-radius: .55rem; background: var(--surface); padding: .5rem .65rem; color: var(--ink); font: inherit; font-size: var(--type-control); }
+.search-label { flex: 1 1 18rem; max-width: 22rem; margin: 0; }
+.search-label input { width: 100%; min-height: 40px; border: 1px solid var(--line-strong); border-radius: 999px; padding: .5rem 1rem; background: var(--surface); color: var(--ink); font-size: var(--type-sm); }
+.pagination { justify-content: end; margin-top: 1rem; color: var(--ink-soft); font-size: var(--type-sm); }
 .correspondence-card, .correspondence-card-heading > div { min-width: 0; overflow-wrap: anywhere; }
-.required-mark, .field-error { color: #b42318; }
+.required-mark, .field-error { color: var(--red); }
 .field-hint, .approval-option small { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-medium); line-height: 1.4; }
 .approval-option { gap: .25rem !important; }
 .approval-option input { width: auto; min-height: auto; margin-right: .35rem; }
-.approval-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; border-top: 1px solid #e2e8f0; padding-top: .75rem; }
-.approval-pending { color: #92500a; font-size: var(--type-sm); font-weight: var(--weight-bold); }
+.approval-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; border-top: 1px solid var(--line); padding-top: .75rem; }
+.approval-pending { color: var(--gold); font-size: var(--type-sm); font-weight: var(--weight-bold); }
 .field-error { font-size: var(--type-meta); font-weight: var(--weight-medium); }
 .action-error { flex-basis: 100%; }
-.correspondence-tabs { display: flex; flex-wrap: wrap; gap: .5rem; border-bottom: 1px solid #dbe3ef; padding: 0 0 .8rem; }
-.correspondence-tab { border: 1px solid #dbe3ef; border-radius: 999px; background: var(--surface); padding: .45rem .85rem; color: #42526b; font-size: var(--type-sm); font-weight: var(--weight-semibold); text-decoration: none; }
-.correspondence-tab.is-active { border-color: #3157a4; background: #eaf0ff; color: #214991; }
-.table-scroll { margin-top: 1rem; overflow-x: auto; border: 1px solid #dbe3ef; border-radius: .85rem; }
-.correspondence-table { width: 100%; min-width: 920px; border-collapse: collapse; }
-.correspondence-table th { background: #f8fafc; color: #52637c; font-size: var(--type-meta); letter-spacing: .03em; text-align: left; text-transform: uppercase; }
-.correspondence-table th, .correspondence-table td { border-bottom: 1px solid #e2e8f0; padding: .8rem; vertical-align: top; }
+.correspondence-tabs { display: flex; flex-wrap: wrap; gap: .45rem; }
+.correspondence-tab { border: 1px solid var(--line); border-radius: 999px; background: var(--surface-subtle); padding: .42rem .85rem; color: var(--ink-soft); font-size: var(--type-sm); font-weight: var(--weight-semibold); text-decoration: none; cursor: pointer; transition: all .15s ease; }
+.correspondence-tab:hover { border-color: var(--primary); color: var(--primary); }
+.correspondence-tab.is-active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-strong); }
+.table-scroll { margin-top: 1rem; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.correspondence-table { width: 100%; min-width: 900px; border-collapse: collapse; }
+.correspondence-table th { background: var(--surface-subtle); color: var(--ink-soft); font-size: 11.5px; font-weight: var(--weight-bold); letter-spacing: .04em; text-align: left; text-transform: uppercase; white-space: nowrap; }
+.correspondence-table th, .correspondence-table td { border-bottom: 1px solid var(--line); padding: .85rem 1rem; vertical-align: top; }
+.correspondence-table tbody tr { transition: background-color .14s ease; }
+.correspondence-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 36%, transparent); }
 .correspondence-table tbody tr:last-child td { border-bottom: 0; }
-.correspondence-table td { color: #334155; font-size: var(--type-sm); }
-.correspondence-table td > small { display: block; margin-top: .25rem; color: var(--ink-soft); line-height: 1.35; }
-.correspondence-table td:nth-child(1) { width: 17%; }
-.correspondence-table td:nth-child(2) { width: 18%; }
-.correspondence-table td:nth-child(3) { width: 25%; }
-.correspondence-table td:nth-child(4) { width: 13%; }
+.correspondence-table td { color: var(--ink); font-size: var(--type-sm); }
+.correspondence-table td > small { display: block; margin-top: .2rem; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.35; }
+.col-number { width: 16%; }
+.doc-number { display: block; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.35; }
+.doc-agenda { color: var(--ink-faint) !important; }
+.doc-date { color: var(--ink-soft); }
+.col-party { width: 19%; }
 .party-cell-content { display: grid; align-content: start; justify-items: start; gap: .25rem; min-width: 0; }
-.party-cell-content strong { max-width: 100%; color: #172b4d; line-height: 1.35; overflow-wrap: anywhere; }
+.party-cell-content strong { max-width: 100%; color: var(--ink); line-height: 1.35; overflow-wrap: anywhere; }
 .party-cell-content small { margin-top: 0; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.3; }
-.party-cell-content .correspondence-kind { margin-bottom: .05rem; }
-.action-cell { width: 30%; min-width: 18rem; }
-.action-cell .record-actions { display: grid; align-items: start; gap: .45rem; }
-.primary-action-group, .secondary-action-group { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; width: 100%; }
-.secondary-action-group { border-top: 1px solid #edf1f7; padding-top: .45rem; }
-.primary-row-action, .secondary-row-action { text-align: left; }
-.primary-action-group > .row-action-button, .primary-action-group > .primary-button, .primary-action-group > .secondary-button { flex: 1 1 10rem; text-align: center; }
-.primary-action-group > .approval-note-input { flex: 1 1 100%; width: 100%; }
-.secondary-action-group > .row-action-button { flex: 1 1 10rem; text-align: center; }
-.row-action-link { text-underline-offset: 2px; }
-.pdf-action-link { flex: 1 1 10rem; text-align: center; }
-.pdf-action-link > span { display: inline-grid; min-width: 1.75rem; min-height: 1.25rem; place-items: center; border-radius: .25rem; background: #e11d48; color: white; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .02em; line-height: 1; }
-.status-update-form { margin-top: .05rem; border-top: 1px solid #edf1f7; padding-top: .55rem; }
+.col-subject { width: 27%; }
+.subject-title { display: block; color: var(--ink); line-height: 1.38; }
+.subject-summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: .25rem 0 0; color: var(--ink-soft); font-size: var(--type-meta); line-height: 1.4; }
+.subject-disposition { margin: .35rem 0 0; padding: .28rem .55rem; border-left: 2px solid var(--gold); border-radius: 4px; background: color-mix(in srgb, var(--gold-soft) 55%, var(--surface)); color: var(--ink); font-size: 12px; line-height: 1.4; }
+.subject-disposition span { font-weight: var(--weight-bold); color: var(--gold); }
+.col-status { width: 13%; }
+.action-cell { width: 20%; min-width: 12rem; }
+.action-stack { display: flex; flex-direction: column; gap: .45rem; }
+.disposition-inline-input { width: 100%; min-height: 34px !important; padding: .35rem .65rem; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12.5px; }
+.action-bar { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; }
+.primary-action-group { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; min-width: 0; }
+.utility-icon-group { display: inline-flex; align-items: center; gap: .35rem; flex-shrink: 0; }
+.action-muted-note { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-medium); }
+.approval-btn-pair { display: flex; gap: .35rem; width: 100%; }
+.approval-note-input { width: 100%; min-height: 2.5rem; border: 1px solid var(--line-strong); border-radius: .6rem; padding: .45rem .65rem; color: var(--ink); font: inherit; font-size: var(--type-meta); }
+.table-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); }
+.table-count { color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-semibold); }
+.pagination { display: flex; align-items: center; gap: .5rem; margin: 0; color: var(--ink-soft); font-size: var(--type-sm); }
 .correspondence-list { display: grid; gap: .85rem; padding-top: 1rem; }
-.correspondence-card { border: 1px solid #dbe3ef; border-radius: .85rem; padding: 1rem; }
+.correspondence-card { border: 1px solid var(--line); border-radius: .85rem; padding: 1rem; }
 .correspondence-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
-.correspondence-card h3 { margin: .3rem 0 .2rem; color: #172b4d; font-size: 1.05rem; font-weight: var(--weight-bold); }
+.correspondence-card h3 { margin: .3rem 0 .2rem; color: var(--ink); font-size: 1.05rem; font-weight: var(--weight-bold); }
 .correspondence-card-heading p, .muted-note, .archived-note { margin: 0; color: var(--ink-soft); font-size: var(--type-sm); }
 .correspondence-kind, .status-chip { display: inline-flex; border-radius: 999px; padding: .2rem .55rem; font-size: var(--type-meta); font-weight: var(--weight-semibold); }
-.kind-incoming { background: #eaf0ff; color: #3157a4; }
-.kind-outgoing { background: #f1f5f9; color: #475569; }
-.status-chip { background: #ecfdf3; color: #067647; white-space: nowrap; }
-.status-chip.status-received { background: #eef4ff; color: #3157a4; }
-.status-chip.status-disposition { background: #fff7e6; color: #a15c00; }
-.status-chip.status-done, .status-chip.status-archived { background: #ecfdf3; color: #067647; }
-.status-chip.status-draft, .status-chip.status-approved { background: #eef4ff; color: #3157a4; }
-.status-chip.status-pending_approval, .status-chip.status-awaiting_signature, .status-chip.status-signature_pending { background: #fff7e6; color: #a15c00; }
-.status-chip.status-signature_failed { background: #fef3f2; color: #b42318; }
-.signature-verified-note { color: #087a55 !important; font-weight: var(--weight-bold); }
-.signature-error-note { color: #b42318 !important; }
-.status-chip.status-issued, .status-chip.status-sent { background: #ecfdf3; color: #067647; }
+.kind-incoming { background: var(--primary-soft); color: var(--primary-strong); }
+.kind-outgoing { background: var(--surface-strong); color: var(--ink-soft); }
+.status-chip { background: var(--green-soft); color: var(--green); white-space: nowrap; }
+.status-chip.status-received { background: var(--primary-soft); color: var(--primary-strong); }
+.status-chip.status-disposition { background: var(--gold-soft); color: var(--gold); }
+.status-chip.status-done, .status-chip.status-archived { background: var(--green-soft); color: var(--green); }
+.status-chip.status-draft, .status-chip.status-approved { background: var(--primary-soft); color: var(--primary-strong); }
+.status-chip.status-pending_approval, .status-chip.status-awaiting_signature, .status-chip.status-signature_pending { background: var(--gold-soft); color: var(--gold); }
+.status-chip.status-signature_failed { background: var(--red-soft); color: var(--red); }
+.signature-verified-note { color: var(--green) !important; font-weight: var(--weight-bold); }
+.signature-error-note { color: var(--red) !important; }
+.status-chip.status-issued, .status-chip.status-sent { background: var(--green-soft); color: var(--green); }
 .correspondence-meta { display: flex; flex-wrap: wrap; gap: .65rem 1.5rem; margin: .9rem 0; }
 .correspondence-meta div { display: grid; gap: .1rem; }
 .correspondence-meta dt { color: var(--ink-soft); font-size: var(--type-meta); }
-.correspondence-meta dd { margin: 0; color: #334155; font-size: var(--type-sm); font-weight: var(--weight-semibold); }
-.correspondence-summary-text, .correspondence-disposition { margin: .5rem 0; color: #475569; font-size: var(--type-sm); white-space: pre-wrap; }
-.correspondence-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid #e2e8f0; padding-top: .8rem; }
-.status-update-form { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: .45rem; }
-.next-step-label { flex: 1 1 100%; color: var(--primary); font-size: var(--type-meta); font-weight: var(--weight-bold); }
-.status-update-form select { width: auto; min-width: 9rem; }
-.status-update-form input { width: min(22rem, 100%); flex: 1 1 14rem; }
+.correspondence-meta dd { margin: 0; color: var(--ink); font-size: var(--type-sm); font-weight: var(--weight-semibold); }
+.correspondence-summary-text, .correspondence-disposition { margin: .5rem 0; color: var(--ink-soft); font-size: var(--type-sm); white-space: pre-wrap; }
+.correspondence-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 .row-action-button { text-align: center; }
 .empty-state { padding: 1.25rem 0; color: var(--ink-soft); }
-@media (min-width: 761px) { .hero-card > div:first-child { flex: 1 1 18rem; } }
 @media (max-width: 1100px) { .queue-grid { grid-template-columns: repeat(3, 1fr); } .template-choices { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 800px) { .correspondence-hero-metrics, .archive-hero-summary { width: 100%; } .dashboard-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .outgoing-hero-summary { width: 100%; } .queue-grid { grid-template-columns: repeat(2, 1fr); } .stepper small { display: none; } .wizard-grid, .signature-options, .review-card, .signatory-form { grid-template-columns: 1fr; } .wizard-grid .wide, .signatory-form .wide { grid-column: auto; } .correspondence-form { grid-template-columns: 1fr; } .correspondence-wide { grid-column: auto; } .correspondence-footer { align-items: stretch; flex-direction: column; } .status-update-form { justify-content: stretch; } .status-update-form select, .status-update-form input, .status-update-form button { width: 100%; } .correspondence-card-heading { align-items: start; } .correspondence-table { min-width: 0; } .correspondence-table thead { display: none; } .correspondence-table tr { display: grid; border-bottom: 1px solid #dbe3ef; padding: .75rem; } .correspondence-table tr:last-child { border-bottom: 0; } .correspondence-table td { display: grid; grid-template-columns: 7.5rem minmax(0,1fr); width: 100% !important; border: 0; padding: .35rem 0; } .correspondence-table td::before { color: var(--ink-soft); content: attr(data-label); font-size: var(--type-meta); } .action-cell { min-width: 0; } .action-cell .record-actions, .action-cell > .status-update-form, .action-cell > .field-error, .action-cell > .archived-note { grid-column: 1 / -1; } .action-cell .record-actions { padding-top: .35rem; } }
-@media (max-width: 800px) { .incoming-flow-list, .outgoing-flow-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incoming-hero-summary { width: 100%; } }
-@media (max-width: 480px) { .correspondence-hero-metrics > div, .archive-hero-summary > div { min-height: 78px; padding: .75rem; } .correspondence-hero-metrics span, .correspondence-hero-metrics small { font-size: var(--type-meta); } .correspondence-hero-metrics strong { font-size: 1.35rem; } .dashboard-filter-bar { grid-template-columns: 1fr; } .outgoing-hero-summary, .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .incoming-flow-list, .outgoing-flow-list { grid-template-columns: 1fr; } }
-/* Shared card rhythm: workflow and form surfaces use the application tokens. */
-.incoming-flow-panel, .outgoing-flow-panel, .correspondence-panel { border-radius: var(--card-radius); background: var(--surface); border-color: var(--line); }
-.queue-grid button { border-color: var(--line); border-radius: var(--card-radius-compact); background: var(--surface); color: var(--ink); }
-.queue-grid button:hover, .queue-grid button.is-selected { border-color: color-mix(in srgb, var(--primary) 42%, var(--line)); box-shadow: var(--card-shadow); }
-.queue-grid button.is-selected { background: var(--primary-soft); }
+@media (max-width: 800px) { .correspondence-heading { flex-direction: column; align-items: stretch; } .workflow-pipelines { grid-template-columns: 1fr; } .dashboard-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .queue-grid { grid-template-columns: repeat(2, 1fr); } .stepper small { display: none; } .wizard-grid, .signature-options, .review-card, .signatory-form { grid-template-columns: 1fr; } .wizard-grid .wide, .signatory-form .wide { grid-column: auto; } .correspondence-form { grid-template-columns: 1fr; } .correspondence-wide { grid-column: auto; } .correspondence-footer { align-items: stretch; flex-direction: column; } .status-update-form { justify-content: stretch; } .status-update-form select, .status-update-form input, .status-update-form button { width: 100%; } .correspondence-card-heading { align-items: start; } .correspondence-table { min-width: 0; } .correspondence-table thead { display: none; } .correspondence-table tr { display: grid; border-bottom: 1px solid var(--line); padding: .75rem; } .correspondence-table tr:last-child { border-bottom: 0; } .correspondence-table td { display: grid; grid-template-columns: 7.5rem minmax(0,1fr); width: 100% !important; border: 0; padding: .35rem 0; } .correspondence-table td::before { color: var(--ink-soft); content: attr(data-label); font-size: var(--type-meta); } .action-cell { min-width: 0; } .action-cell .record-actions, .action-cell > .status-update-form, .action-cell > .field-error, .action-cell > .archived-note { grid-column: 1 / -1; } .action-cell .record-actions { padding-top: .35rem; } .incoming-flow-list, .outgoing-flow-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .dashboard-filter-bar { grid-template-columns: 1fr; } .incoming-flow-list, .outgoing-flow-list { grid-template-columns: 1fr; } .correspondence-page .workflow-actions { align-items: stretch; flex-direction: column; width: 100%; } .correspondence-page .workflow-actions > * { width: 100%; } }
 .incoming-review-note, .tte-readiness-panel { border-color: color-mix(in srgb, var(--primary) 25%, var(--line)); background: var(--primary-soft); }
-.signatory-form, .review-card, .dashboard-filter-bar { border-color: var(--line); background: var(--surface-subtle); }
+.signatory-form, .review-card { border-color: var(--line); background: var(--surface-subtle); }
 .wizard-error { border-radius: var(--card-radius-compact); }
-:global(html[data-theme='dark'] .incoming-page) ,
-:global(html[data-theme='dark'] .outgoing-page) ,
-:global(html[data-theme='dark'] .archive-page) { color: var(--ink); }
-:global(html[data-theme='dark'] .incoming-page .incoming-flow-panel) ,
-:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-panel) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-panel) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-panel) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-panel) ,
-:global(html[data-theme='dark'] .incoming-page .queue-grid button) ,
-:global(html[data-theme='dark'] .outgoing-page .queue-grid button) ,
-:global(html[data-theme='dark'] .archive-page .queue-grid button) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-card) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-card) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-card) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink); }
-:global(html[data-theme='dark'] .incoming-page .queue-grid button.is-selected) ,
-:global(html[data-theme='dark'] .outgoing-page .queue-grid button.is-selected) ,
-:global(html[data-theme='dark'] .archive-page .queue-grid button.is-selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark'] .incoming-page .archive-hero-summary > div) ,
-:global(html[data-theme='dark'] .outgoing-page .outgoing-hero-summary > div) ,
-:global(html[data-theme='dark'] .archive-page .archive-hero-summary > div) { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .incoming-page .incoming-hero-summary) { background: linear-gradient(145deg, color-mix(in srgb, var(--primary) 45%, var(--surface)), var(--primary-soft)) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark'] .incoming-page .incoming-flow-list li) ,
-:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list li) { border-top-color: var(--line) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .incoming-flow-list li > span) ,
-:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list li > span) { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .incoming-flow-list strong) ,
-:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list strong) ,
-:global(html[data-theme='dark'] .incoming-page .queue-grid strong) ,
-:global(html[data-theme='dark'] .outgoing-page .queue-grid strong) ,
-:global(html[data-theme='dark'] .archive-page .queue-grid strong) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-card h3) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-card h3) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-card h3) { color: var(--ink) !important; }
-:global(html[data-theme='dark'] .incoming-page .incoming-flow-list small) ,
-:global(html[data-theme='dark'] .outgoing-page .outgoing-flow-list small) ,
-:global(html[data-theme='dark'] .incoming-page .queue-grid span) ,
-:global(html[data-theme='dark'] .incoming-page .queue-grid small) ,
-:global(html[data-theme='dark'] .outgoing-page .queue-grid span) ,
-:global(html[data-theme='dark'] .outgoing-page .queue-grid small) ,
-:global(html[data-theme='dark'] .archive-page .queue-grid span) ,
-:global(html[data-theme='dark'] .archive-page .queue-grid small) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-card-heading p) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-card-heading p) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-card-heading p) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-meta dt) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-meta dt) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-meta dt) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-card p) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-card p) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-card p) { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .wizard-heading h2) ,
-:global(html[data-theme='dark'] .outgoing-page .wizard-heading h2) ,
-:global(html[data-theme='dark'] .incoming-page .review-card) ,
-:global(html[data-theme='dark'] .outgoing-page .review-card) ,
-:global(html[data-theme='dark'] .incoming-page .signatory-form) ,
-:global(html[data-theme='dark'] .outgoing-page .signatory-form) { color: var(--ink); }
-:global(html[data-theme='dark'] .incoming-page .wizard-grid input) ,
-:global(html[data-theme='dark'] .incoming-page .wizard-grid select) ,
-:global(html[data-theme='dark'] .incoming-page .wizard-grid textarea) ,
-:global(html[data-theme='dark'] .outgoing-page .wizard-grid input) ,
-:global(html[data-theme='dark'] .outgoing-page .wizard-grid select) ,
-:global(html[data-theme='dark'] .outgoing-page .wizard-grid textarea) ,
-:global(html[data-theme='dark'] .incoming-page .approval-note-input) ,
-:global(html[data-theme='dark'] .outgoing-page .approval-note-input) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-form input) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-form select) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-form textarea) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-form input) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-form select) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-form textarea) ,
-:global(html[data-theme='dark'] .incoming-page .status-update-form input) ,
-:global(html[data-theme='dark'] .incoming-page .status-update-form select) ,
-:global(html[data-theme='dark'] .outgoing-page .status-update-form input) ,
-:global(html[data-theme='dark'] .outgoing-page .status-update-form select) ,
-:global(html[data-theme='dark'] .dashboard-filter-bar input) ,
-:global(html[data-theme='dark'] .dashboard-filter-bar select) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark'] .incoming-page .signatory-form) ,
-:global(html[data-theme='dark'] .outgoing-page .signatory-form) ,
-:global(html[data-theme='dark'] .incoming-page .review-card) ,
-:global(html[data-theme='dark'] .outgoing-page .review-card) ,
-:global(html[data-theme='dark'] .dashboard-filter-bar) { background: var(--surface-subtle) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .incoming-page .template-choices label) ,
-:global(html[data-theme='dark'] .outgoing-page .template-choices label) ,
-:global(html[data-theme='dark'] .incoming-page .signature-options label) ,
-:global(html[data-theme='dark'] .outgoing-page .signature-options label) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark'] .incoming-page .template-choices label.selected) ,
-:global(html[data-theme='dark'] .outgoing-page .template-choices label.selected) ,
-:global(html[data-theme='dark'] .incoming-page .signature-options label.selected) ,
-:global(html[data-theme='dark'] .outgoing-page .signature-options label.selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark'] .incoming-page .stepper li:not(:last-child)::after) ,
-:global(html[data-theme='dark'] .outgoing-page .stepper li:not(:last-child)::after) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-footer) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-footer) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-footer) ,
-:global(html[data-theme='dark'] .incoming-page .correspondence-table tr) { background: transparent; border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .incoming-page .stepper span) ,
-:global(html[data-theme='dark'] .outgoing-page .stepper span) { background: var(--surface) !important; border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .incoming-page .incoming-review-note) ,
-:global(html[data-theme='dark'] .outgoing-page .incoming-review-note) ,
-:global(html[data-theme='dark'] .incoming-page .tte-readiness-panel) ,
-:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel) { background: var(--primary-soft) !important; border-color: var(--line) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .tte-readiness-panel.is-ready) ,
-:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel.is-ready) { background: var(--green-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .tte-readiness-panel.is-blocked) ,
-:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel.is-blocked) { background: var(--gold-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .warning-note) ,
-:global(html[data-theme='dark'] .outgoing-page .warning-note) ,
-:global(html[data-theme='dark'] .incoming-page .wizard-error) ,
-:global(html[data-theme='dark'] .outgoing-page .wizard-error) { background: var(--red-soft) !important; border-color: var(--delete-line) !important; color: var(--red) !important; }
-:global(html[data-theme='dark'] .incoming-page .correspondence-table) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-table) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-table) { border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .incoming-page .correspondence-table th) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-table th) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-table th) { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .incoming-page .correspondence-table td) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-table td) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-table td) ,
-:global(html[data-theme='dark'] .incoming-page .party-cell-content strong) ,
-:global(html[data-theme='dark'] .outgoing-page .party-cell-content strong) ,
-:global(html[data-theme='dark'] .archive-page .party-cell-content strong) { color: var(--ink) !important; }
-:global(html[data-theme='dark'] .incoming-page .correspondence-table td > small) ,
-:global(html[data-theme='dark'] .outgoing-page .correspondence-table td > small) ,
-:global(html[data-theme='dark'] .archive-page .correspondence-table td > small) ,
-:global(html[data-theme='dark'] .incoming-page .party-cell-content small) ,
-:global(html[data-theme='dark'] .outgoing-page .party-cell-content small) ,
-:global(html[data-theme='dark'] .archive-page .party-cell-content small) { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .kind-incoming) ,
-:global(html[data-theme='dark'] .status-chip.status-received) ,
-:global(html[data-theme='dark'] .status-chip.status-draft) ,
-:global(html[data-theme='dark'] .status-chip.status-approved) { background: var(--primary-soft) !important; color: var(--primary) !important; }
-:global(html[data-theme='dark'] .kind-outgoing) { background: var(--surface-strong) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .status-chip.status-disposition) ,
-:global(html[data-theme='dark'] .status-chip.status-pending_approval) ,
-:global(html[data-theme='dark'] .status-chip.status-awaiting_signature) ,
-:global(html[data-theme='dark'] .status-chip.status-signature_pending) { background: var(--gold-soft) !important; color: var(--gold) !important; }
-:global(html[data-theme='dark'] .status-chip.status-done) ,
-:global(html[data-theme='dark'] .status-chip.status-archived) ,
-:global(html[data-theme='dark'] .status-chip.status-issued) ,
-:global(html[data-theme='dark'] .status-chip.status-sent) { background: var(--green-soft) !important; color: var(--green) !important; }
-:global(html[data-theme='dark'] .status-chip.status-signature_failed) { background: var(--red-soft) !important; color: var(--red) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-tabs) { border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-tab) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-tab.is-active) { background: var(--primary-soft) !important; border-color: var(--primary) !important; color: var(--primary) !important; }
-:global(html[data-theme='dark'] .correspondence-page .queue-grid button) { background: var(--surface) !important; border-color: var(--line) !important; color: var(--ink) !important; }
-:global(html[data-theme='dark'] .correspondence-page .queue-grid button span) ,
-:global(html[data-theme='dark'] .correspondence-page .queue-grid button small) { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .correspondence-page .queue-grid button strong) { color: var(--ink) !important; }
-:global(html[data-theme='dark'] .correspondence-page .table-scroll) { border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table) ,
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table th) ,
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table td) { border-color: var(--line) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table th) { background: var(--surface-subtle) !important; color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table td) ,
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table td strong) ,
-:global(html[data-theme='dark'] .correspondence-page .party-cell-content strong) { color: var(--ink) !important; }
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table td > small) ,
-:global(html[data-theme='dark'] .correspondence-page .party-cell-content small) ,
-:global(html[data-theme='dark'] .correspondence-page .correspondence-table td::before) { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .correspondence-page .search-label) ,
-:global(html[data-theme='dark'] .correspondence-page .dashboard-filter-bar label) ,
-:global(html[data-theme='dark'] .correspondence-page .workflow-help) ,
-:global(html[data-theme='dark'] .correspondence-page .pagination) ,
-:global(html[data-theme='dark'] .correspondence-page .empty-state) { color: var(--ink-soft) !important; }
-:global(html[data-theme='dark'] .correspondence-page .field-hint) ,
-:global(html[data-theme='dark'] .correspondence-page .approval-option small) { color: var(--ink-faint) !important; }
-:global(html[data-theme='dark'] .correspondence-page .secondary-action-group) ,
-:global(html[data-theme='dark'] .correspondence-page .status-update-form) ,
-:global(html[data-theme='dark'] .correspondence-page .approval-actions) ,
-:global(html[data-theme='dark'] .correspondence-page .correspondence-footer) { border-color: var(--line) !important; }
-.correspondence-page .hero-card, .correspondence-page .panel, .correspondence-page .incoming-flow-panel, .correspondence-page .outgoing-flow-panel { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 14px; box-shadow: none; }
-.correspondence-page .correspondence-hero-metrics > div, .correspondence-page .incoming-hero-summary, .correspondence-page .outgoing-hero-summary > div, .correspondence-page .archive-hero-summary > div { color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: none; }
-.correspondence-page .correspondence-hero-metrics > div:first-child, .correspondence-page .incoming-hero-summary { border-top: 3px solid var(--primary); }
-.correspondence-page .correspondence-hero-metrics > div:nth-child(2) { border-top: 3px solid var(--green); }
-.correspondence-page .correspondence-hero-metrics > div:nth-child(3) { border-top: 3px solid var(--gold); }
-.correspondence-page .correspondence-hero-metrics strong, .correspondence-page .incoming-hero-summary strong, .correspondence-page .outgoing-hero-summary strong, .correspondence-page .archive-hero-summary strong { color: var(--ink); }
-.correspondence-page .correspondence-hero-metrics span, .correspondence-page .correspondence-hero-metrics small, .correspondence-page .incoming-hero-summary span, .correspondence-page .incoming-hero-summary small, .correspondence-page .outgoing-hero-summary span, .correspondence-page .archive-hero-summary span, .correspondence-page .archive-hero-summary small { color: var(--ink-soft); }
-.correspondence-page .queue-grid button { background: var(--surface); border-color: var(--line); border-radius: 10px; box-shadow: none; }
-.correspondence-page .queue-grid button.is-selected { background: var(--primary-soft); border-color: var(--primary); }
-.correspondence-page .dashboard-filter-bar, .correspondence-page .correspondence-card { color: var(--ink); background: var(--surface); border-color: var(--line); border-radius: 12px; }
-.correspondence-page .wizard-grid input, .correspondence-page .wizard-grid select, .correspondence-page .wizard-grid textarea, .correspondence-page .dashboard-filter-bar input, .correspondence-page .dashboard-filter-bar select, .correspondence-page .search-label input, .correspondence-page .status-update-form input, .correspondence-page .status-update-form select { min-height: 44px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); border-radius: 10px; }
+.correspondence-page .wizard-grid input, .correspondence-page .wizard-grid select, .correspondence-page .wizard-grid textarea, .correspondence-page .dashboard-filter-bar input, .correspondence-page .dashboard-filter-bar select, .correspondence-page .status-update-form input, .correspondence-page .status-update-form select { min-height: 42px; color: var(--ink); background: var(--surface); border-color: var(--line-strong); border-radius: 10px; }
 .correspondence-page button:focus-visible, .correspondence-page input:focus-visible, .correspondence-page select:focus-visible, .correspondence-page textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
-@media (max-width: 600px) { .correspondence-page .correspondence-hero-metrics, .correspondence-page .outgoing-hero-summary, .correspondence-page .archive-hero-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .correspondence-page .incoming-hero-summary { flex-basis: 100%; } .correspondence-page .workflow-actions { align-items: stretch; flex-direction: column; } .correspondence-page .workflow-actions > * { width: 100%; } }
-:global(html[data-theme='dark'] .correspondence-page .queue-grid button.is-selected) { background: var(--primary-soft) !important; border-color: var(--primary) !important; }
-:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel h2),
-:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel p),
-:global(html[data-theme='dark'] .outgoing-page .tte-readiness-panel small) { color: #fff !important; }
+.correspondence-table { table-layout: fixed; }
+.col-subject { width: 32%; }
+.col-status { width: 13%; }
+.doc-number { overflow-wrap: anywhere; }
+.subject-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.subject-summary { -webkit-line-clamp: 1; }
+.subject-disposition { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.approval-details { width: 100%; }
+.approval-details summary { cursor: pointer; color: var(--primary-strong); font-weight: var(--weight-semibold); padding: .35rem 0; }
+.approval-details[open] summary { margin-bottom: .35rem; }
+.approval-details .approval-btn-pair { margin-top: .35rem; }
 </style>

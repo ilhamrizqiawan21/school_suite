@@ -23,6 +23,7 @@ class FacilitiesController extends Controller
         $schoolId = (int) $request->user()->school_id;
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', '');
+        $loanStatus = (string) $request->query('loan_status', '');
 
         $assets = FacilityAsset::query()
             ->where('school_id', $schoolId)
@@ -38,6 +39,8 @@ class FacilitiesController extends Controller
         $loans = FacilityLoan::query()
             ->where('school_id', $schoolId)
             ->with('asset:id,inventory_code,name')
+            ->when($loanStatus === 'active', fn ($query) => $query->whereNull('returned_at'))
+            ->when($loanStatus === 'returned', fn ($query) => $query->whereNotNull('returned_at'))
             ->orderByRaw('CASE WHEN returned_at IS NULL THEN 0 ELSE 1 END')
             ->latest('id')
             ->paginate(10, ['*'], 'loan_page')->withQueryString();
@@ -48,7 +51,7 @@ class FacilitiesController extends Controller
             'asset_pages' => ['current' => $assets->currentPage(), 'last' => $assets->lastPage(), 'total' => $assets->total(), 'previous' => $assets->previousPageUrl(), 'next' => $assets->nextPageUrl()],
             'loan_pages' => ['current' => $loans->currentPage(), 'last' => $loans->lastPage(), 'total' => $loans->total(), 'previous' => $loans->previousPageUrl(), 'next' => $loans->nextPageUrl()],
             'available_assets' => FacilityAsset::query()->where('school_id', $schoolId)->where('status', 'available')->where('condition', '!=', 'damaged')->whereDoesntHave('activeLoan')->orderBy('name')->get(['id', 'inventory_code', 'name']),
-            'filters' => ['search' => $search, 'status' => $status],
+            'filters' => ['search' => $search, 'status' => $status, 'loan_status' => $loanStatus],
             'summary' => [
                 'total' => FacilityAsset::where('school_id', $schoolId)->count(),
                 'available' => FacilityAsset::where('school_id', $schoolId)->where('status', 'available')->count(),

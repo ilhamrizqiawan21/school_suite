@@ -6,8 +6,10 @@ namespace App\Modules\Assessment\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
+use App\Modules\Assessment\Application\Services\AssessmentAccessService;
 use App\Modules\Assessment\Application\Services\ReportGeneratorService;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
+use App\Shared\Exports\SpreadsheetStyler;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +24,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportingController extends Controller
 {
-    public function __construct(private readonly AcademicQueryService $academicQuery, private readonly ReportGeneratorService $reportGenerator) {}
+    public function __construct(
+        private readonly AcademicQueryService $academicQuery,
+        private readonly ReportGeneratorService $reportGenerator,
+        private readonly AssessmentAccessService $access,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -56,27 +62,165 @@ class ReportingController extends Controller
     {
         abort_unless((int) $report->school_id === (int) $request->user()->school_id, 404);
         abort_unless($request->user()->can('viewReport', $report), 403);
-        $data = $this->reportGenerator->formatReportView($report);
+        $requestedMode = in_array($request->query('report_mode'), ['sas', 'sts'], true)
+            ? (string) $request->query('report_mode')
+            : null;
+        $data = $this->reportGenerator->formatReportView($report, $requestedMode);
+        $identityOnly = $request->boolean('identity_only');
+        $gradesOnly = ! $identityOnly && $request->boolean('grades_only');
+        $includeCover = ($gradesOnly || $identityOnly)
+            ? false
+            : ($request->has('cover') ? $request->boolean('cover') : (($data['report_mode'] ?? 'sas') === 'sas'));
+        $modeSlug = ($data['report_mode'] ?? 'sas') === 'sts' ? 'sts-' : '';
+        $scopeSlug = $identityOnly ? 'identitas-' : ($gradesOnly ? 'nilai-' : '');
+        $filename = 'rapor-'.$scopeSlug.$modeSlug.str($data['student']['name'])->slug().'-'.$report->id.'.pdf';
+        $pdf = Pdf::loadView('reports.report-card', [
+            'report' => $data,
+            'reports' => [$data],
+            'includeCover' => $includeCover,
+            'gradesOnly' => $gradesOnly,
+            'identityOnly' => $identityOnly,
+        ])->setPaper('a4');
 
-        return Pdf::loadView('reports.report-card', ['report' => $data])->setPaper('a4')->download('rapor-'.str($data['student']['name'])->slug().'-'.$report->id.'.pdf');
+        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
+    }
+
+    public function reportBatchPdf(Request $request): HttpResponse
+    {
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom']), 403);
+        $schoolId = (int) $request->user()->school_id;
+
+        $validated = $request->validate([
+            'term_id' => ['nullable', 'integer', 'exists:terms,id'],
+            'class_group_id' => ['required', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)],
+            'report_mode' => ['nullable', 'in:sas,sts'],
+            'student_ids' => ['nullable'],
+            'cover' => ['nullable', 'boolean'],
+            'grades_only' => ['nullable', 'boolean'],
+            'identity_only' => ['nullable', 'boolean'],
+        ]);
+
+        $term = ! empty($validated['term_id'])
+            ? $this->academicQuery->getTermByIdForSchool($schoolId, (int) $validated['term_id'])
+            : $this->academicQuery->getActiveTerm($schoolId);
+        abort_unless($term, 422);
+
+        $classGroupId = (int) $validated['class_group_id'];
+        abort_unless($this->access->canViewClass($request->user(), (int) $term->id, $classGroupId), 403);
+        $class = $this->academicQuery->getClassGroupById($classGroupId);
+        abort_unless($class && (int) $class->academic_year_id === (int) $term->academic_year_id, 422);
+
+        $studentIds = [];
+        if (! empty($validated['student_ids'])) {
+            $rawIds = is_array($validated['student_ids'])
+                ? $validated['student_ids']
+                : explode(',', (string) $validated['student_ids']);
+            $studentIds = array_values(array_filter(array_map('intval', $rawIds), fn (int $id) => $id > 0));
+        }
+
+        $query = ReportSnapshot::where('school_id', $schoolId)
+            ->where('term_id', $term->id)
+            ->where('class_group_id', $classGroupId);
+
+        if ($studentIds !== []) {
+            $query->whereIn('student_id', $studentIds);
+        }
+
+        $snapshots = $query->limit(60)->get();
+
+        abort_if($snapshots->isEmpty(), 404, 'Belum ada rapor untuk rombel ini.');
+
+        $reportMode = in_array($validated['report_mode'] ?? null, ['sas', 'sts'], true)
+            ? (string) $validated['report_mode']
+            : null;
+        $reports = $snapshots->map(fn (ReportSnapshot $snap) => $this->reportGenerator->formatReportView($snap, $reportMode))->all();
+        $effectiveMode = $reportMode ?? ($reports[0]['report_mode'] ?? 'sas');
+        $identityOnly = $request->boolean('identity_only');
+        $gradesOnly = ! $identityOnly && $request->boolean('grades_only');
+        $includeCover = ($gradesOnly || $identityOnly)
+            ? false
+            : ($request->has('cover') ? $request->boolean('cover') : ($effectiveMode === 'sas'));
+        $modeSlug = $effectiveMode === 'sts' ? 'sts-' : '';
+        $scopeSlug = $identityOnly ? 'identitas-' : ($gradesOnly ? 'nilai-' : '');
+        $filename = 'rapor-'.$scopeSlug.$modeSlug.'kelas-'.str($class->name)->slug().'-'.now()->format('Ymd').'.pdf';
+        $pdf = Pdf::loadView('reports.report-card', [
+            'report' => $reports[0],
+            'reports' => $reports,
+            'includeCover' => $includeCover,
+            'gradesOnly' => $gradesOnly,
+            'identityOnly' => $identityOnly,
+        ])->setPaper('a4');
+
+        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
+    }
+
+    public function ledgerExcel(Request $request): StreamedResponse
+    {
+        $context = $this->validatedLedgerContext($request);
+
+        return $this->streamLedgerSpreadsheet($context);
+    }
+
+    public function ledgerPdf(Request $request): HttpResponse
+    {
+        $context = $this->validatedLedgerContext($request);
+        $ledger = $this->reportGenerator->exportClassLedger(
+            $context['school_id'],
+            (int) $context['term']->id,
+            (int) $context['class']->id,
+            $context['report_mode']
+        );
+
+        $modeSlug = $context['report_mode'] === 'sts' ? 'sts-' : '';
+        $filename = 'ledger-'.$modeSlug.$context['slug'].'-'.now()->format('Ymd').'.pdf';
+        $pdf = Pdf::loadView('reports.class-ledger', [
+            'ledger' => $ledger,
+        ])->setPaper('a4', 'landscape');
+
+        return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
     }
 
     public function scores(Request $request): StreamedResponse
     {
         $context = $this->validatedContext($request);
-        $ledger = $this->reportGenerator->exportClassLedger($context['school_id'], $context['term']->id, $context['class']->id);
-        $headers = ['NIS', 'Nama', ...array_map(fn ($s) => $s['name'], $ledger['subjects']), 'Rata-rata', 'Status Rapor'];
+
+        return $this->streamLedgerSpreadsheet($context, 'nilai-'.$context['slug'].'.xlsx');
+    }
+
+    private function streamLedgerSpreadsheet(array $context, ?string $customFilename = null): StreamedResponse
+    {
+        $reportMode = $context['report_mode'] ?? 'sas';
+        $ledger = $this->reportGenerator->exportClassLedger(
+            $context['school_id'],
+            (int) $context['term']->id,
+            (int) $context['class']->id,
+            $reportMode
+        );
+        $headers = [
+            'No',
+            'NIS',
+            'Nama',
+            ...array_map(fn ($s) => $s['name'], $ledger['subjects']),
+            'Jumlah Nilai',
+            'Rata-rata',
+            'Peringkat',
+            'Sakit (S)',
+            'Izin (I)',
+            'Alpa (A)',
+            'Status Rapor',
+        ];
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Nilai '.$context['class']->name);
+        $sheet->setTitle(substr('Ledger '.$context['class']->name, 0, 31));
         $sheet->fromArray($headers, null, 'A1');
         $sheet->getStyle('A1:'.$sheet->getHighestColumn().'1')->getFont()->setBold(true);
 
         foreach ($ledger['students'] as $index => $student) {
             $row = $index + 2;
-            $sheet->setCellValueExplicit('A'.$row, (string) $student['nis'], DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit('B'.$row, (string) $student['name'], DataType::TYPE_STRING);
-            $column = 3;
+            $sheet->setCellValue('A'.$row, $index + 1);
+            $sheet->setCellValueExplicit('B'.$row, (string) $student['nis'], DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit('C'.$row, (string) $student['name'], DataType::TYPE_STRING);
+            $column = 4;
             foreach ($ledger['subjects'] as $subject) {
                 $score = $student['grades'][$subject['id']] ?? null;
                 if ($score !== null) {
@@ -84,18 +228,24 @@ class ReportingController extends Controller
                 }
                 $column++;
             }
-            $sheet->setCellValue([$column++, $row], (float) $student['average_score']);
+            $sheet->setCellValue([$column++, $row], (float) ($student['total_score'] ?? 0));
+            $sheet->setCellValue([$column++, $row], (float) ($student['average_score'] ?? 0));
+            $sheet->setCellValue([$column++, $row], $student['rank'] ?? '-');
+            $sheet->setCellValue([$column++, $row], (int) ($student['attendance']['sick'] ?? 0));
+            $sheet->setCellValue([$column++, $row], (int) ($student['attendance']['permitted'] ?? 0));
+            $sheet->setCellValue([$column++, $row], (int) ($student['attendance']['absent'] ?? 0));
             $sheet->setCellValueExplicit([$column, $row], (string) $student['report_status'], DataType::TYPE_STRING);
         }
 
-        foreach (range(1, count($headers)) as $column) {
-            $sheet->getColumnDimensionByColumn($column)->setAutoSize(true);
-        }
+        SpreadsheetStyler::styleWorksheet($sheet, 'D2');
+
+        $modeSlug = $reportMode === 'sts' ? 'sts-' : '';
+        $filename = $customFilename ?? ('ledger-nilai-'.$modeSlug.$context['slug'].'.xlsx');
 
         return response()->streamDownload(function () use ($spreadsheet): void {
             (new Xlsx($spreadsheet))->save('php://output');
             $spreadsheet->disconnectWorksheets();
-        }, 'nilai-'.$context['slug'].'.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+        }, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
     }
 
     public function attendance(Request $request): StreamedResponse
@@ -122,17 +272,57 @@ class ReportingController extends Controller
         return $this->csv('sikap-'.$context['slug'].'.csv', ['NIS', 'Nama', 'Predikat Spiritual', 'Deskripsi Spiritual', 'Predikat Sosial', 'Deskripsi Sosial'], $rows);
     }
 
+    private function validatedLedgerContext(Request $request): array
+    {
+        abort_unless($request->user()->hasRole(['admin', 'operator', 'principal', 'teacher', 'homeroom']), 403);
+        $schoolId = (int) $request->user()->school_id;
+        $data = $request->validate([
+            'term_id' => ['nullable', 'integer', 'exists:terms,id'],
+            'class_group_id' => ['required', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)],
+            'report_mode' => ['nullable', 'in:sas,sts'],
+        ]);
+        $term = ! empty($data['term_id'])
+            ? $this->academicQuery->getTermByIdForSchool($schoolId, (int) $data['term_id'])
+            : $this->academicQuery->getActiveTerm($schoolId);
+        abort_unless($term, 422);
+
+        $classGroupId = (int) $data['class_group_id'];
+        abort_unless($this->access->canViewClass($request->user(), (int) $term->id, $classGroupId), 403);
+        $class = $this->academicQuery->getClassGroupById($classGroupId);
+        abort_unless($class && (int) $class->academic_year_id === (int) $term->academic_year_id, 422);
+
+        return [
+            'school_id' => $schoolId,
+            'term' => $term,
+            'class' => $class,
+            'slug' => str($class->name)->slug(),
+            'report_mode' => in_array($data['report_mode'] ?? null, ['sas', 'sts'], true) ? (string) $data['report_mode'] : 'sas',
+        ];
+    }
+
     private function validatedContext(Request $request): array
     {
         $this->authorizeLeader($request);
         $schoolId = (int) $request->user()->school_id;
-        $term = $this->academicQuery->getActiveTerm($schoolId);
+        $data = $request->validate([
+            'term_id' => ['nullable', 'integer', 'exists:terms,id'],
+            'class_group_id' => ['required', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)],
+            'report_mode' => ['nullable', 'in:sas,sts'],
+        ]);
+        $term = ! empty($data['term_id'])
+            ? $this->academicQuery->getTermByIdForSchool($schoolId, (int) $data['term_id'])
+            : $this->academicQuery->getActiveTerm($schoolId);
         abort_unless($term, 422);
-        $data = $request->validate(['class_group_id' => ['required', Rule::exists('class_groups', 'id')->where('school_id', $schoolId)]]);
         $class = $this->academicQuery->getClassGroupById((int) $data['class_group_id']);
         abort_unless($class && (int) $class->academic_year_id === (int) $term->academic_year_id, 422);
 
-        return ['school_id' => $schoolId, 'term' => $term, 'class' => $class, 'slug' => str($class->name)->slug()];
+        return [
+            'school_id' => $schoolId,
+            'term' => $term,
+            'class' => $class,
+            'slug' => str($class->name)->slug(),
+            'report_mode' => in_array($data['report_mode'] ?? null, ['sas', 'sts'], true) ? (string) $data['report_mode'] : 'sas',
+        ];
     }
 
     private function teacherMetrics(int $schoolId, ?int $termId): array

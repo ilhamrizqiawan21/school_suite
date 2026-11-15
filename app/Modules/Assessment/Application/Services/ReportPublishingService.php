@@ -14,6 +14,7 @@ use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use App\Modules\Assessment\Infrastructure\Models\Score;
 use App\Shared\Audit\AuditLogger;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -36,7 +37,8 @@ class ReportPublishingService
         int $termId,
         int $classGroupId,
         int $studentId,
-        ?User $actor = null
+        ?User $actor = null,
+        string $reportMode = 'sas'
     ): ReportSnapshot {
         abort_unless($this->access->classBelongsToSchool($schoolId, $termId, $classGroupId), 404);
         abort_if($actor && ((int) $actor->school_id !== $schoolId || ! $this->access->canPublishClass($actor, $termId, $classGroupId)), 403);
@@ -101,60 +103,94 @@ class ReportPublishingService
             $scheme->load('components');
         }
 
-        // 1. Snapshot Skema Penilaian
+        $reportMode = in_array($reportMode, ['sas', 'sts'], true) ? $reportMode : 'sas';
+
+        // 2. Snapshot Capaian Akademik (Grades) untuk mode SAS & STS
+        $subjects = $this->academicQuery->getTeachingAssignmentsForClass($classGroupId, $termId);
+        if ($subjects->count() > 1 && $scheme->components->contains(fn ($component) => $component->teaching_assignment_id === null)) {
+            throw ValidationException::withMessages(['class_group_id' => 'Komponen penilaian umum harus dipetakan ke penugasan mata pelajaran sebelum rapor kelas dengan beberapa mata pelajaran dapat disusun.']);
+        }
+
+        $existingGradesByMode = [
+            'sas' => collect(data_get($existing?->scheme_snapshot, 'grades_by_mode.sas', data_get($existing?->scheme_snapshot, 'report_mode', 'sas') === 'sas' ? ($existing?->grades_snapshot ?? []) : []))
+                ->keyBy('subject_id')
+                ->map(fn ($item) => $item['competency_description'] ?? null)
+                ->all(),
+            'sts' => collect(data_get($existing?->scheme_snapshot, 'grades_by_mode.sts', data_get($existing?->scheme_snapshot, 'report_mode') === 'sts' ? ($existing?->grades_snapshot ?? []) : []))
+                ->keyBy('subject_id')
+                ->map(fn ($item) => $item['competency_description'] ?? null)
+                ->all(),
+        ];
+
+        $gradesByMode = ['sas' => [], 'sts' => []];
+
+        foreach ($subjects as $subj) {
+            $subjectComponents = $scheme->components->filter(
+                fn ($component) => $component->teaching_assignment_id === null
+                    || (int) $component->teaching_assignment_id === (int) $subj->teaching_assignment_id
+            );
+
+            foreach (['sas', 'sts'] as $modeKey) {
+                $relevantComponents = $this->filterComponentsForMode($subjectComponents, $modeKey);
+                $componentInputs = [];
+                foreach ($relevantComponents as $component) {
+                    $scoreRecord = Score::where('school_id', $schoolId)
+                        ->where('enrollment_id', $enrollmentId)
+                        ->where('assessment_component_id', $component->id)
+                        ->first();
+
+                    $componentInputs[] = [
+                        'code' => $component->code,
+                        'name' => $component->name,
+                        'weight_percentage' => $component->weight_percentage,
+                        'score' => $scoreRecord?->raw_score,
+                        'remedial_score' => $scoreRecord?->remedial_score,
+                        'passing_grade' => $component->passing_grade,
+                    ];
+                }
+
+                $calculation = $this->calculationEngine->calculateFinalGrade($componentInputs, [
+                    'rounding_rule' => $scheme->rounding_rule,
+                    'decimal_places' => $scheme->decimal_places,
+                    'passing_grade' => $scheme->passing_grade_default,
+                ]);
+
+                $customCompetency = $existingGradesByMode[$modeKey][$subj->subject_id] ?? null;
+
+                $gradesByMode[$modeKey][] = [
+                    'subject_id' => $subj->subject_id,
+                    'subject_name' => $subj->subject_name,
+                    'subject_code' => $subj->subject_code,
+                    'teacher_name' => $subj->teacher_name,
+                    'passing_grade' => $scheme->passing_grade_default,
+                    'final_score' => $calculation['final_score'],
+                    'predicate' => $calculation['predicate'],
+                    'is_passed' => $calculation['is_passed'],
+                    'competency_description' => $customCompetency ?: $this->buildCompetencyDescription(
+                        (string) $subj->subject_name,
+                        $calculation['final_score'] !== null ? (float) $calculation['final_score'] : null,
+                        (float) $scheme->passing_grade_default,
+                        $modeKey,
+                    ),
+                    'components' => $calculation['components'],
+                ];
+            }
+        }
+
+        $gradesSnapshot = $gradesByMode[$reportMode];
+
+        // 1. Snapshot Skema Penilaian (menyimpan nilai mode STS & SAS sekaligus agar pergantian mode tidak merusak data)
         $schemeSnapshot = [
             'id' => $scheme->id,
             'name' => $scheme->name,
             'code' => $scheme->code,
             'version' => $scheme->version,
+            'report_mode' => $reportMode,
             'rounding_rule' => $scheme->rounding_rule->value,
             'decimal_places' => $scheme->decimal_places,
             'passing_grade_default' => $scheme->passing_grade_default,
+            'grades_by_mode' => $gradesByMode,
         ];
-
-        // 2. Snapshot Capaian Akademik (Grades)
-        $subjects = $this->academicQuery->getTeachingAssignmentsForClass($classGroupId, $termId);
-        $gradesSnapshot = [];
-        if ($subjects->count() > 1 && $scheme->components->contains(fn ($component) => $component->teaching_assignment_id === null)) {
-            throw ValidationException::withMessages(['class_group_id' => 'Komponen penilaian umum harus dipetakan ke penugasan mata pelajaran sebelum rapor kelas dengan beberapa mata pelajaran dapat disusun.']);
-        }
-
-        foreach ($subjects as $subj) {
-            // Cari skor siswa untuk komponen-komponen yang relevan
-            $componentInputs = [];
-            foreach ($scheme->components->filter(fn ($component) => $component->teaching_assignment_id === null || (int) $component->teaching_assignment_id === (int) $subj->teaching_assignment_id) as $component) {
-                $scoreRecord = Score::where('school_id', $schoolId)
-                    ->where('enrollment_id', $enrollmentId)
-                    ->where('assessment_component_id', $component->id)
-                    ->first();
-
-                $componentInputs[] = [
-                    'code' => $component->code,
-                    'weight_percentage' => $component->weight_percentage,
-                    'score' => $scoreRecord?->raw_score,
-                    'remedial_score' => $scoreRecord?->remedial_score,
-                    'passing_grade' => $component->passing_grade,
-                ];
-            }
-
-            $calculation = $this->calculationEngine->calculateFinalGrade($componentInputs, [
-                'rounding_rule' => $scheme->rounding_rule,
-                'decimal_places' => $scheme->decimal_places,
-                'passing_grade' => $scheme->passing_grade_default,
-            ]);
-
-            $gradesSnapshot[] = [
-                'subject_id' => $subj->subject_id,
-                'subject_name' => $subj->subject_name,
-                'subject_code' => $subj->subject_code,
-                'teacher_name' => $subj->teacher_name,
-                'passing_grade' => $scheme->passing_grade_default,
-                'final_score' => $calculation['final_score'],
-                'predicate' => $calculation['predicate'],
-                'is_passed' => $calculation['is_passed'],
-                'components' => $calculation['components'],
-            ];
-        }
 
         // 3. Snapshot Presensi (Attendance)
         $rawAttendance = $this->academicQuery->getAttendanceAggregates([$enrollmentId]);
@@ -199,10 +235,15 @@ class ReportPublishingService
             ->map(fn ($item) => ['predicate' => $item->predicate, 'description' => $item->description])
             ->all();
 
+        $existingNotes = $existing?->notes_snapshot ?? [];
         $notesSnapshot = [
             'homeroom_notes' => $publicNotes,
             'achievements' => $achievements,
             'attitudes' => $attitudes,
+            'homeroom_report_note' => $existingNotes['homeroom_report_note'] ?? null,
+            'promotion_decision' => $existingNotes['promotion_decision'] ?? null,
+            'report_place' => $existingNotes['report_place'] ?? null,
+            'report_date' => $existingNotes['report_date'] ?? null,
         ];
 
         // 5. Cryptographic Checksum untuk membuktikan Immutability
@@ -221,7 +262,7 @@ class ReportPublishingService
                 'scheme_snapshot' => $schemeSnapshot,
                 'grades_snapshot' => $gradesSnapshot,
                 'attendance_snapshot' => $attendanceSnapshot,
-                'extracurricular_snapshot' => [],
+                'extracurricular_snapshot' => $existing?->extracurricular_snapshot ?? [],
                 'notes_snapshot' => $notesSnapshot,
                 'checksum' => $checksum,
             ]
@@ -292,12 +333,12 @@ class ReportPublishingService
     }
 
     /**
-     * Mengambil daftar snapshot rapor terbit (immutable) per siswa untuk Buku Induk.
+     * Mengambil daftar snapshot rapor per siswa untuk Buku Induk (opsional difilter per semester).
      *
      * @param  list<int>  $studentIds
      * @return array<int, list<array<string, mixed>>>
      */
-    public function getPublishedSnapshotsForStudents(int $schoolId, array $studentIds): array
+    public function getPublishedSnapshotsForStudents(int $schoolId, array $studentIds, ?int $termId = null): array
     {
         if ($studentIds === []) {
             return [];
@@ -306,7 +347,7 @@ class ReportPublishingService
         $snapshots = ReportSnapshot::query()
             ->where('school_id', $schoolId)
             ->whereIn('student_id', $studentIds)
-            ->where('status', ReportStatusEnum::PUBLISHED)
+            ->when($termId !== null, fn ($query) => $query->where('term_id', $termId))
             ->orderBy('term_id')
             ->orderBy('id')
             ->get();
@@ -318,6 +359,7 @@ class ReportPublishingService
                 'enrollment_id' => (int) $snapshot->enrollment_id,
                 'term_id' => (int) $snapshot->term_id,
                 'class_group_id' => (int) $snapshot->class_group_id,
+                'report_mode' => data_get($snapshot->scheme_snapshot, 'report_mode', 'sas'),
                 'published_at' => $snapshot->published_at?->format('Y-m-d'),
                 'checksum' => $snapshot->checksum,
                 'scheme' => $snapshot->scheme_snapshot ?? [],
@@ -328,6 +370,144 @@ class ReportPublishingService
         }
 
         return $grouped;
+    }
+
+    /**
+     * Memperbarui data pelengkap rapor (ekstrakurikuler, catatan wali kelas, keputusan kenaikan, tanggal/tempat) pada draf rapor.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateReportSupplements(ReportSnapshot $report, array $data, User $actor): ReportSnapshot
+    {
+        abort_unless((int) $actor->school_id === (int) $report->school_id
+            && $this->access->canPublishClass($actor, (int) $report->term_id, (int) $report->class_group_id), 403);
+
+        if ($report->status === ReportStatusEnum::PUBLISHED) {
+            throw ValidationException::withMessages(['report' => 'Rapor yang sudah diterbitkan tidak dapat diubah.']);
+        }
+
+        $extracurricular = collect($data['extracurricular'] ?? [])
+            ->filter(fn ($row) => is_array($row) && trim((string) ($row['name'] ?? '')) !== '')
+            ->map(fn ($row) => [
+                'name' => trim((string) $row['name']),
+                'predicate' => trim((string) ($row['predicate'] ?? '')) ?: null,
+                'description' => trim((string) ($row['description'] ?? '')) ?: null,
+            ])
+            ->values()
+            ->all();
+
+        $scheme = $report->scheme_snapshot ?? [];
+        $activeMode = isset($data['report_mode']) && in_array($data['report_mode'], ['sas', 'sts'], true)
+            ? (string) $data['report_mode']
+            : (string) ($scheme['report_mode'] ?? 'sas');
+        $scheme['report_mode'] = $activeMode;
+
+        $notes = $report->notes_snapshot ?? [];
+        $notes['homeroom_report_note'] = isset($data['homeroom_report_note']) && trim((string) $data['homeroom_report_note']) !== ''
+            ? trim((string) $data['homeroom_report_note'])
+            : null;
+        $notes['promotion_decision'] = isset($data['promotion_decision']) && trim((string) $data['promotion_decision']) !== ''
+            ? trim((string) $data['promotion_decision'])
+            : null;
+        $notes['report_place'] = isset($data['report_place']) && trim((string) $data['report_place']) !== ''
+            ? trim((string) $data['report_place'])
+            : null;
+        $notes['report_date'] = isset($data['report_date']) && trim((string) $data['report_date']) !== ''
+            ? trim((string) $data['report_date'])
+            : null;
+
+        $grades = isset($scheme['grades_by_mode'][$activeMode]) && is_array($scheme['grades_by_mode'][$activeMode])
+            ? $scheme['grades_by_mode'][$activeMode]
+            : ($report->grades_snapshot ?? []);
+        $competencyEdits = $data['grade_competencies'] ?? [];
+        if (is_array($competencyEdits) && $competencyEdits !== []) {
+            foreach ($grades as &$grade) {
+                $sid = (string) ($grade['subject_id'] ?? '');
+                if ($sid !== '' && array_key_exists($sid, $competencyEdits)) {
+                    $desc = trim((string) ($competencyEdits[$sid] ?? ''));
+                    $grade['competency_description'] = $desc !== '' ? $desc : null;
+                }
+            }
+            unset($grade);
+        }
+
+        if (isset($scheme['grades_by_mode']) && is_array($scheme['grades_by_mode'])) {
+            $scheme['grades_by_mode'][$activeMode] = $grades;
+        }
+        $attendance = $report->attendance_snapshot ?? [];
+
+        $report->scheme_snapshot = $scheme;
+        $report->extracurricular_snapshot = $extracurricular;
+        $report->notes_snapshot = $notes;
+        $report->grades_snapshot = $grades;
+        $report->checksum = $this->calculateChecksum($scheme, $grades, $attendance, $notes);
+        $report->save();
+
+        $this->auditLogger->log(
+            eventType: 'assessment.report.supplements_updated',
+            targetType: 'report_snapshot',
+            targetId: (string) $report->id,
+            newValues: ['extracurricular_count' => count($extracurricular), 'has_promotion_decision' => $notes['promotion_decision'] !== null],
+            actor: $actor,
+            schoolId: $report->school_id,
+        );
+
+        return $report;
+    }
+
+    /**
+     * Memfilter komponen penilaian sesuai mode evaluasi (STS mengecualikan komponen Akhir Semester / SAS).
+     *
+     * @param  iterable<int, mixed>  $components
+     * @return Collection<int, mixed>
+     */
+    public function filterComponentsForMode(iterable $components, string $mode): Collection
+    {
+        $collection = collect($components)->values();
+        if ($mode !== 'sts' || $collection->count() <= 1) {
+            return $collection;
+        }
+
+        $filtered = $collection->reject(function ($component): bool {
+            $code = strtoupper(trim((string) ($component->code ?? '')));
+            $name = strtoupper(trim((string) ($component->name ?? '')));
+
+            return in_array($code, ['SAS', 'PAS', 'UAS', 'PAT', 'UKK'], true)
+                || str_starts_with($code, 'SAS-')
+                || str_starts_with($code, 'PAS-')
+                || str_contains($name, 'AKHIR SEMESTER')
+                || str_contains($name, 'AKHIR TAHUN');
+        })->values();
+
+        return $filtered->isNotEmpty() ? $filtered : $collection;
+    }
+
+    public function buildCompetencyDescription(string $subjectName, ?float $finalScore, float $passingGrade, string $reportMode = 'sas'): ?string
+    {
+        if ($finalScore === null) {
+            return null;
+        }
+
+        $formatted = rtrim(rtrim(number_format($finalScore, 2, ',', '.'), '0'), ',');
+        if ($reportMode === 'sts') {
+            if ($finalScore >= 90) {
+                return "Menunjukkan penguasaan sangat baik pada materi tengah semester mata pelajaran {$subjectName} dengan capaian nilai {$formatted}.";
+            }
+            if ($finalScore >= $passingGrade) {
+                return "Menunjukkan penguasaan baik pada materi tengah semester mata pelajaran {$subjectName} sesuai tujuan pembelajaran yang telah ditempuh.";
+            }
+
+            return "Perlu bimbingan dan penguatan lebih lanjut pada materi tengah semester mata pelajaran {$subjectName}.";
+        }
+
+        if ($finalScore >= 90) {
+            return "Menunjukkan penguasaan sangat baik dalam mata pelajaran {$subjectName} dengan capaian nilai {$formatted}.";
+        }
+        if ($finalScore >= $passingGrade) {
+            return "Menunjukkan penguasaan baik dalam mata pelajaran {$subjectName} sesuai kriteria ketercapaian tujuan pembelajaran.";
+        }
+
+        return "Perlu bimbingan dan pendampingan lebih lanjut pada beberapa materi mata pelajaran {$subjectName}.";
     }
 
     private function canonicalize(array $value): array

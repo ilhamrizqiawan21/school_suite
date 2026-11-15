@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
-import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -32,13 +32,15 @@ interface Asset {
 const props = defineProps<{
     assets: Asset[];
     loans: Loan[];
-    filters: { search: string; status: string };
+    filters: { search: string; status: string; loan_status: string };
     available_assets: { id: number; inventory_code: string; name: string }[];
     asset_pages: { current: number; last: number; total: number; previous: string | null; next: string | null };
     loan_pages: { current: number; last: number; total: number; previous: string | null; next: string | null };
     summary: { total: number; available: number; borrowed: number; maintenance: number };
 }>();
 
+const activeTab = ref(new URLSearchParams(window.location.search).get('tab') === 'loans' ? 'loans' : 'assets');
+const loanStatus = ref(props.filters.loan_status || '');
 const search = ref(props.filters.search);
 const statusFilter = ref(props.filters.status);
 const editingAssetId = ref<number | null>(null);
@@ -117,6 +119,7 @@ function borrowAsset() {
         preserveScroll: true,
         onSuccess: () => {
             showLoanModal.value = false;
+            activeTab.value = 'loans';
             loanForm.reset('asset_id', 'borrower_name', 'borrower_reference', 'due_at', 'notes');
         },
     });
@@ -138,6 +141,35 @@ const dateLabel = (value?: string | null) => value ? new Intl.DateTimeFormat('id
 const statusLabel = (status: string) => ({ available: 'Tersedia', borrowed: 'Dipinjam', maintenance: 'Perawatan', inactive: 'Nonaktif' }[status] ?? status);
 const conditionLabel = (condition: string) => ({ good: 'Baik', fair: 'Cukup', poor: 'Kurang baik', damaged: 'Rusak' }[condition] ?? condition);
 const conditionClass = (condition: string) => `condition-${condition}`;
+
+let dialogTrigger: HTMLElement | null = null;
+let activeDialog: HTMLElement | null = null;
+const dialogControls = () => Array.from(activeDialog?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], summary') ?? []).filter(element => element.getClientRects().length > 0);
+const trapDialogFocus = (event: KeyboardEvent) => {
+    if (!activeDialog || event.key !== 'Tab') return;
+    const controls = dialogControls();
+    const first = controls[0];
+    const last = controls.at(-1);
+    if (first && last && (!activeDialog.contains(document.activeElement) || (event.shiftKey ? document.activeElement === first : document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+watchPostEffect(() => {
+    const open = showAssetModal.value || showLoanModal.value;
+    if (open && !activeDialog) {
+        dialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        activeDialog = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]')).at(-1) ?? null;
+        dialogControls()[0]?.focus();
+        document.addEventListener('keydown', trapDialogFocus);
+    } else if (!open && activeDialog) {
+        document.removeEventListener('keydown', trapDialogFocus);
+        activeDialog = null;
+        if (dialogTrigger?.isConnected) dialogTrigger.focus();
+    }
+});
+onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
+
 </script>
 
 <template>
@@ -146,41 +178,14 @@ const conditionClass = (condition: string) => `condition-${condition}`;
         <main class="facilities-page">
             <header class="hero-card facilities-hero">
                 <div><p class="eyebrow">Tata Usaha</p><h1>Inventaris sarana & prasarana</h1></div>
-                <nav class="hero-actions" aria-label="Aksi inventaris"><AppButton variant="primary" icon="plus" as="a" href="#asset-form" class="button primary">Tambah aset</AppButton><AppButton variant="secondary" as="a" href="#loan-form" class="button secondary">Catat peminjaman</AppButton></nav>
             </header>
 
 
 
-            <section class="ss-summary-grid" aria-label="Ringkasan inventaris">
-                <MetricSummaryCard
-                    label="Total aset"
-                    :value="summary.total"
-                    note="Seluruh inventaris sekolah"
-                    tone="blue"
-                    icon="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                />
-                <MetricSummaryCard
-                    label="Tersedia"
-                    :value="summary.available"
-                    note="Siap digunakan atau dipinjam"
-                    tone="green"
-                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-                <MetricSummaryCard
-                    label="Sedang dipinjam"
-                    :value="summary.borrowed"
-                    note="Perlu dipantau batas kembali"
-                    tone="amber"
-                    icon="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                />
-                <MetricSummaryCard
-                    label="Perawatan"
-                    :value="summary.maintenance"
-                    note="Tidak tersedia sementara"
-                    tone="rose"
-                    icon="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-            </section>
+            <nav class="facilities-tabs" aria-label="Bagian Sarpras">
+                <button type="button" :aria-pressed="activeTab === 'assets'" @click="activeTab = 'assets'">Aset · {{ summary.total }}</button>
+                <button type="button" :aria-pressed="activeTab === 'loans'" @click="activeTab = 'loans'">Peminjaman · {{ summary.borrowed }} aktif</button>
+            </nav>
 
             <div v-if="showAssetModal" role="dialog" aria-modal="true" aria-labelledby="asset-modal-title" class="modal-backdrop" @click.self="cancelEdit" @keydown.esc="cancelEdit">
                 <section id="asset-form" class="modal-card">
@@ -199,19 +204,19 @@ const conditionClass = (condition: string) => `condition-${condition}`;
                 </section>
             </div>
 
-            <section class="panel">
-                <div class="section-heading"><div><h2>Daftar aset</h2><p>Daftar hanya menampilkan aset milik sekolah Anda.</p></div><AppButton variant="primary" icon="plus" type="button" class="button primary" @click="openCreateAsset"> Tambah aset</AppButton></div>
+            <section v-show="activeTab === 'assets'" class="panel">
+                <div class="section-heading"><div><h2>Daftar aset</h2></div><AppButton variant="primary" icon="plus" type="button" class="button primary" @click="openCreateAsset"> Tambah aset</AppButton></div>
                 <form class="filters" @submit.prevent="applyFilters">
                     <input v-model="search" class="search-control" type="search" aria-label="Cari aset" placeholder="Cari kode, nama, kategori…">
-                    <select v-model="statusFilter" aria-label="Filter status"><option value="">Semua status</option><option value="available">Tersedia</option><option value="borrowed">Dipinjam</option><option value="maintenance">Perawatan</option><option value="inactive">Nonaktif</option></select>
+                    <select v-model="statusFilter" aria-label="Filter status"><option value="">Semua status</option><option value="available">Tersedia ({{ summary.available }})</option><option value="borrowed">Dipinjam ({{ summary.borrowed }})</option><option value="maintenance">Perawatan ({{ summary.maintenance }})</option><option value="inactive">Nonaktif</option></select>
                     <AppButton variant="primary" type="submit" class="button secondary">Terapkan</AppButton>
                     <Link href="/administrasi/sarpras" class="button secondary ui-button ui-button--secondary ui-button--md">Reset</Link>
                 </form>
                 <div class="table-wrap table-scroll" tabindex="0" role="region" aria-label="Daftar aset sekolah"><table class="app-table asset-table"><thead><tr><th scope="col">Kode / aset</th><th scope="col">Kategori & lokasi</th><th scope="col">Kondisi</th><th scope="col">Status / peminjam</th><th scope="col">Aksi</th></tr></thead>
-                    <tbody><tr v-for="asset in assets" :key="asset.id"><td><strong>{{ asset.name }}</strong><small>{{ asset.inventory_code }}</small></td><td><strong>{{ asset.category }}</strong><small>{{ asset.location || 'Lokasi belum diisi' }}</small></td><td><span class="condition" :class="conditionClass(asset.condition)">{{ conditionLabel(asset.condition) }}</span></td><td><span class="status" :class="asset.status">{{ statusLabel(asset.status) }}</span><small v-if="asset.active_loan?.[0]">{{ asset.active_loan[0].borrower_name }} · jatuh tempo {{ dateLabel(asset.active_loan[0].due_at) }}</small></td><td><AppButton variant="ghost" size="sm" type="button" class="text-action" :disabled="asset.status === 'borrowed'" @click="editAsset(asset)">Ubah</AppButton></td></tr>
+                    <tbody><tr v-for="asset in assets" :key="asset.id"><td><strong>{{ asset.name }}</strong><small>{{ asset.inventory_code }}</small></td><td><strong>{{ asset.category }}</strong><small>{{ asset.location || 'Lokasi belum diisi' }}</small></td><td><span class="condition" :class="conditionClass(asset.condition)">{{ conditionLabel(asset.condition) }}</span></td><td><span class="status" :class="asset.status">{{ statusLabel(asset.status) }}</span><small v-if="asset.active_loan?.[0]">{{ asset.active_loan[0].borrower_name }} · jatuh tempo {{ dateLabel(asset.active_loan[0].due_at) }}</small></td><td><AppButton variant="secondary" size="sm" icon="edit" type="button" :disabled="asset.status === 'borrowed'" @click="editAsset(asset)">Ubah</AppButton></td></tr>
                     <tr v-if="assets.length === 0"><td colspan="5" class="empty">Belum ada aset yang cocok dengan filter.</td></tr></tbody>
                 </table></div>
-                <nav class="page-controls" aria-label="Halaman aset"><Link v-if="asset_pages.previous" :href="asset_pages.previous" preserve-scroll class="button secondary ui-button ui-button--secondary ui-button--md">Sebelumnya</Link><span>{{ asset_pages.total }} aset · halaman {{ asset_pages.current }} / {{ asset_pages.last }}</span><Link v-if="asset_pages.next" :href="asset_pages.next" preserve-scroll class="button secondary ui-button ui-button--secondary ui-button--md">Berikutnya</Link></nav>
+                <nav class="page-controls" aria-label="Halaman aset"><Link v-if="asset_pages.previous" :href="asset_pages.previous" preserve-scroll preserve-state class="button secondary ui-button ui-button--secondary ui-button--md">Sebelumnya</Link><span>{{ asset_pages.total }} aset · halaman {{ asset_pages.current }} / {{ asset_pages.last }}</span><Link v-if="asset_pages.next" :href="asset_pages.next" preserve-scroll preserve-state class="button secondary ui-button ui-button--secondary ui-button--md">Berikutnya</Link></nav>
             </section>
 
             <div v-if="showLoanModal" role="dialog" aria-modal="true" aria-labelledby="loan-modal-title" class="modal-backdrop" @click.self="showLoanModal = false" @keydown.esc="showLoanModal = false">
@@ -231,9 +236,10 @@ const conditionClass = (condition: string) => `condition-${condition}`;
                 </section>
             </div>
 
-            <section class="panel">
+            <section v-show="activeTab === 'loans'" class="panel">
                 <div id="loan-history">
-                    <div class="section-heading"><div><p class="eyebrow">Kontrol pengembalian</p><h2>Pengembalian & riwayat</h2><p>Peminjaman yang belum kembali ditampilkan lebih dahulu.</p></div><AppButton variant="primary" type="button" class="button primary" @click="showLoanModal = true">+ Catat peminjaman</AppButton></div>
+                    <div class="section-heading"><div><h2>Peminjaman</h2></div><AppButton variant="primary" type="button" class="button primary" @click="showLoanModal = true">+ Catat peminjaman</AppButton></div>
+                    <label class="loan-status-filter">Status peminjaman<select v-model="loanStatus" @change="router.get('/administrasi/sarpras', { search, status: statusFilter, loan_status: loanStatus, tab: 'loans' }, { preserveState: true, preserveScroll: true, replace: true })"><option value="">Semua</option><option value="active">Belum kembali</option><option value="returned">Sudah kembali</option></select></label>
                     <div class="loan-list">
                         <article v-for="loan in loans" :key="loan.id" class="loan-item">
                             <div><strong>{{ loan.asset?.name || 'Aset' }}</strong><small>{{ loan.asset?.inventory_code }} · {{ loan.borrower_name }}</small><small>Pinjam {{ dateLabel(loan.borrowed_at) }} · {{ loan.returned_at ? 'dikembalikan ' + dateLabel(loan.returned_at) : 'batas kembali ' + dateLabel(loan.due_at) }}</small></div>
@@ -242,7 +248,7 @@ const conditionClass = (condition: string) => `condition-${condition}`;
                         </article>
                         <p v-if="loans.length === 0" class="empty">Belum ada riwayat peminjaman.</p>
                     </div>
-                    <nav class="page-controls" aria-label="Halaman peminjaman"><Link v-if="loan_pages.previous" :href="loan_pages.previous" preserve-scroll class="button secondary ui-button ui-button--secondary ui-button--md">Sebelumnya</Link><span>{{ loan_pages.total }} transaksi · halaman {{ loan_pages.current }} / {{ loan_pages.last }}</span><Link v-if="loan_pages.next" :href="loan_pages.next" preserve-scroll class="button secondary ui-button ui-button--secondary ui-button--md">Berikutnya</Link></nav>
+                    <nav class="page-controls" aria-label="Halaman peminjaman"><Link v-if="loan_pages.previous" :href="loan_pages.previous" preserve-scroll preserve-state class="button secondary ui-button ui-button--secondary ui-button--md">Sebelumnya</Link><span>{{ loan_pages.total }} transaksi · halaman {{ loan_pages.current }} / {{ loan_pages.last }}</span><Link v-if="loan_pages.next" :href="loan_pages.next" preserve-scroll preserve-state class="button secondary ui-button ui-button--secondary ui-button--md">Berikutnya</Link></nav>
                 </div>
             </section>
         </main>
@@ -373,4 +379,8 @@ const conditionClass = (condition: string) => `condition-${condition}`;
 :global(html[data-theme='dark'] .facilities-page .status:not(.available):not(.borrowed):not(.maintenance):not(.inactive)) { background: var(--surface-strong); color: var(--ink-soft); }
 .modal-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / .56); backdrop-filter: blur(3px); }
 .modal-card { width: min(720px, 100%); max-height: 90dvh; overflow-y: auto; display: grid; gap: 1rem; padding: 1.35rem; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 80px rgb(15 23 42 / .25); }
+.facilities-tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+.facilities-tabs button { padding: .6rem 1rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); color: var(--ink); cursor: pointer; }
+.facilities-tabs button[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-strong); }
+.loan-status-filter { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 </style>

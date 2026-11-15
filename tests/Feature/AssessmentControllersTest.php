@@ -1752,6 +1752,121 @@ class AssessmentControllersTest extends TestCase
         $this->assertDatabaseCount('scores', 0);
     }
 
+    public function test_report_supplements_sts_mode_and_pdf_preview_flow(): void
+    {
+        $sasComponent = $this->component->replicate();
+        $sasComponent->fill([
+            'code' => 'SAS',
+            'name' => 'Sumatif Akhir Semester',
+            'weight_percentage' => 60,
+            'sequence' => 2,
+        ]);
+        $sasComponent->save();
+
+        Score::create([
+            'school_id' => $this->school->id,
+            'enrollment_id' => $this->enrollment->id,
+            'assessment_component_id' => $this->component->id,
+            'raw_score' => 90,
+            'final_score' => 90,
+            'recorded_by_user_id' => $this->teacherUser->id,
+        ]);
+        Score::create([
+            'school_id' => $this->school->id,
+            'enrollment_id' => $this->enrollment->id,
+            'assessment_component_id' => $sasComponent->id,
+            'raw_score' => 70,
+            'final_score' => 70,
+            'recorded_by_user_id' => $this->teacherUser->id,
+        ]);
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.generate'), [
+            'class_group_id' => $this->classGroup->id,
+            'term_id' => $this->term->id,
+            'report_mode' => 'sts',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $report = ReportSnapshot::where('enrollment_id', $this->enrollment->id)->firstOrFail();
+        $this->assertSame('sts', data_get($report->scheme_snapshot, 'report_mode'));
+        $this->assertEquals(90.0, (float) data_get($report->scheme_snapshot, 'grades_by_mode.sts.0.final_score'));
+        $this->assertEquals(78.0, (float) data_get($report->scheme_snapshot, 'grades_by_mode.sas.0.final_score'));
+        $this->assertNotEmpty(data_get($report->grades_snapshot, '0.competency_description'));
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.supplements', $report), [
+            'report_mode' => 'sts',
+            'extracurricular' => [
+                ['name' => 'Pramuka', 'predicate' => 'Sangat Baik', 'description' => 'Aktif dalam kegiatan kepramukaan'],
+            ],
+            'homeroom_report_note' => 'Pertahankan semangat belajar.',
+            'promotion_decision' => 'Naik ke kelas VIII',
+            'report_place' => 'Yogyakarta',
+            'report_date' => '20 Desember 2026',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $report->refresh();
+        $this->assertSame('Pramuka', data_get($report->extracurricular_snapshot, '0.name'));
+        $this->assertSame('Naik ke kelas VIII', data_get($report->notes_snapshot, 'promotion_decision'));
+
+        $this->actingAs($this->homeroomUser)->get(route('assessment.reports.show', ['report' => $report->id, 'report_mode' => 'sas']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('report.report_mode', 'sas')
+                ->where('report.grades.0.final_score', 78)
+            );
+
+        $pdfResponse = $this->actingAs($this->homeroomUser)->get(route('assessment.reports.pdf', ['report' => $report->id, 'report_mode' => 'sts']))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline;', (string) $pdfResponse->headers->get('content-disposition'));
+
+        $gradesOnlyPdfResponse = $this->actingAs($this->homeroomUser)->get(route('assessment.reports.pdf', [
+            'report' => $report->id,
+            'report_mode' => 'sas',
+            'grades_only' => '1',
+        ]))->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('rapor-nilai-', (string) $gradesOnlyPdfResponse->headers->get('content-disposition'));
+
+        $batchPdfResponse = $this->actingAs($this->homeroomUser)->get(route('assessment.reports.batch-pdf', [
+            'class_group_id' => $this->classGroup->id,
+            'term_id' => $this->term->id,
+            'report_mode' => 'sas',
+            'student_ids' => (string) $this->student->id,
+            'grades_only' => '1',
+        ]))->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('rapor-nilai-', (string) $batchPdfResponse->headers->get('content-disposition'));
+
+        $identityPdfResponse = $this->actingAs($this->homeroomUser)->get(route('assessment.reports.pdf', [
+            'report' => $report,
+            'report_mode' => 'sas',
+            'identity_only' => '1',
+        ]))->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('rapor-identitas-', (string) $identityPdfResponse->headers->get('content-disposition'));
+
+        $this->actingAs($this->homeroomUser)->get(route('assessment.reports.ledger'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Assessment/Reports/Ledger'));
+
+        $this->actingAs($this->homeroomUser)->get(route('assessment.reports.ledger.excel', [
+            'class_group_id' => $this->classGroup->id,
+            'term_id' => $this->term->id,
+            'report_mode' => 'sts',
+        ]))->assertOk();
+
+        $ledgerPdfResponse = $this->actingAs($this->homeroomUser)->get(route('assessment.reports.ledger.pdf', [
+            'class_group_id' => $this->classGroup->id,
+            'term_id' => $this->term->id,
+            'report_mode' => 'sas',
+        ]))->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline;', (string) $ledgerPdfResponse->headers->get('content-disposition'));
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.publish', $report))
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->actingAs($this->homeroomUser)->post(route('assessment.reports.supplements', $report), [
+            'homeroom_report_note' => 'Perubahan setelah terbit',
+        ])->assertSessionHasErrors('report');
+    }
+
     private function createUnassignedEnrollment(): Enrollment
     {
         $class = ClassGroup::create(['school_id' => $this->school->id, 'academic_year_id' => $this->academicYear->id, 'name' => 'VII-B', 'grade_level' => 7]);

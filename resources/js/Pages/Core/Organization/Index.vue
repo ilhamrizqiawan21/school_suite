@@ -123,7 +123,7 @@ const remove = (member: OrganizationMember) => {
                         <div class="member-rail" aria-hidden="true" />
                         <div class="member-avatar"><img v-if="member.photo_url" :src="member.photo_url" :alt="`Foto ${member.name}`" /><span v-else>{{ member.name.slice(0, 1) }}</span></div><div class="member-content"><div class="member-heading"><div><span class="member-position">{{ member.position }}</span><h3>{{ member.name }}</h3></div></div><p>{{ member.department || 'Unit kerja belum diisi' }} · Atasan: {{ parentName(member.parent_id) }}</p></div>
                         <span class="status" :class="member.is_published ? 'published' : 'hidden'">{{ member.is_published ? 'Publik' : 'Internal' }}</span>
-                        <div class="member-actions"><AppButton variant="ghost" size="sm" type="button" class="text-button" @click="edit(member)">Ubah</AppButton><AppButton variant="danger" size="sm" type="button" class="text-button danger" @click="remove(member)">Hapus</AppButton></div>
+                        <div class="member-actions"><AppButton variant="secondary" size="sm" icon="edit" type="button" @click="edit(member)">Ubah</AppButton><AppButton variant="danger" size="sm" icon="delete" type="button" @click="remove(member)">Hapus</AppButton></div>
                     </article>
                 </div>
                 <div v-else class="empty-state"><strong>Struktur organisasi belum diisi.</strong><p>Tambahkan pimpinan utama untuk mulai membangun hierarki sekolah.</p></div>

@@ -104,7 +104,7 @@ const principalActivity = computed(() => {
     return [
         { role: 'Admin', title: 'Kesiapan rombel', done: Math.max(0, activity.admin.active_classes - activity.admin.missing_homeroom), total: activity.admin.active_classes, detail: `${activity.admin.missing_homeroom} rombel belum memiliki wali kelas`, href: '/akademik/kelas' },
         { role: 'Guru', title: 'Jurnal selesai', done: activity.teacher.journals_completed, total: activity.teacher.sessions_total, detail: `${activity.teacher.journals_completed} dari ${activity.teacher.sessions_total} sesi mengajar`, href: '/laporan' },
-        { role: 'Wali Kelas', title: 'Rapor terbit', done: activity.homeroom.reports_published, total: activity.homeroom.reports_total, detail: `${activity.homeroom.reports_published} dari ${activity.homeroom.reports_total} rapor tersedia`, href: '/penilaian/rapor' },
+        { role: 'Wali Kelas', title: 'Rapor terbit', done: activity.homeroom.reports_published, total: activity.homeroom.reports_total, detail: `${activity.homeroom.reports_published} dari ${activity.homeroom.reports_total} rapor tersedia`, href: '/kepsek/laporan/nilai' },
         { role: 'Siswa', title: 'Tugas dikumpulkan', done: activity.student.tasks_submitted, total: activity.student.tasks_total, detail: `${activity.student.tasks_submitted} dari ${activity.student.tasks_total} tugas kelas`, href: '/pembelajaran/progress' },
     ].map((item) => ({ ...item, rate: completionRate(item.done, item.total) }));
 });
@@ -222,7 +222,7 @@ const workspaceTitle = computed(() => {
 });
 const studentPriorities = computed(() => [
     { ...studentActions[1], count: roleMetrics.value.assignments_pending ?? 0, detail: 'belum dikumpulkan' },
-    { ...studentActions[3], count: roleMetrics.value.upcoming_exams ?? 0, detail: 'ujian mendatang' },
+    { ...studentActions[0], count: undefined, detail: 'Lihat bahan ajar dan modul PDF' },
     { ...studentActions[2], count: undefined, detail: 'Lihat waktu dan ruang belajar' },
 ]);
 const metricIcons = {
@@ -285,9 +285,9 @@ const metricItems = computed(() => {
     ];
 });
 const attendanceChart = computed(() => {
-    const width = 760;
-    const height = 280;
-    const padding = { top: 20, right: 20, bottom: 46, left: 42 };
+    const width = 1040;
+    const height = 190;
+    const padding = { top: 14, right: 24, bottom: 32, left: 44 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
     const points = attendanceTrend.value.map((item, index) => {
@@ -322,9 +322,9 @@ const attendanceAverage = computed(() => {
 const formatAttendancePoint = (point: { label: string; rate: number | null; present: number; total: number }) => `${point.label}: ${percentLabel(point.rate)} hadir (${point.present}/${point.total})`;
 const attendanceDataSummary = computed(() => attendanceTrend.value.filter((item) => item.total > 0).map(formatAttendancePoint).join(' · '));
 const principalAttendanceChart = computed(() => {
-    const width = 760;
-    const height = 264;
-    const padding = { top: 18, right: 24, bottom: 42, left: 42 };
+    const width = 880;
+    const height = 190;
+    const padding = { top: 14, right: 24, bottom: 32, left: 44 };
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
     const points = principalTrend.value.map((item, index) => ({
@@ -382,14 +382,13 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 <aside class="principal-attention">
                     <div class="principal-attention-title"><div><span>Perlu perhatian</span><h2>Prioritas pimpinan</h2></div><strong>{{ principalAttention.length }}</strong></div>
                     <ul v-if="principalAttention.length" class="principal-alert-list">
-                        <li v-for="item in principalAttention.slice(0, 3)" :key="item.key" :class="`alert-${item.level}`">
+                        <li v-for="item in principalAttention" :key="item.key" :class="`alert-${item.level}`">
                             <span class="principal-alert-dot" aria-hidden="true" />
                             <div><strong>{{ item.title }}</strong><p>{{ item.detail }}</p></div>
                             <Link :href="item.href" :aria-label="`Lihat ${item.title}`">↗</Link>
                         </li>
                     </ul>
                     <p v-else class="principal-attention-empty">Belum ada hal yang perlu ditindaklanjuti dari data periode ini.</p>
-                    <span v-if="principalAttention.length > 3" class="principal-alert-more">{{ principalAttention.length - 3 }} perhatian lain tercatat</span>
                 </aside>
                 <article class="principal-lead">
                     <div class="principal-lead-top"><span>Kehadiran sekolah</span><span>Seluruh rombel</span></div>
@@ -397,7 +396,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                     <h2>Seberapa konsisten siswa hadir?</h2>
                     <p v-if="principalSummary?.attendance_total">{{ principalSummary.attendance_present }} hadir dari {{ principalSummary.attendance_total }} catatan presensi pada rentang terpilih.</p>
                     <p v-else>Belum ada catatan presensi pada rentang terpilih.</p>
-                    <Link href="/akademik/presensi/rekap" class="principal-lead-link">Buka rekap presensi <span aria-hidden="true">↗</span></Link>
+                    <Link href="/kepsek/laporan/rekap-absensi" class="principal-lead-link">Buka rekap presensi <span aria-hidden="true">↗</span></Link>
                 </article>
 
             </div>
@@ -458,7 +457,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 
             <section v-if="isTeacher && teacherOverview" class="teacher-overview" aria-label="Kegiatan mengajar hari ini">
                 <div v-if="!teacherOverview.has_teacher_profile || !teacherOverview.has_active_term" class="teacher-notice">{{ !teacherOverview.has_teacher_profile ? 'Akun Anda belum terhubung dengan data guru. Hubungi operator sekolah untuk menghubungkannya.' : 'Belum ada semester aktif. Hubungi operator sekolah untuk menetapkan periode mengajar.' }}</div>
-                <aside class="teacher-attention"><h2>Perlu ditindaklanjuti</h2><Link href="/akademik/jurnal?journal_status=pending"><strong>{{ teacherOverview.pending_journals }}</strong><span>Sesi belum berjurnal<small>Pertemuan tercatat sampai hari ini pada semester aktif.</small></span><b aria-hidden="true">↗</b></Link><Link href="/pembelajaran"><strong>{{ teacherOverview.pending_reviews }}</strong><span>Kiriman tugas menunggu penilaian<small>Tugas siswa dari kelas dan mapel yang Anda ampu.</small></span><b aria-hidden="true">↗</b></Link></aside>
+                <aside class="teacher-attention"><h2>Perlu ditindaklanjuti</h2><Link href="/akademik/jurnal?journal_status=pending"><strong>{{ teacherOverview.pending_journals }}</strong><span>Sesi belum berjurnal<small>Pertemuan tercatat sampai hari ini pada semester aktif.</small></span><b aria-hidden="true">↗</b></Link><Link href="/pembelajaran/tugas"><strong>{{ teacherOverview.pending_reviews }}</strong><span>Kiriman tugas menunggu penilaian<small>Tugas siswa dari kelas dan mapel yang Anda ampu.</small></span><b aria-hidden="true">↗</b></Link></aside>
                 <article class="teacher-day">
                     <header><div><span class="eyebrow">{{ teacherDate }}</span><h2>Jadwal mengajar hari ini</h2></div><Link href="/akademik/jadwal">Semua jadwal ↗</Link></header>
                     <p class="teacher-context">Jadwal terbit pada {{ activePeriod }} · {{ teacherOverview.today_total }} pertemuan.</p>
@@ -565,15 +564,15 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
             <section v-if="isPrincipal" class="principal-overview" aria-label="Ikhtisar sekolah">
                 <div class="principal-charts">
                     <section class="principal-chart-panel" aria-labelledby="principal-attendance-title">
-                        <div class="principal-panel-heading"><div><span>Tren sekolah</span><h2 id="principal-attendance-title">Kehadiran siswa</h2><p>Persentase siswa hadir dari catatan presensi tiap rentang waktu.</p></div><Link href="/akademik/presensi/rekap">Lihat rekap ↗</Link></div>
+                        <div class="principal-panel-heading"><div><span>Tren sekolah</span><h2 id="principal-attendance-title">Kehadiran siswa</h2><p>Persentase siswa hadir dari catatan presensi tiap rentang waktu.</p></div><Link href="/kepsek/laporan/rekap-absensi">Lihat rekap ↗</Link></div>
                         <div v-if="principalAttendanceChart.hasData" class="principal-chart-wrap">
                             <svg class="principal-chart" :viewBox="`0 0 ${principalAttendanceChart.width} ${principalAttendanceChart.height}`" role="img" aria-labelledby="principal-chart-label" aria-describedby="principal-attendance-data">
                                 <title id="principal-chart-label">Tren kehadiran sekolah: {{ principalTrend.filter((point) => point.total > 0).map((point) => `${point.label} ${percentLabel(point.rate)}`).join(', ') }}</title>
-                                <g class="chart-grid"><line v-for="grid in principalAttendanceChart.grid" :key="grid.value" x1="42" x2="736" :y1="grid.y" :y2="grid.y" /><text v-for="grid in principalAttendanceChart.grid" :key="`principal-${grid.value}`" x="0" :y="grid.y + 4">{{ grid.value }}%</text></g>
+                                <g class="chart-grid"><line v-for="grid in principalAttendanceChart.grid" :key="grid.value" :x1="44" :x2="principalAttendanceChart.width - 24" :y1="grid.y" :y2="grid.y" /><text v-for="grid in principalAttendanceChart.grid" :key="`principal-${grid.value}`" x="0" :y="grid.y + 4">{{ grid.value }}%</text></g>
                                 <polyline v-for="(segment, index) in principalAttendanceChart.segments" :key="index" class="chart-line" :points="segment" />
                                 <g v-for="point in principalAttendanceChart.points" :key="point.month_key" class="chart-point">
-                                    <circle v-if="point.total > 0" :cx="point.x" :cy="point.y" r="5"><title>{{ point.label }}: {{ percentLabel(point.rate) }} ({{ point.present }}/{{ point.total }})</title></circle>
-                                    <text :x="point.x" y="252" text-anchor="middle">{{ point.label }}</text>
+                                    <circle v-if="point.total > 0" :cx="point.x" :cy="point.y" r="4"><title>{{ point.label }}: {{ percentLabel(point.rate) }} ({{ point.present }}/{{ point.total }})</title></circle>
+                                    <text :x="point.x" :y="principalAttendanceChart.height - 10" text-anchor="middle">{{ point.label }}</text>
                                 </g>
                             </svg>
                             <p id="principal-attendance-data" class="chart-data-summary">Data dalam teks: {{ principalAttendanceDataSummary }}</p>
@@ -606,7 +605,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                 </section>
 
                 <section class="principal-news" aria-labelledby="principal-news-title">
-                    <div class="principal-section-heading"><div><span>Komunikasi sekolah</span><h2 id="principal-news-title">Pengumuman terbaru</h2></div><Link href="/komunikasi">Lihat semua ↗</Link></div>
+                    <div class="principal-section-heading"><div><span>Komunikasi sekolah</span><h2 id="principal-news-title">Pengumuman terbaru</h2></div><Link href="/kepsek/pengumuman">Lihat semua ↗</Link></div>
                     <ol v-if="latestAnnouncements.length"><li v-for="item in latestAnnouncements" :key="item.id"><strong>{{ item.title }}</strong><span>{{ item.author_name ?? 'Sekolah' }}</span><time>{{ formatDateTime(item.published_at) }}</time></li></ol>
                     <p v-else class="principal-empty">Belum ada pengumuman terbit.</p>
                 </section>
@@ -638,15 +637,15 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                         <svg class="attendance-chart" :viewBox="'0 0 ' + attendanceChart.width + ' ' + attendanceChart.height" role="img" aria-labelledby="attendance-chart-label" aria-describedby="attendance-chart-data">
                             <title id="attendance-chart-label">Grafik garis kehadiran siswa per bulan</title>
                             <g class="chart-grid">
-                                <line v-for="grid in attendanceChart.grid" :key="grid.value" :x1="42" :x2="740" :y1="grid.y" :y2="grid.y" />
+                                <line v-for="grid in attendanceChart.grid" :key="grid.value" :x1="44" :x2="attendanceChart.width - 24" :y1="grid.y" :y2="grid.y" />
                                 <text v-for="grid in attendanceChart.grid" :key="'label-' + grid.value" x="0" :y="grid.y + 4">{{ grid.value }}%</text>
                             </g>
                             <path v-if="attendanceChart.area" class="chart-area" :d="attendanceChart.area" />
                             <polyline class="chart-line" :points="attendanceChart.line" />
                             <g v-for="point in attendanceChart.points" :key="point.month_key" class="chart-point">
-                                <circle :cx="point.x" :cy="point.y" r="5" />
+                                <circle :cx="point.x" :cy="point.y" r="4" />
                                 <title>{{ point.label }}: {{ point.rate }}% hadir ({{ point.present }}/{{ point.total }})</title>
-                                <text :x="point.x" y="266" text-anchor="middle">{{ point.label }}</text>
+                                <text :x="point.x" :y="attendanceChart.height - 10" text-anchor="middle">{{ point.label }}</text>
                             </g>
                         </svg>
                         <p id="attendance-chart-data" class="chart-data-summary">Data dalam teks: {{ attendanceDataSummary }}</p>
@@ -684,7 +683,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .metric-arrow { color: var(--ink-faint) !important; font-size: var(--type-md) !important; line-height: 1; }
 .metric-item strong { display: block; margin: .15rem 0 0; color: color-mix(in srgb, var(--metric-accent) 76%, var(--ink)); font-size: clamp(1.65rem, 2.5vw, 2.1rem); font-weight: var(--weight-bold); letter-spacing: -.04em; line-height: 1; }
 .workflow-section { margin-top: 34px; }.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 12px; }.section-heading h2 { margin: 6px 0 0; color: var(--ink); font-size: var(--type-xl); letter-spacing: -.035em; }.workflow-count { color: var(--ink-faint); font-size: var(--type-meta); }.dashboard-footer { display: flex; align-items: center; gap: 8px; margin-top: 38px; color: var(--ink-faint); font-size: var(--type-caption); }.footer-mark { display: grid; place-items: center; width: 20px; height: 20px; color: #1b304d; background: #edc36c; border-radius: 6px 6px 6px 2px; font: var(--weight-bold) var(--type-caption) var(--font-ui); }.footer-line { width: 30px; height: 1px; margin-left: 5px; background: var(--line); }
-.attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: var(--type-md); }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: var(--type-caption); line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: var(--type-caption); white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; overflow: visible; }.chart-data-summary { margin: 10px 0 0; color: var(--ink-soft); font-size: var(--type-caption); line-height: 1.5; }.chart-grid line { stroke: var(--line); stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); font-size: var(--type-caption); }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 3; }.chart-point text { fill: var(--ink-soft); font-size: var(--type-caption); }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: var(--type-meta); text-align: center; }
+.attendance-trend-section { margin-top: 34px; }.attendance-chart-card { padding: 20px 22px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px 18px 18px 5px; box-shadow: var(--shadow-sm); }.attendance-chart-meta { display: flex; align-items: start; justify-content: space-between; gap: 16px; }.attendance-chart-meta strong { display: block; color: var(--ink); font-size: var(--type-md); }.attendance-chart-meta span:not(.chart-legend) { display: block; margin-top: 5px; color: var(--ink-soft); font-size: var(--type-caption); line-height: 1.5; }.chart-legend { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-size: var(--type-caption); white-space: nowrap; }.chart-legend i { width: 9px; height: 9px; background: var(--blue); border-radius: 50%; }.attendance-chart-wrap { width: 100%; margin-top: 14px; overflow-x: auto; }.attendance-chart { display: block; width: 100%; min-width: 540px; height: auto; max-height: 220px; overflow: visible; }.chart-data-summary { margin: 10px 0 0; color: var(--ink-soft); font-size: var(--type-caption); line-height: 1.5; }.chart-grid line { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 5; }.chart-grid text { fill: var(--ink-faint); stroke: none; font-size: 11px; font-weight: var(--weight-medium); }.chart-area { fill: color-mix(in srgb, var(--blue) 12%, transparent); stroke: none; }.chart-line { fill: none; stroke: var(--blue); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; }.chart-point circle { fill: var(--surface); stroke: var(--blue); stroke-width: 2.5; }.chart-point text { fill: var(--ink-soft); stroke: none; font-size: 11px; font-weight: var(--weight-medium); }.attendance-empty { display: grid; min-height: 180px; place-items: center; color: var(--ink-faint); font-size: var(--type-meta); text-align: center; }
 .admin-overview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .admin-actions-section { margin-top: 18px; }
 .admin-action-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; align-items: stretch; }
@@ -778,7 +777,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 .principal-panel-heading > a, .principal-section-heading > a { flex: 0 0 auto; min-height: 32px; padding: 7px 0; color: var(--blue); font-size: var(--type-meta); font-weight: var(--weight-bold); text-decoration: none; white-space: nowrap; }
 .principal-panel-heading > a:hover, .principal-section-heading > a:hover { text-decoration: underline; }
 .principal-chart-wrap { width: 100%; margin-top: 18px; overflow-x: auto; }
-.principal-chart { display: block; width: 100%; min-width: 500px; height: auto; }
+.principal-chart { display: block; width: 100%; min-width: 480px; height: auto; max-height: 210px; overflow: visible; }
 .principal-grade-list { display: grid; gap: 21px; margin-top: 28px; }
 .principal-grade-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 9px; }
 .principal-grade-meta strong { color: var(--ink); font-size: var(--type-sm); }

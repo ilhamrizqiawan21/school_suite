@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Assessment\Application\Services;
 
+use App\Shared\Exports\SpreadsheetStyler;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -27,8 +28,8 @@ class QuestionSpreadsheetService
         $data = $spreadsheet->getActiveSheet();
         $data->setTitle('Data');
         $this->writeRow($data, 1, self::HEADERS);
-        $data->freezePane('A2');
-        $data->getStyle('A1:R1')->getFont()->setBold(true);
+        SpreadsheetStyler::styleWorksheet($data, 'A2');
+        $data->getColumnDimension('E')->setAutoSize(false);
         $data->getColumnDimension('E')->setWidth(48);
 
         $examples = $spreadsheet->createSheet();
@@ -43,7 +44,7 @@ class QuestionSpreadsheetService
         foreach ($samples as $index => $sample) {
             $this->writeRow($examples, $index + 2, $sample);
         }
-        $examples->getStyle('A1:R1')->getFont()->setBold(true);
+        SpreadsheetStyler::styleWorksheet($examples, 'A2');
 
         return $spreadsheet;
     }
@@ -97,6 +98,9 @@ class QuestionSpreadsheetService
         foreach ($rows as $row) {
             $this->writeRow($sheet, $sheet->getHighestRow() + 1, $row);
         }
+        SpreadsheetStyler::styleWorksheet($sheet, 'A2');
+        $sheet->getColumnDimension('E')->setAutoSize(false);
+        $sheet->getColumnDimension('E')->setWidth(48);
     }
 
     private function writeRow(Worksheet $sheet, int $row, array $values): void

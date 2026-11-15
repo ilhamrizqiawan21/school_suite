@@ -178,7 +178,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
 <template>
     <Head title="Progress Belajar" />
-    <AppLayout>
+    <AppLayout title="Progress Belajar">
         <div class="view space-y-5 learning-progress-page" :class="{ 'student-progress-page': is_student }">
             <!-- Header Hero -->
             <section class="hero-card compact-hero progress-hero">
@@ -187,7 +187,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                         <p class="eyebrow">{{ is_student ? 'Ringkasan belajar saya' : 'Pemantauan Pembelajaran' }}</p>
                         <span v-if="active_term" class="term-pill">{{ active_term.name }}</span>
                     </div>
-                    <h1>{{ is_student ? 'Progres Belajar Saya' : 'Progres Belajar Siswa' }}</h1>
+                    <h1>{{ is_student ? 'Progress Belajar Saya' : 'Progress Belajar Siswa' }}</h1>
                     <p>
                         {{
                             is_student
@@ -290,14 +290,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
             </section>
 
             <!-- Summary Metric Cards (Siswa) -->
-            <section v-else class="ss-summary-grid" aria-label="Ringkasan progress belajar saya">
-                <MetricSummaryCard
-                    label="Kehadiran"
-                    :value="personal_attendance ? `${personal_attendance.percentage}%` : '—'"
-                    :note="personal_attendance ? `${personal_attendance.present} kali hadir dari ${personal_attendance.total} catatan` : 'belum ada catatan presensi'"
-                    tone="green"
-                    icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+            <section v-else class="ss-summary-grid ss-summary-grid--3" aria-label="Ringkasan progress belajar saya">
                 <MetricSummaryCard
                     label="Materi Dipelajari"
                     :value="`${totals.materials_read} / ${totals.materials_total}`"
@@ -376,7 +369,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             <b v-if="totals.attention_rows !== undefined">{{ totals.attention_rows }}</b>
                         </button>
                         <button
-                            v-if="!is_student"
+                            v-if="!is_student || totals.revisions > 0"
                             type="button"
                             class="status-pill status-pill--amber"
                             :class="{ 'is-active': filterForm.status === 'revision' }"
@@ -386,7 +379,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                             <b>{{ totals.revisions }}</b>
                         </button>
                         <button
-                            v-if="!is_student"
+                            v-if="!is_student || totals.late > 0"
                             type="button"
                             class="status-pill status-pill--amber"
                             :class="{ 'is-active': filterForm.status === 'late' }"
@@ -421,17 +414,18 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                     </div>
 
                     <!-- Search, Dropdowns & Sort Form -->
-                    <form v-if="!is_student" class="toolbar progress-toolbar" @submit.prevent="applyFilters">
+                    <form class="toolbar progress-toolbar" @submit.prevent="applyFilters">
                         <label class="progress-search search-control-shell">
-                            <span class="sr-only">Cari siswa atau mata pelajaran</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+                            <span class="sr-only">{{ is_student ? 'Cari mata pelajaran' : 'Cari siswa atau mata pelajaran' }}</span>
                             <input
                                 v-model="filterForm.search"
                                 type="search"
-                                placeholder="Cari nama siswa, NIS, kelas, atau mata pelajaran…"
+                                :placeholder="is_student ? 'Cari mata pelajaran…' : 'Cari nama siswa, NIS, kelas, atau mata pelajaran…'"
                             />
                         </label>
 
-                        <label class="progress-class-filter">
+                        <label v-if="!is_student" class="progress-class-filter">
                             <span class="sr-only">Filter kelas</span>
                             <select v-model="filterForm.class" @change="applyFilters">
                                 <option value="">Semua kelas</option>
@@ -454,7 +448,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                         <label class="progress-sort-filter">
                             <span class="sr-only">Urutkan berdasarkan</span>
                             <select v-model="filterForm.sort" @change="applyFilters">
-                                <option value="student_asc">Urut: Nama Siswa (A–Z)</option>
+                                <option value="student_asc">{{ is_student ? 'Urut: Mata Pelajaran (A–Z)' : 'Urut: Nama Siswa (A–Z)' }}</option>
                                 <option value="attention_desc">Urut: Prioritas Pendampingan</option>
                                 <option value="completion_asc">Urut: Progres Terendah</option>
                                 <option value="completion_desc">Urut: Progres Tertinggi</option>
@@ -502,7 +496,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                     <tr>
                                         <th scope="col">{{ is_student ? 'Mata Pelajaran' : 'Siswa' }}</th>
                                         <th v-if="!is_student" scope="col">Kelas &amp; Mapel</th>
-                                        <th scope="col">Materi Dibaca</th>
+                                        <th scope="col">Materi Dipelajari</th>
                                         <th scope="col">Tugas Dikumpulkan</th>
                                         <th scope="col">Status &amp; Tindak Lanjut</th>
                                         <th scope="col" class="th-score">Rerata Nilai</th>
@@ -577,7 +571,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                                 <span class="status-badge" :class="`status-badge--${rowStatusMeta(row).tone}`">
                                                     {{ rowStatusMeta(row).label }}
                                                 </span>
-                                                <div v-if="!is_student && (row.late_count > 0 || row.revision_count > 0)" class="attention-subbadges">
+                                                <div v-if="row.late_count > 0 || row.revision_count > 0" class="attention-subbadges">
                                                     <span v-if="row.late_count > 0" class="sub-chip sub-chip--amber" :class="{ 'progress-attention': row.late_count > 0 }">
                                                         {{ row.late_count }} terlambat
                                                     </span>
@@ -646,7 +640,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
                                 <div class="progress-row-metrics">
                                     <div>
-                                        <span>{{ is_student ? 'Materi dipelajari' : 'Materi dibaca' }}</span>
+                                        <span>Materi dipelajari</span>
                                         <strong>{{ row.materials_read }} / {{ row.materials_total }} ({{ ratio(row.materials_read, row.materials_total) }}%)</strong>
                                         <div v-if="row.materials_total > 0" class="metric-bar-track">
                                             <span
@@ -667,11 +661,11 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
                                             />
                                         </div>
                                     </div>
-                                    <div v-if="!is_student">
+                                    <div v-if="!is_student || row.late_count > 0">
                                         <span>Terlambat</span>
                                         <strong :class="{ 'progress-attention': row.late_count > 0 }">{{ row.late_count }}</strong>
                                     </div>
-                                    <div v-if="!is_student">
+                                    <div v-if="!is_student || row.revision_count > 0">
                                         <span>Perlu revisi</span>
                                         <strong :class="{ 'progress-attention': row.revision_count > 0 }">{{ row.revision_count }}</strong>
                                     </div>
@@ -741,7 +735,7 @@ const studentGroupsList = computed<StudentProgressGroup[]>(() => props.student_g
 
                                 <div class="student-group-card__counters">
                                     <div class="counter-box">
-                                        <span>Materi Dibaca</span>
+                                        <span>Materi Dipelajari</span>
                                         <strong>{{ student.materials_read }} / {{ student.materials_total }}</strong>
                                     </div>
                                     <div class="counter-box">

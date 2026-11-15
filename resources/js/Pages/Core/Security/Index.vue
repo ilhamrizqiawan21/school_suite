@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -39,6 +40,35 @@ function act(url: string, method: 'post' | 'delete', confirmation: string) {
     else router.delete(url, options);
 }
 function go(url: string | null) { if (url) router.get(url, {}, { preserveState: true, preserveScroll: true }); }
+
+let dialogTrigger: HTMLElement | null = null;
+let activeDialog: HTMLElement | null = null;
+const dialogControls = () => Array.from(activeDialog?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], summary') ?? []).filter(element => element.getClientRects().length > 0);
+const trapDialogFocus = (event: KeyboardEvent) => {
+    if (!activeDialog || event.key !== 'Tab') return;
+    const controls = dialogControls();
+    const first = controls[0];
+    const last = controls.at(-1);
+    if (first && last && (!activeDialog.contains(document.activeElement) || (event.shiftKey ? document.activeElement === first : document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+watchPostEffect(() => {
+    const open = show.value;
+    if (open && !activeDialog) {
+        dialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        activeDialog = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]')).at(-1) ?? null;
+        dialogControls()[0]?.focus();
+        document.addEventListener('keydown', trapDialogFocus);
+    } else if (!open && activeDialog) {
+        document.removeEventListener('keydown', trapDialogFocus);
+        activeDialog = null;
+        if (dialogTrigger?.isConnected) dialogTrigger.focus();
+    }
+});
+onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
+
 </script>
 
 <template>
@@ -60,7 +90,7 @@ function go(url: string | null) { if (url) router.get(url, {}, { preserveState: 
                 <nav v-if="pages" class="pagination" aria-label="Halaman riwayat"><span>{{ pages.total }} catatan · halaman {{ pages.current }} / {{ pages.last }}</span><div class="actions"><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!pages.previous" @click="go(pages.previous)">Sebelumnya</AppButton><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!pages.next" @click="go(pages.next)">Berikutnya</AppButton></div></nav>
             </section>
         </main>
-        <div v-if="show && can_manage" class="modal-backdrop" @click.self="!form.processing && (show = false)"><form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="block-title" @submit.prevent="block"><h2 id="block-title">Blokir alamat IP</h2><p>Pastikan alamat yang dimasukkan benar. Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.</p><label>Alamat IP<input v-model="form.ip_address" required maxlength="45" placeholder="Contoh: 203.0.113.10" /><small v-if="form.errors.ip_address">{{ form.errors.ip_address }}</small></label><label>Alasan<textarea v-model="form.reason" required maxlength="500" rows="3" /><small v-if="form.errors.reason">{{ form.errors.reason }}</small></label><label>Berlaku sampai (opsional)<input v-model="form.expires_at" type="datetime-local" /><small v-if="form.errors.expires_at">{{ form.errors.expires_at }}</small></label><p>Kosongkan masa berlaku untuk blokir tanpa batas waktu.</p><div class="actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="show = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan blokir' }}</AppButton></div></form></div>
+        <div v-if="show && can_manage" class="modal-backdrop" @click.self="!form.processing && (show = false)" @keydown.esc="!form.processing && (show = false)"><form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="block-title" @submit.prevent="block"><h2 id="block-title">Blokir alamat IP</h2><p>Pastikan alamat yang dimasukkan benar. Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.</p><label>Alamat IP<input v-model="form.ip_address" required maxlength="45" placeholder="Contoh: 203.0.113.10" /><small v-if="form.errors.ip_address">{{ form.errors.ip_address }}</small></label><label>Alasan<textarea v-model="form.reason" required maxlength="500" rows="3" /><small v-if="form.errors.reason">{{ form.errors.reason }}</small></label><label>Berlaku sampai (opsional)<input v-model="form.expires_at" type="datetime-local" /><small v-if="form.errors.expires_at">{{ form.errors.expires_at }}</small></label><p>Kosongkan masa berlaku untuk blokir tanpa batas waktu.</p><div class="actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="show = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan blokir' }}</AppButton></div></form></div>
     </AppLayout>
 </template>
 

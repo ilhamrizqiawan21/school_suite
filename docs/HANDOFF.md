@@ -2,6 +2,28 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Pelengkapan & Penyeragaman Menu Rapor Siswa (Standar e-Rapor Kemdikdasmen & STS/SAS) — 15 November 2026
+
+- **Task & Requirement**: Melengkapi alur kerja, kesiapan nilai, data pelengkap, serta format dokumen cetak e-Rapor Kemdikdasmen (termasuk dukungan mode STS dan SAS).
+- **Ringkasan**:
+  - Menambahkan mode periode rapor (`sas` / `sts`) dan generator otomatis `competency_description` pada `ReportPublishingService::generateReportSnapshot()`, serta endpoint `POST /penilaian/rapor/{report}/pelengkap` (`updateReportSupplements`) untuk mengisi ekstrakurikuler, catatan wali kelas, keputusan kenaikan kelas/kelulusan, tempat/tanggal pembagian rapor, dan penyuntingan deskripsi kompetensi selama status masih draf.
+  - Menambahkan ringkasan kesiapan & progres kelengkapan nilai per mata pelajaran (`ReportGeneratorService::getClassReadiness()`) serta modal **Lengkapi Data Pelengkap Rapor** di `Assessment/Reports/Index.vue` dan `Show.vue`.
+  - Menghapus alur **Terbitkan** / approval (`publishBatch`, `publishSingle`, `publishReport`, serta label status `Draf`/`Terbit`) dari antarmuka `Assessment/Reports/Index.vue`, `Show.vue`, dan footer `resources/views/reports/report-card.blade.php` sehingga rapor dapat langsung dilengkapi dan dicetak/dipratinjau tanpa penerbitan (endpoint backend tetap dipertahankan agar kompatibel dengan tes fitur yang ada).
+  - Merombak `resources/views/reports/report-card.blade.php` sesuai format e-Rapor Kemdikdasmen (Halaman Sampul, Identitas Sekolah & Peserta Didik + Pas Foto 3x4, Fase, Capaian Hasil Belajar, Ekstrakurikuler, Prestasi, Ketidakhadiran, Catatan Wali Kelas, Keputusan Kenaikan/Kelulusan, Tanggapan Orang Tua, Tanda Tangan + NIP) dan menambahkan pratinjau PDF tab baru (`inline`) serta cetak PDF massal per rombel (`/penilaian/rapor/cetak-massal/pdf`).
+- **File yang Diubah**:
+  - `app/Modules/Assessment/Application/Services/ReportPublishingService.php`
+  - `app/Modules/Assessment/Application/Services/ReportGeneratorService.php`
+  - `app/Modules/Assessment/Interface/Http/Controllers/ReportCardController.php`
+  - `app/Modules/Assessment/Interface/Http/Controllers/ReportingController.php`
+  - `app/Modules/Assessment/Interface/Routes/web.php`
+  - `resources/views/reports/report-card.blade.php`
+  - `resources/js/Pages/Assessment/Reports/Index.vue`
+  - `resources/js/Pages/Assessment/Reports/Show.vue`
+  - `tests/Feature/AssessmentControllersTest.php`
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/AssessmentControllersTest.php` -> 64 tes lulus (575 assertions, 0 gagal).
+  - `npm run build` -> lulus (`vite build`, 865 modul ditransformasi dalam 4.34s).
+
 ## Audit & Konversi Overlay Modal (Side-Drawer ke Centered Dialog) — 14 November 2026
 
 - **Task & Requirement**: Mengubah dialog tambah/edit/impor data siswa dan seluruh halaman lain yang masih menggunakan pola *side-drawer overlay* dari kanan menjadi *centered modal dialog* di tengah layar.
@@ -1110,3 +1132,67 @@ Migrasi workflow mengubah constraint nomor surat menjadi berbasis tahun, menamba
 
 ### Rollback
 - Kembalikan perubahan dengan `git checkout -- resources/js/components/SidebarNavigation.vue resources/js/Pages/Dashboard.vue resources/js/Pages/Learning/Index.vue resources/js/Pages/Assessment/Exams/Index.vue resources/js/Pages/Academic/OnlineClasses/Index.vue` lalu jalankan `npm run build`.
+
+
+---
+
+## Ledger Nilai (Excel & PDF), Pemilihan Tahun Pelajaran & Semester, Cetak Rapor Spesifik, dan Penyempurnaan Skenario STS vs SAS (15 November 2026)
+
+### Task dan Requirement
+- **Task**: Melengkapi fitur Ledger Nilai dengan ekspor Excel (`.xlsx`) dan PDF (`A4 Landscape`), menyediakan pemilihan Tahun Pelajaran dan Semester pada Rapor Siswa, Ledger Nilai, dan Buku Induk, mendukung pencetakan rapor spesifik (per semester, per mode STS/SAS, dan per siswa terpilih), memperbaiki konsistensi menu navigasi, serta menyempurnakan skenario perhitungan dan tampilan STS vs SAS.
+- **Requirement ID**: `SS-D-005` (Rapor & Ledger Nilai), `SS-F-001` (Buku Induk), `DESIGN.md`, `AI_RULES.md`.
+
+### Ringkasan Perubahan
+1. **Ledger Nilai (`/penilaian/ledger`, `/penilaian/ledger/excel`, `/penilaian/ledger/pdf`)**:
+   - Mendukung pembukaan langsung `/penilaian/ledger` tanpa error redirect ketika parameter kosong (otomatis memilih semester aktif dan kelas pertama yang dapat diakses pengguna).
+   - Menyediakan filter **Tahun Pelajaran**, **Semester**, **Kelas / Rombel**, **Skenario Evaluasi (`SAS` / `STS`)**, dan pencarian siswa.
+   - Menghitung matriks nilai per mata pelajaran, **Jumlah Nilai**, **Rata-rata**, **Peringkat**, dan **Presensi (S, I, A)** baik dari snapshot rapor maupun kalkulasi langsung dari skor komponen apabila snapshot belum disusun.
+   - Menambahkan ekspor **Excel (`.xlsx`)** dan **Pratinjau / Cetak PDF (`A4 Landscape`)** via `resources/views/reports/class-ledger.blade.php`.
+2. **Pemilihan Tahun Pelajaran, Semester & Cetak Rapor Spesifik (`Assessment/Reports/Index.vue`, `StudentLedgerController.php`, `Academic/Students/Ledger/Show.vue`)**:
+   - Menambahkan filter **Tahun Pelajaran**, **Semester**, **Kelas / Rombel**, dan **Skenario Evaluasi (`SAS` / `STS`)** di halaman Rapor Siswa (termasuk bagi akun siswa).
+   - Menambahkan pemilihan spesifik siswa (checkbox per baris & pilih semua) sehingga pengguna dapat mencetak PDF untuk **siswa tertentu**, **semester tertentu**, dan **mode tertentu (`STS` / `SAS`)** tanpa harus mencetak seluruh kelas atau seluruh semester sekaligus.
+   - Pada detail **Buku Induk Siswa**, menambahkan filter semester pada Seksi G (*Rekapitulasi nilai rapor per semester*) serta tombol pintas **Cetak Rapor STS** dan **Cetak Rapor SAS** per semester.
+3. **Skenario STS vs SAS Secara Sempurna (`ReportPublishingService.php`, `ReportGeneratorService.php`, `Show.vue`, `report-card.blade.php`)**:
+   - Menyimpan hasil kalkulasi kedua skenario (`sts` dan `sas`) secara bersamaan di dalam `scheme_snapshot.grades_by_mode` saat rapor disusun: mode **STS** mengecualikan komponen akhir semester (`SAS`, `PAS`, `UAS`, `PAT`, `UKK`), sedangkan **SAS** menghitung seluruh komponen semester.
+   - Menyesuaikan pratinjau web (`Assessment/Reports/Show.vue`) dan cetakan PDF (`resources/views/reports/report-card.blade.php`): pada mode **STS**, menampilkan kolom **Rincian Komponen (Formatif/STS)** & **Predikat**, menyembunyikan bagian **Keputusan Kenaikan Kelas / Kelulusan**, serta menonaktifkan sampul akhir semester secara default.
+4. **Konsistensi Menu & Navigasi (`SidebarNavigation.vue`, `Breadcrumbs.vue`, `Index.vue`, `Ledger.vue`)**:
+   - Menambahkan tab navigasi kontekstual (**Rapor Siswa** | **Ledger Nilai (Excel & PDF)** | **Skema Penilaian**) yang mempertahankan filter aktif.
+   - Memastikan item sidebar `Rapor Siswa` tetap aktif saat berada di `/penilaian/ledger` dan melengkapi label breadcrumb `ledger` serta `skema`.
+
+### File & Migrasi yang Disentuh
+- `app/Modules/Academic/Application/Services/AcademicQueryService.php`
+- `app/Modules/Academic/Interface/Http/Controllers/StudentLedgerController.php`
+- `app/Modules/Assessment/Domain/Services/GradeCalculationEngine.php`
+- `app/Modules/Assessment/Application/Services/ReportPublishingService.php`
+- `app/Modules/Assessment/Application/Services/ReportGeneratorService.php`
+- `app/Modules/Assessment/Interface/Http/Controllers/ReportCardController.php`
+- `app/Modules/Assessment/Interface/Http/Controllers/ReportingController.php`
+- `app/Modules/Assessment/Interface/Routes/web.php`
+- `resources/views/reports/class-ledger.blade.php`
+- `resources/views/reports/report-card.blade.php`
+- `resources/js/Pages/Assessment/Reports/Index.vue`
+- `resources/js/Pages/Assessment/Reports/Ledger.vue`
+- `resources/js/Pages/Assessment/Reports/Show.vue`
+- `resources/js/Pages/Academic/Students/Ledger/Show.vue`
+- `resources/js/components/SidebarNavigation.vue`
+- `resources/js/components/Breadcrumbs.vue`
+- `tests/Feature/AssessmentControllersTest.php`
+- **Migrasi database**: Tidak ada migrasi atau perubahan skema database.
+
+### Tes Beserta Hasil
+- `php artisan test --compact tests/Feature/AssessmentControllersTest.php tests/Feature/StudentLedgerControllersTest.php tests/Feature/RoleMatrixAccessTest.php tests/Architecture/ModularBoundaryTest.php` → **PASS** (90 tests, 919+ assertions).
+- `php artisan test --compact --filter=test_report_supplements_sts_mode_and_pdf_preview_flow tests/Feature/AssessmentControllersTest.php` → **PASS** (1 test, 46 assertions).
+- `./vendor/bin/pint --test` → **PASS**.
+- `npm run build` → **PASS** (866 modules transformed).
+
+### Risiko Tersisa
+- Snapshot rapor lama yang dibuat sebelum pembaruan ini tetap kompatibel melalui fallback ke `grades_snapshot`; untuk mendapatkan rincian ganda `grades_by_mode` (`sts` & `sas`), pengguna cukup menekan tombol **Susun rapor** kembali pada kelas terkait.
+
+### Langkah Review Manual
+1. Buka **Penilaian & Rapor → Rapor Siswa** (`/penilaian/rapor`), pilih **Tahun Pelajaran**, **Semester**, **Kelas / Rombel**, dan **Skenario Evaluasi (`SAS` / `STS`)**.
+2. Centang beberapa siswa tertentu lalu klik **Pratinjau PDF Terpilih**, atau klik **Lihat** / **Pratinjau PDF** pada baris siswa untuk membandingkan tampilan **STS** (dengan rincian komponen formatif/STS tanpa keputusan kenaikan kelas) dan **SAS**.
+3. Klik tab **Ledger Nilai (Excel & PDF)** (`/penilaian/ledger`), uji filter Tahun Pelajaran/Semester/Mode, lalu klik **Export Excel (.xlsx)** dan **Pratinjau / Cetak PDF**.
+4. Buka **Akademik → Buku Induk → Detail Siswa**, periksa filter semester pada bagian Rekapitulasi Rapor serta tombol **Cetak Rapor STS** / **Cetak Rapor SAS** per semester.
+
+### Rollback
+- Kembalikan perubahan dengan `git checkout -- app/Modules/Academic/ app/Modules/Assessment/ resources/views/reports/ resources/js/ tests/Feature/AssessmentControllersTest.php && rm -f resources/views/reports/class-ledger.blade.php` lalu jalankan `npm run build`.

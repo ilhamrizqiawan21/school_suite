@@ -171,16 +171,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                         <div class="space-y-1">
                             <div class="flex items-center gap-3">
                                 <h2 class="text-lg font-bold text-slate-900">{{ scheme.name }}</h2>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-meta font-semibold bg-indigo-100 text-indigo-800">
+                                <span class="scheme-version-pill">
                                     Versi {{ scheme.version }}
                                 </span>
                                 <span
                                     v-if="scheme.is_active"
-                                    class="inline-flex items-center px-2 py-0.5 rounded text-meta font-medium bg-emerald-100 text-emerald-800"
+                                    class="scheme-status-pill is-active"
                                 >
                                     Aktif
                                 </span>
-                                <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-meta font-medium bg-slate-100 text-slate-600">Versi lama</span>
+                                <span v-else class="scheme-status-pill is-inactive">Versi lama</span>
                             </div>
                             <p class="text-meta text-slate-600 font-mono">Kode: {{ scheme.code }} | {{ roundingLabel(scheme.rounding_rule) }} ({{ scheme.decimal_places }} desimal) | KKTP default: {{ scheme.passing_grade_default }}</p>
                         </div>
@@ -506,10 +506,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 .schemes-page .border-slate-300{border-color:var(--line-strong)}
 .schemes-page .text-slate-900,.schemes-page .text-slate-800,.schemes-page .text-slate-700{color:var(--ink)}
 .schemes-page .text-slate-600,.schemes-page .text-slate-500,.schemes-page .text-slate-400{color:var(--ink-soft)}
-.schemes-page .bg-indigo-100{background:var(--primary-soft)}
-.schemes-page .text-indigo-800,.schemes-page .text-indigo-600{color:var(--primary)}
-.schemes-page .bg-emerald-100{background:var(--green-soft)}
-.schemes-page .text-emerald-800,.schemes-page .text-emerald-700{color:var(--green)}
+.scheme-version-pill{display:inline-flex;align-items:center;padding:.2rem .65rem;border-radius:999px;font-size:var(--type-meta);font-weight:var(--weight-semibold);background:var(--primary-soft);color:var(--primary-strong);border:1px solid color-mix(in srgb,var(--primary) 22%,var(--line))}
+.scheme-status-pill{display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:.45rem;font-size:var(--type-meta);font-weight:var(--weight-semibold)}
+.scheme-status-pill.is-active{background:var(--green-soft);color:var(--green);border:1px solid color-mix(in srgb,var(--green) 24%,var(--line))}
+.scheme-status-pill.is-inactive{background:var(--surface-strong);color:var(--ink-soft);border:1px solid var(--line)}
+.schemes-page .text-indigo-600{color:var(--primary)}
+.schemes-page .text-emerald-600,.schemes-page .text-emerald-700{color:var(--green)}
+.schemes-page .text-amber-800{color:var(--gold)}
 .schemes-page .bg-indigo-600{background:var(--primary)}
 .scheme-backdrop{background:color-mix(in srgb,var(--ink) 58%,transparent)}
 .scheme-dialog{background:var(--surface);color:var(--ink);border:1px solid var(--line)}

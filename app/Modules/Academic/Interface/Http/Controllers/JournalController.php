@@ -89,7 +89,7 @@ class JournalController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
-        $relations = ['journal', 'attendanceRecords:id,lesson_session_id,status', 'classGroup:id,name', 'subject:id,name,code'];
+        $relations = ['journal', 'attendanceRecords:id,lesson_session_id,status', 'classGroup:id,name,grade_level', 'subject:id,name,code'];
         $agendaSessions = (clone $baseSessionQuery)
             ->with($relations)
             ->whereDate('date', $agendaDate->toDateString())
@@ -587,6 +587,7 @@ class JournalController extends Controller
             'class_group' => [
                 'id' => $session->classGroup?->id,
                 'name' => $session->classGroup?->name ?? '—',
+                'grade_level' => $session->classGroup?->grade_level,
             ],
             'subject' => [
                 'id' => $session->subject?->id,

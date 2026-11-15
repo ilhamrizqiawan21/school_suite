@@ -128,6 +128,7 @@ class GradeCalculationEngine
 
             $processedComponents[] = [
                 'code' => $comp['code'] ?? 'COMP',
+                'name' => $comp['name'] ?? ($comp['code'] ?? 'Komponen'),
                 'weight_percentage' => $weight,
                 'raw_score' => $rawScore,
                 'remedial_score' => $remedialScore,

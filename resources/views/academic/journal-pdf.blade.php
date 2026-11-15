@@ -1,78 +1,151 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <title>Jurnal Mengajar</title>
     <style>
-        @page { margin: 1.8cm; }
-        body { color: #1d2735; font-family: "DejaVu Sans", sans-serif; font-size: 10pt; line-height: 1.45; }
-        h1, h2 { margin: 0; text-align: center; }
-        h1 { font-size: 16pt; letter-spacing: .04em; }
-        h2 { margin-top: 5px; margin-bottom: 20px; font-size: 10pt; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        td, th { border: 1px solid #aab4c3; padding: 7px 9px; vertical-align: top; }
-        .identity td { border: 0; padding: 2px 4px; }
-        .identity td:first-child { width: 145px; font-weight: bold; }
-        .identity td:nth-child(2) { width: 12px; }
-        .section-title { margin: 18px 0 6px; font-size: 10pt; font-weight: bold; }
-        .label { width: 27%; background: #eef2f7; font-weight: bold; }
-        .muted { color: #68778b; }
-        .signatures { margin-top: 34px; }
-        .signatures td { width: 50%; height: 100px; border: 0; text-align: center; vertical-align: bottom; }
+        @page {
+            size: A4 portrait;
+            margin: 15mm 16mm;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 9.5pt;
+            color: #0f172a;
+            line-height: 1.4;
+            margin: 0;
+        }
+        .header {
+            border-bottom: 1.5px solid #0f172a;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+        .school-name {
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0;
+        }
+        .doc-subtitle {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #334155;
+            margin: 2px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .section-title {
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #0f172a;
+            margin: 14px 0 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #64748b;
+            padding: 6px 8px;
+            vertical-align: top;
+            text-align: left;
+            font-size: 9pt;
+        }
+        th {
+            background: #e2e8f0;
+            width: 30%;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .attendance-table th {
+            width: 25%;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 8pt;
+        }
+        .attendance-table td {
+            text-align: center;
+            font-weight: bold;
+            font-size: 10.5pt;
+        }
+        .signature {
+            margin-top: 28px;
+            width: 100%;
+        }
+        .signature td {
+            border: none;
+            width: 50%;
+            text-align: center;
+            padding-top: 8px;
+            font-size: 9pt;
+        }
     </style>
 </head>
 <body>
-    <h1>JURNAL MENGAJAR</h1>
-    <h2>JURNAL HARIAN GURU</h2>
+    <div class="header">
+        <p class="school-name">{{ $school?->name ?? 'School Suite' }}</p>
+        <p class="doc-subtitle">Jurnal Mengajar &bull; Jurnal Harian Guru</p>
+    </div>
 
-    <table class="identity">
-        <tr><td>Sekolah</td><td>:</td><td>{{ $school->name }}</td></tr>
-        <tr><td>Guru</td><td>:</td><td>{{ $teacherName }}</td></tr>
-        <tr><td>Mata pelajaran</td><td>:</td><td>{{ $session->subject?->name ?? '—' }}</td></tr>
-        <tr><td>Kelas / semester</td><td>:</td><td>{{ $session->classGroup?->name ?? '—' }} / {{ $session->term?->name ?? '—' }}</td></tr>
-        <tr><td>Pertemuan</td><td>:</td><td>Ke-{{ $session->meeting_number }} · {{ $session->date?->locale('id')->translatedFormat('l, d F Y') }}</td></tr>
-        <tr><td>Alokasi waktu</td><td>:</td><td>{{ $journal->period_count }} JP</td></tr>
-    </table>
-
+    <div class="section-title">A. Identitas Sesi Pembelajaran</div>
     <table>
-        @foreach([
-            'Materi pokok' => $journal->topic,
-            'Tujuan pembelajaran' => $journal->learning_objectives,
-            'Topik / tema' => $journal->theme,
-            'Kegiatan pendahuluan' => $journal->opening_activity,
-            'Kegiatan inti' => $journal->main_activity,
-            'Kegiatan penutup' => $journal->closing_activity,
-            'Tindak lanjut' => $journal->follow_up,
-            'Catatan tambahan' => $journal->notes,
-        ] as $label => $value)
-            @if($label !== 'Topik / tema' || filled($value))
-                <tr><td class="label">{{ $label }}</td><td>{!! nl2br(e($value ?: '—')) !!}</td></tr>
-            @endif
-        @endforeach
+        <tr><th>Guru Pengampu</th><td><strong>{{ $teacherName }}</strong></td></tr>
+        <tr><th>Tanggal</th><td>{{ $session->session_date?->format('d/m/Y') }}</td></tr>
+        <tr><th>Rombel</th><td>{{ $session->teachingAssignment?->classGroup?->name }}</td></tr>
+        <tr><th>Mata Pelajaran</th><td>{{ $session->teachingAssignment?->subject?->name }}</td></tr>
+        <tr><th>Pertemuan Ke-</th><td>{{ $journal->meeting_number ?? $session->meeting_number }}</td></tr>
+        <tr><th>Pokok Bahasan / Topik</th><td>{{ $journal->topic ?? $session->topic }}</td></tr>
     </table>
 
-    <p class="section-title">Kehadiran</p>
+    <div class="section-title">B. Pelaksanaan &amp; Evaluasi Pembelajaran</div>
     <table>
-        <tr>
-            <th>Jumlah siswa</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpa</th>
-        </tr>
-        <tr>
-            <td>{{ $studentCount }}</td><td>{{ $attendance['present'] }}</td><td>{{ $attendance['sick'] }}</td>
-            <td>{{ $attendance['permitted'] }}</td><td>{{ $attendance['absent'] }}</td>
-        </tr>
-    </table>
-    <table>
-        <tr><td class="label">Keterangan presensi</td><td>{!! nl2br(e($journal->attendance_notes ?: '—')) !!}</td></tr>
-        <tr><td class="label">Hasil pengamatan</td><td>{!! nl2br(e($journal->observations ?: '—')) !!}</td></tr>
-        <tr><td class="label">Refleksi guru</td><td>{!! nl2br(e($journal->reflection ?: '—')) !!}</td></tr>
+        <tr><th>Metode Pembelajaran</th><td>{{ $journal->teaching_method ?: '-' }}</td></tr>
+        <tr><th>Ringkasan Materi</th><td>{{ $journal->material_summary }}</td></tr>
+        <tr><th>Capaian Pembelajaran</th><td>{{ $journal->student_achievement ?: '-' }}</td></tr>
+        <tr><th>Hambatan / Kendala</th><td>{{ $journal->obstacles ?: '-' }}</td></tr>
+        <tr><th>Tindak Lanjut</th><td>{{ $journal->follow_up ?: '-' }}</td></tr>
+        <tr><th>Catatan Kejadian Khusus</th><td>{{ $journal->incident_notes ?: '-' }}</td></tr>
     </table>
 
-    <table class="signatures">
+    <div class="section-title">C. Rekapitulasi Kehadiran Peserta Didik ({{ $studentCount }} Siswa)</div>
+    <table class="attendance-table">
+        <thead>
+            <tr>
+                <th>Hadir</th>
+                <th>Sakit</th>
+                <th>Izin</th>
+                <th>Alpa</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ $attendance['present'] ?? 0 }}</td>
+                <td>{{ $attendance['sick'] ?? 0 }}</td>
+                <td>{{ $attendance['permitted'] ?? 0 }}</td>
+                <td>{{ $attendance['absent'] ?? 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="signature">
         <tr>
-            <td>Kepala Sekolah,<br><br><br><strong>{{ $school->principal_name ?: '________________________' }}</strong></td>
-            <td>Guru Mata Pelajaran,<br><br><br><strong>{{ $teacherName }}</strong></td>
+            <td>
+                Mengetahui,<br>Kepala Sekolah
+                <div style="height: 52px;"></div>
+                <strong>{{ $school?->principal_name ?? '________________________' }}</strong>
+            </td>
+            <td>
+                {{ $session->session_date?->format('d/m/Y') ?? now()->format('d/m/Y') }}<br>Guru Mata Pelajaran
+                <div style="height: 52px;"></div>
+                <strong>{{ $teacherName }}</strong>
+            </td>
         </tr>
     </table>
-    <p class="muted">Jurnal Mengajar {{ $session->subject?->name ?? '' }} — {{ $school->name }}</p>
 </body>
 </html>

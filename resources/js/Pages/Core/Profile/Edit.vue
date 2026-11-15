@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import type { SharedProps } from '@/types';
 
@@ -63,7 +63,7 @@ const submit = () => form.post('/profil', {
                     <h1>Profil saya</h1>
 
                 </div>
-                <AppButton variant="secondary" as="a" class="secondary-button" href="/ganti-password">Ganti kata sandi</AppButton>
+                <Link href="/ganti-password" class="secondary-button ui-button ui-button--secondary ui-button--md">Ganti kata sandi</Link>
             </header>
 
             <section class="panel profile-panel">

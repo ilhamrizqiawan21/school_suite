@@ -140,18 +140,20 @@ const submitAssignHomeroom = () => {
 
                 <div class="class-heading-controls flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <label class="text-meta font-semibold text-slate-600">Tahun Ajaran:</label>
+                        <label for="class-year-select" class="class-heading-label text-meta font-semibold">Tahun Ajaran:</label>
                         <select
-                            aria-label="Tahun ajaran" v-model="selectedYear"
+                            id="class-year-select"
+                            aria-label="Tahun ajaran"
+                            v-model="selectedYear"
                             @change="changeYear"
-                            class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"
+                            class="class-heading-select"
                         >
                             <option v-for="y in academic_years" :key="y.id" :value="String(y.id)">
                                 {{ y.name }} {{ y.is_active ? '(Aktif)' : '' }}
                             </option>
                         </select>
                     </div>
-                    <select v-if="terms.length" v-model="selectedTerm" aria-label="Semester" class="rounded-lg border px-3 py-2 text-sm" @change="changeTerm"><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.name }}{{ term.is_active ? ' (Aktif)' : '' }}</option></select>
+                    <select v-if="terms.length" v-model="selectedTerm" aria-label="Semester" class="class-heading-select" @change="changeTerm"><option v-for="term in terms" :key="term.id" :value="String(term.id)">{{ term.name }}{{ term.is_active ? ' (Aktif)' : '' }}</option></select>
                     <AppButton variant="primary" icon="plus" v-if="can_manage" type="button" class="class-action-button class-action-add" :disabled="!selectedYear" @click="openAdd">Tambah rombel</AppButton>
                 </div>
             </div>
@@ -234,17 +236,16 @@ const submitAssignHomeroom = () => {
                         </div>
                     </div>
 
-                    <div class="class-card-footer pt-4 mt-4 flex flex-wrap gap-2.5 items-center">
+                    <div v-if="can_manage" class="class-card-footer pt-4 mt-4 flex flex-wrap gap-2.5 items-center">
                         <AppButton variant="secondary"
-                            v-if="can_manage"
                             type="button"
                             @click="openHomeroomModal(cls)"
                             class="class-link-action"
                         >
                             {{ cls.homeroom_teacher ? 'Ubah Wali Kelas' : 'Tetapkan Wali Kelas' }}
                         </AppButton>
-                        <AppButton variant="secondary" icon-only icon="edit" v-if="can_manage" type="button" class="class-card-action class-card-action-edit" :aria-label="`Ubah rombel ${cls.name}`" :title="`Ubah rombel ${cls.name}`" @click="openEdit(cls)"></AppButton>
-                        <AppButton variant="danger" icon-only icon="delete" v-if="can_manage" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" :title="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)"></AppButton>
+                        <AppButton variant="secondary" icon-only icon="edit" type="button" class="class-card-action class-card-action-edit" :aria-label="`Ubah rombel ${cls.name}`" :title="`Ubah rombel ${cls.name}`" @click="openEdit(cls)"></AppButton>
+                        <AppButton variant="danger" icon-only icon="delete" type="button" class="class-card-action class-card-action-danger" :aria-label="`Hapus rombel ${cls.name}`" :title="`Hapus rombel ${cls.name}`" @click="deleteClass(cls)"></AppButton>
                     </div>
                 </article>
 
@@ -353,6 +354,9 @@ const submitAssignHomeroom = () => {
 .class-page .page-heading > div:first-child { min-width: 0; }
 .class-page .page-heading h1 { max-width: 23ch; }
 .class-heading-controls { justify-content: flex-end; }
+.class-heading-label { color: var(--ink-soft); }
+.class-heading-select { min-height: 42px; padding: .55rem .75rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: var(--type-control); font-weight: var(--weight-medium); }
+.class-heading-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
 .class-action-button svg { margin-right: .35rem; }
 .class-filterbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(160px, .4fr) auto; align-items: center; gap: .65rem; padding: .8rem 1rem; }
 .class-search-field input, .class-filter-select { width: 100%; min-height: 42px; padding: .62rem .72rem; border: 1px solid var(--line-strong); border-radius: .65rem; outline: 0; background: var(--surface); color: var(--ink); font-size: var(--type-control); }

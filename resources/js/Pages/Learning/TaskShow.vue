@@ -100,11 +100,11 @@ const formatDate = (value?: string | null) => value
                     <label>Jawaban teks<textarea v-model="form.content" rows="7" placeholder="Tulis jawaban atau catatan untuk guru" /></label>
                     <label>Lampiran (maksimal 5 file)<input :key="fileInputKey" type="file" multiple accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" @change="handleFiles" /></label>
                     <p class="form-hint">Format pengumpulan: PDF, JPG, JPEG. Maksimal 5 MB per file dan 20 MB total.</p>
-                    <p v-if="form.hasErrors" class="form-error">Isi jawaban teks atau pilih minimal satu berkas.</p>
+                    <div v-if="form.hasErrors" role="alert"><p v-for="(error, field) in form.errors" :key="field" class="form-error">{{ error }}</p></div>
                     <div class="form-actions"><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim...' : 'Kirim tugas' }}</AppButton></div>
                 </form>
             </section>
-            <section v-else-if="!can_manage" class="panel empty-state"><strong>Pengumpulan terkunci</strong><p>Jawaban sudah dikirim dan menunggu pemeriksaan guru.</p></section>
+            <section v-else-if="!can_manage" class="panel empty-state"><strong>Pengumpulan terkunci</strong><p>{{ submission?.review_status === 'approved' || submission?.status === 'graded' ? 'Tugas sudah dinilai. Periksa nilai dan umpan balik guru di atas.' : assignment.due_at && !assignment.allow_late && new Date(assignment.due_at).getTime() < Date.now() ? 'Tenggat sudah berakhir dan tugas ini tidak menerima pengumpulan terlambat.' : submission ? 'Jawaban sudah dikirim dan menunggu pemeriksaan guru.' : 'Pengumpulan belum tersedia untuk akun Anda.' }}</p></section>
         </div>
     </AppLayout>
 </template>

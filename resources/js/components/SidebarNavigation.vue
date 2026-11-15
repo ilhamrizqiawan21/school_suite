@@ -61,18 +61,7 @@ const sections: NavSection[] = [
             { name: 'Izin & Cuti Guru', href: '/akademik/izin-guru', key: 'teacher-leave', activePrefix: '/akademik/izin-guru', icon: 'M8 2v4m8-4v4M3 10h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2zm4 9h3m-3 4h6' },
             { name: 'Absensi Siswa', href: '/akademik/presensi', key: 'attendance', activePrefix: '/akademik/presensi', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
             { name: 'Rekap Absensi', href: '/akademik/presensi/rekap', principalHref: '/kepsek/laporan/rekap-absensi', key: 'attendance-report', activePrefix: '/akademik/presensi/rekap', principalActivePrefix: '/kepsek/laporan/rekap-absensi', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012 2v14z' },
-            {
-                name: 'Perangkat Pembelajaran',
-                href: '/akademik/jurnal',
-                key: 'learning-resources',
-                icon: 'M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5v-11zM4 16.5A2.5 2.5 0 016.5 14H20M8 7h8M8 10h6',
-                children: [
-                    { name: 'Jurnal Guru', href: '/akademik/jurnal', key: 'journals', activePrefix: '/akademik/jurnal', icon: 'M5 3h14v18H5zM8 7h8M8 11h8M8 15h5M3 6v15h14' },
-                    { name: 'ATP / Silabus', href: '/akademik/perangkat/atp', key: 'learning-atp', activePrefix: '/akademik/perangkat/atp', icon: 'M8 4h8m-8 4h8m-8 4h5m-8 8h14a2 2 0 002-2V6a2 2 0 00-2-2h-3l-2-2H8L6 4H3a2 2 0 00-2 2v12a2 2 0 002 2z' },
-                    { name: 'Dokumen Perencanaan', href: '/akademik/perangkat/dokumen', key: 'learning-documents', activePrefix: '/akademik/perangkat/dokumen', icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01' },
-                    { name: 'Modul Ajar', href: '/akademik/perangkat/modul-ajar', key: 'learning-module-ajar', activePrefix: '/akademik/perangkat/modul-ajar', icon: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5' },
-                ],
-            },
+            { name: 'Jurnal Guru', href: '/akademik/jurnal', key: 'journals', activePrefix: '/akademik/jurnal', icon: 'M5 3h14v18H5zM8 7h8M8 11h8M8 15h5M3 6v15h14' },
             { name: 'Kelas Daring', href: '/akademik/kelas-daring', key: 'online-classes', activePrefix: '/akademik/kelas-daring', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
             { name: 'Siklus Siswa', href: '/akademik/siklus-siswa', key: 'student-lifecycle', activePrefix: '/akademik/siklus-siswa', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
             { name: 'Pengaturan Akademik', href: '/akademik/pengaturan', key: 'academic-settings', activePrefix: '/akademik/pengaturan', icon: 'M4 6h16M4 12h16M4 18h16' },
@@ -104,7 +93,7 @@ const sections: NavSection[] = [
             { name: 'Input Nilai', href: '/penilaian/skor', key: 'scores', activePrefix: '/penilaian/skor', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
             { name: 'Penilaian Sikap', href: '/penilaian/sikap', key: 'attitudes', activePrefix: '/penilaian/sikap', icon: 'M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 00-.1-7.8z' },
             { name: 'Skema Penilaian', href: '/penilaian/skema', key: 'schemes', activePrefix: '/penilaian/skema', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
-            { name: 'Rapor Siswa', href: '/penilaian/rapor', principalHref: '/kepsek/laporan/nilai', key: 'reports', activePrefix: '/penilaian/rapor', principalActivePrefix: '/kepsek/laporan/nilai', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+            { name: 'Rapor Siswa', href: '/penilaian/rapor', principalHref: '/kepsek/laporan/nilai', key: 'reports', activePrefix: '/penilaian/rapor', activePrefixes: ['/penilaian/rapor', '/penilaian/ledger', '/kepsek/laporan/nilai'], principalActivePrefix: '/kepsek/laporan/nilai', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
             { name: 'Analisis', href: '/penilaian/analisis', principalHref: '/kepsek/statistik', key: 'assessment-analytics', activePrefix: '/penilaian/analisis', principalActivePrefix: '/kepsek/statistik', icon: 'M3 3v18h18M8 15l4-4 4 3 5-7' },
             { name: 'Pusat Laporan', href: '/laporan', key: 'reporting', activePrefix: '/laporan', icon: 'M9 17v-2m3 2v-4m3 4v-6m4 10H5a2 2 0 01-2-2V5a2 2 0 012 2h14a2 2 0 012 2v14z' },
             { name: 'Kinerja Guru', href: '/laporan', principalHref: '/kepsek/performa-guru', key: 'teacher-performance', activePrefix: '/laporan', principalActivePrefix: '/kepsek/performa-guru', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0' },
@@ -271,10 +260,35 @@ const visibleKeys = computed(() => new Set<string>((page.props as any).navigatio
 const visibleSections = computed(() => sections
     .map((section) => ({
         ...section,
-        items: section.items.map((item) => ({
-            ...resolvedItem(item),
-            children: item.children?.filter((child) => visibleKeys.value.has(child.key)).map(resolvedItem),
-        })).filter((item) => item.children ? visibleKeys.value.has(item.key) || item.children.length > 0 : visibleKeys.value.has(item.key)),
+        items: section.items
+            .map((item) => {
+                const base = resolvedItem(item);
+                if (!item.children) {
+                    return visibleKeys.value.has(item.key) ? base : null;
+                }
+
+                const visibleChildren = item.children
+                    .filter((child) => visibleKeys.value.has(child.key))
+                    .map(resolvedItem);
+
+                if (visibleChildren.length === 1) {
+                    const singleChild = visibleChildren[0];
+                    return {
+                        ...singleChild,
+                        name: displayName(singleChild),
+                    };
+                }
+
+                if (visibleChildren.length > 1 || visibleKeys.value.has(item.key)) {
+                    return {
+                        ...base,
+                        children: visibleChildren,
+                    };
+                }
+
+                return null;
+            })
+            .filter((item): item is NavItem => item !== null),
     }))
     .filter((section) => section.items.length > 0));
 
@@ -651,6 +665,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
 .nav-stack.is-topbar {
     flex-direction: row;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     padding: 0;
     flex-wrap: wrap;

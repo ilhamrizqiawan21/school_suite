@@ -37,9 +37,49 @@ class AcademicQueryService
      */
     public function getActiveTerm(int $schoolId): ?Term
     {
-        return Term::whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))
+        return Term::with('academicYear:id,name,school_id')
+            ->whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))
             ->where('is_active', true)
             ->first();
+    }
+
+    /**
+     * Ambil daftar tahun pelajaran untuk sekolah tertentu.
+     *
+     * @return BaseCollection<int, object>
+     */
+    public function getAcademicYears(int $schoolId): BaseCollection
+    {
+        return DB::table('academic_years')
+            ->where('school_id', $schoolId)
+            ->orderByDesc('is_active')
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'is_active', 'start_date', 'end_date']);
+    }
+
+    /**
+     * Ambil daftar semester milik sekolah tertentu (opsional difilter per tahun pelajaran).
+     */
+    public function getTermsForSchool(int $schoolId, ?int $academicYearId = null): Collection
+    {
+        return Term::with('academicYear:id,name,school_id')
+            ->whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))
+            ->when($academicYearId, fn ($q) => $q->where('academic_year_id', $academicYearId))
+            ->orderByDesc('is_active')
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    /**
+     * Ambil satu semester milik sekolah tertentu berdasarkan ID.
+     */
+    public function getTermByIdForSchool(int $schoolId, int $termId): ?Term
+    {
+        return Term::with('academicYear:id,name,school_id')
+            ->whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))
+            ->find($termId);
     }
 
     /**

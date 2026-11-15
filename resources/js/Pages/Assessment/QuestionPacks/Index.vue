@@ -310,7 +310,7 @@ function typeLabel(type: string) {
                             <div class="sequence-controls"><button type="button" :disabled="index === 0" :aria-label="`Naikkan soal ${index + 1}`" @click="moveItem(index, -1)">↑</button><span>{{ index + 1 }}</span><button type="button" :disabled="index === form.items.length - 1" :aria-label="`Turunkan soal ${index + 1}`" @click="moveItem(index, 1)">↓</button></div>
                             <div class="selected-copy"><b>{{ typeLabel(item.type) }}<span v-if="!item.question_active" class="archived-note"> · soal sumber diarsip</span></b><span>{{ item.prompt }}</span></div>
                             <label class="points-field">Poin<input v-model.number="item.points" type="number" min="0.1" max="100" step="0.1" required /></label>
-                            <AppButton variant="danger" type="button" class="remove-button" :aria-label="`Hapus soal ${index + 1}`" @click="form.items.splice(index, 1)">×</AppButton>
+                            <AppButton variant="danger" size="sm" icon="delete" type="button" class="remove-button" :aria-label="`Hapus soal ${index + 1}`" @click="form.items.splice(index, 1)">×</AppButton>
                         </li>
                         <li v-if="!form.items.length" class="empty-selected">Tambahkan minimal satu soal dari daftar di atas.</li>
                     </ol>

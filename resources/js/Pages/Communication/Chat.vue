@@ -52,8 +52,8 @@ const moderate = (id: number) => {
 <template>
     <Head title="Chat Kelas" />
 
-    <AppLayout>
-        <main class="view space-y-6 chat-page">
+    <AppLayout title="Diskusi Chat">
+        <div class="view space-y-6 chat-page">
             <section class="hero-card chat-hero">
                 <div>
                     <p class="eyebrow">Komunikasi kelas</p>
@@ -182,7 +182,7 @@ const moderate = (id: number) => {
                     </div>
                 </form>
             </div>
-        </main>
+        </div>
     </AppLayout>
 </template>
 
@@ -365,7 +365,22 @@ const moderate = (id: number) => {
 .send-box textarea {
     flex: 1;
     min-height: 44px;
+    padding: .65rem .8rem;
+    color: var(--ink);
+    background: var(--surface-subtle);
+    border: 1px solid var(--line-strong);
+    border-radius: .65rem;
+    font: inherit;
     resize: vertical;
+}
+
+.send-box textarea::placeholder {
+    color: var(--ink-faint);
+}
+
+.send-box textarea:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--primary) 30%, transparent);
+    outline-offset: 2px;
 }
 
 .chat-empty,

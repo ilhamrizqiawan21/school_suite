@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\Academic\Application\Services\AcademicImportService;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Shared\Audit\AuditLogger;
+use App\Shared\Exports\SpreadsheetStyler;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -370,8 +371,7 @@ class TeacherController extends Controller
                         $sheet->setCellValueExplicit([$column + 1, $index + 1], (string) $value, DataType::TYPE_STRING);
                     }
                 }
-                $sheet->freezePane('A2');
-                $sheet->getStyle('1:1')->getFont()->setBold(true);
+                SpreadsheetStyler::styleWorksheet($sheet, 'A2');
                 (new Xlsx($book))->save('php://output');
             } finally {
                 $book->disconnectWorksheets();

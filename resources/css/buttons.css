@@ -44,6 +44,38 @@
 .ui-button--warning:hover:not(:disabled):not([aria-disabled='true']) { background: color-mix(in srgb, var(--gold-soft) 92%, var(--gold)); border-color: var(--gold); }
 .ui-button--ghost { color: var(--primary-strong); background: transparent; border-color: transparent; }
 .ui-button--ghost:hover:not(:disabled):not([aria-disabled='true']) { background: var(--primary-soft); }
+.ui-button--icon-excel,
+.file-action-button--excel,
+.ui-button--icon-pdf,
+.file-action-button--pdf,
+.ui-button--icon-edit,
+.ui-button--icon-delete {
+    color: var(--ink) !important;
+    background: var(--surface, #ffffff) !important;
+    border-color: var(--line-strong) !important;
+}
+.ui-button--icon-excel svg,
+.file-action-button--excel svg,
+.ui-button--icon-edit svg {
+    color: var(--green, #15803d) !important;
+}
+.ui-button--icon-pdf svg,
+.file-action-button--pdf svg,
+.ui-button--icon-delete svg {
+    color: var(--red, #dc2626) !important;
+}
+.ui-button--icon-excel:hover:not(:disabled):not([aria-disabled='true']),
+.file-action-button--excel:hover:not(:disabled):not([aria-disabled='true']),
+.ui-button--icon-edit:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--surface-soft, #f8fafc) !important;
+    border-color: var(--green, #16a34a) !important;
+}
+.ui-button--icon-pdf:hover:not(:disabled):not([aria-disabled='true']),
+.file-action-button--pdf:hover:not(:disabled):not([aria-disabled='true']),
+.ui-button--icon-delete:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--surface-soft, #f8fafc) !important;
+    border-color: var(--red, #dc2626) !important;
+}
 .ui-button--icon-only { width: var(--button-size); padding: 0; }
 .ui-button-label { min-width: 0; overflow-wrap: anywhere; }
 .ui-button--icon-only .ui-button-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -230,6 +230,13 @@ class DemoSchoolOperationsSeeder extends Seeder
             'body' => '[DEMO] Tinjau izin guru, sarana, PPDB, dan contoh riwayat siswa melalui menu terkait.',
             'action_url' => null,
         ]);
+        $principal = User::query()->where('school_id', $admin->school_id)->where('email', 'kepsek@pilot.sch.id')->first();
+        if ($principal) {
+            $this->insertExample('user_notifications', ['user_id' => $principal->id, 'title' => '[DEMO] Laporan semester & surat keluar menunggu tinjauan'], [
+                'body' => '[DEMO] Tinjau surat keluar yang memerlukan persetujuan pimpinan serta rekap kehadiran siswa.',
+                'action_url' => '/administrasi/persuratan/surat-keluar',
+            ]);
+        }
     }
 
     private function seedSubstitute(User $admin): void

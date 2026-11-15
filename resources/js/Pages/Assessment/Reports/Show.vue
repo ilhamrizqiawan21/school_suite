@@ -1,45 +1,177 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
-interface Grade { subject_id: number; subject_name: string; final_score: number | null; competency_description?: string | null; }
-interface Report { id: number; status: string; scheme_version: number | null; checksum: string; integrity_valid: boolean; student: { name: string; nis: string; nisn: string }; class_group: { name: string }; term: { name: string; academic_year_name: string }; school: { name: string; address: string; npsn: string; principal_name?: string; logo_data_uri?: string }; academic: { homeroom_teacher: string }; grades: Grade[]; attendance: { sick?: number; permitted?: number; absent?: number }; extracurricular: { name: string; predicate?: string; description?: string }[]; notes?: { homeroom_notes?: string; achievements?: { title: string; level?: string; rank?: string }[] }; published_at?: string | null; }
+
+interface ComponentScore {
+    code?: string;
+    name?: string;
+    weight?: number;
+    raw_score?: number | null;
+}
+
+interface Grade {
+    subject_id: number;
+    subject_name: string;
+    final_score: number | null;
+    predicate?: string | null;
+    competency_description?: string | null;
+    components?: ComponentScore[];
+}
+
+interface Report {
+    id: number;
+    status: string;
+    report_mode?: 'sas' | 'sts';
+    available_modes?: ('sas' | 'sts')[];
+    scheme_version: number | null;
+    checksum: string;
+    integrity_valid: boolean;
+    student: { name: string; nis: string; nisn: string };
+    class_group: { name: string; phase?: string };
+    term: { id?: number; name: string; academic_year_name: string };
+    school: { name: string; address: string; npsn: string; principal_name?: string; principal_nip?: string | null; logo_data_uri?: string };
+    academic: { homeroom_teacher: string; homeroom_nip?: string | null };
+    grades: Grade[];
+    attendance: { sick?: number; permitted?: number; absent?: number };
+    extracurricular: { name: string; predicate?: string; description?: string }[];
+    notes?: { homeroom_notes?: string; promotion_decision?: string | null; report_place?: string | null; report_date?: string | null; achievements?: { title: string; level?: string; rank?: string }[] };
+    published_at?: string | null;
+}
+
 const props = defineProps<{ report: Report }>();
-const scoreLabel = (score: number | null) => score == null ? '—' : Number(score).toLocaleString('id-ID', { maximumFractionDigits: 4 });
+const isSts = computed(() => props.report.report_mode === 'sts');
+const scoreLabel = (score: number | null) => score == null ? '—' : Number(score).toLocaleString('id-ID', { maximumFractionDigits: 2 });
 const total = computed(() => props.report.grades.some(g => g.final_score != null) ? props.report.grades.reduce((sum, g) => sum + Number(g.final_score ?? 0), 0) : null);
+const average = computed(() => {
+    const valid = props.report.grades.filter(g => g.final_score != null);
+    if (!valid.length) return null;
+    return valid.reduce((sum, g) => sum + Number(g.final_score ?? 0), 0) / valid.length;
+});
+const componentSummary = (grade: Grade) => {
+    const items = (grade.components ?? []).filter(c => c.raw_score !== null && c.raw_score !== undefined);
+    if (!items.length) return '—';
+    return items.map(c => `${c.name || c.code || 'Komp'}: ${scoreLabel(c.raw_score ?? null)}`).join(' · ');
+};
+const reportTitle = computed(() => isSts.value ? 'Laporan Hasil Belajar Tengah Semester (STS)' : 'Capaian Hasil Belajar');
+const placeDate = computed(() => {
+    const place = props.report.notes?.report_place;
+    const date = props.report.notes?.report_date || props.report.published_at || 'Tanggal: ........................';
+    return place ? `${place}, ${date}` : date;
+});
+const pdfUrl = computed(() => {
+    const mode = props.report.report_mode || 'sas';
+    const cover = mode === 'sts' ? '0' : '1';
+    return `/penilaian/rapor/${props.report.id}/pdf?report_mode=${mode}&cover=${cover}`;
+});
+const page = usePage<{ auth?: { user?: { role?: string } } }>();
+const backHref = computed(() =>
+    page.props.auth?.user?.role === 'principal' ? '/kepsek/laporan/nilai' : '/penilaian/rapor',
+);
 const printReport = () => window.print();
 </script>
 <template>
     <Head :title="`Rapor — ${report.student.name}`" />
-    <AppLayout>
-        <main class="report-preview">
-            <div class="preview-toolbar"><div><Link href="/penilaian/rapor" class="preview-back">Kembali ke daftar rapor</Link><p>Pratinjau dokumen rapor</p></div><div class="preview-actions"><AppButton variant="secondary" icon="pdf" as="a" :href="`/penilaian/rapor/${report.id}/pdf`" class="pdf-button">Unduh PDF</AppButton><AppButton variant="primary" type="button" class="primary-button" @click="printReport">Cetak rapor</AppButton></div></div>
+    <AppLayout title="Detail Rapor">
+        <div class="report-preview">
+            <div class="preview-toolbar">
+                <div>
+                    <Link :href="backHref" class="preview-back">Kembali ke daftar rapor</Link>
+                    <p>Pratinjau dokumen rapor · <strong>{{ isSts ? 'Tengah Semester (STS)' : 'Akhir Semester (SAS)' }}</strong></p>
+                </div>
+                <div class="preview-actions">
+                    <div class="mode-switcher" role="group" aria-label="Pilih jenis rapor">
+                        <Link
+                            :href="`/penilaian/rapor/${report.id}?report_mode=sas`"
+                            class="mode-switch-pill"
+                            :class="{ 'is-active': !isSts }"
+                        >
+                            SAS (Akhir Semester)
+                        </Link>
+                        <Link
+                            :href="`/penilaian/rapor/${report.id}?report_mode=sts`"
+                            class="mode-switch-pill"
+                            :class="{ 'is-active': isSts }"
+                        >
+                            STS (Tengah Semester)
+                        </Link>
+                    </div>
+                    <AppButton variant="secondary" icon="pdf" as="a" target="_blank" rel="noopener noreferrer" :href="pdfUrl" class="pdf-button">Pratinjau PDF</AppButton>
+                    <AppButton variant="primary" type="button" class="primary-button" @click="printReport">Cetak rapor</AppButton>
+                </div>
+            </div>
             <article class="report-sheet academic-sheet">
                 <header class="school-letterhead"><img v-if="report.school.logo_data_uri" :src="report.school.logo_data_uri" alt="Logo sekolah"><div><h2>{{ report.school.name }}</h2><p>{{ report.school.address }}</p><p>NPSN {{ report.school.npsn }}</p></div></header>
-                <section class="student-identity" aria-label="Identitas peserta didik"><div><span>Nama peserta didik</span><strong>{{ report.student.name }}</strong></div><div><span>Kelas</span><strong>{{ report.class_group.name }}</strong></div><div><span>NIS / NISN</span><strong>{{ report.student.nis }} / {{ report.student.nisn || '—' }}</strong></div><div><span>Semester</span><strong>{{ report.term.name }}</strong></div><div><span>Sekolah</span><strong>{{ report.school.name }}</strong></div><div><span>Tahun pelajaran</span><strong>{{ report.term.academic_year_name }}</strong></div></section>
-                <div class="document-title"><h1>Capaian hasil belajar</h1></div>
-                <div class="grade-scroll table-scroll" tabindex="0" aria-label="Tabel nilai dan capaian kompetensi"><table class="app-table document-table grade-table"><thead><tr><th scope="col" class="number-cell">No.</th><th scope="col">Mata pelajaran</th><th scope="col" class="score-heading">Nilai akhir</th><th scope="col">Capaian kompetensi</th></tr></thead><tbody><tr v-for="(grade, index) in report.grades" :key="`${grade.subject_id}-${index}`"><td class="number-cell">{{ index + 1 }}</td><td class="subject-cell">{{ grade.subject_name }}</td><td class="number-cell score-cell">{{ scoreLabel(grade.final_score) }}</td><td class="competency-cell">{{ grade.competency_description || 'Belum ada deskripsi capaian kompetensi.' }}</td></tr><tr v-if="!report.grades.length"><td colspan="4">Belum ada nilai akademik pada rapor ini.</td></tr><tr v-else class="total-row"><td colspan="2">Jumlah nilai</td><td class="number-cell">{{ scoreLabel(total) }}</td><td></td></tr></tbody></table></div><p class="table-hint">Geser tabel untuk melihat capaian kompetensi.</p>
+                <section class="student-identity" aria-label="Identitas peserta didik"><div><span>Nama peserta didik</span><strong>{{ report.student.name }}</strong></div><div><span>Kelas / Fase</span><strong>{{ report.class_group.name }} / Fase {{ report.class_group.phase || '—' }}</strong></div><div><span>NIS / NISN</span><strong>{{ report.student.nis }} / {{ report.student.nisn || '—' }}</strong></div><div><span>Semester</span><strong>{{ report.term.name }}</strong></div><div><span>Sekolah</span><strong>{{ report.school.name }}</strong></div><div><span>Tahun pelajaran</span><strong>{{ report.term.academic_year_name }}</strong></div></section>
+                <div class="document-title"><h1>{{ reportTitle }}</h1></div>
+                <div class="grade-scroll table-scroll" tabindex="0" aria-label="Tabel nilai dan capaian kompetensi">
+                    <table class="app-table document-table grade-table">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="number-cell">No.</th>
+                                <th scope="col" class="subject-cell">Mata pelajaran</th>
+                                <th v-if="isSts" scope="col" style="width: 24%;">Rincian Komponen (Formatif/STS)</th>
+                                <th scope="col" class="score-heading">{{ isSts ? 'Nilai STS' : 'Nilai akhir' }}</th>
+                                <th scope="col" class="number-cell" style="width: 64px;">Predikat</th>
+                                <th scope="col">{{ isSts ? 'Capaian tengah semester' : 'Capaian kompetensi' }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(grade, index) in report.grades" :key="`${grade.subject_id}-${index}`">
+                                <td class="number-cell">{{ index + 1 }}</td>
+                                <td class="subject-cell">{{ grade.subject_name }}</td>
+                                <td v-if="isSts" class="component-cell">{{ componentSummary(grade) }}</td>
+                                <td class="number-cell score-cell">{{ scoreLabel(grade.final_score) }}</td>
+                                <td class="number-cell score-cell">{{ grade.predicate || '—' }}</td>
+                                <td class="competency-cell">{{ grade.competency_description || 'Belum ada deskripsi capaian kompetensi.' }}</td>
+                            </tr>
+                            <tr v-if="!report.grades.length">
+                                <td :colspan="isSts ? 6 : 5">Belum ada nilai akademik pada rapor ini.</td>
+                            </tr>
+                            <tr v-else class="total-row">
+                                <td :colspan="isSts ? 3 : 2">Jumlah &amp; Rata-rata Nilai</td>
+                                <td class="number-cell">{{ scoreLabel(total) }}</td>
+                                <td class="number-cell">{{ scoreLabel(average) }}</td>
+                                <td>Rata-rata capaian mata pelajaran</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="table-hint">Geser tabel untuk melihat capaian kompetensi.</p>
                 <footer class="document-footer"><span>{{ report.class_group.name }} · {{ report.student.name }}</span><span>Halaman 1</span></footer>
             </article>
             <article class="report-sheet supplement-sheet">
                 <section class="document-section"><h3>Ekstrakurikuler</h3><table class="app-table document-table"><thead><tr><th scope="col" class="number-cell">No.</th><th scope="col">Kegiatan ekstrakurikuler</th><th scope="col">Nilai</th><th scope="col">Keterangan</th></tr></thead><tbody><tr v-for="(activity, index) in report.extracurricular" :key="index"><td class="number-cell">{{ index + 1 }}</td><td>{{ activity.name }}</td><td>{{ activity.predicate || '—' }}</td><td>{{ activity.description || '—' }}</td></tr><tr v-if="!report.extracurricular.length"><td colspan="4" class="empty-cell">Belum ada catatan ekstrakurikuler.</td></tr></tbody></table></section>
                 <section class="document-section"><h3>Prestasi</h3><table class="app-table document-table"><thead><tr><th scope="col" class="number-cell">No.</th><th scope="col">Jenis prestasi</th><th scope="col">Keterangan</th></tr></thead><tbody><tr v-for="(achievement, index) in report.notes?.achievements ?? []" :key="index"><td class="number-cell">{{ index + 1 }}</td><td>{{ achievement.title }}</td><td>{{ [achievement.level, achievement.rank].filter(Boolean).join(' · ') || '—' }}</td></tr><tr v-if="!report.notes?.achievements?.length"><td colspan="3" class="empty-cell">Belum ada catatan prestasi.</td></tr></tbody></table></section>
-                <section class="document-section"><h3>Ketidakhadiran</h3><table class="app-table document-table attendance-table"><tbody><tr v-for="item in [{ key: 'sick', label: 'Sakit' }, { key: 'permitted', label: 'Izin' }, { key: 'absent', label: 'Tanpa keterangan' }] as const" :key="item.key"><td>{{ item.label }}</td><td>{{ report.attendance[item.key] ?? 0 }}</td><td>hari</td></tr></tbody></table></section>
+                <section class="document-section"><h3>Ketidakhadiran</h3><table class="app-table document-table attendance-table"><thead><tr><th scope="col">Keterangan</th><th scope="col" class="number-cell">Jumlah</th><th scope="col">Satuan</th></tr></thead><tbody><tr v-for="item in [{ key: 'sick', label: 'Sakit' }, { key: 'permitted', label: 'Izin' }, { key: 'absent', label: 'Tanpa keterangan' }] as const" :key="item.key"><td>{{ item.label }}</td><td>{{ report.attendance[item.key] ?? 0 }}</td><td>hari</td></tr></tbody></table></section>
                 <section class="document-section"><h3>Catatan wali kelas</h3><p class="homeroom-note">{{ report.notes?.homeroom_notes || 'Belum ada catatan wali kelas.' }}</p></section>
+                <section v-if="!isSts && report.notes?.promotion_decision" class="document-section"><h3>Keputusan kenaikan kelas / kelulusan</h3><p class="homeroom-note font-semibold">{{ report.notes.promotion_decision }}</p></section>
                 <section class="document-section"><h3>Tanggapan orang tua / wali</h3><div class="parent-response" aria-label="Ruang tanggapan tertulis orang tua atau wali"></div></section>
-                <section class="report-signatures" aria-label="Pengesahan rapor"><div><p>Orang tua / wali</p><strong>( ................................ )</strong></div><div><p>{{ report.published_at || 'Tanggal: ........................' }}<br>Wali kelas</p><strong>{{ report.academic.homeroom_teacher || '( ................................ )' }}</strong></div><div class="principal-signature"><p>Mengetahui,<br>Kepala sekolah</p><strong>{{ report.school.principal_name || '( ................................ )' }}</strong></div></section>
+                <section class="report-signatures" aria-label="Pengesahan rapor">
+                    <div><p>Orang tua / wali</p><strong>( ................................ )</strong></div>
+                    <div>
+                        <p>{{ placeDate }}<br>Wali kelas</p>
+                        <strong>{{ report.academic.homeroom_teacher || '( ................................ )' }}</strong>
+                        <small v-if="report.academic.homeroom_nip" class="block text-xs mt-0.5">NIP. {{ report.academic.homeroom_nip }}</small>
+                    </div>
+                    <div class="principal-signature">
+                        <p>Mengetahui,<br>Kepala sekolah</p>
+                        <strong>{{ report.school.principal_name || '( ................................ )' }}</strong>
+                        <small v-if="report.school.principal_nip" class="block text-xs mt-0.5">NIP. {{ report.school.principal_nip }}</small>
+                    </div>
+                </section>
                 <footer class="document-footer"><span>{{ report.class_group.name }} · {{ report.student.name }}</span><span>Halaman 2</span></footer>
                 <small class="document-checksum">Pemeriksaan data SHA-256: {{ report.checksum }}</small>
             </article>
             <details class="report-integrity"><summary>Pemeriksaan data rapor <span :class="{ invalid: !report.integrity_valid }">{{ report.integrity_valid ? 'Checksum cocok' : 'Checksum tidak cocok' }}</span></summary><p>Checksum SHA-256 membandingkan isi skema, nilai, kehadiran, dan catatan dengan data rapor yang disimpan. Kode ini bukan tanda tangan digital.</p><code>{{ report.checksum }}</code><p v-if="!report.integrity_valid">Pemeriksaan data tidak cocok. Minta pengelola sekolah memeriksa sumber rapor sebelum digunakan.</p></details>
-        </main>
+        </div>
     </AppLayout>
 </template>
 <style scoped>
 .report-sheet .document-table { border: 1px solid #7b8993; }
 .report-sheet .document-table tbody tr:last-child td { border-bottom: 1px solid #7b8993 !important; }
-.report-preview{max-width:1000px;min-width:0;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.preview-toolbar,.preview-actions{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}.preview-back{color:var(--primary);font-size:var(--type-meta);font-weight: 600}.preview-toolbar p{font-size:var(--type-meta);color:var(--ink-soft);margin-top:.5rem}.preview-toolbar p span{margin-left:.5rem;color:var(--gold)}.preview-toolbar p span.published{color:var(--green)}.report-sheet{min-width:0;max-width:100%;background:#fff;color:#000;padding:38px 42px;border:1px solid #dbe2e8;box-shadow:0 6px 28px #2033440a;font-family:"DejaVu Sans", var(--font-ui);border-radius:3px;min-height:1030px;display:flex;flex-direction:column}.school-letterhead{display:flex;align-items:center;justify-content:center;gap:22px;text-align:center;padding-bottom:18px;border-bottom:2px solid #263a48}.school-letterhead img{width:64px;height:64px;object-fit:contain}.school-letterhead h2{font-size:20px;font-weight: 700;line-height:1.3}.school-letterhead p{font-size:var(--type-meta);line-height:1.6;color:#000}.student-identity{display:grid;grid-template-columns:2fr 1fr;gap:10px 24px;border-bottom:3px double #70818c;padding:16px 0}.student-identity>div{display:grid;grid-template-columns:115px 1fr;gap:8px;font-size:var(--type-meta);line-height:1.5}.student-identity span{color:#000}.student-identity strong{font-weight:600}.document-title{text-align:center;margin:24px 0}.document-title h1{font-size:18px;font-weight: 700}.table-hint{display:none}.draft-mark{display:block;margin-top:10px;color:#000;font-size:var(--type-meta)}.document-section{margin-bottom:16px;break-inside:avoid}.document-section h3{font-size:var(--type-meta);font-weight: 700;margin-bottom:6px}.document-table{width:100%;table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;font-size:var(--type-sm);line-height:1.5}.document-table th{background:#f1f4f6;color:#000;font-size:var(--type-sm);font-weight:700;text-align:left}.document-table td,.document-table th{white-space:normal;overflow-wrap:anywhere;padding:8px 9px;border:1px solid #7b8993;vertical-align:middle}.document-table .number-cell{text-align:center;width:38px;white-space:nowrap}.document-table .score-heading{text-align:center;width:12%}.subject-cell{width:29%}.competency-cell{font-size:var(--type-sm);line-height:1.6}.score-cell,.total-row{font-weight:700}.total-row td{background:#f8fafb}.empty-cell{color:#000;font-size:var(--type-meta)}.attendance-table td:first-child{width:40%}.attendance-table td:nth-child(2){width:15%;text-align:center}.homeroom-note,.parent-response{padding:10px 12px;border:1px solid #7b8993;min-height:62px;font-size:var(--type-sm);line-height:1.7;white-space:pre-line;overflow-wrap:anywhere}.parent-response{min-height:76px}.report-signatures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 60px;text-align:left;font-size:var(--type-sm);margin:20px 24px 30px;break-inside:avoid}.report-signatures p{min-height:82px;line-height:1.6}.report-signatures strong{font-weight:600}.principal-signature{grid-column:1/-1;text-align:center}.document-footer{display:flex;justify-content:space-between;gap:12px;margin-top:auto;padding-top:16px;font-size:var(--type-caption);color:#000}.document-checksum{font-size:var(--type-caption);color:#000;overflow-wrap:anywhere;margin-top:6px}.report-integrity{min-width:0;padding:1rem 1.2rem;border:1px solid var(--line);border-radius:.6rem;color:var(--ink-soft);background:var(--surface);font-size:var(--type-meta)}.report-integrity summary{cursor:pointer;color:var(--ink);font-weight: 600}.report-integrity summary span{margin-left:.5rem;font-size:var(--type-meta);color:var(--green)}.report-integrity summary span.invalid{color:var(--red)}.report-integrity p{line-height:1.7;margin-top:.75rem}.report-integrity code{display:block;overflow-wrap:anywhere;margin-top:.75rem;font-size:var(--type-meta)}@media(max-width:700px){.table-hint{display:block;font-size:var(--type-caption);color:#647786;margin-top:8px}.report-sheet{padding:24px 18px;min-height:850px}.school-letterhead h2{font-size:16px}.school-letterhead img{width:46px;height:46px}.student-identity{grid-template-columns:1fr}.student-identity>div{grid-template-columns:115px 1fr}.grade-scroll{min-width:0;overflow-x:auto}.grade-table{min-width:550px}.report-signatures{gap:24px;font-size:var(--type-sm);margin-inline:0}.preview-actions{width:100%}}
+.report-preview{max-width:1000px;min-width:0;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:1.25rem}.preview-toolbar,.preview-actions{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}.preview-back{color:var(--primary);font-size:var(--type-meta);font-weight: 600}.preview-toolbar p{font-size:var(--type-meta);color:var(--ink-soft);margin-top:.5rem}.mode-switcher{display:inline-flex;padding:.2rem;border:1px solid var(--line);border-radius:.6rem;background:var(--surface)}.mode-switch-pill{padding:.35rem .7rem;border-radius:.45rem;font-size:var(--type-meta);font-weight:var(--weight-semibold);color:var(--ink-soft);text-decoration:none}.mode-switch-pill.is-active{background:var(--primary-soft);color:var(--primary-strong)}.report-sheet{min-width:0;max-width:100%;background:#fff;color:#000;padding:38px 42px;border:1px solid #dbe2e8;box-shadow:0 6px 28px #2033440a;font-family:"DejaVu Sans", var(--font-ui);border-radius:3px;min-height:1030px;display:flex;flex-direction:column}.school-letterhead{display:flex;align-items:center;justify-content:center;gap:22px;text-align:center;padding-bottom:18px;border-bottom:2px solid #263a48}.school-letterhead img{width:64px;height:64px;object-fit:contain}.school-letterhead h2{font-size:20px;font-weight: 700;line-height:1.3}.school-letterhead p{font-size:var(--type-meta);line-height:1.6;color:#000}.student-identity{display:grid;grid-template-columns:2fr 1fr;gap:10px 24px;border-bottom:3px double #70818c;padding:16px 0}.student-identity>div{display:grid;grid-template-columns:115px 1fr;gap:8px;font-size:var(--type-meta);line-height:1.5}.student-identity span{color:#000}.student-identity strong{font-weight:600}.document-title{text-align:center;margin:24px 0}.document-title h1{font-size:18px;font-weight: 700}.table-hint{display:none}.draft-mark{display:block;margin-top:10px;color:#000;font-size:var(--type-meta)}.document-section{margin-bottom:16px;break-inside:avoid}.document-section h3{font-size:var(--type-meta);font-weight: 700;margin-bottom:6px}.document-table{width:100%;table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;font-size:var(--type-sm);line-height:1.5}.document-table th{background:#f1f4f6;color:#000;font-size:var(--type-sm);font-weight:700;text-align:left}.document-table td,.document-table th{white-space:normal;overflow-wrap:anywhere;padding:8px 9px;border:1px solid #7b8993;vertical-align:middle}.document-table .number-cell{text-align:center;width:38px;white-space:nowrap}.document-table .score-heading{text-align:center;width:11%}.subject-cell{width:25%}.component-cell{font-size:var(--type-meta);color:#1e293b}.competency-cell{font-size:var(--type-sm);line-height:1.6}.score-cell,.total-row{font-weight:700}.total-row td{background:#f8fafb}.empty-cell{color:#000;font-size:var(--type-meta)}.attendance-table td:first-child{width:40%}.attendance-table td:nth-child(2){width:15%;text-align:center}.homeroom-note,.parent-response{padding:10px 12px;border:1px solid #7b8993;min-height:62px;font-size:var(--type-sm);line-height:1.7;white-space:pre-line;overflow-wrap:anywhere}.parent-response{min-height:76px}.report-signatures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 60px;text-align:left;font-size:var(--type-sm);margin:20px 24px 30px;break-inside:avoid}.report-signatures p{min-height:82px;line-height:1.6}.report-signatures strong{font-weight:600}.principal-signature{grid-column:1/-1;text-align:center}.document-footer{display:flex;justify-content:space-between;gap:12px;margin-top:auto;padding-top:16px;font-size:var(--type-caption);color:#000}.document-checksum{font-size:var(--type-caption);color:#000;overflow-wrap:anywhere;margin-top:6px}.report-integrity{min-width:0;padding:1rem 1.2rem;border:1px solid var(--line);border-radius:.6rem;color:var(--ink-soft);background:var(--surface);font-size:var(--type-meta)}.report-integrity summary{cursor:pointer;color:var(--ink);font-weight: 600}.report-integrity summary span{margin-left:.5rem;font-size:var(--type-meta);color:var(--green)}.report-integrity summary span.invalid{color:var(--red)}.report-integrity p{line-height:1.7;margin-top:.75rem}.report-integrity code{display:block;overflow-wrap:anywhere;margin-top:.75rem;font-size:var(--type-meta)}@media(max-width:700px){.table-hint{display:block;font-size:var(--type-caption);color:#647786;margin-top:8px}.report-sheet{padding:24px 18px;min-height:850px}.school-letterhead h2{font-size:16px}.school-letterhead img{width:46px;height:46px}.student-identity{grid-template-columns:1fr}.student-identity>div{grid-template-columns:115px 1fr}.grade-scroll{min-width:0;overflow-x:auto}.grade-table{min-width:550px}.report-signatures{gap:24px;font-size:var(--type-sm);margin-inline:0}.preview-actions{width:100%}}
 @media print{@page{size:A4;margin:14mm}:global(.sidebar),:global(.topbar),:global(.sidebar-backdrop),:global(.skip-link){display:none!important}:global(.app-shell),:global(.workspace){display:block!important;margin:0!important;min-height:0!important}:global(#main-content){padding:0!important;margin:0!important}:global(body){background:white!important}.preview-toolbar,.report-integrity,.table-hint{display:none!important}.report-preview{display:block;max-width:none}.report-sheet{display:block;padding:0;margin:0;border:0;box-shadow:none;border-radius:0;min-height:0}.supplement-sheet{break-before:page}.student-identity{grid-template-columns:2fr 1fr}.grade-table{min-width:0}.document-table thead{display:table-header-group}.document-table tr{break-inside:avoid}.document-footer{margin-top:30px}.report-signatures{grid-template-columns:1fr 1fr}.school-letterhead h2{font-size:12pt}}
 @media print{.document-table td,.document-table th{padding:5px 7px;font-size:9pt;line-height:1.4}.document-section{margin-bottom:10px}.document-section h3{font-size:9pt;margin-bottom:5px}.report-signatures{margin:14px 24px 15px;gap:15px;font-size:9pt}.report-signatures p{min-height:60px}.homeroom-note{min-height:45px;padding:8px;font-size:9pt}.parent-response{min-height:55px}.document-footer{margin-top:15px;padding-top:10px}}
 .report-sheet .document-table td{color:#000}

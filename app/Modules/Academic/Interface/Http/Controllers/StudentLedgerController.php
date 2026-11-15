@@ -15,6 +15,7 @@ use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Assessment\Application\Services\ReportPublishingService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Shared\Audit\AuditLogger;
+use App\Shared\Exports\SpreadsheetStyler;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -346,8 +347,7 @@ class StudentLedgerController extends Controller
                         $sheet->setCellValueExplicit([$colIndex + 1, $rowIndex + 1], (string) $value, DataType::TYPE_STRING);
                     }
                 }
-                $sheet->freezePane('D2');
-                $sheet->getStyle('1:1')->getFont()->setBold(true);
+                SpreadsheetStyler::styleWorksheet($sheet, 'D2');
                 (new Xlsx($book))->save('php://output');
             } finally {
                 $book->disconnectWorksheets();
@@ -684,7 +684,8 @@ class StudentLedgerController extends Controller
 
         $schoolId = (int) $request->user()->school_id;
         $student = Student::query()->where('school_id', $schoolId)->findOrFail($studentId);
-        $record = $this->buildPdfStudentRecord($schoolId, $student);
+        $termId = $request->filled('term_id') ? (int) $request->query('term_id') : null;
+        $record = $this->buildPdfStudentRecord($schoolId, $student, $termId);
         $school = $this->schoolScope->getSchoolLegalSnapshot($schoolId);
         $schoolLogo = $this->schoolScope->getSchoolLogoDataUri($schoolId);
 
@@ -692,7 +693,7 @@ class StudentLedgerController extends Controller
             eventType: 'academic.student_ledger.exported',
             targetType: 'student',
             targetId: (string) $student->id,
-            newValues: ['format' => 'pdf'],
+            newValues: ['format' => 'pdf', 'term_id' => $termId],
             actor: $request->user(),
             schoolId: $schoolId,
         );
@@ -765,14 +766,14 @@ class StudentLedgerController extends Controller
         return $request->boolean('download') ? $pdf->download($filename) : $pdf->stream($filename);
     }
 
-    private function buildPdfStudentRecord(int $schoolId, Student $student): array
+    private function buildPdfStudentRecord(int $schoolId, Student $student, ?int $termId = null): array
     {
         $history = $this->classHistory($student->id, $schoolId);
         $lifecycle = $this->lifecycleHistory($student->id, $schoolId);
         $detail = StudentLedgerDetail::query()->where('school_id', $schoolId)->where('student_id', $student->id)->first();
         $documents = StudentLedgerDocument::query()->where('school_id', $schoolId)->where('student_id', $student->id)
             ->orderBy('created_at')->get(['document_type', 'original_name', 'size_bytes', 'created_at']);
-        $reports = $this->formatReportSnapshotsForStudent($schoolId, $student->id, $history);
+        $reports = $this->formatReportSnapshotsForStudent($schoolId, $student->id, $history, $termId);
 
         return [
             'student' => $student,
@@ -803,9 +804,9 @@ class StudentLedgerController extends Controller
      * @param  Collection<int, Enrollment>  $history
      * @return list<array<string, mixed>>
      */
-    private function formatReportSnapshotsForStudent(int $schoolId, int $studentId, Collection $history): array
+    private function formatReportSnapshotsForStudent(int $schoolId, int $studentId, Collection $history, ?int $termId = null): array
     {
-        $grouped = $this->reportPublishingService->getPublishedSnapshotsForStudents($schoolId, [$studentId]);
+        $grouped = $this->reportPublishingService->getPublishedSnapshotsForStudents($schoolId, [$studentId], $termId);
         $snapshots = $grouped[$studentId] ?? [];
         if ($snapshots === []) {
             return [];
@@ -819,6 +820,7 @@ class StudentLedgerController extends Controller
 
             return [
                 'id' => $snapshot['id'],
+                'term_id' => $snapshot['term_id'] ?? $enrollment?->term_id,
                 'academic_year' => $enrollment?->term?->academicYear?->name ?? '—',
                 'term_name' => $enrollment?->term?->name ?? '—',
                 'class_name' => $enrollment?->classGroup?->name ?? '—',
