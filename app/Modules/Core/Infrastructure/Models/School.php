@@ -66,6 +66,7 @@ class School extends Model
         'email',
         'principal_name',
         'website',
+        'timezone',
         'vision',
         'mission',
         'about',

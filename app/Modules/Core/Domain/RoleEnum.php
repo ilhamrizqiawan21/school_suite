@@ -15,6 +15,14 @@ enum RoleEnum: string
     case LIBRARIAN = 'librarian';
     case STUDENT = 'student';
     case PARENT = 'parent';
+    case ALUMNI = 'alumni';
+    case COMMITTEE = 'committee';
+    case PTSP = 'ptsp';
+    case RECEPTIONIST = 'receptionist';
+    case PICKET = 'picket';
+    case SECURITY_GUARD = 'security_guard';
+    case TASK_FORCE = 'task_force';
+    case SIGNATORY = 'signatory';
 
     /**
      * Get user-friendly label for each role.
@@ -31,6 +39,30 @@ enum RoleEnum: string
             self::LIBRARIAN => 'Pustakawan',
             self::STUDENT => 'Peserta Didik / Siswa',
             self::PARENT => 'Wali Murid / Orang Tua',
+            self::ALUMNI => 'Alumni',
+            self::COMMITTEE => 'Panitia Kegiatan / PPDB',
+            self::PTSP => 'Petugas TU / PTSP',
+            self::RECEPTIONIST => 'Penyambut Tamu / Resepsionis',
+            self::PICKET => 'Petugas Piket',
+            self::SECURITY_GUARD => 'Satpam / Pos Jaga',
+            self::TASK_FORCE => 'Satgas Pengaduan',
+            self::SIGNATORY => 'Pejabat Penandatangan',
         };
+    }
+
+    /**
+     * Whether this role represents internal school staff/officers.
+     */
+    public function isStaff(): bool
+    {
+        return ! in_array($this, [self::STUDENT, self::PARENT, self::ALUMNI], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return array_map(static fn (self $role): string => $role->value, self::cases());
     }
 }

@@ -20,9 +20,7 @@ use App\Modules\Assessment\Infrastructure\Models\AssessmentComponent;
 use App\Modules\Assessment\Infrastructure\Models\AssessmentScheme;
 use App\Modules\Assessment\Infrastructure\Models\ReportSnapshot;
 use App\Modules\Assessment\Infrastructure\Models\Score;
-use App\Modules\Core\Domain\PermissionEnum;
-use App\Modules\Core\Infrastructure\Models\Permission;
-use App\Modules\Core\Infrastructure\Models\Role;
+use App\Modules\Core\Application\Services\RolePermissionRegistryService;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -45,45 +43,7 @@ class PilotSchoolSeeder extends Seeder
         }
 
         // 1. Roles & Permissions Baku
-        $roles = [
-            'admin' => Role::firstOrCreate(['name' => 'admin'], ['label' => 'Administrator', 'is_system' => true]),
-            'principal' => Role::firstOrCreate(['name' => 'principal'], ['label' => 'Kepala Sekolah', 'is_system' => true]),
-            'operator' => Role::firstOrCreate(['name' => 'operator'], ['label' => 'Operator Sekolah', 'is_system' => true]),
-            'teacher' => Role::firstOrCreate(['name' => 'teacher'], ['label' => 'Guru Mata Pelajaran', 'is_system' => true]),
-            'homeroom' => Role::firstOrCreate(['name' => 'homeroom'], ['label' => 'Wali Kelas', 'is_system' => true]),
-            'counselor' => Role::firstOrCreate(['name' => 'counselor'], ['label' => 'Guru BK', 'is_system' => true]),
-            'student' => Role::firstOrCreate(['name' => 'student'], ['label' => 'Siswa', 'is_system' => true]),
-        ];
-
-        // Buat Permissions Core, Academic, Homeroom, Assessment
-        foreach (PermissionEnum::cases() as $permCase) {
-            Permission::firstOrCreate(
-                ['name' => $permCase->value],
-                [
-                    'label' => ucwords(str_replace(['.', '_'], ' ', $permCase->value)),
-                    'module' => explode('.', $permCase->value)[0] ?? 'core',
-                ]
-            );
-        }
-
-        $corePermissions = Permission::query()
-            ->whereIn('name', [
-                PermissionEnum::USERS_VIEW->value,
-                PermissionEnum::USERS_CREATE->value,
-                PermissionEnum::SCHOOL_VIEW->value,
-                PermissionEnum::SCHOOL_UPDATE->value,
-            ])
-            ->pluck('id', 'name');
-        $roles['operator']->permissions()->syncWithoutDetaching([
-            $corePermissions[PermissionEnum::USERS_VIEW->value],
-            $corePermissions[PermissionEnum::USERS_CREATE->value],
-            $corePermissions[PermissionEnum::SCHOOL_VIEW->value],
-            $corePermissions[PermissionEnum::SCHOOL_UPDATE->value],
-        ]);
-        $roles['principal']->permissions()->syncWithoutDetaching([
-            $corePermissions[PermissionEnum::USERS_VIEW->value],
-            $corePermissions[PermissionEnum::SCHOOL_VIEW->value],
-        ]);
+        $roles = app(RolePermissionRegistryService::class)->syncSystemRolesAndPermissions();
 
         // 2. Profil Sekolah Pilot
         $school = School::firstOrCreate(

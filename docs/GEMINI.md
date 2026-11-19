@@ -19,7 +19,7 @@ Anda adalah pelaksana kode utama. Kerjakan hanya task yang jelas batas dan accep
 
 ## Saat menyerahkan
 
-Perbarui `HANDOFF.md` dengan: task dan requirement; ringkasan; file/migrasi; keputusan/asumsi; tes beserta hasil; risiko tersisa; langkah review manual; rollback. Jangan menulis “selesai” bila ada tes gagal atau acceptance criteria belum dibuktikan.
+Perbarui `docs/HANDOFF.md` dengan: task dan requirement; ringkasan; file/migrasi; keputusan/asumsi; tes beserta hasil; risiko tersisa; langkah review manual; rollback. Untuk pekerjaan paritas MAN 4 Banjar, selalu perbarui pula `docs/TODO_PARITAS_MAN4_BANJAR.md` (status/centang item) dan `docs/INVENTARIS_DAN_BASELINE_PARITAS.md` (kolom status School Suite). Jangan menulis “selesai” bila ada tes gagal atau acceptance criteria belum dibuktikan.
 
 ## Larangan
 

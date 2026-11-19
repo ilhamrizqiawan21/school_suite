@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Application\Services\PublicPortalService;
 use App\Modules\Core\Application\Services\SchoolOrganizationTreeService;
 use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolGalleryAlbum;
@@ -14,7 +15,10 @@ use Inertia\Response;
 
 class SchoolProfileController extends Controller
 {
-    public function __construct(private readonly SchoolOrganizationTreeService $organizationTree) {}
+    public function __construct(
+        private readonly SchoolOrganizationTreeService $organizationTree,
+        private readonly PublicPortalService $portalService,
+    ) {}
 
     public function index(): Response
     {
@@ -24,11 +28,21 @@ class SchoolProfileController extends Controller
     public function home(): Response
     {
         $data = $this->publicData();
+        $school = School::query()->firstOrFail();
 
         return Inertia::render('Public/School/Home', [
             'school' => $data['school'],
             'news' => $data['news'],
             'gallery' => $data['gallery'],
+            'visitStats' => $this->portalService->recordAnonymousVisit((int) $school->id),
+            'prayerSchedule' => $this->portalService->prayerTimesForSchool($school),
+            'shortcuts' => [
+                ['key' => 'ppdb', 'label' => 'PPDB Online', 'description' => 'Pendaftaran peserta didik baru', 'href' => '/ppdb'],
+                ['key' => 'ptsp', 'label' => 'PTSP Online', 'description' => 'Layanan persuratan & administrasi', 'href' => '/e-layanan?q=PTSP'],
+                ['key' => 'siap_lapor', 'label' => 'Siap Lapor', 'description' => 'Kanal pengaduan aman & terpantau', 'href' => '/e-layanan?q=Aduan'],
+                ['key' => 'lacak', 'label' => 'Lacak Berkas', 'description' => 'Pantau progres tiket layanan', 'href' => '/e-layanan?q=Lacak'],
+            ],
+            'socialLinks' => data_get($school->settings, 'social_links', []),
         ]);
     }
 
@@ -56,8 +70,12 @@ class SchoolProfileController extends Controller
 
     public function contact(): Response
     {
+        $school = School::query()->firstOrFail();
+
         return Inertia::render('Public/School/Contact', [
             'school' => $this->publicData()['school'],
+            'serviceHours' => data_get($school->settings, 'service_hours', 'Senin – Jumat, 07.30 – 15.00'),
+            'mapUrl' => data_get($school->settings, 'map_url'),
         ]);
     }
 

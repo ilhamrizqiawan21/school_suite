@@ -5,35 +5,12 @@ declare(strict_types=1);
 namespace App\Shared\Audit;
 
 use App\Models\User;
+use App\Modules\Core\Domain\DataClassificationMap;
 use App\Modules\Core\Infrastructure\Models\AuditEvent;
 use Illuminate\Support\Facades\Request;
 
 class AuditLogger
 {
-    /**
-     * List of sensitive keys that must be redacted automatically.
-     *
-     * @var list<string>
-     */
-    private const SENSITIVE_KEYS = [
-        'password',
-        'password_confirmation',
-        'token',
-        'remember_token',
-        'secret',
-        'api_key',
-        'access_token',
-        'refresh_token',
-        'pin',
-        'credit_card',
-        'phone',
-        'parent_phone',
-        'nik',
-        'nis',
-        'nisn',
-        'address',
-    ];
-
     /**
      * Record a new material audit event with automatic redaction of sensitive data.
      *
@@ -99,7 +76,7 @@ class AuditLogger
      */
     private function isSensitiveKey(string $key): bool
     {
-        foreach (self::SENSITIVE_KEYS as $sensitive) {
+        foreach (DataClassificationMap::sensitiveKeys() as $sensitive) {
             if ($key === $sensitive || str_contains($key, $sensitive)) {
                 return true;
             }

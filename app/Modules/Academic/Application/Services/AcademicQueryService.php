@@ -7,6 +7,7 @@ namespace App\Modules\Academic\Application\Services;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
 use App\Modules\Academic\Infrastructure\Models\Student;
+use App\Modules\Academic\Infrastructure\Models\StudentGuardian;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
 use App\Modules\Academic\Infrastructure\Models\Term;
@@ -384,5 +385,136 @@ class AcademicQueryService
     public function getTeachingAssignmentById(int $id): ?TeachingAssignment
     {
         return TeachingAssignment::find($id);
+    }
+
+    /**
+     * Ambil daftar ID siswa yang terhubung dengan akun wali murid terverifikasi.
+     *
+     * @return list<int>
+     */
+    public function getGuardianStudentIdsForUser(int $schoolId, int $userId): array
+    {
+        return StudentGuardian::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $userId)
+            ->where('is_verified', true)
+            ->pluck('student_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil daftar ID siswa milik akun siswa itu sendiri dalam sekolah tertentu.
+     *
+     * @return list<int>
+     */
+    public function getStudentIdsForUser(int $schoolId, int $userId): array
+    {
+        return Student::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $userId)
+            ->pluck('id')
+            ->map(static fn ($id): int => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil daftar ID siswa yang berada di kelas perwalian aktif untuk user wali kelas.
+     *
+     * @return list<int>
+     */
+    public function getHomeroomStudentIdsForUser(int $schoolId, int $userId): array
+    {
+        $activeTerm = $this->getActiveTerm($schoolId);
+        $teacher = $this->getTeacherByUserId($userId);
+
+        if ($activeTerm === null || $teacher === null || (int) $teacher->school_id !== $schoolId) {
+            return [];
+        }
+
+        $classGroupIds = ClassGroup::query()
+            ->where('school_id', $schoolId)
+            ->where('academic_year_id', $activeTerm->academic_year_id)
+            ->where('homeroom_teacher_id', $teacher->id)
+            ->pluck('id');
+
+        if ($classGroupIds->isEmpty()) {
+            return [];
+        }
+
+        return Enrollment::query()
+            ->where('term_id', $activeTerm->id)
+            ->whereIn('class_group_id', $classGroupIds)
+            ->pluck('student_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Ambil snapshot identitas siswa (beserta kelas & periode aktif) untuk kebutuhan referensi dokumen/tiket.
+     *
+     * @return array{student_id: int, school_id: int, nis: string, nisn: ?string, name: string, status: string, term_id: ?int, term_name: ?string, class_group_id: ?int, class_group_name: ?string}|null
+     */
+    public function getStudentIdentitySnapshot(int $schoolId, int $studentId): ?array
+    {
+        $student = Student::query()
+            ->where('school_id', $schoolId)
+            ->find($studentId);
+
+        if ($student === null) {
+            return null;
+        }
+
+        $activeTerm = $this->getActiveTerm($schoolId);
+        $enrollment = $activeTerm !== null
+            ? Enrollment::query()
+                ->with('classGroup:id,name')
+                ->where('term_id', $activeTerm->id)
+                ->where('student_id', $student->id)
+                ->first()
+            : null;
+
+        return [
+            'student_id' => (int) $student->id,
+            'school_id' => (int) $student->school_id,
+            'nis' => (string) $student->nis,
+            'nisn' => $student->nisn,
+            'name' => (string) $student->name,
+            'status' => (string) $student->status,
+            'term_id' => $activeTerm?->id ? (int) $activeTerm->id : null,
+            'term_name' => $activeTerm?->name,
+            'class_group_id' => $enrollment?->class_group_id ? (int) $enrollment->class_group_id : null,
+            'class_group_name' => $enrollment?->classGroup?->name,
+        ];
+    }
+
+    /**
+     * Public-safe GTK directory returning only approved public attributes (M4-PUB-03).
+     * Never exposes NIP, email, phone, or private metadata.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    public function getPublicDirectoryTeachers(int $schoolId, ?string $search = null): array
+    {
+        $cleanSearch = trim((string) $search);
+
+        return Teacher::query()
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->when($cleanSearch !== '', function ($query) use ($cleanSearch): void {
+                $query->where('name', 'like', '%'.$cleanSearch.'%');
+            })
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(static fn (Teacher $teacher): array => [
+                'id' => (int) $teacher->id,
+                'name' => (string) $teacher->name,
+            ])
+            ->values()
+            ->all();
     }
 }

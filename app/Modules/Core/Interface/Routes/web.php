@@ -6,6 +6,8 @@ use App\Modules\Core\Interface\Http\Controllers\AuthController;
 use App\Modules\Core\Interface\Http\Controllers\BrandMediaController;
 use App\Modules\Core\Interface\Http\Controllers\PasswordController;
 use App\Modules\Core\Interface\Http\Controllers\ProfileController;
+use App\Modules\Core\Interface\Http\Controllers\PublicPortalAdminController;
+use App\Modules\Core\Interface\Http\Controllers\PublicPortalController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolGalleryController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolNewsController;
@@ -27,6 +29,14 @@ Route::get('/struktur-organisasi/foto/{member}', [SchoolOrganizationController::
 Route::get('/berita', [SchoolNewsController::class, 'publicIndex'])->name('core.news.public.index');
 Route::get('/berita/{slug}/foto/{photo}', [SchoolNewsController::class, 'photo'])->whereNumber('photo')->name('core.news.photo');
 Route::get('/berita/{slug}', [SchoolNewsController::class, 'publicShow'])->name('core.news.public.show');
+Route::get('/e-layanan', [PublicPortalController::class, 'services'])->name('core.public.services');
+Route::get('/direktori-gtk', [PublicPortalController::class, 'teachers'])->name('core.public.teachers');
+Route::get('/prestasi', [PublicPortalController::class, 'achievements'])->name('core.public.achievements');
+Route::get('/pusat-unduh', [PublicPortalController::class, 'downloads'])->name('core.public.downloads');
+Route::get('/pusat-unduh/{download}/unduh', [PublicPortalController::class, 'downloadFile'])->whereNumber('download')->name('core.public.downloads.file');
+Route::get('/zona-integritas', [PublicPortalController::class, 'integrityZone'])->name('core.public.integrity');
+Route::post('/zona-integritas/ikm', [PublicPortalController::class, 'submitIkm'])->middleware('throttle:sensitive')->name('core.public.ikm.store');
+Route::get('/jadwal-salat', [PublicPortalController::class, 'prayerAndStats'])->name('core.public.prayer');
 
 // Guest authentication routes
 Route::middleware('guest')->group(function (): void {
@@ -76,6 +86,11 @@ Route::middleware('auth')->group(function (): void {
         Route::put('/berita/{news}', [SchoolNewsController::class, 'update'])->middleware(['role:admin,operator', 'throttle:uploads'])->name('news.update');
         Route::delete('/berita/{news}', [SchoolNewsController::class, 'destroy'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('news.destroy');
         Route::delete('/berita/{news}/foto/{photo}', [SchoolNewsController::class, 'destroyPhoto'])->whereNumber(['news', 'photo'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('news.photo.destroy');
+
+        // Public downloads & IKM moderation
+        Route::post('/pusat-unduh', [PublicPortalAdminController::class, 'storeDownload'])->middleware(['role:admin,operator', 'throttle:uploads'])->name('downloads.store');
+        Route::post('/pusat-unduh/{download}/publikasi', [PublicPortalAdminController::class, 'toggleDownloadPublish'])->whereNumber('download')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('downloads.toggle');
+        Route::post('/zona-integritas/{survey}/moderasi', [PublicPortalAdminController::class, 'moderateIkm'])->whereNumber('survey')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('ikm.moderate');
 
         Route::get('/keamanan', [SecurityOperationsController::class, 'index'])->name('security.index');
         Route::post('/keamanan/ip', [SecurityOperationsController::class, 'block'])->middleware('throttle:sensitive')->name('security.block');

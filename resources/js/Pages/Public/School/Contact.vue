@@ -11,7 +11,11 @@ interface School {
     website?: string | null;
 }
 
-defineProps<{ school: School }>();
+defineProps<{
+    school: School;
+    serviceHours?: string;
+    mapUrl?: string | null;
+}>();
 </script>
 
 <template>
@@ -42,6 +46,14 @@ defineProps<{ school: School }>();
                 <article v-if="school.website" class="contact-card">
                     <span class="card-label">Website</span>
                     <a :href="school.website" target="_blank" rel="noreferrer">{{ school.website }}</a>
+                </article>
+                <article v-if="serviceHours" class="contact-card">
+                    <span class="card-label">Jam Layanan</span>
+                    <p>{{ serviceHours }}</p>
+                </article>
+                <article v-if="mapUrl" class="contact-card">
+                    <span class="card-label">Peta Lokasi</span>
+                    <a :href="mapUrl" target="_blank" rel="noreferrer">Buka peta sekolah →</a>
                 </article>
             </div>
         </section>

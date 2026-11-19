@@ -4,31 +4,12 @@ declare(strict_types=1);
 
 namespace App\Logging;
 
+use App\Modules\Core\Domain\DataClassificationMap;
 use Monolog\LogRecord;
 use Monolog\Processor\ProcessorInterface;
 
 class SanitizeSensitiveDataProcessor implements ProcessorInterface
 {
-    /**
-     * Daftar kata kunci parameter sensitif yang harus disamarkan.
-     *
-     * @var list<string>
-     */
-    protected array $sensitiveKeys = [
-        'password',
-        'password_confirmation',
-        'token',
-        'access_token',
-        'secret',
-        'api_key',
-        'nisn',
-        'nik',
-        'parent_phone',
-        'phone',
-        'credit_card',
-        'authorization',
-    ];
-
     public function __invoke(LogRecord $record): LogRecord
     {
         $context = $record->context;
@@ -69,7 +50,7 @@ class SanitizeSensitiveDataProcessor implements ProcessorInterface
 
     protected function isSensitiveKey(string $key): bool
     {
-        foreach ($this->sensitiveKeys as $sensitive) {
+        foreach (DataClassificationMap::sensitiveKeys() as $sensitive) {
             if (str_contains($key, $sensitive)) {
                 return true;
             }

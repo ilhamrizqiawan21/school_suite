@@ -2,6 +2,116 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Paket Portal dan Konten Publik (`M4-PUB-01` s.d. `M4-PUB-07`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi halaman publik, katalog E-Layanan, direktori GTK, prestasi, pusat unduh, zona integritas & IKM, jadwal salat, serta statistik kunjungan anonim (`M4-PUB-01` s.d. `M4-PUB-07`).
+- **Ringkasan**:
+  - **Skema & Model**: Migrasi `2026_11_19_120000_create_public_portal_tables.php` menambahkan tabel `public_downloads`, `public_ikm_surveys`, `public_visit_stats`, serta kolom `category`, `video_url`, `source_url`, `is_archived` pada `school_news`.
+  - **Service & Batas Modul**: `AcademicQueryService::getPublicDirectoryTeachers()` hanya mengekspor `id` dan `name` GTK aktif tanpa membocorkan NIP/email/telepon. `PublicPortalService` menangani penghitung kunjungan anonim (`public_visit_stats`), jadwal salat sesuai zona waktu sekolah dengan fallback lokal, pusat unduh terbit, dan moderasi IKM.
+  - **Rute & Halaman Publik/Admin**: Menambahkan `/e-layanan`, `/direktori-gtk`, `/prestasi`, `/pusat-unduh`, `/pusat-unduh/{download}/unduh`, `/zona-integritas`, `POST /zona-integritas/ikm`, `/jadwal-salat`, serta endpoint admin `/pengaturan/pusat-unduh` & `/pengaturan/zona-integritas/{survey}/moderasi`. Memperkaya `/` (`Home.vue`) dengan 4 pintasan utama & ringkasan harian, serta `/kontak` (`Contact.vue`) dengan jam layanan & peta.
+- **File & Migrasi**:
+  - Migrasi: `app/Modules/Core/Infrastructure/Database/Migrations/2026_11_19_120000_create_public_portal_tables.php`
+  - Backend: `PublicDownload.php`, `PublicIkmSurvey.php`, `PublicVisitStat.php`, `SchoolNews.php`, `PublicPortalService.php`, `AcademicQueryService.php`, `PublicPortalController.php`, `PublicPortalAdminController.php`, `SchoolProfileController.php`, `app/Modules/Core/Interface/Routes/web.php`
+  - Frontend: `resources/js/Pages/Public/{Services/Index,Directory/Teachers,School/Achievements,Downloads/Index,Integrity/Index,Prayer/Index}.vue`, `Home.vue`, `Contact.vue`, `usePublicServicesCatalog.ts`
+  - Tes & Docs: `tests/Feature/PublicPortalTest.php`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/GEMINI.md`, `docs/HANDOFF.md`
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/PublicPortalTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/SchoolNewsTest.php tests/Feature/SchoolGalleryTest.php` -> **23 tes lulus (292 assertions)**.
+  - `./vendor/bin/pint --test` pada seluruh 12 berkas PHP yang ditambah/diubah -> **lulus**.
+  - `vue-tsc --noEmit` & `vite build` -> **belum terverifikasi** di sesi ini karena biner `node`/`npm` tidak tersedia pada sandbox.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=1` (jika sudah dimigrasikan pada DB target) dan kembalikan berkas via Git.
+
+## Paket Desain Bersama Seluruh Aplikasi (`M4-UX-01` s.d. `M4-UX-04`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi komponen desain bersama, panel E-Layanan responsif, dan komponen state/aksesibilitas standar (`M4-UX-01`, `M4-UX-02`, `M4-UX-03`, `M4-UX-04`).
+- **Ringkasan**:
+  - **Sistem Visual (`M4-UX-01`)**: Menambahkan token panel terang & kontras hero pada `resources/js/composables/publicTheme.ts` (`--public-panel-surface`, `--public-panel-border`, `--public-hero-contrast`) serta komponen `resources/js/components/StatusBadge.vue` yang menampilkan status dengan ikon + label teks (bukan warna saja).
+  - **Navigasi Responsif E-Layanan (`M4-UX-02`)**: Menambahkan katalog layanan `resources/js/composables/usePublicServicesCatalog.ts` dan mega-panel **E-Layanan** di `resources/js/components/PublicHeader.vue` (3 kolom berkelompok di desktop `>= 1041px`, 1 kolom di mobile/tablet `<= 1040px` dengan akses login/portal sekolah, pencarian judul/sinonim + state kosong, penutupan klik-luar & `Escape` dengan pemulihan fokus ke tombol pemicu, serta `padding-bottom` aman di mobile).
+  - **Keadaan UI & Aksesibilitas (`M4-UX-04`)**: Menambahkan komponen standar `FormField.vue` (label, indikator wajib `*`, hint, error per kolom dengan `aria-invalid`/`aria-describedby`, tinggi kontrol `44px`), `StateFeedback.vue` (`loading` skeleton, `empty`, dan `error` dengan tombol `Coba lagi`), serta `ConfirmDialog.vue` (`role="alertdialog"`, `Escape` & pemulihan fokus).
+- **File yang Ditambah / Diubah**:
+  - `resources/js/composables/publicTheme.ts`
+  - `resources/js/composables/usePublicServicesCatalog.ts` (baru)
+  - `resources/js/components/PublicHeader.vue`
+  - `resources/js/components/StatusBadge.vue` (baru)
+  - `resources/js/components/FormField.vue` (baru)
+  - `resources/js/components/StateFeedback.vue` (baru)
+  - `resources/js/components/ConfirmDialog.vue` (baru)
+  - `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Layanan pada panel E-Layanan yang rutenya belum dibangun (paket `PUB`/`TU`/`OPS`/`LIF`/`SERV`) menautkan ke rute yang sudah tersedia (`/ppdb`, `/login`, `/profil-sekolah`, `/kontak`) dengan badge `Segera` atau `Portal` agar tidak menimbulkan 404.
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/SchoolGalleryTest.php tests/Feature/SchoolNewsTest.php tests/Feature/SchoolOrganizationTest.php tests/Feature/RoleMatrixAccessTest.php tests/Feature/CoreAuthorizationTest.php` -> **43 tes lulus (490 assertions)**.
+  - `vue-tsc --noEmit`, `vite build`, dan uji browser Playwright (`390×844`, `1024px`, `1280×720`) -> **belum terverifikasi** di sesi ini karena biner `node`/`npm` tidak tersedia pada lingkungan sandbox.
+- **Langkah Review Manual**:
+  1. Jalankan `npx vue-tsc --noEmit && npm run build` pada mesin yang memiliki Node.js.
+  2. Uji panel **E-Layanan** di `/` pada viewport `1280×720`, `1024×768`, dan `390×844`, termasuk pencarian layanan, tombol `Escape` (fokus kembali ke pemicu), serta gulir menu mobile.
+- **Rollback**:
+  - Hapus 5 berkas komponen/composable baru dan kembalikan `publicTheme.ts`, `PublicHeader.vue`, `TODO_PARITAS_MAN4_BANJAR.md`, serta `HANDOFF.md` via Git.
+
+## Paket Fondasi dan Aturan Lintas Modul (`M4-FND-01` s.d. `M4-FND-08`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi kontrak fondasi, skema database lintas layanan, otorisasi 17 peran, mesin status/tiket/dokumen, outbox notifikasi, dan sanitasi privasi untuk `M4-FND-01` s.d. `M4-FND-08`.
+- **Ringkasan**:
+  - **Peran & Akses (`M4-FND-02`)**: Memperluas `RoleEnum` menjadi 17 peran (`admin`, `operator`, `principal`, `teacher`, `homeroom`, `counselor`, `librarian`, `student`, `parent`, `alumni`, `committee`, `ptsp`, `receptionist`, `picket`, `security_guard`, `task_force`, `signatory`), menambah izin layanan pada `PermissionEnum` dengan pemetaan baku `defaultForRole()`, mengekstrak `RolePermissionRegistryService` (dipakai ulang oleh `PilotSchoolSeeder` dan `SchoolInstallCommand`), memperbarui `config/navigation.php` untuk rute `/profil`, serta menambah `AccessScopeService` untuk pembatasan sekolah, wali kelas, wali murid terverifikasi, dan siswa tanpa melanggar batas modular monolith.
+  - **Data Induk, Wali & Pemohon Eksternal (`M4-FND-03`)**: Menambahkan kolom `schools.timezone` (default `Asia/Jakarta`) beserta `SchoolScopeService::getTimezone()` / `localNow()`, tabel `external_applicants` (terpisah dari akun pegawai `users`), tabel `student_guardians` di modul `Academic`, serta method query cakupan wali/siswa/snapshot di `AcademicQueryService`.
+  - **Status, Konkurensi, Tiket & Verifikasi (`M4-FND-04`, `M4-FND-06`)**: Menambahkan `ServiceWorkflowMap`, tabel `service_tickets` dan `service_ticket_transitions`, serta `ServiceTicketService` dengan kode tiket acak 8 karakter non-sekuensial (`PREFIX-YYYY-XXXXXXXX`), `idempotency_key` unik, `lockForUpdate()` + optimistic `version`, hash rahasia verifikasi (`Hash::check`), penolakan eksplisit `identity_verification_required` jika `verification_secret_hash` kosong bagi pemirsa tidak berwenang, status publik minimum, penolakan/kedaluwarsa/cabut, dan isolasi aduan anonim untuk `task_force`/`admin`.
+  - **Berkas Privat & Dokumen (`M4-FND-05`)**: Menambahkan `PrivateStorageService::storeValidatedUpload()` (validasi MIME, ekstensi aman, ukuran, SHA-256), tabel `service_documents`, serta `ServiceDocumentService` (unggah lampiran privat, penomoran dokumen atomik per sekolah/jenis/tahun, `verification_token`, pembatalan beralasan dengan pencatatan `oldValues['status']` aktual, dan URL bertanda tangan berbasis `canAccessDocument`).
+  - **Notifikasi Antrean & Privasi (`M4-FND-07`, `M4-FND-08`)**: Menambahkan tabel `notification_outboxes`, `NotificationOutboxService`, `DispatchNotificationOutboxJob`, `DataClassificationMap`, dan pemusatan daftar kunci sensitif pada `DataClassificationMap::sensitiveKeys()` yang dipakai bersama oleh `AuditLogger` dan `SanitizeSensitiveDataProcessor`.
+- **File & Migrasi**:
+  - Migrasi: `app/Modules/Core/Infrastructure/Database/Migrations/2026_11_19_100000_create_parity_foundation_tables.php`, `app/Modules/Academic/Infrastructure/Database/Migrations/2026_11_19_100001_create_student_guardians_table.php`
+  - Domain: `app/Modules/Core/Domain/{RoleEnum,PermissionEnum,ServiceWorkflowMap,DataClassificationMap}.php`
+  - Models: `app/Modules/Core/Infrastructure/Models/{School,ExternalApplicant,ServiceTicket,ServiceTicketTransition,ServiceDocument,NotificationOutbox}.php`, `app/Modules/Academic/Infrastructure/Models/StudentGuardian.php`
+  - Application Services: `app/Modules/Core/Application/Services/{RolePermissionRegistryService,AccessScopeService,SchoolScopeService,ServiceTicketService,ServiceDocumentService,NotificationOutboxService}.php`, `app/Modules/Academic/Application/Services/AcademicQueryService.php`
+  - Shared & Console/Seeder: `app/Shared/Files/PrivateStorageService.php`, `app/Shared/Audit/AuditLogger.php`, `app/Shared/Jobs/DispatchNotificationOutboxJob.php`, `app/Logging/SanitizeSensitiveDataProcessor.php`, `app/Console/Commands/SchoolInstallCommand.php`, `database/seeders/PilotSchoolSeeder.php`, `config/navigation.php`
+  - Tes: `tests/Unit/ParityFoundationDomainTest.php`, `tests/Feature/ParityFoundationTest.php`
+  - Docs: `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Status checkbox `M4-FND-01` s.d. `M4-FND-08` di `TODO_PARITAS_MAN4_BANJAR.md` tetap ditandai terbuka (`[ ]`, status `dikerjakan`) hingga layar modul (`TU`, `OPS`, `LIF`, `SERV`), drill pemulihan (`REL`), dan keputusan `K-01`/`K-02`/`K-03`/`K-08` terverifikasi.
+  - Tidak ada perubahan pada `DECISIONS.md` maupun dependensi baru.
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Unit/ParityFoundationDomainTest.php tests/Feature/ParityFoundationTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/PilotSeederTest.php tests/Feature/SchoolInstallCommandTest.php tests/Feature/RoleMatrixAccessTest.php tests/Feature/CoreAuthorizationTest.php tests/Feature/PrivateStorageTest.php tests/Feature/AuditLoggerTest.php` -> 56 tes lulus (428 assertions).
+  - `./vendor/bin/pint --test` pada berkas fondasi yang disentuh (`ServiceTicketService.php`, `ServiceDocumentService.php`, `ParityFoundationTest.php`) -> lulus.
+  - `php artisan test --compact` (full suite) -> 463 tes, 461 lulus, 2 dilewati (4.402 assertions, 49.3s).
+  - `./vendor/bin/pint --test` pada seluruh 29 berkas PHP yang ditambah/diubah -> lulus.
+  - `vue-tsc --noEmit` & `vite build` (memakai `node` di `~/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin`) -> lulus (852 modul, 4.33s).
+- **Risiko Tersisa**:
+  - Migrasi `2026_11_19_100000` dan `2026_11_19_100001` belum dijalankan terhadap database MySQL lokal/staging (hanya teruji penuh via `RefreshDatabase` SQLite).
+  - Belum ada antarmuka pengguna (UI) maupun rute HTTP baru pada tahap fondasi ini; pengkabelan ke rute & layar dimulai pada paket `UX`/`PUB` dan `TU`.
+- **Langkah Review Manual**:
+  1. Tinjau skema migrasi baru dan pastikan siap dijalankan (`php artisan migrate`).
+  2. Lanjutkan ke **Irisan 1 (`M4-UX-01`/`02` + `M4-PUB-01`/`02`)** untuk panel E-Layanan dan beranda publik.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=2` (bila sudah dimigrasikan pada DB target) dan kembalikan berkas melalui Git.
+
+## Checklist Awal Paritas MAN 4 Banjar (Inventaris, Baseline & Peta 48 ID) — 19 November 2026
+
+- **Task & Requirement**: Memeriksa `docs/TODO_PARITAS_MAN4_BANJAR.md` dan mengerjakan `Checklist awal` (fondasi awal `M4-FND-01`, pemetaan `K-01`..`K-08`, pemetaan 17 peran `M4-FND-02`, serta inventaris layar/aksi/rute/state untuk 48 ID + 6 rincian tambahan REA).
+- **Ringkasan**:
+  - Mencatat keadaan repositori pada `main` commit `9265cdb` (`HANDOFF MAN4 BANJAR`) beserta folder untracked lokal `output/playwright/school_suite/` (28 screenshot QA 15 Nov 2026).
+  - Menjalankan baseline pemeriksaan berulang: suite PHPUnit, Laravel Pint, TypeScript check (`vue-tsc`), dan build produksi Vite.
+  - Menyusun dokumen [INVENTARIS_DAN_BASELINE_PARITAS.md](INVENTARIS_DAN_BASELINE_PARITAS.md) yang memisahkan varian portal utama vs portal akademik, bukti REA CLI 6.7.0 + batas pengamatan sandbox (`search_web` 19 Nov 2026 tanpa akses HTTP langsung ke `man4banjar.com`), daftar halaman layanan yang belum diuji visual, matriks keputusan `K-01`..`K-08` beserta pemiliknya, pemetaan 17 peran (`PilotSchoolSeeder` vs target `M4-FND-02`), dan matriks 48 ID + 6 rincian tambahan REA dengan tiga status terpisah (Acuan, School Suite, Klien).
+  - Memperbarui bagian `Checklist awal` pada `docs/TODO_PARITAS_MAN4_BANJAR.md` (4 item inventaris & baseline dicentang `[x]`; 3 item tata kelola berkelanjutan / gate 100% dibiarkan terbuka `[ ]`).
+- **File yang Ditambah / Diubah**:
+  - `docs/INVENTARIS_DAN_BASELINE_PARITAS.md` (baru)
+  - `docs/TODO_PARITAS_MAN4_BANJAR.md`
+  - `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Tidak ada perubahan kode aplikasi, skema database, atau `DECISIONS.md` pada tahap ini.
+  - `M4-FND-01` tetap berstatus parsial sampai akses demo/panel di balik login acuan atau persetujuan alur School Suite dari klien tersedia.
+- **Tes & Hasil**:
+  - `php artisan test --compact` -> 453 tes, 451 lulus, 2 dilewati (4.322 assertions, 60.5s, PHP 8.5.12 CLI).
+  - `./vendor/bin/pint --test` -> gagal pada 4 berkas existing baseline (`PasswordController.php`, `JournalService.php`, `artifacts/font-audit/collect-fixtures.php`, `artifacts/dark-mode/collect.php`).
+  - `vue-tsc --noEmit` (memakai `node` di `~/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin`) -> lulus (exit 0).
+  - `vite build` (memakai `node` yang sama) -> lulus (852 modul, 8.21s).
+- **Risiko Tersisa**:
+  - Lingkungan sandbox tidak memiliki akses HTTP langsung ke `man4banjar.com` dan tidak ada `node`/`npm` pada `PATH` shell default.
+  - Direktori `tests/e2e` belum tersedia sehingga suite Playwright belum berjalan.
+  - Panel internal di balik login acuan belum terverifikasi dan `K-01`..`K-08` masih menunggu konfirmasi klien.
+- **Langkah Review Manual & Berikutnya**:
+  1. Tinjau `docs/INVENTARIS_DAN_BASELINE_PARITAS.md` dan konfirmasi urutan irisan berikutnya: **Irisan 1 (FND dasar + UX-01/02 + PUB-01/02)** — panel E-Layanan 3 kolom desktop/mobile, pencarian layanan, dan 4 pintasan beranda.
+- **Rollback**:
+  - Hapus `docs/INVENTARIS_DAN_BASELINE_PARITAS.md` dan kembalikan `docs/TODO_PARITAS_MAN4_BANJAR.md` serta `docs/HANDOFF.md` via Git.
+
 ## Pelengkapan & Penyeragaman Menu Rapor Siswa (Standar e-Rapor Kemdikdasmen & STS/SAS) — 15 November 2026
 
 - **Task & Requirement**: Melengkapi alur kerja, kesiapan nilai, data pelengkap, serta format dokumen cetak e-Rapor Kemdikdasmen (termasuk dukungan mode STS dan SAS).

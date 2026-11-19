@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { filterServiceCategories } from '@/composables/usePublicServicesCatalog';
 import type { SharedProps } from '@/types';
 
 interface SchoolBrand {
@@ -27,22 +28,78 @@ const menus: { label: string; href: string; key: ActiveMenu }[] = [
     { label: 'Galeri', href: '/galeri', key: 'gallery' },
     { label: 'Kontak', href: '/kontak', key: 'contact' },
 ];
+const headerRef = ref<HTMLElement | null>(null);
+const navToggleRef = ref<HTMLButtonElement | null>(null);
+const profileTriggerRef = ref<HTMLButtonElement | null>(null);
+const servicesTriggerRef = ref<HTMLButtonElement | null>(null);
+const servicesSearchRef = ref<HTMLInputElement | null>(null);
+
 const menuOpen = ref(false);
 const profileMenuOpen = ref(false);
+const servicesMenuOpen = ref(false);
+const serviceQuery = ref('');
+
 const profileActive = computed(() => props.active === 'profile' || props.active === 'organization');
 const portalHref = computed(() => page.props.auth?.user ? '/dashboard' : '/login');
 const portalLabel = computed(() => page.props.auth?.user ? 'Dashboard' : 'Portal sekolah');
-const closeMenu = () => {
+const filteredServiceCategories = computed(() => filterServiceCategories(serviceQuery.value));
+
+const closeMenu = (restoreFocus = false) => {
+    const wasServicesOpen = servicesMenuOpen.value;
+    const wasProfileOpen = profileMenuOpen.value;
+    const wasMobileOpen = menuOpen.value;
+
     menuOpen.value = false;
     profileMenuOpen.value = false;
+    servicesMenuOpen.value = false;
+
+    if (!restoreFocus) return;
+
+    if (wasServicesOpen) {
+        servicesTriggerRef.value?.focus();
+    } else if (wasProfileOpen) {
+        profileTriggerRef.value?.focus();
+    } else if (wasMobileOpen) {
+        navToggleRef.value?.focus();
+    }
 };
+
 const toggleProfileMenu = () => {
+    servicesMenuOpen.value = false;
     profileMenuOpen.value = !profileMenuOpen.value;
 };
+
+const toggleServicesMenu = async () => {
+    profileMenuOpen.value = false;
+    servicesMenuOpen.value = !servicesMenuOpen.value;
+    if (servicesMenuOpen.value) {
+        await nextTick();
+        servicesSearchRef.value?.focus();
+    }
+};
+
+const handleDocumentPointerdown = (event: PointerEvent) => {
+    if (headerRef.value && !headerRef.value.contains(event.target as Node)) {
+        closeMenu(false);
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('pointerdown', handleDocumentPointerdown);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', handleDocumentPointerdown);
+});
 </script>
 
 <template>
-    <header class="public-site-header" :class="{ 'is-home': active === 'home', 'is-menu-open': menuOpen }" @keydown.esc="closeMenu">
+    <header
+        ref="headerRef"
+        class="public-site-header"
+        :class="{ 'is-home': active === 'home', 'is-menu-open': menuOpen }"
+        @keydown.esc.stop="closeMenu(true)"
+    >
         <div class="public-site-header-top">
             <Link href="/" class="brand" aria-label="Beranda sekolah">
                 <span class="brand-mark">
@@ -62,6 +119,7 @@ const toggleProfileMenu = () => {
                     SPMB
                 </Link>
                 <button
+                    ref="navToggleRef"
                     type="button"
                     class="nav-toggle ui-button ui-button--secondary ui-button--md"
                     aria-controls="public-navigation"
@@ -79,13 +137,14 @@ const toggleProfileMenu = () => {
                 <Link
                     :href="menus[0].href"
                     :aria-current="props.active === menus[0].key ? 'page' : undefined"
-                    @click="closeMenu"
+                    @click="closeMenu(false)"
                 >
                     {{ menus[0].label }}
                 </Link>
 
                 <div class="profile-menu" :class="{ 'is-active': profileActive }">
                     <button
+                        ref="profileTriggerRef"
                         type="button"
                         class="nav-menu-trigger"
                         :aria-expanded="profileMenuOpen"
@@ -100,17 +159,95 @@ const toggleProfileMenu = () => {
                         <Link
                             href="/profil-sekolah"
                             :aria-current="props.active === 'profile' ? 'page' : undefined"
-                            @click="closeMenu"
+                            @click="closeMenu(false)"
                         >
                             Profil sekolah
                         </Link>
                         <Link
                             href="/struktur-organisasi"
                             :aria-current="props.active === 'organization' ? 'page' : undefined"
-                            @click="closeMenu"
+                            @click="closeMenu(false)"
                         >
                             Struktur organisasi
                         </Link>
+                    </div>
+                </div>
+
+                <div class="services-menu">
+                    <button
+                        ref="servicesTriggerRef"
+                        type="button"
+                        class="nav-menu-trigger"
+                        :aria-expanded="servicesMenuOpen"
+                        aria-controls="services-navigation"
+                        @click.stop="toggleServicesMenu"
+                    >
+                        E-Layanan
+                        <span class="nav-chevron" aria-hidden="true"></span>
+                    </button>
+
+                    <div
+                        v-if="servicesMenuOpen"
+                        id="services-navigation"
+                        class="services-panel"
+                        role="region"
+                        aria-label="Panel E-Layanan"
+                    >
+                        <div class="services-panel__header">
+                            <div class="services-panel__search">
+                                <label class="sr-only" for="public-services-search">Cari E-Layanan</label>
+                                <input
+                                    id="public-services-search"
+                                    ref="servicesSearchRef"
+                                    v-model="serviceQuery"
+                                    type="search"
+                                    class="services-panel__input"
+                                    placeholder="Cari layanan (mis. PTSP, izin, alumni, aduan, pustaka)..."
+                                />
+                            </div>
+                            <Link :href="portalHref" class="services-panel__portal-cta" @click="closeMenu(false)">
+                                {{ portalLabel }} →
+                            </Link>
+                        </div>
+
+                        <div v-if="filteredServiceCategories.length" class="services-panel__grid">
+                            <section
+                                v-for="category in filteredServiceCategories"
+                                :key="category.key"
+                                class="services-panel__category"
+                            >
+                                <h3 class="services-panel__cat-title">{{ category.title }}</h3>
+                                <p class="services-panel__cat-subtitle">{{ category.subtitle }}</p>
+                                <ul class="services-panel__list">
+                                    <li v-for="item in category.items" :key="item.id">
+                                        <Link
+                                            :href="item.href"
+                                            class="services-panel__item"
+                                            @click="closeMenu(false)"
+                                        >
+                                            <span class="services-panel__item-top">
+                                                <strong>{{ item.title }}</strong>
+                                                <span
+                                                    v-if="item.badge"
+                                                    class="services-panel__badge"
+                                                    :class="{ 'is-soon': !item.available }"
+                                                >
+                                                    {{ item.badge }}
+                                                </span>
+                                            </span>
+                                            <span class="services-panel__item-desc">{{ item.description }}</span>
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </section>
+                        </div>
+
+                        <div v-else class="services-panel__empty" role="status">
+                            <p>Layanan tidak ditemukan untuk "{{ serviceQuery }}".</p>
+                            <button type="button" class="services-panel__reset" @click="serviceQuery = ''">
+                                Tampilkan semua layanan
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -119,12 +256,12 @@ const toggleProfileMenu = () => {
                     :key="menu.key"
                     :href="menu.href"
                     :aria-current="props.active === menu.key ? 'page' : undefined"
-                    @click="closeMenu"
+                    @click="closeMenu(false)"
                 >
                     {{ menu.label }}
                 </Link>
 
-                <Link :href="portalHref" class="mobile-portal-link" @click="closeMenu">{{ portalLabel }}</Link>
+                <Link :href="portalHref" class="mobile-portal-link" @click="closeMenu(false)">{{ portalLabel }}</Link>
             </nav>
         </div>
     </header>
@@ -585,7 +722,218 @@ const toggleProfileMenu = () => {
 </style>
 
 <style scoped>
+.services-menu {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.services-panel {
+    position: fixed;
+    top: 4.9rem;
+    left: 50%;
+    z-index: 40;
+    width: min(960px, calc(100vw - 2rem));
+    max-height: min(78dvh, 640px);
+    overflow-y: auto;
+    transform: translateX(-50%);
+    padding: 1.15rem 1.25rem 1.35rem;
+    background: var(--public-panel-surface, #ffffff);
+    border: 1px solid var(--public-panel-border, #d8e2ee);
+    border-radius: var(--radius-lg, 18px);
+    box-shadow: var(--shadow-md, 0 14px 35px rgba(31, 49, 82, .12));
+    color: var(--public-ink, #173044);
+}
+
+.services-panel__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1rem;
+    padding-bottom: .85rem;
+    border-bottom: 1px solid var(--public-panel-border, #d8e2ee);
+}
+
+.services-panel__search {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.services-panel__input {
+    width: 100%;
+    min-height: 44px;
+    padding: .55rem .85rem;
+    color: var(--public-ink, #173044);
+    background: var(--public-surface, #f5f8fb);
+    border: 1px solid var(--public-panel-border, #d8e2ee);
+    border-radius: var(--radius-sm, 8px);
+    font: inherit;
+    font-size: var(--type-sm, .875rem);
+}
+
+.services-panel__input:focus-visible {
+    outline: 0;
+    border-color: var(--public-primary, #3157a4);
+    box-shadow: var(--shadow-focus, 0 0 0 3px color-mix(in srgb, #3157a4 16%, transparent));
+}
+
+.services-panel__portal-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .45rem .9rem;
+    color: var(--public-primary, #3157a4);
+    background: color-mix(in srgb, var(--public-primary, #3157a4) 10%, transparent);
+    border-radius: var(--radius-sm, 8px);
+    font-size: var(--type-sm, .875rem);
+    font-weight: var(--weight-bold, 700);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.services-panel__portal-cta:focus-visible {
+    outline: 2px solid var(--public-primary, #3157a4);
+    outline-offset: 2px;
+}
+
+.services-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.services-panel__category {
+    display: grid;
+    align-content: start;
+    gap: .5rem;
+    min-width: 0;
+}
+
+.services-panel__cat-title {
+    margin: 0;
+    color: var(--public-ink, #173044);
+    font-size: var(--type-sm, .875rem);
+    font-weight: var(--weight-bold, 700);
+}
+
+.services-panel__cat-subtitle {
+    margin: 0 0 .25rem;
+    color: var(--public-muted, #526673);
+    font-size: var(--type-caption, .75rem);
+    line-height: 1.4;
+}
+
+.services-panel__list {
+    display: grid;
+    gap: .35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.services-panel__item {
+    display: grid;
+    gap: .2rem;
+    min-height: 44px;
+    padding: .6rem .7rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm, 8px);
+    text-decoration: none;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
+.services-panel__item:hover,
+.services-panel__item:focus-visible {
+    background: var(--public-surface, #f5f8fb);
+    border-color: var(--public-panel-border, #d8e2ee);
+    outline: 0;
+}
+
+.services-panel__item:focus-visible {
+    box-shadow: var(--shadow-focus, 0 0 0 3px color-mix(in srgb, #3157a4 16%, transparent));
+}
+
+.services-panel__item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    color: var(--public-ink, #173044);
+    font-size: var(--type-sm, .875rem);
+    line-height: 1.3;
+}
+
+.services-panel__badge {
+    flex: 0 0 auto;
+    padding: .1rem .45rem;
+    border-radius: var(--radius-pill, 999px);
+    font-size: .7rem;
+    font-weight: var(--weight-bold, 700);
+    color: var(--public-primary, #3157a4);
+    background: color-mix(in srgb, var(--public-primary, #3157a4) 12%, transparent);
+}
+
+.services-panel__badge.is-soon {
+    color: var(--public-muted, #526673);
+    background: var(--surface-strong, #edf1f7);
+}
+
+.services-panel__item-desc {
+    color: var(--public-muted, #526673);
+    font-size: var(--type-caption, .75rem);
+    line-height: 1.4;
+}
+
+.services-panel__empty {
+    display: grid;
+    justify-items: center;
+    gap: .65rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: var(--public-muted, #526673);
+    font-size: var(--type-sm, .875rem);
+}
+
+.services-panel__empty p {
+    margin: 0;
+}
+
+.services-panel__reset {
+    min-height: 44px;
+    padding: .45rem .9rem;
+    color: var(--public-primary, #3157a4);
+    background: color-mix(in srgb, var(--public-primary, #3157a4) 10%, transparent);
+    border: 0;
+    border-radius: var(--radius-sm, 8px);
+    font-weight: var(--weight-semibold, 600);
+    cursor: pointer;
+}
+
 @media (max-width: 1040px) {
-    .nav-toggle { display: inline-flex; }
+    .nav-toggle { display: inline-flex; min-height: 44px; }
+
+    .public-nav {
+        padding-bottom: 4.5rem;
+    }
+
+    .services-panel {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-height: none;
+        margin: .25rem 0 .35rem;
+        padding: .75rem;
+        border-radius: var(--radius-md, 12px);
+        box-shadow: none;
+    }
+
+    .services-panel__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .services-panel__portal-cta {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>

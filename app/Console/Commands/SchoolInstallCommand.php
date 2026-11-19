@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\Modules\Core\Domain\PermissionEnum;
+use App\Modules\Core\Application\Services\RolePermissionRegistryService;
 use App\Modules\Core\Domain\RoleEnum;
-use App\Modules\Core\Infrastructure\Models\Permission;
-use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -75,8 +73,7 @@ class SchoolInstallCommand extends Command
         }
 
         $admin = DB::transaction(function () use ($data, $password): User {
-            $roles = $this->ensureSystemRoles();
-            $this->ensureSystemPermissions($roles);
+            $roles = app(RolePermissionRegistryService::class)->syncSystemRolesAndPermissions();
 
             $school = School::query()->create([
                 'name' => $data['name'],
@@ -125,52 +122,5 @@ class SchoolInstallCommand extends Command
         }
 
         return is_string($password) ? $password : null;
-    }
-
-    /**
-     * @return array<string, Role>
-     */
-    private function ensureSystemRoles(): array
-    {
-        $roles = [];
-
-        foreach (RoleEnum::cases() as $role) {
-            $roles[$role->value] = Role::query()->updateOrCreate(
-                ['name' => $role->value],
-                ['label' => $role->label(), 'is_system' => true],
-            );
-        }
-
-        return $roles;
-    }
-
-    /**
-     * @param  array<string, Role>  $roles
-     */
-    private function ensureSystemPermissions(array $roles): void
-    {
-        $permissions = [];
-
-        foreach (PermissionEnum::cases() as $permission) {
-            $permissions[$permission->value] = Permission::query()->updateOrCreate(
-                ['name' => $permission->value],
-                [
-                    'label' => Str::of($permission->value)->replace(['.', '_'], ' ')->title()->toString(),
-                    'module' => Str::before($permission->value, '.'),
-                ],
-            );
-        }
-
-        $roles[RoleEnum::OPERATOR->value]->permissions()->syncWithoutDetaching([
-            $permissions[PermissionEnum::USERS_VIEW->value]->id,
-            $permissions[PermissionEnum::USERS_CREATE->value]->id,
-            $permissions[PermissionEnum::SCHOOL_VIEW->value]->id,
-            $permissions[PermissionEnum::SCHOOL_UPDATE->value]->id,
-        ]);
-
-        $roles[RoleEnum::PRINCIPAL->value]->permissions()->syncWithoutDetaching([
-            $permissions[PermissionEnum::USERS_VIEW->value]->id,
-            $permissions[PermissionEnum::SCHOOL_VIEW->value]->id,
-        ]);
     }
 }

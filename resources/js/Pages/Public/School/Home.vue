@@ -42,7 +42,22 @@ interface GalleryItem {
     url: string;
 }
 
-const props = defineProps<{ school: School; news: NewsItem[]; gallery: GalleryItem[] }>();
+interface ShortcutItem {
+    key: string;
+    label: string;
+    description: string;
+    href: string;
+}
+
+const props = defineProps<{
+    school: School;
+    news: NewsItem[];
+    gallery: GalleryItem[];
+    shortcuts?: ShortcutItem[];
+    visitStats?: { today: number; month: number; total: number };
+    prayerSchedule?: { next_prayer: { name: string; time: string }; timezone: string };
+    socialLinks?: Record<string, string>;
+}>();
 const galleryPreview = computed(() => props.gallery.slice(0, 4));
 const lifePhotos = computed(() => galleryPreview.value.length > 1 ? galleryPreview.value.slice(1) : galleryPreview.value);
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
@@ -89,6 +104,37 @@ const formatDate = (value?: string | null) => value
                 <div v-else class="hero-placeholder"><span>{{ initial }}</span><small>Portofolio sekolah</small></div>
                 <div class="hero-caption"><small>{{ school.school_status || 'Ruang belajar bersama' }}</small><strong>Belajar. Berkarya. Berbagi.</strong></div>
             </div>
+        </section>
+
+        <section v-if="shortcuts?.length" class="audience-pathways" aria-label="Pintasan layanan utama">
+            <Link v-for="item in shortcuts" :key="item.key" :href="item.href" class="pathway-card">
+                <span class="pathway-tag">Layanan Utama</span>
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.description }}</small>
+            </Link>
+        </section>
+
+        <section v-if="prayerSchedule || visitStats" class="audience-pathways" aria-label="Informasi harian dan direktori">
+            <Link v-if="prayerSchedule" href="/jadwal-salat" class="pathway-card">
+                <span class="pathway-tag">Jadwal Salat ({{ prayerSchedule.timezone }})</span>
+                <strong>{{ prayerSchedule.next_prayer.name }} · {{ prayerSchedule.next_prayer.time }}</strong>
+                <small v-if="visitStats">Kunjungan portal hari ini: {{ visitStats.today }} · Total: {{ visitStats.total }}</small>
+            </Link>
+            <Link href="/direktori-gtk" class="pathway-card">
+                <span class="pathway-tag">Direktori</span>
+                <strong>Direktori GTK</strong>
+                <small>Lihat daftar guru dan tenaga kependidikan aktif.</small>
+            </Link>
+            <Link href="/pusat-unduh" class="pathway-card">
+                <span class="pathway-tag">Dokumen</span>
+                <strong>Pusat Unduh</strong>
+                <small>Formulir resmi, kalender akademik, dan SOP.</small>
+            </Link>
+            <Link href="/zona-integritas" class="pathway-card">
+                <span class="pathway-tag">Mutu Layanan</span>
+                <strong>Zona Integritas &amp; IKM</strong>
+                <small>Maklumat pelayanan dan penilaian kepuasan masyarakat.</small>
+            </Link>
         </section>
 
         <section class="audience-pathways" aria-label="Jalur cepat pengunjung">

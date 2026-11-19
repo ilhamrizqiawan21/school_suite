@@ -18,15 +18,22 @@ class SchoolNews extends Model
         'author_id',
         'title',
         'slug',
+        'category',
         'excerpt',
         'body',
+        'video_url',
+        'source_url',
         'status',
+        'is_archived',
         'published_at',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime'];
+        return [
+            'is_archived' => 'boolean',
+            'published_at' => 'datetime',
+        ];
     }
 
     public function school(): BelongsTo

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Application\Services;
 
 use App\Modules\Core\Infrastructure\Models\School;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
 
 class SchoolScopeService
@@ -80,5 +81,23 @@ class SchoolScopeService
         }
 
         return 'data:'.$mime.';base64,'.base64_encode(Storage::disk('local')->get($school->logo_path));
+    }
+
+    /**
+     * Resolve configured IANA timezone for a school, defaulting to Asia/Jakarta.
+     */
+    public function getTimezone(int $schoolId): string
+    {
+        $timezone = School::query()->whereKey($schoolId)->value('timezone');
+
+        return is_string($timezone) && $timezone !== '' ? $timezone : 'Asia/Jakarta';
+    }
+
+    /**
+     * Current immutable timestamp in the school's local timezone.
+     */
+    public function localNow(int $schoolId): CarbonImmutable
+    {
+        return CarbonImmutable::now($this->getTimezone($schoolId));
     }
 }
