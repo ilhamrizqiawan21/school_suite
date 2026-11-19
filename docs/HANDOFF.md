@@ -1196,3 +1196,22 @@ Migrasi workflow mengubah constraint nomor surat menjadi berbasis tahun, menamba
 
 ### Rollback
 - Kembalikan perubahan dengan `git checkout -- app/Modules/Academic/ app/Modules/Assessment/ resources/views/reports/ resources/js/ tests/Feature/AssessmentControllersTest.php && rm -f resources/views/reports/class-ledger.blade.php` lalu jalankan `npm run build`.
+
+
+## 2026-11-15 â€” Perapian landing page publik (Home.vue)
+- **Task:** konsolidasi CSS `resources/js/Pages/Public/School/Home.vue` + seragamkan istilah SPMB.
+- **Ringkasan:** 3 lapisan CSS (awal/Editorial/Calm Academic) dilebur jadi satu lapisan (~440 â†’ ~150 baris), aturan mati dihapus (`.gallery-*`, `::before/::after` hero, override yang selalu kalah). Label default hero `Daftar PPDB` â†’ `Daftar SPMB`. Template/markup tidak diubah; URL `/ppdb` tetap.
+- **Migrasi:** tidak ada.
+- **Tes:** `npm run build` sukses; `php artisan test --filter="Public|SchoolProfile"` 11/11 lulus.
+- **Risiko:** pergeseran visual minor; hover kartu Jelajahi kini tanpa ganti warna judul (sebelumnya juga tertimpa). Tambah dukungan reduced-motion untuk kartu.
+- **Review manual:** buka `/` di desktop, â‰¤900px, â‰¤600px; bandingkan hero, kartu jalur, berita, footer.
+- **Rollback:** `git checkout -- resources/js/Pages/Public/School/Home.vue`.
+
+
+## 2026-11-15 — Redesign halaman login (Auth/Login.vue)
+- **Ringkasan:** layout split layar penuh bergaya Calm Academic (selaras situs publik): panel brand terang + chip fitur, form tanpa kartu. Dihapus: orbit dekoratif, panel gelap, kartu berbayang. Ditambah: tautan "Kembali ke situs sekolah", catatan bantuan kata sandi. Logika form/submit/branding/favicon tidak diubah.
+- **Tes:** 
+pm run build sukses; AuthenticationTest 7/7 lulus.
+- **Risiko:** teks "Hubungi operator atau wali kelas" adalah panduan statis (belum ada alur reset kata sandi); verifikasi visual manual belum dilakukan.
+- **Review manual:** buka /login desktop & <860px, uji error validasi, tampilkan/sembunyikan sandi, logo kustom.
+- **Rollback:** `git checkout -- resources/js/Pages/Auth/Login.vue`
