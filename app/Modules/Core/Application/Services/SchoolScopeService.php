@@ -6,10 +6,23 @@ namespace App\Modules\Core\Application\Services;
 
 use App\Modules\Core\Infrastructure\Models\School;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 class SchoolScopeService
 {
+    public function usesMan4PublicTheme(string $npsn): bool
+    {
+        return $npsn === '30208801' || (app()->isLocal() && $npsn === '20109988');
+    }
+
+    public function primaryPublicTheme(): ?string
+    {
+        $npsn = (string) School::query()->orderBy('id')->value('npsn');
+
+        return $this->usesMan4PublicTheme($npsn) ? 'man4-banjar' : null;
+    }
+
     /** @return array{id:int, name:?string, level:?string, address:?string, phone:?string, email:?string, logo_path:?string, theme:array<string, mixed>} */
     public function getPrimaryPublicSnapshot(): array
     {
@@ -99,5 +112,58 @@ class SchoolScopeService
     public function localNow(int $schoolId): CarbonImmutable
     {
         return CarbonImmutable::now($this->getTimezone($schoolId));
+    }
+
+    /**
+     * Return operational rule configuration for permits, kiosk, and post gates (K-03, K-04 defaults).
+     *
+     * @return array{permit_same_day_cutoff: string, permit_max_advance_days: int, kiosk_dedup_seconds: int, has_security_post_pin: bool}
+     */
+    public function getOperationsSettings(int $schoolId): array
+    {
+        $school = School::query()->findOrFail($schoolId);
+        $ops = data_get($school->settings, 'operations', []);
+
+        return [
+            'permit_same_day_cutoff' => (string) ($ops['permit_same_day_cutoff'] ?? '09:00'),
+            'permit_max_advance_days' => max(1, (int) ($ops['permit_max_advance_days'] ?? 30)),
+            'kiosk_dedup_seconds' => max(10, (int) ($ops['kiosk_dedup_seconds'] ?? 120)),
+            'has_security_post_pin' => ! empty($ops['security_post_pin_hash']) || ! empty($ops['security_post_pin']),
+        ];
+    }
+
+    public function verifySecurityPostPin(int $schoolId, string $pin): bool
+    {
+        $candidate = trim($pin);
+        if ($candidate === '') {
+            return false;
+        }
+
+        $school = School::query()->findOrFail($schoolId);
+        $ops = data_get($school->settings, 'operations', []);
+        $hash = $ops['security_post_pin_hash'] ?? null;
+
+        if (is_string($hash) && $hash !== '') {
+            return Hash::check($candidate, $hash);
+        }
+
+        $plain = $ops['security_post_pin'] ?? null;
+        if (is_string($plain) && $plain !== '') {
+            return hash_equals($plain, $candidate);
+        }
+
+        return false;
+    }
+
+    public function setSecurityPostPin(int $schoolId, string $pin): void
+    {
+        $school = School::query()->findOrFail($schoolId);
+        $settings = is_array($school->settings) ? $school->settings : [];
+        $ops = is_array($settings['operations'] ?? null) ? $settings['operations'] : [];
+        $ops['security_post_pin_hash'] = Hash::make(trim($pin));
+        unset($ops['security_post_pin']);
+        $settings['operations'] = $ops;
+
+        $school->forceFill(['settings' => $settings])->save();
     }
 }

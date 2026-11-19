@@ -2,6 +2,220 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Paket Proposal, LPJ dan Koneksi Eksternal (`M4-INT-01` s.d. `M4-INT-04`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi lengkap modul proposal kegiatan guru, portal proposal & LPJ mandiri, serta integrasi sistem eksternal dan kanal komunikasi (`M4-INT-01` s.d. `M4-INT-04`).
+- **Ringkasan**:
+  - **Skema & Model**:
+    - Migrasi `2026_11_19_170000_create_proposals_and_integration_tables.php` menambahkan tabel `activity_proposals`, `integration_connections`, dan `integration_sync_logs` pada modul `Integration`.
+  - **Proposal Kegiatan Guru & Antrean Reviewer (`M4-INT-01`)**:
+    - `ProposalLpjService` + `ProposalController` menyediakan `/guru/proposal` (khusus pengajuan penugasan kerja guru oleh peran `teacher`, `homeroom`, `admin`) serta antrean reviewer `/administrasi/proposal` (`admin`, `operator`, `principal`, `committee`).
+    - Total anggaran RAB dihitung ulang sepenuhnya di server dan menolak kuantitas `< 1` atau harga satuan negatif; revisi reviewer menaikkan `revision_number` dan merekam riwayat keputusan per versi.
+  - **Portal Proposal & LPJ Mandiri (`M4-INT-02`)**:
+    - `/layanan/proposal` mendukung pengajuan kegiatan siswa/organisasi dilengkapi tombol pemuat contoh webinar (`ev_72b43c`), susunan panitia, editor item RAB dinamis bersama (`ProposalBudgetEditor.vue`), serta pengunggahan bukti realisasi LPJ privat (`/proposal/{proposal}/lpj`) via `ServiceDocumentService` jenis `proposal_lpj`.
+    - Reviewer menutup proposal (`closed`) hanya setelah bukti LPJ diunggah, dan penutupan menyinkronkan status `completed` pada `ServiceTicket` terkait (`proposal`). Sesuai `SS-D-009`, tidak ada fitur pencairan atau transfer bank.
+  - **EMIS, RDM, SLiMS & Kanal Eksternal (`M4-INT-03`, `M4-INT-04`)**:
+    - `ExternalIntegrationService` + `IntegrationSettingsController` menyediakan panel `/pengaturan/integrasi` (terbatas `admin` dan `operator`, `403` bagi peran non-berwenang).
+    - Mendukung pemilihan mekanisme (`link`, `file_exchange`, `api_sync` menunggu `K-05`), pemetaan kolom, pratinjau validasi dry-run, pencatatan log batch `partial_failed` dengan detail baris gagal + instruksi pemulihan, ekspor CSV siswa/koleksi perpustakaan, serta percobaan ulang idempoten (`retrySyncLog`).
+    - Konfigurasi kanal eksternal (`prayer`, `map`, `chat`, `email`, `whatsapp`, `kiosk_hardware`) menyimpan token dalam kolom terenkripsi `secret_encrypted` (`hidden` dari serialisasi, hanya `secret_last4` dan `has_secret` yang dikirim ke klien, tidak pernah ditulis ke `audit_events`), serta uji koneksi / simulasi gangguan mengembalikan status fallback eksplisit tanpa memengaruhi layanan inti.
+- **File & Migrasi**:
+  - Core: `app/Modules/Core/Application/Services/UnifiedTrackingService.php` (`proposal`), `app/Modules/Core/Application/Services/ServiceDocumentService.php` (`proposal_lpj`)
+  - Integration: `2026_11_19_170000_create_proposals_and_integration_tables.php`, `ActivityProposal.php`, `IntegrationConnection.php`, `IntegrationSyncLog.php`, `ProposalLpjService.php`, `ExternalIntegrationService.php`, `ProposalController.php`, `IntegrationSettingsController.php`, `app/Modules/Integration/Interface/Routes/web.php`
+  - Navigasi & Frontend: `config/navigation.php`, `SidebarNavigation.vue`, `Breadcrumbs.vue`, `usePublicServicesCatalog.ts`, `resources/js/components/ProposalBudgetEditor.vue`, `resources/js/Pages/Integration/Proposals/{TeacherIndex,IndependentPortal,ReviewQueue}.vue`, `resources/js/Pages/Integration/Settings/Index.vue`
+  - Tes & Docs: `tests/Feature/ProposalAndIntegrationTest.php`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Komunikasi antar-modul (Core/Academic/Library ke Integration) dilakukan murni lewat layer `Application\Services` (`AcademicQueryService`, `LibraryService`, `ServiceTicketService`, `ServiceDocumentService`) sesuai batas modular monolith (`ModularBoundaryTest`).
+  - Portal `/layanan/proposal` mensyaratkan sesi autentikasi pengguna sekolah (`student`, `teacher`, `homeroom`, `committee`, `operator`, `admin`) sedangkan pelacakan ringkas tiket tetap kompatibel via `/lacak`.
+- **Tes & Hasil**:
+  - `php artisan test tests/Feature/ProposalAndIntegrationTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/AcademicMigrationTest.php` -> **14 tes lulus (122 assertions)**.
+  - `./vendor/bin/pint --test` pada seluruh file PHP baru/ubah -> **lulus (`passed`)**.
+  - `vue-tsc --noEmit` & `vite build` -> **lulus (0 error TS, 972 modul terkompilasi dalam 3,76s)**.
+  - `php artisan test --compact` -> **491 tes: 489 lulus, 2 dilewati (MySQL-only existing), 5.241 assertions**.
+- **Risiko Tersisa**:
+  - Migrasi `2026_11_19_170000` baru teruji pada SQLite `RefreshDatabase` dan belum dieksekusi pada MySQL staging/produksi.
+  - Uji antarmuka langsung via Playwright pada breakpoint `1280×720` dan `390×844` serta kredensial API EMIS/RDM (`K-05`) belum dijalankan pada sesi ini.
+- **Langkah Review Manual**:
+  1. Login sebagai guru di `/guru/proposal` -> ajukan proposal dengan RAB multi-item & lampiran -> minta revisi memakai peran `principal`/`operator` di `/administrasi/proposal` -> kirim ulang revisi dan pastikan versi naik menjadi `v2` beserta riwayat keputusan.
+  2. Login sebagai siswa di `/layanan/proposal` -> klik **Muat Contoh Webinar (`ev_72b43c`)** -> ajukan -> setujui melalui `/administrasi/proposal` -> unggah bukti realisasi LPJ -> tutup LPJ dan pastikan tiket `/lacak` berstatus selesai.
+  3. Login sebagai `admin`/`operator` di `/pengaturan/integrasi` -> uji pratinjau CSV dengan 1 baris salah -> komitmen impor `partial_failed` -> klik **Coba Ulang Idempoten**; uji tab **Kanal Eksternal** dengan menyimpan token WhatsApp (verifikasi token hanya tampil masked `••••9876`) lalu klik **Simulasi Gangguan** untuk memverifikasi status fallback aktif.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=1` (bila migrasi `170000` sudah dijalankan di database target) dan kembalikan perubahan via Git.
+
+## Paket Aduan dan Perpustakaan (`M4-SERV-01` s.d. `M4-SERV-04`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi lengkap layanan pengaduan Siap Lapor, antrean Satgas & transparansi publik, serta modul Perpustakaan paritas MAN 4 Banjar (`M4-SERV-01` s.d. `M4-SERV-04`).
+- **Ringkasan**:
+  - **Skema & Model**:
+    - Migrasi `2026_11_19_160000_create_complaint_reports_table.php` menambahkan tabel `complaint_reports` pada modul `Homeroom`.
+    - Migrasi `2026_11_19_160100_create_library_tables.php` menambahkan 5 tabel pada modul `Library`: `library_collections`, `library_visits`, `library_loans`, `library_procurement_requests`, dan `library_clearance_certificates`.
+  - **Siap Lapor & Satgas Transparansi (`M4-SERV-01`, `M4-SERV-02`)**:
+    - `ComplaintReportService` + `ComplaintController` menyediakan `/layanan/lapor` (dukungan laporan bernama dan mode anonim yang tidak menyimpan identitas maupun tautan user pelapor di tabel laporan maupun snapshot tiket `/lacak`), lampiran bukti `evidence` privat, serta `/satgas/aduan` strictly untuk `admin`, `task_force`, `counselor` (dengan transisi multi-langkah tiket agar pembaruan status Satgas langsung terbaca di `/lacak` dan unduhan bukti privat terlindungi `403` bagi peran non-Satgas).
+    - `/lapor/transparansi` hanya mengekspor statistik agregat per kategori/status serta ringkasan publik termoderasi bebas PII yang telah ditandai `publish_to_transparency = true`.
+  - **Perpustakaan — Katalog, Sirkulasi, Kunjungan, Usulan & Bebas Pustaka (`M4-SERV-03`, `M4-SERV-04`)**:
+    - `LibraryService` + `LibraryController` menyediakan portal `/perpustakaan` (katalog pencarian buku & e-book dengan kontrol akses `public`, `members_only`, `staff_only`, presensi kunjungan QR kartu siswa/manual `/perpustakaan/kunjungan`, usul pengadaan `/perpustakaan/usulan`, serta pengajuan Bebas Pustaka `/perpustakaan/bebas-pustaka` yang memblokir penerbitan bila masih ada pinjaman aktif dan menerbitkan PDF ber-token `/verifikasi` saat bebas tanggungan).
+    - `/perpustakaan/kelola` (terbatas `admin` dan `librarian`) menyediakan CRUD koleksi & unggah e-book PDF privat, peminjaman/pengembalian buku dengan mutasi stok `available_copies` atomik, dan review usulan pengadaan.
+  - **Navigasi & Katalog Publik**:
+    - Mengaktifkan item `siap-lapor`, `transparansi-lapor`, dan `perpustakaan` pada `usePublicServicesCatalog.ts` serta menambahkan entri sidebar `task-force-complaints` (`/satgas/aduan`) dan `library-manage` (`/perpustakaan/kelola`) di `config/navigation.php`, `SidebarNavigation.vue`, dan `Breadcrumbs.vue`.
+- **File & Migrasi**:
+  - Core: `app/Modules/Core/Application/Services/ServiceDocumentService.php` (`kindLabel` untuk `clearance` & `ebook`)
+  - Homeroom (Aduan/Satgas): `2026_11_19_160000_create_complaint_reports_table.php`, `ComplaintReport.php`, `ComplaintReportService.php`, `ComplaintController.php`, `app/Modules/Homeroom/Interface/Routes/web.php`
+  - Library: `2026_11_19_160100_create_library_tables.php`, `LibraryCollection.php`, `LibraryVisit.php`, `LibraryLoan.php`, `LibraryProcurementRequest.php`, `LibraryClearanceCertificate.php`, `LibraryService.php`, `LibraryController.php`, `app/Modules/Library/Interface/Routes/web.php`, `resources/views/library/clearance-letter.blade.php`
+  - Frontend & Navigasi: `config/navigation.php`, `SidebarNavigation.vue`, `Breadcrumbs.vue`, `usePublicServicesCatalog.ts`, `resources/js/Pages/Public/Services/{Complaint,ComplaintTransparency}.vue`, `resources/js/Pages/Homeroom/Complaints/Index.vue`, `resources/js/Pages/Public/Library/Index.vue`, `resources/js/Pages/Library/Manage/Index.vue`
+  - Tes & Docs: `tests/Feature/ComplaintsAndLibraryTest.php`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Ketika koneksi eksternal SLiMS belum dikonfigurasi/aktif (`schools.settings['library']['slims_base_url']`), katalog dan pemeriksaan bebas pustaka berjalan penuh secara lokal disertai indikator status fallback eksplisit untuk kesiapan integrasi `M4-INT-03`.
+  - Dokumen `members_only` disembunyikan dari katalog tamu anonim dan diblokir `403` bila diakses langsung tanpa autentikasi anggota sekolah.
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/ComplaintsAndLibraryTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/HomeroomControllersTest.php tests/Feature/AcademicMigrationTest.php` -> **26 tes lulus (202 assertions)**.
+  - `./vendor/bin/pint` pada seluruh berkas PHP baru/ubah paket SERV -> **lulus (`passed`)**.
+  - `vue-tsc --noEmit` & `vite build` -> **lulus (0 error TS, 960 modul terkompilasi dalam 3,41s)**.
+  - `php artisan test --compact` -> **487 tes: 485 lulus, 2 dilewati (MySQL-only existing), 5.152 assertions**.
+- **Risiko Tersisa**:
+  - Migrasi `2026_11_19_160000` dan `2026_11_19_160100` baru teruji via SQLite `RefreshDatabase` (termasuk `AcademicMigrationTest`) dan belum dijalankan pada database MySQL live/staging.
+  - Uji browser/Playwright pada breakpoint `1280×720` dan `390×844` serta sinkronisasi SLiMS eksternal (`K-05`) belum dijalankan pada sesi ini.
+- **Langkah Review Manual**:
+  1. Jalankan `php artisan migrate` pada database staging dan uji laporan anonim & bernama di `/layanan/lapor`.
+  2. Login memakai peran `task_force` di `/satgas/aduan` -> tangani laporan -> terbitkan ringkasan bebas PII -> pastikan tampil di `/lapor/transparansi` dan status berubah di `/lacak` tanpa kebocoran identitas.
+  3. Login memakai peran `librarian` di `/perpustakaan/kelola` -> tambahkan koleksi fisik & e-book `members_only`/`staff_only` -> uji peminjaman aktif memblokir `/perpustakaan/bebas-pustaka` -> kembalikan buku -> verifikasi PDF Bebas Pustaka terbaca sah di `/verifikasi`.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=2` (bila migrasi `160000` dan `160100` sudah dijalankan di database target) dan kembalikan perubahan via Git.
+
+## Paket Siklus Siswa dan Alumni (`M4-LIF-01` s.d. `M4-LIF-07`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi lengkap modul siklus siswa dan alumni paritas MAN 4 Banjar (`M4-LIF-01` s.d. `M4-LIF-07`).
+- **Ringkasan**:
+  - **Skema & Model**:
+    - Migrasi `2026_11_19_150000_expand_admissions_for_candidate_portal.php` memperluas `admission_applicants` (`created_by` nullable bagi kandidat mandiri, `external_applicant_id`, `service_ticket_id`, `verification_secret_hash`, `birth_place`, `address`, `revision_notes`, `idempotency_key`) dan `admission_re_registrations` (`submitted_by_candidate_at`).
+    - Migrasi `2026_11_19_150100_create_mutation_graduation_and_alumni_tables.php` menyelaraskan kolom `enrollments.status` pada SQLite agar mendukung nilai lifecycle (`promoted`, `retained`, `graduated`, `transferred`) serta menambah tabel `student_mutations`, `graduation_batches`, `graduation_records`, dan `alumni_profiles`.
+    - Migrasi `2026_11_19_150200_create_legalization_requests_table.php` menambah tabel `legalization_requests` untuk pengajuan legalisir alumni dan pencatatan register Tata Usaha.
+  - **PPDB & Portal Kandidat (`M4-LIF-01`)**:
+    - `CandidatePortalService` + `AdmissionsController` menambahkan `/ppdb/daftar`, `/ppdb/cek-hasil`, `/ppdb/perbaiki/{applicant}`, `/ppdb/bukti/{applicant}/pdf`, `/ppdb/daftar-ulang/{applicant}`, dan `/spmb/pendaftar/{applicant}/revisi`, lengkap dengan validasi jadwal/status periode, bukti PDF `registration-proof.blade.php`, perbaikan berkas kandidat, gerbang pengumuman `announcement_at`, serta konversi idempoten ke `Student`.
+  - **Mutasi Masuk & Keluar (`M4-LIF-02`)**:
+    - `StudentMutationService` + `StudentMutationController` menyediakan `/layanan/mutasi` & `/akademik/mutasi` dengan validasi semester aktif, pemisahan mutasi masuk/keluar, surat rekomendasi/penerimaan PDF (`mutation-letter.blade.php`), pencabutan persetujuan teraudit, dan pembaruan aman `Enrollment` & `Student` tanpa menghapus histori lama.
+  - **Kelulusan & SKL (`M4-LIF-03`)**:
+    - `GraduationService` + `GraduationController` menyediakan `/akademik/kelulusan` & `/layanan/kelulusan` dengan gerbang rilis `release_at` + `is_published`, verifikasi PIN/pemilik, PDF SKL QR (`graduation-skl.blade.php`), penerbitan ulang terkendali (otomatis mencabut SKL lama via `ServiceDocumentService`), dan pencatatan pengambilan dokumen asli.
+  - **Verifikasi Siswa & Alumni (`M4-LIF-04`)**:
+    - `ServiceDocumentService::verifyPublicDocument()`, `AcademicQueryService::verifyPublicStudentStatus()`, dan `VerificationController` menyediakan portal `/verifikasi` untuk verifikasi token/nomor dokumen (`valid`, `revoked`, `expired`, `not_found`) serta keaktifan siswa via NISN + nama tanpa membocorkan PII sensitif.
+  - **Legalisir, Surat Kuasa & SPTJM (`M4-LIF-05`, `M4-LIF-06`)**:
+    - `LegalizationService` + `LegalizationController` menyediakan `/layanan/legalisir`, generator templat resmi `/layanan/surat-kuasa` (`power-of-attorney.blade.php` & `sptjm.blade.php` versi v1 terhubung kode register legalisir), serta antrean TU `/administrasi/legalisir` untuk verifikasi berkas asli, pengesahan PDF QR (`legalization-proof.blade.php`), dan pencatatan pengambilan langsung/kuasa.
+  - **Alumni, Tracer & E-KTA (`M4-LIF-07`)**:
+    - `AlumniService` + `AlumniController` menyediakan portal tracer `/alumni`, direktori terfilter `/alumni/direktori`, antrean moderasi `/akademik/alumni`, kontrol `opt_in_directory`/`opt_in_contact`/`opt_in_career`/`opt_in_testimonial`, serta penerbitan E-KTA PDF (`alumni-ekta.blade.php`).
+- **File & Migrasi**:
+  - Core: `ExternalApplicantAuthService.php`, `ServiceDocumentService.php`, `VerificationController.php`, `app/Modules/Core/Interface/Routes/web.php`
+  - Admissions: `2026_11_19_150000_expand_admissions_for_candidate_portal.php`, `AdmissionApplicant.php`, `CandidatePortalService.php`, `AdmissionsController.php`, `app/Modules/Admissions/Interface/Routes/web.php`, `resources/views/admissions/registration-proof.blade.php`
+  - Academic: `2026_11_19_150100_create_mutation_graduation_and_alumni_tables.php`, `StudentMutation.php`, `GraduationBatch.php`, `GraduationRecord.php`, `AlumniProfile.php`, `AcademicQueryService.php`, `StudentMutationService.php`, `GraduationService.php`, `AlumniService.php`, `StudentMutationController.php`, `GraduationController.php`, `AlumniController.php`, `app/Modules/Academic/Interface/Routes/web.php`, `resources/views/academic/{mutation-letter,graduation-skl,alumni-ekta}.blade.php`
+  - Administration: `2026_11_19_150200_create_legalization_requests_table.php`, `LegalizationRequest.php`, `LegalizationService.php`, `LegalizationController.php`, `app/Modules/Administration/Interface/Routes/ptsp.php`, `resources/views/administration/{legalization-proof,power-of-attorney,sptjm}.blade.php`
+  - Frontend & Navigasi: `config/navigation.php`, `SidebarNavigation.vue`, `Breadcrumbs.vue`, `usePublicServicesCatalog.ts`, `resources/js/Pages/Public/Admissions/Index.vue`, `resources/js/Pages/Public/Verification/Index.vue`, `resources/js/Pages/Public/Services/{Mutation,Graduation,Legalization,PowerOfAttorney}.vue`, `resources/js/Pages/Public/Alumni/{Portal,Directory}.vue`, `resources/js/Pages/Academic/{Mutations,Graduation,Alumni}/Index.vue`, `resources/js/Pages/Administration/Legalization/Index.vue`
+  - Tes & Docs: `tests/Feature/StudentLifecycleAndAlumniTest.php`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Komunikasi antar-modul untuk verifikasi dokumen/token dan unduhan PDF dari `Academic`/`Administration` ditempatkan di `ServiceDocumentService` (`Core\Application`) agar bebas dari impor `Infrastructure` lintas modul (`ModularBoundaryTest`).
+  - `ExternalApplicantAuthService::ALLOWED_TYPES` ditambah tipe `'candidate'` untuk mendukung pendaftaran akun kandidat PPDB maupun alumni eksternal yang terpisah dari guard staf.
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/StudentLifecycleAndAlumniTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/AdmissionsControllersTest.php tests/Feature/AdmissionsWorkflowTest.php tests/Feature/AcademicMigrationTest.php tests/Feature/AcademicControllersTest.php` -> **62 tes lulus (687 assertions)**.
+  - `./vendor/bin/pint` pada seluruh 29 berkas PHP baru/ubah paket LIF -> **lulus (`passed`)**.
+  - `vue-tsc --noEmit` & `vite build` -> **lulus (0 error TS, 950 modul terkompilasi dalam 3,00s)**.
+  - `php artisan test --compact` -> **485 tes: 483 lulus, 2 dilewati (MySQL-only existing), 5.054 assertions**.
+- **Risiko Tersisa**:
+  - Ketiga migrasi baru (`150000`, `150100`, `150200`) belum dijalankan terhadap database MySQL live/staging (teruji penuh di SQLite `RefreshDatabase` serta uji rollback `AcademicMigrationTest`).
+  - QA visual browser/Playwright pada breakpoint desktop (`1280×720`) dan ponsel (`390×844`) belum dijalankan pada sesi ini.
+- **Langkah Review Manual**:
+  1. Jalankan `php artisan migrate` pada database uji/staging dan cek menu publik E-Layanan (`/e-layanan`) mengarah ke `/ppdb`, `/layanan/mutasi`, `/layanan/kelulusan`, `/verifikasi`, `/layanan/legalisir`, `/layanan/surat-kuasa`, dan `/alumni`.
+  2. Uji siklus penuh PPDB di `/ppdb` dan `/spmb`: daftar saat terbuka -> minta revisi -> perbaiki -> pastikan hasil tersembunyi sebelum `announcement_at` -> rilis & konfirmasi daftar ulang.
+  3. Uji mutasi di `/layanan/mutasi` & `/akademik/mutasi` serta kelulusan di `/akademik/kelulusan` & `/layanan/kelulusan`, lalu verifikasi token dokumen (dan kondisi dicabut) di `/verifikasi`.
+  4. Uji legalisir + Surat Kuasa/SPTJM di `/layanan/legalisir`, `/layanan/surat-kuasa`, dan `/administrasi/legalisir`, serta moderasi alumni + direktori + E-KTA di `/alumni`, `/akademik/alumni`, dan `/alumni/direktori`.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=3` (bila ketiga migrasi `150000`, `150100`, `150200` telah dijalankan di database target) dan kembalikan perubahan via Git.
+
+## Paket Presensi, Izin, Piket dan BK (`M4-OPS-01` s.d. `M4-OPS-05`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi lengkap modul operasional Presensi, Izin/Dispensasi, Kios RFID/QR, Piket & Pos Jaga Satpam, serta Disiplin BK rahasia paritas MAN 4 Banjar (`M4-OPS-01` s.d. `M4-OPS-05`).
+- **Ringkasan**:
+  - **Skema & Model**:
+    - Migrasi `2026_11_19_140000_create_student_cards_and_kiosk_tables.php` menambahkan tabel `student_cards`, `attendance_kiosk_devices`, dan `attendance_kiosk_scans` untuk registrasi/pencabutan kartu siswa, perangkat kios, dan log scan ber-idempotensi.
+    - Migrasi `2026_11_19_140100_expand_dispensations_picket_gate_and_bk.php` memperluas `attendance_dispensations` (dukung pengajuan tamu bertoken, lampiran privat, tanda tangan, tiket layanan, catatan keputusan/koreksi, serta `idempotency_key`), menambahkan `student_permit_tokens` & `gate_passes`, dan memperluas `student_incidents` dengan `incident_time`, `location`, `evidence_document_ids`, dan `is_bk_confidential`.
+  - **Izin & Verifikasi Presensi (`M4-OPS-01`, `M4-OPS-02`)**:
+    - `PermitWorkflowService` + `StudentPermitController` menyediakan `/layanan/izin-siswa` (wali/siswa terverifikasi atau token sekali pakai terikat siswa/tujuan yang dikonsumsi atomik dengan `lockForUpdate()`, penolakan rentang bentrok & melewati cutoff jam lokal sekolah, idempotensi sebelum validasi bentrok, tanda tangan kanvas/data URL, unggah/unduh lampiran privat, dan bukti PDF `permit-proof.blade.php`) serta `/wali-kelas/izin` (penerbitan token, antrean terisolasi wali kelas, keputusan setujui / minta revisi / tolak beralasan, dan koreksi keputusan dengan audit `homeroom.dispensation.corrected`).
+    - `AttendanceService::applyApprovedDispensationToAttendance()` & `revertDispensationAttendance()` otomatis mengisi/mengoreksi baris `attendance_records` untuk status `sick`/`permitted` dan mengembalikannya saat keputusan dikoreksi (memakai `whereDate()` yang konsisten pada SQLite maupun MySQL).
+  - **Kios Presensi RFID/QR (`M4-OPS-03`)**:
+    - `StudentCardKioskService` + `StudentCardKioskController` menyediakan `/akademik/kartu-siswa` (pendaftaran/pencabutan kartu RFID/QR & perangkat kios) dan `/kios-presensi` (mode tap RFID, scan QR kamera/manual, tombol Gate simulasi menunggu kontrak perangkat K-04, tampilan layar minimal nama+kelas, deduplikasi scan berulang dalam jendela waktu konfirgurasi sekolah, antrean offline `localStorage` yang disinkronkan idempoten via `/kios-presensi/sinkron`, dan penolakan kartu dicabut/asing/nonaktif).
+  - **Piket & Pos Jaga Satpam (`M4-OPS-04`)**:
+    - `PicketGateService` + `PicketGateController` menyediakan `/piket/izin-keluar` (pencarian/scan kartu siswa, penerbitan `gate_passes` berzona waktu lokal dikonversi ke timezone aplikasi sebelum persistensi, serta pembatalan beralasan) dan `/pos-jaga` (pengaturan PIN numerik oleh `admin`/`operator`, gerbang papan angka PIN wajib sebelum panel terbuka, validasi keluar/kembali lewat `/pos-jaga/scan` serta penolakan pass kedaluwarsa/dibatalkan/sudah dipakai kembali).
+  - **Disiplin BK Rahasia (`M4-OPS-05`)**:
+    - `BkDisciplineService` + `BkDisciplineController` menyediakan `/bk/kasus` strictly untuk `admin` dan `counselor` (`403` untuk guru/wali kelas/piket/satpam/siswa), pencarian siswa via QR/manual, pencatatan & pembaruan kasus bertanda `is_bk_confidential = true` beserta eviden privat (`documentKind: 'evidence'`), serta ekspor CSV aman injeksi formula dan tercatat di `audit_events` (`homeroom.bk_case.exported`). `StudentDisciplineController::index()` menyaring keluar baris `is_bk_confidential = true` agar kasus rahasia BK tidak muncul di daftar disiplin wali kelas.
+  - **Navigasi & Katalog Publik**:
+    - Menambahkan key navigasi `permits_queue`, `student_cards`, `kiosk`, `picket`, `security_post`, dan `bk_cases` pada `config/navigation.php`, `SidebarNavigation.vue`, dan `Breadcrumbs.vue`, serta memperbarui entri katalog izin siswa di `usePublicServicesCatalog.ts`.
+- **File & Migrasi**:
+  - Migrasi: `app/Modules/Academic/Infrastructure/Database/Migrations/2026_11_19_140000_create_student_cards_and_kiosk_tables.php`, `app/Modules/Homeroom/Infrastructure/Database/Migrations/2026_11_19_140100_expand_dispensations_picket_gate_and_bk.php`
+  - Core: `app/Modules/Core/Application/Services/SchoolScopeService.php`
+  - Academic: `StudentCard.php`, `AttendanceKioskDevice.php`, `AttendanceKioskScan.php`, `AcademicQueryService.php`, `AttendanceService.php`, `StudentCardKioskService.php`, `StudentCardKioskController.php`, `app/Modules/Academic/Interface/Routes/web.php`
+  - Homeroom: `DispensationStatusEnum.php`, `AttendanceDispensation.php`, `StudentPermitToken.php`, `GatePass.php`, `StudentIncident.php`, `PermitWorkflowService.php`, `PicketGateService.php`, `BkDisciplineService.php`, `StudentPermitController.php`, `PicketGateController.php`, `BkDisciplineController.php`, `StudentDisciplineController.php`, `app/Modules/Homeroom/Interface/Routes/web.php`
+  - Views & Frontend: `resources/views/homeroom/permit-proof.blade.php`, `resources/js/Pages/Public/Services/StudentPermit.vue`, `resources/js/Pages/Homeroom/{Permits,Picket,SecurityPost,Bk}/Index.vue`, `resources/js/Pages/Academic/Attendance/{Cards,Kiosk}.vue`, `SidebarNavigation.vue`, `Breadcrumbs.vue`, `usePublicServicesCatalog.ts`, `config/navigation.php`
+  - Tes & Docs: `tests/Feature/OperationsPermitKioskPicketBkTest.php`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Kontrol perangkat keras gerbang/gate fisik (`Kiosk.vue` & `/kios-presensi/gate`) diimplementasikan dalam mode simulasi sampai kontrak protokol perangkat K-04 difinalisasi.
+  - Cutoff pengajuan izin hari yang sama (`09:00`), jendela deduplikasi kios (`120` detik), dan hash PIN Pos Jaga disimpan dalam `schools.settings['operations']` via `SchoolScopeService` agar dapat disesuaikan per sekolah tanpa perubahan skema.
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/OperationsPermitKioskPicketBkTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/HomeroomControllersTest.php tests/Feature/HomeroomIsolationTest.php tests/Feature/HomeroomAttendanceSummaryTest.php tests/Feature/AcademicMigrationTest.php` -> **34 tes lulus (247 assertions)**.
+  - `php artisan test --compact` -> **481 tes: 479 lulus, 2 dilewati (MySQL-only existing), 4.891 assertions**.
+  - `./vendor/bin/pint --test` pada seluruh berkas PHP baru/diubah (`Core`, `Academic`, `Homeroom`, `config/navigation.php`, `OperationsPermitKioskPicketBkTest.php`) -> **lulus**.
+  - `vue-tsc --noEmit` & `vite build` -> **lulus (0 error TS, 928 modul terkompilasi dalam 3,52s)**.
+- **Risiko Tersisa**:
+  - Migrasi `2026_11_19_140000` dan `2026_11_19_140100` baru diverifikasi pada SQLite `RefreshDatabase` (termasuk `AcademicMigrationTest`) dan belum dijalankan pada database MySQL live/staging.
+  - Verifikasi visual browser/Playwright (`1280×720` dan `390×844`) serta uji kamera fisik QR/pembaca RFID & kontrak gerbang fisik (`K-04`) belum dijalankan pada sesi ini.
+- **Langkah Review Manual**:
+  1. Jalankan `php artisan migrate` pada staging dan akses `/layanan/izin-siswa` baik sebagai wali/siswa maupun tamu bertoken dari `/wali-kelas/izin`.
+  2. Uji persetujuan & koreksi izin di `/wali-kelas/izin` lalu cek perubahan status `present`/`sick`/`permitted`/`absent` di rekap presensi harian siswa terkait.
+  3. Terbitkan kartu di `/akademik/kartu-siswa`, uji scan berulang & sinkronisasi offline di `/kios-presensi`, lalu cabut kartu dan pastikan scan ditolak.
+  4. Atur PIN Pos Jaga di `/pos-jaga` (login sebagai admin/operator), terbitkan pass keluar di `/piket/izin-keluar`, buka kunci `/pos-jaga` via papan angka, lalu uji scan keluar -> kembali -> tolak pakai ulang.
+  5. Uji `/bk/kasus` memakai peran `counselor` vs `homeroom`/`teacher` untuk memastikan isolasi akses `403`, unggah/unduh eviden privat, serta tidak bocornya kasus BK di `/wali-kelas/kedisiplinan`.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=2` (bila kedua migrasi `140000` & `140100` sudah dijalankan di target DB) dan kembalikan perubahan via Git.
+
+## Paket PTSP dan Tata Usaha (`M4-TU-01` s.d. `M4-TU-06`) — 19 November 2026
+
+- **Task & Requirement**: Implementasi lengkap modul PTSP & Tata Usaha paritas MAN 4 Banjar (`M4-TU-01` s.d. `M4-TU-06`, beserta rincian tambahan REA `M4-TU-04` untuk filter pelacakan terpadu).
+- **Ringkasan**:
+  - **Skema & Model**:
+    - Migrasi `2026_11_19_130000_add_auth_columns_to_external_applicants.php` menambahkan kolom `password_hash`, `recovery_token_hash`, `recovery_expires_at`, dan `last_login_at` pada `external_applicants` agar akun pemohon eksternal terpisah sepenuhnya dari akun pegawai (`users`).
+    - Migrasi `2026_11_19_130100_create_ptsp_and_guestbook_tables.php` menambahkan tabel `ptsp_services`, `ptsp_requests`, `guestbook_visits`, serta kolom integrasi eksternal pada `correspondence_records` (`service_ticket_id`, kontak narahubung, `external_supporting_document_ids`, dan `created_by` nullable dengan pemulihan trigger provenance SQLite & FK MySQL).
+  - **Katalog PTSP, Akun Pemohon, Pengajuan & Resi (`M4-TU-01`, `M4-TU-02`)**:
+    - `ExternalApplicantAuthService` + `ExternalApplicantAuthController` (`/layanan/ptsp/akun/*`) menyediakan registrasi, masuk, keluar, pembaruan profil/kontak, serta pemulihan sandi bertoken hashed + outbox.
+    - `PtspWorkflowService` + `PtspPublicController` (`/layanan/ptsp/*`) menyediakan katalog layanan aktif/tutup, penyimpanan & penyuntingan draf (termasuk hapus lampiran draf), snapshot persyaratan pada permohonan agar perubahan katalog tidak memengaruhi pengajuan lama, validasi berkas wajib, submit atomik ber-idempotensi menghasilkan tepat 1 tiket (`PTSP-YYYY-XXXXXXXX`), halaman resi terproteksi akses, dan cetak resi PDF (`ptsp-receipt.blade.php`).
+  - **Antrean Petugas & Hasil (`M4-TU-03`)**:
+    - `PtspAdminController` + `Administration/Ptsp/Index.vue` (`/administrasi/ptsp`) untuk peran `admin`, `operator`, dan `ptsp`: filter layanan/status/tanggal/cari, verifikasi/tinjau, minta perbaikan (membuka `/layanan/ptsp/{ticket}/perbaiki` bagi pemohon), tolak beralasan, disposisi, terbitkan hasil PDF standar/unggulan (`ptsp-result.blade.php`), catat pengambilan fisik, unduh berkas privat, serta CRUD katalog PTSP.
+  - **Pelacakan Terpadu (`M4-TU-04`)**:
+    - `UnifiedTrackingService` + `UnifiedTrackingController` + `Public/Tracking/Index.vue` (`/lacak`) menyediakan filter `Semua`, `PTSP`, `Izin`, `Legalisir`, `Mutasi`, `Surat Eksternal`, dan `Pengaduan`, rate limiting `throttle:sensitive`, verifikasi PIN/pemilik sebelum membuka rincian/dokumen, penanganan tiket kedaluwarsa/dicabut, serta isolasi identitas aduan anonim.
+  - **Surat Dinas Eksternal (`M4-TU-05`)**:
+    - `CorrespondenceService::createIncomingFromExternal()` + `ExternalLetterController` (`/layanan/surat-dinas`) langsung mencatat surat masuk ke agenda `correspondence_records` (`IN/YYYY/XXXXXX`) dan menerbitkan tiket `SRT-YYYY-XXXXXXXX` + tanda terima PDF (`external-letter-receipt.blade.php`) tanpa entri ganda, serta menyinkronkan status disposisi/selesai TU ke `/lacak`.
+  - **Buku Tamu Digital (`M4-TU-06`)**:
+    - `GuestbookService` + `GuestbookController` menyediakan registrasi mandiri (`/layanan/buku-tamu`, hanya menampilkan bukti slip milik pengunjung sendiri tanpa daftar tamu publik) dan ruang kerja resepsionis/TU (`/administrasi/buku-tamu`) untuk peran `admin`, `operator`, `ptsp`, dan `receptionist` lengkap dengan pencatatan pulang, KPI harian/bulanan, filter, dan ekspor CSV aman injeksi formula.
+  - **Navigasi & Katalog Publik**:
+    - Menambahkan key `ptsp` & `guestbook` di `config/navigation.php`, `SidebarNavigation.vue`, dan `Breadcrumbs.vue`, serta memperbarui `usePublicServicesCatalog.ts` dan pintasan `SchoolProfileController::home()`.
+- **File & Migrasi**:
+  - Migrasi: `app/Modules/Core/Infrastructure/Database/Migrations/2026_11_19_130000_add_auth_columns_to_external_applicants.php`, `app/Modules/Administration/Infrastructure/Database/Migrations/2026_11_19_130100_create_ptsp_and_guestbook_tables.php`
+  - Core: `ExternalApplicant.php`, `ExternalApplicantAuthService.php`, `UnifiedTrackingService.php`, `ServiceTicketService.php`, `ServiceDocumentService.php`, `ExternalApplicantAuthController.php`, `UnifiedTrackingController.php`, `SchoolProfileController.php`, `app/Modules/Core/Interface/Routes/web.php`
+  - Administration: `PtspService.php`, `PtspRequest.php`, `GuestbookVisit.php`, `CorrespondenceRecord.php`, `PtspWorkflowService.php`, `GuestbookService.php`, `CorrespondenceService.php`, `PtspPublicController.php`, `PtspAdminController.php`, `ExternalLetterController.php`, `GuestbookController.php`, `app/Modules/Administration/Interface/Routes/{ptsp,web}.php`
+  - Views & Frontend: `resources/views/administration/{ptsp-receipt,ptsp-result,external-letter-receipt}.blade.php`, `resources/js/Pages/Public/Services/{Ptsp,PtspAccount,PtspReceipt,PtspRevision,ExternalLetter,ExternalLetterReceipt,Guestbook}.vue`, `resources/js/Pages/Public/Tracking/Index.vue`, `resources/js/Pages/Administration/{Ptsp,Guestbook}/Index.vue`, `SidebarNavigation.vue`, `Breadcrumbs.vue`, `usePublicServicesCatalog.ts`, `config/navigation.php`
+  - Tes & Docs: `tests/Feature/PtspAndTataUsahaTest.php`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`, `docs/HANDOFF.md`
+- **Keputusan & Asumsi**:
+  - Akun pemohon eksternal menggunakan sesi terpisah (`ptsp_external_applicant_id` di atas tabel `external_applicants`) sehingga tidak bercampur dengan guard pegawai (`users`).
+  - Pembuatan katalog layanan default mengikuti kebutuhan konfigurasi masing-masing sekolah melalui `/administrasi/ptsp` (menunggu konfirmasi SOP klien `K-01`/`K-02`/`K-03`).
+- **Tes & Hasil**:
+  - `php artisan test --compact tests/Feature/PtspAndTataUsahaTest.php tests/Architecture/ModularBoundaryTest.php tests/Feature/PublicPortalTest.php tests/Feature/RoleMatrixAccessTest.php tests/Feature/AdministrationCorrespondenceTest.php tests/Feature/ParityFoundationTest.php tests/Feature/PilotSeederTest.php` -> **59 tes lulus (899 assertions)**.
+  - `php artisan test --compact` -> **475 tes, 473 lulus, 2 dilewati (MySQL-only existing), 4.771 assertions**.
+  - `./vendor/bin/pint --test` pada seluruh 26 berkas PHP baru/ubah -> **lulus**.
+  - `vue-tsc --noEmit` & `vite build` (memakai `node` di `~/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin`) -> **lulus (0 error TS, 910 modul terkompilasi)**.
+- **Risiko Tersisa**:
+  - Migrasi `2026_11_19_130000` dan `2026_11_19_130100` belum dijalankan terhadap database MySQL live (teruji penuh via `RefreshDatabase` SQLite, termasuk uji rollback `AcademicMigrationTest`).
+  - Verifikasi visual browser/Playwright (`1280×720` dan `390×844`) dan konfirmasi SOP/format dokumen klien (`K-01`, `K-02`, `K-03`) belum dijalankan di sesi ini.
+- **Langkah Review Manual**:
+  1. Jalankan `php artisan migrate` pada database uji/staging dan login sebagai `operator`/`ptsp` ke `/administrasi/ptsp` untuk membuat 1 layanan katalog PTSP aktif.
+  2. Uji alur pemohon di `/layanan/ptsp/akun` & `/layanan/ptsp` (simpan draf -> unggah wajib -> kirim -> lihat resi PDF), lalu proses di `/administrasi/ptsp` (minta perbaikan -> pemohon perbaiki di `/layanan/ptsp/{tiket}/perbaiki` -> terbitkan hasil -> catat ambil fisik).
+  3. Uji `/layanan/surat-dinas` -> cek muncul di `/administrasi/persuratan/surat-masuk` tanpa duplikasi dan lacak statusnya di `/lacak`.
+  4. Uji `/layanan/buku-tamu` (pastikan tidak ada daftar tamu publik) lalu catat pulang & ekspor CSV di `/administrasi/buku-tamu` memakai peran `receptionist`.
+- **Rollback**:
+  - Jalankan `php artisan migrate:rollback --step=2` (bila sudah dimigrasikan pada DB target) dan kembalikan perubahan via Git.
+
 ## Paket Portal dan Konten Publik (`M4-PUB-01` s.d. `M4-PUB-07`) — 19 November 2026
 
 - **Task & Requirement**: Implementasi halaman publik, katalog E-Layanan, direktori GTK, prestasi, pusat unduh, zona integritas & IKM, jadwal salat, serta statistik kunjungan anonim (`M4-PUB-01` s.d. `M4-PUB-07`).

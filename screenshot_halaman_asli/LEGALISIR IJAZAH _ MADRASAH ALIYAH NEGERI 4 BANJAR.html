@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)https://man4banjar.com/akademik/legalisir.php -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!--<base href="./">--><base href=".">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="Layanan &amp; Formulir Pengajuan Legalisir Ijazah Online | MADRASAH ALIYAH NEGERI 4 BANJAR">
+    <meta name="theme-color" content="#317EFB">
+    <title>LEGALISIR IJAZAH | MADRASAH ALIYAH NEGERI 4 BANJAR</title>
+   
+    <link rel="icon" type="image/png" sizes="192x192" href="https://man4banjar.com/akademik/assets/database.png">
+    <link rel="stylesheet" type="text/css" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/main2.css">
+    <link rel="stylesheet" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/iziToast.min.css">
+    <link href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/front2.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/logo239.png">		
+    <link rel="stylesheet" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/1.css">
+    <link rel="stylesheet" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/2.css">
+    <link rel="stylesheet" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/3.css">
+    <link rel="stylesheet" type="text/css" href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/font-awesome.min.css">
+
+    <!-- Google Fonts: Poppins & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/css2" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: auto !important;
+            min-height: 100% !important;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif !important;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh !important;
+            background-color: #f8fafc;
+        }
+        .home-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+        }
+        .main-content-legalisir {
+            flex: 1 0 auto;
+        }
+        footer.footer-legalisir {
+            margin-top: auto !important;
+        }
+        /* UNIFORM NAVBAR ACROSS ALL PAGES */
+        .home-header {
+            background: #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 4px 0;
+        }
+        .home-header .navbar {
+            padding: 0;
+        }
+        .home-header .navbar-brand img {
+            height: 60px !important;
+            padding-right: 10px !important;
+        }
+        .home-header .home-header-text h5 {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            margin-bottom: 2px !important;
+        }
+        .home-header .home-header-text h6 {
+            font-size: 12px !important;
+            margin-bottom: 0 !important;
+        }
+        .home-header nav .nav-item {
+            padding: 0 !important;
+            margin: 0 2px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 50px !important;
+        }
+        .home-header nav .nav-item.active {
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 2px !important;
+            box-shadow: none !important;
+        }
+        .home-header nav .nav-item .nav-link {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            color: #475569 !important;
+            padding: 7px 13px !important;
+            border-radius: 50px !important;
+            transition: all 0.2s ease !important;
+            white-space: nowrap !important;
+            display: inline-block !important;
+            line-height: 1.4 !important;
+        }
+        .home-header nav .nav-item .nav-link:hover {
+            color: #005BEA !important;
+            background: #f1f5f9 !important;
+        }
+        .home-header nav .nav-item.active .nav-link,
+        .home-header nav .nav-item.active a {
+            background: #005BEA !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 3px 10px rgba(0, 91, 234, 0.3) !important;
+            border-radius: 50px !important;
+        }
+        .hero-banner {
+            background: linear-gradient(135deg, #0f4c81 0%, #1b85df 100%);
+            color: white;
+            padding: 40px 0 30px 0;
+            margin-bottom: 25px;
+            border-radius: 0 0 24px 24px;
+            box-shadow: 0 10px 25px rgba(15, 76, 129, 0.15);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            background: #fff;
+            overflow: hidden;
+        }
+        .btn-tab-menu {
+            color: #475569;
+            background-color: #f1f5f9;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 11px 20px;
+            margin: 0 5px 10px 5px;
+            border: 1px solid #cbd5e1;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+            font-size: 14.5px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn-tab-menu:hover {
+            background-color: #e2e8f0;
+            color: #0284c7;
+            text-decoration: none;
+        }
+        .btn-tab-menu.active {
+            color: #fff !important;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+            border-color: #0284c7 !important;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .step-timeline {
+            position: relative;
+        }
+        .step-card {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 14px;
+            border-left: 5px solid #0284c7;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.25s ease;
+        }
+        .step-card:hover {
+            border-left-color: #28a745;
+            transform: translateX(4px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            margin-right: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+        }
+        .step-number small {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: -2px;
+        }
+        .step-content {
+            flex-grow: 1;
+        }
+        .step-title {
+            font-size: 16.5px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+        .step-desc {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+        .doc-badge-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+        .doc-badge-list li {
+            padding: 8px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13.5px;
+            color: #334155;
+        }
+        .doc-badge-list li:last-child {
+            margin-bottom: 0;
+        }
+        .doc-tag-hadir {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            margin-right: 6px;
+        }
+        .doc-tag-wakil {
+            display: inline-block;
+            background: #fef3c7;
+            color: #b45309;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            margin-right: 6px;
+        }
+        .form-section-header {
+            background: #e0f2fe;
+            padding: 10px 16px;
+            border-left: 4px solid #0284c7;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #0369a1;
+            margin-bottom: 18px;
+            font-size: 15px;
+        }
+        /* CANVAS SIGNATURE */
+        .sig-container {
+            border: 2px dashed #94a3b8;
+            border-radius: 10px;
+            background: #ffffff;
+            position: relative;
+            margin-bottom: 8px;
+            touch-action: none;
+            cursor: crosshair;
+        }
+        .sig-canvas {
+            width: 100%;
+            height: 160px;
+            display: block;
+            border-radius: 10px;
+        }
+        .sig-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .badge-status {
+            font-size: 13.5px;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .table-jam td {
+            padding: 8px 6px;
+            font-size: 13.5px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .sidebar-card-header {
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 15.5px;
+            color: #1e293b;
+        }
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            font-size: 13.5px;
+            color: #334155;
+        }
+        .check-item i {
+            color: #22c55e;
+            margin-right: 8px;
+            margin-top: 3px;
+            font-size: 14px;
+        }
+
+        /* SOP POSTER STYLING */
+        .sop-poster {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(2, 132, 199, 0.12);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            position: relative;
+        }
+        .sop-header-banner {
+            background: radial-gradient(circle at 50% 20%, #0369a1 0%, #0c4a6e 80%, #082f49 100%);
+            color: #ffffff;
+            padding: 22px 20px 18px 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 4px solid #38bdf8;
+        }
+        .sop-header-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.6;
+        }
+        .sop-title-badge {
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #bae6fd;
+            margin-bottom: 2px;
+        }
+        .sop-main-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+        .sop-quote-box {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(186, 230, 253, 0.4);
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-size: 13px;
+            font-style: italic;
+            color: #e0f2fe;
+            font-weight: 600;
+        }
+        .sop-quote-box .quote-mark {
+            color: #38bdf8;
+            font-size: 17px;
+            font-weight: 900;
+        }
+        .sop-body {
+            padding: 22px 20px;
+            background: #fcfdfd;
+        }
+        .sop-step-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 16px;
+            transition: all 0.25s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        .sop-step-row:hover {
+            border-color: #0284c7;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.12);
+            transform: translateY(-2px);
+        }
+        .sop-pill-num {
+            min-width: 54px;
+            height: 48px;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 900;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+            margin-right: 16px;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+        .sop-icon-wrap {
+            width: 66px;
+            height: 66px;
+            margin-right: 16px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sop-icon-wrap svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.08));
+        }
+        .sop-content-wrap {
+            flex-grow: 1;
+            font-size: 13.5px;
+            color: #1e293b;
+            line-height: 1.55;
+        }
+        .sop-content-wrap ul {
+            margin-bottom: 0;
+            padding-left: 18px;
+        }
+        .sop-content-wrap li {
+            margin-bottom: 4px;
+        }
+        .sop-content-wrap li:last-child {
+            margin-bottom: 0;
+        }
+        .sop-badge-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: #0284c7;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 11px;
+            border-radius: 50%;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+        .sop-sub-item {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 5px;
+        }
+        .sop-sub-item span {
+            font-size: 13px;
+        }
+        .sop-estimasi-box {
+            border: 2px solid #0284c7;
+            border-radius: 12px;
+            overflow: hidden;
+            text-align: center;
+            background: #ffffff;
+            min-width: 130px;
+            margin-left: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.08);
+        }
+        .sop-estimasi-head {
+            padding: 5px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0284c7;
+            line-height: 1.2;
+        }
+        .sop-estimasi-head .sop-days {
+            display: block;
+            font-size: 15px;
+            font-weight: 900;
+            color: #0369a1;
+            margin-top: 1px;
+        }
+        .sop-estimasi-foot {
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 3px 5px;
+            letter-spacing: 0.3px;
+        }
+        .sop-info-bar {
+            background: #f0fdf4;
+            border: 1.5px dashed #16a34a;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #15803d;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 16px;
+        }
+        .sop-footer-slogan {
+            background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-top: 3px solid #38bdf8;
+        }
+        .sop-mantab-logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: #bae6fd;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+        .sop-mantab-sub {
+            font-size: 10.5px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        .sop-footer-quote {
+            font-size: 12px;
+            color: #f1f5f9;
+            max-width: 360px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+        }
+        @media (max-width: 767.98px) {
+            .sop-step-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px 12px;
+            }
+            .sop-step-row-top {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            .sop-pill-num {
+                min-width: 44px;
+                height: 40px;
+                font-size: 19px;
+                margin-right: 10px;
+            }
+            .sop-icon-wrap {
+                width: 50px;
+                height: 50px;
+                margin-right: 10px;
+            }
+            .sop-estimasi-box {
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
+            .sop-main-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+<style data-glasp-print="rule">@media print{[data-glasp-print="hide"]{display:none !important}}</style></head>
+
+<body data-spy="scroll" data-target="#navbar-header" data-offset="100">
+    <div class="home-wrapper" id="home">
+        <!-- TINGKAT 1: TOP BAR ATAS -->
+        <div class="top-bar-tier py-1" style="background: #0b1528; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px;">
+            <div class="container d-flex justify-content-between align-items-center flex-wrap">
+                <div class="top-info text-light py-1 d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#f59e0b" viewBox="0 0 16 16" style="margin-right: 6px;">
+                        <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917l-7.5-3.5zM8 8.46 1.758 5.965 8 3.052l6.242 2.913L8 8.46z"></path>
+                        <path d="M4.179 13.879A15.95 15.95 0 0 1 8 13.5c1.365 0 2.664.132 3.821.379.467.1.921.22 1.357.361A1.5 1.5 0 0 0 14 12.822V9.544l-5.628 2.251a1.5 1.5 0 0 1-1.144 0L1.6 9.544v3.278c0 .604.364 1.14.922 1.361.436-.141.89-.261 1.357-.361z"></path>
+                    </svg>
+                    <span class="small font-weight-bold">MADRASAH ALIYAH NEGERI 4 BANJAR • TA 2026/2027</span>
+                </div>
+                <div class="top-links d-flex align-items-center py-1">
+                    <a href="https://man4banjar.com/akademik/user" class="btn btn-sm btn-warning font-weight-bold px-3 mr-2 rounded-pill shadow-sm d-inline-flex align-items-center" style="font-size: 12px; color: #1e293b;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path>
+                            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"></path>
+                        </svg>
+                        <span>Portal Siswa / Wali</span>
+                    </a>
+                    <a href="https://man4banjar.com/akademik/login" class="btn btn-sm btn-outline-light px-3 rounded-pill d-inline-flex align-items-center" style="font-size: 12px; border-color: rgba(255,255,255,0.3);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+                            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path>
+                        </svg>
+                        <span>Login Admin</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- TINGKAT 2: MAIN NAVBAR BAWAH -->
+        <div class="home-header">
+            <div class="container p-0">
+                <nav class="navbar navbar-expand-lg navbar-light" id="navbar-header">
+                    <a class="navbar-brand" href="https://man4banjar.com/akademik/">
+                        <img src="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/logo239.png" height="70" alt="Logo">
+                        <div class="home-header-text d-none d-sm-block">
+                            <h5>APLIKASI DATABASE SISWA</h5>
+                            <h6>MADRASAH ALIYAH NEGERI 4 BANJAR</h6>
+                        </div>
+                        <span class="logo-mini-unbk d-block d-sm-none">DATABASE </span>
+                        <span class="logo-mini-tahun d-block d-sm-none">_ONLINE</span>
+                    </a>
+                    
+                    <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="menu">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/" id="link-home">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/datasiswa.php" id="link-tentang">Data Siswa</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/portal_alumni.php" id="link-alumni">Data Alumni</a>
+                            </li>
+                            <li class="nav-item active">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/legalisir.php" id="link-legalisir">Legalisir</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/surat_izin.php" id="link-izin">Surat Izin</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/mutasi.php" id="link-mutasi">Mutasi</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link font-weight-bold text-success" href="https://man4banjar.com/akademik/tracking.php?type=legalisir" id="link-tracking" style="color: #059669 !important;"><i class="fa fa-search mr-1"></i> Lacak Terpadu</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/lapor.php" id="link-lapor">Pengaduan</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://man4banjar.com/akademik/cek_lulus.php">Cek Kelulusan</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- HERO BANNER -->
+        <div class="hero-banner">
+            <div class="container text-center">
+                <div class="d-inline-flex align-items-center mb-2 px-3 py-1 rounded-pill" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); font-size: 12px; font-weight: 700; color: #fef08a; letter-spacing: 0.5px; text-transform: uppercase;">
+                    <i class="fa fa-certificate mr-2"></i> Layanan Legalisir Ijazah Online
+                </div>
+                <h2 style="font-weight: 800; font-size: 26px; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px;">
+                    MADRASAH ALIYAH NEGERI 4 BANJAR                </h2>
+                <h4 style="font-weight: 600; font-size: 16px; opacity: 0.95; color: #93c5fd; margin-bottom: 10px;">
+                    Tahun Pelajaran 2026/2027                </h4>
+                <p style="font-size: 14.5px; opacity: 0.9; max-width: 680px; margin: 0 auto; line-height: 1.6;">
+                    Formulir Permohonan Legalisir, Pembuatan Surat Kuasa &amp; SPTJM dengan Tanda Tangan Digital Langsung secara online.
+                </p>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <div class="container mb-4 text-center">
+            <div class="d-inline-flex flex-wrap justify-content-center">
+                <button class="btn-tab-menu active" data-tab="tab-alur">
+                    <i class="fa fa-list-ol mr-1"></i> Alur &amp; Ketentuan
+                </button>
+                <button class="btn-tab-menu" data-tab="tab-formulir">
+                    <i class="fa fa-pencil-square-o mr-1"></i> Formulir Pengajuan
+                </button>
+                <button class="btn-tab-menu" data-tab="tab-kuasa">
+                    <i class="fa fa-file-text-o mr-1"></i> Cetak Surat Kuasa
+                </button>
+                <button class="btn-tab-menu" data-tab="tab-sptjm">
+                    <i class="fa fa-shield mr-1"></i> Cetak SPTJM
+                </button>
+                <button class="btn-tab-menu" data-tab="tab-status">
+                    <i class="fa fa-search mr-1"></i> Cek Status Pengajuan
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="container pb-5 main-content-legalisir">
+
+            <!-- ================= TAB 1: ALUR (SOP INFOGRAFIS LENGKAP) ================= -->
+                    <div id="tab-alur" class="tab-panel active">
+                        <div class="row">
+                            <div class="col-lg-8 mb-4">
+                                <div class="sop-poster mb-4">
+                            <!-- HEADER BANNER -->
+                            <div class="sop-header-banner">
+                                <div class="sop-title-badge">STANDAR OPERASIONAL PROSEDUR</div>
+                                <h1 class="sop-main-title">LEGALISIR IJAZAH &amp; RAPOR</h1>
+                                <div class="sop-quote-box">
+                                    <span class="quote-mark">“</span> Layanan Legalisasi Ijazah Cepat, Tepat, Transparan, dan Akuntabel <span class="quote-mark">”</span>
+                                </div>
+                            </div>
+
+                            <!-- BODY STEPS -->
+                            <div class="sop-body">
+                                
+                                <!-- STEP 01 -->
+                                <div class="sop-step-row">
+                                    <div class="d-flex align-items-center sop-step-row-top">
+                                        <div class="sop-pill-num">01</div>
+                                        <div class="sop-icon-wrap">
+                                            <!-- Icon: Ruang Tata Usaha -->
+                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="14" y="24" width="72" height="64" rx="6" fill="#F8FAFC" stroke="#0284C7" stroke-width="2.5"></rect>
+                                                <rect x="22" y="16" width="56" height="12" rx="3" fill="#0284C7"></rect>
+                                                <text x="50" y="25" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="7.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">TATA USAHA</text>
+                                                <!-- Window -->
+                                                <rect x="22" y="36" width="22" height="20" rx="3" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="1.5"></rect>
+                                                <line x1="33" y1="36" x2="33" y2="56" stroke="#0284C7" stroke-width="1"></line>
+                                                <line x1="22" y1="46" x2="44" y2="46" stroke="#0284C7" stroke-width="1"></line>
+                                                <!-- Clock -->
+                                                <circle cx="68" cy="46" r="10" fill="#FEF08A" stroke="#D97706" stroke-width="1.5"></circle>
+                                                <polyline points="68,40 68,46 72,46" stroke="#D97706" stroke-width="1.5" stroke-linecap="round"></polyline>
+                                                <!-- Counter Desk -->
+                                                <rect x="18" y="68" width="64" height="16" rx="2" fill="#CBD5E1"></rect>
+                                                <rect x="42" y="62" width="16" height="12" rx="2" fill="#0369A1"></rect>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="sop-content-wrap">
+                                        <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Kedatangan Pemohon ke Ruang Tata Usaha</div>
+                                        <div>Pemohon datang langsung ke ruang <strong>Tata Usaha (TU) MADRASAH ALIYAH NEGERI 4 BANJAR</strong> pada hari dan jam kerja yang telah ditentukan, atau dapat mengirimkan <strong>perwakilan resmi</strong>.</div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 02 -->
+                                <div class="sop-step-row">
+                                    <div class="d-flex align-items-center sop-step-row-top">
+                                        <div class="sop-pill-num">02</div>
+                                        <div class="sop-icon-wrap">
+                                            <!-- Icon: Dokumen Persyaratan & Ijazah -->
+                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <!-- Certificate background -->
+                                                <rect x="22" y="14" width="56" height="72" rx="4" fill="#FFFFFF" stroke="#0284C7" stroke-width="2.5"></rect>
+                                                <rect x="28" y="20" width="44" height="60" rx="2" fill="#F0F9FF"></rect>
+                                                <!-- Header line -->
+                                                <line x1="34" y1="28" x2="66" y2="28" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"></line>
+                                                <line x1="34" y1="36" x2="60" y2="36" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <line x1="34" y1="43" x2="66" y2="43" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <!-- Red Seal Badge -->
+                                                <g transform="translate(52, 52)">
+                                                    <circle cx="16" cy="16" r="14" fill="#EF4444" stroke="#DC2626" stroke-width="1.5"></circle>
+                                                    <circle cx="16" cy="16" r="10" fill="#FEE2E2"></circle>
+                                                    <path d="M12 16L15 19L20 13" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="sop-content-wrap">
+                                        <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Penyerahan Dokumen Persyaratan</div>
+                                        <div class="mb-1">Pemohon menyerahkan dokumen kelengkapan sesuai ketentuan:</div>
+                                        <div class="sop-sub-item">
+                                            <span class="sop-badge-num">1</span>
+                                            <span><strong>Jika Hadir Sendiri:</strong> Membawa <strong>Ijazah Asli</strong> dan salinan <strong>Fotokopi Ijazah</strong> yang akan dilegalisir (bersih, jelas, dan terbaca).</span>
+                                        </div>
+                                        <div class="sop-sub-item">
+                                            <span class="sop-badge-num">2</span>
+                                            <span><strong>Jika Diwakilkan:</strong> Membawa <strong>Ijazah Asli</strong>, <strong>Fotokopi Ijazah</strong>, <strong>Surat Kuasa bermaterai</strong>, dan <strong>Surat SPTJM</strong>.</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 03 -->
+                                <div class="sop-step-row">
+                                    <div class="d-flex align-items-center sop-step-row-top">
+                                        <div class="sop-pill-num">03</div>
+                                        <div class="sop-icon-wrap">
+                                            <!-- Icon: Verifikasi Dokumen & Buku Induk -->
+                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <!-- Database / Book -->
+                                                <rect x="18" y="24" width="46" height="58" rx="4" fill="#FFFFFF" stroke="#64748B" stroke-width="2"></rect>
+                                                <rect x="22" y="30" width="38" height="6" rx="1" fill="#0284C7"></rect>
+                                                <line x1="24" y1="44" x2="56" y2="44" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"></line>
+                                                <line x1="24" y1="52" x2="52" y2="52" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"></line>
+                                                <line x1="24" y1="60" x2="48" y2="60" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"></line>
+                                                <!-- Magnifying Glass -->
+                                                <g transform="translate(42, 38)">
+                                                    <circle cx="22" cy="22" r="18" fill="#FEF08A" stroke="#D97706" stroke-width="3"></circle>
+                                                    <circle cx="22" cy="22" r="12" fill="#FFFFFF" opacity="0.6"></circle>
+                                                    <path d="M16 22L20 26L28 17" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <line x1="35" y1="35" x2="50" y2="50" stroke="#78350F" stroke-width="5" stroke-linecap="round"></line>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="sop-content-wrap">
+                                        <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Verifikasi Dokumen oleh Petugas TU</div>
+                                        <div>Petugas Tata Usaha memeriksa dan memverifikasi keabsahan fisik Ijazah Asli dengan salinan fotokopi, serta mencocokkan data pada <strong>Buku Induk Siswa / Database Sekolah</strong>.</div>
+                                    </div>
+                                    <div class="sop-estimasi-box">
+                                        <div class="sop-estimasi-head">
+                                            <i class="fa fa-clock-o mr-1"></i> Estimasi Waktu
+                                            <span class="sop-days">10-15 MENIT</span>
+                                        </div>
+                                        <div class="sop-estimasi-foot">Layanan Langsung</div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 04 -->
+                                <div class="sop-step-row">
+                                    <div class="d-flex align-items-center sop-step-row-top">
+                                        <div class="sop-pill-num">04</div>
+                                        <div class="sop-icon-wrap">
+                                            <!-- Icon: Buku Register Pelayanan -->
+                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <!-- Ledger / Register Book -->
+                                                <rect x="18" y="20" width="60" height="66" rx="4" fill="#F8FAFC" stroke="#334155" stroke-width="2.5"></rect>
+                                                <rect x="18" y="20" width="12" height="66" rx="2" fill="#0369A1"></rect>
+                                                <circle cx="24" cy="32" r="2.5" fill="#FEF08A"></circle>
+                                                <circle cx="24" cy="50" r="2.5" fill="#FEF08A"></circle>
+                                                <circle cx="24" cy="68" r="2.5" fill="#FEF08A"></circle>
+                                                <!-- Lines -->
+                                                <line x1="36" y1="32" x2="70" y2="32" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round"></line>
+                                                <line x1="36" y1="42" x2="66" y2="42" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <line x1="36" y1="52" x2="70" y2="52" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <line x1="36" y1="62" x2="60" y2="62" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <!-- Fountain pen -->
+                                                <g transform="translate(60, 48) rotate(40)">
+                                                    <rect x="0" y="0" width="8" height="32" rx="1.5" fill="#F59E0B" stroke="#B45309" stroke-width="1"></rect>
+                                                    <path d="M0 32L4 38L8 32H0Z" fill="#1E293B"></path>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="sop-content-wrap">
+                                        <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Pencatatan Permohonan di Buku Register</div>
+                                        <div>Setelah dokumen dinyatakan lengkap dan valid, petugas TU mencatat permohonan legalisir ke dalam <strong>Buku Register Pelayanan Legalisir Ijazah</strong> untuk penomoran dan arsip dokumentasi resmi.</div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 05 -->
+                                <div class="sop-step-row">
+                                    <div class="d-flex align-items-center sop-step-row-top">
+                                        <div class="sop-pill-num">05</div>
+                                        <div class="sop-icon-wrap">
+                                            <!-- Icon: Cap Stempel Basah & TTD -->
+                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <!-- Paper with Signature -->
+                                                <rect x="18" y="16" width="54" height="68" rx="4" fill="#FFFFFF" stroke="#0284C7" stroke-width="2"></rect>
+                                                <line x1="26" y1="26" x2="60" y2="26" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <line x1="26" y1="34" x2="56" y2="34" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"></line>
+                                                <!-- Signature curve -->
+                                                <path d="M26 56C30 52 32 60 36 54C40 50 42 58 48 54" stroke="#0369A1" stroke-width="2.5" stroke-linecap="round"></path>
+                                                <!-- Stamp Tool (Cap Basah) -->
+                                                <g transform="translate(48, 42)">
+                                                    <!-- Stamp Handle -->
+                                                    <ellipse cx="22" cy="10" rx="10" ry="6" fill="#78350F"></ellipse>
+                                                    <path d="M16 10V24H28V10H16Z" fill="#92400E"></path>
+                                                    <!-- Stamp Base -->
+                                                    <rect x="6" y="24" width="32" height="12" rx="3" fill="#1E293B"></rect>
+                                                    <!-- Wet Ink Mark underneath -->
+                                                    <ellipse cx="22" cy="42" rx="16" ry="6" fill="#3B82F6" opacity="0.85"></ellipse>
+                                                    <ellipse cx="22" cy="42" rx="12" ry="4" stroke="#FFFFFF" stroke-width="1"></ellipse>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="sop-content-wrap">
+                                        <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Proses Legalisir Resmi</div>
+                                        <div>Dokumen salinan fotokopi ijazah dibubuhi <strong>cap/stempel resmi basah MADRASAH ALIYAH NEGERI 4 BANJAR</strong> dan ditandatangani oleh <strong>Kepala Madrasah/Sekolah</strong> atau pejabat yang berwenang.</div>
+                                    </div>
+                                    <div class="sop-estimasi-box">
+                                        <div class="sop-estimasi-head">
+                                            <i class="fa fa-calendar-check-o mr-1"></i> Estimasi Waktu
+                                            <span class="sop-days">1 HARI</span>
+                                        </div>
+                                        <div class="sop-estimasi-foot">Maksimal / Hari Kerja</div>
+                                    </div>
+                                </div>
+
+                                <!-- STEP 06 -->
+                                <div class="sop-step-row">
+                                    <div class="d-flex align-items-center sop-step-row-top">
+                                        <div class="sop-pill-num">06</div>
+                                        <div class="sop-icon-wrap">
+                                            <!-- Icon: Pengambilan Hasil Legalisir -->
+                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <!-- Handover Folder -->
+                                                <rect x="18" y="22" width="46" height="58" rx="3" fill="#0284C7" stroke="#0369A1" stroke-width="2"></rect>
+                                                <rect x="22" y="26" width="8" height="50" fill="#0369A1"></rect>
+                                                <rect x="34" y="34" width="22" height="14" rx="2" fill="#FEF08A"></rect>
+                                                <line x1="38" y1="39" x2="52" y2="39" stroke="#0284C7" stroke-width="1.5"></line>
+                                                <!-- White Envelope/Certificate behind -->
+                                                <rect x="42" y="16" width="44" height="60" rx="3" fill="#FFFFFF" stroke="#10B981" stroke-width="2"></rect>
+                                                <path d="M42 20L64 36L86 20" stroke="#10B981" stroke-width="2"></path>
+                                                <!-- Green verified badge -->
+                                                <circle cx="64" cy="46" r="9" fill="#10B981"></circle>
+                                                <path d="M60 46L63 49L69 43" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="sop-content-wrap">
+                                        <div class="font-weight-bold mb-1" style="color: #15803d; font-size: 14.5px;">Pengambilan Hasil Legalisir Sah</div>
+                                        <div>Pemohon atau perwakilan mengambil kembali <strong>Ijazah Asli</strong> beserta dokumen fotokopi yang telah selesai dilegalisir secara sah sesuai dengan jumlah permohonan yang diserahkan.</div>
+                                    </div>
+                                </div>
+
+                                <!-- INFO BAR GRATIS -->
+                                <div class="sop-info-bar mb-0">
+                                    <i class="fa fa-shield fa-2x mr-3 text-success"></i>
+                                    <div>
+                                        <strong>PELAYANAN BEBAS BIAYA (GRATIS):</strong>
+                                        <span class="d-block" style="font-size: 12.5px; opacity: 0.9;">Seluruh proses pengesahan &amp; legalisir ijazah di MADRASAH ALIYAH NEGERI 4 BANJAR adalah <strong>Rp 0,- (Bebas Pungli)</strong>.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT SIDEBAR KHUSUS TAB ALUR -->
+                    <div class="col-lg-4 mb-4">
+                                
+                                <!-- KOTAK PERSYARATAN -->
+                                <div class="card card-custom mb-4">
+                                    <div class="sidebar-card-header">
+                                        <i class="fa fa-check-circle text-primary mr-2"></i> Ringkasan Persyaratan
+                                    </div>
+                                    <div class="p-3">
+                                        <div class="check-item">
+                                            <i class="fa fa-check-circle"></i>
+                                            <span>Membawa <strong>Ijazah Asli</strong> untuk verifikasi fisik.</span>
+                                        </div>
+                                        <div class="check-item">
+                                            <i class="fa fa-check-circle"></i>
+                                            <span>Salinan <strong>Fotokopi Ijazah</strong> (kualitas cetak bersih &amp; jelas).</span>
+                                        </div>
+                                        <div class="check-item">
+                                            <i class="fa fa-check-circle"></i>
+                                            <span>Maksimal pengajuan disarankan <strong>5 - 10 lembar</strong> per permohonan.</span>
+                                        </div>
+                                        <div class="check-item">
+                                            <i class="fa fa-check-circle"></i>
+                                            <span>Jika diwakilkan: Wajib menyertakan <strong>Surat Kuasa bermaterai Rp 10.000</strong> &amp; <strong>SPTJM</strong>.</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- KOTAK JAM PELAYANAN -->
+                                <div class="card card-custom mb-4">
+                                    <div class="sidebar-card-header">
+                                        <i class="fa fa-clock-o text-warning mr-2"></i> Jadwal Pelayanan TU
+                                    </div>
+                                    <div class="p-3">
+                                        <table class="table table-sm table-jam m-0">
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>Senin - Kamis</strong></td>
+                                                    <td class="text-right text-primary font-weight-bold">08.00 - 14.00 WITA</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Jumat</strong></td>
+                                                    <td class="text-right text-primary font-weight-bold">08.00 - 11.00 WITA</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Sabtu - Minggu</strong></td>
+                                                    <td class="text-right text-danger font-weight-bold">Tutup / Libur</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Hari Libur Nasional</strong></td>
+                                                    <td class="text-right text-danger font-weight-bold">Tutup / Libur</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- KOTAK BANTUAN & KONTAK -->
+                                <div class="card card-custom mb-4">
+                                    <div class="sidebar-card-header">
+                                        <i class="fa fa-institution text-info mr-2"></i> Lokasi &amp; Layanan
+                                    </div>
+                                    <div class="p-3">
+                                        <p class="font-weight-bold mb-1 text-dark" style="font-size: 14.5px;">MADRASAH ALIYAH NEGERI 4 BANJAR</p>
+                                        <p class="text-muted small mb-3">
+                                            <i class="fa fa-map-marker text-danger mr-1"></i> Jln. Pendidikan No. 1  Martapura,                                         </p>
+                                        <a href="https://man4banjar.com/akademik/dataalumni.php" class="btn btn-outline-primary btn-block btn-sm mb-2" style="border-radius: 8px;">
+                                            <i class="fa fa-graduation-cap mr-1"></i> Cek Data Alumni
+                                        </a>
+                                        <a href="https://man4banjar.com/akademik/" class="btn btn-light btn-block btn-sm text-secondary" style="border-radius: 8px;">
+                                            <i class="fa fa-arrow-left mr-1"></i> Kembali ke Beranda
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= TAB 2: FORMULIR PENGAJUAN ================= -->
+                    <div id="tab-formulir" class="tab-panel">
+                        <div class="card card-custom p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                                <div>
+                                    <h4 class="m-0 font-weight-bold text-primary">
+                                        <i class="fa fa-pencil-square-o mr-2"></i> Formulir Pengajuan Legalisir Online
+                                    </h4>
+                                    <small class="text-muted">Isi data permohonan untuk mendapatkan nomor registrasi resmi</small>
+                                </div>
+                            </div>
+
+                            <form id="form-legalisir">
+                                
+                                <div class="form-section-header">
+                                    <i class="fa fa-user mr-1"></i> Data Alumni / Pemohon
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-8">
+                                        <label class="font-weight-bold">NISN Alumni <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="nisn" id="form_nisn" placeholder="Masukkan 10 digit NISN..." required="">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-info" type="button" id="btnCariAlumni">
+                                                    <i class="fa fa-search"></i> Cari Data
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Klik "Cari Data" untuk mengisi otomatis data dari database alumni.</small>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">Tahun Kelulusan</label>
+                                        <input type="text" class="form-control" name="tahun_lulus" id="form_tahun_lulus" placeholder="Contoh: 2024">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-7">
+                                        <label class="font-weight-bold">Nama Lengkap Alumni <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nama_alumni" id="form_nama" placeholder="Nama lengkap sesuai Ijazah" required="">
+                                    </div>
+                                    <div class="form-group col-md-5">
+                                        <label class="font-weight-bold">Jurusan / Program</label>
+                                        <input type="text" class="form-control" name="jurusan" id="form_jurusan" placeholder="Contoh: IPA / IPS / Keagamaan">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">Nomor Seri Ijazah (Opsional)</label>
+                                        <input type="text" class="form-control" name="no_ijazah" id="form_no_ijazah" placeholder="Contoh: DN-01/MA/13/...">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">No. Telepon / WhatsApp Aktif <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="no_hp" id="form_hp" placeholder="08xxxxxxxxxx" required="">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Alamat Lengkap</label>
+                                    <textarea class="form-control" name="alamat" id="form_alamat" rows="2" placeholder="Alamat domisili saat ini..."></textarea>
+                                </div>
+
+                                <div class="form-section-header mt-4">
+                                    <i class="fa fa-file-text-o mr-1"></i> Rincian Permohonan Legalisir
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">Jumlah Lembar Legalisir <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="jumlah_lembar" id="form_jumlah" required="">
+                                            <option value="3">3 Lembar</option>
+                                            <option value="5" selected="">5 Lembar (Standar)</option>
+                                            <option value="10">10 Lembar</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">Metode Pengambilan <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="tipe_pengambilan" id="form_tipe_pengambilan" required="">
+                                            <option value="Sendiri" selected="">Hadir Sendiri</option>
+                                            <option value="Diwakilkan">Diwakilkan (Melalui Surat Kuasa)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="box-kuasa" style="display: none;" class="p-3 mb-3 bg-light border rounded">
+                                    <h6 class="font-weight-bold text-warning mb-2"><i class="fa fa-users mr-1"></i> Data Perwakilan / Penerima Kuasa:</h6>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-5">
+                                            <label>Nama Penerima Kuasa <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="nama_kuasa" id="form_nama_kuasa" placeholder="Nama perwakilan...">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>NIK / No. KTP Penerima Kuasa</label>
+                                            <input type="text" class="form-control" name="nik_kuasa" id="form_nik_kuasa" placeholder="16 digit NIK...">
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Hubungan</label>
+                                            <input type="text" class="form-control" name="hubungan_kuasa" id="form_hubungan" placeholder="Ortu/Kakak/dll">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Keperluan Pengesahan / Legalisir <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="keperluan" id="form_keperluan" placeholder="Contoh: Melanjutkan Kuliah / Daftar Kerja / CPNS / TNI-POLRI" required="">
+                                </div>
+
+                                <div class="form-section-header mt-4">
+                                    <i class="fa fa-pencil mr-1"></i> Tanda Tangan Digital Pemohon
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Goreskan Tanda Tangan Pemohon di Kotak Bawah Ini:</label>
+                                    <div class="sig-container">
+                                        <canvas id="sig-pad-pemohon" class="sig-canvas"></canvas>
+                                    </div>
+                                    <div class="sig-toolbar">
+                                        <small class="text-muted"><i class="fa fa-mouse-pointer mr-1"></i> Gunakan mouse atau sentuhan layar HP/tablet.</small>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-sig-pemohon">
+                                            <i class="fa fa-eraser mr-1"></i> Hapus / Ulangi TTD
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="ttd_pemohon" id="ttd_pemohon_val">
+                                </div>
+
+                                <hr class="my-4">
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5 font-weight-bold" id="btnSubmitLegalisir">
+                                        <i class="fa fa-paper-plane mr-2"></i> Kirim Permohonan Legalisir
+                                    </button>
+                                </div>
+
+                            </form>
+
+                            <!-- RESULT SUCCESS BOX -->
+                            <div id="resultPengajuanBox" class="mt-4" style="display: none;"></div>
+
+                        </div>
+                    </div>
+
+                    <!-- ================= TAB 3: CETAK SURAT KUASA ================= -->
+                    <div id="tab-kuasa" class="tab-panel">
+                        <div class="card card-custom p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                                <div>
+                                    <h4 class="m-0 font-weight-bold text-primary">
+                                        <i class="fa fa-file-text-o mr-2"></i> Generator Surat Kuasa Legalisir
+                                    </h4>
+                                    <small class="text-muted">Isi data di bawah dan tanda tangani langsung untuk mencetak Surat Kuasa resmi</small>
+                                </div>
+                            </div>
+
+                            <form id="form-surat-kuasa" action="https://man4banjar.com/akademik/print_surat_kuasa.php" method="POST" target="_blank">
+                                
+                                <div class="form-section-header">
+                                    <i class="fa fa-user mr-1"></i> Pihak I: Pemberi Kuasa (Alumni)
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-7">
+                                        <label class="font-weight-bold">Nama Lengkap Alumni <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nama_pemberi" id="kuasa_nama_pemberi" placeholder="Nama alumni..." required="">
+                                    </div>
+                                    <div class="form-group col-md-5">
+                                        <label class="font-weight-bold">NISN Alumni <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nisn_pemberi" id="kuasa_nisn_pemberi" placeholder="NISN alumni..." required="">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">NIK / No. KTP Alumni</label>
+                                        <input type="text" class="form-control" name="nik_pemberi" placeholder="16 digit NIK...">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">Tahun Kelulusan</label>
+                                        <input type="text" class="form-control" name="tahun_lulus" id="kuasa_tahun_lulus" placeholder="Tahun lulus...">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-8">
+                                        <label class="font-weight-bold">Alamat Alumni</label>
+                                        <input type="text" class="form-control" name="alamat_pemberi" id="kuasa_alamat_pemberi" placeholder="Alamat domisili...">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">No. HP / WA</label>
+                                        <input type="text" class="form-control" name="hp_pemberi" id="kuasa_hp_pemberi" placeholder="08xxxxxxxxxx">
+                                    </div>
+                                </div>
+
+                                <div class="form-section-header mt-4">
+                                    <i class="fa fa-users mr-1"></i> Pihak II: Penerima Kuasa (Yang Mewakili)
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-7">
+                                        <label class="font-weight-bold">Nama Penerima Kuasa <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nama_penerima" id="kuasa_nama_penerima" placeholder="Nama perwakilan..." required="">
+                                    </div>
+                                    <div class="form-group col-md-5">
+                                        <label class="font-weight-bold">NIK Penerima Kuasa <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nik_penerima" id="kuasa_nik_penerima" placeholder="16 digit NIK..." required="">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">Hubungan dengan Alumni <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="hubungan" id="kuasa_hubungan" placeholder="Contoh: Orang Tua / Kakak / Saudara" required="">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label class="font-weight-bold">No. HP Penerima Kuasa</label>
+                                        <input type="text" class="form-control" name="hp_penerima" placeholder="08xxxxxxxxxx">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Alamat Penerima Kuasa</label>
+                                    <input type="text" class="form-control" name="alamat_penerima" placeholder="Alamat penerima kuasa...">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Keperluan Pengesahan Legalisir <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="keperluan" id="kuasa_keperluan" placeholder="Contoh: Melanjutkan Pendidikan / Pendaftaran Pekerjaan" required="">
+                                </div>
+
+                                <div class="form-section-header mt-4">
+                                    <i class="fa fa-pencil mr-1"></i> Tanda Tangan Digital Pihak Terkait
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="font-weight-bold">TTD Pemberi Kuasa (Alumni):</label>
+                                        <div class="sig-container">
+                                            <canvas id="sig-pad-kuasa-pemberi" class="sig-canvas"></canvas>
+                                        </div>
+                                        <div class="sig-toolbar">
+                                            <small class="text-muted">Goreskan tanda tangan</small>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-sig-kuasa-pemberi">
+                                                <i class="fa fa-eraser"></i> Hapus
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="ttd_pemberi" id="ttd_pemberi_val">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="font-weight-bold">TTD Penerima Kuasa (Perwakilan):</label>
+                                        <div class="sig-container">
+                                            <canvas id="sig-pad-kuasa-penerima" class="sig-canvas"></canvas>
+                                        </div>
+                                        <div class="sig-toolbar">
+                                            <small class="text-muted">Goreskan tanda tangan</small>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-sig-kuasa-penerima">
+                                                <i class="fa fa-eraser"></i> Hapus
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="ttd_penerima" id="ttd_penerima_val">
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-success btn-lg px-5 font-weight-bold" id="btnCetakSuratKuasa">
+                                        <i class="fa fa-print mr-2"></i> Cetak Surat Kuasa (PDF)
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ================= TAB 4: CETAK SPTJM ================= -->
+                    <div id="tab-sptjm" class="tab-panel">
+                        <div class="card card-custom p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                                <div>
+                                    <h4 class="m-0 font-weight-bold text-primary">
+                                        <i class="fa fa-shield mr-2"></i> Generator SPTJM Legalisir Ijazah
+                                    </h4>
+                                    <small class="text-muted">Format FM-PI-03: Surat Pernyataan Tanggung Jawab Mutlak Pengesahan Fotokopi Ijazah/STTB</small>
+                                </div>
+                            </div>
+
+                            <form id="form-sptjm" action="https://man4banjar.com/akademik/print_sptjm.php" method="POST" target="_blank">
+                                
+                                <div class="form-section-header">
+                                    <i class="fa fa-user mr-1"></i> Identitas Pembuat Pernyataan
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-7">
+                                        <label class="font-weight-bold">Nama Lengkap <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nama_alumni" id="sptjm_nama" placeholder="Nama alumni..." required="">
+                                    </div>
+                                    <div class="form-group col-md-5">
+                                        <label class="font-weight-bold">NISN <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nisn" id="sptjm_nisn" placeholder="NISN alumni..." required="">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">NIK / No. KTP <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="nik" placeholder="16 digit NIK..." required="">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">Tempat, Tanggal Lahir</label>
+                                        <input type="text" class="form-control" name="ttl" placeholder="Contoh: Banjar, 12 Mei 2005">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">Pekerjaan</label>
+                                        <input type="text" class="form-control" name="pekerjaan" placeholder="Contoh: Mahasiswa / Karyawan / Belum Bekerja">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">Tahun Kelulusan</label>
+                                        <input type="text" class="form-control" name="tahun_lulus" id="sptjm_tahun_lulus" placeholder="Tahun lulus...">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">Jurusan / Program</label>
+                                        <input type="text" class="form-control" name="jurusan" id="sptjm_jurusan" placeholder="IPA / IPS / Agama">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">Nomor Seri Ijazah</label>
+                                        <input type="text" class="form-control" name="no_ijazah" id="sptjm_no_ijazah" placeholder="DN-01/MA/...">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-8">
+                                        <label class="font-weight-bold">Alamat Lengkap</label>
+                                        <input type="text" class="form-control" name="alamat" id="sptjm_alamat" placeholder="Alamat domisili...">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="font-weight-bold">No. Telepon / HP</label>
+                                        <input type="text" class="form-control" name="no_hp" id="sptjm_hp" placeholder="08xxxxxxxxxx">
+                                    </div>
+                                </div>
+
+                                <div class="form-section-header mt-4">
+                                    <i class="fa fa-pencil mr-1"></i> Tanda Tangan Digital Pembuat Pernyataan
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Goreskan Tanda Tangan Pembuat Pernyataan:</label>
+                                    <div class="sig-container">
+                                        <canvas id="sig-pad-sptjm" class="sig-canvas"></canvas>
+                                    </div>
+                                    <div class="sig-toolbar">
+                                        <small class="text-muted">Goreskan tanda tangan di atas</small>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-sig-sptjm">
+                                            <i class="fa fa-eraser mr-1"></i> Hapus / Ulangi TTD
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="ttd_pemohon" id="ttd_sptjm_val">
+                                </div>
+
+                                <hr class="my-4">
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-info btn-lg px-5 font-weight-bold" id="btnCetakSPTJM">
+                                        <i class="fa fa-print mr-2"></i> Cetak SPTJM (PDF)
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ================= TAB 5: CEK STATUS ================= -->
+                    <div id="tab-status" class="tab-panel">
+                        <div class="card card-custom p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3" style="width: 48px; height: 48px; font-size: 20px; box-shadow: 0 4px 14px rgba(0,123,255,0.3); flex-shrink: 0;">
+                                    <i class="fa fa-search"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-weight-bold mb-1 text-primary">Cek Status Pengajuan Legalisir</h4>
+                                    <p class="text-muted small mb-0">Lacak progres dan status verifikasi permohonan legalisir ijazah alumni secara realtime.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info d-flex align-items-center justify-content-between p-3 mb-3" style="border-radius: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa fa-info-circle mr-2" style="font-size: 20px; color: #16a34a;"></i>
+                                    <span style="font-size: 13.5px;">Tersedia <strong>Portal Lacak Status Terpadu Satu Pintu</strong> untuk cek Legalisir, Mutasi, Surat Izin, dan PTSP sekaligus.</span>
+                                </div>
+                                <a href="https://man4banjar.com/akademik/tracking.php?type=legalisir" class="btn btn-sm btn-success px-3 py-1 font-weight-bold ml-2 text-nowrap" style="border-radius: 20px;">Buka Portal Lacak →</a>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="my-2">
+                                <label class="font-weight-bold text-dark mb-2">Masukkan NISN Siswa atau Nomor Pengajuan:</label>
+                                <div class="input-group input-group-lg shadow-sm" style="border-radius: 10px; overflow: hidden; border: 1.5px solid #cbd5e1;">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-0 text-muted px-3">
+                                            <i class="fa fa-id-card-o text-primary" style="font-size: 20px;"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" id="searchKeyword" class="form-control border-0" style="font-size: 15px; box-shadow: none;" placeholder="Contoh: 0071234567 atau LEG-202608-0001">
+                                    <div class="input-group-append">
+                                        <button type="button" id="btnCekStatus" class="btn btn-primary px-4 font-weight-bold" style="border-radius: 0 8px 8px 0; font-size: 15px;">
+                                            <i class="fa fa-search mr-2"></i> Cari Data
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center mt-2 text-muted small">
+                                    <i class="fa fa-info-circle mr-1 text-info"></i>
+                                    <span>Masukkan <strong>10 digit NISN</strong> alumni atau <strong>Nomor Pengajuan</strong> (misal: <code>LEG-202608-0001</code>) yang diperoleh saat mendaftar.</span>
+                                </div>
+                            </div>
+
+                            <div id="resultStatusBox" class="mt-4"></div>
+
+                        </div>
+                    </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer-legalisir mt-auto py-4 bg-dark text-white text-center">
+            <div class="container text-center">
+                <p class="mb-1">Aplikasi Database &amp; Administrasi Legalisir Ijazah © 2026 MADRASAH ALIYAH NEGERI 4 BANJAR</p>
+                <small class="text-muted">MAN 4 Banjar - Melayani dengan Sepenuh Hati</small>
+            </div>
+        </footer>
+    </div>
+
+    <!-- VENDOR SCRIPTS -->
+    <script src="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/jquery-3.2.1.min.js"></script>
+    <script src="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/bootstrap.min.js"></script>
+    <script src="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/popper.min.js"></script>
+    <script src="./LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR_files/iziToast.min.js"></script>
+
+    <!-- SIGNATURE PAD & APPLICATION LOGIC -->
+    <script>
+        $(document).ready(function() {
+            
+            // --- TAB SWITCHING ---
+            $('.btn-tab-menu').click(function(e) {
+                e.preventDefault();
+                $('.btn-tab-menu').removeClass('active');
+                $(this).addClass('active');
+
+                var target = $(this).data('tab');
+                $('.tab-panel').removeClass('active');
+                $('#' + target).addClass('active');
+
+                // Resize canvas on tab activate
+                resizeAllCanvases();
+            });
+
+            // Toggle Box Kuasa
+            $('#form_tipe_pengambilan').change(function() {
+                if ($(this).val() === 'Diwakilkan') {
+                    $('#box-kuasa').slideDown();
+                    $('#form_nama_kuasa').prop('required', true);
+                } else {
+                    $('#box-kuasa').slideUp();
+                    $('#form_nama_kuasa').prop('required', false);
+                }
+            });
+
+            // --- CANVAS DRAWING HELPER ---
+            function initSignaturePad(canvasId) {
+                var canvas = document.getElementById(canvasId);
+                if (!canvas) return null;
+                var ctx = canvas.getContext('2d');
+                var drawing = false;
+                var hasDrawn = false;
+
+                function resizeCanvas() {
+                    var rect = canvas.getBoundingClientRect();
+                    if (rect.width > 0 && canvas.width !== rect.width) {
+                        var temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        canvas.width = rect.width;
+                        canvas.height = 160;
+                        ctx.lineWidth = 2.5;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.strokeStyle = '#000000';
+                        if (hasDrawn) {
+                            ctx.putImageData(temp, 0, 0);
+                        }
+                    }
+                }
+
+                function getPos(e) {
+                    var rect = canvas.getBoundingClientRect();
+                    var clientX = e.clientX;
+                    var clientY = e.clientY;
+                    if (e.touches && e.touches.length > 0) {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    }
+                    return {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+                }
+
+                function startDrawing(e) {
+                    drawing = true;
+                    hasDrawn = true;
+                    var pos = getPos(e);
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                    e.preventDefault();
+                }
+
+                function draw(e) {
+                    if (!drawing) return;
+                    var pos = getPos(e);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    e.preventDefault();
+                }
+
+                function stopDrawing() {
+                    drawing = false;
+                }
+
+                // Mouse Events
+                canvas.addEventListener('mousedown', startDrawing);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseup', stopDrawing);
+                canvas.addEventListener('mouseleave', stopDrawing);
+
+                // Touch Events (Mobile/Tablet)
+                canvas.addEventListener('touchstart', startDrawing, { passive: false });
+                canvas.addEventListener('touchmove', draw, { passive: false });
+                canvas.addEventListener('touchend', stopDrawing, { passive: false });
+
+                return {
+                    canvas: canvas,
+                    ctx: ctx,
+                    resize: resizeCanvas,
+                    clear: function() {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        hasDrawn = false;
+                    },
+                    isEmpty: function() {
+                        return !hasDrawn;
+                    },
+                    toDataURL: function() {
+                        return hasDrawn ? canvas.toDataURL('image/png') : '';
+                    }
+                };
+            }
+
+            var padPemohon = initSignaturePad('sig-pad-pemohon');
+            var padKuasaPemberi = initSignaturePad('sig-pad-kuasa-pemberi');
+            var padKuasaPenerima = initSignaturePad('sig-pad-kuasa-penerima');
+            var padSPTJM = initSignaturePad('sig-pad-sptjm');
+
+            function resizeAllCanvases() {
+                setTimeout(function() {
+                    if (padPemohon) padPemohon.resize();
+                    if (padKuasaPemberi) padKuasaPemberi.resize();
+                    if (padKuasaPenerima) padKuasaPenerima.resize();
+                    if (padSPTJM) padSPTJM.resize();
+                }, 100);
+            }
+
+            $(window).on('resize', resizeAllCanvases);
+            resizeAllCanvases();
+
+            // Clear Buttons
+            $('#btn-clear-sig-pemohon').click(function() { if (padPemohon) padPemohon.clear(); });
+            $('#btn-clear-sig-kuasa-pemberi').click(function() { if (padKuasaPemberi) padKuasaPemberi.clear(); });
+            $('#btn-clear-sig-kuasa-penerima').click(function() { if (padKuasaPenerima) padKuasaPenerima.clear(); });
+            $('#btn-clear-sig-sptjm').click(function() { if (padSPTJM) padSPTJM.clear(); });
+
+            // --- CARI ALUMNI BY NISN ---
+            $('#btnCariAlumni').click(function() {
+                var nisn = $('#form_nisn').val().trim();
+                if (!nisn) {
+                    iziToast.warning({ title: 'Perhatian', message: 'Silakan masukkan NISN terlebih dahulu.', position: 'topCenter' });
+                    return;
+                }
+
+                $('#btnCariAlumni').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'crud_legalisir.php?pg=cari_alumni',
+                    data: { nisn: nisn },
+                    dataType: 'json',
+                    success: function(res) {
+                        $('#btnCariAlumni').prop('disabled', false).html('<i class="fa fa-search"></i> Cari Data');
+                        if (res.status === 'ok') {
+                            var d = res.data;
+                            $('#form_nama').val(d.nama);
+                            $('#form_tahun_lulus').val(d.tahun_lulus);
+                            $('#form_jurusan').val(d.jurusan);
+                            $('#form_no_ijazah').val(d.no_ijazah);
+                            $('#form_hp').val(d.no_hp);
+                            $('#form_alamat').val(d.alamat);
+
+                            // Sync with Tab Surat Kuasa & SPTJM
+                            $('#kuasa_nama_pemberi').val(d.nama);
+                            $('#kuasa_nisn_pemberi').val(d.nisn);
+                            $('#kuasa_tahun_lulus').val(d.tahun_lulus);
+                            $('#kuasa_alamat_pemberi').val(d.alamat);
+                            $('#kuasa_hp_pemberi').val(d.no_hp);
+
+                            $('#sptjm_nama').val(d.nama);
+                            $('#sptjm_nisn').val(d.nisn);
+                            $('#sptjm_tahun_lulus').val(d.tahun_lulus);
+                            $('#sptjm_jurusan').val(d.jurusan);
+                            $('#sptjm_no_ijazah').val(d.no_ijazah);
+                            $('#sptjm_alamat').val(d.alamat);
+                            $('#sptjm_hp').val(d.no_hp);
+
+                            iziToast.success({ title: 'Berhasil!', message: 'Data alumni ditemukan: ' + d.nama, position: 'topRight' });
+                        } else {
+                            iziToast.info({ title: 'Info', message: res.pesan, position: 'topCenter' });
+                        }
+                    },
+                    error: function() {
+                        $('#btnCariAlumni').prop('disabled', false).html('<i class="fa fa-search"></i> Cari Data');
+                        iziToast.error({ title: 'Gagal', message: 'Terjadi kesalahan koneksi ke server.', position: 'topCenter' });
+                    }
+                });
+            });
+
+            // --- SUBMIT FORMULIR PENGAJUAN ---
+            $('#form-legalisir').submit(function(e) {
+                e.preventDefault();
+
+                if (padPemohon && !padPemohon.isEmpty()) {
+                    $('#ttd_pemohon_val').val(padPemohon.toDataURL());
+                } else {
+                    $('#ttd_pemohon_val').val('');
+                }
+
+                $('#btnSubmitLegalisir').prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-2"></i> Menyimpan Permohonan...');
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'crud_legalisir.php?pg=simpan_legalisir',
+                    data: $(this).serialize(),
+                    dataType: 'json',
+                    success: function(res) {
+                        $('#btnSubmitLegalisir').prop('disabled', false).html('<i class="fa fa-paper-plane mr-2"></i> Kirim Permohonan Legalisir');
+
+                        if (res.pesan === 'ok') {
+                            iziToast.success({ title: 'Alhamdulillah!', message: 'Permohonan legalisir berhasil dikirim.', position: 'topRight' });
+
+                            var resultHtml = '<div class="card bg-light border-success p-4 text-center">' +
+                                '<h4 class="text-success font-weight-bold mb-2"><i class="fa fa-check-circle mr-2"></i> Permohonan Berhasil Dikirim!</h4>' +
+                                '<p class="text-muted">Simpan dan catat Nomor Registrasi resmi Anda di bawah ini:</p>' +
+                                '<div class="alert alert-secondary d-inline-block font-weight-bold" style="font-size: 20px; letter-spacing: 1px;">' + res.no_pengajuan + '</div>' +
+                                '<div class="mt-3">' +
+                                '<a href="print_bukti_legalisir.php?id=' + res.id + '" target="_blank" class="btn btn-success font-weight-bold mr-2 mb-2"><i class="fa fa-print mr-1"></i> Cetak Bukti Registrasi</a>' +
+                                '<a href="print_sptjm.php?id=' + res.id + '" target="_blank" class="btn btn-info font-weight-bold mr-2 mb-2"><i class="fa fa-shield mr-1"></i> Cetak SPTJM</a>' +
+                                (res.tipe_pengambilan === 'Diwakilkan' ? '<a href="print_surat_kuasa.php?id=' + res.id + '" target="_blank" class="btn btn-warning font-weight-bold mr-2 mb-2"><i class="fa fa-file-text-o mr-1"></i> Cetak Surat Kuasa</a>' : '') +
+                                '<button type="button" class="btn btn-outline-primary mb-2" id="btnResetForm"><i class="fa fa-plus mr-1"></i> Ajukan Permohonan Baru</button>' +
+                                '</div>' +
+                                '</div>';
+
+                            $('#form-legalisir').hide();
+                            $('#resultPengajuanBox').html(resultHtml).show();
+
+                            $('#btnResetForm').click(function() {
+                                $('#form-legalisir')[0].reset();
+                                if (padPemohon) padPemohon.clear();
+                                $('#resultPengajuanBox').hide();
+                                $('#form-legalisir').show();
+                            });
+
+                        } else {
+                            iziToast.error({ title: 'Gagal', message: res.pesan, position: 'topCenter' });
+                        }
+                    },
+                    error: function() {
+                        $('#btnSubmitLegalisir').prop('disabled', false).html('<i class="fa fa-paper-plane mr-2"></i> Kirim Permohonan Legalisir');
+                        iziToast.error({ title: 'Error', message: 'Gagal menghubungi server.', position: 'topCenter' });
+                    }
+                });
+            });
+
+            // --- SUBMIT CETAK SURAT KUASA ---
+            $('#form-surat-kuasa').submit(function() {
+                if (padKuasaPemberi && !padKuasaPemberi.isEmpty()) {
+                    $('#ttd_pemberi_val').val(padKuasaPemberi.toDataURL());
+                }
+                if (padKuasaPenerima && !padKuasaPenerima.isEmpty()) {
+                    $('#ttd_penerima_val').val(padKuasaPenerima.toDataURL());
+                }
+                return true;
+            });
+
+            // --- SUBMIT CETAK SPTJM ---
+            $('#form-sptjm').submit(function() {
+                if (padSPTJM && !padSPTJM.isEmpty()) {
+                    $('#ttd_sptjm_val').val(padSPTJM.toDataURL());
+                }
+                return true;
+            });
+
+            // --- CEK STATUS PENGAJUAN ---
+            $('#btnCekStatus').click(function() {
+                var kw = $('#searchKeyword').val().trim();
+                if (!kw) {
+                    iziToast.warning({ title: 'Perhatian', message: 'Masukkan NISN atau Nomor Pengajuan terlebih dahulu.', position: 'topCenter' });
+                    return;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'crud_legalisir.php?pg=cek_status',
+                    data: { keyword: kw },
+                    dataType: 'json',
+                    beforeSend: function() {
+                        $('#btnCekStatus').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+                        $('#resultStatusBox').html('<div class="text-center my-4"><i class="fa fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2 text-muted">Mencari data permohonan legalisir...</p></div>');
+                    },
+                    success: function(res) {
+                        $('#btnCekStatus').prop('disabled', false).html('<i class="fa fa-search mr-2"></i> Cari Data');
+
+                        if (typeof res === 'string') {
+                            try { res = JSON.parse(res); } catch(e) {}
+                        }
+
+                        if (res.status === 'ok' && res.data && res.data.length > 0) {
+                            var html = '<div class="table-responsive mt-3"><table class="table table-bordered table-striped bg-white">';
+                            html += '<thead class="thead-dark"><tr>' +
+                                '<th>No. Pengajuan</th>' +
+                                '<th>Nama Alumni</th>' +
+                                '<th>Tahun</th>' +
+                                '<th>Jumlah Lembar</th>' +
+                                '<th>Metode</th>' +
+                                '<th>Tgl Pengajuan</th>' +
+                                '<th>Status</th>' +
+                                '<th>Catatan TU</th>' +
+                                '<th>Aksi</th>' +
+                                '</tr></thead><tbody>';
+
+                            $.each(res.data, function(i, item) {
+                                var badgeClass = 'badge-warning';
+                                if (item.status === 'Diverifikasi' || item.status === 'Diproses') badgeClass = 'badge-info';
+                                else if (item.status === 'Siap Diambil' || item.status === 'Selesai') badgeClass = 'badge-success';
+                                else if (item.status === 'Ditolak') badgeClass = 'badge-danger';
+
+                                html += '<tr>' +
+                                    '<td><strong class="text-primary">' + item.no_pengajuan + '</strong></td>' +
+                                    '<td><strong>' + item.nama_alumni + '</strong><br><small class="text-muted">NISN: ' + item.nisn + '</small></td>' +
+                                    '<td>' + (item.tahun_lulus || '-') + '</td>' +
+                                    '<td>' + item.jumlah_lembar + ' Lembar</td>' +
+                                    '<td><span class="badge badge-light border">' + item.tipe_pengambilan + '</span></td>' +
+                                    '<td>' + item.tgl_pengajuan + '</td>' +
+                                    '<td><span class="badge ' + badgeClass + ' badge-status">' + item.status + '</span></td>' +
+                                    '<td>' + (item.catatan_admin ? item.catatan_admin : '<em class="text-muted">Belum ada catatan</em>') + '</td>' +
+                                    '<td><a href="print_bukti_legalisir.php?id=' + item.id_legalisir + '" target="_blank" class="btn btn-sm btn-outline-info font-weight-bold"><i class="fa fa-print mr-1"></i> Cetak Bukti</a></td>' +
+                                    '</tr>';
+                            });
+
+                            html += '</tbody></table></div>';
+                            $('#resultStatusBox').html(html);
+
+                        } else {
+                            $('#resultStatusBox').html('<div class="alert alert-warning text-center mt-3"><i class="fa fa-exclamation-triangle mr-2"></i> ' + (res.pesan || 'Data tidak ditemukan. Silakan periksa kembali NISN atau No. Pengajuan Anda.') + '</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#btnCekStatus').prop('disabled', false).html('<i class="fa fa-search mr-2"></i> Cari Data');
+                        $('#resultStatusBox').html('<div class="alert alert-danger text-center mt-3"><i class="fa fa-exclamation-circle mr-2"></i> Gagal mengambil data dari server.</div>');
+                    }
+                });
+            });
+
+            $('#searchKeyword').keypress(function(e) {
+                if (e.which === 13) {
+                    $('#btnCekStatus').click();
+                }
+            });
+
+        });
+    </script>
+
+
+<div class="glasp-extension-toaster glasp-extension-toaster--glasp-extension" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 2147483647;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"></div></template></div><div class="glasp-extension-highlighter" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 0px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 0px; left: 0px; height: 0px; z-index: 2147483646; pointer-events: none;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"><style>
+.glasp-md.glasp-md { word-break: break-word; }
+.glasp-md.glasp-md > :first-child { margin-top: 0; }
+.glasp-md.glasp-md > :last-child { margin-bottom: 0; }
+.glasp-md.glasp-md h1, .glasp-md.glasp-md h2, .glasp-md.glasp-md h3, .glasp-md.glasp-md h4 {
+  margin: 0.4em 0 0.2em; font-size: 1.12em; font-weight: 700; line-height: 1.3; padding: 0;
+}
+.glasp-md.glasp-md p { margin: 0.6em 0; line-height: 1.55; }
+.glasp-md.glasp-md ul { list-style: disc outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md ol { list-style: decimal outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md li { display: list-item; margin: 0.32em 0; line-height: 1.5; }
+.glasp-md.glasp-md ul ul, .glasp-md.glasp-md ol ol, .glasp-md.glasp-md ul ol, .glasp-md.glasp-md ol ul { margin: 0.32em 0; }
+.glasp-md.glasp-md ul ul { list-style: circle outside; }
+.glasp-md.glasp-md strong { font-weight: 700; }
+.glasp-md.glasp-md em { font-style: italic; }
+.glasp-md.glasp-md a { color: rgb(51 121 255); text-decoration: none; }
+.glasp-md.glasp-md a:hover { text-decoration: underline; }
+.glasp-md.glasp-md blockquote {
+  margin: 0.6em 0; padding-block: 0.1em; padding-inline: 0.85em 0;
+  border-inline-start: 3px solid #dfe3ea; color: #5b616e;
+}
+.glasp-md.glasp-md blockquote p { margin: 0.25em 0; }
+.glasp-md.glasp-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+  background: #f1f5f9; color: #1f2937; padding: 0 3px; border-radius: 3px;
+}
+.glasp-md.glasp-md pre {
+  background: #f1f5f9; color: #1f2937; padding: 8px 10px; border-radius: 6px; overflow-x: auto; margin: 0.4em 0;
+}
+.glasp-md.glasp-md pre code { background: none; padding: 0; }
+/* Code is ALWAYS left-to-right, whatever the surrounding text does. Without this,
+   an RTL host page — or a dir=auto container that resolved RTL from an Arabic
+   first character — reorders every code line: an opening brace jumps to the far
+   end, and a leading comment marker lands on the wrong side. unicode-bidi
+   isolate also stops the code from reordering the prose around it.
+   NOTE: no backticks in this comment. It lives inside a JS template literal. */
+.glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
+</style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

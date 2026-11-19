@@ -78,6 +78,8 @@ export interface ClassGroup {
 }
 
 export interface SharedProps {
+    publicPortalTheme?: 'man4-banjar' | null;
+    publicProfileMenu?: { label: string; href: string; icon: string }[];
     appName?: string;
     auth?: {
         user?: User;

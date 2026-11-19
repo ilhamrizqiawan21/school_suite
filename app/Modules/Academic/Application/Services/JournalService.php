@@ -21,7 +21,6 @@ class JournalService
     /**
      * Menyimpan jurnal mengajar guru dan menutup sesi pertemuan pembelajaran.
      */
-
     public function saveJournal(
         int $lessonSessionId,
         string $topic,

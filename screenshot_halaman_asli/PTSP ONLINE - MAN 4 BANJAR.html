@@ -1,0 +1,3277 @@
+<!DOCTYPE html>
+<!-- saved from url=(0040)https://man4banjar.com/akademik/ptsp.php -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style type="text/css">.swal-icon--error{border-color:#f27474;-webkit-animation:animateErrorIcon .5s;animation:animateErrorIcon .5s}.swal-icon--error__x-mark{position:relative;display:block;-webkit-animation:animateXMark .5s;animation:animateXMark .5s}.swal-icon--error__line{position:absolute;height:5px;width:47px;background-color:#f27474;display:block;top:37px;border-radius:2px}.swal-icon--error__line--left{-webkit-transform:rotate(45deg);transform:rotate(45deg);left:17px}.swal-icon--error__line--right{-webkit-transform:rotate(-45deg);transform:rotate(-45deg);right:16px}@-webkit-keyframes animateErrorIcon{0%{-webkit-transform:rotateX(100deg);transform:rotateX(100deg);opacity:0}to{-webkit-transform:rotateX(0deg);transform:rotateX(0deg);opacity:1}}@keyframes animateErrorIcon{0%{-webkit-transform:rotateX(100deg);transform:rotateX(100deg);opacity:0}to{-webkit-transform:rotateX(0deg);transform:rotateX(0deg);opacity:1}}@-webkit-keyframes animateXMark{0%{-webkit-transform:scale(.4);transform:scale(.4);margin-top:26px;opacity:0}50%{-webkit-transform:scale(.4);transform:scale(.4);margin-top:26px;opacity:0}80%{-webkit-transform:scale(1.15);transform:scale(1.15);margin-top:-6px}to{-webkit-transform:scale(1);transform:scale(1);margin-top:0;opacity:1}}@keyframes animateXMark{0%{-webkit-transform:scale(.4);transform:scale(.4);margin-top:26px;opacity:0}50%{-webkit-transform:scale(.4);transform:scale(.4);margin-top:26px;opacity:0}80%{-webkit-transform:scale(1.15);transform:scale(1.15);margin-top:-6px}to{-webkit-transform:scale(1);transform:scale(1);margin-top:0;opacity:1}}.swal-icon--warning{border-color:#f8bb86;-webkit-animation:pulseWarning .75s infinite alternate;animation:pulseWarning .75s infinite alternate}.swal-icon--warning__body{width:5px;height:47px;top:10px;border-radius:2px;margin-left:-2px}.swal-icon--warning__body,.swal-icon--warning__dot{position:absolute;left:50%;background-color:#f8bb86}.swal-icon--warning__dot{width:7px;height:7px;border-radius:50%;margin-left:-4px;bottom:-11px}@-webkit-keyframes pulseWarning{0%{border-color:#f8d486}to{border-color:#f8bb86}}@keyframes pulseWarning{0%{border-color:#f8d486}to{border-color:#f8bb86}}.swal-icon--success{border-color:#a5dc86}.swal-icon--success:after,.swal-icon--success:before{content:"";border-radius:50%;position:absolute;width:60px;height:120px;background:#fff;-webkit-transform:rotate(45deg);transform:rotate(45deg)}.swal-icon--success:before{border-radius:120px 0 0 120px;top:-7px;left:-33px;-webkit-transform:rotate(-45deg);transform:rotate(-45deg);-webkit-transform-origin:60px 60px;transform-origin:60px 60px}.swal-icon--success:after{border-radius:0 120px 120px 0;top:-11px;left:30px;-webkit-transform:rotate(-45deg);transform:rotate(-45deg);-webkit-transform-origin:0 60px;transform-origin:0 60px;-webkit-animation:rotatePlaceholder 4.25s ease-in;animation:rotatePlaceholder 4.25s ease-in}.swal-icon--success__ring{width:80px;height:80px;border:4px solid hsla(98,55%,69%,.2);border-radius:50%;box-sizing:content-box;position:absolute;left:-4px;top:-4px;z-index:2}.swal-icon--success__hide-corners{width:5px;height:90px;background-color:#fff;padding:1px;position:absolute;left:28px;top:8px;z-index:1;-webkit-transform:rotate(-45deg);transform:rotate(-45deg)}.swal-icon--success__line{height:5px;background-color:#a5dc86;display:block;border-radius:2px;position:absolute;z-index:2}.swal-icon--success__line--tip{width:25px;left:14px;top:46px;-webkit-transform:rotate(45deg);transform:rotate(45deg);-webkit-animation:animateSuccessTip .75s;animation:animateSuccessTip .75s}.swal-icon--success__line--long{width:47px;right:8px;top:38px;-webkit-transform:rotate(-45deg);transform:rotate(-45deg);-webkit-animation:animateSuccessLong .75s;animation:animateSuccessLong .75s}@-webkit-keyframes rotatePlaceholder{0%{-webkit-transform:rotate(-45deg);transform:rotate(-45deg)}5%{-webkit-transform:rotate(-45deg);transform:rotate(-45deg)}12%{-webkit-transform:rotate(-405deg);transform:rotate(-405deg)}to{-webkit-transform:rotate(-405deg);transform:rotate(-405deg)}}@keyframes rotatePlaceholder{0%{-webkit-transform:rotate(-45deg);transform:rotate(-45deg)}5%{-webkit-transform:rotate(-45deg);transform:rotate(-45deg)}12%{-webkit-transform:rotate(-405deg);transform:rotate(-405deg)}to{-webkit-transform:rotate(-405deg);transform:rotate(-405deg)}}@-webkit-keyframes animateSuccessTip{0%{width:0;left:1px;top:19px}54%{width:0;left:1px;top:19px}70%{width:50px;left:-8px;top:37px}84%{width:17px;left:21px;top:48px}to{width:25px;left:14px;top:45px}}@keyframes animateSuccessTip{0%{width:0;left:1px;top:19px}54%{width:0;left:1px;top:19px}70%{width:50px;left:-8px;top:37px}84%{width:17px;left:21px;top:48px}to{width:25px;left:14px;top:45px}}@-webkit-keyframes animateSuccessLong{0%{width:0;right:46px;top:54px}65%{width:0;right:46px;top:54px}84%{width:55px;right:0;top:35px}to{width:47px;right:8px;top:38px}}@keyframes animateSuccessLong{0%{width:0;right:46px;top:54px}65%{width:0;right:46px;top:54px}84%{width:55px;right:0;top:35px}to{width:47px;right:8px;top:38px}}.swal-icon--info{border-color:#c9dae1}.swal-icon--info:before{width:5px;height:29px;bottom:17px;border-radius:2px;margin-left:-2px}.swal-icon--info:after,.swal-icon--info:before{content:"";position:absolute;left:50%;background-color:#c9dae1}.swal-icon--info:after{width:7px;height:7px;border-radius:50%;margin-left:-3px;top:19px}.swal-icon{width:80px;height:80px;border-width:4px;border-style:solid;border-radius:50%;padding:0;position:relative;box-sizing:content-box;margin:20px auto}.swal-icon:first-child{margin-top:32px}.swal-icon--custom{width:auto;height:auto;max-width:100%;border:none;border-radius:0}.swal-icon img{max-width:100%;max-height:100%}.swal-title{color:rgba(0,0,0,.65);font-weight:600;text-transform:none;position:relative;display:block;padding:13px 16px;font-size:27px;line-height:normal;text-align:center;margin-bottom:0}.swal-title:first-child{margin-top:26px}.swal-title:not(:first-child){padding-bottom:0}.swal-title:not(:last-child){margin-bottom:13px}.swal-text{font-size:16px;position:relative;float:none;line-height:normal;vertical-align:top;text-align:left;display:inline-block;margin:0;padding:0 10px;font-weight:400;color:rgba(0,0,0,.64);max-width:calc(100% - 20px);overflow-wrap:break-word;box-sizing:border-box}.swal-text:first-child{margin-top:45px}.swal-text:last-child{margin-bottom:45px}.swal-footer{text-align:right;padding-top:13px;margin-top:13px;padding:13px 16px;border-radius:inherit;border-top-left-radius:0;border-top-right-radius:0}.swal-button-container{margin:5px;display:inline-block;position:relative}.swal-button{background-color:#7cd1f9;color:#fff;border:none;box-shadow:none;border-radius:5px;font-weight:600;font-size:14px;padding:10px 24px;margin:0;cursor:pointer}.swal-button:not([disabled]):hover{background-color:#78cbf2}.swal-button:active{background-color:#70bce0}.swal-button:focus{outline:none;box-shadow:0 0 0 1px #fff,0 0 0 3px rgba(43,114,165,.29)}.swal-button[disabled]{opacity:.5;cursor:default}.swal-button::-moz-focus-inner{border:0}.swal-button--cancel{color:#555;background-color:#efefef}.swal-button--cancel:not([disabled]):hover{background-color:#e8e8e8}.swal-button--cancel:active{background-color:#d7d7d7}.swal-button--cancel:focus{box-shadow:0 0 0 1px #fff,0 0 0 3px rgba(116,136,150,.29)}.swal-button--danger{background-color:#e64942}.swal-button--danger:not([disabled]):hover{background-color:#df4740}.swal-button--danger:active{background-color:#cf423b}.swal-button--danger:focus{box-shadow:0 0 0 1px #fff,0 0 0 3px rgba(165,43,43,.29)}.swal-content{padding:0 20px;margin-top:20px;font-size:medium}.swal-content:last-child{margin-bottom:20px}.swal-content__input,.swal-content__textarea{-webkit-appearance:none;background-color:#fff;border:none;font-size:14px;display:block;box-sizing:border-box;width:100%;border:1px solid rgba(0,0,0,.14);padding:10px 13px;border-radius:2px;transition:border-color .2s}.swal-content__input:focus,.swal-content__textarea:focus{outline:none;border-color:#6db8ff}.swal-content__textarea{resize:vertical}.swal-button--loading{color:transparent}.swal-button--loading~.swal-button__loader{opacity:1}.swal-button__loader{position:absolute;height:auto;width:43px;z-index:2;left:50%;top:50%;-webkit-transform:translateX(-50%) translateY(-50%);transform:translateX(-50%) translateY(-50%);text-align:center;pointer-events:none;opacity:0}.swal-button__loader div{display:inline-block;float:none;vertical-align:baseline;width:9px;height:9px;padding:0;border:none;margin:2px;opacity:.4;border-radius:7px;background-color:hsla(0,0%,100%,.9);transition:background .2s;-webkit-animation:swal-loading-anim 1s infinite;animation:swal-loading-anim 1s infinite}.swal-button__loader div:nth-child(3n+2){-webkit-animation-delay:.15s;animation-delay:.15s}.swal-button__loader div:nth-child(3n+3){-webkit-animation-delay:.3s;animation-delay:.3s}@-webkit-keyframes swal-loading-anim{0%{opacity:.4}20%{opacity:.4}50%{opacity:1}to{opacity:.4}}@keyframes swal-loading-anim{0%{opacity:.4}20%{opacity:.4}50%{opacity:1}to{opacity:.4}}.swal-overlay{position:fixed;top:0;bottom:0;left:0;right:0;text-align:center;font-size:0;overflow-y:auto;background-color:rgba(0,0,0,.4);z-index:10000;pointer-events:none;opacity:0;transition:opacity .3s}.swal-overlay:before{content:" ";display:inline-block;vertical-align:middle;height:100%}.swal-overlay--show-modal{opacity:1;pointer-events:auto}.swal-overlay--show-modal .swal-modal{opacity:1;pointer-events:auto;box-sizing:border-box;-webkit-animation:showSweetAlert .3s;animation:showSweetAlert .3s;will-change:transform}.swal-modal{width:478px;opacity:0;pointer-events:none;background-color:#fff;text-align:center;border-radius:5px;position:static;margin:20px auto;display:inline-block;vertical-align:middle;-webkit-transform:scale(1);transform:scale(1);-webkit-transform-origin:50% 50%;transform-origin:50% 50%;z-index:10001;transition:opacity .2s,-webkit-transform .3s;transition:transform .3s,opacity .2s;transition:transform .3s,opacity .2s,-webkit-transform .3s}@media (max-width:500px){.swal-modal{width:calc(100% - 20px)}}@-webkit-keyframes showSweetAlert{0%{-webkit-transform:scale(1);transform:scale(1)}1%{-webkit-transform:scale(.5);transform:scale(.5)}45%{-webkit-transform:scale(1.05);transform:scale(1.05)}80%{-webkit-transform:scale(.95);transform:scale(.95)}to{-webkit-transform:scale(1);transform:scale(1)}}@keyframes showSweetAlert{0%{-webkit-transform:scale(1);transform:scale(1)}1%{-webkit-transform:scale(.5);transform:scale(.5)}45%{-webkit-transform:scale(1.05);transform:scale(1.05)}80%{-webkit-transform:scale(.95);transform:scale(.95)}to{-webkit-transform:scale(1);transform:scale(1)}}</style>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        PTSP ONLINE - MAN 4 BANJAR    </title>
+    <link rel="shortcut icon" href="./PTSP ONLINE - MAN 4 BANJAR_files/logo239.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./PTSP ONLINE - MAN 4 BANJAR_files/css2" rel="stylesheet">
+
+    <!-- CSS Vendor -->
+    <link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/bootstrap.min.css">
+    <link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/font-awesome.min.css">
+    <link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/bootstrap-icons.css">
+    <link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/boxicons.min.css">
+    <link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/swiper-bundle.min.css">
+    <link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/sweetalert.min.css">
+
+    <style>
+        :root {
+            --ptsp-green: #064e3b;
+            --ptsp-dark-green: #022c22;
+            --ptsp-emerald: #059669;
+            --ptsp-yellow: #fbbf24;
+            --ptsp-gold: #f59e0b;
+            --ptsp-blue: #0f172a;
+            --ptsp-cyan: #38bdf8;
+            --ptsp-orange: #d97706;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #334155;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content-wrapper {
+            flex: 1 0 auto;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* 1. TOP BAR */
+        #topbar {
+            background: #022c22;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 12.5px;
+            padding: 8px 0;
+            color: #d1fae5;
+        }
+        #topbar .contact-info a {
+            color: #d1fae5;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        #topbar .contact-info a:hover {
+            color: var(--ptsp-yellow);
+        }
+        #topbar .contact-info span {
+            color: #d1fae5;
+            font-weight: 500;
+        }
+        #topbar .ticker-wrap {
+            overflow: hidden;
+            white-space: nowrap;
+            color: #ecfdf5;
+            font-weight: 500;
+        }
+
+        /* 2. HEADER NAVBAR HIJAU */
+        #header {
+            background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            box-shadow: 0 4px 20px rgba(6, 78, 59, 0.25);
+            border-bottom: 2px solid rgba(251, 191, 36, 0.4);
+        }
+        .navbar-brand-ptsp {
+            color: #ffffff !important;
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: -0.2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand-ptsp .badge-ptsp {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--ptsp-yellow);
+            border: 1px solid var(--ptsp-yellow);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            margin-left: 10px;
+            letter-spacing: 0.5px;
+        }
+        #navbar-ptsp {
+            flex-wrap: nowrap;
+        }
+        #navbar-ptsp .navbar-nav {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+        #navbar-ptsp .nav-item {
+            margin: 0 3px;
+            white-space: nowrap;
+        }
+        #navbar-ptsp .nav-link {
+            color: #ecfdf5 !important;
+            font-weight: 600;
+            font-size: 12.5px;
+            text-transform: uppercase;
+            padding: 7px 13px !important;
+            border-radius: 8px;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        #navbar-ptsp .nav-link:hover {
+            color: var(--ptsp-yellow) !important;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        #navbar-ptsp .nav-link.active {
+            color: #ffffff !important;
+            background: rgba(0, 0, 0, 0.25);
+            box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.5);
+            font-weight: 700;
+        }
+
+        /* Modern Slim Subpage Header */
+        .subpage-header-modern {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 18px 0;
+            margin-bottom: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .header-icon-pill {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #ecfdf5;
+            color: var(--ptsp-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .subpage-header-modern h4 {
+            font-size: 1.25rem;
+            margin-bottom: 2px;
+            color: #0f172a;
+        }
+        .subpage-header-modern .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+        }
+        .subpage-header-modern .breadcrumb a {
+            color: var(--ptsp-green);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .subpage-header-modern .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .subpage-header-modern .breadcrumb-item.active {
+            color: #64748b;
+        }
+
+        /* Modern Card Search Box */
+        .search-card-modern {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #edf2f7;
+            padding: 35px 30px;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05);
+        }
+        .search-input-modern {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px 0 0 10px !important;
+            font-size: 15px;
+            padding: 12px 18px;
+            transition: all 0.2s;
+        }
+        .search-input-modern:focus {
+            border-color: var(--ptsp-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15);
+        }
+        .search-btn-modern {
+            background: linear-gradient(135deg, #ff7a1a 0%, var(--ptsp-orange) 100%);
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 14.5px;
+            padding: 0 24px;
+            border-radius: 0 10px 10px 0 !important;
+            letter-spacing: 0.3px;
+            transition: all 0.2s;
+        }
+        .search-btn-modern:hover {
+            background: linear-gradient(135deg, #e66000 0%, #d95700 100%);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* 3. HERO SECTION (HOME) */
+        #hero {
+            width: 100%;
+            height: 85vh;
+            min-height: 560px;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #hero .hero-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #hero .hero-slider .swiper-slide {
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+        }
+        #hero .hero-slider .swiper-slide::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 100%);
+        }
+        #hero .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #fff;
+            max-width: 850px;
+            padding: 20px;
+        }
+        #hero .hero-content img.logo-kemenag {
+            width: 95px;
+            height: 95px;
+            object-fit: contain;
+            margin-bottom: 18px;
+            filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6));
+        }
+        #hero .hero-content h2 {
+            font-weight: 800;
+            font-size: 2.1rem;
+            line-height: 1.25;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-shadow: 0 4px 14px rgba(0,0,0,0.85), 0 2px 4px rgba(0,0,0,0.9);
+        }
+        #hero .hero-content h2 span.blue-highlight {
+            color: var(--ptsp-yellow);
+            text-shadow: 0 4px 14px rgba(0,0,0,0.9);
+        }
+        #hero .hero-content h6 {
+            font-size: 1.05rem;
+            margin-top: 12px;
+            margin-bottom: 28px;
+            font-weight: 500;
+            color: #ffffff;
+            text-shadow: 0 3px 10px rgba(0,0,0,0.85);
+        }
+
+        .btn-ajukan-hero {
+            background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
+            color: #ffffff !important;
+            font-weight: 800;
+            padding: 13px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            border: 2px solid rgba(52, 211, 153, 0.5);
+            box-shadow: 0 8px 24px rgba(6, 78, 59, 0.45);
+            transition: all 0.3s ease;
+            margin: 6px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            letter-spacing: 0.3px;
+        }
+        .btn-ajukan-hero:hover {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            transform: translateY(-2px);
+            color: #ffffff !important;
+            box-shadow: 0 12px 28px rgba(6, 78, 59, 0.6);
+        }
+        .btn-cek-hero {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff !important;
+            font-weight: 800;
+            padding: 13px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
+            border: 2px solid rgba(251, 191, 36, 0.5);
+            box-shadow: 0 8px 24px rgba(217, 119, 6, 0.4);
+            transition: all 0.3s ease;
+            margin: 6px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            letter-spacing: 0.3px;
+        }
+        .btn-cek-hero:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+            transform: translateY(-2px);
+            color: #ffffff !important;
+            box-shadow: 0 12px 28px rgba(217, 119, 6, 0.55);
+        }
+
+        /* 4. SECTION TENTANG PTSP (Home & Subpage) */
+        .about-section-wrapper {
+            padding: 70px 0 50px;
+            background: #ffffff;
+        }
+        .about-section-wrapper h2 {
+            color: var(--ptsp-green);
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+        }
+        .about-section-wrapper p.about-desc {
+            font-size: 1.05rem;
+            color: #475569;
+            line-height: 1.8;
+        }
+        .about-section-wrapper ul.about-checklist {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0 0;
+        }
+        .about-section-wrapper ul.about-checklist li {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .about-section-wrapper ul.about-checklist li i {
+            color: #059669;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        /* Services Boxes Section (Sesuai Foto) */
+        .services-section-wrapper {
+            padding: 60px 0 70px;
+            background: #f8fafc;
+        }
+        .feature-box-home {
+            padding: 24px 22px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            align-items: flex-start;
+        }
+        .feature-box-home:hover {
+            transform: translateY(-4px);
+            border-color: #10b981;
+            box-shadow: 0 12px 28px rgba(6, 78, 59, 0.08);
+        }
+        .feature-box-home .icon-wrap {
+            font-size: 24px;
+            color: #059669;
+            background: #ecfdf5;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+            border: 1px solid #d1fae5;
+        }
+        .feature-box-home h4 {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .feature-box-home p {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0;
+            line-height: 1.55;
+        }
+
+        /* Prosedur & Login Section (Sesuai Foto) */
+        .prosedur-section-wrapper {
+            padding: 70px 0 80px;
+            background: #ffffff;
+        }
+        .prosedur-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        .prosedur-item .p-icon {
+            font-size: 20px;
+            color: #064e3b;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-weight: 800;
+        }
+        .prosedur-item h5 {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .prosedur-item p {
+            font-size: 0.88rem;
+            color: #64748b;
+            margin-bottom: 0;
+            line-height: 1.55;
+        }
+
+        .login-box-home {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 32px 28px;
+            box-shadow: 0 15px 35px rgba(6, 78, 59, 0.07);
+        }
+        .login-box-home h5 {
+            font-weight: 800;
+            color: #064e3b;
+            text-align: center;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+
+        /* 5. SECTION JENIS LAYANAN */
+        .service-category-title {
+            color: var(--ptsp-green);
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .service-category-title i {
+            margin-right: 8px;
+        }
+        .faq-list {
+            padding: 0;
+            list-style: none;
+        }
+        .faq-list li {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            padding: 12px 18px;
+            background: #ffffff;
+            transition: all 0.25s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .faq-list li:nth-child(even) {
+            background: #f8fafc;
+        }
+        .faq-list li:hover {
+            background: #f0fdf4 !important;
+            border-color: #86efac;
+            box-shadow: 0 5px 16px rgba(0, 111, 46, 0.09);
+            transform: translateY(-1px);
+        }
+        .faq-list a.faq-title {
+            color: #1e293b;
+            font-size: 14.5px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .faq-list a.faq-title:hover {
+            color: var(--ptsp-green);
+        }
+        .faq-list a.faq-title .service-badge-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #ecfdf5;
+            color: var(--ptsp-green);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .faq-list li:hover .service-badge-icon {
+            background: var(--ptsp-green);
+            color: #ffffff;
+        }
+        .thead-ptsp-table th {
+            background-color: #ecfdf5 !important;
+            color: #065f46 !important;
+            font-weight: 700;
+            border-color: #d1fae5 !important;
+        }
+        .btn-ajukan-layanan {
+            background: linear-gradient(135deg, #008f3c 0%, var(--ptsp-green) 100%);
+            color: #ffffff !important;
+            border: none;
+            font-weight: 700;
+            padding: 8px 18px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 111, 46, 0.2);
+            transition: all 0.2s;
+        }
+        .btn-ajukan-layanan:hover {
+            background: linear-gradient(135deg, #006f2e 0%, #004d20 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 111, 46, 0.3);
+        }
+
+        /* 6. SECTION KONTAK */
+        .contact-box-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 26px;
+            margin-bottom: 20px;
+            height: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            transition: all 0.3s;
+        }
+        .contact-box-item:hover {
+            transform: translateY(-4px);
+            border-color: var(--ptsp-green);
+            box-shadow: 0 10px 25px rgba(0, 111, 46, 0.08);
+        }
+        .contact-box-item i {
+            font-size: 32px;
+            color: var(--ptsp-green);
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        .contact-box-item h5 {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+        }
+        .contact-box-item p {
+            font-size: 0.92rem;
+            color: #64748b;
+            margin-bottom: 0;
+            line-height: 1.6;
+        }
+
+        /* FOOTER */
+        footer.footer-bottom-ptsp {
+            background: #022c22;
+            color: #94a3b8;
+            padding: 28px 0;
+            border-top: 3px solid var(--ptsp-gold);
+            flex-shrink: 0;
+        }
+
+
+    </style>
+<style data-glasp-print="rule">@media print{[data-glasp-print="hide"]{display:none !important}}</style></head>
+<body class="lc-theme-emerald">
+
+    <!-- 1. TOP BAR -->
+    <div id="topbar">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap">
+            <div class="contact-info d-flex align-items-center py-1">
+                <a href="https://man4banjar.com/akademik/index.php" class="mr-3 font-weight-bold" style="color: var(--ptsp-yellow);">
+                    <i class="bi bi-arrow-left-circle-fill mr-1"></i> Web Madrasah
+                </a>
+                <a href="https://man4banjar.com/akademik/ptsp?p=kontak" class="mr-3">
+                    <i class="bi bi-envelope mr-1"></i> Kontak
+                </a>
+                <a href="javascript:void(0)" onclick="if(typeof toggleClientLiveCardPopup === 'function') toggleClientLiveCardPopup(); else document.getElementById('btnLiveCardBalloon').click();" class="mr-3" style="color: #6ee7b7; font-weight: 600;">
+                    <i class="bi bi-chat-dots-fill mr-1"></i> Live Chat
+                </a>
+                <span class="d-none d-lg-inline">
+                    <i class="bi bi-telephone-fill mr-1" style="color: #6ee7b7;"></i> Call Centre: <strong>081528205667</strong>
+                </span>
+            </div>
+            <div class="ticker-wrap py-1 d-none d-md-flex align-items-center" style="max-width: 550px;">
+                <marquee onmouseover="this.stop();" onmouseout="this.start();" scrollamount="5">
+                    <span class="mr-4"><i class="bi bi-megaphone-fill" style="color: var(--ptsp-yellow);"></i> <strong>Pemberitahuan Layanan Online PTSP:</strong> Kini pengurusan permohonan surat keterangan aktif, legalisir, mutasi siswa, dan rekomendasi beasiswa dapat diajukan secara online melalui portal PTSP.</span>                </marquee>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. HEADER NAVBAR HIJAU -->
+    <header id="header">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-dark p-0" id="navbar-ptsp">
+                <a class="navbar-brand navbar-brand-ptsp" href="https://man4banjar.com/akademik/ptsp">
+                    <img src="./PTSP ONLINE - MAN 4 BANJAR_files/logo239.png" alt="Logo" style="height: 38px; width: 38px; object-fit: contain; margin-right: 10px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" onerror="this.style.display='none'">
+                    <span>MAN 4 BANJAR</span>
+                    <span class="badge-ptsp d-none d-sm-inline-block">PTSP DIGITAL</span>
+                </a>
+                <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navPTSP">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navPTSP">
+                    <ul class="navbar-nav ml-auto align-items-center">
+                        <li class="nav-item"><a class="nav-link active" href="https://man4banjar.com/akademik/ptsp"><i class="bi bi-house mr-1"></i> Home</a></li>
+                        <li class="nav-item"><a class="nav-link " href="https://man4banjar.com/akademik/ptsp?p=tentang">Tentang PTSP</a></li>
+                        <li class="nav-item"><a class="nav-link " href="https://man4banjar.com/akademik/ptsp?p=cek">Cek Permohonan</a></li>
+                        <li class="nav-item"><a class="nav-link font-weight-bold" href="https://man4banjar.com/akademik/tracking.php?type=ptsp" style="color: var(--ptsp-yellow) !important;"><i class="bi bi-search mr-1"></i> Lacak Terpadu</a></li>
+                        <li class="nav-item"><a class="nav-link " href="https://man4banjar.com/akademik/ptsp?p=layanan">Jenis Layanan</a></li>
+                        <li class="nav-item"><a class="nav-link " href="https://man4banjar.com/akademik/ptsp?p=kontak">Kontak</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle font-weight-bold" href="https://man4banjar.com/akademik/ptsp.php#" id="dropMasuk" data-toggle="dropdown" style="color: var(--ptsp-yellow) !important;">
+                                <i class="bi bi-person-circle mr-1"></i> Masuk <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow-lg border-0" style="border-radius: 12px; padding: 8px;">
+                                <a class="dropdown-item py-2" href="https://man4banjar.com/akademik/ptsp.php#" onclick="bukaModalLoginPemohon(); return false;"><i class="bi bi-box-arrow-in-right mr-2 text-success"></i> Masuk Aplikasi</a>
+                                <a class="dropdown-item py-2" href="https://man4banjar.com/akademik/ptsp.php#" onclick="bukaModalDaftarPemohon(); return false;"><i class="bi bi-person-plus mr-2 text-primary"></i> Buat Akun Baru</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item py-2" href="https://man4banjar.com/akademik/presensi_kiosk.php" target="_blank"><i class="bi bi-person-badge mr-2 text-warning"></i> Kios Presensi Siswa (Tap RFID)</a>
+                                <a class="dropdown-item py-2" href="https://man4banjar.com/akademik/login/"><i class="bi bi-shield-lock mr-2 text-dark"></i> Login Petugas / Admin</a>
+                                <a class="dropdown-item py-2" href="https://man4banjar.com/akademik/index.php"><i class="bi bi-globe mr-2 text-success"></i> Website Akademik</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-content-wrapper">
+                    <!-- 1. HERO SECTION -->
+            <section id="hero">
+                <div class="swiper hero-slider swiper-fade swiper-initialized swiper-horizontal swiper-watch-progress swiper-backface-hidden">
+                    <div class="swiper-wrapper" id="swiper-wrapper-9c10479de1aa95baf" aria-live="off" style="transition-duration: 0ms;">
+                        <div class="swiper-slide swiper-slide-prev" style="background-image: url(&quot;berkas/ptsp/6aafcb117a0972301831245e5dc36d9b.jpeg&quot;); width: 945px; opacity: 0; transform: translate3d(0px, 0px, 0px); transition-duration: 0ms;" data-swiper-autoplay="5000" role="group" aria-label="1 / 6" data-swiper-slide-index="0"></div><div class="swiper-slide swiper-slide-visible swiper-slide-active" style="background-image: url(&quot;berkas/ptsp/83488433c6eb178fae85d7e9095a15d2.jpg&quot;); width: 945px; opacity: 1; transform: translate3d(-945px, 0px, 0px); transition-duration: 0ms;" data-swiper-autoplay="5000" role="group" aria-label="2 / 6" data-swiper-slide-index="1"></div><div class="swiper-slide swiper-slide-next" style="background-image: url(&quot;berkas/ptsp/2a646e36edc9efd2009ab30f6a962fea.jpg&quot;); width: 945px; opacity: 0; transform: translate3d(-1890px, 0px, 0px); transition-duration: 0ms;" data-swiper-autoplay="5000" role="group" aria-label="3 / 6" data-swiper-slide-index="2"></div><div class="swiper-slide" style="background-image: url(&quot;berkas/ptsp/a8807ead7d48cf7c3f9a1e35772701b6.png&quot;); width: 945px; opacity: 0; transform: translate3d(-2835px, 0px, 0px); transition-duration: 0ms;" data-swiper-autoplay="5000" role="group" aria-label="4 / 6" data-swiper-slide-index="3"></div><div class="swiper-slide" style="background-image: url(&quot;berkas/ptsp/e094cbf5f3fa0127418870f21a7c7d24.jpg&quot;); width: 945px; opacity: 0; transform: translate3d(-3780px, 0px, 0px); transition-duration: 0ms;" data-swiper-autoplay="5000" role="group" aria-label="5 / 6" data-swiper-slide-index="4"></div><div class="swiper-slide" style="background-image: url(&quot;berkas/ptsp/eb78091ede0cc73c00a04826647cd7c4.jpg&quot;); width: 945px; opacity: 0; transform: translate3d(-4725px, 0px, 0px); transition-duration: 0ms;" data-swiper-autoplay="5000" role="group" aria-label="6 / 6" data-swiper-slide-index="5"></div>                    </div>
+                <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span></div>
+
+                <div class="hero-content">
+                    <img src="./PTSP ONLINE - MAN 4 BANJAR_files/logo239.png" alt="Logo Sekolah" class="logo-kemenag">
+                    <h2>
+                        LAYANAN ONLINE TERINTEGRASI<br>
+                        MAN 4 BANJAR<br>
+                        <span class="blue-highlight">(PTSP ONLINE)</span>
+                    </h2>
+                    <h6>Layanan Permohonan, Informasi, Konsultasi, Pengaduan dan Legalisir.</h6>
+                    <div>
+                        <a href="https://man4banjar.com/akademik/ptsp?p=layanan" class="btn-ajukan-hero">
+                            AJUKAN PERMOHONAN <i class="bi bi-file-earmark-text ml-2"></i>
+                        </a>
+                        <a href="https://man4banjar.com/akademik/ptsp?p=cek" class="btn-cek-hero">
+                            Cek Permohonan <i class="bi bi-search ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. SECTION TENTANG PTSP -->
+            <section class="about-section-wrapper border-bottom">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-5 text-center mb-4 mb-lg-0">
+                            <img src="./PTSP ONLINE - MAN 4 BANJAR_files/logo-cek.png" alt="PTSP Online" class="img-fluid" style="max-height: 250px; filter: drop-shadow(0 10px 25px rgba(6, 78, 59, 0.12));">
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="d-inline-flex align-items-center px-3 py-1 rounded-pill mb-2" style="background: #ecfdf5; color: #065f46; font-size: 11.5px; font-weight: 700; border: 1px solid #a7f3d0;">
+                                <i class="bi bi-shield-check mr-1.5"></i> Pelayanan Publik Digital Resmi
+                            </div>
+                            <h2 style="color: var(--ptsp-green); font-weight: 800;">PTSP Online</h2>
+                            <p class="about-desc">
+                                <em>Pelayanan Terpadu dalam Satu Pintu Online (PTSP Online)</em> adalah aplikasi website resmi yang dibangun untuk memberikan pelayanan administrasi permohonan surat dan perizinan kepada masyarakat, siswa, alumni, dan orang tua wali secara terpadu dan efisien.
+                                <a href="https://man4banjar.com/akademik/ptsp?p=layanan" class="badge badge-success px-2.5 py-1.5 ml-1" style="background: var(--ptsp-green); font-size: 11px; border-radius: 6px;">
+                                    Buka Layanan <i class="bi bi-arrow-right ml-1"></i>
+                                </a>
+                            </p>
+                            <ul class="about-checklist">
+                                <li><i class="bi bi-check-circle-fill"></i> Proses Aman &amp; Tervalidasi</li>
+                                <li><i class="bi bi-check-circle-fill"></i> Respon Cepat Terjadwal</li>
+                                <li><i class="bi bi-check-circle-fill"></i> Alur Mudah &amp; Transparan</li>
+                                <li><i class="bi bi-check-circle-fill"></i> Hemat Waktu Tanpa Antre Fisik</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. SECTION 4 KOTAK FITUR PTSP -->
+            <section class="services-section-wrapper border-bottom">
+                <div class="container">
+                    <div class="mb-4">
+                        <span class="badge badge-pill badge-success px-3 py-1 mb-2 font-weight-bold" style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; font-size: 11px;">
+                            KEUNGGULAN SISTEM
+                        </span>
+                        <h2 class="font-weight-bold text-dark" style="font-size: 1.8rem;">Keunggulan Layanan PTSP Online</h2>
+                        <p class="text-muted" style="font-size: 0.95rem; line-height: 1.7;">
+                            Pelayanan Terpadu dalam Satu Pintu Online memberikan kemudahan administrasi bagi guru, siswa, alumni, dan masyarakat umum dalam pengajuan permohonan berbagai macam kebutuhan sekolah dalam satu portal resmi.
+                        </p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="feature-box-home">
+                                <div class="icon-wrap"><i class="bi bi-clock-history"></i></div>
+                                <div>
+                                    <h4>Hemat Waktu</h4>
+                                    <p>Sistem online memudahkan pengurusan perizinan lebih cepat dan menghemat waktu tanpa perlu datang antre langsung.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="feature-box-home">
+                                <div class="icon-wrap"><i class="bi bi-shield-check"></i></div>
+                                <div>
+                                    <h4>Proses Aman</h4>
+                                    <p>Sistem PTSP ONLINE menerapkan nomor resi dan verifikasi berkas berstandar digital guna menjamin keaslian dokumen.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="feature-box-home">
+                                <div class="icon-wrap"><i class="bi bi-envelope-check"></i></div>
+                                <div>
+                                    <h4>Respon Cepat</h4>
+                                    <p>Petugas langsung memproses dan memvalidasi berkas yang masuk dengan notifikasi status berkala.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="feature-box-home">
+                                <div class="icon-wrap"><i class="bi bi-check-circle-fill"></i></div>
+                                <div>
+                                    <h4>Mudah &amp; Transparan</h4>
+                                    <p>Kemudahan menyeluruh dari pendaftaran, pengunggahan berkas syarat, pemantauan resi, hingga unduh dokumen jadi.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. SECTION PROSEDUR PENGAJUAN & LOGIN -->
+            <section class="prosedur-section-wrapper">
+                <div class="container">
+                    <div class="text-center mb-5">
+                        <span class="badge badge-pill badge-success px-3 py-1 mb-2 font-weight-bold" style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; font-size: 11px;">
+                            PANDUAN ALUR
+                        </span>
+                        <h2 class="font-weight-bold text-dark" style="font-size: 1.8rem;">Prosedur Pengajuan PTSP Online</h2>
+                        <p class="text-muted small">Ikuti tata cara pengajuan berikut untuk memastikan berkas Anda diproses dengan lancar.</p>
+                    </div>
+
+                    <div class="row">
+                        <!-- 7 Langkah Alur Prosedur -->
+                        <div class="col-lg-6 mb-5 mb-lg-0">
+                            <div class="prosedur-item">
+                                <div class="p-icon">1</div>
+                                <div>
+                                    <h5>Pendaftaran Akun</h5>
+                                    <p>Lakukan pendaftaran untuk mendapatkan akun pemohon dengan mengisi formulir identitas NIK &amp; No. WhatsApp aktif.</p>
+                                </div>
+                            </div>
+
+                            <div class="prosedur-item">
+                                <div class="p-icon">2</div>
+                                <div>
+                                    <h5>Login Pemohon</h5>
+                                    <p>Setelah terdaftar, masuk ke aplikasi menggunakan NIK dan No. WhatsApp/Password yang telah Anda daftarkan.</p>
+                                </div>
+                            </div>
+
+                            <div class="prosedur-item">
+                                <div class="p-icon">3</div>
+                                <div>
+                                    <h5>Pilih Layanan &amp; Unggah Berkas</h5>
+                                    <p>Pilih jenis surat/layanan yang Anda butuhkan dan unggah dokumen persyaratan yang diminta (PDF/JPG/ZIP).</p>
+                                </div>
+                            </div>
+
+                            <div class="prosedur-item">
+                                <div class="p-icon">4</div>
+                                <div>
+                                    <h5>Verifikasi Petugas</h5>
+                                    <p>Petugas PTSP madrasah akan mengecek keabsahan syarat administrasi dan kelengkapan dokumen permohonan Anda.</p>
+                                </div>
+                            </div>
+
+                            <div class="prosedur-item">
+                                <div class="p-icon">5</div>
+                                <div>
+                                    <h5>Cek Status Resi</h5>
+                                    <p>Simpan nomor resi yang terbit. Buka menu Cek Permohonan untuk memantau apakah permohonan sedang diproses atau butuh revisi.</p>
+                                </div>
+                            </div>
+
+                            <div class="prosedur-item">
+                                <div class="p-icon">6</div>
+                                <div>
+                                    <h5>Penyelesaian Dokumen</h5>
+                                    <p>Setelah ditandatangani pejabat berwenang, status tiket berubah menjadi Selesai.</p>
+                                </div>
+                            </div>
+
+                            <div class="prosedur-item">
+                                <div class="p-icon">7</div>
+                                <div>
+                                    <h5>Unduh / Pengambilan Surat</h5>
+                                    <p>Unduh file hasil surat jadi langsung dari aplikasi atau ambil berkas fisik di loket PTSP madrasah.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Login PTSP Online -->
+                        <div class="col-lg-6">
+                            <div class="login-box-home">
+                                <div class="text-center mb-3">
+                                    <div class="w-12 h-12 rounded-xl d-inline-flex align-items-center justify-content-center text-white mb-2" style="background: var(--ptsp-green); width: 44px; height: 44px; border-radius: 12px; font-size: 20px;">
+                                        <i class="bi bi-box-arrow-in-right"></i>
+                                    </div>
+                                    <h5 class="mb-1">LOGIN PTSP ONLINE</h5>
+                                    <p class="small text-muted mb-0">Masuk untuk mengajukan atau memantau permohonan Anda</p>
+                                </div>
+                                <hr class="mt-2 mb-4">
+                                <form id="formLoginHomeBox">
+                                    <div class="form-group mb-3">
+                                        <label class="font-weight-bold small text-dark">Email / NIK</label>
+                                        <input type="text" id="home_login_nik" class="form-control form-control-lg bg-light" placeholder="Masukkan Email atau NIK" required="" style="font-size: 14px; border-radius: 10px;">
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold small text-dark">Password / No. HP</label>
+                                        <input type="password" id="home_login_pass" class="form-control form-control-lg bg-light" placeholder="Masukkan Password atau No. HP" required="" style="font-size: 14px; border-radius: 10px;">
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                        <button type="submit" class="btn btn-success font-weight-bold px-4 py-2" style="background: linear-gradient(135deg, #059669 0%, #064e3b 100%); border: none; border-radius: 10px;">
+                                            <i class="bi bi-box-arrow-in-right mr-1"></i> Masuk Aplikasi
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success font-weight-bold px-4 py-2" onclick="bukaModalDaftarPemohon()" style="border-radius: 10px; border-width: 1.5px;">
+                                            <i class="bi bi-person-plus mr-1"></i> Buat Akun Baru
+                                        </button>
+                                    </div>
+                                    <div class="mb-3 text-center">
+                                        <a href="javascript:void(0)" onclick="if(typeof toggleClientLiveCardPopup === 'function') toggleClientLiveCardPopup(); else document.getElementById('btnLiveCardBalloon').click();" class="small text-muted font-italic">
+                                            <i class="bi bi-chat-dots text-success mr-1"></i> Bantuan / Lupa Password? Hubungi Live Chat
+                                        </a>
+                                    </div>
+                                    <hr class="my-3">
+                                    <p class="text-center text-muted mb-0" style="font-size: 11px; line-height: 1.4;">
+                                        Dengan mengklik Buat Akun Baru, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi dari MAN 4 BANJAR.
+                                    </p>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+            </div></section>
+
+            </div>
+
+    <!-- FOOTER -->
+    <footer class="footer-bottom-ptsp">
+        <div class="container text-center small">
+            <div class="mb-2">
+                <a href="https://man4banjar.com/akademik/index.php" class="font-weight-bold mr-3" style="color: var(--ptsp-yellow); text-decoration: none;"><i class="bi bi-globe mr-1"></i> Website Utama Madrasah</a>
+                <span class="text-white-50">•</span>
+                <a href="https://man4banjar.com/akademik/tracking.php" class="text-light ml-3 mr-3" style="text-decoration: none;"><i class="bi bi-search mr-1"></i> Tracking Tiket</a>
+                <span class="text-white-50">•</span>
+                <a href="https://man4banjar.com/akademik/lapor.php" class="text-light ml-3" style="text-decoration: none;"><i class="bi bi-shield-heart mr-1"></i> Siap Lapor</a>
+            </div>
+            © 2026 <strong class="text-white">MAN 4 BANJAR</strong> • Pelayanan Terpadu Satu Pintu (PTSP) Digital Terpadu.
+        </div>
+    </footer>
+
+    <!-- Floating WA digantikan oleh Live Chat Helpdesk (Terhubung Landing Page) -->
+
+    <!-- MODAL PENGAJUAN LAYANAN -->
+    <div class="modal fade" id="modalAjukanLayanan" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header text-white" style="background: var(--ptsp-green);">
+                    <h5 class="modal-title font-weight-bold"><i class="bi bi-pencil-square mr-2"></i> Formulir Pengajuan Permohonan</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <form id="formSubmitPermohonan" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <input type="hidden" name="id_formulir" id="m_id_formulir">
+                        
+                        <div class="alert alert-success border-0 mb-3" style="border-radius: 10px;">
+                            <h6 class="font-weight-bold mb-1 text-success" id="m_nama_layanan">Nama Layanan</h6>
+                            <div class="small" id="m_syarat_layanan" style="white-space: pre-line;"></div>
+                            <small class="font-weight-bold d-block mt-1 text-dark" id="m_waktu_layanan"></small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">NIK / NISN / No. Identitas <span class="text-danger">*</span></label>
+                                <input type="text" name="nik" class="form-control" placeholder="16 Digit NIK / NISN" required="">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">Nama Lengkap Pemohon <span class="text-danger">*</span></label>
+                                <input type="text" name="nama_pemohon" class="form-control" placeholder="Nama Lengkap sesuai KTP/Akta" required="">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">No. WhatsApp / HP Aktif <span class="text-danger">*</span></label>
+                                <input type="text" name="no_hp" class="form-control" placeholder="081234567890" required="">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">Email (Opsional)</label>
+                                <input type="email" name="email" class="form-control" placeholder="email@gmail.com">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="font-weight-bold small">Alamat Lengkap</label>
+                            <textarea name="alamat" rows="2" class="form-control" placeholder="Alamat domisili"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="font-weight-bold small">Keperluan / Keterangan Tambahan</label>
+                            <textarea name="keperluan" rows="2" class="form-control" placeholder="Tujuan pengajuan surat"></textarea>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label class="font-weight-bold small">Unggah Berkas Persyaratan (PDF / JPG / PNG / ZIP) <span class="text-danger">*</span></label>
+                            <input type="file" name="file_syarat" class="form-control-file border p-2 rounded" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip,.rar" required="">
+                            <small class="text-muted">Jika berkas lebih dari 1 lembar, jadikan 1 file PDF atau arsip ZIP (Maksimal 10 MB).</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" id="btnKirimPermohonanModal" class="btn btn-success font-weight-bold px-4" style="background: var(--ptsp-green); border: none;">
+                            <i class="bi bi-send mr-1"></i> Kirim Permohonan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN PEMOHON -->
+    <div class="modal fade" id="modalLoginPemohon" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header text-white" style="background: var(--ptsp-green);">
+                    <h5 class="modal-title font-weight-bold"><i class="bi bi-lock-fill mr-2"></i> Masuk Aplikasi PTSP</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">×</button>
+                </div>
+                <form id="formLoginPemohon">
+                    <div class="modal-body p-4">
+                        <div class="text-center mb-3">
+                            <img src="./PTSP ONLINE - MAN 4 BANJAR_files/logo239.png" alt="Logo" style="height: 65px; object-fit: contain;">
+                            <h6 class="font-weight-bold mt-2 text-dark">Portal Pemohon Layanan</h6>
+                            <p class="small text-muted">Gunakan NIK atau No. WhatsApp Anda untuk masuk</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold small">NIK / No. Identitas</label>
+                            <input type="text" id="login_nik" class="form-control" placeholder="16 Digit NIK" required="">
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold small">No. WhatsApp</label>
+                            <input type="text" id="login_nohp" class="form-control" placeholder="081234567890" required="">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="submit" class="btn btn-success btn-block font-weight-bold" style="background: var(--ptsp-green); border: none;">
+                            <i class="bi bi-box-arrow-in-right mr-1"></i> Masuk &amp; Lacak Permohonan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DAFTAR PEMOHON -->
+    <div class="modal fade" id="modalDaftarPemohon" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header text-white" style="background: var(--ptsp-green);">
+                    <h5 class="modal-title font-weight-bold"><i class="bi bi-person-plus-fill mr-2"></i> Pendaftaran Akun Pemohon Baru</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">×</button>
+                </div>
+                <form id="formDaftarPemohon">
+                    <div class="modal-body p-4">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">NIK / No. Identitas <span class="text-danger">*</span></label>
+                                <input type="text" name="nik" class="form-control" placeholder="16 Digit NIK" required="">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" name="nama_lengkap" class="form-control" placeholder="Nama Lengkap" required="">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">No. WhatsApp <span class="text-danger">*</span></label>
+                                <input type="text" name="no_hp" class="form-control" placeholder="081234567890" required="">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="font-weight-bold small">Email</label>
+                                <input type="email" name="email" class="form-control" placeholder="email@gmail.com">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold small">Alamat Lengkap</label>
+                            <textarea name="alamat" rows="2" class="form-control" placeholder="Alamat domisili"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="submit" id="btnSubmitDaftarPemohon" class="btn btn-success font-weight-bold px-4" style="background: var(--ptsp-green); border: none;">
+                            <i class="bi bi-check-circle mr-1"></i> Daftarkan Akun
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Vendor -->
+    <script src="./PTSP ONLINE - MAN 4 BANJAR_files/jquery-3.6.0.min.js"></script>
+    <script src="./PTSP ONLINE - MAN 4 BANJAR_files/bootstrap.bundle.min.js"></script>
+    <script src="./PTSP ONLINE - MAN 4 BANJAR_files/swiper-bundle.min.js"></script>
+    <script src="./PTSP ONLINE - MAN 4 BANJAR_files/sweetalert.min.js"></script>
+
+    <script>
+    // Swiper slider for home page
+    if ($('.hero-slider').length) {
+        var heroSwiper = new Swiper('.hero-slider', {
+            loop: true,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            effect: 'fade',
+            fadeEffect: {
+                crossFade: true
+            },
+            speed: 1000
+        });
+    }
+
+    // Modal Helpers
+    function bukaModalLoginPemohon() {
+        $('#modalLoginPemohon').modal('show');
+    }
+
+    function bukaModalDaftarPemohon() {
+        $('#modalDaftarPemohon').modal('show');
+    }
+
+    // Login Pemohon (Modal & Box)
+    $('#formLoginPemohon, #formLoginHomeBox').on('submit', function(e) {
+        e.preventDefault();
+        var nik = $(this).find('input[type="text"]').val().trim();
+        $('#modalLoginPemohon').modal('hide');
+        window.location.href = 'ptsp?p=cek&kw=' + encodeURIComponent(nik);
+    });
+
+    // Check if query string kw exists on cek page
+    
+    // Daftar Pemohon
+    $('#formDaftarPemohon').on('submit', function(e) {
+        e.preventDefault();
+        $('#btnSubmitDaftarPemohon').prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-1"></i> Menyimpan...');
+        $.ajax({
+            url: 'login/mod_ptsp/crud_ptsp.php?action=simpan_user_ptsp',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(res) {
+                $('#btnSubmitDaftarPemohon').prop('disabled', false).html('<i class="bi bi-check-circle mr-1"></i> Daftarkan Akun');
+                if (res.status === 'success') {
+                    $('#modalDaftarPemohon').modal('hide');
+                    swal("Pendaftaran Berhasil!", "Akun pemohon Anda telah terdaftar. Silakan pilih layanan dan ajukan permohonan.", "success");
+                } else {
+                    swal("Gagal!", res.message, "error");
+                }
+            },
+            error: function() {
+                $('#btnSubmitDaftarPemohon').prop('disabled', false).html('<i class="bi bi-check-circle mr-1"></i> Daftarkan Akun');
+                swal("Error!", "Koneksi server gagal", "error");
+            }
+        });
+    });
+
+    // Buka Modal Ajukan Permohonan
+    $(document).on('click', '.btn-buka-modal-ajukan', function(e) {
+        e.preventDefault();
+        var id = $(this).attr('data-id');
+        var nama = $(this).attr('data-nama');
+        var syarat = $(this).attr('data-syarat');
+        var waktu = $(this).attr('data-waktu');
+
+        $('#m_id_formulir').val(id);
+        $('#m_nama_layanan').text(nama);
+        $('#m_syarat_layanan').text(syarat || 'Mengisi data formulir online dengan benar.');
+        $('#m_waktu_layanan').html('⏳ Estimasi Waktu Proses: ' + (waktu || '1-3 Hari Kerja'));
+        $('#formSubmitPermohonan')[0].reset();
+        $('#modalAjukanLayanan').modal('show');
+    });
+
+    function bukaModalAjukan(id, nama, syarat, waktu) {
+        $('#m_id_formulir').val(id);
+        $('#m_nama_layanan').text(nama);
+        $('#m_syarat_layanan').text(syarat || 'Mengisi formulir online.');
+        $('#m_waktu_layanan').html('⏳ Estimasi Waktu Proses: ' + (waktu || '1-3 Hari Kerja'));
+        $('#formSubmitPermohonan')[0].reset();
+        $('#modalAjukanLayanan').modal('show');
+    }
+
+    // Submit Permohonan
+    $('#formSubmitPermohonan').on('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        $('#btnKirimPermohonanModal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-1"></i> Mengirim...');
+
+        $.ajax({
+            url: 'crud_ptsp_public.php?action=ajukan_permohonan',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function(res) {
+                $('#btnKirimPermohonanModal').prop('disabled', false).html('<i class="bi bi-send mr-1"></i> Kirim Permohonan');
+                if (res.status === 'success') {
+                    $('#modalAjukanLayanan').modal('hide');
+                    swal({
+                        title: "Permohonan Berhasil!",
+                        text: "Kode Pengajuan (Nomor Resi) Anda:\n\n" + res.kode_tiket + "\n\nSimpan nomor resi ini untuk melacak status permohonan Anda.",
+                        icon: "success",
+                        buttons: {
+                            cetak: { text: "🖨️ Cetak Bukti Registrasi", value: "cetak" },
+                            lacak: { text: "🔍 Lacak Status", value: "lacak" }
+                        }
+                    }).then((val) => {
+                        if (val === 'cetak') {
+                            window.open('print_bukti_ptsp.php?kode=' + res.kode_tiket, '_blank');
+                        } else if (val === 'lacak') {
+                            window.location.href = 'ptsp?p=cek&kw=' + encodeURIComponent(res.kode_tiket);
+                        }
+                    });
+                } else {
+                    swal("Gagal!", res.message, "error");
+                }
+            },
+            error: function() {
+                $('#btnKirimPermohonanModal').prop('disabled', false).html('<i class="bi bi-send mr-1"></i> Kirim Permohonan');
+                swal("Error!", "Koneksi server gagal", "error");
+            }
+        });
+    });
+
+    // Tracking Permohonan (Sesuai Format Table website_cek.php)
+    $('#formTrackingPublic').on('submit', function(e) {
+        e.preventDefault();
+        var kw = $('#keywordTrackingPublic').val().trim();
+        $('#btnTrackingPublic').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: 'crud_ptsp_public.php?action=cek_tracking',
+            type: 'POST',
+            data: { keyword: kw },
+            dataType: 'json',
+            success: function(res) {
+                $('#btnTrackingPublic').prop('disabled', false).html('<i class="bi bi-search mr-1"></i> Lacak Status');
+                if (res.status === 'success') {
+                    var html = '<div class="card border-0 shadow-lg mt-4" style="border-radius: 14px; overflow: hidden;">';
+                    html += '<div class="card-header bg-dark text-white text-center py-3"><h5 class="font-weight-bold mb-0"><i class="bi bi-file-earmark-check mr-2 text-warning"></i> Hasil Pelacakan Permohonan</h5></div>';
+                    html += '<div class="card-body p-0"><div class="table-responsive mb-0">';
+                    html += '<table class="table table-hover table-striped mb-0 text-dark" style="font-size: 13.5px;">';
+                    html += '<thead class="thead-light"><tr><th class="py-3">Nama Pemohon</th><th class="py-3">Nomor Resi / Tiket</th><th class="py-3">Jenis Pengajuan</th><th class="py-3">Tgl Masuk</th><th class="py-3 text-center">Status</th><th class="py-3">Tindakan / Hasil</th></tr></thead><tbody>';
+
+                    res.data.forEach(function(item) {
+                        var stBadge = '';
+                        if (item.status === 'diproses') stBadge = '<span class="badge badge-warning px-2 py-1 font-weight-bold">⏳ Sedang Diproses</span>';
+                        else if (item.status === 'dipending') stBadge = '<span class="badge badge-info px-2 py-1 font-weight-bold">⚠️ Butuh Revisi</span>';
+                        else if (item.status === 'diterima') stBadge = '<span class="badge badge-success px-2 py-1 font-weight-bold">✅ Selesai / Diterima</span>';
+                        else stBadge = '<span class="badge badge-danger px-2 py-1 font-weight-bold">❌ Ditolak</span>';
+
+                        var aksi = '';
+                        if (item.file_hasil) {
+                            aksi += '<a href="' + item.file_hasil + '" target="_blank" class="btn btn-success btn-sm font-weight-bold mb-1 mr-1"><i class="bi bi-download mr-1"></i> Unduh Surat Jadi</a> ';
+                        }
+                        if (item.catatan_admin) {
+                            aksi += '<div class="small text-muted font-italic mb-1">Catatan: ' + item.catatan_admin + '</div>';
+                        }
+                        aksi += '<a href="print_bukti_ptsp.php?kode=' + item.kode_tiket + '" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer mr-1"></i> Cetak Bukti</a>';
+
+                        html += '<tr>';
+                        html += '<td class="font-weight-bold align-middle">' + item.nama_pemohon + '<br><small class="text-muted">NIK: ' + item.nik + '</small></td>';
+                        html += '<td class="align-middle"><code class="font-weight-bold text-primary" style="font-size: 14px;">' + item.kode_tiket + '</code></td>';
+                        html += '<td class="align-middle font-weight-bold">' + item.nama_layanan + '</td>';
+                        html += '<td class="align-middle text-muted">' + item.tgl_pengajuan + '</td>';
+                        html += '<td class="align-middle text-center">' + stBadge + '</td>';
+                        html += '<td class="align-middle">' + aksi + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div></div></div>';
+                    $('#hasilTrackingPublic').html(html);
+                } else {
+                    $('#hasilTrackingPublic').html('<div class="alert alert-danger shadow-lg border-0 text-center font-weight-bold mt-4" style="border-radius: 10px;"><i class="bi bi-exclamation-triangle mr-2"></i> ' + res.message + '</div>');
+                }
+            },
+            error: function() {
+                $('#btnTrackingPublic').prop('disabled', false).html('<i class="bi bi-search mr-1"></i> Lacak Status');
+                swal("Error!", "Koneksi server gagal", "error");
+            }
+        });
+    });
+    </script>
+
+    
+<!-- Ensure FontAwesome is always available on all pages (Landing, User, Admin) -->
+<link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/font-awesome(1).min.css">
+<link rel="stylesheet" href="./PTSP ONLINE - MAN 4 BANJAR_files/font-awesome(2).min.css">
+
+<!-- LIVE CARD STYLES -->
+<style>
+/* LIVE CARD COLOR THEMES & CSS VARIABLES */
+:root {
+    --lc-primary-1: #10b981;
+    --lc-primary-2: #059669;
+    --lc-primary-3: #047857;
+    --lc-shadow-rgb: 5, 150, 105;
+    --lc-accent-glow: rgba(16, 185, 129, 0.45);
+}
+
+/* 1. Emerald Kemenag (Default Landing Page) */
+body.lc-theme-emerald, .lc-theme-emerald {
+    --lc-primary-1: #10b981;
+    --lc-primary-2: #059669;
+    --lc-primary-3: #047857;
+    --lc-shadow-rgb: 5, 150, 105;
+    --lc-accent-glow: rgba(16, 185, 129, 0.45);
+}
+
+/* 2. Royal Indigo (Default Admin / Super Admin) */
+body.lc-theme-indigo, .lc-theme-indigo {
+    --lc-primary-1: #6366f1;
+    --lc-primary-2: #4f46e5;
+    --lc-primary-3: #3730a3;
+    --lc-shadow-rgb: 79, 70, 229;
+    --lc-accent-glow: rgba(99, 102, 241, 0.45);
+}
+
+/* 3. Ocean Sapphire (Default Siswa) */
+body.lc-theme-sapphire, .lc-theme-sapphire {
+    --lc-primary-1: #38bdf8;
+    --lc-primary-2: #0284c7;
+    --lc-primary-3: #0369a1;
+    --lc-shadow-rgb: 2, 132, 199;
+    --lc-accent-glow: rgba(56, 189, 248, 0.45);
+}
+
+/* 4. Forest Teal (Default Guru / PTK) */
+body.lc-theme-teal, .lc-theme-teal {
+    --lc-primary-1: #14b8a6;
+    --lc-primary-2: #0d9488;
+    --lc-primary-3: #0f766e;
+    --lc-shadow-rgb: 13, 148, 136;
+    --lc-accent-glow: rgba(20, 184, 166, 0.45);
+}
+
+/* 5. Amber Sunset (Default Ortu / Warm) */
+body.lc-theme-amber, .lc-theme-amber {
+    --lc-primary-1: #f59e0b;
+    --lc-primary-2: #ea580c;
+    --lc-primary-3: #c2410c;
+    --lc-shadow-rgb: 234, 88, 12;
+    --lc-accent-glow: rgba(245, 158, 11, 0.45);
+}
+
+/* 6. Crimson Ruby (Merah Menyala - High Contrast) */
+body.lc-theme-ruby, .lc-theme-ruby {
+    --lc-primary-1: #f43f5e;
+    --lc-primary-2: #e11d48;
+    --lc-primary-3: #be123c;
+    --lc-shadow-rgb: 225, 29, 72;
+    --lc-accent-glow: rgba(244, 63, 94, 0.45);
+}
+
+/* 7. Midnight Obsidian (Elegan / Modern Dark) */
+body.lc-theme-obsidian, .lc-theme-obsidian {
+    --lc-primary-1: #475569;
+    --lc-primary-2: #1e293b;
+    --lc-primary-3: #0f172a;
+    --lc-shadow-rgb: 30, 41, 59;
+    --lc-accent-glow: rgba(71, 85, 105, 0.45);
+}
+
+/* Live Card Theme Swatch Selector Bar */
+.live-card-theme-bar {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    animation: lcThemeBarSlide 0.25s ease-out;
+}
+@keyframes lcThemeBarSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.lc-swatch-list {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.lc-swatch-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+    outline: none;
+    padding: 0;
+    position: relative;
+}
+.lc-swatch-dot:hover {
+    transform: scale(1.25);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+.lc-swatch-dot.active {
+    border-color: #0f172a;
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #0f172a;
+}
+
+/* Floating Balloon Button - Draggable & Compact */
+.live-card-balloon-btn {
+    position: fixed;
+    bottom: 38px;
+    right: 36px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lc-primary-1) 0%, var(--lc-primary-2) 50%, var(--lc-primary-3) 100%);
+    box-shadow: 0 8px 24px -3px rgba(var(--lc-shadow-rgb), 0.6), 0 3px 10px rgba(var(--lc-shadow-rgb), 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    z-index: 99999;
+    color: #ffffff;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.3s ease;
+    border: 2.5px solid rgba(255, 255, 255, 0.85);
+    outline: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+.live-card-balloon-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 28px -3px rgba(var(--lc-shadow-rgb), 0.75), 0 6px 16px var(--lc-accent-glow);
+}
+.live-card-balloon-btn:active {
+    transform: scale(0.95);
+    cursor: grabbing;
+}
+.live-card-balloon-btn.is-dragging {
+    cursor: grabbing !important;
+    transition: none !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 16px 36px rgba(var(--lc-shadow-rgb), 0.8), 0 8px 18px rgba(0, 0, 0, 0.25) !important;
+}
+.live-card-balloon-btn.is-dragging .live-card-tooltip {
+    display: none !important;
+}
+.live-card-balloon-btn svg {
+    transition: transform 0.3s ease;
+}
+.live-card-balloon-btn:hover svg {
+    transform: scale(1.08) rotate(4deg);
+}
+
+/* Pulsing Online Ping Ring */
+.live-card-ping {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 0 6px #10b981;
+}
+.live-card-ping::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 50%;
+    border: 1.5px solid #10b981;
+    animation: liveCardPulse 2s infinite ease-out;
+}
+@keyframes liveCardPulse {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Badge Notifikasi Belum Dibaca */
+.live-card-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 19px;
+    height: 19px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.6);
+    display: none;
+    animation: liveBadgeBounce 0.4s ease;
+}
+@keyframes liveBadgeBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* Floating Tooltip Pill */
+.live-card-tooltip {
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    background: #1e1b4b;
+    color: #ffffff;
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.live-card-tooltip::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px 0 5px 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent #1e1b4b;
+}
+.live-card-balloon-btn:hover .live-card-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+.live-card-balloon-btn.is-left-docked .live-card-tooltip {
+    right: auto;
+    left: 60px;
+    transform: translateY(-50%) translateX(-8px);
+}
+.live-card-balloon-btn.is-left-docked .live-card-tooltip::after {
+    right: auto;
+    left: -5px;
+    border-width: 5px 5px 5px 0;
+    border-color: transparent #1e1b4b transparent transparent;
+}
+.live-card-balloon-btn.is-left-docked:hover .live-card-tooltip {
+    transform: translateY(-50%) translateX(0);
+}
+
+/* Common Popup Card Box */
+.live-card-popup {
+    position: fixed;
+    bottom: 148px;
+    right: 50px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 520px;
+    max-height: calc(100vh - 120px);
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 22px 50px -10px rgba(30, 27, 75, 0.3), 0 8px 20px -4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    z-index: 99998;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.85) translateY(20px);
+    transform-origin: bottom right;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.live-card-popup.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateY(0);
+}
+
+/* Admin specific dimensions */
+.live-card-popup.admin-desk {
+    width: 420px;
+    height: 560px;
+}
+
+/* Header */
+.live-card-header {
+    background: linear-gradient(135deg, var(--lc-primary-2) 0%, var(--lc-primary-1) 50%, var(--lc-primary-3) 100%);
+    color: #ffffff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    transition: background 0.3s ease;
+}
+.live-card-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.live-card-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+}
+.live-card-title {
+    font-size: 14.5px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+.live-card-subtitle {
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.live-card-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: background 0.2s;
+}
+.live-card-close-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Body / Chat Area */
+.live-card-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.live-card-welcome-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    margin-bottom: 4px;
+}
+.live-card-welcome-card h6 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+.live-card-welcome-card p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Quick Topic Pills */
+.live-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0;
+}
+.live-card-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.live-card-chip:hover {
+    background: #ecfdf5;
+    border-color: #059669;
+    color: #065f46;
+    transform: translateY(-1px);
+}
+
+/* Bubble Messages */
+.live-bubble {
+    max-width: 82%;
+    padding: 9px 13px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    position: relative;
+    word-break: break-word;
+}
+.live-bubble-client {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--lc-primary-2) 0%, var(--lc-primary-1) 100%);
+    color: #ffffff;
+    border-bottom-right-radius: 3px;
+    box-shadow: 0 4px 12px rgba(var(--lc-shadow-rgb), 0.28);
+    transition: background 0.3s ease;
+}
+.live-bubble-admin {
+    align-self: flex-start;
+    background: #ffffff;
+    color: #1e293b;
+    border-bottom-left-radius: 3px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.live-bubble-meta {
+    font-size: 10px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    opacity: 0.8;
+}
+.live-bubble-admin .live-bubble-meta {
+    color: #64748b;
+    justify-content: flex-start;
+}
+
+/* Footer / Input */
+.live-card-footer {
+    padding: 10px 14px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.live-card-input {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 22px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.live-card-input:focus {
+    border-color: var(--lc-primary-2);
+    box-shadow: 0 0 0 3px rgba(var(--lc-shadow-rgb), 0.2);
+}
+.live-card-send-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lc-primary-2) 0%, var(--lc-primary-1) 100%);
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(var(--lc-shadow-rgb), 0.35);
+    transition: transform 0.2s, background 0.3s ease;
+    outline: none;
+    flex-shrink: 0;
+}
+.live-card-send-btn:hover {
+    transform: scale(1.06);
+}
+.live-card-attach-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    flex-shrink: 0;
+}
+.live-card-attach-btn:hover {
+    background: #e2e8f0;
+    color: var(--lc-primary-2);
+    transform: scale(1.05);
+}
+.live-card-file-preview {
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #334155;
+}
+
+/* Admin Mini Card Items */
+.admin-card-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+}
+.admin-card-item:hover {
+    transform: translateY(-2px);
+    border-color: #056839;
+    box-shadow: 0 6px 16px rgba(5, 104, 57, 0.15);
+}
+.admin-card-avatar-box {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+}
+.admin-card-avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    display: block;
+}
+.admin-card-avatar-fallback {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 2px solid #ffffff;
+}
+.admin-card-avatar-online {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 5px #10b981;
+}
+.admin-card-avatar-offline {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #94a3b8;
+    border: 2px solid #ffffff;
+}
+.admin-filter-pill {
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.admin-filter-pill.active {
+    background: #056839;
+    color: #ffffff;
+    border-color: #056839;
+}
+</style>
+
+<!-- FLOATING BALLOON BUTTON -->
+<div class="live-card-balloon-btn lc-theme-emerald" id="btnLiveCardBalloon" onclick="toggleClientLiveCardPopup()" title="Live Chat &amp; Bantuan">
+    <div class="live-card-ping"></div>
+    <div class="live-card-badge" id="liveCardUnreadBadge">0</div>
+    
+    <!-- Ultra Crisp White Vector Icons (Always 100% visible) -->
+    <div id="liveCardIconWrap" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#ffffff; pointer-events:none;">
+        <svg id="liveCardSvgChat" viewBox="0 -256 1850 1850" width="26" height="26" fill="#ffffff" style="display:block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.32));">
+            <path transform="matrix(0.71186441,0,0,-0.71186441,288.54237,1093.9482)" d="M 704,1152 Q 551,1152 418,1100 285,1048 206.5,959 128,870 128,768 q 0,-82 53,-158 53,-76 149,-132 l 97,-56 -35,-84 q 34,20 62,39 l 44,31 53,-10 q 78,-14 153,-14 153,0 286,52 133,52 211.5,141 78.5,89 78.5,191 0,102 -78.5,191 -78.5,89 -211.5,141 -133,52 -286,52 z m 0,128 q 191,0 353.5,-68.5 Q 1220,1143 1314,1025 1408,907 1408,768 1408,629 1314,511 1220,393 1057.5,324.5 895,256 704,256 618,256 528,272 404,184 250,144 214,135 164,128 h -3 q -11,0 -20.5,8 -9.5,8 -11.5,21 -1,3 -1,6.5 0,3.5 0.5,6.5 0.5,3 2,6 l 2.5,5 q 0,0 3.5,5.5 3.5,5.5 4,5 0.5,-0.5 4.5,5 4,5.5 4,4.5 5,6 23,25 18,19 26,29.5 8,10.5 22.5,29 Q 235,303 245.5,323 256,343 266,367 142,439 71,544 0,649 0,768 0,907 94,1025 188,1143 350.5,1211.5 513,1280 704,1280 Z M 1526,111 q 10,-24 20.5,-44 10.5,-20 25,-38.5 14.5,-18.5 22.5,-29 8,-10.5 26,-29.5 18,-19 23,-25 1,-1 4,-4.5 3,-3.5 4.5,-5 1.5,-1.5 4,-5 2.5,-3.5 3.5,-5.5 l 2.5,-5 q 0,0 2,-6 2,-6 0.5,-6.5 -1.5,-0.5 -1,-6.5 -3,-14 -13,-22 -10,-8 -22,-7 -50,7 -86,16 Q 1388,-72 1264,16 1174,0 1088,0 817,0 616,132 q 58,-4 88,-4 161,0 309,45 148,45 264,129 125,92 192,212 67,120 67,254 0,77 -23,152 129,-71 204,-178 75,-107 75,-230 0,-120 -71,-224.5 Q 1650,183 1526,111 Z"></path>
+        </svg>
+        <svg id="liveCardSvgClose" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="display:none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.32));">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </div>
+    
+    <div class="live-card-tooltip">
+        <span>Live Chat</span>
+    </div>
+</div>
+
+<!-- ==================== CLIENT LIVE CARD BOX (SISWA, GURU, ORTU, TAMU) ==================== -->
+<div class="live-card-popup lc-theme-emerald" id="clientLiveCardPopup">
+    <!-- Header -->
+    <div class="live-card-header">
+        <div class="live-card-header-info">
+            <div class="live-card-avatar" style="overflow: hidden; padding: 0;">
+                                                    <i class="fa fa-heart"></i>
+                            </div>
+            <div>
+                <h5 class="live-card-title">Layanan Informasi Publik</h5>
+                <div class="live-card-subtitle">
+                    <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow: 0 0 5px #10b981;"></span>
+                    <span>Live Chat Terhubung ke Admin</span>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 6px;">
+            <button type="button" class="live-card-close-btn" onclick="toggleLiveCardThemePalette('client')" id="btnClientTheme" title="Ganti Warna Balon">
+                <i class="fa fa-paint-brush"></i>
+            </button>
+            <button type="button" class="live-card-close-btn" onclick="toggleClientLiveCardPopup()" title="Tutup">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Theme Swatch Bar Client -->
+    <div class="live-card-theme-bar" id="clientLiveCardThemeBar" style="display: none;">
+        <span style="font-size: 11px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 4px;">
+            <i class="fa fa-paint-brush text-primary"></i> Warna Balon:
+        </span>
+        <div class="lc-swatch-list">
+            <button type="button" class="lc-swatch-dot" data-theme="emerald" title="Hijau Emerald (Kemenag)" style="background: linear-gradient(135deg, #10b981, #047857);" onclick="setLiveCardTheme('emerald')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="indigo" title="Royal Indigo (Admin)" style="background: linear-gradient(135deg, #6366f1, #3730a3);" onclick="setLiveCardTheme('indigo')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="sapphire" title="Ocean Sapphire (Siswa)" style="background: linear-gradient(135deg, #38bdf8, #0369a1);" onclick="setLiveCardTheme('sapphire')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="teal" title="Forest Teal (Guru)" style="background: linear-gradient(135deg, #14b8a6, #0f766e);" onclick="setLiveCardTheme('teal')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="amber" title="Amber Sunset (Ortu)" style="background: linear-gradient(135deg, #f59e0b, #c2410c);" onclick="setLiveCardTheme('amber')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="ruby" title="Crimson Ruby (Menyala)" style="background: linear-gradient(135deg, #f43f5e, #be123c);" onclick="setLiveCardTheme('ruby')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="obsidian" title="Midnight Obsidian (Dark)" style="background: linear-gradient(135deg, #475569, #0f172a);" onclick="setLiveCardTheme('obsidian')"></button>
+            <button type="button" class="lc-swatch-dot active" data-theme="auto" title="Otomatis (Sesuai Peran Akun)" style="background: conic-gradient(#10b981, #38bdf8, #6366f1, #f59e0b, #10b981); border: 1px dashed #64748b;" onclick="setLiveCardTheme('auto')"></button>
+        </div>
+    </div>
+
+    <!-- Body / Chat Messages -->
+    <div class="live-card-body" id="liveCardMessagesBox">
+        <div class="live-card-welcome-card">
+            <div class="d-flex align-items-center justify-content-center mb-2" style="gap: 10px;">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ea580c, #f59e0b); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(234,88,12,0.3);">
+                        <i class="fa fa-university"></i>
+                    </div>
+                                <div class="text-left">
+                    <h6 id="liveCardWelcomeHeading" style="margin: 0; font-weight: 700; color: #1e293b;">
+                        Assalamu'alaikum, Tamu Madrasah! 👋                    </h6>
+                    <small class="text-muted" style="font-size: 11px;">Layanan Informasi Publik</small>
+                </div>
+            </div>
+
+                            <p style="font-size: 11.5px; color: #475569; margin: 4px 0 8px 0; line-height: 1.5;">
+                    Selamat datang di <strong>Pusat Layanan Informasi Publik Madrasah</strong>. Butuh info pendaftaran siswa baru (PPDB), profil madrasah, atau layanan tamu/PTSP? Tim admin kami siap menyapa dan membantu.
+                </p>
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 6px 10px; font-size: 10.5px; color: #065f46; margin-bottom: 8px; text-align: left;">
+                    💡 <em>Untuk konsultasi nilai, absensi, ujian, dan bimbingan konseling, silakan login ke <strong>Portal Siswa</strong> atau <strong>Portal Guru</strong>.</em>
+                </div>
+                <div style="margin: 8px 0 6px 0;">
+                    <input type="text" id="liveCardGuestName" class="form-control form-control-sm text-center" placeholder="Ketik nama Anda (Contoh: Bpk/Ibu ... / Calon Wali)" style="border-radius: 12px; font-size: 11.5px; border: 1px dashed #059669;" onchange="updateGuestName(this.value)">
+                </div>
+                <div class="live-card-chips">
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, saya ingin menanyakan informasi pendaftaran siswa baru (PPDB)...')">ℹ️ Info PPDB</span>
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, boleh minta informasi profil dan program unggulan madrasah?')">🏫 Profil Madrasah</span>
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, saya ingin menanyakan prosedur pelayanan surat/tamu PTSP...')">📋 Layanan Tamu / PTSP</span>
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, jam operasional pelayanan madrasah buka sampai jam berapa ya?')">🕒 Jam Pelayanan</span>
+                </div>
+
+                    </div>
+        <div id="liveCardMessagesList"></div>
+    </div>
+
+    <!-- Attachment Preview Bar Client -->
+    <div id="liveCardFilePreviewBar" class="live-card-file-preview" style="display: none;"></div>
+
+    <!-- Footer / Input -->
+    <div class="live-card-footer">
+        <input type="file" id="liveCardFileInput" style="display: none;" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" onchange="handleLiveClientFileSelected(this)">
+        <button type="button" class="live-card-attach-btn" onclick="document.getElementById('liveCardFileInput').click()" title="Kirim Foto / File (PDF, Word, Excel)">
+            <i class="fa fa-paperclip"></i>
+        </button>
+        <input type="text" id="liveCardInputText" class="live-card-input" placeholder="Tulis pesan atau pertanyaan..." onkeypress="handleLiveKeyPress(event)">
+        <button type="button" id="liveCardSendBtn" class="live-card-send-btn" onclick="sendLiveMessage()">
+            <i class="fa fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<!-- JAVASCRIPT LIVE CARD CONTROLLER -->
+<script>
+(function() {
+    var liveApiUrl = 'api/live_card.php';
+    var lcIsAdmin  = false;
+    var lcRoleDefaultTheme = 'emerald';
+
+    // =========================================================================
+    // THEME CONTROLLER (Ganti Warna Balon & Header)
+    // =========================================================================
+    window.toggleLiveCardThemePalette = function(ctx) {
+        var bar = (ctx === 'admin') ? document.getElementById('adminDeskThemeBar') : document.getElementById('clientLiveCardThemeBar');
+        if (!bar) return;
+        bar.style.display = (bar.style.display === 'none' || !bar.style.display) ? 'flex' : 'none';
+    };
+
+    window.setLiveCardTheme = function(themeName) {
+        var activeTheme = (themeName === 'auto') ? lcRoleDefaultTheme : themeName;
+
+        try {
+            localStorage.setItem('live_card_custom_theme', themeName);
+        } catch(e) {}
+
+        var allThemes = ['lc-theme-emerald', 'lc-theme-indigo', 'lc-theme-sapphire', 'lc-theme-teal', 'lc-theme-amber', 'lc-theme-ruby', 'lc-theme-obsidian'];
+        allThemes.forEach(function(cls) {
+            document.body.classList.remove(cls);
+            var balloon = document.getElementById('btnLiveCardBalloon');
+            if (balloon) balloon.classList.remove(cls);
+            var popupA = document.getElementById('adminDeskPopup');
+            if (popupA) popupA.classList.remove(cls);
+            var popupC = document.getElementById('clientLiveCardPopup');
+            if (popupC) popupC.classList.remove(cls);
+        });
+
+        var targetCls = 'lc-theme-' + activeTheme;
+        document.body.classList.add(targetCls);
+        var balloon = document.getElementById('btnLiveCardBalloon');
+        if (balloon) balloon.classList.add(targetCls);
+        var popupA = document.getElementById('adminDeskPopup');
+        if (popupA) popupA.classList.add(targetCls);
+        var popupC = document.getElementById('clientLiveCardPopup');
+        if (popupC) popupC.classList.add(targetCls);
+
+        // Highlight active swatch dot
+        document.querySelectorAll('.lc-swatch-dot').forEach(function(dot) {
+            if (dot.getAttribute('data-theme') === themeName) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    };
+
+    // Muat tema tersimpan atau gunakan default peran
+    (function initTheme() {
+        var savedTheme = 'auto';
+        try {
+            savedTheme = localStorage.getItem('live_card_custom_theme') || 'auto';
+        } catch(e) {}
+        setLiveCardTheme(savedTheme);
+    })();
+
+    // =========================================================================
+    // 0. CONTROLLER DRAGGABLE BALLOON (Bisa dipindah ke kiri/kanan/atas/bawah untuk semua role)
+    // =========================================================================
+    (function initDraggableBalloon() {
+        var btn = document.getElementById('btnLiveCardBalloon');
+        if (!btn) return;
+
+        var isDragging = false;
+        var hasMoved = false;
+        var startX = 0;
+        var startY = 0;
+        var initialLeft = 0;
+        var initialTop = 0;
+        var threshold = 5;
+
+        // Posisi default: selalu kembali ke posisi semula (bottom-right) saat refresh atau logout
+        function restorePosition() {
+            try {
+                localStorage.removeItem('live_card_balloon_pos');
+                sessionStorage.removeItem('live_card_balloon_pos');
+            } catch(e) {}
+            // Pastikan posisi kembali ke nilai CSS default jika tidak sedang digeser
+            if (!isDragging && !hasMoved) {
+                btn.style.left = '';
+                btn.style.top = '';
+                btn.style.right = '';
+                btn.style.bottom = '';
+                btn.classList.remove('is-left-docked');
+            }
+        }
+        restorePosition();
+        window.addEventListener('resize', restorePosition);
+
+        // Menyesuaikan posisi popup terhadap letak balon
+        window.repositionLiveCardPopup = function() {
+            var popup = document.querySelector('.live-card-popup.active');
+            if (!popup) return;
+            var rect = btn.getBoundingClientRect();
+            var popW = popup.offsetWidth || 380;
+            var popH = popup.offsetHeight || 520;
+            var winW = window.innerWidth;
+            var winH = window.innerHeight;
+
+            var left, top;
+            // Posisi horizontal: sejajar dengan balon atau di sisi dalam layar
+            if (rect.left + popW <= winW - 15) {
+                left = Math.max(15, rect.left);
+            } else if (rect.right - popW >= 15) {
+                left = rect.right - popW;
+            } else {
+                left = Math.max(15, (winW - popW) / 2);
+            }
+
+            // Posisi vertikal: utamakan di atas balon jika cukup ruang, atau di bawah jika di atas sempit
+            if (rect.top - popH - 12 >= 15) {
+                top = rect.top - popH - 12;
+            } else if (rect.bottom + popH + 12 <= winH - 15) {
+                top = rect.bottom + 12;
+            } else {
+                top = Math.max(15, (winH - popH) / 2);
+            }
+
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+            popup.style.right = 'auto';
+            popup.style.bottom = 'auto';
+        };
+
+        function onStart(e) {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+
+            var clientX = e.type.indexOf('touch') !== -1 ? e.touches[0].clientX : e.clientX;
+            var clientY = e.type.indexOf('touch') !== -1 ? e.touches[0].clientY : e.clientY;
+
+            var rect = btn.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            startX = clientX;
+            startY = clientY;
+            isDragging = true;
+            hasMoved = false;
+
+            document.addEventListener('mousemove', onMove, { passive: false });
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+
+        function onMove(e) {
+            if (!isDragging) return;
+
+            var clientX = e.type.indexOf('touch') !== -1 ? e.touches[0].clientX : e.clientX;
+            var clientY = e.type.indexOf('touch') !== -1 ? e.touches[0].clientY : e.clientY;
+
+            var dx = clientX - startX;
+            var dy = clientY - startY;
+
+            if (!hasMoved && Math.hypot(dx, dy) > threshold) {
+                hasMoved = true;
+                btn.classList.add('is-dragging');
+            }
+
+            if (hasMoved) {
+                if (e.cancelable) e.preventDefault();
+
+                var winW = window.innerWidth;
+                var winH = window.innerHeight;
+                var btnW = btn.offsetWidth || 52;
+                var btnH = btn.offsetHeight || 52;
+
+                var newLeft = Math.max(8, Math.min(initialLeft + dx, winW - btnW - 8));
+                var newTop  = Math.max(8, Math.min(initialTop + dy, winH - btnH - 8));
+
+                btn.style.left = newLeft + 'px';
+                btn.style.top = newTop + 'px';
+                btn.style.right = 'auto';
+                btn.style.bottom = 'auto';
+
+                if (newLeft < 140) {
+                    btn.classList.add('is-left-docked');
+                } else {
+                    btn.classList.remove('is-left-docked');
+                }
+
+                if (window.repositionLiveCardPopup) {
+                    window.repositionLiveCardPopup();
+                }
+            }
+        }
+
+        function onEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+
+            if (hasMoved) {
+                btn.classList.remove('is-dragging');
+                if (window.repositionLiveCardPopup) {
+                    window.repositionLiveCardPopup();
+                }
+
+                // Cegah pemicu klik toggle jika pengguna sedang menggeser (drag)
+                var preventClick = function(ev) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    btn.removeEventListener('click', preventClick, true);
+                };
+                btn.addEventListener('click', preventClick, true);
+            }
+        }
+
+        btn.addEventListener('mousedown', onStart);
+        btn.addEventListener('touchstart', onStart, { passive: true });
+    })();
+
+    function resolveAvatarUrl(fotoPath) {
+        if (!fotoPath || fotoPath === '0' || fotoPath === 'null' || fotoPath === '') return '';
+        if (fotoPath.indexOf('http://') === 0 || fotoPath.indexOf('https://') === 0) return fotoPath;
+        var isSubdir = (window.location.pathname.indexOf('/user') !== -1 || window.location.pathname.indexOf('/login') !== -1);
+        var prefix = isSubdir ? '../' : '';
+        if (fotoPath.indexOf('/') === 0) return fotoPath;
+        return prefix + fotoPath;
+    }
+
+    // =========================================================================
+    // A. LOGIKA KHUSUS ADMIN & SUPER ADMIN (MINI LIVE DESK)
+    // =========================================================================
+    if (lcIsAdmin) {
+        var isAdminDeskOpen = false;
+        var currentAdminFilter = '';
+        var currentChatToken = '';
+        var currentChatUser = null;
+        var adminDeskPingTimer = null;
+        var adminDeskChatTimer = null;
+        var isDeskSoundEnabled = true;
+        var previousUnreadCount = 0;
+
+        window.toggleAdminDeskPopup = function() {
+            var popup = document.getElementById('adminDeskPopup');
+            var svgChat = document.getElementById('liveCardSvgChat');
+            var svgClose = document.getElementById('liveCardSvgClose');
+            var icon = document.getElementById('liveCardIcon');
+            isAdminDeskOpen = !isAdminDeskOpen;
+
+            if (isAdminDeskOpen) {
+                popup.classList.add('active');
+                if (window.repositionLiveCardPopup) window.repositionLiveCardPopup();
+                if (svgChat) svgChat.style.display = 'none';
+                if (svgClose) svgClose.style.display = 'block';
+                if (icon) icon.className = 'fa fa-times';
+                sessionStorage.setItem('admin_desk_open', '1');
+                fetchAdminDeskCards();
+            } else {
+                popup.classList.remove('active');
+                if (svgChat) svgChat.style.display = 'block';
+                if (svgClose) svgClose.style.display = 'none';
+                if (icon) icon.className = 'fa fa-comments';
+                sessionStorage.setItem('admin_desk_open', '0');
+                if (adminDeskChatTimer) clearInterval(adminDeskChatTimer);
+            }
+        };
+
+        window.setAdminDeskFilter = function(role, btn) {
+            currentAdminFilter = role;
+            document.querySelectorAll('.admin-filter-pill').forEach(function(el) { el.classList.remove('active'); });
+            btn.classList.add('active');
+            fetchAdminDeskCards();
+        };
+
+        window.toggleDeskSound = function() {
+            isDeskSoundEnabled = !isDeskSoundEnabled;
+            var icon = document.getElementById('iconDeskSound');
+            if (isDeskSoundEnabled) {
+                icon.className = 'fa fa-bell';
+                icon.style.color = '#ffffff';
+                playAdminChime(); // Bunyikan tes nada agar admin tahu suara aktif
+            } else {
+                icon.className = 'fa fa-bell-slash';
+                icon.style.color = 'rgba(255,255,255,0.6)';
+            }
+        };
+
+        var deskAudioCtx = null;
+        function getDeskAudioCtx() {
+            if (!deskAudioCtx) {
+                var AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) deskAudioCtx = new AudioCtx();
+            }
+            return deskAudioCtx;
+        }
+
+        // Buka suspensi audio browser saat admin pertama kali klik halaman
+        document.addEventListener('click', function unlockAudio() {
+            var ctx = getDeskAudioCtx();
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }, { once: false });
+
+        function playAdminChime() {
+            if (!isDeskSoundEnabled) return;
+            try {
+                var ctx = getDeskAudioCtx();
+                if (!ctx) return;
+
+                var playTones = function() {
+                    var now = ctx.currentTime;
+                    // Nada 1: 587Hz (D5)
+                    var osc1 = ctx.createOscillator();
+                    var gain1 = ctx.createGain();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(587.33, now);
+                    gain1.gain.setValueAtTime(0.3, now);
+                    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc1.connect(gain1);
+                    gain1.connect(ctx.destination);
+                    osc1.start(now);
+                    osc1.stop(now + 0.35);
+
+                    // Nada 2: 880Hz (A5) - nada ceria
+                    var osc2 = ctx.createOscillator();
+                    var gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880.00, now + 0.12);
+                    gain2.gain.setValueAtTime(0.35, now + 0.12);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(now + 0.12);
+                    osc2.stop(now + 0.65);
+                };
+
+                if (ctx.state === 'suspended') {
+                    ctx.resume().then(playTones);
+                } else {
+                    playTones();
+                }
+            } catch(e) {}
+        }
+
+        var hasInitialLoadedDesk = false;
+
+        window.fetchAdminDeskCards = function() {
+            var icon = document.getElementById('iconDeskRefresh');
+            if (icon) icon.classList.add('fa-spin');
+
+            fetch(liveApiUrl + '?action=admin_get_cards&filter_role=' + encodeURIComponent(currentAdminFilter))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (icon) icon.classList.remove('fa-spin');
+                if (data.status === 'ok') {
+                    renderAdminDeskCards(data.cards);
+                    updateAdminDeskStats(data);
+
+                    // Update Badge Balon
+                    var badge = document.getElementById('liveCardUnreadBadge');
+                    if (badge) {
+                        if (data.total_unread > 0) {
+                            badge.innerText = data.total_unread;
+                            badge.style.display = 'flex';
+                            badge.style.background = '#ef4444';
+                        } else if (data.total_online > 0) {
+                            badge.innerText = data.total_online;
+                            badge.style.display = 'flex';
+                            badge.style.background = '#10b981';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+
+                    // Bunyikan chime setiap kali ada pesan baru yang masuk
+                    if (!hasInitialLoadedDesk) {
+                        hasInitialLoadedDesk = true;
+                        previousUnreadCount = data.total_unread || 0;
+                    } else {
+                        if (data.total_unread > previousUnreadCount) {
+                            playAdminChime();
+                        }
+                        previousUnreadCount = data.total_unread || 0;
+                    }
+                }
+            })
+            .catch(function() {
+                if (icon) icon.classList.remove('fa-spin');
+            });
+        };
+
+        function updateAdminDeskStats(data) {
+            var onlineText = document.getElementById('adminDeskOnlineText');
+            if (onlineText) onlineText.innerText = (data.total_online || 0) + ' Pengguna Online';
+            var totalCards = document.getElementById('adminDeskTotalCards');
+            if (totalCards) totalCards.innerText = (data.cards ? data.cards.length : 0) + ' Kartu';
+        }
+
+        function renderAdminDeskCards(cards) {
+            var container = document.getElementById('adminDeskCardsList');
+            if (!container) return;
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = 
+                    '<div class="text-center py-5 text-muted">' +
+                    '<div style="width:50px; height:50px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:22px; color:#94a3b8;">' +
+                    '<i class="fa fa-comments-o"></i>' +
+                    '</div>' +
+                    '<strong style="color:#475569; font-size:13px;">Belum Ada Kartu Masuk</strong>' +
+                    '<p style="font-size:11.5px; margin-top:4px;">Saat siswa, guru, atau tamu mengirim pesan, kartu mereka otomatis muncul di sini.</p>' +
+                    '</div>';
+                return;
+            }
+
+            var html = '';
+            cards.forEach(function(c) {
+                var roleBadge = '<span class="badge badge-info text-white" style="font-size:10px;">Siswa</span>';
+                var borderLeft = '#0284c7';
+                var bgFallback = '#0284c7';
+
+                if (c.user_type === 'guru') {
+                    roleBadge = '<span class="badge badge-success text-white" style="font-size:10px;">Guru / PTK</span>';
+                    borderLeft = '#059669';
+                    bgFallback = '#059669';
+                } else if (c.user_type === 'ortu' || c.user_type === 'umum') {
+                    roleBadge = '<span class="badge badge-warning text-dark font-weight-bold" style="font-size:10px;">Orang Tua / Tamu</span>';
+                    borderLeft = '#d97706';
+                    bgFallback = '#d97706';
+                }
+
+                var resolvedFoto = resolveAvatarUrl(c.foto);
+                var initial = (c.nama && c.nama.trim().length > 0) ? c.nama.trim().charAt(0).toUpperCase() : '?';
+
+                var unreadTag = (c.unread > 0) ?
+                    '<span class="badge badge-danger px-2 py-0 ml-auto" style="font-size:10.5px; border-radius:10px; animation: liveBadgeBounce 0.4s ease;"><i class="fa fa-envelope"></i> ' + c.unread + ' Baru</span>' : '';
+
+                html += '<div class="admin-card-item" style="border-left: 4px solid ' + borderLeft + '; display: flex; gap: 11px; align-items: flex-start;" onclick="openAdminDeskChat(\'' + c.token + '\', \'' + escapeHtml(c.nama) + '\', \'' + c.user_type + '\', \'' + escapeHtml(c.keterangan) + '\', ' + c.is_online + ', \'' + escapeHtml(c.foto || '') + '\')">';
+
+                // Foto Avatar Siswa / Guru dengan Indikator Online
+                html += '<div class="admin-card-avatar-box">';
+                if (resolvedFoto) {
+                    html += '<img src="' + resolvedFoto + '" alt="Foto ' + escapeHtml(c.nama) + '" class="admin-card-avatar-img" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">';
+                    html += '<div class="admin-card-avatar-fallback" style="display:none; background:' + bgFallback + ';">' + initial + '</div>';
+                } else {
+                    html += '<div class="admin-card-avatar-fallback" style="background:' + bgFallback + ';">' + initial + '</div>';
+                }
+                html += '<span class="' + (c.is_online ? 'admin-card-avatar-online' : 'admin-card-avatar-offline') + '"></span>';
+                html += '</div>';
+
+                // Kolom Konten Kartu
+                html += '<div style="flex: 1; min-width: 0;">';
+                html += '<div class="d-flex align-items-center justify-content-between mb-1">';
+                html += '<div class="d-flex align-items-center" style="gap:6px;">';
+                html += roleBadge;
+                html += '<small class="text-muted ml-1" style="font-size:10px;">' + (c.last_pesan_time || c.last_active) + '</small>';
+                html += '</div>';
+                html += unreadTag;
+                html += '</div>';
+
+                html += '<div class="font-weight-bold text-dark" style="font-size:13.5px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(c.nama) + '</div>';
+                html += '<div class="text-muted" style="font-size:11px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fa fa-info-circle mr-1"></i>' + escapeHtml(c.keterangan) + '</div>';
+
+                html += '<div style="background:#f8fafc; border-radius:8px; padding:6px 10px; font-size:12px; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">';
+                html += '<span style="color:#6366f1; font-weight:600;">' + (c.unread > 0 ? '📩 ' : '') + '</span>' + escapeHtml(c.last_pesan);
+                html += '</div>';
+
+                html += '</div>'; // End Kolom Konten
+                html += '</div>'; // End admin-card-item
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Buka Chat dengan User Tertentu di dalam Balon
+        window.openAdminDeskChat = function(token, nama, role, keterangan, isOnline, foto) {
+            currentChatToken = token;
+            currentChatUser = { nama: nama, role: role, keterangan: keterangan, isOnline: isOnline, foto: foto };
+
+            document.getElementById('adminDeskListView').style.display = 'none';
+            var chatView = document.getElementById('adminDeskChatView');
+            chatView.style.display = 'flex';
+
+            document.getElementById('adminChatHeaderNama').innerText = nama;
+            document.getElementById('adminChatHeaderRole').innerText = (role === 'siswa' ? 'Siswa' : (role === 'guru' ? 'Guru' : 'Orang Tua'));
+            document.getElementById('adminChatHeaderStatus').innerText = isOnline ? '● Online' : '○ Offline';
+            document.getElementById('adminChatHeaderStatus').style.color = isOnline ? '#10b981' : '#94a3b8';
+
+            // Set Foto di Chat Header
+            var avatarImg = document.getElementById('adminChatHeaderAvatarImg');
+            var avatarFallback = document.getElementById('adminChatHeaderAvatarFallback');
+            var onlineDot = document.getElementById('adminChatHeaderOnlineDot');
+            var resolved = resolveAvatarUrl(foto);
+            var initial = (nama && nama.trim().length > 0) ? nama.trim().charAt(0).toUpperCase() : '?';
+            var bgFallback = (role === 'guru') ? '#059669' : ((role === 'ortu') ? '#d97706' : '#0284c7');
+
+            if (onlineDot) {
+                onlineDot.className = isOnline ? 'admin-card-avatar-online' : 'admin-card-avatar-offline';
+            }
+            if (avatarFallback) {
+                avatarFallback.style.background = bgFallback;
+                avatarFallback.innerText = initial;
+            }
+            if (avatarImg && avatarFallback) {
+                if (resolved) {
+                    avatarImg.src = resolved;
+                    avatarImg.style.display = 'block';
+                    avatarFallback.style.display = 'none';
+                    avatarImg.onerror = function() {
+                        avatarImg.style.display = 'none';
+                        avatarFallback.style.display = 'flex';
+                    };
+                } else {
+                    avatarImg.style.display = 'none';
+                    avatarFallback.style.display = 'flex';
+                }
+            }
+
+            loadAdminDeskChatMessages();
+            if (adminDeskChatTimer) clearInterval(adminDeskChatTimer);
+            adminDeskChatTimer = setInterval(loadAdminDeskChatMessages, 3000);
+
+            try {
+                sessionStorage.setItem('admin_desk_current_chat', JSON.stringify({ token: token, nama: nama, role: role, keterangan: keterangan, isOnline: isOnline, foto: foto }));
+            } catch(e) {}
+
+            setTimeout(function() {
+                var input = document.getElementById('adminDeskInputText');
+                if (input) input.focus();
+            }, 250);
+        };
+
+        window.backToAdminDeskList = function() {
+            if (adminDeskChatTimer) clearInterval(adminDeskChatTimer);
+            document.getElementById('adminDeskChatView').style.display = 'none';
+            document.getElementById('adminDeskListView').style.display = 'flex';
+            currentChatToken = '';
+            try { sessionStorage.removeItem('admin_desk_current_chat'); } catch(e) {}
+            fetchAdminDeskCards();
+        };
+
+        function loadAdminDeskChatMessages() {
+            if (!currentChatToken) return;
+
+            fetch(liveApiUrl + '?action=get_messages&token=' + encodeURIComponent(currentChatToken) + '&role=admin')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === 'ok' && data.messages) {
+                    if (data.session && (!currentChatUser.foto || currentChatUser.foto === '')) {
+                        currentChatUser.foto = data.session.foto || '';
+                    }
+                    renderAdminDeskChatMessages(data.messages);
+                }
+            })
+            .catch(function() {});
+        }
+
+        function renderAdminDeskChatMessages(messages) {
+            var list = document.getElementById('adminDeskMessagesList');
+            var body = document.getElementById('adminDeskMessagesBody');
+            if (!list) return;
+
+            var userFoto = (currentChatUser && currentChatUser.foto) ? resolveAvatarUrl(currentChatUser.foto) : '';
+            var userInitial = (currentChatUser && currentChatUser.nama) ? currentChatUser.nama.trim().charAt(0).toUpperCase() : '?';
+            var userBg = (currentChatUser && currentChatUser.role === 'guru') ? '#059669' : ((currentChatUser && currentChatUser.role === 'ortu') ? '#d97706' : '#0284c7');
+
+            var html = '';
+            messages.forEach(function(m) {
+                var isAdmin = (m.sender_type === 'admin');
+                html += '<div style="display: flex; gap: 8px; margin-bottom: 8px; justify-content: ' + (isAdmin ? 'flex-end' : 'flex-start') + '; align-items: flex-end;">';
+
+                // Avatar Pengirim Siswa/Guru di sisi kiri
+                if (!isAdmin) {
+                    html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background:' + userBg + '; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                    if (userFoto) {
+                        html += '<img src="' + userFoto + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">';
+                        html += '<span style="display:none;">' + userInitial + '</span>';
+                    } else {
+                        html += '<span>' + userInitial + '</span>';
+                    }
+                    html += '</div>';
+                }
+
+                html += '<div class="live-bubble ' + (isAdmin ? 'live-bubble-client' : 'live-bubble-admin') + '" style="margin: 0; max-width: 78%;">';
+                if (!isAdmin) {
+                    html += '<strong style="font-size:11px; display:block; margin-bottom:2px; color:#4f46e5;">' + escapeHtml(m.sender_name) + '</strong>';
+                }
+                html += renderLiveMessageBody(m);
+                html += '<div class="live-bubble-meta">';
+                html += '<span>' + m.time + '</span>';
+                if (isAdmin) html += '<i class="fa fa-check" style="font-size:9px;"></i>';
+                html += '</div>';
+                html += '</div>';
+
+                // Avatar Admin di sisi kanan
+                if (isAdmin) {
+                    html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #4f46e5; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                    html += '<i class="fa fa-shield" style="font-size: 13px;"></i>';
+                    html += '</div>';
+                }
+
+                html += '</div>';
+            });
+
+            list.innerHTML = html;
+            if (body) body.scrollTop = body.scrollHeight;
+        }
+
+        var selectedAdminDeskFile = null;
+
+        window.handleAdminDeskFileSelected = function(input) {
+            if (input.files && input.files[0]) {
+                var file = input.files[0];
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Ukuran file maksimal 10 MB');
+                    input.value = '';
+                    return;
+                }
+                selectedAdminDeskFile = file;
+                var bar = document.getElementById('adminDeskFilePreviewBar');
+                if (bar) {
+                    bar.style.display = 'flex';
+                    bar.innerHTML = '<span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i class="fa fa-paperclip text-primary"></i> <strong>' + escapeHtml(file.name) + '</strong> (' + Math.round(file.size/1024) + ' KB)</span>' +
+                        '<button type="button" onclick="clearAdminDeskFileAttachment()" style="background:none; border:none; color:#ef4444; font-size:13px; cursor:pointer;" title="Batal"><i class="fa fa-times-circle"></i></button>';
+                }
+            }
+        };
+
+        window.clearAdminDeskFileAttachment = function() {
+            selectedAdminDeskFile = null;
+            var inp = document.getElementById('adminDeskFileInput');
+            if (inp) inp.value = '';
+            var bar = document.getElementById('adminDeskFilePreviewBar');
+            if (bar) bar.style.display = 'none';
+        };
+
+        window.adminDeskQuickReply = function(text) {
+            var input = document.getElementById('adminDeskInputText');
+            if (input) {
+                input.value = text;
+                adminDeskSendReply();
+            }
+        };
+
+        window.handleAdminDeskKey = function(e) {
+            if (e.key === 'Enter') adminDeskSendReply();
+        };
+
+        window.adminDeskSendReply = function() {
+            var input = document.getElementById('adminDeskInputText');
+            var text = input ? input.value.trim() : '';
+            if (!text && !selectedAdminDeskFile) return;
+            if (!currentChatToken) return;
+
+            var btn = document.getElementById('adminDeskSendBtn');
+            btn.disabled = true;
+
+            var formData = new FormData();
+            formData.append('action', 'send_message');
+            formData.append('token', currentChatToken);
+            formData.append('sender_type', 'admin');
+            formData.append('sender_name', 'Administrator');
+            formData.append('pesan', text);
+            if (selectedAdminDeskFile) {
+                formData.append('file', selectedAdminDeskFile);
+            }
+
+            fetch(liveApiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                if (data.status === 'ok') {
+                    if (input) input.value = '';
+                    clearAdminDeskFileAttachment();
+                    loadAdminDeskChatMessages();
+                } else {
+                    alert(data.pesan || 'Gagal mengirim pesan');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+            });
+        };
+
+        window.adminDeskResolveSession = function() {
+            if (!currentChatToken) return;
+            if (!confirm('Tandai sesi bantuan ini telah selesai?')) return;
+
+            var formData = new FormData();
+            formData.append('action', 'close_session');
+            formData.append('token', currentChatToken);
+
+            fetch(liveApiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function() {
+                try { sessionStorage.removeItem('admin_desk_current_chat'); } catch(e) {}
+                backToAdminDeskList();
+            });
+        };
+
+        window.adminDeskDeleteCurrentSession = function() {
+            if (!currentChatToken) return;
+            if (!confirm('Hapus percakapan dengan pengguna ini secara permanen?')) return;
+
+            var formData = new FormData();
+            formData.append('action', 'delete_chat');
+            formData.append('token', currentChatToken);
+
+            fetch(liveApiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                try { sessionStorage.removeItem('admin_desk_current_chat'); } catch(e) {}
+                alert(data.pesan || 'Percakapan berhasil dihapus');
+                backToAdminDeskList();
+            });
+        };
+
+        window.adminDeskPromptClean = function() {
+            var pilih = prompt(
+                "PEMBERSIHAN LIVE CHAT:\n\n" +
+                "1 = Hapus SEMUA sesi kosong (yang belum ada pesannya)\n" +
+                "reset = Hapus SEMUA chat & sesi uji coba (reset total)\n\n" +
+                "Ketik '1' atau 'reset' lalu klik OK:",
+                "1"
+            );
+            if (!pilih) return;
+            pilih = pilih.trim().toLowerCase();
+
+            if (pilih === '1') {
+                var formData = new FormData();
+                formData.append('action', 'clean_empty');
+                fetch(liveApiUrl, { method: 'POST', body: formData })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    alert(data.pesan || 'Selesai!');
+                    fetchAdminDeskCards();
+                });
+            } else if (pilih === 'reset') {
+                if (confirm('PERINGATAN: Seluruh riwayat obrolan dan sesi uji coba akan dihapus bersih secara permanen. Lanjutkan?')) {
+                    var formData = new FormData();
+                    formData.append('action', 'reset_all');
+                    fetch(liveApiUrl, { method: 'POST', body: formData })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        alert(data.pesan || 'Semua riwayat obrolan berhasil direset!');
+                        fetchAdminDeskCards();
+                    });
+                }
+            } else {
+                alert('Pilihan tidak valid.');
+            }
+        };
+
+        // Mulai polling berkala admin tiap 5 detik
+        fetchAdminDeskCards();
+        adminDeskPingTimer = setInterval(fetchAdminDeskCards, 5000);
+
+        // Pertahankan status buka & chat aktif jika sebelumnya sedang dibuka sebelum refresh
+        if (sessionStorage.getItem('admin_desk_open') === '1') {
+            toggleAdminDeskPopup();
+            var savedChat = sessionStorage.getItem('admin_desk_current_chat');
+            if (savedChat) {
+                try {
+                    var sc = JSON.parse(savedChat);
+                    if (sc && sc.token) {
+                        openAdminDeskChat(sc.token, sc.nama, sc.role, sc.keterangan, sc.isOnline, sc.foto);
+                    }
+                } catch(e) {}
+            }
+        }
+        return;
+    }
+
+    // =========================================================================
+    // B. LOGIKA CLIENT (SISWA, GURU, ORANG TUA, TAMU)
+    // =========================================================================
+    var liveUserData = {
+        user_type: 'umum',
+        id_user: '0',
+        nama: 'Tamu Madrasah',
+        keterangan: 'Layanan Informasi Publik',
+        foto: ''
+    };
+
+    // Kunci storage yang terisolasi per jenis user dan id_user agar tidak bercampur antara landing page dan akun siswa/guru:
+    var storageKey = 'madrasah_live_card_token_guest';
+    if (liveUserData.user_type === 'siswa' && liveUserData.id_user && liveUserData.id_user !== '0') {
+        storageKey = 'madrasah_live_card_token_siswa_' + liveUserData.id_user;
+    } else if (liveUserData.user_type === 'guru' && liveUserData.id_user && liveUserData.id_user !== '0') {
+        storageKey = 'madrasah_live_card_token_guru_' + liveUserData.id_user;
+    }
+
+    // Bersihkan token generic lama jika pernah tersimpan
+    localStorage.removeItem('madrasah_live_card_token');
+
+    var liveToken = localStorage.getItem(storageKey);
+    if (!liveToken) {
+        liveToken = 'tok_' + liveUserData.user_type + '_' + (liveUserData.id_user || 'guest') + '_' + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem(storageKey, liveToken);
+    }
+
+    // Cek apakah pengguna saat ini adalah tamu / pengunjung umum (tanpa login akun)
+    var isGuest = (liveUserData.user_type === 'umum' || liveUserData.user_type === 'ortu' || !liveUserData.id_user || liveUserData.id_user === '0' || liveUserData.id_user === 0);
+    var hasMessagedKey = 'madrasah_live_has_messaged_' + liveToken;
+    var hasMessaged = (localStorage.getItem(hasMessagedKey) === '1');
+
+    // Cek nama tersimpan untuk tamu/orang tua
+    var savedGuestName = localStorage.getItem('madrasah_live_guest_name');
+    if (savedGuestName && (liveUserData.user_type === 'umum' || liveUserData.user_type === 'ortu')) {
+        liveUserData.nama = savedGuestName;
+        liveUserData.user_type = 'ortu';
+        liveUserData.keterangan = 'Wali Murid / Tamu';
+        setTimeout(function() {
+            var heading = document.getElementById('liveCardWelcomeHeading');
+            if (heading) heading.innerText = "Assalamu'alaikum, " + savedGuestName + '! 👋';
+            var inputGuest = document.getElementById('liveCardGuestName');
+            if (inputGuest) inputGuest.value = savedGuestName;
+        }, 100);
+    }
+
+    window.updateGuestName = function(val) {
+        var clean = val ? val.trim() : '';
+        if (clean) {
+            liveUserData.nama = clean;
+            liveUserData.user_type = 'ortu';
+            liveUserData.keterangan = 'Wali Murid / Tamu';
+            localStorage.setItem('madrasah_live_guest_name', clean);
+            var heading = document.getElementById('liveCardWelcomeHeading');
+            if (heading) heading.innerText = "Assalamu'alaikum, " + clean + '! 👋';
+            if (!isGuest || hasMessaged) {
+                runClientLivePing();
+            }
+        }
+    };
+
+    var isClientLiveOpen = false;
+    var clientPingTimer = null;
+
+    window.toggleClientLiveCardPopup = function() {
+        var popup = document.getElementById('clientLiveCardPopup');
+        var svgChat = document.getElementById('liveCardSvgChat');
+        var svgClose = document.getElementById('liveCardSvgClose');
+        var icon = document.getElementById('liveCardIcon');
+        if (!popup) return;
+        isClientLiveOpen = !isClientLiveOpen;
+
+        if (isClientLiveOpen) {
+            popup.classList.add('active');
+            if (window.repositionLiveCardPopup) window.repositionLiveCardPopup();
+            if (svgChat) svgChat.style.display = 'none';
+            if (svgClose) svgClose.style.display = 'block';
+            if (icon) icon.className = 'fa fa-times';
+            sessionStorage.setItem('client_live_card_open', '1');
+            document.getElementById('liveCardUnreadBadge').style.display = 'none';
+            
+            // Jika siswa/guru, atau tamu yang sudah pernah mengirim pesan sebelumnya:
+            if (!isGuest || hasMessaged) {
+                fetchClientLiveMessages();
+                if (!clientPingTimer) {
+                    runClientLivePing();
+                    clientPingTimer = setInterval(runClientLivePing, 5000);
+                }
+            }
+            setTimeout(function() {
+                var input = document.getElementById('liveCardInputText');
+                if (input) input.focus();
+            }, 250);
+        } else {
+            popup.classList.remove('active');
+            if (svgChat) svgChat.style.display = 'block';
+            if (svgClose) svgClose.style.display = 'none';
+            if (icon) icon.className = 'fa fa-comments-o';
+            sessionStorage.setItem('client_live_card_open', '0');
+        }
+    };
+
+    window.openRuangCurhatBK = function() {
+        toggleClientLiveCardPopup();
+        if (typeof $ !== 'undefined' && $('#modalTulisCurhat').length > 0) {
+            $('#modalTulisCurhat').modal('show');
+        } else {
+            var curhatUrl = (window.location.pathname.indexOf('/user') !== -1) ? 'index.php?pg=curhat_saya' : 'user/index.php?pg=curhat_saya';
+            window.location.href = curhatUrl;
+        }
+    };
+
+    window.quickSend = function(text) {
+        var input = document.getElementById('liveCardInputText');
+        if (input) {
+            input.value = text;
+            sendLiveMessage();
+        }
+    };
+
+    window.handleLiveKeyPress = function(e) {
+        if (e.key === 'Enter') sendLiveMessage();
+    };
+
+    var selectedClientFile = null;
+
+    window.handleLiveClientFileSelected = function(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Ukuran file maksimal 10 MB');
+                input.value = '';
+                return;
+            }
+            selectedClientFile = file;
+            var bar = document.getElementById('liveCardFilePreviewBar');
+            if (bar) {
+                bar.style.display = 'flex';
+                bar.innerHTML = '<span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i class="fa fa-paperclip text-primary"></i> <strong>' + escapeHtml(file.name) + '</strong> (' + Math.round(file.size/1024) + ' KB)</span>' +
+                    '<button type="button" onclick="clearLiveClientFileAttachment()" style="background:none; border:none; color:#ef4444; font-size:13px; cursor:pointer;" title="Batal"><i class="fa fa-times-circle"></i></button>';
+            }
+        }
+    };
+
+    window.clearLiveClientFileAttachment = function() {
+        selectedClientFile = null;
+        var inp = document.getElementById('liveCardFileInput');
+        if (inp) inp.value = '';
+        var bar = document.getElementById('liveCardFilePreviewBar');
+        if (bar) bar.style.display = 'none';
+    };
+
+    window.sendLiveMessage = function() {
+        var input = document.getElementById('liveCardInputText');
+        var text = input ? input.value.trim() : '';
+        if (!text && !selectedClientFile) return;
+
+        var btn = document.getElementById('liveCardSendBtn');
+        btn.disabled = true;
+
+        var formData = new FormData();
+        formData.append('action', 'send_message');
+        formData.append('token', liveToken);
+        formData.append('sender_type', 'client');
+        formData.append('sender_name', liveUserData.nama);
+        formData.append('user_type', liveUserData.user_type);
+        formData.append('id_user', liveUserData.id_user || '');
+        formData.append('keterangan', liveUserData.keterangan || '');
+        formData.append('foto', liveUserData.foto || '');
+        formData.append('pesan', text);
+        if (selectedClientFile) {
+            formData.append('file', selectedClientFile);
+        }
+
+        fetch(liveApiUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            if (data.status === 'ok') {
+                if (input) input.value = '';
+                clearLiveClientFileAttachment();
+                localStorage.setItem(hasMessagedKey, '1');
+                hasMessaged = true;
+                fetchClientLiveMessages();
+                // Tamu sekarang sudah resmi aktif di live chat, mulai ping berkala
+                if (!clientPingTimer) {
+                    clientPingTimer = setInterval(runClientLivePing, 5000);
+                }
+            } else {
+                alert(data.pesan || 'Gagal mengirim pesan');
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+        });
+    };
+
+    function fetchClientLiveMessages() {
+        fetch(liveApiUrl + '?action=get_messages&token=' + encodeURIComponent(liveToken) + '&role=client')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'ok' && data.messages) {
+                renderClientLiveMessages(data.messages);
+            }
+        })
+        .catch(function() {});
+    }
+
+    function renderLiveMessageBody(m) {
+        var html = '';
+        var fileData = m.file;
+        if (!fileData && m.pesan && typeof m.pesan === 'string' && m.pesan.indexOf('[FILE:') === 0) {
+            try {
+                var jsonStr = m.pesan.replace(/^\[FILE:/, '').replace(/\]$/, '');
+                fileData = JSON.parse(jsonStr);
+            } catch(e) {}
+        }
+
+        if (fileData) {
+            var prefix = (window.location.pathname.indexOf('/login') !== -1 || window.location.pathname.indexOf('/user') !== -1) ? '../' : '';
+            var fileUrl = prefix + fileData.file_url;
+            var fileName = escapeHtml(fileData.file_name || 'Berkas');
+            var fileSize = fileData.file_size || '';
+            var fileExt = (fileData.file_ext || 'FILE').toUpperCase();
+            var category = fileData.file_category || 'other';
+
+            if (category === 'image') {
+                html += '<div style="margin-bottom:6px;">';
+                html += '<a href="' + fileUrl + '" target="_blank" download="' + fileName + '" style="display:block; text-decoration:none;">';
+                html += '<img src="' + fileUrl + '" alt="' + fileName + '" style="max-width:100%; max-height:200px; border-radius:10px; display:block; object-fit:cover; box-shadow:0 2px 6px rgba(0,0,0,0.15);">';
+                html += '</a>';
+                html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:11px; gap:8px;">';
+                html += '<span style="opacity:0.85; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + fileName + '</span>';
+                html += '<a href="' + fileUrl + '" target="_blank" download="' + fileName + '" style="padding:2px 8px; border-radius:10px; background:#ffffff; color:#0f172a; font-size:10px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
+                html += '<i class="fa fa-download"></i> Unduh</a>';
+                html += '</div>';
+                html += '</div>';
+            } else {
+                var iconClass = 'fa-file-text-o';
+                var iconBg = '#64748b';
+                if (category === 'pdf') {
+                    iconClass = 'fa-file-pdf-o';
+                    iconBg = '#ef4444';
+                } else if (category === 'word') {
+                    iconClass = 'fa-file-word-o';
+                    iconBg = '#2563eb';
+                } else if (category === 'excel') {
+                    iconClass = 'fa-file-excel-o';
+                    iconBg = '#10b981';
+                } else if (category === 'powerpoint') {
+                    iconClass = 'fa-file-powerpoint-o';
+                    iconBg = '#f97316';
+                } else if (category === 'archive') {
+                    iconClass = 'fa-file-archive-o';
+                    iconBg = '#8b5cf6';
+                }
+
+                html += '<div style="background:#ffffff; border-radius:10px; padding:8px 10px; display:flex; align-items:center; gap:9px; margin-bottom:5px; box-shadow:0 1px 4px rgba(0,0,0,0.12); color:#1e293b; text-align:left;">';
+                html += '<div style="width:34px; height:34px; border-radius:8px; background:' + iconBg + '; color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;">';
+                html += '<i class="fa ' + iconClass + '"></i>';
+                html += '</div>';
+                html += '<div style="flex:1; min-width:0;">';
+                html += '<div style="font-weight:700; font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a;" title="' + fileName + '">' + fileName + '</div>';
+                html += '<small style="color:#64748b; font-size:10px;">' + fileSize + ' • ' + fileExt + '</small>';
+                html += '</div>';
+                html += '<a href="' + fileUrl + '" target="_blank" download="' + fileName + '" style="width:28px; height:28px; border-radius:6px; background:#f1f5f9; color:#0f172a; display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; font-size:12px;" title="Unduh File">';
+                html += '<i class="fa fa-download"></i>';
+                html += '</a>';
+                html += '</div>';
+            }
+
+            if (fileData.caption && fileData.caption.trim()) {
+                html += '<div style="margin-top:4px; font-size:12.5px;">' + escapeHtml(fileData.caption) + '</div>';
+            }
+        } else {
+            html += escapeHtml(m.pesan);
+        }
+        return html;
+    }
+
+    function renderClientLiveMessages(messages) {
+        var listElem = document.getElementById('liveCardMessagesList');
+        if (!listElem) return;
+
+        var clientFoto = resolveAvatarUrl(liveUserData.foto);
+        var clientInitial = (liveUserData.nama) ? liveUserData.nama.trim().charAt(0).toUpperCase() : '?';
+        var clientBg = (liveUserData.user_type === 'guru') ? '#059669' : ((liveUserData.user_type === 'ortu') ? '#d97706' : '#6366f1');
+
+        var html = '';
+        messages.forEach(function(m) {
+            var isClient = (m.sender_type === 'client');
+            html += '<div style="display: flex; gap: 8px; margin-bottom: 8px; justify-content: ' + (isClient ? 'flex-end' : 'flex-start') + '; align-items: flex-end;">';
+
+            // Avatar Admin di sisi kiri jika pesan dari admin
+            if (!isClient) {
+                html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #7c3aed; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                html += '<i class="fa fa-shield" style="font-size: 13px;"></i>';
+                html += '</div>';
+            }
+
+            html += '<div class="live-bubble ' + (isClient ? 'live-bubble-client' : 'live-bubble-admin') + '" style="margin: 0; max-width: 78%;">';
+            if (!isClient) {
+                html += '<strong style="font-size:11px; display:block; margin-bottom:2px; color:#7c3aed;">' + escapeHtml(m.sender_name || 'Admin Madrasah') + '</strong>';
+            }
+            html += renderLiveMessageBody(m);
+            html += '<div class="live-bubble-meta">';
+            html += '<span>' + m.time + '</span>';
+            if (isClient) html += '<i class="fa fa-check" style="font-size:9px;"></i>';
+            html += '</div>';
+            html += '</div>';
+
+            // Avatar Siswa/Guru di sisi kanan jika pesan dari siswa/guru
+            if (isClient) {
+                html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background:' + clientBg + '; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                if (clientFoto) {
+                    html += '<img src="' + clientFoto + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">';
+                    html += '<span style="display:none;">' + clientInitial + '</span>';
+                } else {
+                    html += '<span>' + clientInitial + '</span>';
+                }
+                html += '</div>';
+            }
+
+            html += '</div>';
+        });
+
+        listElem.innerHTML = html;
+        var box = document.getElementById('liveCardMessagesBox');
+        if (box) box.scrollTop = box.scrollHeight;
+    }
+
+    var clientAudioCtx = null;
+    function getClientAudioCtx() {
+        if (!clientAudioCtx) {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) clientAudioCtx = new AudioCtx();
+        }
+        return clientAudioCtx;
+    }
+
+    document.addEventListener('click', function unlockClientAudio() {
+        var ctx = getClientAudioCtx();
+        if (ctx && ctx.state === 'suspended') {
+            ctx.resume();
+        }
+    }, { once: false });
+
+    function playClientChime() {
+        try {
+            var ctx = getClientAudioCtx();
+            if (!ctx) return;
+            var playTones = function() {
+                var now = ctx.currentTime;
+                var osc1 = ctx.createOscillator();
+                var gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, now);
+                gain1.gain.setValueAtTime(0.25, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+
+                var osc2 = ctx.createOscillator();
+                var gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880.00, now + 0.12);
+                gain2.gain.setValueAtTime(0.3, now + 0.12);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.12);
+                osc2.stop(now + 0.65);
+            };
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(playTones);
+            } else {
+                playTones();
+            }
+        } catch(e) {}
+    }
+
+    var isInitialClientPing = true;
+    var previousClientUnread = 0;
+
+    function runClientLivePing() {
+        var formData = new FormData();
+        formData.append('action', 'ping');
+        formData.append('token', liveToken);
+        formData.append('user_type', liveUserData.user_type);
+        formData.append('id_user', liveUserData.id_user);
+        formData.append('nama', liveUserData.nama);
+        formData.append('keterangan', liveUserData.keterangan);
+        formData.append('foto', liveUserData.foto);
+
+        fetch(liveApiUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                var badge = document.getElementById('liveCardUnreadBadge');
+                if (badge) {
+                    if (data.unread > 0 && !isClientLiveOpen) {
+                        badge.innerText = data.unread;
+                        badge.style.display = 'flex';
+                    } else if (isClientLiveOpen) {
+                        badge.style.display = 'none';
+                        fetchClientLiveMessages();
+                    }
+                }
+
+                // Bunyikan nada notifikasi jika ada balasan baru dari admin
+                if (isInitialClientPing) {
+                    isInitialClientPing = false;
+                    previousClientUnread = data.unread || 0;
+                } else {
+                    if (data.unread > previousClientUnread) {
+                        playClientChime();
+                    }
+                    previousClientUnread = data.unread || 0;
+                }
+            }
+        })
+        .catch(function() {});
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Pertahankan status buka jika sebelumnya sedang dibuka sebelum refresh
+    if (sessionStorage.getItem('client_live_card_open') === '1') {
+        toggleClientLiveCardPopup();
+    }
+
+    // Untuk Siswa/Guru, atau Tamu yang memang sudah pernah mengirim pesan sebelumnya:
+    // Jalankan ping berkala tiap 5 detik untuk memeriksa balasan admin.
+    // Jika Tamu belum pernah mengirim pesan, JANGAN ping otomatis agar tidak mengotori sesi/database!
+    if (!isGuest || hasMessaged) {
+        runClientLivePing();
+        clientPingTimer = setInterval(runClientLivePing, 5000);
+    }
+
+})();
+</script>
+
+
+<div class="glasp-extension-toaster glasp-extension-toaster--glasp-extension" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 2147483647;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"></div></template></div><div class="glasp-extension-highlighter" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 0px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 0px; left: 0px; height: 0px; z-index: 2147483646; pointer-events: none;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"><style>
+.glasp-md.glasp-md { word-break: break-word; }
+.glasp-md.glasp-md > :first-child { margin-top: 0; }
+.glasp-md.glasp-md > :last-child { margin-bottom: 0; }
+.glasp-md.glasp-md h1, .glasp-md.glasp-md h2, .glasp-md.glasp-md h3, .glasp-md.glasp-md h4 {
+  margin: 0.4em 0 0.2em; font-size: 1.12em; font-weight: 700; line-height: 1.3; padding: 0;
+}
+.glasp-md.glasp-md p { margin: 0.6em 0; line-height: 1.55; }
+.glasp-md.glasp-md ul { list-style: disc outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md ol { list-style: decimal outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md li { display: list-item; margin: 0.32em 0; line-height: 1.5; }
+.glasp-md.glasp-md ul ul, .glasp-md.glasp-md ol ol, .glasp-md.glasp-md ul ol, .glasp-md.glasp-md ol ul { margin: 0.32em 0; }
+.glasp-md.glasp-md ul ul { list-style: circle outside; }
+.glasp-md.glasp-md strong { font-weight: 700; }
+.glasp-md.glasp-md em { font-style: italic; }
+.glasp-md.glasp-md a { color: rgb(51 121 255); text-decoration: none; }
+.glasp-md.glasp-md a:hover { text-decoration: underline; }
+.glasp-md.glasp-md blockquote {
+  margin: 0.6em 0; padding-block: 0.1em; padding-inline: 0.85em 0;
+  border-inline-start: 3px solid #dfe3ea; color: #5b616e;
+}
+.glasp-md.glasp-md blockquote p { margin: 0.25em 0; }
+.glasp-md.glasp-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+  background: #f1f5f9; color: #1f2937; padding: 0 3px; border-radius: 3px;
+}
+.glasp-md.glasp-md pre {
+  background: #f1f5f9; color: #1f2937; padding: 8px 10px; border-radius: 6px; overflow-x: auto; margin: 0.4em 0;
+}
+.glasp-md.glasp-md pre code { background: none; padding: 0; }
+/* Code is ALWAYS left-to-right, whatever the surrounding text does. Without this,
+   an RTL host page — or a dir=auto container that resolved RTL from an Arabic
+   first character — reorders every code line: an opening brace jumps to the far
+   end, and a leading comment marker lands on the wrong side. unicode-bidi
+   isolate also stops the code from reordering the prose around it.
+   NOTE: no backticks in this comment. It lives inside a JS template literal. */
+.glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
+</style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

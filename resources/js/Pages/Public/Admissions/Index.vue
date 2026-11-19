@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
+import { Head, useForm } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 interface Requirement {
+    id?: number;
     label: string;
     is_required: boolean;
 }
@@ -24,6 +25,7 @@ interface Period {
     academic_year: string;
     level?: string | null;
     status: string;
+    is_result_released?: boolean;
     registration_start?: string | null;
     registration_end?: string | null;
     verification_start?: string | null;
@@ -36,10 +38,116 @@ interface Period {
     tracks: Track[];
 }
 
+interface CandidateView {
+    id: number;
+    registration_no: string;
+    name: string;
+    nisn?: string | null;
+    period_name?: string | null;
+    track_name?: string | null;
+    status: string;
+    revision_notes?: string | null;
+    is_result_released: boolean;
+    announcement_at?: string | null;
+    selection_decision?: string | null;
+    selection_rank?: number | null;
+    can_re_register: boolean;
+    re_registration_status?: string | null;
+    re_registration_submitted: boolean;
+    requirements: { id: number; label: string; is_required: boolean }[];
+}
+
 const props = defineProps<{
     school: { name: string; level?: string | null; address?: string | null; phone?: string | null; email?: string | null; logo_url?: string | null; theme?: { primary?: string | null } };
     periods: Period[];
+    issuedReceipt?: { id: number; registration_no: string; ticket_code?: string | null; verification_secret: string } | null;
+    lookupResult?: { authorized: boolean; message?: string; applicant?: CandidateView } | null;
 }>();
+
+const openPeriod = computed(() => props.periods.find((p) => p.status === 'registration_open') ?? props.periods[0] ?? null);
+const activePortalTab = ref<'register' | 'lookup'>(props.lookupResult ? 'lookup' : 'register');
+
+const registerForm = useForm({
+    period_id: (openPeriod.value?.id ?? '') as string | number,
+    track_id: (openPeriod.value?.tracks[0]?.id ?? '') as string | number,
+    name: '',
+    nisn: '',
+    gender: 'L',
+    birth_date: '',
+    birth_place: '',
+    parent_name: '',
+    parent_phone: '',
+    address: '',
+    previous_school: '',
+    notes: '',
+    idempotency_key: `ppdb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    documents: {} as Record<number, File>,
+});
+
+const selectedPeriod = computed(() => props.periods.find((p) => Number(p.id) === Number(registerForm.period_id)) ?? null);
+const selectedTrack = computed(() => selectedPeriod.value?.tracks.find((t) => Number(t.id) === Number(registerForm.track_id)) ?? null);
+
+watch(() => registerForm.period_id, () => {
+    registerForm.track_id = selectedPeriod.value?.tracks[0]?.id ?? '';
+});
+
+const onDocumentPick = (reqId: number, event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+        registerForm.documents = { ...registerForm.documents, [reqId]: file };
+    }
+};
+
+const submitRegistration = () => {
+    registerForm.post('/ppdb/daftar', {
+        forceFormData: true,
+        preserveScroll: true,
+    });
+};
+
+const lookupForm = useForm({
+    registration_no: '',
+    pin: '',
+});
+
+const submitLookup = () => {
+    lookupForm.post('/ppdb/cek-hasil', { preserveScroll: true });
+};
+
+const revisionForm = useForm({
+    name: props.lookupResult?.applicant?.name ?? '',
+    previous_school: '',
+    parent_name: '',
+    parent_phone: '',
+    address: '',
+    documents: {} as Record<number, File>,
+});
+
+const onRevisionDocPick = (reqId: number, event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+        revisionForm.documents = { ...revisionForm.documents, [reqId]: file };
+    }
+};
+
+const submitRevision = () => {
+    const id = props.lookupResult?.applicant?.id;
+    if (!id) return;
+    revisionForm.post(`/ppdb/perbaiki/${id}`, {
+        forceFormData: true,
+        preserveScroll: true,
+    });
+};
+
+const reRegisterForm = useForm({
+    notes: '',
+});
+
+const submitReRegistration = () => {
+    const id = props.lookupResult?.applicant?.id;
+    if (!id) return;
+    reRegisterForm.post(`/ppdb/daftar-ulang/${id}`, { preserveScroll: true });
+};
 
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
 const dateFormatter = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -117,6 +225,194 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                 </article>
             </div>
             <div v-else class="empty-state"><strong>Penerimaan siswa baru belum dibuka.</strong><p>Jadwal, jalur, dan kuota akan ditampilkan setelah sekolah menerbitkan periode penerimaan.</p></div>
+        </section>
+
+        <section id="portal-kandidat" class="content-section" aria-labelledby="portal-kandidat-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Layanan Kandidat SPMB</p>
+                    <h2 id="portal-kandidat-title">Pendaftaran &amp; Cek Hasil Kandidat.</h2>
+                </div>
+                <div class="flex gap-2">
+                    <AppButton type="button" :variant="activePortalTab === 'register' ? 'primary' : 'secondary'" @click="activePortalTab = 'register'">
+                        Formulir Daftar
+                    </AppButton>
+                    <AppButton type="button" :variant="activePortalTab === 'lookup' ? 'primary' : 'secondary'" @click="activePortalTab = 'lookup'">
+                        Cek Status / Hasil
+                    </AppButton>
+                </div>
+            </div>
+
+            <div v-if="issuedReceipt" class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950 space-y-2">
+                <p class="font-bold">Bukti Pendaftaran PPDB Diterbitkan!</p>
+                <p>Nomor Pendaftaran: <strong class="font-mono">{{ issuedReceipt.registration_no }}</strong> | PIN Verifikasi: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
+                <p v-if="issuedReceipt.ticket_code">Kode Pelacakan (/lacak): <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong></p>
+                <a
+                    :href="`/ppdb/bukti/${issuedReceipt.id}/pdf`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-block rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white"
+                >
+                    Unduh Bukti Pendaftaran (PDF)
+                </a>
+            </div>
+
+            <div v-if="activePortalTab === 'register'" class="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+                <p v-if="!registrationOpen" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    Saat ini belum ada periode dengan status pendaftaran dibuka. Pengajuan sebelum jadwal resmi akan ditolak oleh sistem.
+                </p>
+
+                <form v-if="periods.length" @submit.prevent="submitRegistration" class="space-y-4">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div>
+                            <label for="ppdb-period" class="block text-xs font-semibold uppercase text-slate-600">Periode SPMB *</label>
+                            <select id="ppdb-period" v-model="registerForm.period_id" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                <option v-for="p in periods" :key="p.id" :value="p.id">{{ p.name }} ({{ statusLabel(p.status) }})</option>
+                            </select>
+                            <p v-if="registerForm.errors.period_id" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.period_id }}</p>
+                        </div>
+                        <div>
+                            <label for="ppdb-track" class="block text-xs font-semibold uppercase text-slate-600">Jalur Pendaftaran *</label>
+                            <select id="ppdb-track" v-model="registerForm.track_id" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                <option v-for="t in (selectedPeriod?.tracks ?? [])" :key="t.id" :value="t.id">{{ t.name }} (Kuota: {{ t.quota }})</option>
+                            </select>
+                            <p v-if="registerForm.errors.track_id" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.track_id }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-3">
+                        <div>
+                            <label for="ppdb-name" class="block text-xs font-semibold uppercase text-slate-600">Nama Lengkap Calon Siswa *</label>
+                            <input id="ppdb-name" v-model="registerForm.name" type="text" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <p v-if="registerForm.errors.name" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.name }}</p>
+                        </div>
+                        <div>
+                            <label for="ppdb-nisn" class="block text-xs font-semibold uppercase text-slate-600">NISN</label>
+                            <input id="ppdb-nisn" v-model="registerForm.nisn" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <p v-if="registerForm.errors.nisn" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.nisn }}</p>
+                        </div>
+                        <div>
+                            <label for="ppdb-gender" class="block text-xs font-semibold uppercase text-slate-600">Jenis Kelamin *</label>
+                            <select id="ppdb-gender" v-model="registerForm.gender" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-3">
+                        <div>
+                            <label for="ppdb-birth-place" class="block text-xs font-semibold uppercase text-slate-600">Tempat Lahir</label>
+                            <input id="ppdb-birth-place" v-model="registerForm.birth_place" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                            <label for="ppdb-birth-date" class="block text-xs font-semibold uppercase text-slate-600">Tanggal Lahir</label>
+                            <input id="ppdb-birth-date" v-model="registerForm.birth_date" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                            <label for="ppdb-prev-school" class="block text-xs font-semibold uppercase text-slate-600">Sekolah Asal</label>
+                            <input id="ppdb-prev-school" v-model="registerForm.previous_school" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-3">
+                        <div>
+                            <label for="ppdb-parent" class="block text-xs font-semibold uppercase text-slate-600">Nama Orang Tua / Wali</label>
+                            <input id="ppdb-parent" v-model="registerForm.parent_name" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                            <label for="ppdb-phone" class="block text-xs font-semibold uppercase text-slate-600">No. Telepon / WA</label>
+                            <input id="ppdb-phone" v-model="registerForm.parent_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                            <label for="ppdb-address" class="block text-xs font-semibold uppercase text-slate-600">Alamat Domisili</label>
+                            <input id="ppdb-address" v-model="registerForm.address" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                    </div>
+
+                    <div v-if="selectedTrack?.requirements?.length" class="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs font-bold uppercase text-slate-600">Unggah Persyaratan Jalur</p>
+                        <div v-for="req in selectedTrack.requirements" :key="req.id ?? req.label" class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                            <span>{{ req.label }} <strong v-if="req.is_required" class="text-rose-600">*</strong></span>
+                            <input
+                                v-if="req.id"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                class="text-xs"
+                                @change="onDocumentPick(req.id, $event)"
+                            />
+                        </div>
+                    </div>
+
+                    <AppButton type="submit" :disabled="registerForm.processing">
+                        {{ registerForm.processing ? 'Mengirim Pendaftaran...' : 'Kirim Pendaftaran SPMB' }}
+                    </AppButton>
+                </form>
+            </div>
+
+            <div v-else class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+                <form @submit.prevent="submitLookup" class="grid gap-3 md:grid-cols-3 items-end">
+                    <div>
+                        <label for="ppdb-lookup-reg" class="block text-xs font-semibold uppercase text-slate-600">Nomor Pendaftaran</label>
+                        <input id="ppdb-lookup-reg" v-model="lookupForm.registration_no" type="text" placeholder="SPMB-2026-..." class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm uppercase" />
+                    </div>
+                    <div>
+                        <label for="ppdb-lookup-pin" class="block text-xs font-semibold uppercase text-slate-600">PIN Verifikasi (6 Digit)</label>
+                        <input id="ppdb-lookup-pin" v-model="lookupForm.pin" type="password" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm" />
+                    </div>
+                    <AppButton type="submit" :disabled="lookupForm.processing">Periksa Status &amp; Hasil</AppButton>
+                </form>
+
+                <div v-if="lookupResult && !lookupResult.authorized" class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                    {{ lookupResult.message }}
+                </div>
+
+                <div v-if="lookupResult?.authorized && lookupResult.applicant" class="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4 text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <p class="font-bold text-slate-900">{{ lookupResult.applicant.name }} ({{ lookupResult.applicant.registration_no }})</p>
+                            <p class="text-xs text-slate-600">{{ lookupResult.applicant.period_name }} — {{ lookupResult.applicant.track_name }}</p>
+                        </div>
+                        <a
+                            :href="`/ppdb/bukti/${lookupResult.applicant.id}/pdf`"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                        >
+                            Unduh Bukti (PDF)
+                        </a>
+                    </div>
+
+                    <p>Status Saat Ini: <strong class="uppercase">{{ lookupResult.applicant.status }}</strong></p>
+
+                    <div v-if="!lookupResult.applicant.is_result_released" class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
+                        Hasil seleksi belum dibuka sebelum jadwal pengumuman resmi ({{ lookupResult.applicant.announcement_at || 'menunggu penetapan panitia' }}).
+                    </div>
+                    <div v-else class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-950">
+                        Keputusan Seleksi: <strong class="uppercase">{{ lookupResult.applicant.selection_decision || 'Dalam Peninjauan' }}</strong>
+                        <span v-if="lookupResult.applicant.selection_rank"> (Peringkat #{{ lookupResult.applicant.selection_rank }})</span>
+                    </div>
+
+                    <form v-if="lookupResult.applicant.status === 'needs_revision'" @submit.prevent="submitRevision" class="rounded-lg border border-amber-300 bg-white p-4 space-y-3">
+                        <p class="font-semibold text-amber-900">Perlu Perbaikan Data/Berkas: {{ lookupResult.applicant.revision_notes }}</p>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <input v-model="revisionForm.name" type="text" placeholder="Nama lengkap" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <input v-model="revisionForm.previous_school" type="text" placeholder="Sekolah asal" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        </div>
+                        <div v-for="req in lookupResult.applicant.requirements" :key="req.id" class="flex items-center justify-between gap-2 text-xs">
+                            <span>{{ req.label }}</span>
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="onRevisionDocPick(req.id, $event)" />
+                        </div>
+                        <AppButton type="submit" :disabled="revisionForm.processing">Kirim Perbaikan Berkas</AppButton>
+                    </form>
+
+                    <form v-if="lookupResult.applicant.can_re_register && !lookupResult.applicant.re_registration_submitted" @submit.prevent="submitReRegistration" class="rounded-lg border border-emerald-300 bg-white p-4 space-y-3">
+                        <p class="font-semibold text-emerald-900">Selamat! Anda dinyatakan DITERIMA. Ajukan konfirmasi daftar ulang:</p>
+                        <input v-model="reRegisterForm.notes" type="text" placeholder="Catatan daftar ulang (opsional)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <AppButton type="submit" :disabled="reRegisterForm.processing">Konfirmasi Daftar Ulang</AppButton>
+                    </form>
+                </div>
+            </div>
         </section>
 
         <section id="alur" class="content-section admissions-flow" aria-labelledby="flow-title">

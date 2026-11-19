@@ -612,3 +612,31 @@ body .public-site.public-admissions :is(.period-card h3, .flow-grid h3) {
     font-weight: var(--weight-bold);
     line-height: var(--leading-snug);
 }
+
+body:has(.public-site-header.is-man4) .madrasah-profile-hero {
+    scroll-margin-top: 8rem;
+    padding: clamp(1.5rem, 4vw, 3.5rem);
+    border: 1px solid #13634d;
+    border-radius: 1.25rem;
+    color: #fff;
+    background:
+        radial-gradient(circle, rgb(167 243 208 / 13%) 1px, transparent 1.5px) 0 0 / 20px 20px,
+        linear-gradient(135deg, #052e26, #0d5948 72%, #082f2a);
+}
+
+body:has(.public-site-header.is-man4) .madrasah-profile-hero h1 {
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+}
+
+body:has(.public-site-header.is-man4) .madrasah-profile-hero p {
+    color: #d1fae5;
+}
+
+body:has(.public-site-header.is-man4) .madrasah-profile-hero :is(.eyebrow, .kicker, .hero-title-accent) {
+    color: #fcd34d;
+}
+
+body:has(.public-site-header.is-man4) :is(#sambutan, #arah) {
+    scroll-margin-top: 10rem;
+}

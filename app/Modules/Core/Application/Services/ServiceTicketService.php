@@ -394,6 +394,137 @@ class ServiceTicketService
     }
 
     /**
+     * Verify a ticket verification secret without exposing ticket details.
+     */
+    public function verifyTicketSecret(int $schoolId, string $ticketCode, string $secret): bool
+    {
+        $normalizedCode = strtoupper(trim($ticketCode));
+        $candidate = trim($secret);
+
+        if ($normalizedCode === '' || $candidate === '') {
+            return false;
+        }
+
+        /** @var ServiceTicket|null $ticket */
+        $ticket = ServiceTicket::query()
+            ->where('school_id', $schoolId)
+            ->where('ticket_code', $normalizedCode)
+            ->first(['id', 'verification_secret_hash']);
+
+        if ($ticket === null || $ticket->verification_secret_hash === null) {
+            return false;
+        }
+
+        return Hash::check($candidate, $ticket->verification_secret_hash);
+    }
+
+    /**
+     * Return a safe ticket snapshot by ticket code for cross-module Application services.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getTicketSnapshotByCode(int $schoolId, string $ticketCode): ?array
+    {
+        $normalizedCode = strtoupper(trim($ticketCode));
+        if ($normalizedCode === '') {
+            return null;
+        }
+
+        /** @var ServiceTicket|null $ticket */
+        $ticket = ServiceTicket::query()
+            ->with(['transitions' => fn ($q) => $q->orderBy('id')])
+            ->where('school_id', $schoolId)
+            ->where('ticket_code', $normalizedCode)
+            ->first();
+
+        return $ticket ? $this->serializeTicketSnapshot($ticket) : null;
+    }
+
+    /**
+     * Return a safe ticket snapshot by ID for cross-module Application services.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getTicketSnapshotById(int $schoolId, int $ticketId): ?array
+    {
+        /** @var ServiceTicket|null $ticket */
+        $ticket = ServiceTicket::query()
+            ->with(['transitions' => fn ($q) => $q->orderBy('id')])
+            ->where('school_id', $schoolId)
+            ->whereKey($ticketId)
+            ->first();
+
+        return $ticket ? $this->serializeTicketSnapshot($ticket) : null;
+    }
+
+    /**
+     * Batch-fetch ticket snapshots keyed by ticket ID to avoid N+1 queries.
+     *
+     * @param  list<int>  $ticketIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function getTicketsMapByIds(int $schoolId, array $ticketIds): array
+    {
+        $ids = array_values(array_unique(array_filter($ticketIds, static fn (mixed $id): bool => (int) $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+
+        return ServiceTicket::query()
+            ->with(['transitions' => fn ($q) => $q->orderBy('id')])
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id')
+            ->map(fn (ServiceTicket $ticket): array => $this->serializeTicketSnapshot($ticket))
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeTicketSnapshot(ServiceTicket $ticket): array
+    {
+        $effectiveStatus = $ticket->revoked_at !== null
+            ? ServiceWorkflowMap::STATUS_CANCELLED
+            : ($ticket->expires_at !== null && $ticket->expires_at->isPast()
+                ? ServiceWorkflowMap::STATUS_EXPIRED
+                : $ticket->public_status);
+
+        return [
+            'id' => (int) $ticket->id,
+            'school_id' => (int) $ticket->school_id,
+            'service_type' => (string) $ticket->service_type,
+            'ticket_code' => (string) $ticket->ticket_code,
+            'has_verification_secret' => $ticket->verification_secret_hash !== null,
+            'applicant_user_id' => $ticket->applicant_user_id ? (int) $ticket->applicant_user_id : null,
+            'external_applicant_id' => $ticket->external_applicant_id ? (int) $ticket->external_applicant_id : null,
+            'applicant_snapshot' => $ticket->applicant_snapshot ?? [],
+            'public_status' => $effectiveStatus,
+            'internal_status' => (string) $ticket->internal_status,
+            'public_summary' => (string) $ticket->public_summary,
+            'version' => (int) $ticket->version,
+            'expires_at' => $ticket->expires_at?->toIso8601String(),
+            'revoked_at' => $ticket->revoked_at?->toIso8601String(),
+            'created_at' => $ticket->created_at?->toIso8601String(),
+            'updated_at' => $ticket->updated_at?->toIso8601String(),
+            'transitions' => $ticket->transitions
+                ->map(static fn (ServiceTicketTransition $transition): array => [
+                    'id' => (int) $transition->id,
+                    'actor_role' => $transition->actor_role,
+                    'from_status' => $transition->from_status,
+                    'to_status' => $transition->to_status,
+                    'public_status' => $transition->public_status,
+                    'reason' => $transition->reason,
+                    'metadata' => $transition->metadata,
+                    'created_at' => $transition->created_at?->toIso8601String(),
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
      * @return list<array{public_status: string, created_at: ?string}>
      */
     private function publicTimeline(ServiceTicket $ticket): array

@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Academic\Application\Services\GraduationService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -16,3 +17,9 @@ Schedule::command('school:backup')
 
 Schedule::command('queue:restart')
     ->dailyAt('04:00');
+
+Artisan::command('school:release-graduations', function (GraduationService $graduation): void {
+    $graduation->releaseDueGraduations();
+})->purpose('Apply due graduation decisions to student and enrollment status');
+
+Schedule::command('school:release-graduations')->everyMinute()->withoutOverlapping();

@@ -25,10 +25,11 @@ class CorrespondenceRecord extends Model
     }
 
     protected $fillable = [
-        'school_id', 'created_by', 'letter_type', 'agenda_number', 'letter_number',
+        'school_id', 'service_ticket_id', 'created_by', 'letter_type', 'agenda_number', 'letter_number',
         'letter_template', 'classification', 'urgency',
-        'letter_date', 'letter_year', 'received_at', 'sender', 'recipient', 'subject', 'summary',
-        'disposition', 'status', 'attachment_path', 'attachment_name', 'archived_at',
+        'letter_date', 'letter_year', 'received_at', 'sender', 'sender_contact_name', 'sender_contact_position',
+        'sender_contact_phone', 'sender_contact_email', 'recipient', 'subject', 'summary',
+        'disposition', 'status', 'attachment_path', 'attachment_name', 'external_supporting_document_ids', 'archived_at',
         'approval_required', 'approval_status', 'approved_by', 'approved_at', 'approval_note',
         'signature_method', 'document_hash', 'letter_body', 'signer_name', 'signer_title', 'signer_identifier_type', 'signer_identifier',
         'attachment_note', 'verification_token', 'verification_expires_at', 'verification_revoked_at', 'school_snapshot',
@@ -42,6 +43,7 @@ class CorrespondenceRecord extends Model
     {
         return [
             'school_id' => 'integer',
+            'service_ticket_id' => 'integer',
             'created_by' => 'integer',
             'approval_required' => 'boolean',
             'approved_by' => 'integer',
@@ -54,6 +56,7 @@ class CorrespondenceRecord extends Model
             'verification_revoked_at' => 'datetime',
             'school_snapshot' => 'array',
             'signer_snapshot' => 'array',
+            'external_supporting_document_ids' => 'array',
             'signatory_id' => 'integer',
             'is_legacy' => 'boolean',
         ];

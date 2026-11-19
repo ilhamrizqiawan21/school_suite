@@ -52,7 +52,7 @@ const organizationTree = computed<TreeMember[]>(() => {
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
         <PublicHeader :school="school" active="organization" />
 
-        <section class="page-intro" aria-labelledby="organization-title">
+        <section class="madrasah-profile-hero page-intro" aria-labelledby="organization-title">
             <p class="eyebrow">Struktur organisasi</p>
             <h1 id="organization-title">Orang-orang yang menggerakkan sekolah.</h1>
             <p>Kenali pengelola {{ school.name }} yang bekerja bersama untuk menjaga proses belajar tetap bertumbuh.</p>

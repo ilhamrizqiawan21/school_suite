@@ -11,7 +11,11 @@ use App\Modules\Administration\Infrastructure\Models\CorrespondenceDocumentVersi
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceRecord;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceSignatory;
 use App\Modules\Administration\Infrastructure\Models\CorrespondenceSignatureRequest;
+use App\Modules\Core\Application\Services\NotificationOutboxService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Modules\Core\Application\Services\ServiceDocumentService;
+use App\Modules\Core\Application\Services\ServiceTicketService;
+use App\Modules\Core\Domain\ServiceWorkflowMap;
 use App\Shared\Audit\AuditLogger;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -31,6 +35,9 @@ class CorrespondenceService
         private readonly AuditLogger $audit,
         private readonly SchoolScopeService $schoolScope,
         private readonly ElectronicSignatureProvider $signatureProvider,
+        private readonly ServiceTicketService $ticketService,
+        private readonly ServiceDocumentService $documentService,
+        private readonly NotificationOutboxService $outbox,
     ) {}
 
     /** @return array<string, mixed> */
@@ -237,6 +244,8 @@ class CorrespondenceService
                 $actor,
                 (int) $record->school_id,
             );
+
+            $this->syncExternalTicketStatus($record, $actor);
         });
     }
 
@@ -648,5 +657,334 @@ class CorrespondenceService
         $name = preg_replace('/[\x00-\x1F\x7F]/u', '', $name) ?? '';
 
         return Str::limit($name !== '' ? $name : 'lampiran', 255, '');
+    }
+
+    /**
+     * Accept an external official letter submission, issue a tracking ticket + receipt,
+     * and register it directly into the TU incoming correspondence agenda without duplication (M4-TU-05).
+     *
+     * @param  array<string, mixed>  $data
+     * @param  list<UploadedFile>  $supportingFiles
+     * @return array{ticket: array<string, mixed>, record: CorrespondenceRecord, plain_verification_secret: string}
+     */
+    public function createIncomingFromExternal(
+        int $schoolId,
+        array $data,
+        UploadedFile $primaryPdf,
+        array $supportingFiles = [],
+        ?string $verificationSecret = null,
+        ?string $idempotencyKey = null,
+    ): array {
+        $storedAttachmentPath = null;
+
+        try {
+            return DB::transaction(function () use (
+                $schoolId,
+                $data,
+                $primaryPdf,
+                $supportingFiles,
+                $verificationSecret,
+                $idempotencyKey,
+                &$storedAttachmentPath,
+            ): array {
+                $this->schoolScope->lockSchool($schoolId);
+
+                $cleanIdempotency = $idempotencyKey !== null && trim($idempotencyKey) !== ''
+                    ? trim($idempotencyKey)
+                    : hash('sha256', implode('|', [
+                        $schoolId,
+                        trim((string) $data['agency_name']),
+                        trim((string) $data['letter_number']),
+                        trim((string) $data['letter_date']),
+                        trim((string) $data['subject']),
+                    ]));
+
+                $plainSecret = trim((string) $verificationSecret) !== ''
+                    ? trim((string) $verificationSecret)
+                    : str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+                $externalApplicant = $this->ticketService->registerExternalApplicant($schoolId, [
+                    'applicant_type' => 'external_agency',
+                    'full_name' => trim((string) $data['contact_person']),
+                    'phone' => trim((string) $data['contact_phone']),
+                    'email' => isset($data['contact_email']) ? trim((string) $data['contact_email']) ?: null : null,
+                    'organization_name' => trim((string) $data['agency_name']),
+                    'is_verified' => false,
+                ]);
+
+                $localNow = $this->schoolScope->localNow($schoolId);
+                $year = $localNow->format('Y');
+
+                // Check if this idempotency key already created a ticket & record
+                $ticket = $this->ticketService->issueTicket($schoolId, [
+                    'service_type' => 'surat_eksternal',
+                    'prefix' => 'SRT',
+                    'external_applicant_id' => (int) $externalApplicant->id,
+                    'applicant_snapshot' => [
+                        'agency_name' => trim((string) $data['agency_name']),
+                        'contact_person' => trim((string) $data['contact_person']),
+                        'contact_position' => trim((string) $data['contact_position']),
+                        'letter_number' => trim((string) $data['letter_number']),
+                        'subject' => trim((string) $data['subject']),
+                    ],
+                    'verification_secret' => $plainSecret,
+                    'internal_status' => 'received',
+                    'public_summary' => 'Surat dinas eksternal telah masuk ke agenda TU dan menunggu disposisi.',
+                    'idempotency_key' => $cleanIdempotency,
+                ]);
+
+                /** @var CorrespondenceRecord|null $existingRecord */
+                $existingRecord = CorrespondenceRecord::query()
+                    ->where('school_id', $schoolId)
+                    ->where('service_ticket_id', (int) $ticket->id)
+                    ->first();
+
+                if ($existingRecord !== null) {
+                    $snapshot = $this->ticketService->getTicketSnapshotById($schoolId, (int) $ticket->id);
+
+                    return [
+                        'ticket' => $snapshot ?? [],
+                        'record' => $existingRecord,
+                        'plain_verification_secret' => $plainSecret,
+                    ];
+                }
+
+                $nextNumber = CorrespondenceRecord::query()
+                    ->where('school_id', $schoolId)
+                    ->where('letter_type', 'incoming')
+                    ->where('agenda_number', 'like', "IN/{$year}/%")
+                    ->count() + 1;
+                $agendaNumber = sprintf('IN/%s/%06d', $year, $nextNumber);
+
+                // Store primary PDF on private disk both as Correspondence attachment and ServiceDocument
+                $primaryDoc = $this->documentService->storePrivateAttachment(
+                    schoolId: $schoolId,
+                    file: $primaryPdf,
+                    documentKind: 'letter',
+                    ticket: $ticket,
+                );
+
+                $storedAttachmentPath = $this->storeAttachment($primaryPdf, $schoolId);
+
+                $supportingIds = [];
+                foreach ($supportingFiles as $file) {
+                    if (! $file instanceof UploadedFile) {
+                        continue;
+                    }
+                    $supDoc = $this->documentService->storePrivateAttachment(
+                        schoolId: $schoolId,
+                        file: $file,
+                        documentKind: 'attachment',
+                        ticket: $ticket,
+                    );
+                    $supportingIds[] = (int) $supDoc->id;
+                }
+
+                $record = CorrespondenceRecord::query()->create([
+                    'school_id' => $schoolId,
+                    'service_ticket_id' => (int) $ticket->id,
+                    'created_by' => null,
+                    'letter_type' => 'incoming',
+                    'agenda_number' => $agendaNumber,
+                    'letter_number' => trim((string) $data['letter_number']),
+                    'letter_template' => 'official_school',
+                    'classification' => isset($data['classification']) ? trim((string) $data['classification']) ?: 'Umum' : 'Umum',
+                    'urgency' => (string) ($data['urgency'] ?? 'ordinary'),
+                    'letter_date' => $data['letter_date'],
+                    'received_at' => $localNow->toDateString(),
+                    'sender' => trim((string) $data['agency_name']),
+                    'sender_contact_name' => trim((string) $data['contact_person']),
+                    'sender_contact_position' => trim((string) $data['contact_position']),
+                    'sender_contact_phone' => trim((string) $data['contact_phone']),
+                    'sender_contact_email' => isset($data['contact_email']) ? trim((string) $data['contact_email']) ?: null : null,
+                    'recipient' => 'Tata Usaha Sekolah',
+                    'subject' => trim((string) $data['subject']),
+                    'summary' => trim((string) $data['summary']),
+                    'status' => 'received',
+                    'approval_required' => false,
+                    'approval_status' => 'not_required',
+                    'signature_method' => 'manual',
+                    'attachment_path' => $storedAttachmentPath,
+                    'attachment_name' => $this->safeOriginalName($primaryPdf),
+                    'external_supporting_document_ids' => $supportingIds,
+                ]);
+
+                // Attach agenda_number to ticket snapshot for unified tracking
+                $ticket->forceFill([
+                    'applicant_snapshot' => [
+                        ...($ticket->applicant_snapshot ?? []),
+                        'agenda_number' => $agendaNumber,
+                        'primary_document_id' => (int) $primaryDoc->id,
+                    ],
+                ])->save();
+
+                $this->audit->log(
+                    eventType: 'administration.external_letter.submitted',
+                    targetType: 'CorrespondenceRecord',
+                    targetId: (string) $record->id,
+                    newValues: [
+                        'ticket_code' => $ticket->ticket_code,
+                        'agenda_number' => $agendaNumber,
+                        'letter_number' => $record->letter_number,
+                    ],
+                    schoolId: $schoolId,
+                );
+
+                $this->outbox->enqueue(
+                    schoolId: $schoolId,
+                    eventKey: 'surat_eksternal.received',
+                    channel: 'in_app',
+                    recipientType: 'external_applicant',
+                    recipientId: (int) $externalApplicant->id,
+                    templateKey: 'surat_eksternal_received',
+                    payload: [
+                        'ticket_code' => $ticket->ticket_code,
+                        'agenda_number' => $agendaNumber,
+                    ],
+                    idempotencyKey: sprintf('ext-letter-%s', $ticket->ticket_code),
+                    dispatchJob: false,
+                );
+
+                $snapshot = $this->ticketService->getTicketSnapshotById($schoolId, (int) $ticket->id);
+
+                return [
+                    'ticket' => $snapshot ?? [],
+                    'record' => $record->refresh(),
+                    'plain_verification_secret' => $plainSecret,
+                ];
+            });
+        } catch (Throwable $exception) {
+            if ($storedAttachmentPath !== null) {
+                Storage::disk('local')->delete($storedAttachmentPath);
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findExternalReceiptByTicketCode(int $schoolId, string $ticketCode): ?array
+    {
+        $ticket = $this->ticketService->getTicketSnapshotByCode($schoolId, $ticketCode);
+        if ($ticket === null || $ticket['service_type'] !== 'surat_eksternal') {
+            return null;
+        }
+
+        /** @var CorrespondenceRecord|null $record */
+        $record = CorrespondenceRecord::query()
+            ->where('school_id', $schoolId)
+            ->where('service_ticket_id', (int) $ticket['id'])
+            ->first();
+
+        if ($record === null) {
+            return null;
+        }
+
+        $documents = $this->documentService->listDocumentsForTicket($schoolId, (int) $ticket['id']);
+
+        return [
+            'ticket' => $ticket,
+            'record' => [
+                'id' => (int) $record->id,
+                'agenda_number' => $record->agenda_number,
+                'letter_number' => $record->letter_number,
+                'letter_date' => $record->letter_date?->toDateString(),
+                'received_at' => $record->received_at?->toDateString(),
+                'urgency' => $record->urgency,
+                'classification' => $record->classification,
+                'agency_name' => $record->sender,
+                'contact_person' => $record->sender_contact_name,
+                'contact_position' => $record->sender_contact_position,
+                'subject' => $record->subject,
+                'summary' => $record->summary,
+                'disposition' => $record->disposition,
+                'status' => $record->status,
+            ],
+            'documents' => $documents,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $receipt
+     */
+    public function renderExternalReceiptPdfBytes(int $schoolId, array $receipt): string
+    {
+        $school = $this->getSchoolLegalSnapshot($schoolId);
+        $ticketCode = (string) ($receipt['ticket']['ticket_code'] ?? '');
+        $trackUrl = rtrim((string) config('app.url'), '/').'/lacak?code='.urlencode($ticketCode).'&category=surat_eksternal';
+
+        $writer = new Writer(new ImageRenderer(new RendererStyle(180, 2), new SvgImageBackEnd));
+        $qr = base64_encode($writer->writeString($trackUrl));
+
+        $pdf = Pdf::loadView('administration.external-letter-receipt', [
+            'school' => $school,
+            'ticket' => $receipt['ticket'],
+            'record' => $receipt['record'],
+            'qr' => $qr,
+            'track_url' => $trackUrl,
+        ])->setPaper('a4');
+
+        return $pdf->output();
+    }
+
+    private function syncExternalTicketStatus(CorrespondenceRecord $record, User $actor): void
+    {
+        if ($record->service_ticket_id === null) {
+            return;
+        }
+
+        $ticket = $this->ticketService->getTicketSnapshotById((int) $record->school_id, (int) $record->service_ticket_id);
+        if ($ticket === null) {
+            return;
+        }
+
+        $currentStatus = (string) $ticket['public_status'];
+        if ($currentStatus === ServiceWorkflowMap::STATUS_COMPLETED) {
+            return;
+        }
+
+        if ($record->status === 'disposition' && $currentStatus === ServiceWorkflowMap::STATUS_SUBMITTED) {
+            $this->ticketService->transition(
+                ticketId: (int) $record->service_ticket_id,
+                schoolId: (int) $record->school_id,
+                toPublicStatus: ServiceWorkflowMap::STATUS_IN_REVIEW,
+                toInternalStatus: 'disposition',
+                reason: $record->disposition,
+                actor: $actor,
+                expectedVersion: (int) $ticket['version'],
+                publicSummary: 'Surat dinas telah didisposisikan dan sedang ditindaklanjuti.',
+            );
+
+            return;
+        }
+
+        if (in_array($record->status, ['done', 'archived'], true)) {
+            $version = (int) $ticket['version'];
+            if ($currentStatus === ServiceWorkflowMap::STATUS_SUBMITTED) {
+                $intermediate = $this->ticketService->transition(
+                    ticketId: (int) $record->service_ticket_id,
+                    schoolId: (int) $record->school_id,
+                    toPublicStatus: ServiceWorkflowMap::STATUS_IN_REVIEW,
+                    toInternalStatus: 'in_review',
+                    reason: null,
+                    actor: $actor,
+                    expectedVersion: $version,
+                );
+                $version = (int) $intermediate->version;
+            }
+
+            $this->ticketService->transition(
+                ticketId: (int) $record->service_ticket_id,
+                schoolId: (int) $record->school_id,
+                toPublicStatus: ServiceWorkflowMap::STATUS_COMPLETED,
+                toInternalStatus: $record->status,
+                reason: null,
+                actor: $actor,
+                expectedVersion: $version,
+                publicSummary: 'Surat dinas eksternal telah selesai diproses oleh Tata Usaha.',
+            );
+        }
     }
 }

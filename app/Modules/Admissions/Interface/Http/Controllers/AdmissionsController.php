@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Modules\Academic\Application\Services\TeacherDirectoryService;
 use App\Modules\Admissions\Application\Policies\AdmissionsPolicy;
 use App\Modules\Admissions\Application\Services\AdmissionWorkflowService;
+use App\Modules\Admissions\Application\Services\CandidatePortalService;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicant;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicantDocument;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicantScore;
@@ -16,10 +17,14 @@ use App\Modules\Admissions\Infrastructure\Models\AdmissionDocumentRequirement;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionPeriod;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionSelectionCriterion;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionTrack;
+use App\Modules\Core\Application\Services\ExternalApplicantAuthService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Modules\Core\Application\Services\ServiceTicketService;
+use App\Modules\Core\Domain\ServiceWorkflowMap;
 use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +40,9 @@ class AdmissionsController extends Controller
     public function __construct(
         private readonly TeacherDirectoryService $teacherDirectory,
         private readonly AdmissionWorkflowService $workflow,
+        private readonly CandidatePortalService $candidatePortal,
+        private readonly ExternalApplicantAuthService $externalAuth,
+        private readonly ServiceTicketService $ticketService,
         private readonly SchoolScopeService $schoolScope,
         private readonly AuditLogger $auditLogger,
     ) {}
@@ -44,11 +52,12 @@ class AdmissionsController extends Controller
         return $this->render($request, $policy, 'dashboard');
     }
 
-    public function publicIndex(): Response
+    public function publicIndex(Request $request): Response
     {
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
         $periods = AdmissionPeriod::query()
-            ->where('school_id', $school['id'])
+            ->where('school_id', $schoolId)
             ->whereIn('status', ['registration_open', 'verification', 'selection', 'announcement', 're_registration'])
             ->with(['tracks' => fn ($query) => $query->where('is_active', true)->with('requirements')])
             ->orderByDesc('registration_start')
@@ -60,6 +69,7 @@ class AdmissionsController extends Controller
                 'academic_year' => $period->academic_year,
                 'level' => $period->level,
                 'status' => $period->status,
+                'is_result_released' => $this->candidatePortal->isAnnouncementReleased($schoolId, $period),
                 'registration_start' => $period->registration_start?->toDateString(),
                 'registration_end' => $period->registration_end?->toDateString(),
                 'verification_start' => $period->verification_start?->toDateString(),
@@ -75,11 +85,25 @@ class AdmissionsController extends Controller
                     'code' => $track->code,
                     'quota' => $track->quota,
                     'requirements' => $track->requirements->map(fn (AdmissionDocumentRequirement $requirement): array => [
+                        'id' => $requirement->id,
                         'label' => $requirement->label,
                         'is_required' => $requirement->is_required,
                     ])->values()->all(),
                 ])->values()->all(),
             ])->values()->all();
+
+        $extApplicant = $this->externalAuth->currentFromSession($request, $schoolId);
+        $candidateApplications = [];
+        if ($extApplicant !== null) {
+            $candidateApplications = AdmissionApplicant::query()
+                ->where('school_id', $schoolId)
+                ->where('external_applicant_id', (int) $extApplicant['id'])
+                ->latest('id')
+                ->get()
+                ->map(fn (AdmissionApplicant $a): array => $this->candidatePortal->serializeCandidateView($schoolId, $a))
+                ->values()
+                ->all();
+        }
 
         return Inertia::render('Public/Admissions/Index', [
             'school' => [
@@ -92,7 +116,174 @@ class AdmissionsController extends Controller
                 'theme' => $school['theme'],
             ],
             'periods' => $periods,
+            'candidateAccount' => $extApplicant,
+            'candidateApplications' => $candidateApplications,
+            'issuedReceipt' => $request->session()->get('issued_ppdb_receipt'),
+            'lookupResult' => $request->session()->get('ppdb_lookup_result'),
         ]);
+    }
+
+    public function candidateRegister(Request $request): RedirectResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+
+        $validated = $request->validate([
+            'period_id' => ['required', 'integer'],
+            'track_id' => ['required', 'integer'],
+            'name' => ['required', 'string', 'max:150'],
+            'nisn' => ['nullable', 'string', 'max:20'],
+            'gender' => ['required', Rule::in(['L', 'P'])],
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
+            'birth_place' => ['nullable', 'string', 'max:100'],
+            'parent_name' => ['nullable', 'string', 'max:150'],
+            'parent_phone' => ['nullable', 'string', 'max:30'],
+            'address' => ['nullable', 'string', 'max:1000'],
+            'previous_school' => ['nullable', 'string', 'max:180'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'idempotency_key' => ['nullable', 'string', 'max:80'],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $extApplicant = $this->externalAuth->currentFromSession($request, $schoolId);
+        $files = is_array($request->file('documents')) ? $request->file('documents') : [];
+
+        $result = $this->candidatePortal->submitCandidateRegistration(
+            schoolId: $schoolId,
+            data: $validated,
+            uploadedFilesByRequirement: $files,
+            externalApplicantId: $extApplicant ? (int) $extApplicant['id'] : null,
+        );
+
+        $applicant = $result['applicant'];
+        $request->session()->put("ppdb_candidate_access.{$applicant->id}", true);
+
+        return redirect()->route('public.admissions')
+            ->with('message', "Pendaftaran PPDB berhasil ({$applicant->registration_no}). Simpan nomor pendaftaran dan PIN Anda.")
+            ->with('issued_ppdb_receipt', [
+                'id' => (int) $applicant->id,
+                'registration_no' => $applicant->registration_no,
+                'ticket_code' => $result['ticket']['ticket_code'] ?? null,
+                'verification_secret' => $result['plain_verification_secret'],
+            ]);
+    }
+
+    public function candidateLookup(Request $request): RedirectResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+
+        $validated = $request->validate([
+            'registration_no' => ['required', 'string', 'max:40'],
+            'pin' => ['required', 'string', 'max:20'],
+        ]);
+
+        $res = $this->candidatePortal->lookupStatus($schoolId, $validated['registration_no'], $validated['pin']);
+        if (! empty($res['authorized']) && ! empty($res['applicant']['id'])) {
+            $request->session()->put("ppdb_candidate_access.{$res['applicant']['id']}", true);
+        }
+
+        return redirect()->route('public.admissions')
+            ->with('ppdb_lookup_result', $res);
+    }
+
+    public function candidateResubmit(Request $request, AdmissionApplicant $applicant): RedirectResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+        abort_unless($this->candidatePortal->canSessionViewCandidate($request, $schoolId, $applicant), 403);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'previous_school' => ['nullable', 'string', 'max:180'],
+            'parent_name' => ['nullable', 'string', 'max:150'],
+            'parent_phone' => ['nullable', 'string', 'max:30'],
+            'address' => ['nullable', 'string', 'max:1000'],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $files = is_array($request->file('documents')) ? $request->file('documents') : [];
+        $updated = $this->candidatePortal->resubmitRevision($schoolId, $applicant, $validated, $files);
+
+        return back()
+            ->with('message', 'Perbaikan data/berkas berhasil dikirim.')
+            ->with('ppdb_lookup_result', [
+                'authorized' => true,
+                'applicant' => $this->candidatePortal->serializeCandidateView($schoolId, $updated),
+            ]);
+    }
+
+    public function candidateProofPdf(Request $request, AdmissionApplicant $applicant): HttpResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+
+        $user = $request->user();
+        $isStaff = $user !== null && (int) $user->school_id === $schoolId && $user->hasRole(['admin', 'operator', 'principal', 'teacher']);
+        abort_unless($isStaff || $this->candidatePortal->canSessionViewCandidate($request, $schoolId, $applicant), 403);
+
+        $bytes = $this->candidatePortal->renderProofPdfBytes($applicant);
+
+        return response($bytes, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('inline; filename="bukti-ppdb-%s.pdf"', preg_replace('/[^A-Za-z0-9_-]/', '', (string) $applicant->registration_no)),
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function candidateReRegister(Request $request, AdmissionApplicant $applicant): RedirectResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+        abort_unless($this->candidatePortal->canSessionViewCandidate($request, $schoolId, $applicant), 403);
+
+        $validated = $request->validate([
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $this->candidatePortal->submitCandidateReRegistrationIntent($schoolId, $applicant, $validated['notes'] ?? null);
+
+        return back()
+            ->with('message', 'Konfirmasi pengajuan daftar ulang Anda berhasil dikirim ke panitia.')
+            ->with('ppdb_lookup_result', [
+                'authorized' => true,
+                'applicant' => $this->candidatePortal->serializeCandidateView($schoolId, $applicant->fresh()),
+            ]);
+    }
+
+    public function requestRevision(Request $request, AdmissionApplicant $applicant): RedirectResponse
+    {
+        Gate::authorize('manageApplicant', $applicant);
+        $this->assertApplicantSchool($request, $applicant);
+
+        $validated = $request->validate([
+            'revision_notes' => ['required', 'string', 'max:1500'],
+        ]);
+
+        $applicant->forceFill([
+            'status' => 'needs_revision',
+            'revision_notes' => trim($validated['revision_notes']),
+        ])->save();
+
+        if ($applicant->service_ticket_id !== null) {
+            $ticket = $this->ticketService->getTicketSnapshotById((int) $applicant->school_id, (int) $applicant->service_ticket_id);
+            if ($ticket !== null && ServiceWorkflowMap::canTransition((string) $ticket['public_status'], ServiceWorkflowMap::STATUS_NEEDS_REVISION)) {
+                $this->ticketService->transition(
+                    ticketId: (int) $applicant->service_ticket_id,
+                    schoolId: (int) $applicant->school_id,
+                    toPublicStatus: ServiceWorkflowMap::STATUS_NEEDS_REVISION,
+                    toInternalStatus: 'needs_revision',
+                    reason: $applicant->revision_notes,
+                    actor: $request->user(),
+                    expectedVersion: (int) $ticket['version'],
+                    publicSummary: 'Berkas PPDB perlu diperbaiki oleh kandidat.',
+                );
+            }
+        }
+
+        return back()->with('message', 'Pendaftar dikembalikan ke tahap perbaikan berkas.');
     }
 
     public function section(Request $request, AdmissionsPolicy $policy, string $section): Response

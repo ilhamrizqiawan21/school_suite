@@ -24,7 +24,7 @@ const submitSearch = () => {
     <main class="public-site public-portal-page" :style="themeStyle">
         <PublicHeader :school="school" active="profile" />
         <section class="portal-container">
-            <header class="portal-hero">
+            <header class="madrasah-profile-hero portal-hero">
                 <p class="eyebrow">Direktori Guru &amp; Tenaga Kependidikan</p>
                 <h1>Direktori GTK {{ school.name }}</h1>
                 <p>Daftar pendidik dan tenaga kependidikan aktif. Hanya menampilkan atribut publik yang disetujui.</p>

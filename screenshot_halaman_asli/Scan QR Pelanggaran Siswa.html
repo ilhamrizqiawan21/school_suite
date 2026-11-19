@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<!-- saved from url=(0052)https://man4banjar.com/akademik/scan_pelanggaran.php -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Pelanggaran Siswa</title>
+    <!-- Modern Fonts & UI -->
+    <link href="./Scan QR Pelanggaran Siswa_files/css2" rel="stylesheet">
+    <link rel="stylesheet" href="./Scan QR Pelanggaran Siswa_files/all.min.css">
+    <link rel="stylesheet" href="./Scan QR Pelanggaran Siswa_files/bootstrap.min.css">
+    <script src="./Scan QR Pelanggaran Siswa_files/html5-qrcode" type="text/javascript"></script>
+    <script src="./Scan QR Pelanggaran Siswa_files/iziToast.min.js"></script>
+    <link rel="stylesheet" href="./Scan QR Pelanggaran Siswa_files/iziToast.min.css">
+    
+    <style>
+        :root {
+            --card-header-bg: #046A38;
+            --btn-camera: #059669;
+            --btn-camera-hover: #047857;
+            --btn-search: #1e3a8a;
+            --btn-search-hover: #1e40af;
+            --border-color: #cbd5e1;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 16px;
+        }
+
+        .main-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 370px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .card-header-custom {
+            background-color: var(--card-header-bg);
+            color: #ffffff;
+            padding: 18px 16px 14px 16px;
+            text-align: center;
+        }
+
+        .card-header-custom .title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .card-header-custom .title i {
+            color: #facc15;
+            font-size: 1.05rem;
+        }
+
+        .card-header-custom .subtitle {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .card-body-custom {
+            padding: 18px 20px 14px 20px;
+        }
+
+        .scan-area-wrapper {
+            position: relative;
+            padding: 10px;
+            background: #ffffff;
+            border: 1.5px dashed var(--border-color);
+            border-radius: 14px;
+            margin-bottom: 14px;
+            min-height: 185px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #reader { 
+            width: 100%; 
+            border-radius: 10px; 
+            overflow: hidden !important;
+            position: relative;
+            z-index: 2;
+        }
+        
+        #reader video {
+            object-fit: cover;
+            border-radius: 10px;
+            width: 100% !important;
+        }
+        
+        #idle-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-muted);
+            z-index: 1;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #idle-placeholder i {
+            font-size: 3.3rem;
+            color: #10b981;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        #idle-placeholder p {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Scan Line Animation */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            animation: scanning 2s linear infinite;
+            display: none;
+        }
+
+        .scanning-active .scan-line {
+            display: block;
+        }
+
+        @keyframes scanning {
+            0% { top: 0; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .btn-custom-camera {
+            background-color: var(--btn-camera);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            padding: 10px 16px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-custom-camera:hover {
+            background-color: var(--btn-camera-hover);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        }
+
+        .btn-custom-stop {
+            background-color: #dc2626 !important;
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            border-radius: 10px;
+            padding: 10px 16px;
+            width: 100%;
+        }
+
+        .hint-text {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .section-separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #94a3b8;
+            margin: 12px 0 14px 0;
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.8px;
+        }
+
+        .section-separator::before,
+        .section-separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .section-separator:not(:empty)::before { margin-right: .75em; }
+        .section-separator:not(:empty)::after { margin-left: .75em; }
+
+        .input-nisn {
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            height: 42px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: #334155;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .input-nisn:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+            outline: none;
+        }
+
+        .input-nisn::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.84rem;
+        }
+
+        .btn-custom-search {
+            background-color: var(--btn-search);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            padding: 10px 16px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-custom-search:hover {
+            background-color: var(--btn-search-hover);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+        }
+
+        .card-footer-links {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            margin-top: 14px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .card-footer-links a {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .card-footer-links a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .link-left {
+            color: #64748b;
+        }
+
+        .link-right {
+            color: #059669;
+        }
+    </style>
+<style data-glasp-print="rule">@media print{[data-glasp-print="hide"]{display:none !important}}</style></head>
+<body>
+
+<div class="main-card">
+    <div class="card-header-custom">
+        <div class="title">
+            <i class="fas fa-qrcode"></i> SCAN KARTU PELAJAR
+        </div>
+        <p class="subtitle">Lapor Pelanggaran Siswa (BK &amp; Kedisiplinan)</p>
+    </div>
+    
+    <div class="card-body-custom">
+        
+        <div class="scan-area-wrapper">
+            <div id="idle-placeholder">
+                <i class="fas fa-camera"></i>
+                <p>KAMERA TIDAK AKTIF</p>
+            </div>
+            <div id="reader"></div>
+            <div class="scan-line"></div>
+        </div>
+
+        <div>
+            <button id="camera-permission" class="btn-custom-camera">
+                <i class="fas fa-camera"></i> MULAI SCAN KAMERA
+            </button>
+            <div class="hint-text">
+                Arahkan kamera ke <strong>QR Code / Barcode</strong> Kartu Pelajar
+            </div>
+        </div>
+
+        <div class="section-separator">ATAU CARI MANUAL</div>
+
+        <div>
+            <input type="text" id="manual-code" class="form-control input-nisn" placeholder="Masukkan 10 Digit NISN Siswa" maxlength="15">
+            <button class="btn-custom-search" id="btn-manual">
+                <i class="fas fa-search"></i> CARI DATA SISWA
+            </button>
+        </div>
+
+        <div class="card-footer-links">
+            <a href="https://man4banjar.com/akademik/index.php" class="link-left">
+                <i class="fas fa-file-alt mr-1"></i> Form / Beranda →
+            </a>
+            <a href="https://man4banjar.com/akademik/login/" class="link-right">
+                <i class="fas fa-shield-alt mr-1"></i> Pos BK / Guru →
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script src="./Scan QR Pelanggaran Siswa_files/jquery-3.5.1.min.js"></script>
+<script>
+    let html5QrCode;
+    let isScanning = false;
+
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Scan result: ${decodedText}`, decodedResult);
+        
+        // Stop scanning
+        stopCamera().then(() => {
+             // Redirect
+             window.location.href = "input_pelanggaran.php?nisn=" + encodeURIComponent(decodedText);
+        });
+    }
+
+    function onScanError(errorMessage) {
+        // handle on error condition
+    }
+
+    async function startCamera() {
+        try {
+            html5QrCode = new Html5Qrcode("reader");
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: 180,
+                    aspectRatio: 1.0,
+                    formatsToSupport: [ 
+                        Html5QrcodeSupportedFormats.QR_CODE,
+                        Html5QrcodeSupportedFormats.CODE_128,
+                        Html5QrcodeSupportedFormats.CODE_39,
+                        Html5QrcodeSupportedFormats.EAN_13
+                    ]
+                },
+                onScanSuccess,
+                onScanError
+            );
+            
+            // UI Updates
+            isScanning = true;
+            $('#idle-placeholder').hide();
+            $('.scan-area-wrapper').addClass('scanning-active');
+            
+            // Change Button to Stop
+            $('#camera-permission').removeClass('btn-custom-camera').addClass('btn-custom-stop')
+                .html('<i class="fas fa-stop mr-2"></i> STOP KAMERA');
+
+        } catch (err) {
+            console.error(err);
+             iziToast.error({
+                title: 'Error',
+                message: 'Gagal mengakses kamera: ' + err,
+                position: 'topCenter'
+            });
+        }
+    }
+
+    async function stopCamera() {
+        if(html5QrCode && isScanning) {
+            try {
+                await html5QrCode.stop();
+                html5QrCode.clear();
+                
+                // UI Updates
+                isScanning = false;
+                $('#idle-placeholder').show();
+                $('.scan-area-wrapper').removeClass('scanning-active');
+                
+                // Change Button to Start
+                $('#camera-permission').removeClass('btn-custom-stop').addClass('btn-custom-camera')
+                    .html('<i class="fas fa-camera mr-2"></i> MULAI SCAN KAMERA');
+                    
+            } catch (err) {
+                console.error("Failed to stop", err);
+            }
+        }
+    }
+
+    $("#camera-permission").click(function(){
+        if(isScanning) {
+            stopCamera();
+        } else {
+            startCamera();
+        }
+    });
+
+    // Manual Input Handler
+    $("#btn-manual").click(function() {
+        var code = $("#manual-code").val().trim();
+        if (code !== "") {
+            window.location.href = "input_pelanggaran.php?nisn=" + encodeURIComponent(code);
+        } else {
+             iziToast.warning({
+                title: 'Hei!',
+                message: 'NISN tidak boleh kosong',
+                position: 'topCenter'
+            });
+        }
+    });
+
+    $("#manual-code").on('keypress', function(e) {
+        if (e.which === 13) {
+            $("#btn-manual").click();
+        }
+    });
+    
+    function onlyNumberKey(evt) {
+        var ASCIICode = (evt.which) ? evt.which : evt.keyCode
+        if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
+            return false;
+        return true;
+    }
+
+</script>
+
+
+
+<div class="glasp-extension-toaster glasp-extension-toaster--glasp-extension" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 2147483647;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"></div></template></div><div class="glasp-extension-highlighter" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 0px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 0px; left: 0px; height: 0px; z-index: 2147483646; pointer-events: none;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"><style>
+.glasp-md.glasp-md { word-break: break-word; }
+.glasp-md.glasp-md > :first-child { margin-top: 0; }
+.glasp-md.glasp-md > :last-child { margin-bottom: 0; }
+.glasp-md.glasp-md h1, .glasp-md.glasp-md h2, .glasp-md.glasp-md h3, .glasp-md.glasp-md h4 {
+  margin: 0.4em 0 0.2em; font-size: 1.12em; font-weight: 700; line-height: 1.3; padding: 0;
+}
+.glasp-md.glasp-md p { margin: 0.6em 0; line-height: 1.55; }
+.glasp-md.glasp-md ul { list-style: disc outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md ol { list-style: decimal outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md li { display: list-item; margin: 0.32em 0; line-height: 1.5; }
+.glasp-md.glasp-md ul ul, .glasp-md.glasp-md ol ol, .glasp-md.glasp-md ul ol, .glasp-md.glasp-md ol ul { margin: 0.32em 0; }
+.glasp-md.glasp-md ul ul { list-style: circle outside; }
+.glasp-md.glasp-md strong { font-weight: 700; }
+.glasp-md.glasp-md em { font-style: italic; }
+.glasp-md.glasp-md a { color: rgb(51 121 255); text-decoration: none; }
+.glasp-md.glasp-md a:hover { text-decoration: underline; }
+.glasp-md.glasp-md blockquote {
+  margin: 0.6em 0; padding-block: 0.1em; padding-inline: 0.85em 0;
+  border-inline-start: 3px solid #dfe3ea; color: #5b616e;
+}
+.glasp-md.glasp-md blockquote p { margin: 0.25em 0; }
+.glasp-md.glasp-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+  background: #f1f5f9; color: #1f2937; padding: 0 3px; border-radius: 3px;
+}
+.glasp-md.glasp-md pre {
+  background: #f1f5f9; color: #1f2937; padding: 8px 10px; border-radius: 6px; overflow-x: auto; margin: 0.4em 0;
+}
+.glasp-md.glasp-md pre code { background: none; padding: 0; }
+/* Code is ALWAYS left-to-right, whatever the surrounding text does. Without this,
+   an RTL host page — or a dir=auto container that resolved RTL from an Arabic
+   first character — reorders every code line: an opening brace jumps to the far
+   end, and a leading comment marker lands on the wrong side. unicode-bidi
+   isolate also stops the code from reordering the prose around it.
+   NOTE: no backticks in this comment. It lives inside a JS template literal. */
+.glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
+</style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

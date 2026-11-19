@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Core\Interface\Http\Controllers\AuthController;
 use App\Modules\Core\Interface\Http\Controllers\BrandMediaController;
+use App\Modules\Core\Interface\Http\Controllers\ExternalApplicantAuthController;
 use App\Modules\Core\Interface\Http\Controllers\PasswordController;
 use App\Modules\Core\Interface\Http\Controllers\ProfileController;
 use App\Modules\Core\Interface\Http\Controllers\PublicPortalAdminController;
@@ -14,7 +15,9 @@ use App\Modules\Core\Interface\Http\Controllers\SchoolNewsController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolOrganizationController;
 use App\Modules\Core\Interface\Http\Controllers\SchoolProfileController;
 use App\Modules\Core\Interface\Http\Controllers\SecurityOperationsController;
+use App\Modules\Core\Interface\Http\Controllers\UnifiedTrackingController;
 use App\Modules\Core\Interface\Http\Controllers\UserController;
+use App\Modules\Core\Interface\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/branding/sekolah/{school}/{kind}', [BrandMediaController::class, 'school'])->where('kind', 'logo|favicon')->name('branding.school');
@@ -37,6 +40,22 @@ Route::get('/pusat-unduh/{download}/unduh', [PublicPortalController::class, 'dow
 Route::get('/zona-integritas', [PublicPortalController::class, 'integrityZone'])->name('core.public.integrity');
 Route::post('/zona-integritas/ikm', [PublicPortalController::class, 'submitIkm'])->middleware('throttle:sensitive')->name('core.public.ikm.store');
 Route::get('/jadwal-salat', [PublicPortalController::class, 'prayerAndStats'])->name('core.public.prayer');
+
+// Pelacakan Terpadu & Verifikasi Dokumen/Siswa Publik (M4-TU-01, M4-TU-04, M4-LIF-04)
+Route::get('/lacak', [UnifiedTrackingController::class, 'index'])->name('core.tracking.index');
+Route::post('/lacak', [UnifiedTrackingController::class, 'lookup'])->middleware('throttle:sensitive')->name('core.tracking.lookup');
+Route::get('/verifikasi', [VerificationController::class, 'index'])->name('core.verification.index');
+Route::post('/verifikasi', [VerificationController::class, 'verify'])->middleware('throttle:sensitive')->name('core.verification.check');
+
+Route::prefix('layanan/ptsp/akun')->name('core.ptsp.account.')->group(function (): void {
+    Route::get('/', [ExternalApplicantAuthController::class, 'show'])->name('show');
+    Route::post('/daftar', [ExternalApplicantAuthController::class, 'register'])->middleware('throttle:sensitive')->name('register');
+    Route::post('/masuk', [ExternalApplicantAuthController::class, 'login'])->middleware('throttle:sensitive')->name('login');
+    Route::post('/keluar', [ExternalApplicantAuthController::class, 'logout'])->name('logout');
+    Route::patch('/profil', [ExternalApplicantAuthController::class, 'updateProfile'])->middleware('throttle:sensitive')->name('profile');
+    Route::post('/pulihkan', [ExternalApplicantAuthController::class, 'requestRecovery'])->middleware('throttle:sensitive')->name('recovery');
+    Route::post('/reset-sandi', [ExternalApplicantAuthController::class, 'resetPassword'])->middleware('throttle:sensitive')->name('reset');
+});
 
 // Guest authentication routes
 Route::middleware('guest')->group(function (): void {

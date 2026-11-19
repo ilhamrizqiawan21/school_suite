@@ -22,12 +22,16 @@ class StudentIncident extends Model
         'class_group_id',
         'recorded_by_user_id',
         'incident_date',
+        'incident_time',
+        'location',
         'title',
         'description',
         'category',
         'penalty_points',
         'follow_up_action',
+        'evidence_document_ids',
         'status',
+        'is_bk_confidential',
     ];
 
     protected $casts = [
@@ -38,6 +42,8 @@ class StudentIncident extends Model
         'recorded_by_user_id' => 'integer',
         'incident_date' => 'date',
         'penalty_points' => 'integer',
+        'evidence_document_ids' => 'array',
+        'is_bk_confidential' => 'boolean',
     ];
 
     /**

@@ -13,13 +13,22 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class AdmissionApplicant extends Model
 {
     protected $fillable = [
-        'school_id', 'period_id', 'track_id', 'registration_no', 'name', 'nisn', 'gender', 'birth_date',
-        'parent_name', 'parent_phone', 'previous_school', 'status', 'notes', 'created_by',
+        'school_id', 'period_id', 'track_id', 'external_applicant_id', 'service_ticket_id',
+        'verification_secret_hash', 'registration_no', 'name', 'nisn', 'gender', 'birth_date',
+        'birth_place', 'parent_name', 'parent_phone', 'address', 'previous_school', 'status',
+        'notes', 'revision_notes', 'idempotency_key', 'created_by',
     ];
 
     protected function casts(): array
     {
-        return ['birth_date' => 'date', 'school_id' => 'integer', 'period_id' => 'integer', 'track_id' => 'integer'];
+        return [
+            'birth_date' => 'date',
+            'school_id' => 'integer',
+            'period_id' => 'integer',
+            'track_id' => 'integer',
+            'external_applicant_id' => 'integer',
+            'service_ticket_id' => 'integer',
+        ];
     }
 
     /** @return BelongsTo<User, $this> */

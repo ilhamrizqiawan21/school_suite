@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)https://man4banjar.com/akademik/presensi_kiosk.php -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR</title>
+    
+    <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR_files/css2" rel="stylesheet">
+    <link rel="stylesheet" href="./Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR_files/all.min.css">
+    
+    <!-- HTML5 QR Code Scanner (Fallback Kamera) -->
+    <script src="./Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR_files/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        :root {
+            --bg-dark: #090e17;
+            --bg-card: #0f172a;
+            --bg-card-hover: #1e293b;
+            --emerald-500: #10b981;
+            --emerald-600: #059669;
+            --emerald-glow: rgba(16, 185, 129, 0.4);
+            --amber-500: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.4);
+            --rose-500: #f43f5e;
+            --rose-glow: rgba(244, 63, 94, 0.4);
+            --cyan-500: #06b6d4;
+            --cyan-glow: rgba(6, 182, 212, 0.4);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(5, 150, 105, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
+        }
+
+        /* Top Header */
+        header {
+            padding: 16px 28px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .school-logo {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+        }
+
+        .brand-text h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .brand-text p {
+            font-size: 13px;
+            color: var(--emerald-500);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand-text p .badge-live {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10.5px;
+            font-weight: 700;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .clock-container {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .clock-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .clock-time span.sec {
+            color: var(--emerald-500);
+            font-size: 22px;
+        }
+
+        .clock-date {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-kiosk {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-light);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .btn-kiosk:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Main Workspace Container */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+        }
+
+        /* Hidden / Persistent Input for RFID USB Reader */
+        #rfid-input {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Central Display Card */
+        .terminal-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 680px;
+            padding: 40px 36px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Idle State / Waiting Animation */
+        .idle-state {
+            display: block;
+        }
+
+        .nfc-icon-wrapper {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 28px auto;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 70%, transparent 100%);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        .nfc-icon-wrapper i {
+            font-size: 48px;
+            color: var(--emerald-500);
+            filter: drop-shadow(0 0 15px var(--emerald-glow));
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); transform: scale(0.98); }
+            50% { box-shadow: 0 0 0 22px rgba(16, 185, 129, 0); transform: scale(1.02); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); transform: scale(0.98); }
+        }
+
+        .idle-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .idle-desc {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            max-width: 460px;
+            margin: 0 auto 24px auto;
+        }
+
+        .gate-badge-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .gate-badge-indicator i {
+            color: var(--cyan-500);
+        }
+
+        /* Result State (Success / Warning / Pulang) */
+        .result-state {
+            display: none;
+            animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes card-appear {
+            from { opacity: 0; transform: scale(0.94) translateY(15px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .result-badge-top {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .result-badge-top.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1.5px solid rgba(52, 211, 153, 0.4);
+            box-shadow: 0 0 20px var(--emerald-glow);
+        }
+
+        .result-badge-top.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1.5px solid rgba(251, 191, 36, 0.4);
+            box-shadow: 0 0 20px var(--amber-glow);
+        }
+
+        .result-badge-top.info {
+            background: rgba(6, 182, 212, 0.2);
+            color: #38bdf8;
+            border: 1.5px solid rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 20px var(--cyan-glow);
+        }
+
+        .result-badge-top.error {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fb7185;
+            border: 1.5px solid rgba(251, 113, 133, 0.4);
+            box-shadow: 0 0 20px var(--rose-glow);
+        }
+
+        .student-profile-box {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 20px 24px;
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .student-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 18px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: #1e293b;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .student-info h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .student-info .meta-tag {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-info .meta-tag strong {
+            color: #cbd5e1;
+        }
+
+        .student-class-badge {
+            background: rgba(6, 182, 212, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .result-meta-row {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .meta-col {
+            text-align: center;
+        }
+
+        .meta-col .label {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .meta-col .val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .result-message-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Bottom Live Stream Footer */
+        footer {
+            padding: 14px 28px;
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            z-index: 10;
+        }
+
+        .stats-pills {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            padding: 5px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .stat-pill .num {
+            font-weight: 800;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-pill.success .num { color: #34d399; }
+        .stat-pill.warning .num { color: #fbbf24; }
+        .stat-pill.info .num { color: #38bdf8; }
+        .stat-pill.danger .num { color: #f87171; }
+
+        /* QR Scanner Modal */
+        #qr-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        #qr-video-reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 16px 0;
+            background: #000;
+        }
+
+        /* Pulse Indicator for Active Input */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--emerald-500);
+            display: inline-block;
+            box-shadow: 0 0 8px var(--emerald-glow);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+<style data-glasp-print="rule">@media print{[data-glasp-print="hide"]{display:none !important}}</style></head>
+<body>
+
+    <!-- Header Atas -->
+    <header>
+        <div class="brand-container">
+            <img src="./Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR_files/logo239.png" alt="Logo MADRASAH ALIYAH NEGERI 4 BANJAR" class="school-logo" onerror="this.onerror=null; this.src='assets/database.png';">
+            <div class="brand-text">
+                <h1>MADRASAH ALIYAH NEGERI 4 BANJAR</h1>
+                <p>
+                    <span class="status-dot"></span> 
+                    <span>KIOS PRESENSI SISWA</span>
+                    <span class="badge-live" id="gate-display-label">Gate Utama</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="clock-container">
+            <div>
+                <div class="clock-time" id="digital-clock">22:12<span class="sec">:03</span></div>
+                <div class="clock-date" id="digital-date">Kamis, 19 November 2026</div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button type="button" class="btn-kiosk" id="btn-camera" title="Buka Kamera Scan QR Code"><i class="fa fa-qrcode"></i> QR Kamera</button>
+            <button type="button" class="btn-kiosk" id="btn-change-gate" title="Ganti Nama Gate/Pos"><i class="fa fa-sliders"></i> Gate</button>
+            <button type="button" class="btn-kiosk" id="btn-fullscreen" title="Layar Penuh (F11)"><i class="fa fa-expand"></i> Fullscreen</button>
+            <a href="https://man4banjar.com/akademik/login/index.php?pg=presensi_siswa" class="btn-kiosk text-warning" title="Kembali ke Dashboard Admin"><i class="fa fa-dashboard"></i> Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Workspace Utama -->
+    <main onclick="focusRfidInput();">
+        
+        <!-- Persistent Hidden Input yang selalu menerima sinyal RFID USB Reader -->
+        <input type="text" id="rfid-input" autofocus="" autocomplete="off" spellcheck="false">
+
+        <!-- Kartu Terminal Utama -->
+        <div class="terminal-card" id="terminal-card">
+
+            <!-- STATE 1: IDLE / MENUNGGU TAP KARTU -->
+            <div class="idle-state" id="idle-state">
+                <div class="nfc-icon-wrapper">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                </div>
+                <h2 class="idle-title">Tempelkan Kartu Pelajar</h2>
+                <p class="idle-desc">Dekatkan kartu RFID atau arahkan Barcode kartu ke alat scanner untuk presensi mandiri.</p>
+                <div class="gate-badge-indicator">
+                    <i class="fa fa-bolt"></i> 
+                    <span>Scanner Aktif &amp; Siap Menerima Tap</span>
+                </div>
+            </div>
+
+            <!-- STATE 2: HASIL SCAN (POP-UP SISWA) -->
+            <div class="result-state" id="result-state">
+                
+                <div class="result-badge-top success" id="res-badge">
+                    <i class="fa fa-check-circle" id="res-icon"></i>
+                    <span id="res-status-text">HADIR TEPAT WAKTU</span>
+                </div>
+
+                <div class="student-profile-box">
+                    <img src="./Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR_files/avatar-1.png" alt="Foto Siswa" class="student-avatar" id="res-avatar" onerror="this.src='assets/img/avatar/avatar-1.png';">
+                    <div class="student-info">
+                        <h2 id="res-nama">Muhammad Fauzan</h2>
+                        <div class="meta-tag">
+                            <span>NISN: <strong id="res-nisn">0081234567</strong></span>
+                            <span>•</span>
+                            <span class="student-class-badge" id="res-kelas">XII IPA 1</span>
+                        </div>
+                        <div class="meta-tag" style="margin-bottom: 0;">
+                            <span>Status Hari Ini: <b id="res-status-sub" style="color: #34d399;">Tepat Waktu</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-meta-row">
+                    <div class="meta-col">
+                        <div class="label">Waktu Presensi</div>
+                        <div class="val" id="res-jam">06:45 WIB</div>
+                    </div>
+                    <div class="meta-col">
+                        <div class="label">Pos / Gate</div>
+                        <div class="val" id="res-gate" style="color: var(--cyan-500);">Gate Utama</div>
+                    </div>
+                    <div class="meta-col">
+                        <div class="label">Keterlambatan</div>
+                        <div class="val" id="res-terlambat" style="color: #34d399;">0 Menit</div>
+                    </div>
+                </div>
+
+                <p class="result-message-text" id="res-msg">Presensi kehadiran berhasil dicatat.</p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer Statistik Hari Ini -->
+    <footer>
+        <div class="stats-pills" id="stats-pills-container">
+            <div class="stat-pill">
+                <span>Total Siswa:</span>
+                <span class="num" id="stat-total">781</span>
+            </div>
+            <div class="stat-pill success">
+                <i class="fa fa-user-check text-success"></i>
+                <span>Hadir:</span>
+                <span class="num" id="stat-hadir">15</span>
+            </div>
+            <div class="stat-pill success">
+                <span>Tepat Waktu:</span>
+                <span class="num" id="stat-tepat">0</span>
+            </div>
+            <div class="stat-pill warning">
+                <i class="fa fa-user-clock text-warning"></i>
+                <span>Terlambat:</span>
+                <span class="num" id="stat-terlambat">0</span>
+            </div>
+            <div class="stat-pill info">
+                <i class="fa fa-person-walking-arrow-right text-info"></i>
+                <span>Sudah Pulang:</span>
+                <span class="num" id="stat-pulang">0</span>
+            </div>
+            <div class="stat-pill danger">
+                <span>Belum Hadir:</span>
+                <span class="num" id="stat-belum">766</span>
+            </div>
+        </div>
+
+        <div style="color: var(--text-muted); font-size: 12px;">
+            <span><i class="fa fa-keyboard mr-1"></i> Mode USB Keyboard RFID / Barcode Auto-Focus</span>
+        </div>
+    </footer>
+
+    <!-- QR Code Camera Modal -->
+    <div id="qr-modal">
+        <div class="modal-box">
+            <h3 style="font-size: 18px; margin-bottom: 6px;"><i class="fa fa-camera text-info mr-2"></i> Scan QR Code Kartu</h3>
+            <p style="font-size: 13px; color: var(--text-muted);">Arahkan QR Code Kartu Pelajar ke depan kamera.</p>
+            <div id="qr-video-reader"></div>
+            <button type="button" class="btn-kiosk mt-2 w-100 justify-content-center" id="btn-close-camera">
+                <i class="fa fa-times mr-1"></i> Tutup Kamera
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 0. PATH & KONFIGURASI DINAMIS
+        // =========================================================================
+        const API_URL = 'login/mod_presensi_siswa/api_presensi.php';
+        const DOC_ROOT = '';
+        const DEFAULT_AVATAR = 'assets/img/avatar/avatar-1.png';
+
+        // =========================================================================
+        // 1. INTI JAM & TANGGAL REAL-TIME
+        // =========================================================================
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('digital-clock').innerHTML = `${h}:${m}<span class="sec">:${s}</span>`;
+            
+            const dayName = days[now.getDay()];
+            const dayNum = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            document.getElementById('digital-date').innerText = `${dayName}, ${dayNum} ${monthName} ${year}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // =========================================================================
+        // 2. KELOLA PENGATURAN GATE / POS DI LOCALSTORAGE
+        // =========================================================================
+        let currentGate = localStorage.getItem('kiosk_gate_name') || 'Gate Utama';
+        document.getElementById('gate-display-label').innerText = currentGate;
+
+        document.getElementById('btn-change-gate').addEventListener('click', function() {
+            const newGate = prompt('Masukkan Nama Pos / Gate Kios Ini (Misal: Gate Putra, Gate Putri, Gate 1):', currentGate);
+            if (newGate && newGate.trim() !== '') {
+                currentGate = newGate.trim();
+                localStorage.setItem('kiosk_gate_name', currentGate);
+                document.getElementById('gate-display-label').innerText = currentGate;
+            }
+        });
+
+        // =========================================================================
+        // 3. AUDIO SYNTHESIS ENGINE (BEEP MERDU + SUARA SAMBUTAN INDONESIA)
+        // =========================================================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSoundTone(type) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'success') {
+                    // Dua nada manis (C5 -> E5)
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'warning') {
+                    // Tiga nada peringatan (F4 -> D4)
+                    osc.frequency.setValueAtTime(349.23, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(293.66, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else {
+                    // Nada rendah error
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.warn('Audio tone failed', e);
+            }
+        }
+
+        function speakGreeting(text) {
+            if (!('speechSynthesis' in window) || !text) return;
+            try {
+                window.speechSynthesis.cancel(); // Hentikan suara sebelumnya jika ada
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.rate = 1.05; // Sedikit lebih lincah
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.warn('Speech synthesis failed', e);
+            }
+        }
+
+        // =========================================================================
+        // 4. AUTOFOCUS KEEPER UNTUK RFID USB READER
+        // =========================================================================
+        const rfidInput = document.getElementById('rfid-input');
+
+        function focusRfidInput() {
+            rfidInput.focus();
+        }
+
+        // Pastikan input selalu aktif dan fokus
+        window.addEventListener('load', focusRfidInput);
+        document.addEventListener('click', focusRfidInput);
+        setInterval(() => {
+            if (document.activeElement !== rfidInput && !document.getElementById('qr-modal').style.display.includes('flex')) {
+                rfidInput.focus();
+            }
+        }, 1500);
+
+        // =========================================================================
+        // 5. PENANGANAN SCAN KARTU (ENTER KEY DARI RFID READER)
+        // =========================================================================
+        let isProcessing = false;
+        let resetTimer = null;
+
+        rfidInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const code = this.value.trim();
+                this.value = '';
+                if (code.length >= 3) {
+                    processScan(code, 'rfid');
+                }
+            }
+        });
+
+        function processScan(code, method = 'rfid') {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const formData = new FormData();
+            formData.append('action', 'scan');
+            formData.append('code', code);
+            formData.append('gate', currentGate);
+            formData.append('method', method);
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                showScanResult(data);
+                refreshStats();
+            })
+            .catch(err => {
+                console.error(err);
+                playSoundTone('error');
+                showErrorMessage('Terjadi kendala jaringan saat menghubungi server.');
+            })
+            .finally(() => {
+                isProcessing = false;
+                focusRfidInput();
+            });
+        }
+
+        // =========================================================================
+        // 6. TAMPILKAN HASIL SCAN KE LAYAR
+        // =========================================================================
+        const idleState = document.getElementById('idle-state');
+        const resultState = document.getElementById('result-state');
+        const resBadge = document.getElementById('res-badge');
+        const resIcon = document.getElementById('res-icon');
+        const resStatusText = document.getElementById('res-status-text');
+        const resAvatar = document.getElementById('res-avatar');
+        const resNama = document.getElementById('res-nama');
+        const resNisn = document.getElementById('res-nisn');
+        const resKelas = document.getElementById('res-kelas');
+        const resStatusSub = document.getElementById('res-status-sub');
+        const resJam = document.getElementById('res-jam');
+        const resGate = document.getElementById('res-gate');
+        const resTerlambat = document.getElementById('res-terlambat');
+        const resMsg = document.getElementById('res-msg');
+
+        function showScanResult(res) {
+            if (resetTimer) clearTimeout(resetTimer);
+
+            if (!res.success) {
+                // Kartu tidak dikenali
+                playSoundTone(res.sound_tone || 'error');
+                if (res.audio_text) speakGreeting(res.audio_text);
+                showErrorMessage(res.message);
+                return;
+            }
+
+            // Bunyikan Audio
+            playSoundTone(res.sound_tone || 'success');
+            if (res.audio_text) speakGreeting(res.audio_text);
+
+            const st = res.student;
+            resAvatar.src = (st.foto && st.foto !== '') ? (DOC_ROOT + st.foto) : DEFAULT_AVATAR;
+            resAvatar.onerror = function() { this.src = DEFAULT_AVATAR; };
+            resNama.innerText = st.nama;
+            resNisn.innerText = st.nisn;
+            resKelas.innerText = st.kelas;
+            resJam.innerText = st.jam || 'Sekarang';
+            resGate.innerText = currentGate;
+            resMsg.innerText = res.message;
+
+            // Reset Badge Class
+            resBadge.className = 'result-badge-top';
+            if (res.type === 'pulang') {
+                resBadge.classList.add('info');
+                resIcon.className = 'fa fa-person-walking-arrow-right';
+                resStatusText.innerText = 'PRESENSI PULANG';
+                resStatusSub.innerText = 'Sudah Pulang';
+                resStatusSub.style.color = '#38bdf8';
+                resTerlambat.innerText = '-';
+                resTerlambat.style.color = '#ffffff';
+            } else if (res.type === 'duplicate' || res.type === 'info') {
+                resBadge.classList.add('warning');
+                resIcon.className = 'fa fa-info-circle';
+                resStatusText.innerText = st.status_label || 'SUDAH HADIR';
+                resStatusSub.innerText = 'Tercatat Hadir';
+                resStatusSub.style.color = '#fbbf24';
+                resTerlambat.innerText = '-';
+            } else if (st.terlambat > 0) {
+                resBadge.classList.add('warning');
+                resIcon.className = 'fa fa-clock';
+                resStatusText.innerText = `TERLAMBAT ${st.terlambat} MENIT`;
+                resStatusSub.innerText = 'Terlambat';
+                resStatusSub.style.color = '#fbbf24';
+                resTerlambat.innerText = `${st.terlambat} Menit`;
+                resTerlambat.style.color = '#fbbf24';
+            } else {
+                resBadge.classList.add('success');
+                resIcon.className = 'fa fa-check-circle';
+                resStatusText.innerText = 'HADIR TEPAT WAKTU';
+                resStatusSub.innerText = 'Tepat Waktu';
+                resStatusSub.style.color = '#34d399';
+                resTerlambat.innerText = '0 Menit';
+                resTerlambat.style.color = '#34d399';
+            }
+
+            idleState.style.display = 'none';
+            resultState.style.display = 'block';
+
+            // Kembali ke mode idle setelah 3.5 detik
+            resetTimer = setTimeout(() => {
+                resultState.style.display = 'none';
+                idleState.style.display = 'block';
+                focusRfidInput();
+            }, 3500);
+        }
+
+        function showErrorMessage(msg) {
+            if (resetTimer) clearTimeout(resetTimer);
+
+            resBadge.className = 'result-badge-top error';
+            resIcon.className = 'fa fa-triangle-exclamation';
+            resStatusText.innerText = 'GAGAL / TIDAK DIKENALI';
+            
+            resAvatar.src = DEFAULT_AVATAR;
+            resAvatar.onerror = function() { this.src = DEFAULT_AVATAR; };
+            resNama.innerText = 'Kartu Tidak Dikenali';
+            resNisn.innerText = '-';
+            resKelas.innerText = 'Tidak Terdaftar';
+            resStatusSub.innerText = 'Gagal';
+            resStatusSub.style.color = '#fb7185';
+            resJam.innerText = '-';
+            resGate.innerText = currentGate;
+            resTerlambat.innerText = '-';
+            resMsg.innerText = msg;
+
+            idleState.style.display = 'none';
+            resultState.style.display = 'block';
+
+            resetTimer = setTimeout(() => {
+                resultState.style.display = 'none';
+                idleState.style.display = 'block';
+                focusRfidInput();
+            }, 3000);
+        }
+
+        // =========================================================================
+        // 7. STATISTIK HARI INI & AUTO REFRESH
+        // =========================================================================
+        function refreshStats() {
+            fetch(API_URL + '?action=get_stats_today')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('stat-total').innerText = data.total_siswa.toLocaleString();
+                    document.getElementById('stat-hadir').innerText = data.hadir.toLocaleString();
+                    document.getElementById('stat-tepat').innerText = data.tepat_waktu.toLocaleString();
+                    document.getElementById('stat-terlambat').innerText = data.terlambat.toLocaleString();
+                    document.getElementById('stat-pulang').innerText = data.sudah_pulang.toLocaleString();
+                    document.getElementById('stat-belum').innerText = data.belum_hadir.toLocaleString();
+                }
+            })
+            .catch(console.warn);
+        }
+        refreshStats();
+        setInterval(refreshStats, 15000); // Polling statistik tiap 15 detik
+
+        // =========================================================================
+        // 8. KAMERA SCANNER FALLBACK (HTML5 QR CODE)
+        // =========================================================================
+        let html5QrScanner = null;
+        const qrModal = document.getElementById('qr-modal');
+
+        document.getElementById('btn-camera').addEventListener('click', function() {
+            qrModal.style.display = 'flex';
+            if (!html5QrScanner) {
+                html5QrScanner = new Html5Qrcode("qr-video-reader");
+            }
+            html5QrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    closeCamera();
+                    processScan(decodedText, 'qr_kamera');
+                },
+                (error) => {}
+            ).catch(err => {
+                alert("Gagal mengaktifkan kamera: " + err);
+                closeCamera();
+            });
+        });
+
+        function closeCamera() {
+            if (html5QrScanner) {
+                html5QrScanner.stop().then(() => {
+                    qrModal.style.display = 'none';
+                    focusRfidInput();
+                }).catch(() => {
+                    qrModal.style.display = 'none';
+                    focusRfidInput();
+                });
+            } else {
+                qrModal.style.display = 'none';
+                focusRfidInput();
+            }
+        }
+        document.getElementById('btn-close-camera').addEventListener('click', closeCamera);
+
+        // =========================================================================
+        // 9. FULLSCREEN TOGGLE
+        // =========================================================================
+        document.getElementById('btn-fullscreen').addEventListener('click', function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Gagal masuk mode layar penuh: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+    </script>
+
+
+<div class="glasp-extension-toaster glasp-extension-toaster--glasp-extension" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 2147483647;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"></div></template></div><div class="glasp-extension-highlighter" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 0px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 0px; left: 0px; height: 0px; z-index: 2147483646; pointer-events: none;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"><style>
+.glasp-md.glasp-md { word-break: break-word; }
+.glasp-md.glasp-md > :first-child { margin-top: 0; }
+.glasp-md.glasp-md > :last-child { margin-bottom: 0; }
+.glasp-md.glasp-md h1, .glasp-md.glasp-md h2, .glasp-md.glasp-md h3, .glasp-md.glasp-md h4 {
+  margin: 0.4em 0 0.2em; font-size: 1.12em; font-weight: 700; line-height: 1.3; padding: 0;
+}
+.glasp-md.glasp-md p { margin: 0.6em 0; line-height: 1.55; }
+.glasp-md.glasp-md ul { list-style: disc outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md ol { list-style: decimal outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md li { display: list-item; margin: 0.32em 0; line-height: 1.5; }
+.glasp-md.glasp-md ul ul, .glasp-md.glasp-md ol ol, .glasp-md.glasp-md ul ol, .glasp-md.glasp-md ol ul { margin: 0.32em 0; }
+.glasp-md.glasp-md ul ul { list-style: circle outside; }
+.glasp-md.glasp-md strong { font-weight: 700; }
+.glasp-md.glasp-md em { font-style: italic; }
+.glasp-md.glasp-md a { color: rgb(51 121 255); text-decoration: none; }
+.glasp-md.glasp-md a:hover { text-decoration: underline; }
+.glasp-md.glasp-md blockquote {
+  margin: 0.6em 0; padding-block: 0.1em; padding-inline: 0.85em 0;
+  border-inline-start: 3px solid #dfe3ea; color: #5b616e;
+}
+.glasp-md.glasp-md blockquote p { margin: 0.25em 0; }
+.glasp-md.glasp-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+  background: #f1f5f9; color: #1f2937; padding: 0 3px; border-radius: 3px;
+}
+.glasp-md.glasp-md pre {
+  background: #f1f5f9; color: #1f2937; padding: 8px 10px; border-radius: 6px; overflow-x: auto; margin: 0.4em 0;
+}
+.glasp-md.glasp-md pre code { background: none; padding: 0; }
+/* Code is ALWAYS left-to-right, whatever the surrounding text does. Without this,
+   an RTL host page — or a dir=auto container that resolved RTL from an Arabic
+   first character — reorders every code line: an opening brace jumps to the far
+   end, and a leading comment marker lands on the wrong side. unicode-bidi
+   isolate also stops the code from reordering the prose around it.
+   NOTE: no backticks in this comment. It lives inside a JS template literal. */
+.glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
+</style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

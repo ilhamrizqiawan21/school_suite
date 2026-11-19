@@ -36,6 +36,35 @@ class PublicPortalService
     ) {}
 
     /**
+     * Build shared header/footer/modal data for the Madrasah public Blade theme.
+     *
+     * @return array<string, mixed>
+     */
+    public function madrasahShellData(School $school, bool $incrementVisit = false): array
+    {
+        $schoolId = (int) $school->id;
+
+        $visits = $incrementVisit
+            ? $this->recordAnonymousVisit($schoolId)
+            : $this->visitStats($schoolId);
+
+        return [
+            'profile' => [
+                ...$school->only([
+                    'name', 'legal_name', 'level', 'school_status', 'accreditation',
+                    'address', 'phone', 'email', 'principal_name', 'website',
+                    'about', 'principal_message', 'vision', 'mission',
+                ]),
+                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+            ],
+            'visits' => $visits,
+            'prayer' => $this->prayerTimesForSchool($school),
+            'downloads' => $this->publishedDownloads($schoolId),
+            'ikm' => $this->ikmSummary($schoolId),
+        ];
+    }
+
+    /**
      * Increment anonymous daily visit counter without storing any PII (M4-PUB-07).
      *
      * @return array{today: int, month: int, total: int}

@@ -7,28 +7,60 @@ namespace App\Modules\Core\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Core\Application\Services\PublicPortalService;
 use App\Modules\Core\Application\Services\SchoolOrganizationTreeService;
+use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolGalleryAlbum;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class SchoolProfileController extends Controller
 {
     public function __construct(
         private readonly SchoolOrganizationTreeService $organizationTree,
         private readonly PublicPortalService $portalService,
+        private readonly SchoolScopeService $schoolScope,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response|HttpResponse
     {
-        return Inertia::render('Public/School/Profile', $this->publicData());
+        $school = School::query()->orderBy('id')->firstOrFail();
+
+        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+            return response()->view('public.madrasah.profile', $this->portalService->madrasahShellData($school));
+        }
+
+        return Inertia::render('Public/School/Profile', $this->publicData($school));
     }
 
-    public function home(): Response
+    public function home(Request $request): Response|HttpResponse
     {
-        $data = $this->publicData();
-        $school = School::query()->firstOrFail();
+        $school = School::query()->orderBy('id')->firstOrFail();
+
+        $npsn = (string) $school->npsn;
+        $isMan4 = $npsn === '30208801';
+
+        if ($this->schoolScope->usesMan4PublicTheme($npsn)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location(route('public.home'));
+            }
+
+            $data = $isMan4 ? $this->publicData($school) : [];
+
+            return response()->view('public.man4-banjar', [
+                'profile' => $data['school'] ?? [],
+                'news' => $data['news'] ?? [],
+                'gallery' => $data['gallery'] ?? [],
+                'visits' => $this->portalService->recordAnonymousVisit((int) $school->id),
+                'prayer' => $this->portalService->prayerTimesForSchool($school),
+                'downloads' => $this->portalService->publishedDownloads((int) $school->id),
+                'ikm' => $this->portalService->ikmSummary((int) $school->id),
+            ]);
+        }
+
+        $data = $this->publicData($school);
 
         return Inertia::render('Public/School/Home', [
             'school' => $data['school'],
@@ -38,9 +70,9 @@ class SchoolProfileController extends Controller
             'prayerSchedule' => $this->portalService->prayerTimesForSchool($school),
             'shortcuts' => [
                 ['key' => 'ppdb', 'label' => 'PPDB Online', 'description' => 'Pendaftaran peserta didik baru', 'href' => '/ppdb'],
-                ['key' => 'ptsp', 'label' => 'PTSP Online', 'description' => 'Layanan persuratan & administrasi', 'href' => '/e-layanan?q=PTSP'],
+                ['key' => 'ptsp', 'label' => 'PTSP Online', 'description' => 'Layanan persuratan & administrasi', 'href' => '/layanan/ptsp'],
                 ['key' => 'siap_lapor', 'label' => 'Siap Lapor', 'description' => 'Kanal pengaduan aman & terpantau', 'href' => '/e-layanan?q=Aduan'],
-                ['key' => 'lacak', 'label' => 'Lacak Berkas', 'description' => 'Pantau progres tiket layanan', 'href' => '/e-layanan?q=Lacak'],
+                ['key' => 'lacak', 'label' => 'Lacak Berkas', 'description' => 'Pantau progres tiket layanan', 'href' => '/lacak'],
             ],
             'socialLinks' => data_get($school->settings, 'social_links', []),
         ]);
@@ -80,9 +112,9 @@ class SchoolProfileController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function publicData(): array
+    private function publicData(?School $school = null): array
     {
-        $school = School::query()->firstOrFail();
+        $school ??= School::query()->firstOrFail();
         $news = SchoolNews::query()
             ->with('photos')
             ->where('school_id', $school->id)

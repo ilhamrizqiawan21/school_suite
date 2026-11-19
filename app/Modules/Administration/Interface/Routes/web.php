@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 require __DIR__.'/staff_tasks.php';
 require __DIR__.'/facilities.php';
 require __DIR__.'/correspondence.php';
+require __DIR__.'/ptsp.php';
 
 Route::middleware(['auth', 'role:admin,operator,principal,teacher,homeroom,student', 'throttle:sensitive'])->prefix('komunikasi')->name('communication.')->group(function () {
     Route::get('/', [CommunicationController::class, 'index'])->name('index');

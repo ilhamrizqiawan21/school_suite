@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Application\Services\PublicPortalService;
+use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use App\Modules\Core\Infrastructure\Models\SchoolNewsPhoto;
@@ -19,11 +21,16 @@ use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SchoolNewsController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger) {}
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly PublicPortalService $portalService,
+        private readonly SchoolScopeService $schoolScope,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -135,10 +142,17 @@ class SchoolNewsController extends Controller
         return redirect()->route('core.news.index')->with('message', 'Foto berita berhasil dihapus.');
     }
 
-    public function publicIndex(): Response
+    public function publicIndex(Request $request): Response|HttpResponse
     {
-        $school = School::query()->firstOrFail();
+        $school = School::query()->orderBy('id')->firstOrFail();
         $news = $this->publishedQuery($school)->with('photos')->get()->map(fn (SchoolNews $item): array => $this->present($item))->values();
+
+        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+            return response()->view('public.madrasah.news', [
+                ...$this->portalService->madrasahShellData($school),
+                'news' => $news->all(),
+            ]);
+        }
 
         return Inertia::render('Public/News/Index', [
             'school' => [

@@ -53,7 +53,7 @@ const submit = () => {
     <main class="public-site public-portal-page" :style="themeStyle">
         <PublicHeader :school="school" />
         <section class="portal-container">
-            <header class="portal-hero">
+            <header class="madrasah-profile-hero portal-hero">
                 <p class="eyebrow">Zona Integritas &amp; Indeks Kepuasan Masyarakat</p>
                 <h1>Zona Integritas {{ school.name }}</h1>
                 <p>Maklumat pelayanan, enam area perubahan, ringkasan IKM terverifikasi, serta kanal penilaian dan pengaduan masyarakat.</p>

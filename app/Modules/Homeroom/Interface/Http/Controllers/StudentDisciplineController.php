@@ -43,6 +43,7 @@ class StudentDisciplineController extends Controller
         );
 
         $incidents = StudentIncident::where('school_id', $schoolId)
+            ->where('is_bk_confidential', false)
             ->when($activeTerm, fn ($q) => $q->where('term_id', $activeTerm->id))
             ->when($classGroupId, fn ($q) => $q->where('class_group_id', $classGroupId))
             ->with('recordedByUser')

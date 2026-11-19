@@ -7,6 +7,7 @@ namespace App\Modules\Core\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Core\Application\Services\PublicPortalService;
+use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Infrastructure\Models\PublicDownload;
 use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class PublicPortalController extends Controller
 {
@@ -23,6 +25,7 @@ class PublicPortalController extends Controller
         private readonly PublicPortalService $portalService,
         private readonly AcademicQueryService $academicQuery,
         private readonly PrivateStorageService $storage,
+        private readonly SchoolScopeService $schoolScope,
     ) {}
 
     public function services(Request $request): Response
@@ -35,21 +38,30 @@ class PublicPortalController extends Controller
         ]);
     }
 
-    public function teachers(Request $request): Response
+    public function teachers(Request $request): Response|HttpResponse
     {
-        $school = School::query()->firstOrFail();
+        $school = School::query()->orderBy('id')->firstOrFail();
         $search = trim((string) $request->query('q', ''));
+        $teachers = $this->academicQuery->getPublicDirectoryTeachers((int) $school->id, $search);
+
+        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+            return response()->view('public.madrasah.teachers', [
+                ...$this->portalService->madrasahShellData($school),
+                'teachers' => $teachers,
+                'filters' => ['q' => $search],
+            ]);
+        }
 
         return Inertia::render('Public/Directory/Teachers', [
             'school' => $this->schoolPayload($school),
-            'teachers' => $this->academicQuery->getPublicDirectoryTeachers((int) $school->id, $search),
+            'teachers' => $teachers,
             'filters' => ['q' => $search],
         ]);
     }
 
-    public function achievements(): Response
+    public function achievements(Request $request): Response|HttpResponse
     {
-        $school = School::query()->firstOrFail();
+        $school = School::query()->orderBy('id')->firstOrFail();
 
         $items = SchoolNews::query()
             ->where('school_id', $school->id)
@@ -70,6 +82,13 @@ class PublicPortalController extends Controller
             ])
             ->values()
             ->all();
+
+        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+            return response()->view('public.madrasah.achievements', [
+                ...$this->portalService->madrasahShellData($school),
+                'items' => $items,
+            ]);
+        }
 
         return Inertia::render('Public/School/Achievements', [
             'school' => $this->schoolPayload($school),

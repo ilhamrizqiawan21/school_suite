@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Academic\Application\Services;
 
+use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Academic\Infrastructure\Models\Enrollment;
+use App\Modules\Academic\Infrastructure\Models\GraduationRecord;
 use App\Modules\Academic\Infrastructure\Models\Student;
+use App\Modules\Academic\Infrastructure\Models\StudentCard;
 use App\Modules\Academic\Infrastructure\Models\StudentGuardian;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\TeachingAssignment;
@@ -17,6 +20,26 @@ use Illuminate\Support\Facades\DB;
 
 class AcademicQueryService
 {
+    public function isGraduationDocumentReleased(int $schoolId, int $documentId, ?int $revokedForStudentId, array $snapshot): bool
+    {
+        $records = GraduationRecord::query()->with('batch')->where('school_id', $schoolId);
+        $record = (clone $records)->where('skl_document_id', $documentId)->first();
+
+        if ($record === null && $revokedForStudentId !== null) {
+            $records->where('student_id', $revokedForStudentId);
+
+            // Legacy reissues only stored the original SKL number in the ticket snapshot.
+            if (isset($snapshot['graduation_record_id'])) {
+                $record = $records->find($snapshot['graduation_record_id']);
+            } elseif (isset($snapshot['skl_number'])) {
+                $matches = $records->where('skl_number', $snapshot['skl_number'])->limit(2)->get();
+                $record = $matches->count() === 1 ? $matches->first() : null;
+            }
+        }
+
+        return $record?->batch?->isReleased() === true;
+    }
+
     public function getLearningTeachingAssignments(int $termId, ?int $teacherUserId = null): Collection
     {
         return TeachingAssignment::with(['subject:id,name,code', 'classGroup:id,name', 'teacher:id,name,user_id'])
@@ -516,5 +539,210 @@ class AcademicQueryService
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Resolve active students owned by a guardian or student user account.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getStudentsForUserScope(int $schoolId, User $user): array
+    {
+        $studentIds = [];
+
+        if ($user->hasRole('parent')) {
+            $studentIds = $this->getGuardianStudentIdsForUser($schoolId, (int) $user->id);
+        } elseif ($user->hasRole('student')) {
+            $studentIds = $this->getStudentIdsForUser($schoolId, (int) $user->id);
+        }
+
+        if ($studentIds === []) {
+            return [];
+        }
+
+        return array_values($this->getStudentsSnapshotsByIds($schoolId, $studentIds));
+    }
+
+    /**
+     * Batch-resolve student snapshots (with active class name & term) keyed by student_id.
+     *
+     * @param  list<int>  $studentIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function getStudentsSnapshotsByIds(int $schoolId, array $studentIds): array
+    {
+        $ids = array_values(array_unique(array_filter($studentIds, static fn (mixed $id): bool => (int) $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $activeTerm = $this->getActiveTerm($schoolId);
+        $students = Student::query()
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $ids)
+            ->get(['id', 'school_id', 'nis', 'nisn', 'name', 'status']);
+
+        $enrollments = $activeTerm !== null
+            ? Enrollment::query()
+                ->with('classGroup:id,name')
+                ->where('term_id', $activeTerm->id)
+                ->whereIn('student_id', $ids)
+                ->get()
+                ->keyBy('student_id')
+            : collect();
+
+        $map = [];
+        foreach ($students as $student) {
+            $enr = $enrollments->get($student->id);
+            $map[(int) $student->id] = [
+                'student_id' => (int) $student->id,
+                'school_id' => (int) $student->school_id,
+                'nis' => (string) $student->nis,
+                'nisn' => $student->nisn,
+                'name' => (string) $student->name,
+                'status' => (string) $student->status,
+                'term_id' => $activeTerm?->id ? (int) $activeTerm->id : null,
+                'term_name' => $activeTerm?->name,
+                'class_group_id' => $enr?->class_group_id ? (int) $enr->class_group_id : null,
+                'class_group_name' => $enr?->classGroup?->name,
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Search active students by name, NIS, NISN, or active card/QR token for staff workflows.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function searchActiveStudentsForStaff(int $schoolId, string $query = '', int $limit = 20): array
+    {
+        $clean = trim($query);
+        $cardStudentIds = [];
+
+        if ($clean !== '') {
+            $cardStudentIds = StudentCard::query()
+                ->where('school_id', $schoolId)
+                ->where('status', 'active')
+                ->where(fn ($q) => $q->where('card_uid', $clean)->orWhere('qr_token', $clean))
+                ->pluck('student_id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+        }
+
+        $studentIds = Student::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->when($clean !== '', function ($q) use ($clean, $cardStudentIds): void {
+                $q->where(function ($sub) use ($clean, $cardStudentIds): void {
+                    $sub->where('name', 'like', "%{$clean}%")
+                        ->orWhere('nis', 'like', "%{$clean}%")
+                        ->orWhere('nisn', 'like', "%{$clean}%");
+                    if ($cardStudentIds !== []) {
+                        $sub->orWhereIn('id', $cardStudentIds);
+                    }
+                });
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->pluck('id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        return array_values($this->getStudentsSnapshotsByIds($schoolId, $studentIds));
+    }
+
+    /**
+     * Find an active student strictly by an active RFID UID or QR token within the school.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findActiveStudentByCardToken(int $schoolId, string $token): ?array
+    {
+        $clean = trim($token);
+        if ($clean === '') {
+            return null;
+        }
+
+        /** @var StudentCard|null $card */
+        $card = StudentCard::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->where(fn ($q) => $q->where('card_uid', $clean)->orWhere('qr_token', $clean))
+            ->first();
+
+        if ($card === null) {
+            return null;
+        }
+
+        $snapshot = $this->getStudentIdentitySnapshot($schoolId, (int) $card->student_id);
+        if ($snapshot === null || $snapshot['status'] !== 'active') {
+            return null;
+        }
+
+        return [
+            ...$snapshot,
+            'card_id' => (int) $card->id,
+        ];
+    }
+
+    /**
+     * Publicly confirm active/graduated/transferred student status when exact NISN + name match,
+     * returning strictly minimal attributes without leaking PII (M4-LIF-04).
+     *
+     * @return array{found: bool, status_label?: string, status_code?: string, student_name?: string, class_or_level?: string, academic_year?: string, message: string}
+     */
+    public function verifyPublicStudentStatus(int $schoolId, string $nisn, string $nameQuery): array
+    {
+        $cleanNisn = preg_replace('/\D+/', '', trim($nisn)) ?? '';
+        $cleanName = mb_strtolower(trim($nameQuery));
+
+        if ($cleanNisn === '' || $cleanName === '') {
+            return [
+                'found' => false,
+                'message' => 'NISN dan nama siswa wajib diisi untuk verifikasi status siswa.',
+            ];
+        }
+
+        /** @var Student|null $student */
+        $student = Student::query()
+            ->where('school_id', $schoolId)
+            ->where('nisn', $cleanNisn)
+            ->first();
+
+        if ($student === null || ! str_contains(mb_strtolower((string) $student->name), $cleanName)) {
+            return [
+                'found' => false,
+                'message' => 'Data keaktifan siswa tidak ditemukan atau tidak cocok dengan kombinasi NISN dan nama.',
+            ];
+        }
+
+        $latestEnrollment = Enrollment::query()
+            ->with(['classGroup:id,name,grade_level', 'term.academicYear:id,name'])
+            ->where('student_id', $student->id)
+            ->latest('id')
+            ->first();
+
+        $statusCode = (string) ($student->status ?? 'active');
+        $statusLabel = match ($statusCode) {
+            'active' => 'Siswa Aktif',
+            'graduated' => 'Lulus / Alumni',
+            'transferred' => 'Mutasi Keluar',
+            'dropped_out' => 'Nonaktif / Berhenti',
+            default => ucfirst($statusCode),
+        };
+
+        return [
+            'found' => true,
+            'status_code' => $statusCode,
+            'status_label' => $statusLabel,
+            'student_name' => (string) $student->name,
+            'class_or_level' => $latestEnrollment?->classGroup?->name
+                ? sprintf('%s (Tingkat %s)', $latestEnrollment->classGroup->name, (string) $latestEnrollment->classGroup->grade_level)
+                : '-',
+            'academic_year' => (string) ($latestEnrollment?->term?->academicYear?->name ?? '-'),
+            'message' => 'Data keaktifan siswa ditemukan dan terkonfirmasi.',
+        ];
     }
 }

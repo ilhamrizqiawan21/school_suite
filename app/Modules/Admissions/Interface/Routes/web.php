@@ -6,6 +6,11 @@ use App\Modules\Admissions\Interface\Http\Controllers\AdmissionsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ppdb', [AdmissionsController::class, 'publicIndex'])->name('public.admissions');
+Route::post('/ppdb/daftar', [AdmissionsController::class, 'candidateRegister'])->middleware('throttle:uploads')->name('public.admissions.register');
+Route::post('/ppdb/cek-hasil', [AdmissionsController::class, 'candidateLookup'])->middleware('throttle:sensitive')->name('public.admissions.lookup');
+Route::post('/ppdb/perbaiki/{applicant}', [AdmissionsController::class, 'candidateResubmit'])->whereNumber('applicant')->middleware('throttle:uploads')->name('public.admissions.resubmit');
+Route::get('/ppdb/bukti/{applicant}/pdf', [AdmissionsController::class, 'candidateProofPdf'])->whereNumber('applicant')->name('public.admissions.proof');
+Route::post('/ppdb/daftar-ulang/{applicant}', [AdmissionsController::class, 'candidateReRegister'])->whereNumber('applicant')->middleware('throttle:sensitive')->name('public.admissions.re-register');
 
 Route::middleware(['auth', 'role:admin,operator,principal,teacher', 'throttle:sensitive'])
     ->prefix('spmb')
@@ -30,6 +35,7 @@ Route::middleware(['auth', 'role:admin,operator,principal,teacher', 'throttle:se
         Route::post('/kriteria', [AdmissionsController::class, 'storeCriterion'])->name('criteria.store');
         Route::post('/pendaftar', [AdmissionsController::class, 'store'])->name('applicants.store');
         Route::put('/pendaftar/{applicant}', [AdmissionsController::class, 'update'])->name('applicants.update');
+        Route::post('/pendaftar/{applicant}/revisi', [AdmissionsController::class, 'requestRevision'])->name('applicants.revision');
         Route::delete('/pendaftar/{applicant}', [AdmissionsController::class, 'destroy'])->name('applicants.destroy');
         Route::post('/pendaftar/{applicant}/berkas', [AdmissionsController::class, 'storeDocument'])->name('documents.store');
         Route::put('/berkas/{document}/verifikasi', [AdmissionsController::class, 'verifyDocument'])->name('documents.verify');

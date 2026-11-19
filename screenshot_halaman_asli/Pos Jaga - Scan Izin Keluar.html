@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)https://man4banjar.com/akademik/scan_pos.php -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pos Jaga - Scan Izin Keluar</title>
+    <!-- Modern Fonts & UI -->
+    <link href="./Pos Jaga - Scan Izin Keluar_files/css2" rel="stylesheet">
+    <link rel="stylesheet" href="./Pos Jaga - Scan Izin Keluar_files/all.min.css">
+    <link rel="stylesheet" href="./Pos Jaga - Scan Izin Keluar_files/bootstrap.min.css">
+    <!-- QR Code & Alerts -->
+    <script src="./Pos Jaga - Scan Izin Keluar_files/html5-qrcode" type="text/javascript"></script>
+    <script src="./Pos Jaga - Scan Izin Keluar_files/sweetalert2@11"></script><style>:root{--swal2-outline: 0 0 0 3px rgba(100, 150, 200, 0.5);--swal2-container-padding: 0.625em;--swal2-backdrop: rgba(0, 0, 0, 0.4);--swal2-backdrop-transition: background-color 0.15s;--swal2-width: 32em;--swal2-padding: 0 0 1.25em;--swal2-border: none;--swal2-border-radius: 0.3125rem;--swal2-background: white;--swal2-color: #545454;--swal2-show-animation: swal2-show 0.3s;--swal2-hide-animation: swal2-hide 0.15s forwards;--swal2-icon-zoom: 1;--swal2-title-padding: 0.8em 1em 0;--swal2-html-container-padding: 1em 1.6em 0.3em;--swal2-input-border: 1px solid #d9d9d9;--swal2-input-border-radius: 0.1875em;--swal2-input-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px transparent;--swal2-input-background: transparent;--swal2-input-transition: border-color 0.2s, box-shadow 0.2s;--swal2-input-hover-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px transparent;--swal2-input-focus-border: 1px solid #b4dbed;--swal2-input-focus-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(100, 150, 200, 0.5);--swal2-progress-step-background: #add8e6;--swal2-validation-message-background: #f0f0f0;--swal2-validation-message-color: #666;--swal2-footer-border-color: #eee;--swal2-footer-background: transparent;--swal2-footer-color: inherit;--swal2-timer-progress-bar-background: rgba(0, 0, 0, 0.3);--swal2-close-button-position: initial;--swal2-close-button-inset: auto;--swal2-close-button-font-size: 2.5em;--swal2-close-button-color: #ccc;--swal2-close-button-transition: color 0.2s, box-shadow 0.2s;--swal2-close-button-outline: initial;--swal2-close-button-box-shadow: inset 0 0 0 3px transparent;--swal2-close-button-focus-box-shadow: inset var(--swal2-outline);--swal2-close-button-hover-transform: none;--swal2-actions-justify-content: center;--swal2-actions-width: auto;--swal2-actions-margin: 1.25em auto 0;--swal2-actions-padding: 0;--swal2-actions-border-radius: 0;--swal2-actions-background: transparent;--swal2-action-button-transition: background-color 0.2s, box-shadow 0.2s;--swal2-action-button-hover: black 10%;--swal2-action-button-active: black 10%;--swal2-confirm-button-box-shadow: none;--swal2-confirm-button-border-radius: 0.25em;--swal2-confirm-button-background-color: #7066e0;--swal2-confirm-button-color: #fff;--swal2-deny-button-box-shadow: none;--swal2-deny-button-border-radius: 0.25em;--swal2-deny-button-background-color: #dc3741;--swal2-deny-button-color: #fff;--swal2-cancel-button-box-shadow: none;--swal2-cancel-button-border-radius: 0.25em;--swal2-cancel-button-background-color: #6e7881;--swal2-cancel-button-color: #fff;--swal2-toast-show-animation: swal2-toast-show 0.5s;--swal2-toast-hide-animation: swal2-toast-hide 0.1s forwards;--swal2-toast-border: none;--swal2-toast-box-shadow: 0 0 1px hsl(0deg 0% 0% / 0.075), 0 1px 2px hsl(0deg 0% 0% / 0.075), 1px 2px 4px hsl(0deg 0% 0% / 0.075), 1px 3px 8px hsl(0deg 0% 0% / 0.075), 2px 4px 16px hsl(0deg 0% 0% / 0.075)}[data-swal2-theme=dark]{--swal2-dark-theme-black: #19191a;--swal2-dark-theme-white: #e1e1e1;--swal2-background: var(--swal2-dark-theme-black);--swal2-color: var(--swal2-dark-theme-white);--swal2-footer-border-color: #555;--swal2-input-background: color-mix(in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10%);--swal2-validation-message-background: color-mix( in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10% );--swal2-validation-message-color: var(--swal2-dark-theme-white);--swal2-timer-progress-bar-background: rgba(255, 255, 255, 0.7)}@media(prefers-color-scheme: dark){[data-swal2-theme=auto]{--swal2-dark-theme-black: #19191a;--swal2-dark-theme-white: #e1e1e1;--swal2-background: var(--swal2-dark-theme-black);--swal2-color: var(--swal2-dark-theme-white);--swal2-footer-border-color: #555;--swal2-input-background: color-mix(in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10%);--swal2-validation-message-background: color-mix( in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10% );--swal2-validation-message-color: var(--swal2-dark-theme-white);--swal2-timer-progress-bar-background: rgba(255, 255, 255, 0.7)}}body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown){overflow:hidden}body.swal2-height-auto{height:auto !important}body.swal2-no-backdrop .swal2-container{background-color:rgba(0,0,0,0) !important;pointer-events:none}body.swal2-no-backdrop .swal2-container .swal2-popup{pointer-events:auto}body.swal2-no-backdrop .swal2-container .swal2-modal{box-shadow:0 0 10px var(--swal2-backdrop)}body.swal2-toast-shown .swal2-container{box-sizing:border-box;width:360px;max-width:100%;background-color:rgba(0,0,0,0);pointer-events:none}body.swal2-toast-shown .swal2-container.swal2-top{inset:0 auto auto 50%;transform:translateX(-50%)}body.swal2-toast-shown .swal2-container.swal2-top-end,body.swal2-toast-shown .swal2-container.swal2-top-right{inset:0 0 auto auto}body.swal2-toast-shown .swal2-container.swal2-top-start,body.swal2-toast-shown .swal2-container.swal2-top-left{inset:0 auto auto 0}body.swal2-toast-shown .swal2-container.swal2-center-start,body.swal2-toast-shown .swal2-container.swal2-center-left{inset:50% auto auto 0;transform:translateY(-50%)}body.swal2-toast-shown .swal2-container.swal2-center{inset:50% auto auto 50%;transform:translate(-50%, -50%)}body.swal2-toast-shown .swal2-container.swal2-center-end,body.swal2-toast-shown .swal2-container.swal2-center-right{inset:50% 0 auto auto;transform:translateY(-50%)}body.swal2-toast-shown .swal2-container.swal2-bottom-start,body.swal2-toast-shown .swal2-container.swal2-bottom-left{inset:auto auto 0 0}body.swal2-toast-shown .swal2-container.swal2-bottom{inset:auto auto 0 50%;transform:translateX(-50%)}body.swal2-toast-shown .swal2-container.swal2-bottom-end,body.swal2-toast-shown .swal2-container.swal2-bottom-right{inset:auto 0 0 auto}@media print{body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown){overflow-y:scroll !important}body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown)>[aria-hidden=true]{display:none}body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown) .swal2-container{position:static !important}}div:where(.swal2-container){display:grid;position:fixed;z-index:1060;inset:0;box-sizing:border-box;grid-template-areas:"top-start     top            top-end" "center-start  center         center-end" "bottom-start  bottom-center  bottom-end";grid-template-rows:minmax(min-content, auto) minmax(min-content, auto) minmax(min-content, auto);height:100%;padding:var(--swal2-container-padding);overflow-x:hidden;transition:var(--swal2-backdrop-transition);-webkit-overflow-scrolling:touch}div:where(.swal2-container).swal2-backdrop-show,div:where(.swal2-container).swal2-noanimation{background:var(--swal2-backdrop)}div:where(.swal2-container).swal2-backdrop-hide{background:rgba(0,0,0,0) !important}div:where(.swal2-container).swal2-top-start,div:where(.swal2-container).swal2-center-start,div:where(.swal2-container).swal2-bottom-start{grid-template-columns:minmax(0, 1fr) auto auto}div:where(.swal2-container).swal2-top,div:where(.swal2-container).swal2-center,div:where(.swal2-container).swal2-bottom{grid-template-columns:auto minmax(0, 1fr) auto}div:where(.swal2-container).swal2-top-end,div:where(.swal2-container).swal2-center-end,div:where(.swal2-container).swal2-bottom-end{grid-template-columns:auto auto minmax(0, 1fr)}div:where(.swal2-container).swal2-top-start>.swal2-popup{align-self:start}div:where(.swal2-container).swal2-top>.swal2-popup{grid-column:2;place-self:start center}div:where(.swal2-container).swal2-top-end>.swal2-popup,div:where(.swal2-container).swal2-top-right>.swal2-popup{grid-column:3;place-self:start end}div:where(.swal2-container).swal2-center-start>.swal2-popup,div:where(.swal2-container).swal2-center-left>.swal2-popup{grid-row:2;align-self:center}div:where(.swal2-container).swal2-center>.swal2-popup{grid-column:2;grid-row:2;place-self:center center}div:where(.swal2-container).swal2-center-end>.swal2-popup,div:where(.swal2-container).swal2-center-right>.swal2-popup{grid-column:3;grid-row:2;place-self:center end}div:where(.swal2-container).swal2-bottom-start>.swal2-popup,div:where(.swal2-container).swal2-bottom-left>.swal2-popup{grid-column:1;grid-row:3;align-self:end}div:where(.swal2-container).swal2-bottom>.swal2-popup{grid-column:2;grid-row:3;place-self:end center}div:where(.swal2-container).swal2-bottom-end>.swal2-popup,div:where(.swal2-container).swal2-bottom-right>.swal2-popup{grid-column:3;grid-row:3;place-self:end end}div:where(.swal2-container).swal2-grow-row>.swal2-popup,div:where(.swal2-container).swal2-grow-fullscreen>.swal2-popup{grid-column:1/4;width:100%}div:where(.swal2-container).swal2-grow-column>.swal2-popup,div:where(.swal2-container).swal2-grow-fullscreen>.swal2-popup{grid-row:1/4;align-self:stretch}div:where(.swal2-container).swal2-no-transition{transition:none !important}div:where(.swal2-container)[popover]{width:auto;border:0}div:where(.swal2-container) div:where(.swal2-popup){display:none;position:relative;box-sizing:border-box;grid-template-columns:minmax(0, 100%);width:var(--swal2-width);max-width:100%;padding:var(--swal2-padding);border:var(--swal2-border);border-radius:var(--swal2-border-radius);background:var(--swal2-background);color:var(--swal2-color);font-family:inherit;font-size:1rem}div:where(.swal2-container) div:where(.swal2-popup):focus{outline:none}div:where(.swal2-container) div:where(.swal2-popup).swal2-loading{overflow-y:hidden}div:where(.swal2-container) div:where(.swal2-popup).swal2-draggable{cursor:grab}div:where(.swal2-container) div:where(.swal2-popup).swal2-draggable div:where(.swal2-icon){cursor:grab}div:where(.swal2-container) div:where(.swal2-popup).swal2-dragging{cursor:grabbing}div:where(.swal2-container) div:where(.swal2-popup).swal2-dragging div:where(.swal2-icon){cursor:grabbing}div:where(.swal2-container) h2:where(.swal2-title){position:relative;max-width:100%;margin:0;padding:var(--swal2-title-padding);color:inherit;font-size:1.875em;font-weight:600;text-align:center;text-transform:none;overflow-wrap:break-word;cursor:initial}div:where(.swal2-container) div:where(.swal2-actions){display:flex;z-index:1;box-sizing:border-box;flex-wrap:wrap;align-items:center;justify-content:var(--swal2-actions-justify-content);width:var(--swal2-actions-width);margin:var(--swal2-actions-margin);padding:var(--swal2-actions-padding);border-radius:var(--swal2-actions-border-radius);background:var(--swal2-actions-background)}div:where(.swal2-container) div:where(.swal2-loader){display:none;align-items:center;justify-content:center;width:2.2em;height:2.2em;margin:0 1.875em;animation:swal2-rotate-loading 1.5s linear 0s infinite normal;border-width:.25em;border-style:solid;border-radius:100%;border-color:#2778c4 rgba(0,0,0,0) #2778c4 rgba(0,0,0,0)}div:where(.swal2-container) button:where(.swal2-styled){margin:.3125em;padding:.625em 1.1em;transition:var(--swal2-action-button-transition);border:none;box-shadow:0 0 0 3px rgba(0,0,0,0);font-weight:500}div:where(.swal2-container) button:where(.swal2-styled):not([disabled]){cursor:pointer}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm){border-radius:var(--swal2-confirm-button-border-radius);background:initial;background-color:var(--swal2-confirm-button-background-color);box-shadow:var(--swal2-confirm-button-box-shadow);color:var(--swal2-confirm-button-color);font-size:1em}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):hover{background-color:color-mix(in srgb, var(--swal2-confirm-button-background-color), var(--swal2-action-button-hover))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):active{background-color:color-mix(in srgb, var(--swal2-confirm-button-background-color), var(--swal2-action-button-active))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny){border-radius:var(--swal2-deny-button-border-radius);background:initial;background-color:var(--swal2-deny-button-background-color);box-shadow:var(--swal2-deny-button-box-shadow);color:var(--swal2-deny-button-color);font-size:1em}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny):hover{background-color:color-mix(in srgb, var(--swal2-deny-button-background-color), var(--swal2-action-button-hover))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny):active{background-color:color-mix(in srgb, var(--swal2-deny-button-background-color), var(--swal2-action-button-active))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel){border-radius:var(--swal2-cancel-button-border-radius);background:initial;background-color:var(--swal2-cancel-button-background-color);box-shadow:var(--swal2-cancel-button-box-shadow);color:var(--swal2-cancel-button-color);font-size:1em}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel):hover{background-color:color-mix(in srgb, var(--swal2-cancel-button-background-color), var(--swal2-action-button-hover))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel):active{background-color:color-mix(in srgb, var(--swal2-cancel-button-background-color), var(--swal2-action-button-active))}div:where(.swal2-container) button:where(.swal2-styled):focus-visible{outline:none;box-shadow:var(--swal2-action-button-focus-box-shadow)}div:where(.swal2-container) button:where(.swal2-styled)[disabled]:not(.swal2-loading){opacity:.4}div:where(.swal2-container) button:where(.swal2-styled)::-moz-focus-inner{border:0}div:where(.swal2-container) div:where(.swal2-footer){margin:1em 0 0;padding:1em 1em 0;border-top:1px solid var(--swal2-footer-border-color);background:var(--swal2-footer-background);color:var(--swal2-footer-color);font-size:1em;text-align:center;cursor:initial}div:where(.swal2-container) .swal2-timer-progress-bar-container{position:absolute;right:0;bottom:0;left:0;grid-column:auto !important;overflow:hidden;border-bottom-right-radius:var(--swal2-border-radius);border-bottom-left-radius:var(--swal2-border-radius)}div:where(.swal2-container) div:where(.swal2-timer-progress-bar){width:100%;height:.25em;background:var(--swal2-timer-progress-bar-background)}div:where(.swal2-container) img:where(.swal2-image){max-width:100%;margin:2em auto 1em;cursor:initial}div:where(.swal2-container) button:where(.swal2-close){position:var(--swal2-close-button-position);inset:var(--swal2-close-button-inset);z-index:2;align-items:center;justify-content:center;width:1.2em;height:1.2em;margin-top:0;margin-right:0;margin-bottom:-1.2em;padding:0;overflow:hidden;transition:var(--swal2-close-button-transition);border:none;border-radius:var(--swal2-border-radius);outline:var(--swal2-close-button-outline);background:rgba(0,0,0,0);color:var(--swal2-close-button-color);font-family:monospace;font-size:var(--swal2-close-button-font-size);cursor:pointer;justify-self:end}div:where(.swal2-container) button:where(.swal2-close):hover{transform:var(--swal2-close-button-hover-transform);background:rgba(0,0,0,0);color:#f27474}div:where(.swal2-container) button:where(.swal2-close):focus-visible{outline:none;box-shadow:var(--swal2-close-button-focus-box-shadow)}div:where(.swal2-container) button:where(.swal2-close)::-moz-focus-inner{border:0}div:where(.swal2-container) div:where(.swal2-html-container){z-index:1;justify-content:center;margin:0;padding:var(--swal2-html-container-padding);overflow:auto;color:inherit;font-size:1.125em;font-weight:normal;line-height:normal;text-align:center;overflow-wrap:break-word;word-break:break-word;cursor:initial}div:where(.swal2-container) input:where(.swal2-input),div:where(.swal2-container) input:where(.swal2-file),div:where(.swal2-container) textarea:where(.swal2-textarea),div:where(.swal2-container) select:where(.swal2-select),div:where(.swal2-container) div:where(.swal2-radio),div:where(.swal2-container) label:where(.swal2-checkbox){margin:1em 2em 3px}div:where(.swal2-container) input:where(.swal2-input),div:where(.swal2-container) input:where(.swal2-file),div:where(.swal2-container) textarea:where(.swal2-textarea){box-sizing:border-box;width:auto;transition:var(--swal2-input-transition);border:var(--swal2-input-border);border-radius:var(--swal2-input-border-radius);background:var(--swal2-input-background);box-shadow:var(--swal2-input-box-shadow);color:inherit;font-size:1.125em}div:where(.swal2-container) input:where(.swal2-input).swal2-inputerror,div:where(.swal2-container) input:where(.swal2-file).swal2-inputerror,div:where(.swal2-container) textarea:where(.swal2-textarea).swal2-inputerror{border-color:#f27474 !important;box-shadow:0 0 2px #f27474 !important}div:where(.swal2-container) input:where(.swal2-input):hover,div:where(.swal2-container) input:where(.swal2-file):hover,div:where(.swal2-container) textarea:where(.swal2-textarea):hover{box-shadow:var(--swal2-input-hover-box-shadow)}div:where(.swal2-container) input:where(.swal2-input):focus,div:where(.swal2-container) input:where(.swal2-file):focus,div:where(.swal2-container) textarea:where(.swal2-textarea):focus{border:var(--swal2-input-focus-border);outline:none;box-shadow:var(--swal2-input-focus-box-shadow)}div:where(.swal2-container) input:where(.swal2-input)::placeholder,div:where(.swal2-container) input:where(.swal2-file)::placeholder,div:where(.swal2-container) textarea:where(.swal2-textarea)::placeholder{color:#ccc}div:where(.swal2-container) .swal2-range{margin:1em 2em 3px;background:var(--swal2-background)}div:where(.swal2-container) .swal2-range input{width:80%}div:where(.swal2-container) .swal2-range output{width:20%;color:inherit;font-weight:600;text-align:center}div:where(.swal2-container) .swal2-range input,div:where(.swal2-container) .swal2-range output{height:2.625em;padding:0;font-size:1.125em;line-height:2.625em}div:where(.swal2-container) .swal2-input{height:2.625em;padding:0 .75em}div:where(.swal2-container) .swal2-file{width:75%;margin-right:auto;margin-left:auto;background:var(--swal2-input-background);font-size:1.125em}div:where(.swal2-container) .swal2-textarea{height:6.75em;padding:.75em}div:where(.swal2-container) .swal2-select{min-width:50%;max-width:100%;padding:.375em .625em;background:var(--swal2-input-background);color:inherit;font-size:1.125em}div:where(.swal2-container) .swal2-radio,div:where(.swal2-container) .swal2-checkbox{align-items:center;justify-content:center;background:var(--swal2-background);color:inherit}div:where(.swal2-container) .swal2-radio label,div:where(.swal2-container) .swal2-checkbox label{margin:0 .6em;font-size:1.125em}div:where(.swal2-container) .swal2-radio input,div:where(.swal2-container) .swal2-checkbox input{flex-shrink:0;margin:0 .4em}div:where(.swal2-container) label:where(.swal2-input-label){display:flex;justify-content:center;margin:1em auto 0}div:where(.swal2-container) div:where(.swal2-validation-message){align-items:center;justify-content:center;margin:1em 0 0;padding:.625em;overflow:hidden;background:var(--swal2-validation-message-background);color:var(--swal2-validation-message-color);font-size:1em;font-weight:300}div:where(.swal2-container) div:where(.swal2-validation-message)::before{content:"!";display:inline-block;width:1.5em;min-width:1.5em;height:1.5em;margin:0 .625em;border-radius:50%;background-color:#f27474;color:#fff;font-weight:600;line-height:1.5em;text-align:center}div:where(.swal2-container) .swal2-progress-steps{flex-wrap:wrap;align-items:center;max-width:100%;margin:1.25em auto;padding:0;background:rgba(0,0,0,0);font-weight:600}div:where(.swal2-container) .swal2-progress-steps li{display:inline-block;position:relative}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step{z-index:20;flex-shrink:0;width:2em;height:2em;border-radius:2em;background:#2778c4;color:#fff;line-height:2em;text-align:center}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step{background:#2778c4}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step~.swal2-progress-step{background:var(--swal2-progress-step-background);color:#fff}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step~.swal2-progress-step-line{background:var(--swal2-progress-step-background)}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step-line{z-index:10;flex-shrink:0;width:2.5em;height:.4em;margin:0 -1px;background:#2778c4}div:where(.swal2-icon){position:relative;box-sizing:content-box;justify-content:center;width:5em;height:5em;margin:2.5em auto .6em;zoom:var(--swal2-icon-zoom);border:.25em solid rgba(0,0,0,0);border-radius:50%;border-color:#000;font-family:inherit;line-height:5em;cursor:default;user-select:none}div:where(.swal2-icon) .swal2-icon-content{display:flex;align-items:center;font-size:3.75em}div:where(.swal2-icon).swal2-error{border-color:#f27474;color:#f27474}div:where(.swal2-icon).swal2-error .swal2-x-mark{position:relative;flex-grow:1}div:where(.swal2-icon).swal2-error [class^=swal2-x-mark-line]{display:block;position:absolute;top:2.3125em;width:2.9375em;height:.3125em;border-radius:.125em;background-color:#f27474}div:where(.swal2-icon).swal2-error [class^=swal2-x-mark-line][class$=left]{left:1.0625em;transform:rotate(45deg)}div:where(.swal2-icon).swal2-error [class^=swal2-x-mark-line][class$=right]{right:1em;transform:rotate(-45deg)}div:where(.swal2-icon).swal2-error.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-error.swal2-icon-show .swal2-x-mark{animation:swal2-animate-error-x-mark .5s}div:where(.swal2-icon).swal2-warning{border-color:#f8bb86;color:#f8bb86}div:where(.swal2-icon).swal2-warning.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-warning.swal2-icon-show .swal2-icon-content{animation:swal2-animate-i-mark .5s}div:where(.swal2-icon).swal2-info{border-color:#3fc3ee;color:#3fc3ee}div:where(.swal2-icon).swal2-info.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-info.swal2-icon-show .swal2-icon-content{animation:swal2-animate-i-mark .8s}div:where(.swal2-icon).swal2-question{border-color:#87adbd;color:#87adbd}div:where(.swal2-icon).swal2-question.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-question.swal2-icon-show .swal2-icon-content{animation:swal2-animate-question-mark .8s}div:where(.swal2-icon).swal2-success{border-color:#a5dc86;color:#a5dc86}div:where(.swal2-icon).swal2-success [class^=swal2-success-circular-line]{position:absolute;width:3.75em;height:7.5em;border-radius:50%}div:where(.swal2-icon).swal2-success [class^=swal2-success-circular-line][class$=left]{top:-0.4375em;left:-2.0635em;transform:rotate(-45deg);transform-origin:3.75em 3.75em;border-radius:7.5em 0 0 7.5em}div:where(.swal2-icon).swal2-success [class^=swal2-success-circular-line][class$=right]{top:-0.6875em;left:1.875em;transform:rotate(-45deg);transform-origin:0 3.75em;border-radius:0 7.5em 7.5em 0}div:where(.swal2-icon).swal2-success .swal2-success-ring{position:absolute;z-index:2;top:-0.25em;left:-0.25em;box-sizing:content-box;width:100%;height:100%;border:.25em solid rgba(165,220,134,.3);border-radius:50%}div:where(.swal2-icon).swal2-success .swal2-success-fix{position:absolute;z-index:1;top:.5em;left:1.625em;width:.4375em;height:5.625em;transform:rotate(-45deg)}div:where(.swal2-icon).swal2-success [class^=swal2-success-line]{display:block;position:absolute;z-index:2;height:.3125em;border-radius:.125em;background-color:#a5dc86}div:where(.swal2-icon).swal2-success [class^=swal2-success-line][class$=tip]{top:2.875em;left:.8125em;width:1.5625em;transform:rotate(45deg)}div:where(.swal2-icon).swal2-success [class^=swal2-success-line][class$=long]{top:2.375em;right:.5em;width:2.9375em;transform:rotate(-45deg)}div:where(.swal2-icon).swal2-success.swal2-icon-show .swal2-success-line-tip{animation:swal2-animate-success-line-tip .75s}div:where(.swal2-icon).swal2-success.swal2-icon-show .swal2-success-line-long{animation:swal2-animate-success-line-long .75s}div:where(.swal2-icon).swal2-success.swal2-icon-show .swal2-success-circular-line-right{animation:swal2-rotate-success-circular-line 4.25s ease-in}[class^=swal2]{-webkit-tap-highlight-color:rgba(0,0,0,0)}.swal2-show{animation:var(--swal2-show-animation)}.swal2-hide{animation:var(--swal2-hide-animation)}.swal2-noanimation{transition:none}.swal2-scrollbar-measure{position:absolute;top:-9999px;width:50px;height:50px;overflow:scroll}.swal2-rtl .swal2-close{margin-right:initial;margin-left:0}.swal2-rtl .swal2-timer-progress-bar{right:0;left:auto}.swal2-toast{box-sizing:border-box;grid-column:1/4 !important;grid-row:1/4 !important;grid-template-columns:min-content auto min-content;padding:1em;overflow-y:hidden;border:var(--swal2-toast-border);background:var(--swal2-background);box-shadow:var(--swal2-toast-box-shadow);pointer-events:auto}.swal2-toast>*{grid-column:2}.swal2-toast h2:where(.swal2-title){margin:.5em 1em;padding:0;font-size:1em;text-align:initial}.swal2-toast .swal2-loading{justify-content:center}.swal2-toast input:where(.swal2-input){height:2em;margin:.5em;font-size:1em}.swal2-toast .swal2-validation-message{font-size:1em}.swal2-toast div:where(.swal2-footer){margin:.5em 0 0;padding:.5em 0 0;font-size:.8em}.swal2-toast button:where(.swal2-close){grid-column:3/3;grid-row:1/99;align-self:center;width:.8em;height:.8em;margin:0;font-size:2em}.swal2-toast div:where(.swal2-html-container){margin:.5em 1em;padding:0;overflow:initial;font-size:1em;text-align:initial}.swal2-toast div:where(.swal2-html-container):empty{padding:0}.swal2-toast .swal2-loader{grid-column:1;grid-row:1/99;align-self:center;width:2em;height:2em;margin:.25em}.swal2-toast .swal2-icon{grid-column:1;grid-row:1/99;align-self:center;width:2em;min-width:2em;height:2em;margin:0 .5em 0 0}.swal2-toast .swal2-icon .swal2-icon-content{display:flex;align-items:center;font-size:1.8em;font-weight:bold}.swal2-toast .swal2-icon.swal2-success .swal2-success-ring{width:2em;height:2em}.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line]{top:.875em;width:1.375em}.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line][class$=left]{left:.3125em}.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line][class$=right]{right:.3125em}.swal2-toast div:where(.swal2-actions){justify-content:flex-start;height:auto;margin:0;margin-top:.5em;padding:0 .5em}.swal2-toast button:where(.swal2-styled){margin:.25em .5em;padding:.4em .6em;font-size:1em}.swal2-toast .swal2-success{border-color:#a5dc86}.swal2-toast .swal2-success [class^=swal2-success-circular-line]{position:absolute;width:1.6em;height:3em;border-radius:50%}.swal2-toast .swal2-success [class^=swal2-success-circular-line][class$=left]{top:-0.8em;left:-0.5em;transform:rotate(-45deg);transform-origin:2em 2em;border-radius:4em 0 0 4em}.swal2-toast .swal2-success [class^=swal2-success-circular-line][class$=right]{top:-0.25em;left:.9375em;transform-origin:0 1.5em;border-radius:0 4em 4em 0}.swal2-toast .swal2-success .swal2-success-ring{width:2em;height:2em}.swal2-toast .swal2-success .swal2-success-fix{top:0;left:.4375em;width:.4375em;height:2.6875em}.swal2-toast .swal2-success [class^=swal2-success-line]{height:.3125em}.swal2-toast .swal2-success [class^=swal2-success-line][class$=tip]{top:1.125em;left:.1875em;width:.75em}.swal2-toast .swal2-success [class^=swal2-success-line][class$=long]{top:.9375em;right:.1875em;width:1.375em}.swal2-toast .swal2-success.swal2-icon-show .swal2-success-line-tip{animation:swal2-toast-animate-success-line-tip .75s}.swal2-toast .swal2-success.swal2-icon-show .swal2-success-line-long{animation:swal2-toast-animate-success-line-long .75s}.swal2-toast.swal2-show{animation:var(--swal2-toast-show-animation)}.swal2-toast.swal2-hide{animation:var(--swal2-toast-hide-animation)}@keyframes swal2-show{0%{transform:translate3d(0, -50px, 0) scale(0.9);opacity:0}100%{transform:translate3d(0, 0, 0) scale(1);opacity:1}}@keyframes swal2-hide{0%{transform:translate3d(0, 0, 0) scale(1);opacity:1}100%{transform:translate3d(0, -50px, 0) scale(0.9);opacity:0}}@keyframes swal2-animate-success-line-tip{0%{top:1.1875em;left:.0625em;width:0}54%{top:1.0625em;left:.125em;width:0}70%{top:2.1875em;left:-0.375em;width:3.125em}84%{top:3em;left:1.3125em;width:1.0625em}100%{top:2.8125em;left:.8125em;width:1.5625em}}@keyframes swal2-animate-success-line-long{0%{top:3.375em;right:2.875em;width:0}65%{top:3.375em;right:2.875em;width:0}84%{top:2.1875em;right:0;width:3.4375em}100%{top:2.375em;right:.5em;width:2.9375em}}@keyframes swal2-rotate-success-circular-line{0%{transform:rotate(-45deg)}5%{transform:rotate(-45deg)}12%{transform:rotate(-405deg)}100%{transform:rotate(-405deg)}}@keyframes swal2-animate-error-x-mark{0%{margin-top:1.625em;transform:scale(0.4);opacity:0}50%{margin-top:1.625em;transform:scale(0.4);opacity:0}80%{margin-top:-0.375em;transform:scale(1.15)}100%{margin-top:0;transform:scale(1);opacity:1}}@keyframes swal2-animate-error-icon{0%{transform:rotateX(100deg);opacity:0}100%{transform:rotateX(0deg);opacity:1}}@keyframes swal2-rotate-loading{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes swal2-animate-question-mark{0%{transform:rotateY(-360deg)}100%{transform:rotateY(0)}}@keyframes swal2-animate-i-mark{0%{transform:rotateZ(45deg);opacity:0}25%{transform:rotateZ(-25deg);opacity:.4}50%{transform:rotateZ(15deg);opacity:.8}75%{transform:rotateZ(-5deg);opacity:1}100%{transform:rotateX(0);opacity:1}}@keyframes swal2-toast-show{0%{transform:translateY(-0.625em) rotateZ(2deg)}33%{transform:translateY(0) rotateZ(-2deg)}66%{transform:translateY(0.3125em) rotateZ(2deg)}100%{transform:translateY(0) rotateZ(0deg)}}@keyframes swal2-toast-hide{100%{transform:rotateZ(1deg);opacity:0}}@keyframes swal2-toast-animate-success-line-tip{0%{top:.5625em;left:.0625em;width:0}54%{top:.125em;left:.125em;width:0}70%{top:.625em;left:-0.25em;width:1.625em}84%{top:1.0625em;left:.75em;width:.5em}100%{top:1.125em;left:.1875em;width:.75em}}@keyframes swal2-toast-animate-success-line-long{0%{top:1.625em;right:1.375em;width:0}65%{top:1.25em;right:.9375em;width:0}84%{top:.9375em;right:0;width:1.125em}100%{top:.9375em;right:.1875em;width:1.375em}}</style>
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+            --secondary-gradient: linear-gradient(135deg, #047857 0%, #10b981 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            color: #334155;
+            overflow-x: hidden;
+        }
+
+        /* PIN OVERLAY - FULLSCREEN */
+        /* PIN OVERLAY - COMPACT & CENTERED */
+        #pin-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #064e3b 0%, #022c22 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .pin-card {
+            background: white;
+            padding: 24px 22px 20px 22px;
+            border-radius: 18px;
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+        }
+        
+        .pin-card h4 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 2px;
+            letter-spacing: 0.3px;
+        }
+        
+        .pin-display {
+            font-size: 2.2rem;
+            letter-spacing: 12px;
+            margin-bottom: 14px;
+            font-weight: bold;
+            color: #1e293b;
+            min-height: 48px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .pin-btn {
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            padding: 10px 0;
+            font-size: 1.25rem;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+        }
+        
+        .pin-btn:active, .pin-btn:hover {
+            background: #f1f5f9;
+            transform: scale(0.96);
+        }
+        
+        .pin-btn.clear { color: #dc2626; border-color: #fecaca; background: #fff5f5; }
+        .pin-btn.enter { background: #059669; color: white; border-color: #059669; }
+        .pin-btn.enter:hover { background: #047857; color: white; }
+
+        /* DASHBOARD LAYOUT - COMPACT & CENTERED */
+        .dashboard-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 15px 12px;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+        }
+
+        .card-header-custom {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 12px 16px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #reader { 
+            width: 100%; 
+            border-radius: 12px; 
+            overflow: hidden !important;
+            background: #0f172a;
+        }
+        #reader video { object-fit: cover; border-radius: 12px; max-height: 180px; }
+
+        .monitor-list {
+            max-height: 380px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .monitor-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid #cbd5e1;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            animation: slideIn 0.3s ease;
+            border-top: 1px solid #f1f5f9;
+            border-right: 1px solid #f1f5f9;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        @keyframes slideIn { from { transform: translateX(15px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+        .monitor-item.out { border-left-color: #f59e0b; }
+        .monitor-item.in { border-left-color: #10b981; }
+        .monitor-item.late { border-left-color: #ef4444; }
+        
+        /* Scan Line Animation */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            animation: scanning 2s linear infinite;
+            display: none;
+        }
+
+        .scanning-active .scan-line {
+            display: block;
+        }
+
+        @keyframes scanning {
+            0% { top: 0; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .btn-back-form {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            color: #334155;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.2s;
+            text-decoration: none;
+            border: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+        .btn-back-form:hover {
+            background: #059669;
+            color: #fff;
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+    </style>
+<style data-glasp-print="rule">@media print{[data-glasp-print="hide"]{display:none !important}}</style></head>
+<body>
+
+    <!-- PIN OVERLAY -->
+    <div id="pin-overlay">
+        <div class="pin-card">
+            <i class="fas fa-shield-alt mb-2" style="font-size: 2.2rem; color: #059669;"></i>
+            <h4>AKSES POS JAGA</h4>
+            <p class="text-muted font-weight-bold" style="font-size: 0.76rem; margin-bottom: 1px;">Scan Kartu Izin Siswa di Gerbang</p>
+            <p class="text-muted" style="font-size: 0.72rem; margin-bottom: 12px;">Masukkan PIN Keamanan Satpam</p>
+            
+            <div class="pin-display" id="pin-input"></div>
+            
+            <div class="pin-pad">
+                <button class="pin-btn" onclick="addPin(1)">1</button>
+                <button class="pin-btn" onclick="addPin(2)">2</button>
+                <button class="pin-btn" onclick="addPin(3)">3</button>
+                <button class="pin-btn" onclick="addPin(4)">4</button>
+                <button class="pin-btn" onclick="addPin(5)">5</button>
+                <button class="pin-btn" onclick="addPin(6)">6</button>
+                <button class="pin-btn" onclick="addPin(7)">7</button>
+                <button class="pin-btn" onclick="addPin(8)">8</button>
+                <button class="pin-btn" onclick="addPin(9)">9</button>
+                <button class="pin-btn clear" onclick="clearPin()"><i class="fas fa-times"></i></button>
+                <button class="pin-btn" onclick="addPin(0)">0</button>
+                <button class="pin-btn enter" onclick="checkPin()"><i class="fas fa-arrow-right"></i></button>
+            </div>
+            
+            <a href="https://man4banjar.com/akademik/index.php" class="btn btn-link mt-3 text-muted" style="font-size: 0.74rem;"><i class="fas fa-arrow-left mr-1"></i> Batal &amp; Kembali ke Beranda</a>
+        </div>
+    </div>
+
+    <!-- MAIN APP (Hidden by default) -->
+    <div id="app-content" style="display:none;">
+        
+        <div class="dashboard-container">
+             <div class="d-flex justify-content-between align-items-center mb-2.5">
+                 <a href="https://man4banjar.com/akademik/index.php" class="btn-back-form" title="Kembali ke Beranda"><i class="fas fa-arrow-left"></i></a>
+                 <div class="d-flex align-items-center" style="gap: 8px;">
+                     <a href="https://man4banjar.com/akademik/monitor_izin.php" target="_blank" class="btn btn-sm btn-outline-success font-weight-bold shadow-sm" style="border-radius: 20px; font-size: 0.78rem; padding: 4px 12px;">
+                         <i class="fas fa-desktop mr-1"></i> Monitor Izin
+                     </a>
+                     <a href="https://man4banjar.com/akademik/scan_izin.php" class="btn btn-sm btn-light border font-weight-bold shadow-sm" style="border-radius: 20px; font-size: 0.78rem; padding: 4px 12px;">
+                         <i class="fas fa-clipboard-check mr-1"></i> Mode Piket
+                     </a>
+                 </div>
+             </div>
+
+            <div class="row">
+                <!-- COL 1: SCANNER -->
+                <div class="col-md-5 mb-3">
+                    <div class="main-card">
+                        <div class="card-header-custom">
+                            <span><i class="fas fa-qrcode mr-1.5 text-warning"></i> SCAN POS SATPAM</span>
+                            <span class="badge badge-pill badge-light text-dark shadow-sm" id="clock" style="font-size:0.82rem; font-weight: 700; padding: 3px 8px;">22.13.07</span>
+                        </div>
+                        <div class="card-body p-2.5 text-center">
+                            <!-- Camera Area with Placeholder -->
+                            <div id="scanner-container" style="position:relative; min-height:180px; max-height:200px; background:#0f172a; border-radius:12px; overflow:hidden;">
+                                <div id="reader" style="width:100%; height:100%;"></div>
+                                <div class="scan-line"></div>
+                                
+                                <!-- Placeholder (Visible initially) -->
+                                <div id="camera-placeholder" style="position:absolute; top:0; left:0; width:100%; height:100%; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 15px;">
+                                    <i class="fas fa-qrcode text-muted mb-1.5" style="font-size: 2.8rem; opacity:0.35;"></i>
+                                    <h6 class="text-muted font-weight-bold mb-0.5" style="font-size: 0.82rem;">Kamera Belum Aktif</h6>
+                                    <small class="text-muted mb-2" style="font-size: 0.70rem;">Arahkan ke QR/Barcode Kartu Pelajar</small>
+                                    <button class="btn btn-success rounded-pill px-3 py-1 shadow-sm" style="background: #059669; border-color: #059669; font-size: 0.78rem;" onclick="startCamera()">
+                                        <i class="fas fa-camera mr-1"></i> BUKA KAMERA
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-2.5">
+                            <div class="form-group mb-1.5">
+                                <label class="text-muted font-weight-bold" style="font-size: 0.72rem; margin-bottom: 3px;">INPUT KODE / NISN MANUAL</label>
+                                <input type="text" id="manual-code" class="form-control text-center rounded-pill" style="height: 36px; font-size: 0.82rem;" placeholder="Ketik 10 Digit NISN Siswa..." onkeypress="return onlyNumberKey(event)">
+                            </div>
+                            <button class="btn btn-success btn-block rounded-pill font-weight-bold shadow-sm" style="background: #059669; border-color: #059669; padding: 7px 15px; font-size: 0.82rem;" id="btn-manual">
+                                <i class="fas fa-check-circle mr-1.5"></i> CEK STATUS SISWA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COL 2: MONITOR LIST -->
+                <div class="col-md-7 mb-3">
+                     <div class="main-card" style="height: 100%;">
+                        <div class="card-header-custom" style="background: var(--secondary-gradient);">
+                            <span><i class="fas fa-history mr-1.5"></i> LOG AKTIVITAS (HARI INI)</span>
+                            <button class="btn btn-sm btn-light text-success font-weight-bold shadow-sm" style="padding: 2px 8px; font-size: 0.75rem;" onclick="loadMonitorData()"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="monitor-list p-2.5" id="monitor-content">
+                                <!-- Ajax Content -->
+                                <div class="text-center text-muted py-4" style="font-size: 0.82rem;">
+                                    <i class="fas fa-spinner fa-spin fa-lg mb-2"></i><br>Memuat Data...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOUNDS -->
+    <audio id="audio-success" src="assets/sounds/beep.mp3"></audio>
+    <audio id="audio-error" src="assets/sounds/error.mp3"></audio>
+
+    <script src="./Pos Jaga - Scan Izin Keluar_files/jquery-3.5.1.min.js"></script>
+    <script>
+        // --- PIN LOGIC ---
+        let currentPin = "";
+        const CORRECT_PIN = "123456"; 
+
+        function addPin(num) {
+            if(currentPin.length < 6) {
+                currentPin += num;
+                updatePinDisplay();
+                // Auto Submit
+                if(currentPin.length === 6) {
+                    setTimeout(checkPin, 200); // Small delay for UX
+                }
+            }
+        }
+        function clearPin() {
+            currentPin = "";
+            updatePinDisplay();
+        }
+        function updatePinDisplay() {
+            let dots = "";
+            for(let i=0; i<currentPin.length; i++) dots += "•";
+            $("#pin-input").text(dots);
+        }
+        function checkPin() {
+            if(currentPin === CORRECT_PIN) {
+                 // Success Animation
+                 $("#pin-input").css("color", "#28a745");
+                 setTimeout(() => {
+                     $("#pin-overlay").fadeOut(300, function() {
+                         $("#app-content").fadeIn(300);
+                         // Initialize things after fade in
+                         loadMonitorData();
+                         // Note: Camera NOT started automatically
+                     });
+                     
+                     const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                     });
+                     Toast.fire({
+                        icon: 'success',
+                        title: 'Akses Pos Jaga Diterima'
+                     });
+                 }, 300);
+            } else {
+                 // Error Animation
+                 $("#pin-input").addClass("text-danger");
+                 Swal.fire({
+                     icon: 'error',
+                     title: 'PIN Salah!',
+                     text: 'Kode akses tidak valid.',
+                     timer: 1500,
+                     showConfirmButton: false
+                 });
+                 setTimeout(() => {
+                     $("#pin-input").removeClass("text-danger");
+                     currentPin = "";
+                     updatePinDisplay();
+                 }, 500);
+            }
+        }
+
+        // --- CLOCK ---
+        setInterval(() => {
+            const now = new Date();
+            $("#clock").text(now.toLocaleTimeString('id-ID'));
+        }, 1000);
+
+        // --- SCANNER LOGIC ---
+        let html5QrCode;
+        
+        async function startCamera() {
+            // Hide Placeholder
+            $("#camera-placeholder").fadeOut();
+            
+            // Check if element exists and visible
+            if(!document.getElementById("reader")) return;
+            
+            try {
+                // Trik: Gunakan config khusus untuk WebView agar tidak dianggap insecure
+                const config = { fps: 10, qrbox: { width: 250, height: 250 }, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
+                
+                // Cek apakah di Android WebView
+                html5QrCode = new Html5Qrcode("reader");
+                await html5QrCode.start( { facingMode: "environment" }, config, onScanSuccess, onScanError );
+                $("#scanner-container").addClass("scanning-active");
+            } catch (err) {
+                console.error(err);
+                // Pesan khusus jika error karena HTTPS/Browser tidak support
+                if(err.toString().includes("NotAllowedError") || err.toString().includes("Permission")) {
+                    Swal.fire({ icon: 'error', title: 'Izin Kamera Ditolak', text: 'Mohon izinkan akses kamera di pengaturan HP.', confirmButtonText: 'OK' });
+                } else if(err.toString().includes("Secure Context") || err.toString().includes("SSL")) {
+                     // Ini biasanya terjadi di WebView HTTP
+                     Swal.fire({ icon: 'warning', title: 'Kamera Error', text: 'Fitur kamera membutuhkan HTTPS. Gunakan input manual.', confirmButtonText: 'OK' });
+                } else {
+                    Swal.fire({ icon: 'warning', title: 'Kamera Tidak Terdeteksi', text: 'Browser tidak mendukung akses kamera langsung. Gunakan input manual.', confirmButtonText: 'OK' });
+                }
+                $("#camera-placeholder").fadeIn();
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`Scan result: ${decodedText}`);
+            document.getElementById('audio-success').play().catch(e=>{});
+            if(html5QrCode) html5QrCode.pause(); 
+            $("#scanner-container").removeClass("scanning-active");
+            
+            // --- NEW: VERIFICATION STEP ---
+            verifyStudent(decodedText);
+        }
+
+        function onScanError(errorMessage) {}
+        
+        // --- MANUAL INPUT ---
+        $("#btn-manual").click(function() {
+            var code = $("#manual-code").val().trim();
+            if(code) {
+                 verifyStudent(code);
+                 $("#manual-code").val('');
+            }
+        });
+        function onlyNumberKey(evt) { var ASCIICode = (evt.which) ? evt.which : evt.keyCode; if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57)) return false; return true; }
+
+        // --- VERIFY FUNCTION ---
+        function verifyStudent(kode) {
+            Swal.fire({
+                title: 'Mencari Data...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading() }
+            });
+            
+            $.ajax({
+                url: 'scan_pos.php?action=get_student_info',
+                type: 'POST',
+                data: { kode: kode },
+                success: function(res) {
+                    Swal.close();
+                    if(res.status == 'found') {
+                        // Determine Action Text
+                        let actionText = res.status_izin == 0 ? "KONFIRMASI KELUAR" : "KONFIRMASI KEMBALI";
+                        let actionColor = res.status_izin == 0 ? "#ffc107" : "#28a745"; // Warning (Yellow) for Out, Success (Green) for In
+                        
+                        Swal.fire({
+                            title: 'Verifikasi Identitas',
+                            html: `
+                                <img src="${res.foto}" class="rounded-circle mb-3 shadow-sm" style="width:120px; height:120px; object-fit:cover;">
+                                <h5 class="font-weight-bold mb-1">${res.nama}</h5>
+                                <p class="text-muted mb-2">${res.kelas}</p>
+                                <span class="badge badge-success mb-3 p-2"><i class="fas fa-check-circle"></i> Diverifikasi Identitas</span>
+                                <div class="alert alert-secondary text-left mt-2" style="font-size:0.9rem;">
+                                    <strong class="text-dark">Keperluan:</strong><br>
+                                    ${res.alasan}<br>
+                                    <small class="text-muted">Keterangan Detail:</small><br>
+                                    ${res.keterangan || '-'}<br><br>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Disetujui Guru Mapel:</small><br>
+                                            <strong>${res.guru}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Wali Kelas:</small><br>
+                                            <strong>${res.wali || '-'}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: `<i class="fas fa-check"></i> ${actionText}`,
+                            confirmButtonColor: actionColor,
+                            cancelButtonText: 'Batal',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                executeScan(kode);
+                            } else {
+                                if(html5QrCode) {
+                                    html5QrCode.resume();
+                                    $("#scanner-container").addClass("scanning-active");
+                                }
+                            }
+                        });
+                    } else if(res.status == 'no_permit') {
+                         Swal.fire({
+                            icon: 'warning',
+                            title: 'Belum Ada Izin',
+                            html: `Siswa <b>${res.nama}</b> belum membuat izin keluar.<br>Silakan arahkan untuk buat izin dulu.`,
+                            confirmButtonText: 'OK'
+                        }).then(() => { 
+                            if(html5QrCode) {
+                                html5QrCode.resume();
+                                $("#scanner-container").addClass("scanning-active");
+                            }
+                        });
+                    } else {
+                        Swal.fire('Data Tidak Ditemukan', 'Siswa tidak terdaftar.', 'error')
+                        .then(() => { 
+                            if(html5QrCode) {
+                                html5QrCode.resume();
+                                $("#scanner-container").addClass("scanning-active");
+                            }
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Gagal memverifikasi data', 'error');
+                    if(html5QrCode) {
+                        html5QrCode.resume();
+                        $("#scanner-container").addClass("scanning-active");
+                    }
+                }
+            });
+        }
+        
+        function executeScan(kode) {
+            var now = new Date();
+            var deviceTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                             now.getMinutes().toString().padStart(2, '0') + ':' + 
+                             now.getSeconds().toString().padStart(2, '0');
+
+             $.ajax({
+                url: 'login/mod_izin/ajax_scan.php',
+                type: 'POST',
+                data: { 
+                    url_data: kode,
+                    device_time: deviceTime
+                },
+                success: function(response) {
+                    try {
+                        var res = JSON.parse(response);
+                        var icon = res.status == 'success' ? 'success' : 'error';
+                        
+                        Swal.fire({
+                            icon: icon,
+                            title: res.status == 'success' ? 'Berhasil' : 'Gagal',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                             if(html5QrCode) {
+                                 html5QrCode.resume();
+                                 $("#scanner-container").addClass("scanning-active");
+                             }
+                        });
+                        
+                        if(res.status == 'success') loadMonitorData();
+                        
+                    } catch(e) {
+                         console.error(e);
+                         if(html5QrCode) {
+                             html5QrCode.resume();
+                             $("#scanner-container").addClass("scanning-active");
+                         }
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Gagal menghubungi server', 'error');
+                    if(html5QrCode) {
+                        html5QrCode.resume();
+                        $("#scanner-container").addClass("scanning-active");
+                    }
+                }
+            });
+        }
+
+        // --- MONITOR DATA LIST ---
+        function loadMonitorData() {
+             $.ajax({
+                 url: 'scan_pos.php?action=get_monitor',
+                 success: function(html) { $("#monitor-content").html(html); },
+                 error: function() { $("#monitor-content").html('<div class="text-center text-danger py-5">Gagal memuat data.</div>'); }
+             });
+        }
+        // --- SHOW DETAIL --
+        function showDetail(nisn, nama, kelas, alasan, ket) {
+             Swal.fire({
+                title: 'DETAIL IZIN KELUAR',
+                html: `
+                    <div class="text-left mt-3">
+                        <table class="table table-sm table-borderless" style="font-size: 0.95rem; width:100%;">
+                            <tr><td width="28%" class="text-muted text-right pr-2 align-top">NISN</td><td width="2%" class="align-top">:</td><td class="font-weight-bold align-top text-left pl-2">${nisn}</td></tr>
+                            <tr><td class="text-muted text-right pr-2 align-top">Nama</td><td class="align-top">:</td><td class="font-weight-bold align-top text-left pl-2">${nama}</td></tr>
+                            <tr><td class="text-muted text-right pr-2 align-top">Kelas</td><td class="align-top">:</td><td class="font-weight-bold align-top text-left pl-2">${kelas}</td></tr>
+                            <tr><td class="text-muted text-right pr-2 align-top">Keperluan</td><td class="align-top">:</td><td class="font-weight-bold text-primary align-top text-left pl-2" style="word-wrap: break-word;">${alasan}</td></tr>
+                            <tr><td class="text-muted text-right pr-2 align-top">Keterangan</td><td class="align-top">:</td><td class="align-top text-left pl-2" style="white-space: pre-wrap; word-wrap: break-word; line-height:1.5;">${ket}</td></tr>
+                        </table>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#3085d6',
+                customClass: { content: 'text-left' }
+            });
+        }
+    </script>
+
+
+<div class="glasp-extension-toaster glasp-extension-toaster--glasp-extension" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 2147483647;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"></div></template></div><div class="glasp-extension-highlighter" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 0px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 0px; left: 0px; height: 0px; z-index: 2147483646; pointer-events: none;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"><style>
+.glasp-md.glasp-md { word-break: break-word; }
+.glasp-md.glasp-md > :first-child { margin-top: 0; }
+.glasp-md.glasp-md > :last-child { margin-bottom: 0; }
+.glasp-md.glasp-md h1, .glasp-md.glasp-md h2, .glasp-md.glasp-md h3, .glasp-md.glasp-md h4 {
+  margin: 0.4em 0 0.2em; font-size: 1.12em; font-weight: 700; line-height: 1.3; padding: 0;
+}
+.glasp-md.glasp-md p { margin: 0.6em 0; line-height: 1.55; }
+.glasp-md.glasp-md ul { list-style: disc outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md ol { list-style: decimal outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md li { display: list-item; margin: 0.32em 0; line-height: 1.5; }
+.glasp-md.glasp-md ul ul, .glasp-md.glasp-md ol ol, .glasp-md.glasp-md ul ol, .glasp-md.glasp-md ol ul { margin: 0.32em 0; }
+.glasp-md.glasp-md ul ul { list-style: circle outside; }
+.glasp-md.glasp-md strong { font-weight: 700; }
+.glasp-md.glasp-md em { font-style: italic; }
+.glasp-md.glasp-md a { color: rgb(51 121 255); text-decoration: none; }
+.glasp-md.glasp-md a:hover { text-decoration: underline; }
+.glasp-md.glasp-md blockquote {
+  margin: 0.6em 0; padding-block: 0.1em; padding-inline: 0.85em 0;
+  border-inline-start: 3px solid #dfe3ea; color: #5b616e;
+}
+.glasp-md.glasp-md blockquote p { margin: 0.25em 0; }
+.glasp-md.glasp-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+  background: #f1f5f9; color: #1f2937; padding: 0 3px; border-radius: 3px;
+}
+.glasp-md.glasp-md pre {
+  background: #f1f5f9; color: #1f2937; padding: 8px 10px; border-radius: 6px; overflow-x: auto; margin: 0.4em 0;
+}
+.glasp-md.glasp-md pre code { background: none; padding: 0; }
+/* Code is ALWAYS left-to-right, whatever the surrounding text does. Without this,
+   an RTL host page — or a dir=auto container that resolved RTL from an Arabic
+   first character — reorders every code line: an opening brace jumps to the far
+   end, and a leading comment marker lands on the wrong side. unicode-bidi
+   isolate also stops the code from reordering the prose around it.
+   NOTE: no backticks in this comment. It lives inside a JS template literal. */
+.glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
+</style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

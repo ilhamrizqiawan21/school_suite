@@ -24,7 +24,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     <Head :title="`${title} — ${school.name}`" />
     <main class="public-site public-section-page" :style="themeStyle">
         <PublicHeader :school="school" :active="active" />
-        <section class="section-hero" aria-labelledby="section-title">
+        <section class="section-hero madrasah-profile-hero" aria-labelledby="section-title">
             <p class="eyebrow">{{ eyebrow }}</p>
             <h1 id="section-title">{{ title }}</h1>
             <p>{{ description }}</p>

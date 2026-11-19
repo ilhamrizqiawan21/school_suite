@@ -21,13 +21,19 @@ class ExternalApplicant extends Model
         'identifier_hash',
         'phone',
         'email',
+        'password_hash',
+        'recovery_token_hash',
+        'recovery_expires_at',
         'organization_name',
         'is_verified',
         'verified_at',
+        'last_login_at',
     ];
 
     protected $hidden = [
         'identifier_hash',
+        'password_hash',
+        'recovery_token_hash',
     ];
 
     /**
@@ -38,6 +44,8 @@ class ExternalApplicant extends Model
         return [
             'is_verified' => 'boolean',
             'verified_at' => 'datetime',
+            'recovery_expires_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -51,7 +51,15 @@ interface OrganizationMember {
 }
 
 const props = defineProps<{ school: SchoolProfile; news: NewsItem[]; gallery: GalleryPhoto[]; organization: OrganizationMember[] }>();
-const missionPoints = computed(() => (props.school.mission ?? '')
+const preview = computed(() => usePage().props.publicPortalTheme === 'man4-banjar');
+const sampleMission = 'Menguatkan karakter dan kebiasaan belajar.\nMengembangkan literasi, riset, dan kepedulian lingkungan.';
+const principalMessage = computed(() => props.school.principal_message || (preview.value
+    ? 'Selamat datang di Portal Madrasah. Mari membangun lingkungan belajar yang tertib, terbuka, dan mendorong rasa ingin tahu.'
+    : ''));
+const vision = computed(() => props.school.vision || (preview.value
+    ? 'Mewujudkan madrasah yang berkarakter, unggul dalam pembelajaran, dan peduli lingkungan.'
+    : ''));
+const missionPoints = computed(() => (props.school.mission || (preview.value ? sampleMission : ''))
     .split(/\r?\n/)
     .map((item) => item.trim())
     .filter(Boolean));
@@ -66,7 +74,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
         <PublicHeader :school="school" active="profile" />
 
-        <section class="hero" aria-labelledby="hero-title">
+        <section class="madrasah-profile-hero hero" aria-labelledby="hero-title">
             <div class="hero-copy">
                 <p class="kicker">{{ school.level || 'Sekolah' }} · Profil resmi</p>
                 <h1 id="hero-title">{{ school.name }}<span class="hero-title-accent">ruang untuk tumbuh bersama.</span></h1>
@@ -91,15 +99,15 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
             <div class="about-copy"><p>{{ school.about || 'Profil sekolah sedang disiapkan.' }}</p><p v-if="school.legal_name" class="muted">{{ school.legal_name }}</p></div>
         </section>
 
-        <section v-if="school.principal_message" id="sambutan" class="message-section">
+        <section v-if="principalMessage" id="sambutan" class="message-section">
             <div class="quote-mark" aria-hidden="true">“</div>
-            <div><p class="kicker">Sambutan kepala sekolah</p><blockquote>{{ school.principal_message }}</blockquote><cite>{{ school.principal_name || 'Kepala Sekolah' }}</cite></div>
+            <div><p class="kicker">Sambutan kepala sekolah</p><blockquote>{{ principalMessage }}</blockquote><cite>{{ school.principal_message ? (school.principal_name || 'Kepala Sekolah') : 'Contoh sambutan' }}</cite></div>
         </section>
 
-        <section v-if="school.vision || missionPoints.length" id="arah" class="content-section two-column">
-            <div><p class="kicker">Arah pendidikan</p><h2>Nilai yang menjadi kompas.</h2></div>
+        <section v-if="vision || missionPoints.length" id="arah" class="content-section two-column">
+            <div><p class="kicker">Arah pendidikan</p><h2>Visi dan Misi</h2><p v-if="preview && (!school.vision || !school.mission)">Contoh konten profil</p></div>
             <div class="direction-grid">
-                <article v-if="school.vision"><span>Visi</span><p>{{ school.vision }}</p></article>
+                <article v-if="vision"><span>Visi</span><p>{{ vision }}</p></article>
                 <article v-if="missionPoints.length"><span>Misi</span><ul><li v-for="mission in missionPoints" :key="mission">{{ mission }}</li></ul></article>
             </div>
         </section>

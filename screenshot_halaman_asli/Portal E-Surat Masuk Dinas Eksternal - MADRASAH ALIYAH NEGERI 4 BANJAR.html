@@ -1,0 +1,2862 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)https://man4banjar.com/akademik/kirim_surat.php -->
+<html lang="id" class="scroll-smooth"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR</title>
+  <meta name="description" content="Layanan resmi penerimaan dan agenda surat dinas masuk dari Kementerian, Lembaga Pemerintah, Dinas, Kepolisian, Kampus, dan Organisasi Mitra ke MADRASAH ALIYAH NEGERI 4 BANJAR.">
+  <link rel="shortcut icon" href="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/logo_kemenag.png">
+  
+  <!-- Font Google & Font Awesome 6 Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <link href="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/css2" rel="stylesheet">
+  <link rel="stylesheet" href="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/all.min.css">
+
+  <!-- Tailwind CSS -->
+  <script src="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/saved_resource"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kemenag: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22'
+            },
+            gold: {
+              300: '#fde047',
+              400: '#facc15',
+              500: '#eab308',
+              600: '#ca8a04'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- SweetAlert2 -->
+  <script src="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/sweetalert2@11"></script><style>:root{--swal2-outline: 0 0 0 3px rgba(100, 150, 200, 0.5);--swal2-container-padding: 0.625em;--swal2-backdrop: rgba(0, 0, 0, 0.4);--swal2-backdrop-transition: background-color 0.15s;--swal2-width: 32em;--swal2-padding: 0 0 1.25em;--swal2-border: none;--swal2-border-radius: 0.3125rem;--swal2-background: white;--swal2-color: #545454;--swal2-show-animation: swal2-show 0.3s;--swal2-hide-animation: swal2-hide 0.15s forwards;--swal2-icon-zoom: 1;--swal2-title-padding: 0.8em 1em 0;--swal2-html-container-padding: 1em 1.6em 0.3em;--swal2-input-border: 1px solid #d9d9d9;--swal2-input-border-radius: 0.1875em;--swal2-input-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px transparent;--swal2-input-background: transparent;--swal2-input-transition: border-color 0.2s, box-shadow 0.2s;--swal2-input-hover-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px transparent;--swal2-input-focus-border: 1px solid #b4dbed;--swal2-input-focus-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(100, 150, 200, 0.5);--swal2-progress-step-background: #add8e6;--swal2-validation-message-background: #f0f0f0;--swal2-validation-message-color: #666;--swal2-footer-border-color: #eee;--swal2-footer-background: transparent;--swal2-footer-color: inherit;--swal2-timer-progress-bar-background: rgba(0, 0, 0, 0.3);--swal2-close-button-position: initial;--swal2-close-button-inset: auto;--swal2-close-button-font-size: 2.5em;--swal2-close-button-color: #ccc;--swal2-close-button-transition: color 0.2s, box-shadow 0.2s;--swal2-close-button-outline: initial;--swal2-close-button-box-shadow: inset 0 0 0 3px transparent;--swal2-close-button-focus-box-shadow: inset var(--swal2-outline);--swal2-close-button-hover-transform: none;--swal2-actions-justify-content: center;--swal2-actions-width: auto;--swal2-actions-margin: 1.25em auto 0;--swal2-actions-padding: 0;--swal2-actions-border-radius: 0;--swal2-actions-background: transparent;--swal2-action-button-transition: background-color 0.2s, box-shadow 0.2s;--swal2-action-button-hover: black 10%;--swal2-action-button-active: black 10%;--swal2-confirm-button-box-shadow: none;--swal2-confirm-button-border-radius: 0.25em;--swal2-confirm-button-background-color: #7066e0;--swal2-confirm-button-color: #fff;--swal2-deny-button-box-shadow: none;--swal2-deny-button-border-radius: 0.25em;--swal2-deny-button-background-color: #dc3741;--swal2-deny-button-color: #fff;--swal2-cancel-button-box-shadow: none;--swal2-cancel-button-border-radius: 0.25em;--swal2-cancel-button-background-color: #6e7881;--swal2-cancel-button-color: #fff;--swal2-toast-show-animation: swal2-toast-show 0.5s;--swal2-toast-hide-animation: swal2-toast-hide 0.1s forwards;--swal2-toast-border: none;--swal2-toast-box-shadow: 0 0 1px hsl(0deg 0% 0% / 0.075), 0 1px 2px hsl(0deg 0% 0% / 0.075), 1px 2px 4px hsl(0deg 0% 0% / 0.075), 1px 3px 8px hsl(0deg 0% 0% / 0.075), 2px 4px 16px hsl(0deg 0% 0% / 0.075)}[data-swal2-theme=dark]{--swal2-dark-theme-black: #19191a;--swal2-dark-theme-white: #e1e1e1;--swal2-background: var(--swal2-dark-theme-black);--swal2-color: var(--swal2-dark-theme-white);--swal2-footer-border-color: #555;--swal2-input-background: color-mix(in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10%);--swal2-validation-message-background: color-mix( in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10% );--swal2-validation-message-color: var(--swal2-dark-theme-white);--swal2-timer-progress-bar-background: rgba(255, 255, 255, 0.7)}@media(prefers-color-scheme: dark){[data-swal2-theme=auto]{--swal2-dark-theme-black: #19191a;--swal2-dark-theme-white: #e1e1e1;--swal2-background: var(--swal2-dark-theme-black);--swal2-color: var(--swal2-dark-theme-white);--swal2-footer-border-color: #555;--swal2-input-background: color-mix(in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10%);--swal2-validation-message-background: color-mix( in srgb, var(--swal2-dark-theme-black), var(--swal2-dark-theme-white) 10% );--swal2-validation-message-color: var(--swal2-dark-theme-white);--swal2-timer-progress-bar-background: rgba(255, 255, 255, 0.7)}}body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown){overflow:hidden}body.swal2-height-auto{height:auto !important}body.swal2-no-backdrop .swal2-container{background-color:rgba(0,0,0,0) !important;pointer-events:none}body.swal2-no-backdrop .swal2-container .swal2-popup{pointer-events:auto}body.swal2-no-backdrop .swal2-container .swal2-modal{box-shadow:0 0 10px var(--swal2-backdrop)}body.swal2-toast-shown .swal2-container{box-sizing:border-box;width:360px;max-width:100%;background-color:rgba(0,0,0,0);pointer-events:none}body.swal2-toast-shown .swal2-container.swal2-top{inset:0 auto auto 50%;transform:translateX(-50%)}body.swal2-toast-shown .swal2-container.swal2-top-end,body.swal2-toast-shown .swal2-container.swal2-top-right{inset:0 0 auto auto}body.swal2-toast-shown .swal2-container.swal2-top-start,body.swal2-toast-shown .swal2-container.swal2-top-left{inset:0 auto auto 0}body.swal2-toast-shown .swal2-container.swal2-center-start,body.swal2-toast-shown .swal2-container.swal2-center-left{inset:50% auto auto 0;transform:translateY(-50%)}body.swal2-toast-shown .swal2-container.swal2-center{inset:50% auto auto 50%;transform:translate(-50%, -50%)}body.swal2-toast-shown .swal2-container.swal2-center-end,body.swal2-toast-shown .swal2-container.swal2-center-right{inset:50% 0 auto auto;transform:translateY(-50%)}body.swal2-toast-shown .swal2-container.swal2-bottom-start,body.swal2-toast-shown .swal2-container.swal2-bottom-left{inset:auto auto 0 0}body.swal2-toast-shown .swal2-container.swal2-bottom{inset:auto auto 0 50%;transform:translateX(-50%)}body.swal2-toast-shown .swal2-container.swal2-bottom-end,body.swal2-toast-shown .swal2-container.swal2-bottom-right{inset:auto 0 0 auto}@media print{body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown){overflow-y:scroll !important}body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown)>[aria-hidden=true]{display:none}body.swal2-shown:not(.swal2-no-backdrop,.swal2-toast-shown) .swal2-container{position:static !important}}div:where(.swal2-container){display:grid;position:fixed;z-index:1060;inset:0;box-sizing:border-box;grid-template-areas:"top-start     top            top-end" "center-start  center         center-end" "bottom-start  bottom-center  bottom-end";grid-template-rows:minmax(min-content, auto) minmax(min-content, auto) minmax(min-content, auto);height:100%;padding:var(--swal2-container-padding);overflow-x:hidden;transition:var(--swal2-backdrop-transition);-webkit-overflow-scrolling:touch}div:where(.swal2-container).swal2-backdrop-show,div:where(.swal2-container).swal2-noanimation{background:var(--swal2-backdrop)}div:where(.swal2-container).swal2-backdrop-hide{background:rgba(0,0,0,0) !important}div:where(.swal2-container).swal2-top-start,div:where(.swal2-container).swal2-center-start,div:where(.swal2-container).swal2-bottom-start{grid-template-columns:minmax(0, 1fr) auto auto}div:where(.swal2-container).swal2-top,div:where(.swal2-container).swal2-center,div:where(.swal2-container).swal2-bottom{grid-template-columns:auto minmax(0, 1fr) auto}div:where(.swal2-container).swal2-top-end,div:where(.swal2-container).swal2-center-end,div:where(.swal2-container).swal2-bottom-end{grid-template-columns:auto auto minmax(0, 1fr)}div:where(.swal2-container).swal2-top-start>.swal2-popup{align-self:start}div:where(.swal2-container).swal2-top>.swal2-popup{grid-column:2;place-self:start center}div:where(.swal2-container).swal2-top-end>.swal2-popup,div:where(.swal2-container).swal2-top-right>.swal2-popup{grid-column:3;place-self:start end}div:where(.swal2-container).swal2-center-start>.swal2-popup,div:where(.swal2-container).swal2-center-left>.swal2-popup{grid-row:2;align-self:center}div:where(.swal2-container).swal2-center>.swal2-popup{grid-column:2;grid-row:2;place-self:center center}div:where(.swal2-container).swal2-center-end>.swal2-popup,div:where(.swal2-container).swal2-center-right>.swal2-popup{grid-column:3;grid-row:2;place-self:center end}div:where(.swal2-container).swal2-bottom-start>.swal2-popup,div:where(.swal2-container).swal2-bottom-left>.swal2-popup{grid-column:1;grid-row:3;align-self:end}div:where(.swal2-container).swal2-bottom>.swal2-popup{grid-column:2;grid-row:3;place-self:end center}div:where(.swal2-container).swal2-bottom-end>.swal2-popup,div:where(.swal2-container).swal2-bottom-right>.swal2-popup{grid-column:3;grid-row:3;place-self:end end}div:where(.swal2-container).swal2-grow-row>.swal2-popup,div:where(.swal2-container).swal2-grow-fullscreen>.swal2-popup{grid-column:1/4;width:100%}div:where(.swal2-container).swal2-grow-column>.swal2-popup,div:where(.swal2-container).swal2-grow-fullscreen>.swal2-popup{grid-row:1/4;align-self:stretch}div:where(.swal2-container).swal2-no-transition{transition:none !important}div:where(.swal2-container)[popover]{width:auto;border:0}div:where(.swal2-container) div:where(.swal2-popup){display:none;position:relative;box-sizing:border-box;grid-template-columns:minmax(0, 100%);width:var(--swal2-width);max-width:100%;padding:var(--swal2-padding);border:var(--swal2-border);border-radius:var(--swal2-border-radius);background:var(--swal2-background);color:var(--swal2-color);font-family:inherit;font-size:1rem}div:where(.swal2-container) div:where(.swal2-popup):focus{outline:none}div:where(.swal2-container) div:where(.swal2-popup).swal2-loading{overflow-y:hidden}div:where(.swal2-container) div:where(.swal2-popup).swal2-draggable{cursor:grab}div:where(.swal2-container) div:where(.swal2-popup).swal2-draggable div:where(.swal2-icon){cursor:grab}div:where(.swal2-container) div:where(.swal2-popup).swal2-dragging{cursor:grabbing}div:where(.swal2-container) div:where(.swal2-popup).swal2-dragging div:where(.swal2-icon){cursor:grabbing}div:where(.swal2-container) h2:where(.swal2-title){position:relative;max-width:100%;margin:0;padding:var(--swal2-title-padding);color:inherit;font-size:1.875em;font-weight:600;text-align:center;text-transform:none;overflow-wrap:break-word;cursor:initial}div:where(.swal2-container) div:where(.swal2-actions){display:flex;z-index:1;box-sizing:border-box;flex-wrap:wrap;align-items:center;justify-content:var(--swal2-actions-justify-content);width:var(--swal2-actions-width);margin:var(--swal2-actions-margin);padding:var(--swal2-actions-padding);border-radius:var(--swal2-actions-border-radius);background:var(--swal2-actions-background)}div:where(.swal2-container) div:where(.swal2-loader){display:none;align-items:center;justify-content:center;width:2.2em;height:2.2em;margin:0 1.875em;animation:swal2-rotate-loading 1.5s linear 0s infinite normal;border-width:.25em;border-style:solid;border-radius:100%;border-color:#2778c4 rgba(0,0,0,0) #2778c4 rgba(0,0,0,0)}div:where(.swal2-container) button:where(.swal2-styled){margin:.3125em;padding:.625em 1.1em;transition:var(--swal2-action-button-transition);border:none;box-shadow:0 0 0 3px rgba(0,0,0,0);font-weight:500}div:where(.swal2-container) button:where(.swal2-styled):not([disabled]){cursor:pointer}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm){border-radius:var(--swal2-confirm-button-border-radius);background:initial;background-color:var(--swal2-confirm-button-background-color);box-shadow:var(--swal2-confirm-button-box-shadow);color:var(--swal2-confirm-button-color);font-size:1em}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):hover{background-color:color-mix(in srgb, var(--swal2-confirm-button-background-color), var(--swal2-action-button-hover))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-confirm):active{background-color:color-mix(in srgb, var(--swal2-confirm-button-background-color), var(--swal2-action-button-active))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny){border-radius:var(--swal2-deny-button-border-radius);background:initial;background-color:var(--swal2-deny-button-background-color);box-shadow:var(--swal2-deny-button-box-shadow);color:var(--swal2-deny-button-color);font-size:1em}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny):hover{background-color:color-mix(in srgb, var(--swal2-deny-button-background-color), var(--swal2-action-button-hover))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-deny):active{background-color:color-mix(in srgb, var(--swal2-deny-button-background-color), var(--swal2-action-button-active))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel){border-radius:var(--swal2-cancel-button-border-radius);background:initial;background-color:var(--swal2-cancel-button-background-color);box-shadow:var(--swal2-cancel-button-box-shadow);color:var(--swal2-cancel-button-color);font-size:1em}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel):hover{background-color:color-mix(in srgb, var(--swal2-cancel-button-background-color), var(--swal2-action-button-hover))}div:where(.swal2-container) button:where(.swal2-styled):where(.swal2-cancel):active{background-color:color-mix(in srgb, var(--swal2-cancel-button-background-color), var(--swal2-action-button-active))}div:where(.swal2-container) button:where(.swal2-styled):focus-visible{outline:none;box-shadow:var(--swal2-action-button-focus-box-shadow)}div:where(.swal2-container) button:where(.swal2-styled)[disabled]:not(.swal2-loading){opacity:.4}div:where(.swal2-container) button:where(.swal2-styled)::-moz-focus-inner{border:0}div:where(.swal2-container) div:where(.swal2-footer){margin:1em 0 0;padding:1em 1em 0;border-top:1px solid var(--swal2-footer-border-color);background:var(--swal2-footer-background);color:var(--swal2-footer-color);font-size:1em;text-align:center;cursor:initial}div:where(.swal2-container) .swal2-timer-progress-bar-container{position:absolute;right:0;bottom:0;left:0;grid-column:auto !important;overflow:hidden;border-bottom-right-radius:var(--swal2-border-radius);border-bottom-left-radius:var(--swal2-border-radius)}div:where(.swal2-container) div:where(.swal2-timer-progress-bar){width:100%;height:.25em;background:var(--swal2-timer-progress-bar-background)}div:where(.swal2-container) img:where(.swal2-image){max-width:100%;margin:2em auto 1em;cursor:initial}div:where(.swal2-container) button:where(.swal2-close){position:var(--swal2-close-button-position);inset:var(--swal2-close-button-inset);z-index:2;align-items:center;justify-content:center;width:1.2em;height:1.2em;margin-top:0;margin-right:0;margin-bottom:-1.2em;padding:0;overflow:hidden;transition:var(--swal2-close-button-transition);border:none;border-radius:var(--swal2-border-radius);outline:var(--swal2-close-button-outline);background:rgba(0,0,0,0);color:var(--swal2-close-button-color);font-family:monospace;font-size:var(--swal2-close-button-font-size);cursor:pointer;justify-self:end}div:where(.swal2-container) button:where(.swal2-close):hover{transform:var(--swal2-close-button-hover-transform);background:rgba(0,0,0,0);color:#f27474}div:where(.swal2-container) button:where(.swal2-close):focus-visible{outline:none;box-shadow:var(--swal2-close-button-focus-box-shadow)}div:where(.swal2-container) button:where(.swal2-close)::-moz-focus-inner{border:0}div:where(.swal2-container) div:where(.swal2-html-container){z-index:1;justify-content:center;margin:0;padding:var(--swal2-html-container-padding);overflow:auto;color:inherit;font-size:1.125em;font-weight:normal;line-height:normal;text-align:center;overflow-wrap:break-word;word-break:break-word;cursor:initial}div:where(.swal2-container) input:where(.swal2-input),div:where(.swal2-container) input:where(.swal2-file),div:where(.swal2-container) textarea:where(.swal2-textarea),div:where(.swal2-container) select:where(.swal2-select),div:where(.swal2-container) div:where(.swal2-radio),div:where(.swal2-container) label:where(.swal2-checkbox){margin:1em 2em 3px}div:where(.swal2-container) input:where(.swal2-input),div:where(.swal2-container) input:where(.swal2-file),div:where(.swal2-container) textarea:where(.swal2-textarea){box-sizing:border-box;width:auto;transition:var(--swal2-input-transition);border:var(--swal2-input-border);border-radius:var(--swal2-input-border-radius);background:var(--swal2-input-background);box-shadow:var(--swal2-input-box-shadow);color:inherit;font-size:1.125em}div:where(.swal2-container) input:where(.swal2-input).swal2-inputerror,div:where(.swal2-container) input:where(.swal2-file).swal2-inputerror,div:where(.swal2-container) textarea:where(.swal2-textarea).swal2-inputerror{border-color:#f27474 !important;box-shadow:0 0 2px #f27474 !important}div:where(.swal2-container) input:where(.swal2-input):hover,div:where(.swal2-container) input:where(.swal2-file):hover,div:where(.swal2-container) textarea:where(.swal2-textarea):hover{box-shadow:var(--swal2-input-hover-box-shadow)}div:where(.swal2-container) input:where(.swal2-input):focus,div:where(.swal2-container) input:where(.swal2-file):focus,div:where(.swal2-container) textarea:where(.swal2-textarea):focus{border:var(--swal2-input-focus-border);outline:none;box-shadow:var(--swal2-input-focus-box-shadow)}div:where(.swal2-container) input:where(.swal2-input)::placeholder,div:where(.swal2-container) input:where(.swal2-file)::placeholder,div:where(.swal2-container) textarea:where(.swal2-textarea)::placeholder{color:#ccc}div:where(.swal2-container) .swal2-range{margin:1em 2em 3px;background:var(--swal2-background)}div:where(.swal2-container) .swal2-range input{width:80%}div:where(.swal2-container) .swal2-range output{width:20%;color:inherit;font-weight:600;text-align:center}div:where(.swal2-container) .swal2-range input,div:where(.swal2-container) .swal2-range output{height:2.625em;padding:0;font-size:1.125em;line-height:2.625em}div:where(.swal2-container) .swal2-input{height:2.625em;padding:0 .75em}div:where(.swal2-container) .swal2-file{width:75%;margin-right:auto;margin-left:auto;background:var(--swal2-input-background);font-size:1.125em}div:where(.swal2-container) .swal2-textarea{height:6.75em;padding:.75em}div:where(.swal2-container) .swal2-select{min-width:50%;max-width:100%;padding:.375em .625em;background:var(--swal2-input-background);color:inherit;font-size:1.125em}div:where(.swal2-container) .swal2-radio,div:where(.swal2-container) .swal2-checkbox{align-items:center;justify-content:center;background:var(--swal2-background);color:inherit}div:where(.swal2-container) .swal2-radio label,div:where(.swal2-container) .swal2-checkbox label{margin:0 .6em;font-size:1.125em}div:where(.swal2-container) .swal2-radio input,div:where(.swal2-container) .swal2-checkbox input{flex-shrink:0;margin:0 .4em}div:where(.swal2-container) label:where(.swal2-input-label){display:flex;justify-content:center;margin:1em auto 0}div:where(.swal2-container) div:where(.swal2-validation-message){align-items:center;justify-content:center;margin:1em 0 0;padding:.625em;overflow:hidden;background:var(--swal2-validation-message-background);color:var(--swal2-validation-message-color);font-size:1em;font-weight:300}div:where(.swal2-container) div:where(.swal2-validation-message)::before{content:"!";display:inline-block;width:1.5em;min-width:1.5em;height:1.5em;margin:0 .625em;border-radius:50%;background-color:#f27474;color:#fff;font-weight:600;line-height:1.5em;text-align:center}div:where(.swal2-container) .swal2-progress-steps{flex-wrap:wrap;align-items:center;max-width:100%;margin:1.25em auto;padding:0;background:rgba(0,0,0,0);font-weight:600}div:where(.swal2-container) .swal2-progress-steps li{display:inline-block;position:relative}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step{z-index:20;flex-shrink:0;width:2em;height:2em;border-radius:2em;background:#2778c4;color:#fff;line-height:2em;text-align:center}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step{background:#2778c4}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step~.swal2-progress-step{background:var(--swal2-progress-step-background);color:#fff}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step~.swal2-progress-step-line{background:var(--swal2-progress-step-background)}div:where(.swal2-container) .swal2-progress-steps .swal2-progress-step-line{z-index:10;flex-shrink:0;width:2.5em;height:.4em;margin:0 -1px;background:#2778c4}div:where(.swal2-icon){position:relative;box-sizing:content-box;justify-content:center;width:5em;height:5em;margin:2.5em auto .6em;zoom:var(--swal2-icon-zoom);border:.25em solid rgba(0,0,0,0);border-radius:50%;border-color:#000;font-family:inherit;line-height:5em;cursor:default;user-select:none}div:where(.swal2-icon) .swal2-icon-content{display:flex;align-items:center;font-size:3.75em}div:where(.swal2-icon).swal2-error{border-color:#f27474;color:#f27474}div:where(.swal2-icon).swal2-error .swal2-x-mark{position:relative;flex-grow:1}div:where(.swal2-icon).swal2-error [class^=swal2-x-mark-line]{display:block;position:absolute;top:2.3125em;width:2.9375em;height:.3125em;border-radius:.125em;background-color:#f27474}div:where(.swal2-icon).swal2-error [class^=swal2-x-mark-line][class$=left]{left:1.0625em;transform:rotate(45deg)}div:where(.swal2-icon).swal2-error [class^=swal2-x-mark-line][class$=right]{right:1em;transform:rotate(-45deg)}div:where(.swal2-icon).swal2-error.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-error.swal2-icon-show .swal2-x-mark{animation:swal2-animate-error-x-mark .5s}div:where(.swal2-icon).swal2-warning{border-color:#f8bb86;color:#f8bb86}div:where(.swal2-icon).swal2-warning.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-warning.swal2-icon-show .swal2-icon-content{animation:swal2-animate-i-mark .5s}div:where(.swal2-icon).swal2-info{border-color:#3fc3ee;color:#3fc3ee}div:where(.swal2-icon).swal2-info.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-info.swal2-icon-show .swal2-icon-content{animation:swal2-animate-i-mark .8s}div:where(.swal2-icon).swal2-question{border-color:#87adbd;color:#87adbd}div:where(.swal2-icon).swal2-question.swal2-icon-show{animation:swal2-animate-error-icon .5s}div:where(.swal2-icon).swal2-question.swal2-icon-show .swal2-icon-content{animation:swal2-animate-question-mark .8s}div:where(.swal2-icon).swal2-success{border-color:#a5dc86;color:#a5dc86}div:where(.swal2-icon).swal2-success [class^=swal2-success-circular-line]{position:absolute;width:3.75em;height:7.5em;border-radius:50%}div:where(.swal2-icon).swal2-success [class^=swal2-success-circular-line][class$=left]{top:-0.4375em;left:-2.0635em;transform:rotate(-45deg);transform-origin:3.75em 3.75em;border-radius:7.5em 0 0 7.5em}div:where(.swal2-icon).swal2-success [class^=swal2-success-circular-line][class$=right]{top:-0.6875em;left:1.875em;transform:rotate(-45deg);transform-origin:0 3.75em;border-radius:0 7.5em 7.5em 0}div:where(.swal2-icon).swal2-success .swal2-success-ring{position:absolute;z-index:2;top:-0.25em;left:-0.25em;box-sizing:content-box;width:100%;height:100%;border:.25em solid rgba(165,220,134,.3);border-radius:50%}div:where(.swal2-icon).swal2-success .swal2-success-fix{position:absolute;z-index:1;top:.5em;left:1.625em;width:.4375em;height:5.625em;transform:rotate(-45deg)}div:where(.swal2-icon).swal2-success [class^=swal2-success-line]{display:block;position:absolute;z-index:2;height:.3125em;border-radius:.125em;background-color:#a5dc86}div:where(.swal2-icon).swal2-success [class^=swal2-success-line][class$=tip]{top:2.875em;left:.8125em;width:1.5625em;transform:rotate(45deg)}div:where(.swal2-icon).swal2-success [class^=swal2-success-line][class$=long]{top:2.375em;right:.5em;width:2.9375em;transform:rotate(-45deg)}div:where(.swal2-icon).swal2-success.swal2-icon-show .swal2-success-line-tip{animation:swal2-animate-success-line-tip .75s}div:where(.swal2-icon).swal2-success.swal2-icon-show .swal2-success-line-long{animation:swal2-animate-success-line-long .75s}div:where(.swal2-icon).swal2-success.swal2-icon-show .swal2-success-circular-line-right{animation:swal2-rotate-success-circular-line 4.25s ease-in}[class^=swal2]{-webkit-tap-highlight-color:rgba(0,0,0,0)}.swal2-show{animation:var(--swal2-show-animation)}.swal2-hide{animation:var(--swal2-hide-animation)}.swal2-noanimation{transition:none}.swal2-scrollbar-measure{position:absolute;top:-9999px;width:50px;height:50px;overflow:scroll}.swal2-rtl .swal2-close{margin-right:initial;margin-left:0}.swal2-rtl .swal2-timer-progress-bar{right:0;left:auto}.swal2-toast{box-sizing:border-box;grid-column:1/4 !important;grid-row:1/4 !important;grid-template-columns:min-content auto min-content;padding:1em;overflow-y:hidden;border:var(--swal2-toast-border);background:var(--swal2-background);box-shadow:var(--swal2-toast-box-shadow);pointer-events:auto}.swal2-toast>*{grid-column:2}.swal2-toast h2:where(.swal2-title){margin:.5em 1em;padding:0;font-size:1em;text-align:initial}.swal2-toast .swal2-loading{justify-content:center}.swal2-toast input:where(.swal2-input){height:2em;margin:.5em;font-size:1em}.swal2-toast .swal2-validation-message{font-size:1em}.swal2-toast div:where(.swal2-footer){margin:.5em 0 0;padding:.5em 0 0;font-size:.8em}.swal2-toast button:where(.swal2-close){grid-column:3/3;grid-row:1/99;align-self:center;width:.8em;height:.8em;margin:0;font-size:2em}.swal2-toast div:where(.swal2-html-container){margin:.5em 1em;padding:0;overflow:initial;font-size:1em;text-align:initial}.swal2-toast div:where(.swal2-html-container):empty{padding:0}.swal2-toast .swal2-loader{grid-column:1;grid-row:1/99;align-self:center;width:2em;height:2em;margin:.25em}.swal2-toast .swal2-icon{grid-column:1;grid-row:1/99;align-self:center;width:2em;min-width:2em;height:2em;margin:0 .5em 0 0}.swal2-toast .swal2-icon .swal2-icon-content{display:flex;align-items:center;font-size:1.8em;font-weight:bold}.swal2-toast .swal2-icon.swal2-success .swal2-success-ring{width:2em;height:2em}.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line]{top:.875em;width:1.375em}.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line][class$=left]{left:.3125em}.swal2-toast .swal2-icon.swal2-error [class^=swal2-x-mark-line][class$=right]{right:.3125em}.swal2-toast div:where(.swal2-actions){justify-content:flex-start;height:auto;margin:0;margin-top:.5em;padding:0 .5em}.swal2-toast button:where(.swal2-styled){margin:.25em .5em;padding:.4em .6em;font-size:1em}.swal2-toast .swal2-success{border-color:#a5dc86}.swal2-toast .swal2-success [class^=swal2-success-circular-line]{position:absolute;width:1.6em;height:3em;border-radius:50%}.swal2-toast .swal2-success [class^=swal2-success-circular-line][class$=left]{top:-0.8em;left:-0.5em;transform:rotate(-45deg);transform-origin:2em 2em;border-radius:4em 0 0 4em}.swal2-toast .swal2-success [class^=swal2-success-circular-line][class$=right]{top:-0.25em;left:.9375em;transform-origin:0 1.5em;border-radius:0 4em 4em 0}.swal2-toast .swal2-success .swal2-success-ring{width:2em;height:2em}.swal2-toast .swal2-success .swal2-success-fix{top:0;left:.4375em;width:.4375em;height:2.6875em}.swal2-toast .swal2-success [class^=swal2-success-line]{height:.3125em}.swal2-toast .swal2-success [class^=swal2-success-line][class$=tip]{top:1.125em;left:.1875em;width:.75em}.swal2-toast .swal2-success [class^=swal2-success-line][class$=long]{top:.9375em;right:.1875em;width:1.375em}.swal2-toast .swal2-success.swal2-icon-show .swal2-success-line-tip{animation:swal2-toast-animate-success-line-tip .75s}.swal2-toast .swal2-success.swal2-icon-show .swal2-success-line-long{animation:swal2-toast-animate-success-line-long .75s}.swal2-toast.swal2-show{animation:var(--swal2-toast-show-animation)}.swal2-toast.swal2-hide{animation:var(--swal2-toast-hide-animation)}@keyframes swal2-show{0%{transform:translate3d(0, -50px, 0) scale(0.9);opacity:0}100%{transform:translate3d(0, 0, 0) scale(1);opacity:1}}@keyframes swal2-hide{0%{transform:translate3d(0, 0, 0) scale(1);opacity:1}100%{transform:translate3d(0, -50px, 0) scale(0.9);opacity:0}}@keyframes swal2-animate-success-line-tip{0%{top:1.1875em;left:.0625em;width:0}54%{top:1.0625em;left:.125em;width:0}70%{top:2.1875em;left:-0.375em;width:3.125em}84%{top:3em;left:1.3125em;width:1.0625em}100%{top:2.8125em;left:.8125em;width:1.5625em}}@keyframes swal2-animate-success-line-long{0%{top:3.375em;right:2.875em;width:0}65%{top:3.375em;right:2.875em;width:0}84%{top:2.1875em;right:0;width:3.4375em}100%{top:2.375em;right:.5em;width:2.9375em}}@keyframes swal2-rotate-success-circular-line{0%{transform:rotate(-45deg)}5%{transform:rotate(-45deg)}12%{transform:rotate(-405deg)}100%{transform:rotate(-405deg)}}@keyframes swal2-animate-error-x-mark{0%{margin-top:1.625em;transform:scale(0.4);opacity:0}50%{margin-top:1.625em;transform:scale(0.4);opacity:0}80%{margin-top:-0.375em;transform:scale(1.15)}100%{margin-top:0;transform:scale(1);opacity:1}}@keyframes swal2-animate-error-icon{0%{transform:rotateX(100deg);opacity:0}100%{transform:rotateX(0deg);opacity:1}}@keyframes swal2-rotate-loading{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes swal2-animate-question-mark{0%{transform:rotateY(-360deg)}100%{transform:rotateY(0)}}@keyframes swal2-animate-i-mark{0%{transform:rotateZ(45deg);opacity:0}25%{transform:rotateZ(-25deg);opacity:.4}50%{transform:rotateZ(15deg);opacity:.8}75%{transform:rotateZ(-5deg);opacity:1}100%{transform:rotateX(0);opacity:1}}@keyframes swal2-toast-show{0%{transform:translateY(-0.625em) rotateZ(2deg)}33%{transform:translateY(0) rotateZ(-2deg)}66%{transform:translateY(0.3125em) rotateZ(2deg)}100%{transform:translateY(0) rotateZ(0deg)}}@keyframes swal2-toast-hide{100%{transform:rotateZ(1deg);opacity:0}}@keyframes swal2-toast-animate-success-line-tip{0%{top:.5625em;left:.0625em;width:0}54%{top:.125em;left:.125em;width:0}70%{top:.625em;left:-0.25em;width:1.625em}84%{top:1.0625em;left:.75em;width:.5em}100%{top:1.125em;left:.1875em;width:.75em}}@keyframes swal2-toast-animate-success-line-long{0%{top:1.625em;right:1.375em;width:0}65%{top:1.25em;right:.9375em;width:0}84%{top:.9375em;right:0;width:1.125em}100%{top:.9375em;right:.1875em;width:1.375em}}</style>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-display { font-family: 'Outfit', sans-serif; }
+    
+    .glass-nav {
+      background: rgba(6, 78, 59, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 20px 25px -5px rgba(6, 78, 59, 0.05);
+    }
+
+    .hero-mesh {
+      background-color: #064e3b;
+      background-image: 
+        radial-gradient(at 10% 20%, rgba(16, 185, 129, 0.28) 0px, transparent 50%),
+        radial-gradient(at 90% 10%, rgba(234, 179, 8, 0.22) 0px, transparent 50%),
+        radial-gradient(at 50% 80%, rgba(4, 120, 87, 0.4) 0px, transparent 60%);
+    }
+
+    .custom-input {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .custom-input:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+      background-color: #ffffff;
+    }
+
+    /* Print styling */
+    @media print {
+      body * { visibility: hidden; }
+      #printableArea, #printableArea * { visibility: visible; }
+      #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:"Plus Jakarta Sans", sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.-bottom-1{bottom:-0.25rem}.-right-1{right:-0.25rem}.top-0{top:0px}.z-10{z-index:10}.z-20{z-index:20}.z-40{z-index:40}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.-mt-8{margin-top:-2rem}.mb-1{margin-bottom:0.25rem}.mb-1\.5{margin-bottom:0.375rem}.mb-16{margin-bottom:4rem}.mb-3{margin-bottom:0.75rem}.mr-1{margin-right:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mb-2{margin-bottom:0.5rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-10{height:2.5rem}.h-12{height:3rem}.h-14{height:3.5rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-20{height:5rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-7{height:1.75rem}.h-8{height:2rem}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-14{width:3.5rem}.w-16{width:4rem}.w-2{width:0.5rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-7{width:1.75rem}.w-8{width:2rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-3xl{max-width:48rem}.max-w-7xl{max-width:80rem}.max-w-lg{max-width:32rem}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.shrink-0{flex-shrink:0}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-3\.5{gap:0.875rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-6{gap:1.5rem}.gap-8{gap:2rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.space-y-8 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.scroll-smooth{scroll-behavior:smooth}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-dashed{border-style:dashed}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-amber-200\/80{border-color:rgb(253 230 138 / 0.8)}.border-amber-300{--tw-border-opacity:1;border-color:rgb(252 211 77 / var(--tw-border-opacity, 1))}.border-amber-300\/40{border-color:rgb(252 211 77 / 0.4)}.border-amber-400\/40{border-color:rgb(251 191 36 / 0.4)}.border-emerald-200{--tw-border-opacity:1;border-color:rgb(167 243 208 / var(--tw-border-opacity, 1))}.border-emerald-400\/30{border-color:rgb(52 211 153 / 0.3)}.border-emerald-400\/80{border-color:rgb(52 211 153 / 0.8)}.border-emerald-600\/40{border-color:rgb(5 150 105 / 0.4)}.border-emerald-700\/40{border-color:rgb(4 120 87 / 0.4)}.border-kemenag-950{--tw-border-opacity:1;border-color:rgb(2 44 34 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-slate-200\/80{border-color:rgb(226 232 240 / 0.8)}.border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-white\/15{border-color:rgb(255 255 255 / 0.15)}.border-white\/20{border-color:rgb(255 255 255 / 0.2)}.bg-amber-400{--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.bg-amber-50{--tw-bg-opacity:1;background-color:rgb(255 251 235 / var(--tw-bg-opacity, 1))}.bg-amber-50\/70{background-color:rgb(255 251 235 / 0.7)}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-black\/25{background-color:rgb(0 0 0 / 0.25)}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-500\/20{background-color:rgb(59 130 246 / 0.2)}.bg-emerald-100{--tw-bg-opacity:1;background-color:rgb(209 250 229 / var(--tw-bg-opacity, 1))}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-emerald-50{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}.bg-emerald-50\/40{background-color:rgb(236 253 245 / 0.4)}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-emerald-800\/80{background-color:rgb(6 95 70 / 0.8)}.bg-emerald-950\/70{background-color:rgb(2 44 34 / 0.7)}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-50\/60{background-color:rgb(248 250 252 / 0.6)}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-950\/70{background-color:rgb(2 6 23 / 0.7)}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-white\/80{background-color:rgb(255 255 255 / 0.8)}.bg-white\/90{background-color:rgb(255 255 255 / 0.9)}.bg-\[radial-gradient\(\#fde047_1px\2c transparent_1px\)\]{background-image:radial-gradient(#fde047 1px,transparent 1px)}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--tw-gradient-stops))}.from-amber-300{--tw-gradient-from:#fcd34d var(--tw-gradient-from-position);--tw-gradient-to:rgb(252 211 77 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-amber-400{--tw-gradient-from:#fbbf24 var(--tw-gradient-from-position);--tw-gradient-to:rgb(251 191 36 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-emerald-600{--tw-gradient-from:#059669 var(--tw-gradient-from-position);--tw-gradient-to:rgb(5 150 105 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-white\/15{--tw-gradient-from:rgb(255 255 255 / 0.15) var(--tw-gradient-from-position);--tw-gradient-to:rgb(255 255 255 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-amber-500{--tw-gradient-to:rgb(245 158 11 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #f59e0b var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-emerald-200{--tw-gradient-to:rgb(167 243 208 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #a7f3d0 var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-kemenag-700{--tw-gradient-to:rgb(4 120 87 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #047857 var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-amber-600{--tw-gradient-to:#d97706 var(--tw-gradient-to-position)}.to-emerald-400{--tw-gradient-to:#34d399 var(--tw-gradient-to-position)}.to-kemenag-900{--tw-gradient-to:#064e3b var(--tw-gradient-to-position)}.to-teal-100{--tw-gradient-to:#ccfbf1 var(--tw-gradient-to-position)}.to-white\/5{--tw-gradient-to:rgb(255 255 255 / 0.05) var(--tw-gradient-to-position)}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.object-contain{object-fit:contain}.p-1\.5{padding:0.375rem}.p-2\.5{padding:0.625rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.px-8{padding-left:2rem;padding-right:2rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-16{padding-bottom:4rem}.pb-2{padding-bottom:0.5rem}.pb-3{padding-bottom:0.75rem}.pb-4{padding-bottom:1rem}.pt-1{padding-top:0.25rem}.pt-10{padding-top:2.5rem}.pt-2{padding-top:0.5rem}.pt-3{padding-top:0.75rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-display{font-family:"Outfit", sans-serif}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-\[9\.5px\]{font-size:9.5px}.text-\[9px\]{font-size:9px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-\[1\.15\]{line-height:1.15}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.text-blue-300{--tw-text-opacity:1;color:rgb(147 197 253 / var(--tw-text-opacity, 1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216 / var(--tw-text-opacity, 1))}.text-emerald-100{--tw-text-opacity:1;color:rgb(209 250 229 / var(--tw-text-opacity, 1))}.text-emerald-100\/80{color:rgb(209 250 229 / 0.8)}.text-emerald-100\/90{color:rgb(209 250 229 / 0.9)}.text-emerald-200{--tw-text-opacity:1;color:rgb(167 243 208 / var(--tw-text-opacity, 1))}.text-emerald-200\/90{color:rgb(167 243 208 / 0.9)}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-emerald-700{--tw-text-opacity:1;color:rgb(4 120 87 / var(--tw-text-opacity, 1))}.text-emerald-800{--tw-text-opacity:1;color:rgb(6 95 70 / var(--tw-text-opacity, 1))}.text-kemenag-900{--tw-text-opacity:1;color:rgb(6 78 59 / var(--tw-text-opacity, 1))}.text-rose-500{--tw-text-opacity:1;color:rgb(244 63 94 / var(--tw-text-opacity, 1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-slate-950{--tw-text-opacity:1;color:rgb(2 6 23 / var(--tw-text-opacity, 1))}.text-transparent{color:transparent}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.opacity-10{opacity:0.1}.opacity-75{opacity:0.75}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-amber-900\/20{--tw-shadow-color:rgb(120 53 15 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-black\/20{--tw-shadow-color:rgb(0 0 0 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-600\/30{--tw-shadow-color:rgb(5 150 105 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-700\/20{--tw-shadow-color:rgb(4 120 87 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-900\/25{--tw-shadow-color:rgb(6 78 59 / 0.25);--tw-shadow:var(--tw-shadow-colored)}.ring-2{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.ring-8{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(8px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.ring-amber-400\/60{--tw-ring-color:rgb(251 191 36 / 0.6)}.ring-emerald-50{--tw-ring-opacity:1;--tw-ring-color:rgb(236 253 245 / var(--tw-ring-opacity, 1))}.drop-shadow-sm{--tw-drop-shadow:drop-shadow(0 1px 1px rgb(0 0 0 / 0.05));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-xl{--tw-backdrop-blur:blur(24px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.\[background-size\:20px_20px\]{background-size:20px 20px}.selection\:bg-emerald-500 *::selection{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-emerald-500::selection{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.file\:mr-3::file-selector-button{margin-right:0.75rem}.file\:rounded-xl::file-selector-button{border-radius:0.75rem}.file\:border-0::file-selector-button{border-width:0px}.file\:bg-emerald-600::file-selector-button{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.file\:bg-slate-700::file-selector-button{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.file\:px-4::file-selector-button{padding-left:1rem;padding-right:1rem}.file\:py-2::file-selector-button{padding-top:0.5rem;padding-bottom:0.5rem}.file\:text-xs::file-selector-button{font-size:0.75rem;line-height:1rem}.file\:font-bold::file-selector-button{font-weight:700}.file\:text-white::file-selector-button{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.placeholder\:text-slate-400::placeholder{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.hover\:scale-\[1\.02\]:hover{--tw-scale-x:1.02;--tw-scale-y:1.02;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-amber-300:hover{--tw-bg-opacity:1;background-color:rgb(252 211 77 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-50\/80:hover{background-color:rgb(236 253 245 / 0.8)}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-900:hover{--tw-bg-opacity:1;background-color:rgb(6 78 59 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-100:hover{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/20:hover{background-color:rgb(255 255 255 / 0.2)}.hover\:from-amber-500:hover{--tw-gradient-from:#f59e0b var(--tw-gradient-from-position);--tw-gradient-to:rgb(245 158 11 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.hover\:from-emerald-500:hover{--tw-gradient-from:#10b981 var(--tw-gradient-from-position);--tw-gradient-to:rgb(16 185 129 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.hover\:to-amber-700:hover{--tw-gradient-to:#b45309 var(--tw-gradient-to-position)}.hover\:to-kemenag-800:hover{--tw-gradient-to:#065f46 var(--tw-gradient-to-position)}.hover\:text-amber-200:hover{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.hover\:text-amber-400:hover{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.hover\:text-emerald-400:hover{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:file\:bg-emerald-700::file-selector-button:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:file\:bg-slate-800::file-selector-button:hover{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-amber-400:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(251 191 36 / var(--tw-ring-opacity, 1))}.focus\:ring-emerald-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(16 185 129 / var(--tw-ring-opacity, 1))}.active\:scale-\[0\.98\]:active{--tw-scale-x:0.98;--tw-scale-y:0.98;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:scale-105{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:scale-110{--tw-scale-x:1.1;--tw-scale-y:1.1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:col-span-2{grid-column:span 2 / span 2}.sm\:inline{display:inline}.sm\:inline-flex{display:inline-flex}.sm\:hidden{display:none}.sm\:w-auto{width:auto}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:gap-3{gap:0.75rem}.sm\:p-10{padding:2.5rem}.sm\:p-7{padding:1.75rem}.sm\:p-8{padding:2rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:inline-flex{display:inline-flex}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:col-span-12{grid-column:span 12 / span 12}.lg\:col-span-5{grid-column:span 5 / span 5}.lg\:col-span-7{grid-column:span 7 / span 7}.lg\:inline-flex{display:inline-flex}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:px-8{padding-left:2rem;padding-right:2rem}.lg\:text-5xl{font-size:3rem;line-height:1}.lg\:text-xl{font-size:1.25rem;line-height:1.75rem}}</style><style data-glasp-print="rule">@media print{[data-glasp-print="hide"]{display:none !important}}</style></head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white lc-theme-emerald">
+
+  <!-- ==================== HEADER / NAVBAR RESMI KEMENAG ==================== -->
+  <header class="glass-nav border-b border-emerald-700/40 text-white sticky top-0 z-40 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      
+      <!-- Brand Identitas Kemenag & Madrasah -->
+      <a href="https://man4banjar.com/akademik/index.php" class="flex items-center gap-3.5 group">
+        <div class="relative flex-shrink-0">
+          <div class="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-md ring-2 ring-amber-400/60 flex items-center justify-center transition-transform group-hover:scale-105">
+            <img src="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/logo_kemenag.png" alt="Logo Kemenag" class="w-full h-full object-contain filter drop-shadow-sm">
+          </div>
+          <span class="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-400 border-2 border-kemenag-950"></span>
+          </span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="text-[9.5px] font-extrabold tracking-widest text-amber-300 uppercase">KEMENTERIAN AGAMA REPUBLIK INDONESIA</span>
+            <span class="hidden lg:inline-flex text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-800/80 text-emerald-200 border border-emerald-600/40">PORTAL PERSURATAN RESMI</span>
+          </div>
+          <h1 class="text-base sm:text-lg lg:text-xl font-extrabold font-display tracking-tight text-white leading-tight">
+            MADRASAH ALIYAH NEGERI 4 BANJAR          </h1>
+          <p class="text-[11px] text-emerald-200/90 font-medium">Layanan Penerimaan &amp; Disposisi Surat Dinas Eksternal (E-Surat Masuk)</p>
+        </div>
+      </a>
+
+      <!-- Quick Nav Action Buttons -->
+      <div class="flex items-center gap-2 sm:gap-3 text-xs font-semibold">
+        <a href="https://man4banjar.com/akademik/index.php" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/10">
+          <i class="fa-solid fa-house-chimney text-xs"></i>
+          <span>Portal Utama</span>
+        </a>
+        <a href="https://man4banjar.com/akademik/ptsp.php" class="hidden md:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/10">
+          <i class="fa-solid fa-stamp text-xs text-amber-300"></i>
+          <span>Layanan PTSP</span>
+        </a>
+        <a href="https://man4banjar.com/akademik/login/" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-bold transition shadow-md shadow-amber-900/20 border border-amber-300">
+          <i class="fa-solid fa-lock text-xs"></i>
+          <span class="hidden sm:inline">Meja Petugas TU</span>
+          <span class="sm:hidden">Login TU</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== HERO COMMAND SECTION (ASIMETRIS & EKSKLUSIF) ==================== -->
+  <div class="hero-mesh text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    
+    <!-- Pattern Hiasan Geometris Islami / Modern Dot Grid -->
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fde047_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto relative z-10">
+      
+      <!-- Grid 2 Kolom Asimetris (Bukan Monoton Center-Aligned) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- Kolom Kiri: Narasi & Otoritas Resmi (7 Kolom) -->
+        <div class="lg:col-span-7 space-y-4 text-left">
+          
+          <div class="inline-flex items-center gap-2.5 bg-emerald-950/70 border border-amber-400/40 px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-300 shadow-sm backdrop-blur-md">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>KANAL DINAS RESMI TERVERIFIKASI</span>
+            <span class="text-emerald-400">•</span>
+            <span class="text-emerald-200 font-medium">Kabupaten Banjar</span>
+          </div>
+
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black font-display text-white tracking-tight leading-[1.15]">
+            Penerimaan &amp; Agenda Digital <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-emerald-200 to-teal-100">
+              Surat Kedinasan Eksternal
+            </span>
+          </h2>
+
+          <p class="text-sm sm:text-base text-emerald-100/90 max-w-2xl leading-relaxed">
+            Fasilitas resmi bagi Kementerian, Lembaga Negara, Pemerintah Daerah, TNI/Polri, Lembaga Pendidikan, dan Organisasi Mitra untuk mengirimkan surat dinas secara langsung ke meja Tata Usaha dan Kepala Madrasah. Teragendakan otomatis, aman, dan dapat dilacak real-time.
+          </p>
+
+          <!-- Alur 4 Langkah Horizontal (Visual Workflow Badge) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
+              <span class="text-[10px] font-black text-amber-300 uppercase block">Tahap 1</span>
+              <p class="text-xs font-bold text-white mt-0.5"><i class="fa-solid fa-file-pdf text-amber-400 mr-1"></i> Unggah Scan PDF</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
+              <span class="text-[10px] font-black text-amber-300 uppercase block">Tahap 2</span>
+              <p class="text-xs font-bold text-white mt-0.5"><i class="fa-solid fa-qrcode text-emerald-300 mr-1"></i> Resi &amp; QR Tiket</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
+              <span class="text-[10px] font-black text-amber-300 uppercase block">Tahap 3</span>
+              <p class="text-xs font-bold text-white mt-0.5"><i class="fa-solid fa-stamp text-blue-300 mr-1"></i> Disposisi Kepala</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/10">
+              <span class="text-[10px] font-black text-amber-300 uppercase block">Tahap 4</span>
+              <p class="text-xs font-bold text-white mt-0.5"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> Notif WhatsApp</p>
+            </div>
+          </div>
+
+          <!-- Tab Switcher Modern Segmented Controller -->
+          <div class="pt-3 flex flex-wrap gap-2.5">
+            <button type="button" id="tabBtnKirim" onclick="switchTab('kirim')" class="px-5 py-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2.5 bg-white text-kemenag-900 shadow-xl shadow-black/20 hover:scale-[1.02] border-2 border-white">
+              <i class="fa-solid fa-paper-plane text-emerald-600"></i>
+              <span>Buat Pengiriman Surat Baru</span>
+            </button>
+            <button type="button" id="tabBtnLacak" onclick="switchTab('lacak')" class="px-5 py-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2.5 bg-emerald-950/70 text-emerald-200 hover:bg-emerald-900 hover:text-white border-2 border-emerald-600/40 backdrop-blur-md">
+              <i class="fa-solid fa-magnifying-glass-chart text-amber-300"></i>
+              <span>Lacak Status Surat (Tracking)</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Kolom Kanan: Bento Executive Guarantee & Quick Tracker Card (5 Kolom) -->
+        <div class="lg:col-span-5">
+          <div class="bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-white/15 pb-3">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-amber-300 text-lg"></i>
+                <h3 class="font-extrabold text-sm text-white">Standar Layanan Administrasi</h3>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">ISO 9001 Terpadu</span>
+            </div>
+
+            <div class="space-y-3 text-xs">
+              <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                  <strong class="text-white block font-bold">Respons Cepat Tata Usaha</strong>
+                  <span class="text-emerald-100/80">Verifikasi naskah awal dilakukan dalam waktu ≤ 24 jam kerja sejak naskah diunggah.</span>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <i class="fa-solid fa-fingerprint"></i>
+                </div>
+                <div>
+                  <strong class="text-white block font-bold">Otoritas Tanda Terima Digital</strong>
+                  <span class="text-emerald-100/80">Pengirim memperoleh Tanda Terima Elektronik resmi dengan Kode Tiket &amp; Barcode pelacakan sah.</span>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <div>
+                  <strong class="text-white block font-bold">Sinkronisasi Agenda AMS Madrasah</strong>
+                  <span class="text-emerald-100/80">Surat otomatis tersinkron ke Buku Agenda Surat Masuk Sistem AMS tanpa risiko arsip tercecer.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Quick Tracking Box Inline -->
+            <div class="bg-black/25 rounded-2xl p-3.5 border border-white/10 space-y-2">
+              <label class="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt"></i> Cek Cepat Status Surat:
+              </label>
+              <div class="flex gap-2">
+                <input type="text" id="quickTrackInput" placeholder="Ketik Kode Tiket / No. Surat..." class="w-full text-xs px-3 py-2 rounded-xl bg-white/90 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-slate-400">
+                <button type="button" onclick="doQuickTrack()" class="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl transition shrink-0">
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Kontak Bantuan Live Chat -->
+            <div class="flex items-center justify-between text-[11px] pt-1 text-emerald-200/90">
+              <span>Butuh bantuan langsung?</span>
+              <button type="button" onclick="bukaLiveChatMadrasah()" class="font-bold text-amber-300 hover:text-amber-200 transition flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-300/40 cursor-pointer shadow-sm">
+                <i class="fa-solid fa-comments text-amber-300"></i> Hubungi Live Chat →
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== MAIN CONTENT AREA ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-16 relative z-20 w-full">
+    
+    <!-- ==================== TAB 1: FORMULIR PENGIRIMAN SURAT (BENTO MODERN) ==================== -->
+    <div id="sectionKirimSurat" class="space-y-6">
+      
+      <form id="formKirimSuratDinas" enctype="multipart/form-data">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Bento Card 1: Identitas Lembaga & PIC (5 Kolom) -->
+          <div class="lg:col-span-5 glass-card rounded-3xl p-6 sm:p-7 space-y-5">
+            
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-base shadow-sm">
+                <i class="fa-solid fa-landmark-dome"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">1. Lembaga Pengirim</h3>
+                <p class="text-[11px] text-slate-500">Data instansi asal &amp; narahubung resmi</p>
+              </div>
+            </div>
+
+            <div class="space-y-4 text-xs">
+              
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Nama Instansi / Lembaga / Dinas <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="nama_instansi" required="" placeholder="Contoh: Kantor Kemenag Kab. Banjar / Balai Diklat" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm">
+                <span class="text-[10px] text-slate-400 mt-1 block">Tulis nama resmi instansi tanpa singkatan yang meragukan</span>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Nama Pejabat / Narahubung Pengirim <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="nama_pengirim" required="" placeholder="Nama lengkap narahubung / PIC" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Jabatan / Unit Kerja Narahubung
+                </label>
+                <input type="text" name="jabatan_pengirim" placeholder="Contoh: Kasubbag Tata Usaha / Staf Kepegawaian" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>Nomor WhatsApp Narahubung <span class="text-rose-500">*</span></span>
+                  <span class="text-[10px] text-emerald-600 font-bold"><i class="fa-brands fa-whatsapp"></i> Wajib Aktif</span>
+                </label>
+                <input type="text" name="no_hp" required="" placeholder="08xxxxxxxxxx (untuk kirim resi otomatis)" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm">
+                <span class="text-[10px] text-slate-400 mt-1 block">Sistem akan mengirimkan konfirmasi tanda terima ke nomor ini</span>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Alamat Email Kedinasan (Opsional)
+                </label>
+                <input type="email" name="email" placeholder="persuratan@instansi.go.id" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm">
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Bento Card 2: Rincian Surat & Naskah (7 Kolom) -->
+          <div class="lg:col-span-7 glass-card rounded-3xl p-6 sm:p-7 space-y-5">
+            
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-base shadow-sm">
+                <i class="fa-solid fa-envelope-open-text"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">2. Spesifikasi Surat Dinas</h3>
+                <p class="text-[11px] text-slate-500">Nomor, perihal, dan derajat kepentingan surat</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Nomor Surat Resmi Kedinasan <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="nomor_surat" required="" placeholder="Contoh: B-1284/Kk.17.03/PP.00/10/2026" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm font-mono">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Tanggal Terbit Surat <span class="text-rose-500">*</span>
+                </label>
+                <input type="date" name="tgl_surat" required="" value="2026-11-19" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Derajat / Sifat Surat <span class="text-rose-500">*</span>
+                </label>
+                <select name="sifat_surat" required="" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm font-bold text-slate-800">
+                  <option value="Biasa">⚪ Biasa (Rutin)</option>
+                  <option value="Penting" selected="">🟡 Penting (Perhatian Khusus)</option>
+                  <option value="Segera">🟠 Segera / Mendesak</option>
+                  <option value="Rahasia">🔴 Sangat Rahasia (Tertutup)</option>
+                </select>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Perihal / Pokok Surat <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" name="perihal" required="" placeholder="Contoh: Undangan Rapat Koordinasi / Permohonan Narasumber Kurikulum" class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm font-semibold">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block font-bold text-slate-700 mb-1.5">
+                  Ringkasan Pokok Isi Surat / Catatan Khusus
+                </label>
+                <textarea name="isi_ringkas" rows="3" placeholder="Tuliskan intisari isi surat, batas waktu respons yang diharapkan, atau jadwal pelaksanaan kegiatan..." class="custom-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-xs sm:text-sm"></textarea>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Bento Card 3: Dropzone Berkas & Submit Area (12 Kolom Penuh) -->
+          <div class="lg:col-span-12 glass-card rounded-3xl p-6 sm:p-8 space-y-6">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-base shadow-sm">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div>
+                  <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">3. Berkas Dokumen Resmi</h3>
+                  <p class="text-[11px] text-slate-500">Unggah file pindaian resmi (Scan) bertanda tangan &amp; stempel sah</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <i class="fa-solid fa-shield-check"></i> Enkripsi Data Aman
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              
+              <!-- Dropzone Berkas Surat Utama -->
+              <div class="relative group border-2 border-dashed border-emerald-400/80 bg-emerald-50/40 rounded-2xl p-6 text-center hover:bg-emerald-50/80 transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-white text-rose-500 shadow-sm flex items-center justify-center mx-auto mb-3 text-xl group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <label for="inputFileSurat" class="block text-xs sm:text-sm font-extrabold text-slate-900 mb-1 cursor-pointer">
+                  Unggah Berkas Surat Utama (PDF) <span class="text-rose-500">*</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mb-3">Wajib PDF pindaian resmi bertanda tangan &amp; stempel basah (Maks. 15 MB)</p>
+                
+                <input type="file" name="file_surat" id="inputFileSurat" required="" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                
+                <div id="fileSuratNamePreview" class="hidden mt-2 text-xs font-bold text-emerald-800 bg-white/80 py-1 px-3 rounded-lg border border-emerald-200"></div>
+              </div>
+
+              <!-- Dropzone Lampiran Tambahan -->
+              <div class="relative group border-2 border-dashed border-slate-300 bg-slate-50/60 rounded-2xl p-6 text-center hover:bg-slate-100 transition-all">
+                <div class="w-12 h-12 rounded-2xl bg-white text-slate-400 shadow-sm flex items-center justify-center mx-auto mb-3 text-xl group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-paperclip"></i>
+                </div>
+                <label for="inputFileLampiran" class="block text-xs sm:text-sm font-extrabold text-slate-900 mb-1 cursor-pointer">
+                  Lampiran Pendukung (Opsional)
+                </label>
+                <p class="text-[11px] text-slate-500 mb-3">Berkas pelengkap seperti TOR, Jadwal, Rundown, atau ZIP (Maks. 25 MB)</p>
+                
+                <input type="file" name="file_lampiran" id="inputFileLampiran" accept=".pdf,.doc,.docx,.zip,.rar,.xls,.xlsx,.jpg,.png" class="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-700 file:text-white hover:file:bg-slate-800 cursor-pointer">
+                
+                <div id="fileLampiranNamePreview" class="hidden mt-2 text-xs font-bold text-slate-700 bg-white/80 py-1 px-3 rounded-lg border border-slate-200"></div>
+              </div>
+
+            </div>
+
+            <!-- Disclaimer & Pernyataan Sah -->
+            <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex items-start gap-3">
+              <input type="checkbox" id="checkPernyataan" required="" class="mt-1 w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300 cursor-pointer">
+              <label for="checkPernyataan" class="text-xs text-slate-700 leading-relaxed cursor-pointer select-none">
+                <strong>Pernyataan Keabsahan:</strong> Saya menyatakan bahwa naskah dinas yang dikirimkan ini adalah dokumen resmi yang sah dari instansi pengirim, dan saya bersedia dikonfirmasi oleh Tata Usaha MADRASAH ALIYAH NEGERI 4 BANJAR terkait surat ini.
+              </label>
+            </div>
+
+            <!-- Tombol Aksi Submit -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+              <div class="text-xs text-slate-500 flex items-center gap-2">
+                <i class="fa-solid fa-certificate text-emerald-600 text-sm"></i>
+                <span>Resi digital bertanda terima resmi terbit seketika setelah surat dikirim.</span>
+              </div>
+              <button type="submit" id="btnSubmitSurat" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-kemenag-700 to-kemenag-900 hover:from-emerald-500 hover:to-kemenag-800 text-white font-extrabold text-sm shadow-xl shadow-emerald-900/25 transition-all flex items-center justify-center gap-2.5 hover:scale-[1.02] active:scale-[0.98]">
+                <i class="fa-solid fa-paper-plane text-amber-300"></i>
+                <span>Kirim Surat Dinas Resmi Sekarang</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </form>
+
+    </div>
+
+    <!-- ==================== TAB 2: LACAK STATUS SURAT (TRACKING TIMELINE) ==================== -->
+    <div id="sectionLacakSurat" class="glass-card rounded-3xl p-6 sm:p-10 shadow-2xl border border-slate-200 hidden space-y-8">
+      
+      <div class="max-w-2xl mx-auto text-center space-y-3">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white flex items-center justify-center text-2xl mx-auto shadow-lg shadow-emerald-600/30">
+          <i class="fa-solid fa-magnifying-glass-location"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-black font-display text-slate-900">Pelacakan Perjalanan Surat Kedinasan</h3>
+        <p class="text-xs sm:text-sm text-slate-500">
+          Pantau status penanganan surat dinas Anda dari proses penerimaan Tata Usaha hingga disposisi Kepala Madrasah secara transparan.
+        </p>
+
+        <form id="formTrackSurat" class="flex gap-2 pt-2 max-w-lg mx-auto">
+          <input type="text" id="inputKeywordTrack" required="" placeholder="Masukkan Kode Tiket (SMO-...) / Nomor Surat..." class="custom-input flex-1 text-xs sm:text-sm px-4 py-3 rounded-2xl border border-slate-300 bg-slate-50 text-slate-900">
+          <button type="submit" id="btnTrackSurat" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl text-xs sm:text-sm transition flex items-center gap-2 shadow-lg shadow-emerald-700/20 shrink-0">
+            <i class="fa-solid fa-search"></i>
+            <span>Lacak</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Hasil Tracking Box -->
+      <div id="resultTrackingBox" class="hidden max-w-3xl mx-auto bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+        <!-- Rendered via JS -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ==================== MODAL SUKSES PENGIRIMAN & CETAK RESI RESMI ==================== -->
+  <div id="modalSuksesKirim" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative text-center space-y-4">
+      
+      <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto ring-8 ring-emerald-50">
+        <i class="fa-solid fa-check-double"></i>
+      </div>
+
+      <div class="space-y-1">
+        <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+          BERHASIL TEREGISTRASI
+        </span>
+        <h3 class="text-xl font-black font-display text-slate-900">Surat Dinas Telah Diterima!</h3>
+        <p class="text-xs text-slate-500">Naskah dinas resmi instansi Anda telah masuk ke sistem Tata Usaha MADRASAH ALIYAH NEGERI 4 BANJAR.</p>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-200/80">
+          <span class="text-slate-500">Kode Tiket / Resi:</span>
+          <span class="font-black text-emerald-700 text-sm font-mono tracking-wider" id="resKodeTiket">-</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500">Instansi Pengirim:</span>
+          <span class="font-bold text-slate-800 text-right" id="resInstansi">-</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500">Nomor Surat:</span>
+          <span class="font-semibold text-slate-800 text-right font-mono" id="resNoSurat">-</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500">Waktu Diterima:</span>
+          <span class="font-semibold text-slate-800 text-right" id="resWaktu">-</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2.5 pt-2">
+        <button type="button" onclick="printTandaTerima()" class="flex-1 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-700/20">
+          <i class="fa-solid fa-print"></i> Cetak Bukti Resi Digital
+        </button>
+        <button type="button" onclick="closeModalSukses()" class="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition">
+          Selesai
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Area Cetak Resi (Khusus Window Print) -->
+  <div id="printableArea" class="hidden">
+    <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 680px; margin: auto; border: 2px solid #064e3b;">
+      <div style="text-align: center; border-bottom: 3px double #064e3b; padding-bottom: 12px; margin-bottom: 18px;">
+        <h3 style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #333;">KEMENTERIAN AGAMA REPUBLIK INDONESIA</h3>
+        <h2 style="margin: 4px 0; font-size: 19px; font-weight: bold; color: #064e3b;">MADRASAH ALIYAH NEGERI 4 BANJAR</h2>
+        <p style="margin: 0; font-size: 11px; color: #555;">Jln. Pendidikan No. 1  Martapura | Telp: 081528205667</p>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h4 style="margin: 0; font-size: 14px; text-decoration: underline; font-weight: bold;">TANDA TERIMA RESMI SURAT DINAS MASUK (ELEKTRONIK)</h4>
+        <p style="margin: 4px 0 0 0; font-size: 13px; font-weight: bold; color: #047857;" id="printKodeTiket">-</p>
+      </div>
+
+      <table style="width: 100%; font-size: 12px; border-collapse: collapse; margin-bottom: 25px;">
+        <tbody><tr style="border-bottom: 1px dashed #ddd;"><td style="padding: 7px 0; width: 35%; font-weight: bold;">Instansi Pengirim</td><td style="padding: 7px 0;">: <span id="printInstansi">-</span></td></tr>
+        <tr style="border-bottom: 1px dashed #ddd;"><td style="padding: 7px 0; font-weight: bold;">Nomor Surat Resmi</td><td style="padding: 7px 0;">: <span id="printNoSurat">-</span></td></tr>
+        <tr style="border-bottom: 1px dashed #ddd;"><td style="padding: 7px 0; font-weight: bold;">Waktu Masuk Sistem</td><td style="padding: 7px 0;">: <span id="printWaktu">-</span></td></tr>
+        <tr style="border-bottom: 1px dashed #ddd;"><td style="padding: 7px 0; font-weight: bold;">Kanal Pengiriman</td><td style="padding: 7px 0;">: Portal E-Surat Masuk Kedinasan Terintegrasi</td></tr>
+        <tr><td style="padding: 7px 0; font-weight: bold;">Status Penerimaan</td><td style="padding: 7px 0;">: <strong style="color: #047857;">Tercatat Sah &amp; Menunggu Disposisi Pimpinan</strong></td></tr>
+      </tbody></table>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; font-size: 10.5px; color: #475569; line-height: 1.5; margin-bottom: 25px;">
+        * Bukti elektronik ini sah diterbitkan oleh sistem persuratan resmi madrasah. Anda dapat memantau proses disposisi dan tindak lanjut surat ini kapan saja melalui menu pelacakan surat dengan memasukkan kode tiket di atas.
+      </div>
+
+      <table style="width: 100%; font-size: 12px;">
+        <tbody><tr>
+          <td style="width: 50%; text-align: center;">
+            <p style="margin-bottom: 60px;">Pengirim Surat,</p>
+            <p style="font-weight: bold;">Narahubung Instansi</p>
+          </td>
+          <td style="width: 50%; text-align: center;">
+            <p style="margin-bottom: 60px;">Penerima,</p>
+            <p style="font-weight: bold; text-decoration: underline;">Tata Usaha MADRASAH ALIYAH NEGERI 4 BANJAR</p>
+          </td>
+        </tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="bg-slate-900 text-slate-400 py-8 text-xs border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <img src="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/logo_kemenag.png" alt="Logo" class="w-8 h-8 object-contain">
+        <div class="text-left">
+          <p class="font-bold text-slate-200">© 2026 Tata Usaha MADRASAH ALIYAH NEGERI 4 BANJAR</p>
+          <p class="text-[11px] text-slate-500">Kementerian Agama Republik Indonesia • Sistem Informasi Akademik &amp; Persuratan</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <a href="https://man4banjar.com/akademik/index.php" class="hover:text-emerald-400 transition">Beranda</a>
+        <a href="https://man4banjar.com/akademik/ptsp.php" class="hover:text-emerald-400 transition">Layanan PTSP</a>
+        <a href="https://man4banjar.com/akademik/login/" class="hover:text-amber-400 transition">Login Pegawai</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== SCRIPT LOGIC ==================== -->
+  <script>
+    var lastSubmittedData = null;
+
+    // File name preview
+    document.getElementById('inputFileSurat').addEventListener('change', function(e) {
+      var name = e.target.files && e.target.files[0] ? e.target.files[0].name : '';
+      var box = document.getElementById('fileSuratNamePreview');
+      if (name) {
+        box.innerHTML = '<i class="fa-solid fa-file-pdf mr-1 text-rose-500"></i> Terpilih: ' + name;
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('inputFileLampiran').addEventListener('change', function(e) {
+      var name = e.target.files && e.target.files[0] ? e.target.files[0].name : '';
+      var box = document.getElementById('fileLampiranNamePreview');
+      if (name) {
+        box.innerHTML = '<i class="fa-solid fa-paperclip mr-1 text-slate-500"></i> Terpilih: ' + name;
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    });
+
+    function switchTab(tab) {
+      var secKirim = document.getElementById('sectionKirimSurat');
+      var secLacak = document.getElementById('sectionLacakSurat');
+      var btnKirim = document.getElementById('tabBtnKirim');
+      var btnLacak = document.getElementById('tabBtnLacak');
+
+      if (tab === 'kirim') {
+        secKirim.classList.remove('hidden');
+        secLacak.classList.add('hidden');
+        btnKirim.className = "px-5 py-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2.5 bg-white text-kemenag-900 shadow-xl shadow-black/20 hover:scale-[1.02] border-2 border-white";
+        btnLacak.className = "px-5 py-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2.5 bg-emerald-950/70 text-emerald-200 hover:bg-emerald-900 hover:text-white border-2 border-emerald-600/40 backdrop-blur-md";
+      } else {
+        secKirim.classList.add('hidden');
+        secLacak.classList.remove('hidden');
+        btnLacak.className = "px-5 py-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2.5 bg-white text-kemenag-900 shadow-xl shadow-black/20 hover:scale-[1.02] border-2 border-white";
+        btnKirim.className = "px-5 py-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center gap-2.5 bg-emerald-950/70 text-emerald-200 hover:bg-emerald-900 hover:text-white border-2 border-emerald-600/40 backdrop-blur-md";
+      }
+    }
+
+    function doQuickTrack() {
+      var q = document.getElementById('quickTrackInput').value.trim();
+      if (!q) {
+        Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Masukkan kode tiket atau nomor surat terlebih dahulu.' });
+        return;
+      }
+      switchTab('lacak');
+      document.getElementById('inputKeywordTrack').value = q;
+      document.getElementById('formTrackSurat').dispatchEvent(new Event('submit'));
+    }
+
+    // Submit Surat Dinas Online
+    document.getElementById('formKirimSuratDinas').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      var chk = document.getElementById('checkPernyataan');
+      if (!chk.checked) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Pernyataan Keabsahan',
+          text: 'Harap centang persetujuan keabsahan dokumen sebelum mengirim surat.'
+        });
+        return;
+      }
+
+      var btn = document.getElementById('btnSubmitSurat');
+      var originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Memproses Naskah Dinas...';
+
+      var formData = new FormData(this);
+      formData.append('action', 'submit_surat');
+
+      fetch('crud_kirim_surat.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+
+        if (data.status === 'success') {
+          lastSubmittedData = data;
+          document.getElementById('formKirimSuratDinas').reset();
+          document.getElementById('fileSuratNamePreview').classList.add('hidden');
+          document.getElementById('fileLampiranNamePreview').classList.add('hidden');
+
+          // Isi modal
+          document.getElementById('resKodeTiket').innerText = data.kode_tiket;
+          document.getElementById('resInstansi').innerText = data.instansi;
+          document.getElementById('resNoSurat').innerText = data.nomor_surat;
+          document.getElementById('resWaktu').innerText = data.tgl_kirim;
+
+          // Isi print area
+          document.getElementById('printKodeTiket').innerText = "KODE RESI: " + data.kode_tiket;
+          document.getElementById('printInstansi').innerText = data.instansi;
+          document.getElementById('printNoSurat').innerText = data.nomor_surat;
+          document.getElementById('printWaktu').innerText = data.tgl_kirim;
+
+          document.getElementById('modalSuksesKirim').classList.remove('hidden');
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Pengiriman Gagal',
+            text: data.message || 'Terjadi kesalahan saat memproses surat.'
+          });
+        }
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        Swal.fire({
+          icon: 'error',
+          title: 'Kesalahan Server',
+          text: 'Gagal menghubungi server. Periksa koneksi internet Anda.'
+        });
+      });
+    });
+
+    function closeModalSukses() {
+      document.getElementById('modalSuksesKirim').classList.add('hidden');
+    }
+
+    function printTandaTerima() {
+      window.print();
+    }
+
+    // Tracking Surat
+    document.getElementById('formTrackSurat').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var keyword = document.getElementById('inputKeywordTrack').value.trim();
+      var btn = document.getElementById('btnTrackSurat');
+      var originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+      var resBox = document.getElementById('resultTrackingBox');
+
+      fetch('crud_kirim_surat.php?action=track_surat&keyword=' + encodeURIComponent(keyword))
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+
+        if (data.status === 'success') {
+          var item = data.data;
+          resBox.classList.remove('hidden');
+
+          var badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+          if (item.status_raw === 'selesai') {
+            badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+          } else if (item.status_raw === 'didisposisi') {
+            badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
+          } else if (item.status_raw === 'ditolak') {
+            badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+          }
+
+          var html = '';
+          html += '<div class="flex flex-col sm:flex-row justify-between sm:items-center pb-4 border-b border-slate-200 gap-2">';
+          html += '  <div>';
+          html += '    <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Kode Tiket / Resi Digital</span>';
+          html += '    <h4 class="text-base font-black text-emerald-800 font-mono tracking-wider">' + item.kode_tiket + '</h4>';
+          html += '  </div>';
+          html += '  <span class="text-xs font-bold px-3.5 py-1.5 rounded-full border ' + badgeColor + '">' + item.status_label + '</span>';
+          html += '</div>';
+
+          html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs py-2">';
+          html += '  <div class="bg-white p-3 rounded-2xl border border-slate-200/80"><span class="text-slate-400 block text-[11px] mb-0.5">Asal Instansi / Pengirim:</span><strong class="text-slate-900 font-bold text-sm">' + item.nama_instansi + '</strong></div>';
+          html += '  <div class="bg-white p-3 rounded-2xl border border-slate-200/80"><span class="text-slate-400 block text-[11px] mb-0.5">Nomor Surat Resmi:</span><strong class="text-slate-900 font-mono font-bold text-sm">' + item.nomor_surat + '</strong></div>';
+          html += '  <div class="sm:col-span-2 bg-white p-3 rounded-2xl border border-slate-200/80"><span class="text-slate-400 block text-[11px] mb-0.5">Perihal Surat:</span><strong class="text-slate-900 font-bold text-sm">' + item.perihal + '</strong></div>';
+          html += '  <div class="bg-white p-3 rounded-2xl border border-slate-200/80"><span class="text-slate-400 block text-[11px] mb-0.5">Tanggal Registrasi Sistem:</span><strong class="text-slate-700">' + item.tgl_kirim + '</strong></div>';
+          html += '  <div class="bg-white p-3 rounded-2xl border border-slate-200/80"><span class="text-slate-400 block text-[11px] mb-0.5">Sifat / Urgensi:</span><span class="font-bold text-emerald-700">' + item.sifat_surat + '</span></div>';
+          html += '</div>';
+
+          if (item.status_raw === 'didisposisi' || item.status_raw === 'selesai') {
+            html += '<div class="p-4 bg-emerald-50/80 rounded-2xl border border-emerald-200 text-xs space-y-1.5">';
+            html += '  <div class="font-extrabold text-emerald-900 flex items-center gap-1.5"><i class="fa-solid fa-stamp text-emerald-600"></i> Disposisi Kepala Madrasah / Pimpinan:</div>';
+            html += '  <div class="text-slate-800">Diteruskan Kepada: <strong>' + item.disposisi_tujuan + '</strong></div>';
+            if (item.disposisi_instruksi) {
+              html += '  <div class="text-slate-600 italic bg-white/70 p-2 rounded-xl border border-emerald-100 mt-1">"' + item.disposisi_instruksi + '"</div>';
+            }
+            html += '</div>';
+          }
+
+          resBox.innerHTML = html;
+        } else {
+          resBox.classList.add('hidden');
+          Swal.fire({
+            icon: 'info',
+            title: 'Surat Tidak Ditemukan',
+            text: data.message || 'Periksa kembali kode tiket atau nomor surat yang Anda masukkan.'
+          });
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        Swal.fire({ icon: 'error', title: 'Kesalahan Sistem', text: 'Gagal melacak surat. Coba lagi dalam beberapa saat.' });
+      });
+    });
+
+    function bukaLiveChatMadrasah() {
+      if (typeof toggleClientLiveCardPopup === 'function') {
+        toggleClientLiveCardPopup();
+      } else if (document.getElementById('btnLiveCardBalloon')) {
+        document.getElementById('btnLiveCardBalloon').click();
+      } else if (typeof Tawk_API !== 'undefined' && Tawk_API.maximize) {
+        Tawk_API.maximize();
+      } else {
+        Swal.fire({
+          icon: 'info',
+          title: 'Live Chat Madrasah',
+          text: 'Silakan gunakan tombol balon bantuan di pojok kanan bawah layar untuk memulai percakapan langsung.'
+        });
+      }
+    }
+  </script>
+
+  <!-- Live Chat Widget Bantuan -->
+  
+<!-- Ensure FontAwesome is always available on all pages (Landing, User, Admin) -->
+<link rel="stylesheet" href="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/font-awesome.min.css">
+<link rel="stylesheet" href="./Portal E-Surat Masuk Dinas Eksternal - MADRASAH ALIYAH NEGERI 4 BANJAR_files/font-awesome(1).min.css">
+
+<!-- LIVE CARD STYLES -->
+<style>
+/* LIVE CARD COLOR THEMES & CSS VARIABLES */
+:root {
+    --lc-primary-1: #10b981;
+    --lc-primary-2: #059669;
+    --lc-primary-3: #047857;
+    --lc-shadow-rgb: 5, 150, 105;
+    --lc-accent-glow: rgba(16, 185, 129, 0.45);
+}
+
+/* 1. Emerald Kemenag (Default Landing Page) */
+body.lc-theme-emerald, .lc-theme-emerald {
+    --lc-primary-1: #10b981;
+    --lc-primary-2: #059669;
+    --lc-primary-3: #047857;
+    --lc-shadow-rgb: 5, 150, 105;
+    --lc-accent-glow: rgba(16, 185, 129, 0.45);
+}
+
+/* 2. Royal Indigo (Default Admin / Super Admin) */
+body.lc-theme-indigo, .lc-theme-indigo {
+    --lc-primary-1: #6366f1;
+    --lc-primary-2: #4f46e5;
+    --lc-primary-3: #3730a3;
+    --lc-shadow-rgb: 79, 70, 229;
+    --lc-accent-glow: rgba(99, 102, 241, 0.45);
+}
+
+/* 3. Ocean Sapphire (Default Siswa) */
+body.lc-theme-sapphire, .lc-theme-sapphire {
+    --lc-primary-1: #38bdf8;
+    --lc-primary-2: #0284c7;
+    --lc-primary-3: #0369a1;
+    --lc-shadow-rgb: 2, 132, 199;
+    --lc-accent-glow: rgba(56, 189, 248, 0.45);
+}
+
+/* 4. Forest Teal (Default Guru / PTK) */
+body.lc-theme-teal, .lc-theme-teal {
+    --lc-primary-1: #14b8a6;
+    --lc-primary-2: #0d9488;
+    --lc-primary-3: #0f766e;
+    --lc-shadow-rgb: 13, 148, 136;
+    --lc-accent-glow: rgba(20, 184, 166, 0.45);
+}
+
+/* 5. Amber Sunset (Default Ortu / Warm) */
+body.lc-theme-amber, .lc-theme-amber {
+    --lc-primary-1: #f59e0b;
+    --lc-primary-2: #ea580c;
+    --lc-primary-3: #c2410c;
+    --lc-shadow-rgb: 234, 88, 12;
+    --lc-accent-glow: rgba(245, 158, 11, 0.45);
+}
+
+/* 6. Crimson Ruby (Merah Menyala - High Contrast) */
+body.lc-theme-ruby, .lc-theme-ruby {
+    --lc-primary-1: #f43f5e;
+    --lc-primary-2: #e11d48;
+    --lc-primary-3: #be123c;
+    --lc-shadow-rgb: 225, 29, 72;
+    --lc-accent-glow: rgba(244, 63, 94, 0.45);
+}
+
+/* 7. Midnight Obsidian (Elegan / Modern Dark) */
+body.lc-theme-obsidian, .lc-theme-obsidian {
+    --lc-primary-1: #475569;
+    --lc-primary-2: #1e293b;
+    --lc-primary-3: #0f172a;
+    --lc-shadow-rgb: 30, 41, 59;
+    --lc-accent-glow: rgba(71, 85, 105, 0.45);
+}
+
+/* Live Card Theme Swatch Selector Bar */
+.live-card-theme-bar {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    animation: lcThemeBarSlide 0.25s ease-out;
+}
+@keyframes lcThemeBarSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.lc-swatch-list {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.lc-swatch-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+    outline: none;
+    padding: 0;
+    position: relative;
+}
+.lc-swatch-dot:hover {
+    transform: scale(1.25);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+.lc-swatch-dot.active {
+    border-color: #0f172a;
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #0f172a;
+}
+
+/* Floating Balloon Button - Draggable & Compact */
+.live-card-balloon-btn {
+    position: fixed;
+    bottom: 38px;
+    right: 36px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lc-primary-1) 0%, var(--lc-primary-2) 50%, var(--lc-primary-3) 100%);
+    box-shadow: 0 8px 24px -3px rgba(var(--lc-shadow-rgb), 0.6), 0 3px 10px rgba(var(--lc-shadow-rgb), 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    z-index: 99999;
+    color: #ffffff;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.3s ease;
+    border: 2.5px solid rgba(255, 255, 255, 0.85);
+    outline: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+.live-card-balloon-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 12px 28px -3px rgba(var(--lc-shadow-rgb), 0.75), 0 6px 16px var(--lc-accent-glow);
+}
+.live-card-balloon-btn:active {
+    transform: scale(0.95);
+    cursor: grabbing;
+}
+.live-card-balloon-btn.is-dragging {
+    cursor: grabbing !important;
+    transition: none !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 16px 36px rgba(var(--lc-shadow-rgb), 0.8), 0 8px 18px rgba(0, 0, 0, 0.25) !important;
+}
+.live-card-balloon-btn.is-dragging .live-card-tooltip {
+    display: none !important;
+}
+.live-card-balloon-btn svg {
+    transition: transform 0.3s ease;
+}
+.live-card-balloon-btn:hover svg {
+    transform: scale(1.08) rotate(4deg);
+}
+
+/* Pulsing Online Ping Ring */
+.live-card-ping {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 0 6px #10b981;
+}
+.live-card-ping::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 50%;
+    border: 1.5px solid #10b981;
+    animation: liveCardPulse 2s infinite ease-out;
+}
+@keyframes liveCardPulse {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Badge Notifikasi Belum Dibaca */
+.live-card-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 19px;
+    height: 19px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.6);
+    display: none;
+    animation: liveBadgeBounce 0.4s ease;
+}
+@keyframes liveBadgeBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* Floating Tooltip Pill */
+.live-card-tooltip {
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%) translateX(8px);
+    background: #1e1b4b;
+    color: #ffffff;
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.live-card-tooltip::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 5px 0 5px 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent #1e1b4b;
+}
+.live-card-balloon-btn:hover .live-card-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+.live-card-balloon-btn.is-left-docked .live-card-tooltip {
+    right: auto;
+    left: 60px;
+    transform: translateY(-50%) translateX(-8px);
+}
+.live-card-balloon-btn.is-left-docked .live-card-tooltip::after {
+    right: auto;
+    left: -5px;
+    border-width: 5px 5px 5px 0;
+    border-color: transparent #1e1b4b transparent transparent;
+}
+.live-card-balloon-btn.is-left-docked:hover .live-card-tooltip {
+    transform: translateY(-50%) translateX(0);
+}
+
+/* Common Popup Card Box */
+.live-card-popup {
+    position: fixed;
+    bottom: 148px;
+    right: 50px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 520px;
+    max-height: calc(100vh - 120px);
+    background: #ffffff;
+    border-radius: 22px;
+    box-shadow: 0 22px 50px -10px rgba(30, 27, 75, 0.3), 0 8px 20px -4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    z-index: 99998;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.85) translateY(20px);
+    transform-origin: bottom right;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.live-card-popup.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateY(0);
+}
+
+/* Admin specific dimensions */
+.live-card-popup.admin-desk {
+    width: 420px;
+    height: 560px;
+}
+
+/* Header */
+.live-card-header {
+    background: linear-gradient(135deg, var(--lc-primary-2) 0%, var(--lc-primary-1) 50%, var(--lc-primary-3) 100%);
+    color: #ffffff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    transition: background 0.3s ease;
+}
+.live-card-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.live-card-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+}
+.live-card-title {
+    font-size: 14.5px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+.live-card-subtitle {
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.live-card-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: background 0.2s;
+}
+.live-card-close-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Body / Chat Area */
+.live-card-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.live-card-welcome-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    margin-bottom: 4px;
+}
+.live-card-welcome-card h6 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+.live-card-welcome-card p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Quick Topic Pills */
+.live-card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0;
+}
+.live-card-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.live-card-chip:hover {
+    background: #ecfdf5;
+    border-color: #059669;
+    color: #065f46;
+    transform: translateY(-1px);
+}
+
+/* Bubble Messages */
+.live-bubble {
+    max-width: 82%;
+    padding: 9px 13px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    position: relative;
+    word-break: break-word;
+}
+.live-bubble-client {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--lc-primary-2) 0%, var(--lc-primary-1) 100%);
+    color: #ffffff;
+    border-bottom-right-radius: 3px;
+    box-shadow: 0 4px 12px rgba(var(--lc-shadow-rgb), 0.28);
+    transition: background 0.3s ease;
+}
+.live-bubble-admin {
+    align-self: flex-start;
+    background: #ffffff;
+    color: #1e293b;
+    border-bottom-left-radius: 3px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.live-bubble-meta {
+    font-size: 10px;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    opacity: 0.8;
+}
+.live-bubble-admin .live-bubble-meta {
+    color: #64748b;
+    justify-content: flex-start;
+}
+
+/* Footer / Input */
+.live-card-footer {
+    padding: 10px 14px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.live-card-input {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 22px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.live-card-input:focus {
+    border-color: var(--lc-primary-2);
+    box-shadow: 0 0 0 3px rgba(var(--lc-shadow-rgb), 0.2);
+}
+.live-card-send-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lc-primary-2) 0%, var(--lc-primary-1) 100%);
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(var(--lc-shadow-rgb), 0.35);
+    transition: transform 0.2s, background 0.3s ease;
+    outline: none;
+    flex-shrink: 0;
+}
+.live-card-send-btn:hover {
+    transform: scale(1.06);
+}
+.live-card-attach-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    flex-shrink: 0;
+}
+.live-card-attach-btn:hover {
+    background: #e2e8f0;
+    color: var(--lc-primary-2);
+    transform: scale(1.05);
+}
+.live-card-file-preview {
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #334155;
+}
+
+/* Admin Mini Card Items */
+.admin-card-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+}
+.admin-card-item:hover {
+    transform: translateY(-2px);
+    border-color: #056839;
+    box-shadow: 0 6px 16px rgba(5, 104, 57, 0.15);
+}
+.admin-card-avatar-box {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+}
+.admin-card-avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    display: block;
+}
+.admin-card-avatar-fallback {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    border: 2px solid #ffffff;
+}
+.admin-card-avatar-online {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 5px #10b981;
+}
+.admin-card-avatar-offline {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #94a3b8;
+    border: 2px solid #ffffff;
+}
+.admin-filter-pill {
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.admin-filter-pill.active {
+    background: #056839;
+    color: #ffffff;
+    border-color: #056839;
+}
+</style>
+
+<!-- FLOATING BALLOON BUTTON -->
+<div class="live-card-balloon-btn lc-theme-emerald" id="btnLiveCardBalloon" onclick="toggleClientLiveCardPopup()" title="Live Chat &amp; Bantuan">
+    <div class="live-card-ping"></div>
+    <div class="live-card-badge" id="liveCardUnreadBadge">0</div>
+    
+    <!-- Ultra Crisp White Vector Icons (Always 100% visible) -->
+    <div id="liveCardIconWrap" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#ffffff; pointer-events:none;">
+        <svg id="liveCardSvgChat" viewBox="0 -256 1850 1850" width="26" height="26" fill="#ffffff" style="display:block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.32));">
+            <path transform="matrix(0.71186441,0,0,-0.71186441,288.54237,1093.9482)" d="M 704,1152 Q 551,1152 418,1100 285,1048 206.5,959 128,870 128,768 q 0,-82 53,-158 53,-76 149,-132 l 97,-56 -35,-84 q 34,20 62,39 l 44,31 53,-10 q 78,-14 153,-14 153,0 286,52 133,52 211.5,141 78.5,89 78.5,191 0,102 -78.5,191 -78.5,89 -211.5,141 -133,52 -286,52 z m 0,128 q 191,0 353.5,-68.5 Q 1220,1143 1314,1025 1408,907 1408,768 1408,629 1314,511 1220,393 1057.5,324.5 895,256 704,256 618,256 528,272 404,184 250,144 214,135 164,128 h -3 q -11,0 -20.5,8 -9.5,8 -11.5,21 -1,3 -1,6.5 0,3.5 0.5,6.5 0.5,3 2,6 l 2.5,5 q 0,0 3.5,5.5 3.5,5.5 4,5 0.5,-0.5 4.5,5 4,5.5 4,4.5 5,6 23,25 18,19 26,29.5 8,10.5 22.5,29 Q 235,303 245.5,323 256,343 266,367 142,439 71,544 0,649 0,768 0,907 94,1025 188,1143 350.5,1211.5 513,1280 704,1280 Z M 1526,111 q 10,-24 20.5,-44 10.5,-20 25,-38.5 14.5,-18.5 22.5,-29 8,-10.5 26,-29.5 18,-19 23,-25 1,-1 4,-4.5 3,-3.5 4.5,-5 1.5,-1.5 4,-5 2.5,-3.5 3.5,-5.5 l 2.5,-5 q 0,0 2,-6 2,-6 0.5,-6.5 -1.5,-0.5 -1,-6.5 -3,-14 -13,-22 -10,-8 -22,-7 -50,7 -86,16 Q 1388,-72 1264,16 1174,0 1088,0 817,0 616,132 q 58,-4 88,-4 161,0 309,45 148,45 264,129 125,92 192,212 67,120 67,254 0,77 -23,152 129,-71 204,-178 75,-107 75,-230 0,-120 -71,-224.5 Q 1650,183 1526,111 Z"></path>
+        </svg>
+        <svg id="liveCardSvgClose" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="display:none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.32));">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </div>
+    
+    <div class="live-card-tooltip">
+        <span>Live Chat</span>
+    </div>
+</div>
+
+<!-- ==================== CLIENT LIVE CARD BOX (SISWA, GURU, ORTU, TAMU) ==================== -->
+<div class="live-card-popup lc-theme-emerald" id="clientLiveCardPopup">
+    <!-- Header -->
+    <div class="live-card-header">
+        <div class="live-card-header-info">
+            <div class="live-card-avatar" style="overflow: hidden; padding: 0;">
+                                                    <i class="fa fa-heart"></i>
+                            </div>
+            <div>
+                <h5 class="live-card-title">Layanan Informasi Publik</h5>
+                <div class="live-card-subtitle">
+                    <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow: 0 0 5px #10b981;"></span>
+                    <span>Live Chat Terhubung ke Admin</span>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 6px;">
+            <button type="button" class="live-card-close-btn" onclick="toggleLiveCardThemePalette('client')" id="btnClientTheme" title="Ganti Warna Balon">
+                <i class="fa fa-paint-brush"></i>
+            </button>
+            <button type="button" class="live-card-close-btn" onclick="toggleClientLiveCardPopup()" title="Tutup">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Theme Swatch Bar Client -->
+    <div class="live-card-theme-bar" id="clientLiveCardThemeBar" style="display: none;">
+        <span style="font-size: 11px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 4px;">
+            <i class="fa fa-paint-brush text-primary"></i> Warna Balon:
+        </span>
+        <div class="lc-swatch-list">
+            <button type="button" class="lc-swatch-dot" data-theme="emerald" title="Hijau Emerald (Kemenag)" style="background: linear-gradient(135deg, #10b981, #047857);" onclick="setLiveCardTheme('emerald')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="indigo" title="Royal Indigo (Admin)" style="background: linear-gradient(135deg, #6366f1, #3730a3);" onclick="setLiveCardTheme('indigo')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="sapphire" title="Ocean Sapphire (Siswa)" style="background: linear-gradient(135deg, #38bdf8, #0369a1);" onclick="setLiveCardTheme('sapphire')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="teal" title="Forest Teal (Guru)" style="background: linear-gradient(135deg, #14b8a6, #0f766e);" onclick="setLiveCardTheme('teal')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="amber" title="Amber Sunset (Ortu)" style="background: linear-gradient(135deg, #f59e0b, #c2410c);" onclick="setLiveCardTheme('amber')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="ruby" title="Crimson Ruby (Menyala)" style="background: linear-gradient(135deg, #f43f5e, #be123c);" onclick="setLiveCardTheme('ruby')"></button>
+            <button type="button" class="lc-swatch-dot" data-theme="obsidian" title="Midnight Obsidian (Dark)" style="background: linear-gradient(135deg, #475569, #0f172a);" onclick="setLiveCardTheme('obsidian')"></button>
+            <button type="button" class="lc-swatch-dot active" data-theme="auto" title="Otomatis (Sesuai Peran Akun)" style="background: conic-gradient(#10b981, #38bdf8, #6366f1, #f59e0b, #10b981); border: 1px dashed #64748b;" onclick="setLiveCardTheme('auto')"></button>
+        </div>
+    </div>
+
+    <!-- Body / Chat Messages -->
+    <div class="live-card-body" id="liveCardMessagesBox">
+        <div class="live-card-welcome-card">
+            <div class="d-flex align-items-center justify-content-center mb-2" style="gap: 10px;">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ea580c, #f59e0b); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 3px 8px rgba(234,88,12,0.3);">
+                        <i class="fa fa-university"></i>
+                    </div>
+                                <div class="text-left">
+                    <h6 id="liveCardWelcomeHeading" style="margin: 0; font-weight: 700; color: #1e293b;">
+                        Assalamu'alaikum, Tamu Madrasah! 👋                    </h6>
+                    <small class="text-muted" style="font-size: 11px;">Layanan Informasi Publik</small>
+                </div>
+            </div>
+
+                            <p style="font-size: 11.5px; color: #475569; margin: 4px 0 8px 0; line-height: 1.5;">
+                    Selamat datang di <strong>Pusat Layanan Informasi Publik Madrasah</strong>. Butuh info pendaftaran siswa baru (PPDB), profil madrasah, atau layanan tamu/PTSP? Tim admin kami siap menyapa dan membantu.
+                </p>
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 6px 10px; font-size: 10.5px; color: #065f46; margin-bottom: 8px; text-align: left;">
+                    💡 <em>Untuk konsultasi nilai, absensi, ujian, dan bimbingan konseling, silakan login ke <strong>Portal Siswa</strong> atau <strong>Portal Guru</strong>.</em>
+                </div>
+                <div style="margin: 8px 0 6px 0;">
+                    <input type="text" id="liveCardGuestName" class="form-control form-control-sm text-center" placeholder="Ketik nama Anda (Contoh: Bpk/Ibu ... / Calon Wali)" style="border-radius: 12px; font-size: 11.5px; border: 1px dashed #059669;" onchange="updateGuestName(this.value)">
+                </div>
+                <div class="live-card-chips">
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, saya ingin menanyakan informasi pendaftaran siswa baru (PPDB)...')">ℹ️ Info PPDB</span>
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, boleh minta informasi profil dan program unggulan madrasah?')">🏫 Profil Madrasah</span>
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, saya ingin menanyakan prosedur pelayanan surat/tamu PTSP...')">📋 Layanan Tamu / PTSP</span>
+                    <span class="live-card-chip" onclick="quickSend('Assalamu\'alaikum Admin, jam operasional pelayanan madrasah buka sampai jam berapa ya?')">🕒 Jam Pelayanan</span>
+                </div>
+
+                    </div>
+        <div id="liveCardMessagesList"></div>
+    </div>
+
+    <!-- Attachment Preview Bar Client -->
+    <div id="liveCardFilePreviewBar" class="live-card-file-preview" style="display: none;"></div>
+
+    <!-- Footer / Input -->
+    <div class="live-card-footer">
+        <input type="file" id="liveCardFileInput" style="display: none;" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" onchange="handleLiveClientFileSelected(this)">
+        <button type="button" class="live-card-attach-btn" onclick="document.getElementById('liveCardFileInput').click()" title="Kirim Foto / File (PDF, Word, Excel)">
+            <i class="fa fa-paperclip"></i>
+        </button>
+        <input type="text" id="liveCardInputText" class="live-card-input" placeholder="Tulis pesan atau pertanyaan..." onkeypress="handleLiveKeyPress(event)">
+        <button type="button" id="liveCardSendBtn" class="live-card-send-btn" onclick="sendLiveMessage()">
+            <i class="fa fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<!-- JAVASCRIPT LIVE CARD CONTROLLER -->
+<script>
+(function() {
+    var liveApiUrl = 'api/live_card.php';
+    var lcIsAdmin  = false;
+    var lcRoleDefaultTheme = 'emerald';
+
+    // =========================================================================
+    // THEME CONTROLLER (Ganti Warna Balon & Header)
+    // =========================================================================
+    window.toggleLiveCardThemePalette = function(ctx) {
+        var bar = (ctx === 'admin') ? document.getElementById('adminDeskThemeBar') : document.getElementById('clientLiveCardThemeBar');
+        if (!bar) return;
+        bar.style.display = (bar.style.display === 'none' || !bar.style.display) ? 'flex' : 'none';
+    };
+
+    window.setLiveCardTheme = function(themeName) {
+        var activeTheme = (themeName === 'auto') ? lcRoleDefaultTheme : themeName;
+
+        try {
+            localStorage.setItem('live_card_custom_theme', themeName);
+        } catch(e) {}
+
+        var allThemes = ['lc-theme-emerald', 'lc-theme-indigo', 'lc-theme-sapphire', 'lc-theme-teal', 'lc-theme-amber', 'lc-theme-ruby', 'lc-theme-obsidian'];
+        allThemes.forEach(function(cls) {
+            document.body.classList.remove(cls);
+            var balloon = document.getElementById('btnLiveCardBalloon');
+            if (balloon) balloon.classList.remove(cls);
+            var popupA = document.getElementById('adminDeskPopup');
+            if (popupA) popupA.classList.remove(cls);
+            var popupC = document.getElementById('clientLiveCardPopup');
+            if (popupC) popupC.classList.remove(cls);
+        });
+
+        var targetCls = 'lc-theme-' + activeTheme;
+        document.body.classList.add(targetCls);
+        var balloon = document.getElementById('btnLiveCardBalloon');
+        if (balloon) balloon.classList.add(targetCls);
+        var popupA = document.getElementById('adminDeskPopup');
+        if (popupA) popupA.classList.add(targetCls);
+        var popupC = document.getElementById('clientLiveCardPopup');
+        if (popupC) popupC.classList.add(targetCls);
+
+        // Highlight active swatch dot
+        document.querySelectorAll('.lc-swatch-dot').forEach(function(dot) {
+            if (dot.getAttribute('data-theme') === themeName) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    };
+
+    // Muat tema tersimpan atau gunakan default peran
+    (function initTheme() {
+        var savedTheme = 'auto';
+        try {
+            savedTheme = localStorage.getItem('live_card_custom_theme') || 'auto';
+        } catch(e) {}
+        setLiveCardTheme(savedTheme);
+    })();
+
+    // =========================================================================
+    // 0. CONTROLLER DRAGGABLE BALLOON (Bisa dipindah ke kiri/kanan/atas/bawah untuk semua role)
+    // =========================================================================
+    (function initDraggableBalloon() {
+        var btn = document.getElementById('btnLiveCardBalloon');
+        if (!btn) return;
+
+        var isDragging = false;
+        var hasMoved = false;
+        var startX = 0;
+        var startY = 0;
+        var initialLeft = 0;
+        var initialTop = 0;
+        var threshold = 5;
+
+        // Posisi default: selalu kembali ke posisi semula (bottom-right) saat refresh atau logout
+        function restorePosition() {
+            try {
+                localStorage.removeItem('live_card_balloon_pos');
+                sessionStorage.removeItem('live_card_balloon_pos');
+            } catch(e) {}
+            // Pastikan posisi kembali ke nilai CSS default jika tidak sedang digeser
+            if (!isDragging && !hasMoved) {
+                btn.style.left = '';
+                btn.style.top = '';
+                btn.style.right = '';
+                btn.style.bottom = '';
+                btn.classList.remove('is-left-docked');
+            }
+        }
+        restorePosition();
+        window.addEventListener('resize', restorePosition);
+
+        // Menyesuaikan posisi popup terhadap letak balon
+        window.repositionLiveCardPopup = function() {
+            var popup = document.querySelector('.live-card-popup.active');
+            if (!popup) return;
+            var rect = btn.getBoundingClientRect();
+            var popW = popup.offsetWidth || 380;
+            var popH = popup.offsetHeight || 520;
+            var winW = window.innerWidth;
+            var winH = window.innerHeight;
+
+            var left, top;
+            // Posisi horizontal: sejajar dengan balon atau di sisi dalam layar
+            if (rect.left + popW <= winW - 15) {
+                left = Math.max(15, rect.left);
+            } else if (rect.right - popW >= 15) {
+                left = rect.right - popW;
+            } else {
+                left = Math.max(15, (winW - popW) / 2);
+            }
+
+            // Posisi vertikal: utamakan di atas balon jika cukup ruang, atau di bawah jika di atas sempit
+            if (rect.top - popH - 12 >= 15) {
+                top = rect.top - popH - 12;
+            } else if (rect.bottom + popH + 12 <= winH - 15) {
+                top = rect.bottom + 12;
+            } else {
+                top = Math.max(15, (winH - popH) / 2);
+            }
+
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+            popup.style.right = 'auto';
+            popup.style.bottom = 'auto';
+        };
+
+        function onStart(e) {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+
+            var clientX = e.type.indexOf('touch') !== -1 ? e.touches[0].clientX : e.clientX;
+            var clientY = e.type.indexOf('touch') !== -1 ? e.touches[0].clientY : e.clientY;
+
+            var rect = btn.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            startX = clientX;
+            startY = clientY;
+            isDragging = true;
+            hasMoved = false;
+
+            document.addEventListener('mousemove', onMove, { passive: false });
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        }
+
+        function onMove(e) {
+            if (!isDragging) return;
+
+            var clientX = e.type.indexOf('touch') !== -1 ? e.touches[0].clientX : e.clientX;
+            var clientY = e.type.indexOf('touch') !== -1 ? e.touches[0].clientY : e.clientY;
+
+            var dx = clientX - startX;
+            var dy = clientY - startY;
+
+            if (!hasMoved && Math.hypot(dx, dy) > threshold) {
+                hasMoved = true;
+                btn.classList.add('is-dragging');
+            }
+
+            if (hasMoved) {
+                if (e.cancelable) e.preventDefault();
+
+                var winW = window.innerWidth;
+                var winH = window.innerHeight;
+                var btnW = btn.offsetWidth || 52;
+                var btnH = btn.offsetHeight || 52;
+
+                var newLeft = Math.max(8, Math.min(initialLeft + dx, winW - btnW - 8));
+                var newTop  = Math.max(8, Math.min(initialTop + dy, winH - btnH - 8));
+
+                btn.style.left = newLeft + 'px';
+                btn.style.top = newTop + 'px';
+                btn.style.right = 'auto';
+                btn.style.bottom = 'auto';
+
+                if (newLeft < 140) {
+                    btn.classList.add('is-left-docked');
+                } else {
+                    btn.classList.remove('is-left-docked');
+                }
+
+                if (window.repositionLiveCardPopup) {
+                    window.repositionLiveCardPopup();
+                }
+            }
+        }
+
+        function onEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+
+            if (hasMoved) {
+                btn.classList.remove('is-dragging');
+                if (window.repositionLiveCardPopup) {
+                    window.repositionLiveCardPopup();
+                }
+
+                // Cegah pemicu klik toggle jika pengguna sedang menggeser (drag)
+                var preventClick = function(ev) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    btn.removeEventListener('click', preventClick, true);
+                };
+                btn.addEventListener('click', preventClick, true);
+            }
+        }
+
+        btn.addEventListener('mousedown', onStart);
+        btn.addEventListener('touchstart', onStart, { passive: true });
+    })();
+
+    function resolveAvatarUrl(fotoPath) {
+        if (!fotoPath || fotoPath === '0' || fotoPath === 'null' || fotoPath === '') return '';
+        if (fotoPath.indexOf('http://') === 0 || fotoPath.indexOf('https://') === 0) return fotoPath;
+        var isSubdir = (window.location.pathname.indexOf('/user') !== -1 || window.location.pathname.indexOf('/login') !== -1);
+        var prefix = isSubdir ? '../' : '';
+        if (fotoPath.indexOf('/') === 0) return fotoPath;
+        return prefix + fotoPath;
+    }
+
+    // =========================================================================
+    // A. LOGIKA KHUSUS ADMIN & SUPER ADMIN (MINI LIVE DESK)
+    // =========================================================================
+    if (lcIsAdmin) {
+        var isAdminDeskOpen = false;
+        var currentAdminFilter = '';
+        var currentChatToken = '';
+        var currentChatUser = null;
+        var adminDeskPingTimer = null;
+        var adminDeskChatTimer = null;
+        var isDeskSoundEnabled = true;
+        var previousUnreadCount = 0;
+
+        window.toggleAdminDeskPopup = function() {
+            var popup = document.getElementById('adminDeskPopup');
+            var svgChat = document.getElementById('liveCardSvgChat');
+            var svgClose = document.getElementById('liveCardSvgClose');
+            var icon = document.getElementById('liveCardIcon');
+            isAdminDeskOpen = !isAdminDeskOpen;
+
+            if (isAdminDeskOpen) {
+                popup.classList.add('active');
+                if (window.repositionLiveCardPopup) window.repositionLiveCardPopup();
+                if (svgChat) svgChat.style.display = 'none';
+                if (svgClose) svgClose.style.display = 'block';
+                if (icon) icon.className = 'fa fa-times';
+                sessionStorage.setItem('admin_desk_open', '1');
+                fetchAdminDeskCards();
+            } else {
+                popup.classList.remove('active');
+                if (svgChat) svgChat.style.display = 'block';
+                if (svgClose) svgClose.style.display = 'none';
+                if (icon) icon.className = 'fa fa-comments';
+                sessionStorage.setItem('admin_desk_open', '0');
+                if (adminDeskChatTimer) clearInterval(adminDeskChatTimer);
+            }
+        };
+
+        window.setAdminDeskFilter = function(role, btn) {
+            currentAdminFilter = role;
+            document.querySelectorAll('.admin-filter-pill').forEach(function(el) { el.classList.remove('active'); });
+            btn.classList.add('active');
+            fetchAdminDeskCards();
+        };
+
+        window.toggleDeskSound = function() {
+            isDeskSoundEnabled = !isDeskSoundEnabled;
+            var icon = document.getElementById('iconDeskSound');
+            if (isDeskSoundEnabled) {
+                icon.className = 'fa fa-bell';
+                icon.style.color = '#ffffff';
+                playAdminChime(); // Bunyikan tes nada agar admin tahu suara aktif
+            } else {
+                icon.className = 'fa fa-bell-slash';
+                icon.style.color = 'rgba(255,255,255,0.6)';
+            }
+        };
+
+        var deskAudioCtx = null;
+        function getDeskAudioCtx() {
+            if (!deskAudioCtx) {
+                var AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) deskAudioCtx = new AudioCtx();
+            }
+            return deskAudioCtx;
+        }
+
+        // Buka suspensi audio browser saat admin pertama kali klik halaman
+        document.addEventListener('click', function unlockAudio() {
+            var ctx = getDeskAudioCtx();
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }, { once: false });
+
+        function playAdminChime() {
+            if (!isDeskSoundEnabled) return;
+            try {
+                var ctx = getDeskAudioCtx();
+                if (!ctx) return;
+
+                var playTones = function() {
+                    var now = ctx.currentTime;
+                    // Nada 1: 587Hz (D5)
+                    var osc1 = ctx.createOscillator();
+                    var gain1 = ctx.createGain();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(587.33, now);
+                    gain1.gain.setValueAtTime(0.3, now);
+                    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc1.connect(gain1);
+                    gain1.connect(ctx.destination);
+                    osc1.start(now);
+                    osc1.stop(now + 0.35);
+
+                    // Nada 2: 880Hz (A5) - nada ceria
+                    var osc2 = ctx.createOscillator();
+                    var gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880.00, now + 0.12);
+                    gain2.gain.setValueAtTime(0.35, now + 0.12);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(now + 0.12);
+                    osc2.stop(now + 0.65);
+                };
+
+                if (ctx.state === 'suspended') {
+                    ctx.resume().then(playTones);
+                } else {
+                    playTones();
+                }
+            } catch(e) {}
+        }
+
+        var hasInitialLoadedDesk = false;
+
+        window.fetchAdminDeskCards = function() {
+            var icon = document.getElementById('iconDeskRefresh');
+            if (icon) icon.classList.add('fa-spin');
+
+            fetch(liveApiUrl + '?action=admin_get_cards&filter_role=' + encodeURIComponent(currentAdminFilter))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (icon) icon.classList.remove('fa-spin');
+                if (data.status === 'ok') {
+                    renderAdminDeskCards(data.cards);
+                    updateAdminDeskStats(data);
+
+                    // Update Badge Balon
+                    var badge = document.getElementById('liveCardUnreadBadge');
+                    if (badge) {
+                        if (data.total_unread > 0) {
+                            badge.innerText = data.total_unread;
+                            badge.style.display = 'flex';
+                            badge.style.background = '#ef4444';
+                        } else if (data.total_online > 0) {
+                            badge.innerText = data.total_online;
+                            badge.style.display = 'flex';
+                            badge.style.background = '#10b981';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+
+                    // Bunyikan chime setiap kali ada pesan baru yang masuk
+                    if (!hasInitialLoadedDesk) {
+                        hasInitialLoadedDesk = true;
+                        previousUnreadCount = data.total_unread || 0;
+                    } else {
+                        if (data.total_unread > previousUnreadCount) {
+                            playAdminChime();
+                        }
+                        previousUnreadCount = data.total_unread || 0;
+                    }
+                }
+            })
+            .catch(function() {
+                if (icon) icon.classList.remove('fa-spin');
+            });
+        };
+
+        function updateAdminDeskStats(data) {
+            var onlineText = document.getElementById('adminDeskOnlineText');
+            if (onlineText) onlineText.innerText = (data.total_online || 0) + ' Pengguna Online';
+            var totalCards = document.getElementById('adminDeskTotalCards');
+            if (totalCards) totalCards.innerText = (data.cards ? data.cards.length : 0) + ' Kartu';
+        }
+
+        function renderAdminDeskCards(cards) {
+            var container = document.getElementById('adminDeskCardsList');
+            if (!container) return;
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = 
+                    '<div class="text-center py-5 text-muted">' +
+                    '<div style="width:50px; height:50px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:22px; color:#94a3b8;">' +
+                    '<i class="fa fa-comments-o"></i>' +
+                    '</div>' +
+                    '<strong style="color:#475569; font-size:13px;">Belum Ada Kartu Masuk</strong>' +
+                    '<p style="font-size:11.5px; margin-top:4px;">Saat siswa, guru, atau tamu mengirim pesan, kartu mereka otomatis muncul di sini.</p>' +
+                    '</div>';
+                return;
+            }
+
+            var html = '';
+            cards.forEach(function(c) {
+                var roleBadge = '<span class="badge badge-info text-white" style="font-size:10px;">Siswa</span>';
+                var borderLeft = '#0284c7';
+                var bgFallback = '#0284c7';
+
+                if (c.user_type === 'guru') {
+                    roleBadge = '<span class="badge badge-success text-white" style="font-size:10px;">Guru / PTK</span>';
+                    borderLeft = '#059669';
+                    bgFallback = '#059669';
+                } else if (c.user_type === 'ortu' || c.user_type === 'umum') {
+                    roleBadge = '<span class="badge badge-warning text-dark font-weight-bold" style="font-size:10px;">Orang Tua / Tamu</span>';
+                    borderLeft = '#d97706';
+                    bgFallback = '#d97706';
+                }
+
+                var resolvedFoto = resolveAvatarUrl(c.foto);
+                var initial = (c.nama && c.nama.trim().length > 0) ? c.nama.trim().charAt(0).toUpperCase() : '?';
+
+                var unreadTag = (c.unread > 0) ?
+                    '<span class="badge badge-danger px-2 py-0 ml-auto" style="font-size:10.5px; border-radius:10px; animation: liveBadgeBounce 0.4s ease;"><i class="fa fa-envelope"></i> ' + c.unread + ' Baru</span>' : '';
+
+                html += '<div class="admin-card-item" style="border-left: 4px solid ' + borderLeft + '; display: flex; gap: 11px; align-items: flex-start;" onclick="openAdminDeskChat(\'' + c.token + '\', \'' + escapeHtml(c.nama) + '\', \'' + c.user_type + '\', \'' + escapeHtml(c.keterangan) + '\', ' + c.is_online + ', \'' + escapeHtml(c.foto || '') + '\')">';
+
+                // Foto Avatar Siswa / Guru dengan Indikator Online
+                html += '<div class="admin-card-avatar-box">';
+                if (resolvedFoto) {
+                    html += '<img src="' + resolvedFoto + '" alt="Foto ' + escapeHtml(c.nama) + '" class="admin-card-avatar-img" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">';
+                    html += '<div class="admin-card-avatar-fallback" style="display:none; background:' + bgFallback + ';">' + initial + '</div>';
+                } else {
+                    html += '<div class="admin-card-avatar-fallback" style="background:' + bgFallback + ';">' + initial + '</div>';
+                }
+                html += '<span class="' + (c.is_online ? 'admin-card-avatar-online' : 'admin-card-avatar-offline') + '"></span>';
+                html += '</div>';
+
+                // Kolom Konten Kartu
+                html += '<div style="flex: 1; min-width: 0;">';
+                html += '<div class="d-flex align-items-center justify-content-between mb-1">';
+                html += '<div class="d-flex align-items-center" style="gap:6px;">';
+                html += roleBadge;
+                html += '<small class="text-muted ml-1" style="font-size:10px;">' + (c.last_pesan_time || c.last_active) + '</small>';
+                html += '</div>';
+                html += unreadTag;
+                html += '</div>';
+
+                html += '<div class="font-weight-bold text-dark" style="font-size:13.5px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(c.nama) + '</div>';
+                html += '<div class="text-muted" style="font-size:11px; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><i class="fa fa-info-circle mr-1"></i>' + escapeHtml(c.keterangan) + '</div>';
+
+                html += '<div style="background:#f8fafc; border-radius:8px; padding:6px 10px; font-size:12px; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">';
+                html += '<span style="color:#6366f1; font-weight:600;">' + (c.unread > 0 ? '📩 ' : '') + '</span>' + escapeHtml(c.last_pesan);
+                html += '</div>';
+
+                html += '</div>'; // End Kolom Konten
+                html += '</div>'; // End admin-card-item
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Buka Chat dengan User Tertentu di dalam Balon
+        window.openAdminDeskChat = function(token, nama, role, keterangan, isOnline, foto) {
+            currentChatToken = token;
+            currentChatUser = { nama: nama, role: role, keterangan: keterangan, isOnline: isOnline, foto: foto };
+
+            document.getElementById('adminDeskListView').style.display = 'none';
+            var chatView = document.getElementById('adminDeskChatView');
+            chatView.style.display = 'flex';
+
+            document.getElementById('adminChatHeaderNama').innerText = nama;
+            document.getElementById('adminChatHeaderRole').innerText = (role === 'siswa' ? 'Siswa' : (role === 'guru' ? 'Guru' : 'Orang Tua'));
+            document.getElementById('adminChatHeaderStatus').innerText = isOnline ? '● Online' : '○ Offline';
+            document.getElementById('adminChatHeaderStatus').style.color = isOnline ? '#10b981' : '#94a3b8';
+
+            // Set Foto di Chat Header
+            var avatarImg = document.getElementById('adminChatHeaderAvatarImg');
+            var avatarFallback = document.getElementById('adminChatHeaderAvatarFallback');
+            var onlineDot = document.getElementById('adminChatHeaderOnlineDot');
+            var resolved = resolveAvatarUrl(foto);
+            var initial = (nama && nama.trim().length > 0) ? nama.trim().charAt(0).toUpperCase() : '?';
+            var bgFallback = (role === 'guru') ? '#059669' : ((role === 'ortu') ? '#d97706' : '#0284c7');
+
+            if (onlineDot) {
+                onlineDot.className = isOnline ? 'admin-card-avatar-online' : 'admin-card-avatar-offline';
+            }
+            if (avatarFallback) {
+                avatarFallback.style.background = bgFallback;
+                avatarFallback.innerText = initial;
+            }
+            if (avatarImg && avatarFallback) {
+                if (resolved) {
+                    avatarImg.src = resolved;
+                    avatarImg.style.display = 'block';
+                    avatarFallback.style.display = 'none';
+                    avatarImg.onerror = function() {
+                        avatarImg.style.display = 'none';
+                        avatarFallback.style.display = 'flex';
+                    };
+                } else {
+                    avatarImg.style.display = 'none';
+                    avatarFallback.style.display = 'flex';
+                }
+            }
+
+            loadAdminDeskChatMessages();
+            if (adminDeskChatTimer) clearInterval(adminDeskChatTimer);
+            adminDeskChatTimer = setInterval(loadAdminDeskChatMessages, 3000);
+
+            try {
+                sessionStorage.setItem('admin_desk_current_chat', JSON.stringify({ token: token, nama: nama, role: role, keterangan: keterangan, isOnline: isOnline, foto: foto }));
+            } catch(e) {}
+
+            setTimeout(function() {
+                var input = document.getElementById('adminDeskInputText');
+                if (input) input.focus();
+            }, 250);
+        };
+
+        window.backToAdminDeskList = function() {
+            if (adminDeskChatTimer) clearInterval(adminDeskChatTimer);
+            document.getElementById('adminDeskChatView').style.display = 'none';
+            document.getElementById('adminDeskListView').style.display = 'flex';
+            currentChatToken = '';
+            try { sessionStorage.removeItem('admin_desk_current_chat'); } catch(e) {}
+            fetchAdminDeskCards();
+        };
+
+        function loadAdminDeskChatMessages() {
+            if (!currentChatToken) return;
+
+            fetch(liveApiUrl + '?action=get_messages&token=' + encodeURIComponent(currentChatToken) + '&role=admin')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === 'ok' && data.messages) {
+                    if (data.session && (!currentChatUser.foto || currentChatUser.foto === '')) {
+                        currentChatUser.foto = data.session.foto || '';
+                    }
+                    renderAdminDeskChatMessages(data.messages);
+                }
+            })
+            .catch(function() {});
+        }
+
+        function renderAdminDeskChatMessages(messages) {
+            var list = document.getElementById('adminDeskMessagesList');
+            var body = document.getElementById('adminDeskMessagesBody');
+            if (!list) return;
+
+            var userFoto = (currentChatUser && currentChatUser.foto) ? resolveAvatarUrl(currentChatUser.foto) : '';
+            var userInitial = (currentChatUser && currentChatUser.nama) ? currentChatUser.nama.trim().charAt(0).toUpperCase() : '?';
+            var userBg = (currentChatUser && currentChatUser.role === 'guru') ? '#059669' : ((currentChatUser && currentChatUser.role === 'ortu') ? '#d97706' : '#0284c7');
+
+            var html = '';
+            messages.forEach(function(m) {
+                var isAdmin = (m.sender_type === 'admin');
+                html += '<div style="display: flex; gap: 8px; margin-bottom: 8px; justify-content: ' + (isAdmin ? 'flex-end' : 'flex-start') + '; align-items: flex-end;">';
+
+                // Avatar Pengirim Siswa/Guru di sisi kiri
+                if (!isAdmin) {
+                    html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background:' + userBg + '; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                    if (userFoto) {
+                        html += '<img src="' + userFoto + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">';
+                        html += '<span style="display:none;">' + userInitial + '</span>';
+                    } else {
+                        html += '<span>' + userInitial + '</span>';
+                    }
+                    html += '</div>';
+                }
+
+                html += '<div class="live-bubble ' + (isAdmin ? 'live-bubble-client' : 'live-bubble-admin') + '" style="margin: 0; max-width: 78%;">';
+                if (!isAdmin) {
+                    html += '<strong style="font-size:11px; display:block; margin-bottom:2px; color:#4f46e5;">' + escapeHtml(m.sender_name) + '</strong>';
+                }
+                html += renderLiveMessageBody(m);
+                html += '<div class="live-bubble-meta">';
+                html += '<span>' + m.time + '</span>';
+                if (isAdmin) html += '<i class="fa fa-check" style="font-size:9px;"></i>';
+                html += '</div>';
+                html += '</div>';
+
+                // Avatar Admin di sisi kanan
+                if (isAdmin) {
+                    html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #4f46e5; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                    html += '<i class="fa fa-shield" style="font-size: 13px;"></i>';
+                    html += '</div>';
+                }
+
+                html += '</div>';
+            });
+
+            list.innerHTML = html;
+            if (body) body.scrollTop = body.scrollHeight;
+        }
+
+        var selectedAdminDeskFile = null;
+
+        window.handleAdminDeskFileSelected = function(input) {
+            if (input.files && input.files[0]) {
+                var file = input.files[0];
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('Ukuran file maksimal 10 MB');
+                    input.value = '';
+                    return;
+                }
+                selectedAdminDeskFile = file;
+                var bar = document.getElementById('adminDeskFilePreviewBar');
+                if (bar) {
+                    bar.style.display = 'flex';
+                    bar.innerHTML = '<span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i class="fa fa-paperclip text-primary"></i> <strong>' + escapeHtml(file.name) + '</strong> (' + Math.round(file.size/1024) + ' KB)</span>' +
+                        '<button type="button" onclick="clearAdminDeskFileAttachment()" style="background:none; border:none; color:#ef4444; font-size:13px; cursor:pointer;" title="Batal"><i class="fa fa-times-circle"></i></button>';
+                }
+            }
+        };
+
+        window.clearAdminDeskFileAttachment = function() {
+            selectedAdminDeskFile = null;
+            var inp = document.getElementById('adminDeskFileInput');
+            if (inp) inp.value = '';
+            var bar = document.getElementById('adminDeskFilePreviewBar');
+            if (bar) bar.style.display = 'none';
+        };
+
+        window.adminDeskQuickReply = function(text) {
+            var input = document.getElementById('adminDeskInputText');
+            if (input) {
+                input.value = text;
+                adminDeskSendReply();
+            }
+        };
+
+        window.handleAdminDeskKey = function(e) {
+            if (e.key === 'Enter') adminDeskSendReply();
+        };
+
+        window.adminDeskSendReply = function() {
+            var input = document.getElementById('adminDeskInputText');
+            var text = input ? input.value.trim() : '';
+            if (!text && !selectedAdminDeskFile) return;
+            if (!currentChatToken) return;
+
+            var btn = document.getElementById('adminDeskSendBtn');
+            btn.disabled = true;
+
+            var formData = new FormData();
+            formData.append('action', 'send_message');
+            formData.append('token', currentChatToken);
+            formData.append('sender_type', 'admin');
+            formData.append('sender_name', 'Administrator');
+            formData.append('pesan', text);
+            if (selectedAdminDeskFile) {
+                formData.append('file', selectedAdminDeskFile);
+            }
+
+            fetch(liveApiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                if (data.status === 'ok') {
+                    if (input) input.value = '';
+                    clearAdminDeskFileAttachment();
+                    loadAdminDeskChatMessages();
+                } else {
+                    alert(data.pesan || 'Gagal mengirim pesan');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+            });
+        };
+
+        window.adminDeskResolveSession = function() {
+            if (!currentChatToken) return;
+            if (!confirm('Tandai sesi bantuan ini telah selesai?')) return;
+
+            var formData = new FormData();
+            formData.append('action', 'close_session');
+            formData.append('token', currentChatToken);
+
+            fetch(liveApiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function() {
+                try { sessionStorage.removeItem('admin_desk_current_chat'); } catch(e) {}
+                backToAdminDeskList();
+            });
+        };
+
+        window.adminDeskDeleteCurrentSession = function() {
+            if (!currentChatToken) return;
+            if (!confirm('Hapus percakapan dengan pengguna ini secara permanen?')) return;
+
+            var formData = new FormData();
+            formData.append('action', 'delete_chat');
+            formData.append('token', currentChatToken);
+
+            fetch(liveApiUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                try { sessionStorage.removeItem('admin_desk_current_chat'); } catch(e) {}
+                alert(data.pesan || 'Percakapan berhasil dihapus');
+                backToAdminDeskList();
+            });
+        };
+
+        window.adminDeskPromptClean = function() {
+            var pilih = prompt(
+                "PEMBERSIHAN LIVE CHAT:\n\n" +
+                "1 = Hapus SEMUA sesi kosong (yang belum ada pesannya)\n" +
+                "reset = Hapus SEMUA chat & sesi uji coba (reset total)\n\n" +
+                "Ketik '1' atau 'reset' lalu klik OK:",
+                "1"
+            );
+            if (!pilih) return;
+            pilih = pilih.trim().toLowerCase();
+
+            if (pilih === '1') {
+                var formData = new FormData();
+                formData.append('action', 'clean_empty');
+                fetch(liveApiUrl, { method: 'POST', body: formData })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    alert(data.pesan || 'Selesai!');
+                    fetchAdminDeskCards();
+                });
+            } else if (pilih === 'reset') {
+                if (confirm('PERINGATAN: Seluruh riwayat obrolan dan sesi uji coba akan dihapus bersih secara permanen. Lanjutkan?')) {
+                    var formData = new FormData();
+                    formData.append('action', 'reset_all');
+                    fetch(liveApiUrl, { method: 'POST', body: formData })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        alert(data.pesan || 'Semua riwayat obrolan berhasil direset!');
+                        fetchAdminDeskCards();
+                    });
+                }
+            } else {
+                alert('Pilihan tidak valid.');
+            }
+        };
+
+        // Mulai polling berkala admin tiap 5 detik
+        fetchAdminDeskCards();
+        adminDeskPingTimer = setInterval(fetchAdminDeskCards, 5000);
+
+        // Pertahankan status buka & chat aktif jika sebelumnya sedang dibuka sebelum refresh
+        if (sessionStorage.getItem('admin_desk_open') === '1') {
+            toggleAdminDeskPopup();
+            var savedChat = sessionStorage.getItem('admin_desk_current_chat');
+            if (savedChat) {
+                try {
+                    var sc = JSON.parse(savedChat);
+                    if (sc && sc.token) {
+                        openAdminDeskChat(sc.token, sc.nama, sc.role, sc.keterangan, sc.isOnline, sc.foto);
+                    }
+                } catch(e) {}
+            }
+        }
+        return;
+    }
+
+    // =========================================================================
+    // B. LOGIKA CLIENT (SISWA, GURU, ORANG TUA, TAMU)
+    // =========================================================================
+    var liveUserData = {
+        user_type: 'umum',
+        id_user: '0',
+        nama: 'Tamu Madrasah',
+        keterangan: 'Layanan Informasi Publik',
+        foto: ''
+    };
+
+    // Kunci storage yang terisolasi per jenis user dan id_user agar tidak bercampur antara landing page dan akun siswa/guru:
+    var storageKey = 'madrasah_live_card_token_guest';
+    if (liveUserData.user_type === 'siswa' && liveUserData.id_user && liveUserData.id_user !== '0') {
+        storageKey = 'madrasah_live_card_token_siswa_' + liveUserData.id_user;
+    } else if (liveUserData.user_type === 'guru' && liveUserData.id_user && liveUserData.id_user !== '0') {
+        storageKey = 'madrasah_live_card_token_guru_' + liveUserData.id_user;
+    }
+
+    // Bersihkan token generic lama jika pernah tersimpan
+    localStorage.removeItem('madrasah_live_card_token');
+
+    var liveToken = localStorage.getItem(storageKey);
+    if (!liveToken) {
+        liveToken = 'tok_' + liveUserData.user_type + '_' + (liveUserData.id_user || 'guest') + '_' + Math.random().toString(36).substring(2, 10);
+        localStorage.setItem(storageKey, liveToken);
+    }
+
+    // Cek apakah pengguna saat ini adalah tamu / pengunjung umum (tanpa login akun)
+    var isGuest = (liveUserData.user_type === 'umum' || liveUserData.user_type === 'ortu' || !liveUserData.id_user || liveUserData.id_user === '0' || liveUserData.id_user === 0);
+    var hasMessagedKey = 'madrasah_live_has_messaged_' + liveToken;
+    var hasMessaged = (localStorage.getItem(hasMessagedKey) === '1');
+
+    // Cek nama tersimpan untuk tamu/orang tua
+    var savedGuestName = localStorage.getItem('madrasah_live_guest_name');
+    if (savedGuestName && (liveUserData.user_type === 'umum' || liveUserData.user_type === 'ortu')) {
+        liveUserData.nama = savedGuestName;
+        liveUserData.user_type = 'ortu';
+        liveUserData.keterangan = 'Wali Murid / Tamu';
+        setTimeout(function() {
+            var heading = document.getElementById('liveCardWelcomeHeading');
+            if (heading) heading.innerText = "Assalamu'alaikum, " + savedGuestName + '! 👋';
+            var inputGuest = document.getElementById('liveCardGuestName');
+            if (inputGuest) inputGuest.value = savedGuestName;
+        }, 100);
+    }
+
+    window.updateGuestName = function(val) {
+        var clean = val ? val.trim() : '';
+        if (clean) {
+            liveUserData.nama = clean;
+            liveUserData.user_type = 'ortu';
+            liveUserData.keterangan = 'Wali Murid / Tamu';
+            localStorage.setItem('madrasah_live_guest_name', clean);
+            var heading = document.getElementById('liveCardWelcomeHeading');
+            if (heading) heading.innerText = "Assalamu'alaikum, " + clean + '! 👋';
+            if (!isGuest || hasMessaged) {
+                runClientLivePing();
+            }
+        }
+    };
+
+    var isClientLiveOpen = false;
+    var clientPingTimer = null;
+
+    window.toggleClientLiveCardPopup = function() {
+        var popup = document.getElementById('clientLiveCardPopup');
+        var svgChat = document.getElementById('liveCardSvgChat');
+        var svgClose = document.getElementById('liveCardSvgClose');
+        var icon = document.getElementById('liveCardIcon');
+        if (!popup) return;
+        isClientLiveOpen = !isClientLiveOpen;
+
+        if (isClientLiveOpen) {
+            popup.classList.add('active');
+            if (window.repositionLiveCardPopup) window.repositionLiveCardPopup();
+            if (svgChat) svgChat.style.display = 'none';
+            if (svgClose) svgClose.style.display = 'block';
+            if (icon) icon.className = 'fa fa-times';
+            sessionStorage.setItem('client_live_card_open', '1');
+            document.getElementById('liveCardUnreadBadge').style.display = 'none';
+            
+            // Jika siswa/guru, atau tamu yang sudah pernah mengirim pesan sebelumnya:
+            if (!isGuest || hasMessaged) {
+                fetchClientLiveMessages();
+                if (!clientPingTimer) {
+                    runClientLivePing();
+                    clientPingTimer = setInterval(runClientLivePing, 5000);
+                }
+            }
+            setTimeout(function() {
+                var input = document.getElementById('liveCardInputText');
+                if (input) input.focus();
+            }, 250);
+        } else {
+            popup.classList.remove('active');
+            if (svgChat) svgChat.style.display = 'block';
+            if (svgClose) svgClose.style.display = 'none';
+            if (icon) icon.className = 'fa fa-comments-o';
+            sessionStorage.setItem('client_live_card_open', '0');
+        }
+    };
+
+    window.openRuangCurhatBK = function() {
+        toggleClientLiveCardPopup();
+        if (typeof $ !== 'undefined' && $('#modalTulisCurhat').length > 0) {
+            $('#modalTulisCurhat').modal('show');
+        } else {
+            var curhatUrl = (window.location.pathname.indexOf('/user') !== -1) ? 'index.php?pg=curhat_saya' : 'user/index.php?pg=curhat_saya';
+            window.location.href = curhatUrl;
+        }
+    };
+
+    window.quickSend = function(text) {
+        var input = document.getElementById('liveCardInputText');
+        if (input) {
+            input.value = text;
+            sendLiveMessage();
+        }
+    };
+
+    window.handleLiveKeyPress = function(e) {
+        if (e.key === 'Enter') sendLiveMessage();
+    };
+
+    var selectedClientFile = null;
+
+    window.handleLiveClientFileSelected = function(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Ukuran file maksimal 10 MB');
+                input.value = '';
+                return;
+            }
+            selectedClientFile = file;
+            var bar = document.getElementById('liveCardFilePreviewBar');
+            if (bar) {
+                bar.style.display = 'flex';
+                bar.innerHTML = '<span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><i class="fa fa-paperclip text-primary"></i> <strong>' + escapeHtml(file.name) + '</strong> (' + Math.round(file.size/1024) + ' KB)</span>' +
+                    '<button type="button" onclick="clearLiveClientFileAttachment()" style="background:none; border:none; color:#ef4444; font-size:13px; cursor:pointer;" title="Batal"><i class="fa fa-times-circle"></i></button>';
+            }
+        }
+    };
+
+    window.clearLiveClientFileAttachment = function() {
+        selectedClientFile = null;
+        var inp = document.getElementById('liveCardFileInput');
+        if (inp) inp.value = '';
+        var bar = document.getElementById('liveCardFilePreviewBar');
+        if (bar) bar.style.display = 'none';
+    };
+
+    window.sendLiveMessage = function() {
+        var input = document.getElementById('liveCardInputText');
+        var text = input ? input.value.trim() : '';
+        if (!text && !selectedClientFile) return;
+
+        var btn = document.getElementById('liveCardSendBtn');
+        btn.disabled = true;
+
+        var formData = new FormData();
+        formData.append('action', 'send_message');
+        formData.append('token', liveToken);
+        formData.append('sender_type', 'client');
+        formData.append('sender_name', liveUserData.nama);
+        formData.append('user_type', liveUserData.user_type);
+        formData.append('id_user', liveUserData.id_user || '');
+        formData.append('keterangan', liveUserData.keterangan || '');
+        formData.append('foto', liveUserData.foto || '');
+        formData.append('pesan', text);
+        if (selectedClientFile) {
+            formData.append('file', selectedClientFile);
+        }
+
+        fetch(liveApiUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            if (data.status === 'ok') {
+                if (input) input.value = '';
+                clearLiveClientFileAttachment();
+                localStorage.setItem(hasMessagedKey, '1');
+                hasMessaged = true;
+                fetchClientLiveMessages();
+                // Tamu sekarang sudah resmi aktif di live chat, mulai ping berkala
+                if (!clientPingTimer) {
+                    clientPingTimer = setInterval(runClientLivePing, 5000);
+                }
+            } else {
+                alert(data.pesan || 'Gagal mengirim pesan');
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+        });
+    };
+
+    function fetchClientLiveMessages() {
+        fetch(liveApiUrl + '?action=get_messages&token=' + encodeURIComponent(liveToken) + '&role=client')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'ok' && data.messages) {
+                renderClientLiveMessages(data.messages);
+            }
+        })
+        .catch(function() {});
+    }
+
+    function renderLiveMessageBody(m) {
+        var html = '';
+        var fileData = m.file;
+        if (!fileData && m.pesan && typeof m.pesan === 'string' && m.pesan.indexOf('[FILE:') === 0) {
+            try {
+                var jsonStr = m.pesan.replace(/^\[FILE:/, '').replace(/\]$/, '');
+                fileData = JSON.parse(jsonStr);
+            } catch(e) {}
+        }
+
+        if (fileData) {
+            var prefix = (window.location.pathname.indexOf('/login') !== -1 || window.location.pathname.indexOf('/user') !== -1) ? '../' : '';
+            var fileUrl = prefix + fileData.file_url;
+            var fileName = escapeHtml(fileData.file_name || 'Berkas');
+            var fileSize = fileData.file_size || '';
+            var fileExt = (fileData.file_ext || 'FILE').toUpperCase();
+            var category = fileData.file_category || 'other';
+
+            if (category === 'image') {
+                html += '<div style="margin-bottom:6px;">';
+                html += '<a href="' + fileUrl + '" target="_blank" download="' + fileName + '" style="display:block; text-decoration:none;">';
+                html += '<img src="' + fileUrl + '" alt="' + fileName + '" style="max-width:100%; max-height:200px; border-radius:10px; display:block; object-fit:cover; box-shadow:0 2px 6px rgba(0,0,0,0.15);">';
+                html += '</a>';
+                html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; font-size:11px; gap:8px;">';
+                html += '<span style="opacity:0.85; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + fileName + '</span>';
+                html += '<a href="' + fileUrl + '" target="_blank" download="' + fileName + '" style="padding:2px 8px; border-radius:10px; background:#ffffff; color:#0f172a; font-size:10px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
+                html += '<i class="fa fa-download"></i> Unduh</a>';
+                html += '</div>';
+                html += '</div>';
+            } else {
+                var iconClass = 'fa-file-text-o';
+                var iconBg = '#64748b';
+                if (category === 'pdf') {
+                    iconClass = 'fa-file-pdf-o';
+                    iconBg = '#ef4444';
+                } else if (category === 'word') {
+                    iconClass = 'fa-file-word-o';
+                    iconBg = '#2563eb';
+                } else if (category === 'excel') {
+                    iconClass = 'fa-file-excel-o';
+                    iconBg = '#10b981';
+                } else if (category === 'powerpoint') {
+                    iconClass = 'fa-file-powerpoint-o';
+                    iconBg = '#f97316';
+                } else if (category === 'archive') {
+                    iconClass = 'fa-file-archive-o';
+                    iconBg = '#8b5cf6';
+                }
+
+                html += '<div style="background:#ffffff; border-radius:10px; padding:8px 10px; display:flex; align-items:center; gap:9px; margin-bottom:5px; box-shadow:0 1px 4px rgba(0,0,0,0.12); color:#1e293b; text-align:left;">';
+                html += '<div style="width:34px; height:34px; border-radius:8px; background:' + iconBg + '; color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;">';
+                html += '<i class="fa ' + iconClass + '"></i>';
+                html += '</div>';
+                html += '<div style="flex:1; min-width:0;">';
+                html += '<div style="font-weight:700; font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#0f172a;" title="' + fileName + '">' + fileName + '</div>';
+                html += '<small style="color:#64748b; font-size:10px;">' + fileSize + ' • ' + fileExt + '</small>';
+                html += '</div>';
+                html += '<a href="' + fileUrl + '" target="_blank" download="' + fileName + '" style="width:28px; height:28px; border-radius:6px; background:#f1f5f9; color:#0f172a; display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; font-size:12px;" title="Unduh File">';
+                html += '<i class="fa fa-download"></i>';
+                html += '</a>';
+                html += '</div>';
+            }
+
+            if (fileData.caption && fileData.caption.trim()) {
+                html += '<div style="margin-top:4px; font-size:12.5px;">' + escapeHtml(fileData.caption) + '</div>';
+            }
+        } else {
+            html += escapeHtml(m.pesan);
+        }
+        return html;
+    }
+
+    function renderClientLiveMessages(messages) {
+        var listElem = document.getElementById('liveCardMessagesList');
+        if (!listElem) return;
+
+        var clientFoto = resolveAvatarUrl(liveUserData.foto);
+        var clientInitial = (liveUserData.nama) ? liveUserData.nama.trim().charAt(0).toUpperCase() : '?';
+        var clientBg = (liveUserData.user_type === 'guru') ? '#059669' : ((liveUserData.user_type === 'ortu') ? '#d97706' : '#6366f1');
+
+        var html = '';
+        messages.forEach(function(m) {
+            var isClient = (m.sender_type === 'client');
+            html += '<div style="display: flex; gap: 8px; margin-bottom: 8px; justify-content: ' + (isClient ? 'flex-end' : 'flex-start') + '; align-items: flex-end;">';
+
+            // Avatar Admin di sisi kiri jika pesan dari admin
+            if (!isClient) {
+                html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #7c3aed; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                html += '<i class="fa fa-shield" style="font-size: 13px;"></i>';
+                html += '</div>';
+            }
+
+            html += '<div class="live-bubble ' + (isClient ? 'live-bubble-client' : 'live-bubble-admin') + '" style="margin: 0; max-width: 78%;">';
+            if (!isClient) {
+                html += '<strong style="font-size:11px; display:block; margin-bottom:2px; color:#7c3aed;">' + escapeHtml(m.sender_name || 'Admin Madrasah') + '</strong>';
+            }
+            html += renderLiveMessageBody(m);
+            html += '<div class="live-bubble-meta">';
+            html += '<span>' + m.time + '</span>';
+            if (isClient) html += '<i class="fa fa-check" style="font-size:9px;"></i>';
+            html += '</div>';
+            html += '</div>';
+
+            // Avatar Siswa/Guru di sisi kanan jika pesan dari siswa/guru
+            if (isClient) {
+                html += '<div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background:' + clientBg + '; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">';
+                if (clientFoto) {
+                    html += '<img src="' + clientFoto + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">';
+                    html += '<span style="display:none;">' + clientInitial + '</span>';
+                } else {
+                    html += '<span>' + clientInitial + '</span>';
+                }
+                html += '</div>';
+            }
+
+            html += '</div>';
+        });
+
+        listElem.innerHTML = html;
+        var box = document.getElementById('liveCardMessagesBox');
+        if (box) box.scrollTop = box.scrollHeight;
+    }
+
+    var clientAudioCtx = null;
+    function getClientAudioCtx() {
+        if (!clientAudioCtx) {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) clientAudioCtx = new AudioCtx();
+        }
+        return clientAudioCtx;
+    }
+
+    document.addEventListener('click', function unlockClientAudio() {
+        var ctx = getClientAudioCtx();
+        if (ctx && ctx.state === 'suspended') {
+            ctx.resume();
+        }
+    }, { once: false });
+
+    function playClientChime() {
+        try {
+            var ctx = getClientAudioCtx();
+            if (!ctx) return;
+            var playTones = function() {
+                var now = ctx.currentTime;
+                var osc1 = ctx.createOscillator();
+                var gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, now);
+                gain1.gain.setValueAtTime(0.25, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+
+                var osc2 = ctx.createOscillator();
+                var gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880.00, now + 0.12);
+                gain2.gain.setValueAtTime(0.3, now + 0.12);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.12);
+                osc2.stop(now + 0.65);
+            };
+            if (ctx.state === 'suspended') {
+                ctx.resume().then(playTones);
+            } else {
+                playTones();
+            }
+        } catch(e) {}
+    }
+
+    var isInitialClientPing = true;
+    var previousClientUnread = 0;
+
+    function runClientLivePing() {
+        var formData = new FormData();
+        formData.append('action', 'ping');
+        formData.append('token', liveToken);
+        formData.append('user_type', liveUserData.user_type);
+        formData.append('id_user', liveUserData.id_user);
+        formData.append('nama', liveUserData.nama);
+        formData.append('keterangan', liveUserData.keterangan);
+        formData.append('foto', liveUserData.foto);
+
+        fetch(liveApiUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                var badge = document.getElementById('liveCardUnreadBadge');
+                if (badge) {
+                    if (data.unread > 0 && !isClientLiveOpen) {
+                        badge.innerText = data.unread;
+                        badge.style.display = 'flex';
+                    } else if (isClientLiveOpen) {
+                        badge.style.display = 'none';
+                        fetchClientLiveMessages();
+                    }
+                }
+
+                // Bunyikan nada notifikasi jika ada balasan baru dari admin
+                if (isInitialClientPing) {
+                    isInitialClientPing = false;
+                    previousClientUnread = data.unread || 0;
+                } else {
+                    if (data.unread > previousClientUnread) {
+                        playClientChime();
+                    }
+                    previousClientUnread = data.unread || 0;
+                }
+            }
+        })
+        .catch(function() {});
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Pertahankan status buka jika sebelumnya sedang dibuka sebelum refresh
+    if (sessionStorage.getItem('client_live_card_open') === '1') {
+        toggleClientLiveCardPopup();
+    }
+
+    // Untuk Siswa/Guru, atau Tamu yang memang sudah pernah mengirim pesan sebelumnya:
+    // Jalankan ping berkala tiap 5 detik untuk memeriksa balasan admin.
+    // Jika Tamu belum pernah mengirim pesan, JANGAN ping otomatis agar tidak mengotori sesi/database!
+    if (!isGuest || hasMessaged) {
+        runClientLivePing();
+        clientPingTimer = setInterval(runClientLivePing, 5000);
+    }
+
+})();
+</script>
+
+
+<div class="glasp-extension-toaster glasp-extension-toaster--glasp-extension" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 2147483647;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"></div></template></div><div class="glasp-extension-highlighter" data-glasp-print="hide" dir="ltr" style="text-align: start; display: block; width: 0px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 0px; left: 0px; height: 0px; z-index: 2147483646; pointer-events: none;"><template shadowrootmode="closed"><style>[data-glasp-page-press]{pointer-events:none!important}</style><style media="not all">*{-webkit-user-select:none!important;user-select:none!important}input,textarea,[contenteditable]:not([contenteditable="false"]),[contenteditable]:not([contenteditable="false"]) *{pointer-events:none!important}</style><div class="glasp-extension" style="font-family: inherit;"><style>
+.glasp-md.glasp-md { word-break: break-word; }
+.glasp-md.glasp-md > :first-child { margin-top: 0; }
+.glasp-md.glasp-md > :last-child { margin-bottom: 0; }
+.glasp-md.glasp-md h1, .glasp-md.glasp-md h2, .glasp-md.glasp-md h3, .glasp-md.glasp-md h4 {
+  margin: 0.4em 0 0.2em; font-size: 1.12em; font-weight: 700; line-height: 1.3; padding: 0;
+}
+.glasp-md.glasp-md p { margin: 0.6em 0; line-height: 1.55; }
+.glasp-md.glasp-md ul { list-style: disc outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md ol { list-style: decimal outside; padding-inline-start: 1.4em; margin: 0.6em 0; }
+.glasp-md.glasp-md li { display: list-item; margin: 0.32em 0; line-height: 1.5; }
+.glasp-md.glasp-md ul ul, .glasp-md.glasp-md ol ol, .glasp-md.glasp-md ul ol, .glasp-md.glasp-md ol ul { margin: 0.32em 0; }
+.glasp-md.glasp-md ul ul { list-style: circle outside; }
+.glasp-md.glasp-md strong { font-weight: 700; }
+.glasp-md.glasp-md em { font-style: italic; }
+.glasp-md.glasp-md a { color: rgb(51 121 255); text-decoration: none; }
+.glasp-md.glasp-md a:hover { text-decoration: underline; }
+.glasp-md.glasp-md blockquote {
+  margin: 0.6em 0; padding-block: 0.1em; padding-inline: 0.85em 0;
+  border-inline-start: 3px solid #dfe3ea; color: #5b616e;
+}
+.glasp-md.glasp-md blockquote p { margin: 0.25em 0; }
+.glasp-md.glasp-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+  background: #f1f5f9; color: #1f2937; padding: 0 3px; border-radius: 3px;
+}
+.glasp-md.glasp-md pre {
+  background: #f1f5f9; color: #1f2937; padding: 8px 10px; border-radius: 6px; overflow-x: auto; margin: 0.4em 0;
+}
+.glasp-md.glasp-md pre code { background: none; padding: 0; }
+/* Code is ALWAYS left-to-right, whatever the surrounding text does. Without this,
+   an RTL host page — or a dir=auto container that resolved RTL from an Arabic
+   first character — reorders every code line: an opening brace jumps to the far
+   end, and a leading comment marker lands on the wrong side. unicode-bidi
+   isolate also stops the code from reordering the prose around it.
+   NOTE: no backticks in this comment. It lives inside a JS template literal. */
+.glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
+.glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
+</style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

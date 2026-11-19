@@ -76,6 +76,61 @@ class PublicPortalTest extends TestCase
         ]);
     }
 
+    public function test_pilot_home_uses_man4_snapshot_only_in_local_environment(): void
+    {
+        $this->school->update(['npsn' => '20109988']);
+
+        $this->get('/')->assertInertia(fn (Assert $page) => $page
+            ->component('Public/School/Home')
+            ->where('publicPortalTheme', null));
+
+        $this->app->instance('env', 'local');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertViewIs('public.man4-banjar')
+            ->assertSee('Olimpiade Bahasa Arab')
+            ->assertViewHas('news', []);
+
+        $this->get('/e-layanan')->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Services/Index')
+            ->where('publicPortalTheme', 'man4-banjar'));
+    }
+
+    public function test_man4_home_uses_local_theme_and_supports_inertia_navigation(): void
+    {
+        $this->school->update([
+            'name' => 'MADRASAH ALIYAH NEGERI 4 BANJAR',
+            'npsn' => '30208801',
+        ]);
+        $article = SchoolNews::query()->create([
+            'school_id' => $this->school->id,
+            'author_id' => $this->admin->id,
+            'title' => 'Pameran Riset Madrasah',
+            'slug' => 'pameran-riset-madrasah',
+            'category' => 'prestasi',
+            'excerpt' => 'Pameran hasil riset siswa.',
+            'body' => 'Pameran menampilkan hasil riset siswa madrasah.',
+            'status' => 'published',
+            'published_at' => now()->subHour(),
+        ]);
+
+        $this->withHeader('X-Inertia', 'true')->get('/')
+            ->assertStatus(409)
+            ->assertHeader('X-Inertia-Location', route('public.home'));
+
+        $this->flushHeaders()->get('/')
+            ->assertOk()
+            ->assertViewIs('public.man4-banjar')
+            ->assertSee('href="/layanan/ptsp"', false)
+            ->assertSee('href="/ppdb"', false)
+            ->assertSee($article->title)
+            ->assertSee(route('core.news.public.show', $article->slug), false)
+            ->assertSee('/madrasah-theme/home.css')
+            ->assertDontSee('ajax_traffic.php')
+            ->assertViewHas('visits', fn (array $visits): bool => $visits['today'] === 1);
+    }
+
     public function test_e_layanan_catalog_and_public_gtk_directory_expose_only_public_fields(): void
     {
         Teacher::query()->create([
