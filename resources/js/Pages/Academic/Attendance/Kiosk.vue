@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import QrScanPanel from '@/components/QrScanPanel.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
+import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
@@ -31,20 +32,16 @@ const props = defineProps<{
 const QUEUE_KEY = `ss_kiosk_queue_${props.school.id}`;
 const kioskRootRef = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
-const videoRef = ref<HTMLVideoElement | null>(null);
 
 const scanMode = ref<'rfid' | 'qr'>('rfid');
 const selectedDeviceId = ref<number | null>(props.devices[0]?.id ?? null);
 const codeInput = ref('');
 const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true);
 const isFullscreen = ref(false);
-const cameraActive = ref(false);
-const cameraError = ref('');
 const gateMessage = ref('');
 const lastResult = ref<{ status: string; message: string; student?: { name: string; class_name: string } | null } | null>(null);
 const feed = ref<ScanFeedItem[]>([...props.recentScans]);
 const offlineQueue = ref<QueuedScanEvent[]>([]);
-let mediaStream: MediaStream | null = null;
 
 const loadQueue = () => {
     try {
@@ -143,29 +140,6 @@ const syncOfflineQueue = async () => {
     }
 };
 
-const toggleCamera = async () => {
-    cameraError.value = '';
-    if (cameraActive.value) {
-        mediaStream?.getTracks().forEach((t) => t.stop());
-        mediaStream = null;
-        cameraActive.value = false;
-        return;
-    }
-    if (!navigator.mediaDevices?.getUserMedia) {
-        cameraError.value = 'Peramban tidak mendukung akses kamera langsung; gunakan input scanner/manual.';
-        return;
-    }
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        if (videoRef.value) {
-            videoRef.value.srcObject = mediaStream;
-        }
-        cameraActive.value = true;
-    } catch {
-        cameraError.value = 'Izin kamera ditolak atau kamera tidak tersedia.';
-    }
-};
-
 const toggleFullscreen = async () => {
     if (!document.fullscreenElement && kioskRootRef.value?.requestFullscreen) {
         await kioskRootRef.value.requestFullscreen();
@@ -185,17 +159,30 @@ const triggerGate = async () => {
     gateMessage.value = data.message || 'Gate diperiksa.';
 };
 
+const currentClock = ref('');
+let clockTimer: ReturnType<typeof setInterval> | null = null;
+
+const updateClock = () => {
+    currentClock.value = new Intl.DateTimeFormat('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    }).format(new Date());
+};
+
 const onOnline = () => { isOnline.value = true; syncOfflineQueue(); };
 const onOffline = () => { isOnline.value = false; };
 
 onMounted(() => {
     loadQueue();
+    updateClock();
+    clockTimer = setInterval(updateClock, 1000);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
 });
 
 onBeforeUnmount(() => {
-    mediaStream?.getTracks().forEach((t) => t.stop());
+    if (clockTimer) clearInterval(clockTimer);
     window.removeEventListener('online', onOnline);
     window.removeEventListener('offline', onOffline);
 });
@@ -203,17 +190,20 @@ onBeforeUnmount(() => {
 
 <template>
     <Head title="Kios Presensi RFID & QR" />
-    <AppLayout title="Kios Presensi">
-        <div ref="kioskRootRef" class="kiosk-shell">
+    <OperationsLayout mode="kiosk" title="Kios Presensi">
+        <div ref="kioskRootRef" class="kiosk-shell kiosk-display">
             <header class="kiosk-head">
                 <div>
                     <h1>Kios Presensi — {{ school.name }}</h1>
                     <p>Mode tap kartu RFID atau pindai QR. Jendela deduplikasi: {{ operations.kiosk_dedup_seconds }} detik.</p>
                 </div>
                 <div class="kiosk-controls">
+                    <span v-if="currentClock" class="rounded-lg bg-white/10 px-3 py-1.5 font-mono text-sm font-bold text-amber-300 border border-white/20">
+                        {{ currentClock }}
+                    </span>
                     <StatusBadge :status="isOnline ? 'active' : 'warning'" :label="isOnline ? 'Online' : 'Offline'" />
                     <AppButton variant="secondary" size="sm" @click="scanMode = 'rfid'; inputRef?.focus()">Tap Kartu RFID</AppButton>
-                    <AppButton variant="secondary" size="sm" @click="scanMode = 'qr'; toggleCamera()">QR Kamera</AppButton>
+                    <AppButton variant="secondary" size="sm" @click="scanMode = 'qr'">QR Kamera</AppButton>
                     <AppButton variant="secondary" size="sm" @click="triggerGate">Gate</AppButton>
                     <AppButton variant="secondary" size="sm" @click="toggleFullscreen">{{ isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh' }}</AppButton>
                 </div>
@@ -225,7 +215,11 @@ onBeforeUnmount(() => {
                 <AppButton size="sm" @click="syncOfflineQueue">Sinkronkan Sekarang</AppButton>
             </div>
 
-            <section class="scanner-card">
+            <section class="scanner-card" aria-labelledby="kiosk-scanner-title">
+                <div class="kiosk-scan-prompt">
+                    <h2 id="kiosk-scanner-title">{{ scanMode === 'rfid' ? 'Tempelkan Kartu Pelajar' : 'Pindai Kode QR' }}</h2>
+                    <p>{{ scanMode === 'rfid' ? 'Dekatkan kartu ke pembaca RFID.' : 'Arahkan kamera ke kode QR kartu pelajar.' }}</p>
+                </div>
                 <form class="scan-form" @submit.prevent="submitScan">
                     <input
                         ref="inputRef"
@@ -238,10 +232,7 @@ onBeforeUnmount(() => {
                     <AppButton type="submit">Catat Scan</AppButton>
                 </form>
 
-                <div v-if="cameraActive" class="camera-box">
-                    <video ref="videoRef" autoplay playsinline muted />
-                </div>
-                <p v-if="cameraError" class="cam-error" role="alert">{{ cameraError }}</p>
+                <QrScanPanel v-if="scanMode === 'qr'" @detected="codeInput = $event; submitScan()" />
 
                 <div v-if="lastResult" class="result-banner" :class="`is-${lastResult.status}`" role="status">
                     <strong v-if="lastResult.student">{{ lastResult.student.name }} · {{ lastResult.student.class_name }}</strong>
@@ -267,11 +258,30 @@ onBeforeUnmount(() => {
                 <p v-else class="sub-text">Belum ada pemindaian pada sesi ini.</p>
             </section>
         </div>
-    </AppLayout>
+    </OperationsLayout>
 </template>
 
 <style scoped>
 .kiosk-shell { display: grid; gap: 1.25rem; background: var(--bg, #f5f7fb); }
+.kiosk-display {
+    padding: clamp(1rem, 3vw, 2.25rem);
+    border-radius: 1rem;
+    color: #fff;
+    background: radial-gradient(ellipse at top, #064e3b, #0f172a 62%);
+}
+.kiosk-display .kiosk-head h1 { color: #fff; }
+.kiosk-display .kiosk-head p { color: #d1fae5; }
+.kiosk-display .scanner-card, .kiosk-display .panel-card { color: #e2e8f0; background: #0f172a; }
+.kiosk-scan-prompt {
+    padding: clamp(1rem, 4vw, 2rem);
+    border-radius: .85rem;
+    background: #ecfdf5;
+    color: #064e3b;
+    text-align: center;
+}
+.kiosk-scan-prompt h2 { margin: 0 0 .35rem; font-size: clamp(1.35rem, 4vw, 2.2rem); font-weight: 800; }
+.kiosk-scan-prompt p { margin: 0; }
+.scan-form input { min-width: 0; }
 .kiosk-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
 .kiosk-head h1 { margin: 0; font-size: 1.45rem; }
 .kiosk-head p { margin: .2rem 0 0; color: var(--ink-soft, #536174); }
@@ -279,8 +289,6 @@ onBeforeUnmount(() => {
 .scanner-card, .panel-card { background: var(--surface, #fff); border: 1px solid var(--line, #dee4ee); border-radius: 14px; padding: 1.25rem; display: grid; gap: 1rem; }
 .scan-form { display: flex; flex-wrap: wrap; gap: .6rem; }
 .scan-form input { flex: 1 1 280px; min-height: 48px; padding: .6rem .9rem; border: 2px solid var(--primary, #3157a4); border-radius: 10px; font-size: 1rem; }
-.camera-box video { width: min(420px, 100%); border-radius: 12px; border: 1px solid var(--line, #dee4ee); }
-.cam-error { margin: 0; color: #b13f38; font-weight: 600; }
 .result-banner { padding: 1rem; border-radius: 12px; display: grid; gap: .25rem; font-weight: 600; }
 .result-banner.is-recorded { background: #e1f2e8; color: #1b5c3e; }
 .result-banner.is-duplicate, .result-banner.is-queued { background: #fff1d5; color: #80500d; }

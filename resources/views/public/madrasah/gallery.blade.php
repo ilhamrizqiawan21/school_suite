@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'PORTAL MADRASAH';
+  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
   $selectedCategory = trim((string) request()->query('kategori', ''));
 
   $dummyGallery = [
@@ -24,10 +24,11 @@
       ])->all()
       : $dummyGallery;
 
+  $categories = array_values(array_unique(array_column($items, 'category')));
+
   if ($selectedCategory !== '') {
       $items = array_values(array_filter($items, fn ($i) => mb_strtolower($i['category']) === mb_strtolower($selectedCategory)));
   }
-  $categories = ['Riset & Sains', 'Riset & Akademik', 'Prestasi Sains', 'Adiwiyata', 'Upacara & Hari Besar', 'Literasi', 'Olahraga'];
 @endphp
 
 @section('title', 'Galeri & Dokumentasi Kegiatan | ' . $schoolName)
@@ -53,8 +54,12 @@
 
   <!-- ================= KONTEN UTAMA ================= -->
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
+    @if (empty($albums))
+      <p class="mb-5 text-sm font-semibold text-slate-600">Konten contoh untuk pratinjau portal.</p>
+    @endif
+
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-4 border-b border-slate-200">
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+      <div class="madrasah-catalog-filters">
         <a href="/galeri" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
           Semua Album Foto ({{ count($items) }})
         </a>
@@ -64,19 +69,25 @@
           </a>
         @endforeach
       </div>
+      <div class="text-xs text-slate-500">
+        Total <b>{{ count($items) }}</b> dokumentasi foto
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       @forelse ($items as $album)
         <button
           type="button"
-          class="group relative rounded-2xl overflow-hidden shadow-sm h-56 cursor-pointer text-left border border-slate-200"
+          class="group relative rounded-3xl overflow-hidden shadow-sm h-56 cursor-pointer text-left border border-slate-200"
           data-open-dialog="lightboxModal"
           aria-haspopup="dialog"
           data-image="{{ $album['url'] }}"
           data-caption="{{ $album['caption'] }}"
         >
           <img src="{{ $album['url'] }}" alt="{{ $album['title'] }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+          <span class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-xs opacity-90 group-hover:scale-110 transition">
+            <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i>
+          </span>
           <span class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/20 to-transparent flex flex-col justify-end p-4">
             <span class="text-[10px] font-bold text-accent-yellow uppercase tracking-wider">{{ $album['category'] }}</span>
             <span class="text-white text-sm font-bold leading-snug mt-0.5 line-clamp-2">{{ $album['title'] }}</span>

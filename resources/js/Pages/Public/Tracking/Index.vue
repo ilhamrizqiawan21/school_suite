@@ -47,34 +47,34 @@ const submitLookup = () => {
 };
 
 const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso)) : '-';
+
+const categoryIcon = (value: string): string => {
+    const map: Record<string, string> = {
+        all: 'fa-solid fa-layer-group',
+        ptsp: 'fa-solid fa-stamp',
+        izin: 'fa-solid fa-file-signature',
+        legalisir: 'fa-solid fa-certificate',
+        mutasi: 'fa-solid fa-people-arrows',
+        surat_eksternal: 'fa-solid fa-envelope-open-text',
+        aduan: 'fa-solid fa-bullhorn',
+    };
+    return map[value] ?? 'fa-solid fa-ticket';
+};
 </script>
 
 <template>
     <Head :title="`Lacak Berkas Terpadu — ${school.name}`" />
-    <main class="public-site public-portal-page" :style="themeStyle">
+    <main class="public-site public-portal-page" data-madrasah-service="tracking" :style="themeStyle">
         <PublicHeader :school="school" />
 
         <section class="portal-container">
-            <header class="portal-hero">
-                <p class="eyebrow">Pelacakan Terpadu</p>
-                <h1>Lacak Tiket &amp; Berkas Layanan</h1>
+            <header class="portal-hero madrasah-service-hero">
+                <p class="madrasah-service-label"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Pusat Layanan Informasi &amp; Pelacakan Resmi</p>
+                <h1>Pusat Lacak Status Layanan Terpadu</h1>
                 <p>Pantau progres permohonan PTSP, izin siswa, legalisir, mutasi, surat dinas eksternal, dan pengaduan dari satu pintu.</p>
             </header>
 
             <section class="portal-card">
-                <div class="chip-row" role="group" aria-label="Filter kategori layanan pelacakan">
-                    <button
-                        v-for="cat in categories"
-                        :key="cat.value"
-                        type="button"
-                        class="chip-btn"
-                        :class="{ 'is-active': form.category === cat.value }"
-                        @click="selectCategory(cat.value)"
-                    >
-                        {{ cat.label }}
-                    </button>
-                </div>
-
                 <form class="lookup-form" @submit.prevent="submitLookup">
                     <FormField id="track-code" label="Nomor Tiket / Referensi" required :error="form.errors.code" v-slot="{ inputId, describedBy, invalid }">
                         <input :id="inputId" v-model="form.code" type="text" required placeholder="Contoh: PTSP-2026-XXXXXXXX atau SRT-2026-XXXXXXXX" :aria-describedby="describedBy" :aria-invalid="invalid" />
@@ -90,6 +90,31 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
                         </button>
                     </div>
                 </form>
+
+                <div class="chip-row" role="group" aria-label="Filter kategori layanan pelacakan">
+                    <button
+                        v-for="cat in categories"
+                        :key="cat.value"
+                        type="button"
+                        class="chip-btn"
+                        :aria-pressed="form.category === cat.value"
+                        :class="{ 'is-active': form.category === cat.value }"
+                        @click="selectCategory(cat.value)"
+                    >
+                        <i :class="categoryIcon(cat.value)" aria-hidden="true"></i>
+                        <span>{{ cat.label }}</span>
+                    </button>
+                </div>
+
+                <div class="tracking-hints">
+                    <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Contoh format tiket:</span>
+                    <code>PTSP-2026-...</code>
+                    <code>IZN-2026-...</code>
+                    <code>LEG-2026-...</code>
+                    <code>MTS-2026-...</code>
+                    <code>SRT-2026-...</code>
+                    <code>ADU-2026-...</code>
+                </div>
             </section>
 
             <section v-if="result" class="portal-card">
@@ -164,8 +189,10 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
 .portal-hero p { margin: 0; color: var(--public-muted, #526673); max-width: 65ch; }
 .portal-card { background: #fff; border: 1px solid var(--public-panel-border, #d8e2ee); border-radius: 16px; padding: 1.5rem; display: grid; gap: 1.25rem; }
 .chip-row { display: flex; flex-wrap: wrap; gap: .45rem; }
-.chip-btn { min-height: 40px; padding: .35rem .85rem; border-radius: 999px; border: 1px solid var(--public-panel-border, #d8e2ee); background: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.chip-btn { min-height: 40px; padding: .35rem .85rem; border-radius: 999px; border: 1px solid var(--public-panel-border, #d8e2ee); background: #fff; font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; }
 .chip-btn.is-active { background: var(--public-primary, #3157a4); border-color: var(--public-primary, #3157a4); color: #fff; }
+.tracking-hints { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; font-size: .78rem; color: var(--public-muted, #526673); padding-top: .25rem; border-top: 1px dashed #dce7e3; }
+.tracking-hints code { padding: .15rem .45rem; border-radius: 6px; background: #f1f5f9; color: #0f172a; font-size: .75rem; }
 .lookup-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; align-items: start; }
 .form-action { grid-column: 1 / -1; }
 .result-panel { display: grid; gap: 1rem; }

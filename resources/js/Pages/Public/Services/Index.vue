@@ -29,7 +29,7 @@ const categories = computed(() => {
         <PublicHeader :school="school" />
 
         <section class="portal-container">
-            <header class="portal-hero">
+            <header class="portal-hero madrasah-profile-hero">
                 <p class="eyebrow">Katalog E-Layanan</p>
                 <h1>Layanan Digital {{ school.name }}</h1>
                 <p>Cari dan buka layanan persuratan, kesiswaan, aduan, perpustakaan, pusat unduh, dan zona integritas.</p>

@@ -62,35 +62,11 @@ const facilityGallery = computed(() => props.gallery.length
         active="programs"
     >
         <section class="section-content" aria-label="Informasi akademik dan fasilitas">
-            <div class="info-grid">
-                <article class="info-card">
-                    <span class="card-number">01</span>
-                    <h2>Profil akademik</h2>
-                    <p>{{ school.about || 'Informasi program akademik sekolah sedang disiapkan.' }}</p>
-                    <dl>
-                        <div v-if="school.level"><dt>Jenjang</dt><dd>{{ school.level }}</dd></div>
-                        <div v-if="school.accreditation"><dt>Akreditasi</dt><dd>{{ school.accreditation }}</dd></div>
-                    </dl>
-                </article>
-                <article class="info-card">
-                    <span class="card-number">02</span>
-                    <h2>Fasilitas dan ruang belajar</h2>
-                    <p>Dokumentasi ruang dan kegiatan sekolah dapat dilihat melalui koleksi galeri publik.</p>
-                    <Link href="/galeri" class="card-link">Lihat galeri →</Link>
-                </article>
-                <article class="info-card">
-                    <span class="card-number">03</span>
-                    <h2>Kabar pembelajaran</h2>
-                    <p v-if="news.length">Baca kabar terbaru tentang kegiatan belajar dan program sekolah.</p>
-                    <p v-else>Berita pembelajaran akan tampil setelah dipublikasikan oleh sekolah.</p>
-                    <Link href="/berita" class="card-link">Buka berita →</Link>
-                </article>
-            </div>
             <section class="facility-gallery" aria-labelledby="facility-gallery-title">
                 <div class="gallery-heading">
                     <div>
                         <span class="section-label">Fasilitas unggulan</span>
-                        <h2 id="facility-gallery-title">Ruang yang mendukung proses belajar.</h2>
+                        <h2 id="facility-gallery-title">Sarana &amp; Prasarana</h2>
                     </div>
                     <p>{{ gallery.length ? 'Dokumentasi ruang dan kegiatan yang diterbitkan sekolah.' : 'Contoh visual fasilitas sekolah. Foto resmi dapat diterbitkan melalui galeri.' }}</p>
                 </div>
@@ -104,6 +80,27 @@ const facilityGallery = computed(() => props.gallery.length
                     </figure>
                 </div>
             </section>
+            <div class="info-grid">
+                <article class="info-card">
+                    <h2>Profil akademik</h2>
+                    <p>{{ school.about || 'Informasi program akademik sekolah sedang disiapkan.' }}</p>
+                    <dl>
+                        <div v-if="school.level"><dt>Jenjang</dt><dd>{{ school.level }}</dd></div>
+                        <div v-if="school.accreditation"><dt>Akreditasi</dt><dd>{{ school.accreditation }}</dd></div>
+                    </dl>
+                </article>
+                <article class="info-card">
+                    <h2>Fasilitas dan ruang belajar</h2>
+                    <p>Dokumentasi ruang dan kegiatan sekolah dapat dilihat melalui koleksi galeri publik.</p>
+                    <Link href="/galeri" class="card-link">Lihat galeri →</Link>
+                </article>
+                <article class="info-card">
+                    <h2>Kabar pembelajaran</h2>
+                    <p v-if="news.length">Baca kabar terbaru tentang kegiatan belajar dan program sekolah.</p>
+                    <p v-else>Berita pembelajaran akan tampil setelah dipublikasikan oleh sekolah.</p>
+                    <Link href="/berita" class="card-link">Buka berita →</Link>
+                </article>
+            </div>
             <div v-if="gallery.length" class="resource-strip">
                 <span>Portofolio tersedia</span>
                 <strong>{{ gallery.length }} koleksi foto sekolah</strong>
@@ -117,7 +114,6 @@ const facilityGallery = computed(() => props.gallery.length
 .section-content { padding-bottom: 1rem; }
 .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .info-card { display: grid; align-content: start; gap: .7rem; min-height: 240px; padding: 1.35rem; background: #fffdf8; border: 1px solid #ded7c9; border-radius: .8rem; }
-.card-number { color: #9a7329; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .08em; }
 .info-card h2 { margin: 0; font-family: var(--font-ui); font-size: 1.6rem; font-weight: var(--weight-regular); }
 .info-card p { margin: 0; color: #526673; font-size: var(--type-md); line-height: 1.65; }
 .info-card dl { display: grid; gap: .45rem; margin: auto 0 0; }
@@ -125,14 +121,13 @@ const facilityGallery = computed(() => props.gallery.length
 .info-card dt { color: #526673; font-size: var(--type-meta); }.info-card dd { margin: 0; font-size: var(--type-sm); font-weight: var(--weight-bold); }
 .card-link, .resource-strip a { color: #9a7329; font-size: var(--type-sm); font-weight: var(--weight-bold); text-decoration: none; }
 .card-link { align-self: end; margin-top: auto; }
-.facility-gallery { margin-top: 6rem; }
+.facility-gallery { margin-bottom: 2rem; }
 .gallery-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 1.5rem; }
 .section-label { color: #9a7329; font-size: var(--type-meta); font-weight: var(--weight-bold); letter-spacing: .09em; text-transform: uppercase; }
 .gallery-heading h2 { max-width: 620px; margin: .6rem 0 0; font-family: var(--font-ui); font-size: clamp(2rem, 4vw, 3.7rem); font-weight: var(--weight-regular); letter-spacing: -.05em; line-height: 1.03; }
 .gallery-heading p { max-width: 300px; margin: 0; color: #526673; font-size: var(--type-md); line-height: 1.6; }
 .facility-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 1rem; }
 .facility-card { display: grid; grid-template-rows: 250px auto; overflow: hidden; margin: 0; background: #fffdf8; border: 1px solid #ded7c9; border-radius: .8rem; }
-.facility-card:first-child { grid-row: span 2; grid-template-rows: 100% auto; }
 .facility-card img { width: 100%; height: 100%; min-height: 0; object-fit: cover; }
 .facility-card figcaption { display: grid; gap: .35rem; padding: 1rem; }.facility-card strong { font-family: var(--font-ui); font-size: 1.35rem; font-weight: var(--weight-regular); }.facility-card span { color: #526673; font-size: var(--type-meta); line-height: 1.55; }
 .resource-strip { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; padding: 1rem 1.2rem; border-top: 1px solid #cfc8ba; border-bottom: 1px solid #cfc8ba; }

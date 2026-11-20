@@ -80,6 +80,7 @@ Route::middleware(['auth', 'role:admin,operator,ptsp,receptionist', 'throttle:se
     ->group(function (): void {
         Route::get('/', [GuestbookController::class, 'index'])->name('index');
         Route::post('/', [GuestbookController::class, 'store'])->name('store');
+        Route::get('/{visit}/foto', [GuestbookController::class, 'photo'])->whereNumber('visit')->name('photo');
         Route::post('/{visit}/pulang', [GuestbookController::class, 'checkOut'])->whereNumber('visit')->name('checkout');
         Route::get('/ekspor', [GuestbookController::class, 'export'])->name('export');
     });

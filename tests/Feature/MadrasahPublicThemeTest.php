@@ -19,9 +19,11 @@ class MadrasahPublicThemeTest extends TestCase
     {
         parent::setUp();
 
+        config(['public_portal.theme' => 'madrasah']);
+
         $this->school = School::query()->create([
             'name' => 'MA Contoh Unggul Nusantara',
-            'npsn' => '30208801',
+            'npsn' => '30990001',
             'level' => 'MA',
             'accreditation' => 'A (Unggul)',
             'address' => 'Jl. Pendidikan No. 10, Contoh',
@@ -64,5 +66,51 @@ class MadrasahPublicThemeTest extends TestCase
 
         $this->get('/galeri')
             ->assertSee('Galeri &amp; Kegiatan Madrasah', false);
+    }
+
+    public function test_blade_catalogues_and_inertia_services_share_the_same_public_navigation(): void
+    {
+        foreach (['/', '/berita', '/akademik-fasilitas', '/layanan/ptsp', '/lacak'] as $uri) {
+            $this->get($uri)
+                ->assertOk()
+                ->assertSee('data-madrasah-navigation', false)
+                ->assertSee('href="/layanan/buku-tamu"', false)
+                ->assertSee('href="/galeri/video"', false);
+        }
+
+        $this->get('/login')
+            ->assertOk()
+            ->assertDontSee('data-madrasah-navigation', false);
+    }
+
+    public function test_inertia_navigation_keeps_madrasah_templates_and_query_parameters(): void
+    {
+        foreach (['/profil-sekolah', '/direktori-gtk', '/berita', '/prestasi', '/galeri', '/galeri/video'] as $path) {
+            $uri = $path.'?q=contoh';
+
+            $this->withHeader('X-Inertia', 'true')->get($uri)
+                ->assertStatus(409)
+                ->assertHeader('X-Inertia-Location', url($uri));
+        }
+    }
+
+    public function test_video_gallery_serves_local_demo_media_without_source_school_links(): void
+    {
+        $this->get('/galeri/video')
+            ->assertOk()
+            ->assertSee('Video Contoh')
+            ->assertSee('Koleksi Video &amp; Dokumentasi', false)
+            ->assertSee('Semua Video (6)')
+            ->assertSee('/madrasah-theme/images/videos/tur-kampus.webp')
+            ->assertSee('/madrasah-theme/images/videos/tur-kampus.webm')
+            ->assertDontSee('youtube.com')
+            ->assertDontSee('MAN 4 BANJAR');
+
+        $this->get('/galeri/video?kategori=Prestasi')
+            ->assertOk()
+            ->assertSee('Praktikum Sains')
+            ->assertDontSee('Orientasi Siswa Baru');
+
+        $this->assertFileExists(public_path('madrasah-theme/images/videos/tur-kampus.webm'));
     }
 }

@@ -1,0 +1,605 @@
+.reference-legalisir .sop-poster {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(2, 132, 199, 0.12);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            position: relative;
+        }
+.reference-legalisir .sop-header-banner {
+            background: radial-gradient(circle at 50% 20%, #0369a1 0%, #0c4a6e 80%, #082f49 100%);
+            color: #ffffff;
+            padding: 22px 20px 18px 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 4px solid #38bdf8;
+        }
+.reference-legalisir .sop-header-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.6;
+        }
+.reference-legalisir .sop-title-badge {
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #bae6fd;
+            margin-bottom: 2px;
+        }
+.reference-legalisir .sop-main-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+.reference-legalisir .sop-quote-box {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(186, 230, 253, 0.4);
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-size: 13px;
+            font-style: italic;
+            color: #e0f2fe;
+            font-weight: 600;
+        }
+.reference-legalisir .sop-quote-box .quote-mark {
+            color: #38bdf8;
+            font-size: 17px;
+            font-weight: 900;
+        }
+.reference-legalisir .sop-body {
+            padding: 22px 20px;
+            background: #fcfdfd;
+        }
+.reference-legalisir .sop-step-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 16px;
+            transition: all 0.25s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            position: relative;
+        }
+.reference-legalisir .sop-step-row:hover {
+            border-color: #0284c7;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.12);
+            transform: translateY(-2px);
+        }
+.reference-legalisir .sop-pill-num {
+            min-width: 54px;
+            height: 48px;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 900;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+            margin-right: 16px;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+.reference-legalisir .sop-icon-wrap {
+            width: 66px;
+            height: 66px;
+            margin-right: 16px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+.reference-legalisir .sop-icon-wrap svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.08));
+        }
+.reference-legalisir .sop-content-wrap {
+            flex-grow: 1;
+            font-size: 13.5px;
+            color: #1e293b;
+            line-height: 1.55;
+        }
+.reference-legalisir .sop-content-wrap ul {
+            margin-bottom: 0;
+            padding-left: 18px;
+        }
+.reference-legalisir .sop-content-wrap li {
+            margin-bottom: 4px;
+        }
+.reference-legalisir .sop-content-wrap li:last-child {
+            margin-bottom: 0;
+        }
+.reference-legalisir .sop-badge-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: #0284c7;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 11px;
+            border-radius: 50%;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+.reference-legalisir .sop-sub-item {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 5px;
+        }
+.reference-legalisir .sop-sub-item span {
+            font-size: 13px;
+        }
+.reference-legalisir .sop-estimasi-box {
+            border: 2px solid #0284c7;
+            border-radius: 12px;
+            overflow: hidden;
+            text-align: center;
+            background: #ffffff;
+            min-width: 130px;
+            margin-left: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.08);
+        }
+.reference-legalisir .sop-estimasi-head {
+            padding: 5px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0284c7;
+            line-height: 1.2;
+        }
+.reference-legalisir .sop-estimasi-head .sop-days {
+            display: block;
+            font-size: 15px;
+            font-weight: 900;
+            color: #0369a1;
+            margin-top: 1px;
+        }
+.reference-legalisir .sop-estimasi-foot {
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 3px 5px;
+            letter-spacing: 0.3px;
+        }
+.reference-legalisir .sop-info-bar {
+            background: #f0fdf4;
+            border: 1.5px dashed #16a34a;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #15803d;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 16px;
+        }
+.reference-legalisir .sop-footer-slogan {
+            background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-top: 3px solid #38bdf8;
+        }
+.reference-legalisir .sop-mantab-logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: #bae6fd;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+.reference-legalisir .sop-mantab-sub {
+            font-size: 10.5px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+.reference-legalisir .sop-footer-quote {
+            font-size: 12px;
+            color: #f1f5f9;
+            max-width: 360px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+        }
+.reference-legalisir .sop-step-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px 12px;
+            }
+.reference-legalisir .sop-step-row-top {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+.reference-legalisir .sop-pill-num {
+                min-width: 44px;
+                height: 40px;
+                font-size: 19px;
+                margin-right: 10px;
+            }
+.reference-legalisir .sop-icon-wrap {
+                width: 50px;
+                height: 50px;
+                margin-right: 10px;
+            }
+.reference-legalisir .sop-estimasi-box {
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
+.reference-legalisir .sop-main-title {
+                font-size: 20px;
+            }
+.reference-mutasi .sop-poster {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(13, 92, 58, 0.12);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            position: relative;
+        }
+.reference-mutasi .sop-header-banner {
+            background: radial-gradient(circle at 50% 20%, #0d5c3a 0%, #064e3b 80%, #043829 100%);
+            color: #ffffff;
+            padding: 22px 20px 18px 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 4px solid #d97706;
+        }
+.reference-mutasi .sop-header-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.6;
+        }
+.reference-mutasi .sop-kemenag-logo {
+            width: 75px;
+            height: 75px;
+            margin: 0 auto 12px auto;
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+.reference-mutasi .sop-kemenag-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+.reference-mutasi .sop-title-badge {
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #fef08a;
+            margin-bottom: 2px;
+        }
+.reference-mutasi .sop-main-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+.reference-mutasi .sop-quote-box {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(254, 240, 138, 0.4);
+            border-radius: 30px;
+            padding: 6px 20px;
+            font-size: 13.5px;
+            font-style: italic;
+            color: #fef9c3;
+            font-weight: 600;
+        }
+.reference-mutasi .sop-quote-box .quote-mark {
+            color: #f59e0b;
+            font-size: 18px;
+            font-weight: 900;
+        }
+.reference-mutasi .sop-body {
+            padding: 25px 25px;
+            background: #fcfdfd;
+        }
+.reference-mutasi .sop-step-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 18px;
+            transition: all 0.25s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            position: relative;
+        }
+.reference-mutasi .sop-step-row:hover {
+            border-color: #10b981;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.12);
+            transform: translateY(-2px);
+        }
+.reference-mutasi .sop-pill-num {
+            min-width: 58px;
+            height: 52px;
+            background: linear-gradient(135deg, #0d5c3a 0%, #064e3b 100%);
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 900;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(13, 92, 58, 0.3);
+            margin-right: 18px;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+.reference-mutasi .sop-icon-wrap {
+            width: 72px;
+            height: 72px;
+            margin-right: 18px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+.reference-mutasi .sop-icon-wrap svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.08));
+        }
+.reference-mutasi .sop-content-wrap {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #1e293b;
+            line-height: 1.55;
+        }
+.reference-mutasi .sop-content-wrap ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+.reference-mutasi .sop-content-wrap li {
+            margin-bottom: 4px;
+        }
+.reference-mutasi .sop-content-wrap li:last-child {
+            margin-bottom: 0;
+        }
+.reference-mutasi .sop-badge-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: #0d5c3a;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 11px;
+            border-radius: 50%;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+.reference-mutasi .sop-sub-item {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 5px;
+        }
+.reference-mutasi .sop-sub-item span {
+            font-size: 13.5px;
+        }
+.reference-mutasi .sop-estimasi-box {
+            border: 2px solid #0d5c3a;
+            border-radius: 12px;
+            overflow: hidden;
+            text-align: center;
+            background: #ffffff;
+            min-width: 135px;
+            margin-left: 15px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(13, 92, 58, 0.08);
+        }
+.reference-mutasi .sop-estimasi-head {
+            padding: 6px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #0d5c3a;
+            line-height: 1.2;
+        }
+.reference-mutasi .sop-estimasi-head .sop-days {
+            display: block;
+            font-size: 17px;
+            font-weight: 900;
+            color: #064e3b;
+            margin-top: 1px;
+        }
+.reference-mutasi .sop-estimasi-foot {
+            background: #0d5c3a;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 6px;
+            letter-spacing: 0.3px;
+        }
+.reference-mutasi .sop-step-row.blue:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
+        }
+.reference-mutasi .sop-header-banner-blue {
+            background: radial-gradient(circle at 50% 20%, #1e40af 0%, #0f172a 80%, #0b1120 100%);
+            border-bottom: 4px solid #38bdf8;
+        }
+.reference-mutasi .sop-pill-num.blue {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
+        }
+.reference-mutasi .sop-badge-num.blue {
+            background: #1d4ed8;
+        }
+.reference-mutasi .sop-estimasi-box.blue {
+            border: 2px solid #1d4ed8;
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.08);
+        }
+.reference-mutasi .sop-estimasi-head.blue {
+            color: #1d4ed8;
+        }
+.reference-mutasi .sop-estimasi-head.blue .sop-days {
+            color: #1e3a8a;
+        }
+.reference-mutasi .sop-estimasi-foot.blue {
+            background: #1d4ed8;
+        }
+.reference-mutasi .sop-info-bar.blue {
+            background: #eff6ff;
+            border: 1.5px dashed #3b82f6;
+            color: #1e40af;
+        }
+.reference-mutasi .sop-footer-slogan.blue {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            border-top: 3px solid #38bdf8;
+        }
+.reference-mutasi .sop-info-bar {
+            background: #ecfdf5;
+            border: 1.5px dashed #059669;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 13.5px;
+            color: #065f46;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 18px;
+        }
+.reference-mutasi .sop-footer-slogan {
+            background: linear-gradient(135deg, #064e3b 0%, #0d5c3a 100%);
+            border-radius: 14px;
+            padding: 16px 22px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-top: 3px solid #d97706;
+        }
+.reference-mutasi .sop-mantab-logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #fef08a;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+.reference-mutasi .sop-mantab-sub {
+            font-size: 11px;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+.reference-mutasi .sop-footer-quote {
+            font-size: 12.5px;
+            color: #f1f5f9;
+            max-width: 400px;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+        }
+.reference-mutasi .sop-flow-toggle-btn {
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+.reference-mutasi .sop-flow-toggle-btn.btn-masuk {
+            background: #e8f8f0;
+            color: #0d5c3a;
+            border-color: #10b981;
+        }
+.reference-mutasi .sop-flow-toggle-btn.btn-masuk.active {
+            background: #0d5c3a;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(13, 92, 58, 0.35);
+        }
+.reference-mutasi .sop-flow-toggle-btn.btn-keluar {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #3b82f6;
+        }
+.reference-mutasi .sop-flow-toggle-btn.btn-keluar.active {
+            background: #1d4ed8;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
+        }
+.reference-mutasi .sop-step-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 14px 14px;
+            }
+.reference-mutasi .sop-step-row-top {
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+                width: 100%;
+            }
+.reference-mutasi .sop-pill-num {
+                min-width: 46px;
+                height: 42px;
+                font-size: 20px;
+                margin-right: 12px;
+            }
+.reference-mutasi .sop-icon-wrap {
+                width: 54px;
+                height: 54px;
+                margin-right: 12px;
+            }
+.reference-mutasi .sop-estimasi-box {
+                margin-left: 0;
+                margin-top: 12px;
+                width: 100%;
+            }
+.reference-mutasi .sop-main-title {
+                font-size: 20px;
+            }
+.reference-sop-tabs { display:flex; justify-content:center; gap:8px; margin-bottom:20px; }
+.reference-sop-tabs button { padding:12px 20px; border:1px solid #059669; border-radius:24px; color:#047857; background:white; font-size:13px; font-weight:700; }
+.reference-sop-tabs button[aria-pressed="true"] { background:#047857; color:white; }
+.reference-legalisir .d-flex, .reference-mutasi .d-flex { display:flex; }
+.reference-legalisir .align-items-center, .reference-mutasi .align-items-center { align-items:center; }
+.reference-legalisir .font-weight-bold, .reference-mutasi .font-weight-bold { font-weight:700; }
+.reference-legalisir .mb-1, .reference-mutasi .mb-1 { margin-bottom:4px; }
+.reference-legalisir .sop-icon-wrap svg, .reference-mutasi .sop-icon-wrap svg { width:100%; height:100%; }
+@media(max-width:767px) {
+ .reference-legalisir .sop-step-row, .reference-mutasi .sop-step-row { flex-direction:column; align-items:stretch; gap:14px; padding:20px 16px; }
+ .reference-legalisir .sop-step-row-top, .reference-mutasi .sop-step-row-top { justify-content:center; }
+ .reference-legalisir .sop-main-title, .reference-mutasi .sop-main-title { font-size:24px; }
+ .reference-sop-tabs { flex-wrap:wrap; }
+}

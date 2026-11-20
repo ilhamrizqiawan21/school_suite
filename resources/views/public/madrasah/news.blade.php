@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'PORTAL MADRASAH';
+  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
   $q = trim((string) request()->query('q', ''));
   $selectedCategory = trim((string) request()->query('kategori', ''));
 
@@ -61,13 +61,14 @@
       ])->all()
       : $dummyNews;
 
+  $categories = array_values(array_unique(array_column($articles, 'category')));
+
   if ($selectedCategory !== '') {
       $articles = array_values(array_filter($articles, fn ($a) => mb_strtolower((string) $a['category']) === mb_strtolower($selectedCategory)));
   }
   if ($q !== '') {
       $articles = array_values(array_filter($articles, fn ($a) => str_contains(mb_strtolower($a['title'].' '.$a['excerpt']), mb_strtolower($q))));
   }
-  $categories = ['Prestasi Sains', 'Keagamaan & Tahfidz', 'Adiwiyata & Lingkungan', 'Riset & Akademik'];
 @endphp
 
 @section('title', 'Warta & Berita Resmi | ' . $schoolName)
@@ -89,9 +90,12 @@
         </p>
 
         <form action="/berita" method="GET" class="mt-6 flex flex-col sm:flex-row gap-2 max-w-xl">
+          @if ($selectedCategory !== '')
+            <input type="hidden" name="kategori" value="{{ $selectedCategory }}">
+          @endif
           <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" name="q" value="{{ $q }}" placeholder="Cari judul berita atau agenda..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <input type="search" name="q" aria-label="Cari berita" value="{{ $q }}" placeholder="Cari judul berita atau agenda..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
           </div>
           <button type="submit" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm">
             Cari Warta
@@ -103,16 +107,23 @@
 
   <!-- ================= LISTING KATALOG BERITA & FILTER ================= -->
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
+    @if (empty($news))
+      <p class="mb-5 text-sm font-semibold text-slate-600">Konten contoh untuk pratinjau portal.</p>
+    @endif
+
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-4 border-b border-slate-200">
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+      <div class="madrasah-catalog-filters">
         <a href="/berita" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
           Semua Kategori ({{ count($articles) }})
         </a>
         @foreach ($categories as $cat)
-          <a href="/berita?kategori={{ urlencode($cat) }}" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === $cat ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+          <a href="/berita?kategori={{ urlencode($cat) }}&amp;q={{ urlencode($q) }}" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === $cat ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             {{ $cat }}
           </a>
         @endforeach
+      </div>
+      <div class="text-xs text-slate-500">
+        Menampilkan <b>{{ count($articles) }}</b> warta berita
       </div>
     </div>
 

@@ -48,15 +48,21 @@ class PublicPortalService
             ? $this->recordAnonymousVisit($schoolId)
             : $this->visitStats($schoolId);
 
+        $profile = [
+            ...$school->only([
+                'name', 'legal_name', 'npsn', 'level', 'school_status', 'accreditation',
+                'address', 'phone', 'email', 'principal_name', 'website',
+                'about', 'principal_message', 'vision', 'mission',
+            ]),
+            'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+        ];
+
+        if (app()->isLocal() && (string) $school->npsn === '20109988' && config('public_portal.theme') !== 'madrasah') {
+            $profile = ['name' => 'Madrasah Contoh Nusantara'];
+        }
+
         return [
-            'profile' => [
-                ...$school->only([
-                    'name', 'legal_name', 'level', 'school_status', 'accreditation',
-                    'address', 'phone', 'email', 'principal_name', 'website',
-                    'about', 'principal_message', 'vision', 'mission',
-                ]),
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
-            ],
+            'profile' => $profile,
             'visits' => $visits,
             'prayer' => $this->prayerTimesForSchool($school),
             'downloads' => $this->publishedDownloads($schoolId),

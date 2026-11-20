@@ -9,6 +9,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 interface VisitRow {
+    photo_url?: string | null;
     id: number;
     visit_code: string;
     visitor_name: string;
@@ -134,6 +135,7 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
                             <tr v-for="v in visits" :key="v.id">
                                 <td>
                                     <strong>{{ v.visitor_name }}</strong>
+                                    <a v-if="v.photo_url" :href="v.photo_url" target="_blank" rel="noopener noreferrer" class="block text-xs text-emerald-700 underline">Lihat foto kunjungan</a>
                                     <div class="sub-text">{{ v.visit_code }} · {{ v.visitor_organization || 'Perorangan' }}</div>
                                 </td>
                                 <td>

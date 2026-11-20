@@ -43,13 +43,14 @@ const applyFilter = () => {
 <template>
     <Head :title="`Direktori Alumni — ${school.name}`" />
 
-    <div class="min-h-screen bg-[#f8f6f0]" :style="themeStyle">
+    <div class="min-h-screen bg-[#f8f6f0]" data-madrasah-service="alumni" :style="themeStyle">
         <PublicHeader :school="school" />
 
         <main class="mx-auto max-w-5xl px-4 py-10 space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="madrasah-service-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Direktori &amp; Jejaring Alumni</h1>
+                    <p class="madrasah-service-label"><i class="fa-solid fa-users" aria-hidden="true"></i> Ikatan Keluarga Alumni</p>
+                    <h1 class="text-2xl font-bold text-slate-900">Direktori Temu Alumni &amp; Jejaring Almamater</h1>
                     <p class="mt-1 text-sm text-slate-600">Hanya menampilkan alumni yang telah dimoderasi dan menyetujui publikasi atribut profil.</p>
                 </div>
                 <Link href="/alumni" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">

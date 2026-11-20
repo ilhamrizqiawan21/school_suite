@@ -719,6 +719,48 @@ class PtspAndTataUsahaTest extends TestCase
         );
     }
 
+    public function test_guestbook_photo_is_private_and_restricted_to_authorized_school_staff(): void
+    {
+        $payload = [
+            'visitor_name' => 'Tamu Contoh Foto',
+            'visitor_phone' => '0800000000',
+            'category' => 'tamu_dinas',
+            'purpose' => 'Kunjungan contoh',
+            'photo' => UploadedFile::fake()->image('foto.jpg', 640, 480),
+        ];
+
+        $this->post('/layanan/buku-tamu', $payload)->assertRedirect('/layanan/buku-tamu');
+        $visit = GuestbookVisit::query()->where('visitor_name', 'Tamu Contoh Foto')->sole();
+        $photos = Storage::disk('local')->files("schools/{$this->schoolA->id}/guestbook/{$visit->id}");
+        $this->assertCount(1, $photos);
+        Storage::disk('public')->assertMissing($photos[0]);
+
+        $url = "/administrasi/buku-tamu/{$visit->id}/foto";
+        $this->get($url)->assertRedirect('/login');
+        $this->actingAs($this->teacherA)->get($url)->assertForbidden();
+        $this->actingAs($this->operatorB)->get($url)->assertNotFound();
+        $this->actingAs($this->receptionistA)->get($url)
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        $this->actingAs($this->receptionistA)->get('/administrasi/buku-tamu')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('visits.0.photo_url', route('administration.guestbook.admin.photo', $visit->id)));
+    }
+
+    public function test_guestbook_rejects_invalid_photo_before_recording_the_visit(): void
+    {
+        $this->post('/layanan/buku-tamu', [
+            'visitor_name' => 'Foto Tidak Valid',
+            'visitor_phone' => '0800000000',
+            'category' => 'tamu_dinas',
+            'purpose' => 'Kunjungan contoh',
+            'photo' => UploadedFile::fake()->create('foto.jpg', 20, 'text/plain'),
+        ])->assertSessionHasErrors('photo');
+
+        $this->assertDatabaseMissing('guestbook_visits', ['visitor_name' => 'Foto Tidak Valid']);
+    }
+
     private function createUser(School $school, int $roleId, string $email, string $username): User
     {
         return User::query()->create([

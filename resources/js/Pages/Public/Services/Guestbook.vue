@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
@@ -32,25 +32,130 @@ const form = useForm({
     host_name: '',
     host_unit: '',
     notes: '',
+    photo: null as File | null,
 });
+
+const camera = ref<HTMLVideoElement>();
+const cameraActive = ref(false);
+const cameraBusy = ref(false);
+const cameraError = ref('');
+const photoPreview = ref('');
+let media: MediaStream | undefined;
+let cameraSession = 0;
+
+function stopCamera() {
+    cameraSession++;
+    media?.getTracks().forEach((track) => track.stop());
+    media = undefined;
+    cameraActive.value = false;
+    cameraBusy.value = false;
+}
+
+function clearPhoto() {
+    if (photoPreview.value) URL.revokeObjectURL(photoPreview.value);
+    photoPreview.value = '';
+    form.photo = null;
+}
+
+async function startCamera() {
+    cameraError.value = '';
+    if (!navigator.mediaDevices?.getUserMedia) {
+        cameraError.value = 'Kamera tidak tersedia. Anda dapat memilih foto JPEG atau melanjutkan tanpa foto.';
+        return;
+    }
+    const session = ++cameraSession;
+    cameraBusy.value = true;
+    try {
+        const acquired = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+        if (session !== cameraSession) {
+            acquired.getTracks().forEach((track) => track.stop());
+            return;
+        }
+        media = acquired;
+        cameraActive.value = true;
+        await nextTick();
+        if (camera.value && session === cameraSession) {
+            camera.value.srcObject = acquired;
+            await camera.value.play();
+        }
+    } catch {
+        if (session === cameraSession) {
+            stopCamera();
+            cameraError.value = 'Kamera tidak dapat dibuka. Periksa izin kamera atau pilih foto JPEG.';
+        }
+    } finally {
+        if (session === cameraSession) cameraBusy.value = false;
+    }
+}
+
+async function capturePhoto() {
+    const preview = camera.value;
+    if (!preview?.videoWidth) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = Math.round(640 * preview.videoHeight / preview.videoWidth);
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.drawImage(preview, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', .82));
+    if (!blob) {
+        cameraError.value = 'Foto belum dapat diambil. Coba sekali lagi.';
+        return;
+    }
+    clearPhoto();
+    form.photo = new File([blob], 'foto-kunjungan.jpg', { type: 'image/jpeg' });
+    photoPreview.value = URL.createObjectURL(blob);
+    stopCamera();
+}
+
+function choosePhoto(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.type !== 'image/jpeg' || file.size > 524288) {
+        cameraError.value = 'Pilih foto JPEG dengan ukuran maksimal 512 KB.';
+        input.value = '';
+        return;
+    }
+    clearPhoto();
+    stopCamera();
+    cameraError.value = '';
+    form.photo = file;
+    photoPreview.value = URL.createObjectURL(file);
+}
+
+onBeforeUnmount(() => { stopCamera(); clearPhoto(); });
 
 const submit = () => {
     form.post('/layanan/buku-tamu', {
-        onSuccess: () => form.reset('visitor_name', 'visitor_organization', 'visitor_phone', 'visitor_email', 'purpose', 'host_teacher_id', 'host_name', 'host_unit', 'notes'),
+        forceFormData: true,
+        onSuccess: () => {
+            form.reset('visitor_name', 'visitor_organization', 'visitor_phone', 'visitor_email', 'purpose', 'host_teacher_id', 'host_name', 'host_unit', 'notes');
+            clearPhoto();
+            stopCamera();
+        },
     });
 };
 </script>
 
 <template>
     <Head :title="`Buku Tamu Digital — ${school.name}`" />
-    <main class="public-site public-portal-page" :style="themeStyle">
+    <main class="public-site public-portal-page" data-madrasah-service="guestbook" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <section class="portal-container">
-            <header class="portal-hero">
-                <p class="eyebrow">Resepsionis &amp; Penerimaan Tamu</p>
-                <h1>Registrasi Buku Tamu Digital</h1>
+        <section class="portal-container guestbook-layout">
+            <header class="portal-hero madrasah-service-hero guestbook-welcome">
+                <p class="madrasah-service-label"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Resepsionis &amp; Penerimaan Tamu</p>
+                <p class="parity-guest-greeting">Selamat datang</p>
+                <h1>Buku Tamu</h1>
+                <p class="guestbook-school">{{ school.name }}</p>
+                <img class="parity-guest-logo" :src="school.logo_url || '/madrasah-theme/images/logo-kemenag.png'" alt="" />
                 <p>Silakan isi data kunjungan Anda untuk dicatat oleh resepsionis. Data pengunjung bersifat privat dan hanya dapat dilihat oleh petugas berwenang.</p>
+                <ul class="guestbook-highlights">
+                    <li><i class="fa-solid fa-clock" aria-hidden="true"></i> Jam Resepsionis: Senin–Jumat, 07.30–15.00</li>
+                    <li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Data kunjungan terjaga kerahasiaannya</li>
+                    <li><i class="fa-solid fa-ticket" aria-hidden="true"></i> Dapatkan bukti registrasi kunjungan instan</li>
+                </ul>
             </header>
 
             <div v-if="flashMessage" class="alert-banner" role="status">{{ flashMessage }}</div>
@@ -61,7 +166,8 @@ const submit = () => {
                 <p>Pengunjung: <strong>{{ confirmationSlip.visitor_name }}</strong> · Tujuan: <strong>{{ confirmationSlip.host_name }}</strong></p>
             </section>
 
-            <section class="portal-card">
+            <section class="portal-card guestbook-register" aria-labelledby="guestbook-register-title">
+                <h2 id="guestbook-register-title" class="service-form-title">Register Tamu</h2>
                 <form class="form-grid" @submit.prevent="submit">
                     <FormField id="guest-name" label="Nama Pengunjung" required :error="form.errors.visitor_name" v-slot="{ inputId, describedBy, invalid }">
                         <input :id="inputId" v-model="form.visitor_name" type="text" required :aria-describedby="describedBy" :aria-invalid="invalid" />
@@ -111,6 +217,20 @@ const submit = () => {
                     </div>
                 </form>
             </section>
+            <aside class="parity-guest-photo" aria-labelledby="guest-photo-title">
+                <h2 id="guest-photo-title">Foto Kunjungan</h2>
+                <video v-if="cameraActive" ref="camera" muted playsinline aria-label="Pratinjau kamera foto kunjungan" />
+                <img v-else :src="photoPreview || '/madrasah-theme/images/portrait.webp'" :alt="photoPreview ? 'Foto kunjungan yang dipilih' : 'Avatar contoh pengunjung'" />
+                <button v-if="cameraActive" type="button" @click="capturePhoto">Ambil Foto</button>
+                <button v-else type="button" :disabled="cameraBusy" @click="startCamera">{{ cameraBusy ? 'Membuka Kamera...' : photoPreview ? 'Ambil Ulang Foto' : 'Buka Kamera' }}</button>
+                <button v-if="cameraActive" type="button" @click="stopCamera">Tutup Kamera</button>
+                <label for="guest-photo-file" class="parity-photo-file">Pilih foto JPEG
+                    <input id="guest-photo-file" type="file" accept="image/jpeg" @change="choosePhoto" />
+                </label>
+                <button v-if="photoPreview" type="button" @click="clearPhoto">Hapus Foto</button>
+                <p v-if="cameraError || form.errors.photo" role="alert">{{ cameraError || form.errors.photo }}</p>
+                <p v-else>Foto bersifat opsional dan hanya dapat diakses petugas buku tamu.</p>
+            </aside>
         </section>
     </main>
 </template>
@@ -127,4 +247,7 @@ const submit = () => {
 .slip-card { background: #eef4ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 1.1rem 1.25rem; display: grid; gap: .3rem; }
 .slip-code { font-size: 1.35rem; font-weight: 800; color: #1e3a8a; letter-spacing: .06em; }
 .slip-card p { margin: 0; }
+.guestbook-school { font-weight: 700; color: #fde68a !important; }
+.guestbook-highlights { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .5rem; text-align: left; font-size: .85rem; }
+.guestbook-highlights li { display: flex; align-items: center; gap: .5rem; color: #d1fae5; }
 </style>

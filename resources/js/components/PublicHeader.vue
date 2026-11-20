@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { filterServiceCategories } from '@/composables/usePublicServicesCatalog';
 import type { SharedProps } from '@/types';
@@ -19,11 +19,8 @@ const props = withDefaults(defineProps<{
 });
 
 const page = usePage<SharedProps>();
-const man4 = computed(() => page.props.publicPortalTheme === 'man4-banjar');
-const brand = computed(() => man4.value ? {
-    name: 'Portal Madrasah',
-    logo_url: '/brand/favicon/favicon.svg',
-} : props.school);
+const hasDocumentNavigation = document.body.classList.contains('madrasah-inertia-shell');
+const brand = computed(() => props.school);
 const initial = computed(() => brand.value.name.trim().charAt(0).toUpperCase() || 'S');
 const currentPath = computed(() => page.url.split(/[?#]/, 1)[0]);
 const isCurrent = (href: string) => currentPath.value === href
@@ -36,27 +33,7 @@ const menus: { label: string; href: string; key?: ActiveMenu }[] = [
     { label: 'Galeri', href: '/galeri', key: 'gallery' },
     { label: 'Kontak', href: '/kontak', key: 'contact' },
 ];
-const man4Menus = [
-    { label: 'Zona Integritas', href: '/zona-integritas' },
-    { label: 'PTSP Digital', href: '/layanan/ptsp' },
-    { label: 'Peminatan', href: '/akademik-fasilitas', key: 'programs' },
-    { label: 'Kesiswaan', href: '/kesiswaan-prestasi', key: 'student-life' },
-    { label: 'Perpustakaan', href: '/perpustakaan' },
-    { label: 'Alumni', href: '/alumni' },
-    { label: 'Berita', href: '/berita', key: 'news' },
-    { label: 'Prestasi', href: '/prestasi' },
-    { label: 'Galeri', href: '/galeri', key: 'gallery' },
-    { label: 'Kontak', href: '/kontak', key: 'contact' },
-    { label: 'Lacak Berkas', href: '/lacak' },
-    { label: 'Cek SKL', href: '/layanan/kelulusan' },
-] satisfies typeof menus;
-const operationsMenus = [
-    { label: 'Kios Presensi', href: '/kios-presensi' },
-    { label: 'Izin Keluar-Masuk (Piket)', href: '/piket/izin-keluar' },
-    { label: 'Pos Satpam', href: '/pos-jaga' },
-    { label: 'Disiplin BK', href: '/bk/kasus' },
-];
-const visibleMenus = computed(() => man4.value ? man4Menus : menus.slice(1));
+const visibleMenus = menus.slice(1);
 const headerRef = ref<HTMLElement | null>(null);
 const navToggleRef = ref<HTMLButtonElement | null>(null);
 const profileTriggerRef = ref<HTMLButtonElement | null>(null);
@@ -73,7 +50,6 @@ const portalHref = computed(() => page.props.auth?.user ? '/dashboard' : '/login
 const portalLabel = computed(() => page.props.auth?.user ? 'Dashboard' : 'Portal sekolah');
 const filteredServiceCategories = computed(() => filterServiceCategories(serviceQuery.value));
 
-const servicesPanelTop = ref(0);
 
 const closeMenu = (restoreFocus = false) => {
     const wasServicesOpen = servicesMenuOpen.value;
@@ -104,7 +80,6 @@ const toggleServicesMenu = async () => {
     profileMenuOpen.value = false;
     servicesMenuOpen.value = !servicesMenuOpen.value;
     if (servicesMenuOpen.value) {
-        servicesPanelTop.value = Math.max(0, servicesTriggerRef.value?.getBoundingClientRect().bottom ?? 0);
         await nextTick();
         servicesSearchRef.value?.focus();
     }
@@ -126,22 +101,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Head v-if="man4">
-        <link head-key="man4-fonts" rel="stylesheet" href="/madrasah-theme/fonts.css" />
-    </Head>
     <header
+        v-if="!hasDocumentNavigation"
         ref="headerRef"
         class="public-site-header"
-        :class="{ 'is-home': active === 'home', 'is-menu-open': menuOpen, 'is-man4': man4 }"
+        :class="{ 'is-home': active === 'home', 'is-menu-open': menuOpen }"
         @keydown.esc.stop="closeMenu(true)"
     >
-        <div v-if="man4" class="man4-utility">
-            <span>Portal School Suite</span>
-            <div>
-                <Link href="/jadwal-salat">Jadwal Salat</Link>
-                <Link href="/pusat-unduh">Pusat Unduh</Link>
-            </div>
-        </div>
         <div class="public-site-header-top">
             <Link href="/" class="brand" aria-label="Beranda sekolah">
                 <span class="brand-mark">
@@ -150,7 +116,6 @@ onBeforeUnmount(() => {
                 </span>
                 <span class="brand-name">
                     {{ brand.name }}
-                    <small v-if="man4">Informasi dan layanan sekolah</small>
                 </span>
             </Link>
 
@@ -161,9 +126,8 @@ onBeforeUnmount(() => {
                     class="admissions-action ui-button ui-button--primary ui-button--md"
                     :aria-current="props.active === 'admissions' ? 'page' : undefined"
                 >
-                    {{ man4 ? 'PPDB' : 'SPMB' }}
+                    SPMB
                 </Link>
-                <Link v-if="man4" href="/lacak" class="man4-tracking">Lacak</Link>
                 <button
                     ref="navToggleRef"
                     type="button"
@@ -202,17 +166,8 @@ onBeforeUnmount(() => {
                         <span class="nav-chevron" aria-hidden="true"></span>
                     </button>
                     <div v-if="profileMenuOpen" id="profile-navigation" class="profile-dropdown">
-                        <template v-if="man4">
-                            <a v-for="item in page.props.publicProfileMenu" :key="item.href" :href="item.href"
-                                :aria-current="page.url === item.href ? 'page' : undefined" @click="closeMenu(false)">
-                                <i class="fa-solid" :class="item.icon" aria-hidden="true"></i>
-                                <span>{{ item.label }}</span>
-                            </a>
-                        </template>
-                        <template v-else>
-                            <Link href="/profil-sekolah" :aria-current="active === 'profile' ? 'page' : undefined" @click="closeMenu(false)">Profil sekolah</Link>
-                            <Link href="/struktur-organisasi" :aria-current="active === 'organization' ? 'page' : undefined" @click="closeMenu(false)">Struktur organisasi</Link>
-                        </template>
+                        <Link href="/profil-sekolah" :aria-current="active === 'profile' ? 'page' : undefined" @click="closeMenu(false)">Profil sekolah</Link>
+                        <Link href="/struktur-organisasi" :aria-current="active === 'organization' ? 'page' : undefined" @click="closeMenu(false)">Struktur organisasi</Link>
                     </div>
                 </div>
 
@@ -233,7 +188,6 @@ onBeforeUnmount(() => {
                         v-if="servicesMenuOpen"
                         id="services-navigation"
                         class="services-panel"
-                        :style="man4 ? { '--man4-menu-top': servicesPanelTop + 'px' } : undefined"
                         role="region"
                         aria-label="Panel E-Layanan"
                     >
@@ -254,9 +208,6 @@ onBeforeUnmount(() => {
                             </Link>
                         </div>
 
-                        <Link v-if="man4" href="/e-layanan" class="man4-catalog-link" @click="closeMenu(false)">
-                            Buka katalog E-Layanan
-                        </Link>
                         <div v-if="filteredServiceCategories.length" class="services-panel__grid">
                             <section
                                 v-for="category in filteredServiceCategories"
@@ -295,11 +246,6 @@ onBeforeUnmount(() => {
                                 Tampilkan semua layanan
                             </button>
                         </div>
-                        <nav v-if="man4 && !serviceQuery" class="man4-operations" aria-label="Pintasan operasional">
-                            <Link v-for="item in operationsMenus" :key="item.href" :href="item.href" @click="closeMenu(false)">
-                                {{ item.label }}
-                            </Link>
-                        </nav>
                     </div>
                 </div>
 
@@ -307,7 +253,7 @@ onBeforeUnmount(() => {
                     v-for="menu in visibleMenus"
                     :key="menu.href"
                     :href="menu.href"
-                    :aria-current="(man4 ? isCurrent(menu.href) : props.active === menu.key) ? 'page' : undefined"
+                    :aria-current="props.active === menu.key ? 'page' : undefined"
                     @click="closeMenu(false)"
                 >
                     {{ menu.label }}
@@ -988,181 +934,6 @@ onBeforeUnmount(() => {
     .services-panel__portal-cta {
         width: 100%;
         justify-content: center;
-    }
-}
-</style>
-
-
-<style scoped>
-.public-site-header.is-man4 {
-    --public-primary: #047857;
-    --public-accent: #b45309;
-    --public-ink: #0f172a;
-    --public-muted: #475569;
-    --public-line: #e2e8f0;
-    --font-ui: Inter, system-ui, sans-serif;
-    width: 100% !important;
-    max-width: none !important;
-    padding: 0 !important;
-    display: block;
-    border-bottom: 1px solid #e2e8f0;
-    font-family: var(--font-ui);
-}
-
-.is-man4 .profile-dropdown {
-    min-width: min(16rem, calc(100vw - 2rem));
-    padding: .5rem;
-    border-radius: 1rem;
-    border-color: #e2e8f0;
-}
-
-.is-man4 .profile-dropdown a {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    padding: .6rem .7rem;
-    border-radius: .7rem;
-}
-
-.is-man4 .profile-dropdown i {
-    width: 1rem;
-    color: #047857;
-    text-align: center;
-}
-
-.is-man4 .man4-utility {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .55rem clamp(1rem, 3.3vw, 3rem);
-    color: #ecfdf5;
-    background: #064e3b;
-    font-size: .75rem;
-}
-
-.man4-utility div {
-    display: flex;
-    gap: 1rem;
-}
-
-.man4-utility a:hover {
-    color: #fcd34d;
-}
-
-.is-man4 .public-site-header-top {
-    display: flex;
-    min-height: 64px;
-    padding: .65rem clamp(1rem, 3.3vw, 3rem);
-    gap: .75rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.is-man4 .brand {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-family: 'Plus Jakarta Sans', Inter, sans-serif;
-}
-
-.is-man4 .brand-mark {
-    width: 40px;
-    height: 40px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-}
-
-.is-man4 .brand-name {
-    max-width: none;
-    overflow-wrap: anywhere;
-    font-size: clamp(.78rem, 2vw, 1.12rem);
-    font-weight: 800;
-}
-
-.is-man4 .brand-name small {
-    display: block;
-    margin-top: .16rem;
-    color: #475569;
-    font-size: .66rem;
-    font-weight: 500;
-}
-
-.is-man4 .admissions-action {
-    color: #1c1917;
-    background: #fbbf24;
-    border-color: #f59e0b;
-    box-shadow: none;
-}
-
-.man4-tracking,
-.man4-catalog-link {
-    color: #047857;
-    font-size: .8rem;
-    font-weight: 700;
-}
-
-.man4-catalog-link {
-    display: inline-block;
-    margin: .4rem 0 .85rem;
-    text-decoration: underline;
-}
-
-.man4-operations {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-    margin-top: 1rem;
-}
-
-.man4-operations a {
-    padding: .4rem .65rem;
-    border-radius: .5rem;
-    color: #065f46;
-    background: #ecfdf5;
-    font-size: .78rem;
-    font-weight: 600;
-}
-
-.is-man4 .public-site-header-nav-row {
-    min-height: 0;
-    padding-inline: clamp(.5rem, 2.7vw, 2.4rem);
-    background: #f8fafc;
-}
-
-.is-man4 .public-nav {
-    flex-wrap: wrap;
-    gap: .2rem;
-}
-
-.is-man4 .public-nav > a[href='/'] {
-    display: inline-flex;
-}
-
-.is-man4 .public-nav > a[aria-current='page'] {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-@media (min-width: 1041px) {
-    .is-man4 .services-panel {
-        top: var(--man4-menu-top, 8rem);
-        max-height: min(70dvh, 640px);
-    }
-}
-
-@media (max-width: 640px) {
-    .is-man4 .man4-utility,
-    .is-man4 .man4-tracking {
-        display: none;
-    }
-
-    .is-man4 .brand-mark {
-        width: 28px;
-        height: 34px;
-    }
-
-    .is-man4 .brand {
-        gap: .4rem;
     }
 }
 </style>

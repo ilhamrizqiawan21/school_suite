@@ -9,12 +9,19 @@ use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Administration\Application\Services\GuestbookService;
 use App\Modules\Administration\Infrastructure\Models\GuestbookVisit;
 use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Shared\Files\PrivateStorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class GuestbookController extends Controller
 {
@@ -22,6 +29,7 @@ class GuestbookController extends Controller
         private readonly GuestbookService $guestbook,
         private readonly AcademicQueryService $academicQuery,
         private readonly SchoolScopeService $schoolScope,
+        private readonly PrivateStorageService $storage,
     ) {}
 
     /**
@@ -64,9 +72,35 @@ class GuestbookController extends Controller
             'host_name' => ['nullable', 'string', 'max:150'],
             'host_unit' => ['nullable', 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'photo' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg', 'max:512', 'dimensions:max_width=1280,max_height=1280'],
         ]);
 
-        $visit = $this->guestbook->recordVisit($schoolId, $validated, null);
+        $storedPhoto = null;
+        try {
+            $visit = DB::transaction(function () use ($schoolId, $validated, $request, &$storedPhoto): GuestbookVisit {
+                $visit = $this->guestbook->recordVisit($schoolId, $validated, null);
+                if ($request->hasFile('photo')) {
+                    $storedPhoto = $this->storage->storeValidatedUpload(
+                        $request->file('photo'),
+                        "schools/{$schoolId}/guestbook/{$visit->id}",
+                        ['image/jpeg'],
+                        524_288,
+                    );
+                }
+
+                return $visit;
+            });
+        } catch (Throwable $exception) {
+            if ($storedPhoto !== null) {
+                $this->storage->delete($storedPhoto['path']);
+            }
+
+            if ($exception instanceof InvalidArgumentException) {
+                throw ValidationException::withMessages(['photo' => $exception->getMessage()]);
+            }
+
+            throw $exception;
+        }
 
         return redirect()->route('administration.guestbook.public.create')
             ->with('message', 'Registrasi kunjungan buku tamu berhasil dicatat.')
@@ -93,6 +127,14 @@ class GuestbookController extends Controller
         ];
 
         $data = $this->guestbook->listForStaff($schoolId, $filters);
+        $data['visits'] = array_map(static function (array $visit) use ($schoolId): array {
+            $photos = Storage::disk('local')->files("schools/{$schoolId}/guestbook/{$visit['id']}");
+            $visit['photo_url'] = $photos !== []
+                ? route('administration.guestbook.admin.photo', $visit['id'])
+                : null;
+
+            return $visit;
+        }, $data['visits']);
 
         return Inertia::render('Administration/Guestbook/Index', [
             'visits' => $data['visits'],
@@ -104,6 +146,19 @@ class GuestbookController extends Controller
                 ->values()
                 ->all(),
             'hosts' => $this->academicQuery->getPublicDirectoryTeachers($schoolId),
+        ]);
+    }
+
+    public function photo(Request $request, GuestbookVisit $visit): StreamedResponse
+    {
+        $schoolId = (int) $request->user()->school_id;
+        abort_unless((int) $visit->school_id === $schoolId, 404);
+        $photos = Storage::disk('local')->files("schools/{$schoolId}/guestbook/{$visit->id}");
+        abort_if($photos === [], 404);
+
+        return Storage::disk('local')->response($photos[0], null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 

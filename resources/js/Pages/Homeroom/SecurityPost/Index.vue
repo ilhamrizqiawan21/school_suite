@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import QrScanPanel from '@/components/QrScanPanel.vue';
 import FormField from '@/components/FormField.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
+import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -134,23 +135,25 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 </script>
 
 <template>
-    <AppLayout title="Pos Jaga Gerbang">
+    <OperationsLayout mode="gate" title="Pos Jaga Gerbang">
         <Head title="Pos Jaga Gerbang" />
 
-        <div class="space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="security-post-layout space-y-6" :class="{ 'is-locked': !unlocked }">
+            <header class="operations-scan-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Pos Jaga & Validasi Gerbang</h1>
-                    <p class="text-sm text-slate-600">
+                    <p class="operations-scan-label">Akses Pos Jaga · Validasi Gerbang</p>
+                    <h1 class="text-xl font-bold text-white">Pos Jaga &amp; Validasi Gerbang</h1>
+                    <p class="text-sm text-emerald-100">
                         Validasi keluar-masuk siswa berdasarkan surat jalan atau pass yang diterbitkan guru piket.
                     </p>
                 </div>
                 <AppButton v-if="unlocked" type="button" variant="secondary" @click="lockPost">
                     Kunci Layar Pos Jaga
                 </AppButton>
-            </div>
+            </header>
 
-            <div v-if="canConfigurePin" class="rounded-xl border border-slate-200 bg-white p-5">
+            <details v-if="canConfigurePin" class="security-pin-configuration rounded-xl border border-slate-200 bg-white p-5">
+                <summary>Konfigurasi PIN Pos Jaga</summary>
                 <form @submit.prevent="savePinSetting" class="flex flex-wrap items-end gap-3">
                     <div class="min-w-[220px] flex-1">
                         <FormField
@@ -173,9 +176,9 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         {{ hasPin ? 'Perbarui PIN' : 'Simpan PIN Pos Jaga' }}
                     </AppButton>
                 </form>
-            </div>
+            </details>
 
-            <div v-if="!unlocked" class="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+            <div v-if="!unlocked" class="operations-pin-panel mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
                 <div class="text-center">
                     <h2 class="text-lg font-bold text-slate-900">Buka Kunci Pos Jaga</h2>
                     <p class="mt-1 text-sm text-slate-600">
@@ -245,7 +248,11 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
             <div v-else class="space-y-6">
                 <div class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
-                    <h2 class="text-base font-semibold text-slate-900">Pindai / Input Kode Pass Gerbang</h2>
+                    <div class="operations-scan-panel">
+                        <h2 class="text-base font-semibold text-slate-900">Pindai / Input Kode Pass Gerbang</h2>
+                        <p>Validasi surat jalan keluar atau kembali ke madrasah.</p>
+                        <QrScanPanel @detected="scanCode = $event" />
+                    </div>
 
                     <div class="grid gap-3 md:grid-cols-4">
                         <div class="md:col-span-2">
@@ -350,5 +357,5 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </OperationsLayout>
 </template>

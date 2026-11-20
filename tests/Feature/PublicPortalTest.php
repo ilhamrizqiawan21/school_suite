@@ -88,20 +88,22 @@ class PublicPortalTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertViewIs('public.man4-banjar')
+            ->assertViewIs('public.madrasah.home')
             ->assertSee('Olimpiade Bahasa Arab')
             ->assertViewHas('news', []);
 
         $this->get('/e-layanan')->assertInertia(fn (Assert $page) => $page
             ->component('Public/Services/Index')
-            ->where('publicPortalTheme', 'man4-banjar'));
+            ->where('publicPortalTheme', 'madrasah'));
     }
 
-    public function test_man4_home_uses_local_theme_and_supports_inertia_navigation(): void
+    public function test_configured_madrasah_home_uses_local_theme_and_supports_inertia_navigation(): void
     {
+        config(['public_portal.theme' => 'madrasah']);
+
         $this->school->update([
-            'name' => 'MADRASAH ALIYAH NEGERI 4 BANJAR',
-            'npsn' => '30208801',
+            'name' => 'Madrasah Contoh Nusantara',
+            'npsn' => '30990001',
         ]);
         $article = SchoolNews::query()->create([
             'school_id' => $this->school->id,
@@ -121,7 +123,7 @@ class PublicPortalTest extends TestCase
 
         $this->flushHeaders()->get('/')
             ->assertOk()
-            ->assertViewIs('public.man4-banjar')
+            ->assertViewIs('public.madrasah.home')
             ->assertSee('href="/layanan/ptsp"', false)
             ->assertSee('href="/ppdb"', false)
             ->assertSee($article->title)

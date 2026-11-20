@@ -10,7 +10,7 @@ export interface PublicThemeTokens {
 }
 
 export const publicThemeStyle = (theme?: PublicThemeTokens) => {
-    if (usePage<SharedProps>().props.publicPortalTheme === 'man4-banjar') {
+    if (usePage<SharedProps>().props.publicPortalTheme === 'madrasah') {
         theme = { primary: '#047857', accent: '#b45309', surface: '#f8fafc', ink: '#0f172a', muted: '#475569' };
     }
 

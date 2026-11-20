@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'PORTAL MADRASAH';
+  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
   $accreditation = ($profile['accreditation'] ?? null) ?: 'A (Unggul)';
   $visionText = ($profile['vision'] ?? null) ?: 'Terwujudnya Generasi yang Berakhlak Mulia, Unggul dalam Prestasi Akademik & Riset, Berwawasan Lingkungan, serta Mandiri Berlandaskan Iman dan Taqwa.';
   $rawMission = trim((string) ($profile['mission'] ?? ''));
@@ -12,7 +12,7 @@
           'Meningkatkan kompetensi riset ilmiah siswa melalui program Madrasah Riset & Sains Terapan.',
           'Membina karakter religius, pembiasaan sholat berjamaah, dan tahfidz Al-Qur\'an.',
           'Mengembangkan budaya peduli lingkungan, madrasah hijau, dan ramah anak.',
-          'Mengoptimalkan layanan digital terpadu berbasis teknologi informasi bagi seluruh civitas.',
+          'Memperkuat kecakapan digital siswa menyongsong era kecerdasan buatan (AI) & industri 4.0.',
       ];
 @endphp
 
@@ -90,37 +90,49 @@
             @endforeach
           </div>
         </div>
+
+        <div class="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Panduan Pelaksanaan Kurikulum Merdeka</span>
+          <a href="/direktori-gtk" class="text-kemenag-700 font-bold hover:underline flex items-center gap-1">
+            <span>Lihat Dewan Guru</span> &rarr;
+          </a>
+        </div>
       </div>
 
     </div>
 
     <!-- Bagian 2: 5 Nilai Budaya Kerja Kemenag -->
-    <div>
+    <div class="bg-gradient-to-b from-emerald-50/50 to-white p-8 sm:p-10 rounded-3xl border border-emerald-200/90 shadow-sm">
       <div class="text-center max-w-2xl mx-auto mb-8">
-        <span class="text-xs font-bold text-kemenag-700 uppercase tracking-widest">Etos &amp; Integritas</span>
-        <h3 class="text-2xl font-extrabold text-slate-900 mt-1">
+        <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-200 inline-block mb-2">
+          Etika Kerja ASN Kemenag
+        </span>
+        <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900">
           5 Nilai Budaya Kerja Kementerian Agama
         </h3>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">
+          Pondasi karakter dan integritas seluruh aparatur, pendidik, dan tenaga kependidikan {{ $schoolName }}.
+        </p>
       </div>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl mb-3 shadow-xs">
-            <i class="fa-solid fa-shield-halved"></i>
+            <i class="fa-solid fa-shield-heart"></i>
           </div>
           <h4 class="text-sm font-extrabold text-slate-900 mb-1">1. Integritas</h4>
           <p class="text-[11px] text-slate-500 leading-relaxed">
-            Keselarasan antara hati, pikiran, perkataan, dan perbuatan yang baik dan benar dalam pelayanan publik.
+            Keselarasan antara hati, pikiran, perkataan, dan perbuatan yang baik dan benar serta anti-gratifikasi.
           </p>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-500 shadow-xs hover:shadow-md transition text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl mb-3 shadow-xs">
-            <i class="fa-solid fa-award"></i>
+            <i class="fa-solid fa-briefcase"></i>
           </div>
           <h4 class="text-sm font-extrabold text-slate-900 mb-1">2. Profesionalitas</h4>
           <p class="text-[11px] text-slate-500 leading-relaxed">
-            Bekerja secara disiplin, kompeten, dan tepat waktu dengan hasil terbaik bagi kemajuan peserta didik.
+            Bekerja secara disiplin, kompeten, tepat waktu, dan memberikan mutu layanan terbaik bagi peserta didik.
           </p>
         </div>
 
@@ -171,7 +183,7 @@
             <i class="fa-solid fa-microscope"></i>
           </div>
           <h4 class="text-sm font-extrabold text-slate-900 mb-1">Madrasah Riset</h4>
-          <p class="text-xs text-slate-600 leading-relaxed">Fokus pembimbingan karya tulis ilmiah remaja (KIR/MYRES) dan inovasi sains lingkungan.</p>
+          <p class="text-xs text-slate-600 leading-relaxed">Fokus pembimbingan karya tulis ilmiah remaja (KIR/MYRES) dan inovasi sains lingkungan rawa.</p>
         </div>
 
         <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-amber-500 transition">
@@ -197,25 +209,6 @@
           <h4 class="text-sm font-extrabold text-slate-900 mb-1">Zona Integritas (WBK)</h4>
           <p class="text-xs text-slate-600 leading-relaxed">Pelayanan terpadu digital tanpa antre, bebas pungli, transparan, dan berakuntabilitas tinggi.</p>
         </div>
-      </div>
-    </div>
-
-    <!-- Bagian 4: Sambutan Pimpinan -->
-    <div id="sambutan" class="bg-white p-7 sm:p-9 rounded-3xl border border-slate-200 shadow-sm grid lg:grid-cols-12 gap-6 items-center">
-      <div class="lg:col-span-3 flex flex-col items-center text-center">
-        <div class="w-40 h-44 rounded-2xl overflow-hidden border-4 border-kemenag-700 shadow-lg bg-kemenag-800">
-          <img src="/madrasah-theme/images/portrait.webp" alt="Pimpinan {{ $schoolName }}" class="w-full h-full object-cover">
-        </div>
-        <h4 class="font-extrabold text-slate-900 text-sm mt-3">{{ ($profile['principal_name'] ?? null) ?: 'Drs. H. Ahmad Hidayat, M.Pd.' }}</h4>
-        <p class="text-xs text-kemenag-700 font-semibold">Kepala {{ $schoolName }}</p>
-      </div>
-      <div class="lg:col-span-9 space-y-3">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-kemenag-800">
-          <i class="fa-solid fa-quote-left"></i> Sambutan Pimpinan
-        </span>
-        <p class="text-slate-700 text-sm sm:text-base leading-relaxed">
-          {{ ($profile['principal_message'] ?? null) ?: 'Assalamu\'alaikum Warahmatullahi Wabarakatuh. Selamat datang di portal resmi ' . $schoolName . '. Kami berkomitmen menghadirkan ekosistem pendidikan madrasah yang unggul dalam riset sains, berkarakter Islami, transparan, dan melayani masyarakat dengan sepenuh hati.' }}
-        </p>
       </div>
     </div>
 

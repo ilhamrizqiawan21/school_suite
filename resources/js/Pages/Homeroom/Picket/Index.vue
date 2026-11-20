@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import OperationsScanner from '@/components/OperationsScanner.vue';
 import FormField from '@/components/FormField.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
+import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -134,14 +135,22 @@ const exitTypeLabel = (type: string): string => {
 </script>
 
 <template>
-    <AppLayout title="Piket Izin Keluar">
+    <OperationsLayout mode="scan" title="Piket Izin Keluar">
         <Head title="Piket Izin Keluar" />
 
+        <OperationsScanner v-model="searchQuery" title="Scan Kartu Pelajar" description="Izin Keluar-Masuk Siswa (Piket & Satpam)"
+            :busy="searchLoading" @lookup="lookupStudent">
+            <a href="/e-layanan">Form / Beranda →</a>
+            <a href="/pos-jaga">Pos Satpam →</a>
+        </OperationsScanner>
+        <details class="operations-workflow" :open="searchResults.length > 0">
+            <summary>Form Izin & Riwayat Surat Jalan</summary>
         <div class="space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <header class="operations-scan-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Piket Sekolah — Surat Jalan & Izin Keluar</h1>
-                    <p class="text-sm text-slate-600">
+                    <p class="operations-scan-label">Piket Sekolah · Scan Kartu Pelajar</p>
+                    <h1 class="text-xl font-bold text-white">Piket Sekolah — Surat Jalan &amp; Izin Keluar</h1>
+                    <p class="text-sm text-emerald-100">
                         Terbitkan pass keluar sementara, pulang lebih awal, atau tugas sekolah untuk divalidasi di Pos Jaga ({{ timezone }}).
                     </p>
                 </div>
@@ -151,13 +160,14 @@ const exitTypeLabel = (type: string): string => {
                 >
                     Buka Layar Pos Jaga
                 </a>
-            </div>
+            </header>
 
             <form @submit.prevent="submitIssue" class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
                 <h2 class="text-base font-semibold text-slate-900">Terbitkan Pass Izin Keluar</h2>
 
                 <div class="grid gap-3 md:grid-cols-3">
-                    <div class="md:col-span-2">
+                    <div class="operations-scan-panel md:col-span-2">
+                        <p>Pindai kartu atau cari siswa sebelum menerbitkan pass izin keluar.</p>
                         <FormField id="picket-search-student" label="Cari Siswa (Nama, NIS, atau Scan Kartu)">
                             <div class="flex gap-2">
                                 <input
@@ -315,5 +325,6 @@ const exitTypeLabel = (type: string): string => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+        </details>
+    </OperationsLayout>
 </template>

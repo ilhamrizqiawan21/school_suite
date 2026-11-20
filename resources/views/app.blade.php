@@ -1,3 +1,18 @@
+@php
+    $usesMadrasahShell = str_starts_with($page['component'] ?? '', 'Public/')
+        && ($page['props']['publicPortalTheme'] ?? null) === 'madrasah';
+
+    if ($usesMadrasahShell) {
+        $portalSchool = \App\Modules\Core\Infrastructure\Models\School::query()->orderBy('id')->firstOrFail();
+        $shellData = app(\App\Modules\Core\Application\Services\PublicPortalService::class)->madrasahShellData($portalSchool);
+        $profile = $shellData['profile'];
+        $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+        $schoolAddress = ($profile['address'] ?? null) ?: 'Alamat belum tersedia';
+        $schoolPhone = ($profile['phone'] ?? null) ?: 'Telepon belum tersedia';
+        $schoolEmail = ($profile['email'] ?? null) ?: 'humas@madrasah.example';
+        $schoolLogo = ($profile['logo_url'] ?? null) ?: '/madrasah-theme/images/logo-kemenag.png';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -31,10 +46,28 @@
         </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
+        @if ($usesMadrasahShell)
+            @include('public.madrasah.assets')
+        @endif
         @inertiaHead
     </head>
-    <body class="font-sans antialiased bg-slate-50 text-slate-900">
-        @inertia
+    <body data-portal-path="{{ request()->path() }}" data-portal-layout="{{ request()->is('profil-sekolah', 'direktori-gtk', 'berita*', 'prestasi', 'galeri*') ? 'catalogue' : (request()->path() === '/' ? 'home' : 'service') }}" @class(['font-sans antialiased bg-slate-50 text-slate-900', 'madrasah-inertia-shell' => $usesMadrasahShell])>
+        @if ($usesMadrasahShell)
+            @include('public.madrasah.navigation', $shellData)
+            <div id="main-content" tabindex="-1">
+                <noscript>
+                    <p class="madrasah-loading-state">Aktifkan JavaScript untuk membuka formulir dan layanan portal ini.</p>
+                </noscript>
+                <div class="madrasah-loading-state" data-portal-load-error hidden role="alert">
+                    <p>Halaman layanan belum dapat dimuat.</p>
+                    <a href="{{ request()->getRequestUri() }}">Muat ulang halaman</a>
+                </div>
+                @inertia
+            </div>
+            @include('public.madrasah.footer', $shellData)
+        @else
+            @inertia
+        @endif
     </body>
 </html>
 

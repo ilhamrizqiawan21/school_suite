@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import OperationsScanner from '@/components/OperationsScanner.vue';
 import FormField from '@/components/FormField.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
-import AppLayout from '@/layouts/AppLayout.vue';
+import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 interface BkCaseItem {
     id: number;
@@ -49,11 +50,6 @@ const studentOptions = ref<StudentOption[]>(props.students.slice(0, 20));
 const studentLookupLoading = ref(false);
 const editingCase = ref<BkCaseItem | null>(null);
 
-const videoRef = ref<HTMLVideoElement | null>(null);
-const cameraActive = ref(false);
-const cameraError = ref('');
-let mediaStream: MediaStream | null = null;
-let scanLoopTimer: number | null = null;
 
 const caseForm = useForm({
     student_id: props.students[0]?.student_id ?? ('' as string | number),
@@ -106,60 +102,6 @@ const searchStudentByCodeOrName = async (queryOverride?: string) => {
         }
     } finally {
         studentLookupLoading.value = false;
-    }
-};
-
-const stopCamera = () => {
-    if (scanLoopTimer !== null) {
-        window.clearTimeout(scanLoopTimer);
-        scanLoopTimer = null;
-    }
-    if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-        mediaStream = null;
-    }
-    cameraActive.value = false;
-};
-
-const startQrScanner = async () => {
-    cameraError.value = '';
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-        cameraError.value = 'Peramban tidak mendukung akses kamera; gunakan pencarian manual.';
-        return;
-    }
-
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        cameraActive.value = true;
-        if (videoRef.value) {
-            videoRef.value.srcObject = mediaStream;
-            await videoRef.value.play();
-        }
-
-        const DetectorCtor = (window as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => { detect: (src: HTMLVideoElement) => Promise<{ rawValue?: string }[]> } }).BarcodeDetector;
-        if (DetectorCtor && videoRef.value) {
-            const detector = new DetectorCtor({ formats: ['qr_code'] });
-            const poll = async () => {
-                if (!cameraActive.value || !videoRef.value) return;
-                try {
-                    const codes = await detector.detect(videoRef.value);
-                    const value = codes[0]?.rawValue?.trim();
-                    if (value) {
-                        studentLookup.value = value;
-                        await searchStudentByCodeOrName(value);
-                        stopCamera();
-                        return;
-                    }
-                } catch {
-                    // Continue polling
-                }
-                scanLoopTimer = window.setTimeout(poll, 400);
-            };
-            poll();
-        }
-    } catch {
-        cameraError.value = 'Izin kamera ditolak atau kamera tidak tersedia. Gunakan pencarian manual.';
-        stopCamera();
     }
 };
 
@@ -226,18 +168,25 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     return 'neutral';
 };
 
-onBeforeUnmount(() => stopCamera());
 </script>
 
 <template>
-    <AppLayout title="Catatan Kasus BK">
+    <OperationsLayout mode="scan" title="Catatan Kasus BK">
         <Head title="Catatan Kasus BK" />
 
+        <OperationsScanner v-model="studentLookup" title="Scan Kartu Pelajar" description="Lapor Pelanggaran Siswa (BK & Kedisiplinan)"
+            :busy="studentLookupLoading" @lookup="searchStudentByCodeOrName">
+            <a href="/e-layanan">Form / Beranda →</a>
+            <a href="/dashboard">Pos BK / Guru →</a>
+        </OperationsScanner>
+        <details class="operations-workflow" :open="studentOptions.length > 0 || !!editingCase">
+            <summary>Form Kasus & Riwayat Konseling</summary>
         <div class="space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <header class="operations-scan-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Bimbingan Konseling (BK) — Kasus Disiplin Rahasia</h1>
-                    <p class="text-sm text-slate-600">
+                    <p class="operations-scan-label">Ruang Kerja BK · Scan QR Pelanggaran</p>
+                    <h1 class="text-xl font-bold text-white">Bimbingan Konseling (BK) — Kasus Disiplin Rahasia</h1>
+                    <p class="text-sm text-emerald-100">
                         Area tertutup khusus Guru BK dan Admin Sekolah. Eviden dan catatan kasus diaudit dan terisolasi dari daftar wali kelas biasa.
                     </p>
                 </div>
@@ -247,26 +196,16 @@ onBeforeUnmount(() => stopCamera());
                 >
                     Ekspor CSV BK
                 </a>
-            </div>
+            </header>
 
             <form @submit.prevent="submitCase" class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <h2 class="text-base font-semibold text-slate-900">
                         {{ editingCase ? `Perbarui Kasus #${editingCase.id}` : 'Catat Kasus Disiplin / Konseling Baru' }}
                     </h2>
-                    <div class="flex gap-2">
-                        <AppButton v-if="!cameraActive" type="button" variant="secondary" @click="startQrScanner">
-                            Scan QR Kartu Siswa
-                        </AppButton>
-                        <AppButton v-else type="button" variant="secondary" @click="stopCamera">
-                            Tutup Kamera
-                        </AppButton>
-                    </div>
                 </div>
 
-                <div v-if="cameraActive || cameraError" class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-                    <video v-if="cameraActive" ref="videoRef" class="h-48 w-full rounded-lg bg-black object-cover" muted playsinline />
-                    <p v-if="cameraError" class="text-xs font-medium text-rose-700">{{ cameraError }}</p>
+                <div v-if="!editingCase" class="operations-scan-panel">
                 </div>
 
                 <div v-if="!editingCase" class="grid gap-3 md:grid-cols-3">
@@ -446,5 +385,6 @@ onBeforeUnmount(() => stopCamera());
                 </div>
             </div>
         </div>
-    </AppLayout>
+        </details>
+    </OperationsLayout>
 </template>

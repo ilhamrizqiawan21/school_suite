@@ -74,21 +74,48 @@ const submit = () => {
 <template>
     <Head :title="`Portal &amp; Tracer Alumni — ${school.name}`" />
 
-    <div class="min-h-screen bg-[#f8f6f0]" :style="themeStyle">
+    <div class="min-h-screen bg-[#f8f6f0]" data-madrasah-service="alumni" :style="themeStyle">
         <PublicHeader :school="school" />
 
         <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
-            <div class="madrasah-profile-hero flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Portal Alumni, Tracer &amp; E-KTA</h1>
+            <div class="madrasah-service-hero grid gap-5 lg:grid-cols-12 items-center">
+                <div class="lg:col-span-8 space-y-3">
+                    <p class="madrasah-service-label"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Ikatan Keluarga Alumni (IKA)</p>
+                    <h1 class="text-2xl font-bold text-slate-900">Temu Silaturahmi, Keluarga Besar Alumni &amp; Karir</h1>
                     <p class="mt-1 text-sm text-slate-600">Pembaruan karier, studi lanjut, beasiswa, testimoni, serta kontrol persetujuan publikasi direktori.</p>
+                    <form action="/alumni/direktori" method="get" class="parity-hero-search">
+                        <input name="search" type="search" aria-label="Cari alumni" placeholder="Cari nama alumni, kampus, atau instansi..." />
+                        <button type="submit">Cari Alumni</button>
+                    </form>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <a href="#tracer-alumni" class="rounded-xl bg-amber-400 px-4 py-2 text-xs font-extrabold text-slate-950">Isi / Update Data Alumni</a>
+                        <Link href="/alumni/direktori" class="rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-800">
+                            Lihat Direktori Alumni
+                        </Link>
+                    </div>
                 </div>
-                <Link href="/alumni/direktori" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
-                    Lihat Direktori Alumni
-                </Link>
+                <div class="parity-alumni-visual lg:col-span-4 rounded-2xl border border-white/20 bg-white/10 p-4 text-xs text-emerald-50 space-y-2">
+                    <img src="/madrasah-theme/images/classroom.webp" alt="Ilustrasi jejaring alumni" class="parity-alumni-image" />
+                    <p class="font-extrabold uppercase tracking-wider text-amber-300">Jejaring Almamater</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <Link href="/alumni/direktori?current_status=studying" class="rounded-lg bg-white/15 px-2.5 py-1 hover:bg-white/25">🎓 Kuliah</Link>
+                        <Link href="/alumni/direktori?current_status=working" class="rounded-lg bg-white/15 px-2.5 py-1 hover:bg-white/25">💼 Bekerja</Link>
+                        <Link href="/alumni/direktori?current_status=entrepreneur" class="rounded-lg bg-white/15 px-2.5 py-1 hover:bg-white/25">🚀 Bisnis Mandiri</Link>
+                    </div>
+                </div>
             </div>
 
-            <div v-if="!authenticatedAlumni" class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950 space-y-2">
+            <nav aria-labelledby="alumni-services-title">
+                <h2 id="alumni-services-title" class="service-form-title mb-3">Membangun Kolaborasi Lulusan Berkelanjutan</h2>
+                <div class="service-tiles">
+                    <Link href="/alumni/direktori"><strong>Direktori Alumni</strong><span>Temukan alumni yang membuka profilnya untuk publik</span></Link>
+                    <a href="#tracer-alumni"><strong>Tracer Study Mandiri</strong><span>Perbarui riwayat studi lanjut, pekerjaan, dan usaha</span></a>
+                    <Link href="/alumni/direktori"><strong>Bursa Karir &amp; Beasiswa</strong><span>Info peluang karier dan beasiswa jejaring alumni</span></Link>
+                    <a href="#tracer-alumni"><strong>E-KTA Digital</strong><span>Unduh kartu tanda anggota alumni terverifikasi</span></a>
+                </div>
+            </nav>
+
+            <div id="tracer-alumni" v-if="!authenticatedAlumni" class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950 space-y-2">
                 <p class="font-bold">Masuk Sebagai Akun Alumni Terverifikasi</p>
                 <p>Daftar atau masuk memakai tipe pemohon Alumni terlebih dahulu agar perubahan tracer dan penerbitan E-KTA hanya dilakukan oleh pemiliknya.</p>
                 <Link href="/layanan/ptsp/akun" class="inline-block rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white">
@@ -96,7 +123,7 @@ const submit = () => {
                 </Link>
             </div>
 
-            <div v-else class="space-y-6">
+            <div id="tracer-alumni" v-else class="space-y-6">
                 <div v-if="profile" class="rounded-2xl border border-slate-200 bg-white p-5 flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="text-sm font-semibold text-slate-900">Status Moderasi Direktori &amp; E-KTA</p>

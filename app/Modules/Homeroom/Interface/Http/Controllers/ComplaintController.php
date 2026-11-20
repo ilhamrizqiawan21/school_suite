@@ -42,6 +42,7 @@ class ComplaintController extends Controller
                 ->values()
                 ->all(),
             'issuedReceipt' => $request->session()->get('issued_complaint_receipt'),
+            'transparency' => $this->complaintService->publicTransparencySummary((int) $school['id']),
         ]);
     }
 

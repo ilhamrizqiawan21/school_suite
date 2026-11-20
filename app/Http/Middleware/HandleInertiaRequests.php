@@ -60,7 +60,6 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'publicPortalTheme' => fn () => app(SchoolScopeService::class)->primaryPublicTheme(),
-            'publicProfileMenu' => fn () => config('public_portal.profile_menu'),
             'appName' => config('app.name', 'School Suite'),
             'auth' => fn () => $user ? [
                 'user' => [

@@ -30,6 +30,17 @@ router.visit = ((url: InertiaVisitUrl, options?: Parameters<typeof router.visit>
     originalVisit(normalizeVisitUrl(url), options);
 }) as typeof router.visit;
 
+// The portal shell is rendered on the document so it can also be used by Blade pages.
+router.on('navigate', (event) => {
+    const page = event.detail.page;
+    const usesDocumentNavigation = page.component.startsWith('Public/')
+        && page.props.publicPortalTheme === 'madrasah';
+
+    if (usesDocumentNavigation !== document.body.classList.contains('madrasah-inertia-shell')) {
+        window.location.reload();
+    }
+});
+
 const setupTableScrollAffordances = () => {
     let refreshPending = false;
     const tableScrollers = new Set<HTMLElement>();
@@ -110,5 +121,10 @@ createInertiaApp({
             .mount(el);
         setupTableScrollAffordances();
     },
-});
+}).catch((error: unknown) => {
+    const portalError = document.querySelector<HTMLElement>('[data-portal-load-error]');
+    if (!portalError) throw error;
 
+    portalError.hidden = false;
+    console.error(error);
+});

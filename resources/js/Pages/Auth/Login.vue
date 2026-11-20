@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const props=defineProps<{status?:string;branding?:{school_name:string;logo_url?:string|null;favicon_url?:string|null;theme_primary?:string}|null}>();
@@ -10,6 +10,10 @@ const form = useForm({
     password: '',
     remember: false,
 });
+
+const page = usePage();
+const man4 = computed(() => page.props.publicPortalTheme === 'madrasah');
+const studentPortal = computed(() => man4.value && new URLSearchParams(page.url.split('?')[1]).get('portal') === 'siswa');
 
 const showPassword = ref(false);
 const schoolName = computed(() => props.branding?.school_name || 'Portal Sekolah');
@@ -48,7 +52,7 @@ const submit = () => {
 </script>
 
 <template>
-    <main class="login-page" :style="{ '--login-primary': branding?.theme_primary || '#3157a4' }">
+    <main class="login-page" :class="{ 'is-madrasah-login': man4, 'is-student-portal': studentPortal }" :style="{ '--login-primary': branding?.theme_primary || '#3157a4' }">
         <Head :title="`Masuk — ${schoolName}`" />
         <section class="login-layout" aria-label="Login portal sekolah">
             <aside class="welcome-panel">
@@ -58,9 +62,49 @@ const submit = () => {
                     <span class="brand-copy"><strong>{{ schoolName }}</strong><small>School Suite</small></span>
                 </div>
                 <div class="welcome-copy">
-                    <p class="welcome-kicker">Portal warga sekolah</p>
-                    <h1>Semua kebutuhan belajar, dalam satu tempat.</h1>
-                    <ul class="welcome-points">
+                    <p class="welcome-kicker">{{ studentPortal ? 'Portal Siswa & Wali Murid' : man4 ? 'Portal Database Madrasah' : 'Portal warga sekolah' }}</p>
+                    <h1>{{ studentPortal ? 'Pantau Perkembangan Akademik & Administrasi Siswa' : man4 ? 'Pusat Manajemen Database & Layanan Administrasi Digital' : 'Semua kebutuhan belajar, dalam satu tempat.' }}</h1>
+
+                    <div v-if="man4" class="madrasah-feature-grid">
+                        <template v-if="studentPortal">
+                            <div class="madrasah-feature-card">
+                                <strong>Biodata &amp; Profil</strong>
+                                <span>Cek NISN, data kelas, jurusan, dan kartu pelajar digital.</span>
+                            </div>
+                            <div class="madrasah-feature-card">
+                                <strong>Pengajuan Izin</strong>
+                                <span>Form izin sakit atau dispensasi langsung diverifikasi wali kelas.</span>
+                            </div>
+                            <div class="madrasah-feature-card">
+                                <strong>Perpustakaan</strong>
+                                <span>Katalog buku digital, riwayat peminjaman, dan bebas pustaka.</span>
+                            </div>
+                            <div class="madrasah-feature-card">
+                                <strong>Prestasi &amp; Catatan</strong>
+                                <span>Pantau poin kedisiplinan serta catatan prestasi penghargaan.</span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <div class="madrasah-feature-card">
+                                <strong>Database &amp; Siswa</strong>
+                                <span>Data induk siswa, riwayat akademik, pelanggaran, dan presensi.</span>
+                            </div>
+                            <div class="madrasah-feature-card">
+                                <strong>Tenaga Pendidik</strong>
+                                <span>Jurnal mengajar, absensi guru, dan administrasi kepegawaian.</span>
+                            </div>
+                            <div class="madrasah-feature-card">
+                                <strong>Lapor &amp; PTSP</strong>
+                                <span>Pengaduan madrasah, izin siswa, dan surat menyurat digital.</span>
+                            </div>
+                            <div class="madrasah-feature-card">
+                                <strong>Aman &amp; Terenkripsi</strong>
+                                <span>Sesi terproteksi, audit log aktivitas, dan hak akses bertingkat.</span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <ul v-else class="welcome-points">
                         <li>Materi &amp; tugas</li>
                         <li>Jadwal pelajaran</li>
                         <li>Nilai &amp; rapor</li>
@@ -68,13 +112,29 @@ const submit = () => {
                     </ul>
                 </div>
 
-                <a class="back-home" href="/">← Kembali ke situs sekolah</a>
+                <div class="welcome-footer-links">
+                    <a class="back-home" href="/">← Kembali ke situs sekolah</a>
+                    <div v-if="man4" class="portal-switch-links">
+                        <a href="/layanan/lapor">Portal Lapor</a>
+                        <a href="/layanan/ptsp">PTSP Online</a>
+                        <a href="/perpustakaan">Perpustakaan</a>
+                        <a :href="studentPortal ? '/login' : '/login?portal=siswa'">
+                            {{ studentPortal ? 'Login Guru / Admin' : 'Login Siswa' }}
+                        </a>
+                    </div>
+                </div>
             </aside>
 
             <section class="login-panel" aria-labelledby="login-title">
+                <div v-if="man4" class="login-mobile-brand">
+                    <img :src="branding?.logo_url || '/madrasah-theme/images/logo-kemenag.png'" alt="" />
+                    <strong>{{ schoolName }}</strong>
+                    <a href="/">Beranda</a>
+                </div>
                 <header class="login-heading">
-                    <p class="login-kicker">Akun sekolah</p>
-                    <h2 id="login-title">Masuk ke portal</h2>
+                    <span v-if="man4" class="login-heading-mark" aria-hidden="true"></span>
+                    <p v-else class="login-kicker">Akun sekolah</p>
+                    <h2 id="login-title">{{ studentPortal ? 'Login Siswa' : man4 ? 'Selamat Datang' : 'Masuk ke portal' }}</h2>
                     <p>Gunakan akun yang diberikan sekolah.</p>
 
                 </header>
@@ -91,7 +151,7 @@ const submit = () => {
                             required
                             autofocus
                             autocomplete="username"
-                            placeholder="nama@sekolah.sch.id"
+                            :placeholder="studentPortal ? 'Username atau email akun siswa' : 'nama@sekolah.sch.id'"
                             :aria-invalid="!!form.errors.identity"
                             :aria-describedby="form.errors.identity ? 'identity-error' : undefined"
                         />
@@ -146,6 +206,9 @@ const submit = () => {
                         <span>{{ form.processing ? 'Memproses…' : 'Masuk' }}</span>
                     </AppButton>
                 </form>
+                <p v-if="man4" class="login-portal-switch">
+                    <a :href="studentPortal ? '/login' : '/login?portal=siswa'">{{ studentPortal ? 'Masuk sebagai Guru / Admin' : 'Masuk sebagai Siswa / Wali' }}</a>
+                </p>
                 <p class="system-note">Lupa kata sandi? Hubungi operator atau wali kelas Anda.</p>
             </section>
         </section>
@@ -161,6 +224,10 @@ const submit = () => {
 }
 
 .login-page {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
     --login-ink: #173044;
     --login-muted: #526673;
     --login-line: #dde5ef;
@@ -217,6 +284,94 @@ const submit = () => {
 .login-heading h2 { margin: 0 0 .5rem; font-family: var(--font-ui); font-size: clamp(1.6rem, 2.6vw, 2rem); font-weight: var(--weight-bold); letter-spacing: -.035em; line-height: 1.2; }
 .login-heading p { margin: 0; color: var(--login-muted); font-size: var(--type-md); line-height: 1.6; }
 
+.is-madrasah-login .welcome-panel {
+    background:
+        radial-gradient(circle at 75% 25%, #047857 0, transparent 48%),
+        linear-gradient(135deg, #022c22, #064e3b 55%, #020617);
+    border-color: #065f46;
+    color: white;
+}
+.is-madrasah-login {
+    background: #020617;
+}
+
+.is-madrasah-login .login-panel {
+    width: calc(100% - 2rem);
+    margin-block: 1rem;
+    border: 1px solid #334155;
+    border-radius: 1.25rem;
+    background: #0f172a;
+    color: #f8fafc;
+    --login-muted: #cbd5e1;
+    --login-line: #334155;
+}
+
+.is-madrasah-login .login-heading h2,
+.is-madrasah-login .form-field label {
+    color: #fff;
+}
+
+.is-madrasah-login .field-error {
+    color: #fda4af;
+}
+
+.is-madrasah-login .welcome-copy h1 { color: white; }
+.is-madrasah-login .brand-copy small,
+.is-madrasah-login .welcome-kicker,
+.is-madrasah-login .back-home { color: #d1fae5; }
+.is-madrasah-login .welcome-points li {
+    color: #ecfdf5;
+    background: rgb(255 255 255 / 10%);
+    border-color: #34d399;
+}
+.madrasah-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+}
+.madrasah-feature-card {
+    padding: .85rem .95rem;
+    border-radius: .9rem;
+    background: rgb(255 255 255 / 7%);
+    border: 1px solid rgb(167 243 208 / 22%);
+    display: grid;
+    gap: .25rem;
+}
+.madrasah-feature-card strong {
+    font-size: .85rem;
+    color: #fef08a;
+}
+.madrasah-feature-card span {
+    font-size: .76rem;
+    line-height: 1.45;
+    color: #d1fae5;
+}
+.welcome-footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+.portal-switch-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+    font-size: .78rem;
+}
+.portal-switch-links a {
+    color: #a7f3d0;
+    text-decoration: none;
+    font-weight: 600;
+}
+.portal-switch-links a:hover {
+    color: #fef08a;
+    text-decoration: underline;
+}
+@media (max-width: 520px) {
+    .madrasah-feature-grid { grid-template-columns: 1fr; }
+}
+
 .status-message { margin-bottom: 1.25rem; padding: .85rem 1rem; color: #17613c; background: #edf8f1; border: 1px solid #b9e3c8; border-radius: .7rem; font-size: var(--type-sm); line-height: 1.5; }
 .login-form { display: grid; gap: 1.25rem; }
 .form-field { display: grid; gap: .5rem; min-width: 0; }
@@ -263,5 +418,55 @@ const submit = () => {
 @media (prefers-reduced-motion: reduce) {
     .spinner { animation-duration: 2.5s; }
     .form-field input { transition: none; }
+}
+ .login-mobile-brand { display: none; }
+.login-heading-mark { display: block; width: 48px; height: 48px; margin-bottom: 1.5rem; border-radius: 12px; background: linear-gradient(135deg,#34d399,#0d9488); }
+.login-portal-switch { margin: 1.5rem 0; font-size: .8rem; color: #5eead4; }
+.is-madrasah-login .form-field input { background: #1e293b; color: #f8fafc; border-color: #334155; }
+.is-madrasah-login .form-field input::placeholder { color: #94a3b8; }
+.is-madrasah-login .submit-button { background: linear-gradient(110deg,#059669,#0d9488); border-color: #10b981; color: #fff; }
+@media (min-width: 861px) {
+    .is-madrasah-login .login-layout { width: min(1280px,100%); margin: auto; grid-template-columns: 1fr 1fr; }
+    .is-madrasah-login .login-panel { max-width: 480px; background: transparent; border: 0; padding: 3rem; }
+    .is-madrasah-login .welcome-panel { padding: 3rem; }
+    .is-madrasah-login .welcome-copy h1 { font-size: 2rem; }
+}
+@media (max-width: 860px) {
+    .is-madrasah-login { display: block; background: #0f172a; }
+    .is-madrasah-login .welcome-panel { display: none; }
+    .is-madrasah-login .login-layout { display: block; min-height: 100svh; }
+    .is-madrasah-login .login-panel { width: 100%; max-width: 480px; min-height: 100svh; margin: auto; padding: 1.5rem; border: 0; border-radius: 0; background: #0f172a; }
+    .login-mobile-brand { display: flex; align-items: center; gap: .6rem; margin-bottom: 3rem; color: #fff; }
+    .login-mobile-brand img { width: 42px; height: 42px; object-fit: contain; }
+    .login-mobile-brand strong { font-size: .85rem; line-height: 1.3; }
+    .login-mobile-brand a { margin-left: auto; padding: .55rem .8rem; border: 1px solid #334155; border-radius: .5rem; font-size: .75rem; color: #cbd5e1; }
+}
+
+@media (min-width: 1024px) {
+    .is-madrasah-login .login-layout { grid-template-columns: 7fr 5fr; }
+    .is-madrasah-login .welcome-panel { padding: 48px; justify-content: flex-start; gap: 0; background: linear-gradient(125deg,#020617,#022c22,#0f172a); }
+    .is-madrasah-login .school-brand { margin-bottom: 72px; }
+    .is-madrasah-login .welcome-copy h1 { font-size: 36px; line-height: 1.25; }
+    .is-madrasah-login .welcome-footer-links { margin-top: 48px; }
+    .is-madrasah-login .login-panel { max-width: none; width: 100%; margin: 0; padding: 176px 48px 48px; align-self: stretch; }
+    .is-madrasah-login.is-student-portal .login-panel { padding-top: 139px; }
+    .is-madrasah-login .login-heading h2 { font-size: 30px; }
+}
+@media (min-width: 1280px) {
+    .is-madrasah-login .login-layout { grid-template-columns: 3fr 2fr; }
+    .is-madrasah-login .welcome-panel { padding: 64px; }
+    .is-madrasah-login .school-brand { margin-bottom: 88px; }
+    .is-madrasah-login .login-panel { padding-inline: 56px; }
+}
+@media (max-width: 1023px) {
+    .is-madrasah-login { display: block; background: #0f172a; }
+    .is-madrasah-login .welcome-panel { display: none; }
+    .is-madrasah-login .login-layout { display: block; min-height: 100svh; }
+    .is-madrasah-login .login-panel { width: 100%; max-width: 480px; min-height: 100svh; margin: auto; padding: 24px; border: 0; border-radius: 0; background: #0f172a; }
+    .is-madrasah-login .login-mobile-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 38px; color: #fff; }
+    .is-madrasah-login .login-mobile-brand img { width: 42px; height: 42px; object-fit: contain; }
+    .is-madrasah-login .login-mobile-brand strong { font-size: 13px; line-height: 1.3; }
+    .is-madrasah-login .login-mobile-brand a { margin-left: auto; padding: 9px 12px; border: 1px solid #334155; border-radius: 8px; font-size: 12px; color: #cbd5e1; }
+    .is-madrasah-login .login-heading h2 { font-size: 24px; }
 }
 </style>

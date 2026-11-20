@@ -6,8 +6,20 @@ const searchLinks = [...document.querySelectorAll('#portalSearchResults a')];
 let activeDialog = null;
 let opener = null;
 
+let openMenu = null;
+
+function closeMenu(returnFocus = false) {
+    if (!openMenu) return;
+    byId(openMenu.dataset.portalMenu).hidden = true;
+    openMenu.setAttribute('aria-expanded', 'false');
+    if (returnFocus) openMenu.focus();
+    openMenu = null;
+}
+
 function closeDialog(restoreFocus = true) {
     if (!activeDialog) return;
+    const modalVideo = activeDialog.querySelector('video');
+    if (modalVideo) modalVideo.pause();
     activeDialog.classList.add('hidden');
     if (activeDialog === mobileMenu) mobileToggle.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
@@ -33,6 +45,17 @@ function populateDialog(trigger) {
         image.alt = trigger.dataset.caption;
         byId('lightboxCaption').textContent = trigger.dataset.caption;
     }
+    if (trigger.dataset.videoSrc) {
+        const player = byId('videoModalPlayer');
+        const source = byId('videoModalSource');
+        const title = byId('videoModalTitle');
+        if (title) title.textContent = trigger.dataset.videoTitle || 'Pemutar Video';
+        if (player && source) {
+            source.src = trigger.dataset.videoSrc;
+            if (trigger.dataset.videoPoster) player.poster = trigger.dataset.videoPoster;
+            player.load();
+        }
+    }
     if (trigger.dataset.article) {
         const article = JSON.parse(trigger.dataset.article);
         byId('bmKategori').textContent = article.category ?? 'Warta';
@@ -47,6 +70,19 @@ function populateDialog(trigger) {
 }
 
 document.addEventListener('click', (event) => {
+    const menuButton = event.target.closest('[data-portal-menu]');
+    if (menuButton) {
+        const wasOpen = menuButton === openMenu;
+        closeMenu();
+        if (!wasOpen) {
+            openMenu = menuButton;
+            byId(menuButton.dataset.portalMenu).hidden = false;
+            menuButton.setAttribute('aria-expanded', 'true');
+        }
+        return;
+    }
+    if (openMenu && !byId(openMenu.dataset.portalMenu).contains(event.target)) closeMenu();
+
     const trigger = event.target.closest('[data-open-dialog], [data-close-dialog], [data-toggle-mobile], [data-scroll-top]');
     if (trigger?.hasAttribute('data-toggle-mobile')) {
         if (activeDialog === mobileMenu) closeDialog();
@@ -66,12 +102,31 @@ document.addEventListener('click', (event) => {
         window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
         return;
     }
-    if (activeDialog === mobileMenu && event.target.closest('a[href^="#"]')) closeDialog(false);
+    const anchorLink = event.target.closest('a[href^="#"], a[href^="/#"]');
+    if (anchorLink) {
+        const rawHref = anchorLink.getAttribute('href') || '';
+        const hashId = rawHref.replace(/^\/?#/, '');
+        const targetEl = hashId ? document.getElementById(hashId) : null;
+        if (activeDialog === mobileMenu) closeDialog(false);
+        if (openMenu) closeMenu();
+        if (targetEl && (window.location.pathname === '/' || rawHref.startsWith('#'))) {
+            event.preventDefault();
+            targetEl.scrollIntoView({
+                behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                block: 'start',
+            });
+            history.replaceState(null, '', `#${hashId}`);
+        }
+    }
 });
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && activeDialog) {
         closeDialog();
+        return;
+    }
+    if (event.key === 'Escape' && openMenu) {
+        closeMenu(true);
         return;
     }
     if (event.key === ' ' || event.key === 'Enter') {

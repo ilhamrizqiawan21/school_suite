@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import LegalizationProcedure from '@/components/LegalizationProcedure.vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -69,21 +70,49 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 <template>
     <Head :title="`Legalisir Ijazah — ${school.name}`" />
 
-    <div class="min-h-screen bg-[#f8f6f0]" :style="themeStyle">
+    <div class="min-h-screen bg-[#f8f6f0]" data-madrasah-service="legalization" :style="themeStyle">
         <PublicHeader :school="school" />
 
         <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="madrasah-service-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Layanan Legalisir Ijazah &amp; Dokumen</h1>
+                    <p class="madrasah-service-label"><i class="fa-solid fa-certificate" aria-hidden="true"></i> Layanan Administrasi Alumni</p>
+                    <h1 class="text-2xl font-bold text-slate-900">Legalisir Ijazah &amp; Rapor</h1>
                     <p class="mt-1 text-sm text-slate-600">Pengajuan legalisir alumni dengan pengambilan langsung atau melalui kuasa resmi.</p>
                 </div>
-                <Link
-                    href="/layanan/surat-kuasa"
-                    class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                    Buat Surat Kuasa / SPTJM
-                </Link>
+
+            </div>
+
+                <nav class="parity-document-nav" aria-label="Navigasi layanan">
+                    <a href="#alur-legalisir">Alur &amp; Ketentuan</a>
+                    <a href="#legalization-form-title" class="rounded-lg bg-amber-400 px-3 py-2 text-xs font-extrabold text-slate-950">Formulir Pengajuan</a>
+                    <Link
+                        href="/layanan/surat-kuasa"
+                        class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                        Cetak Surat Kuasa / SPTJM
+                    </Link>
+                    <Link
+                        href="/lacak?category=legalisir"
+                        class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white"
+                    >
+                        Cek Status Pengajuan
+                    </Link>
+                </nav>
+
+            <div id="alur-legalisir" class="parity-legalization-layout">
+                <LegalizationProcedure />
+                <aside class="parity-requirements">
+                    <h2>Ringkasan Persyaratan</h2>
+                    <h3>Dokumen Ijazah Asli atau Salinan</h3>
+                    <p>Siapkan dokumen yang jelas untuk pemeriksaan petugas Tata Usaha.</p>
+                    <h3>Pengambilan Langsung atau Kuasa</h3>
+                    <p>Pengambilan melalui perwakilan memerlukan Surat Kuasa dan SPTJM.</p>
+                    <Link href="/layanan/surat-kuasa">Buat Surat Kuasa / SPTJM →</Link>
+                    <h3>Status Permohonan</h3>
+                    <p>Simpan nomor tiket dan PIN agar status pengajuan dapat dipantau.</p>
+                    <Link href="/lacak?category=legalisir">Cek Status Pengajuan →</Link>
+                </aside>
             </div>
 
             <div v-if="issuedReceipt" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 space-y-1">
@@ -95,7 +124,14 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </p>
             </div>
 
-            <form @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+            <ol class="service-tiles" aria-label="Alur legalisir">
+                <li><strong>Lengkapi data alumni</strong><span>Isi identitas dan dokumen yang akan dilegalisir.</span></li>
+                <li><strong>Pilih pengambilan</strong><span>Ambil langsung atau gunakan surat kuasa.</span></li>
+                <li><strong>Lacak permohonan</strong><span>Pantau verifikasi menggunakan tiket dan PIN.</span></li>
+            </ol>
+
+            <form aria-labelledby="legalization-form-title" @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+                <h2 id="legalization-form-title" class="service-form-title">Formulir Legalisir</h2>
                 <div class="grid gap-3 md:grid-cols-3">
                     <FormField id="leg-name" label="Nama Lengkap Alumni" :error="form.errors.applicant_name" required>
                         <input id="leg-name" v-model="form.applicant_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />

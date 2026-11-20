@@ -613,7 +613,7 @@ body .public-site.public-admissions :is(.period-card h3, .flow-grid h3) {
     line-height: var(--leading-snug);
 }
 
-body:has(.public-site-header.is-man4) .madrasah-profile-hero {
+body.madrasah-inertia-shell .madrasah-profile-hero {
     scroll-margin-top: 8rem;
     padding: clamp(1.5rem, 4vw, 3.5rem);
     border: 1px solid #13634d;
@@ -624,19 +624,396 @@ body:has(.public-site-header.is-man4) .madrasah-profile-hero {
         linear-gradient(135deg, #052e26, #0d5948 72%, #082f2a);
 }
 
-body:has(.public-site-header.is-man4) .madrasah-profile-hero h1 {
+body.madrasah-inertia-shell .madrasah-profile-hero h1 {
     color: #fff;
     font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
 }
 
-body:has(.public-site-header.is-man4) .madrasah-profile-hero p {
+body.madrasah-inertia-shell .madrasah-profile-hero p {
     color: #d1fae5;
 }
 
-body:has(.public-site-header.is-man4) .madrasah-profile-hero :is(.eyebrow, .kicker, .hero-title-accent) {
+body.madrasah-inertia-shell .madrasah-profile-hero :is(.eyebrow, .kicker, .hero-title-accent) {
     color: #fcd34d;
 }
 
-body:has(.public-site-header.is-man4) :is(#sambutan, #arah) {
+body.madrasah-inertia-shell :is(.public-section-page, .public-organization) > .madrasah-profile-hero {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: clamp(2rem, 5vw, 4rem) max(1rem, calc((100% - 1180px) / 2 + 1rem));
+    border: 0;
+    border-radius: 0;
+    background-color: #052e26;
+}
+
+body.madrasah-inertia-shell :is(.public-section-page, .public-organization) > .madrasah-profile-hero .eyebrow {
+    display: inline-block;
+    padding: .25rem .65rem;
+    border: 1px solid rgb(167 243 208 / 45%);
+    border-radius: 999px;
+    background: rgb(16 185 129 / 16%);
+    color: #a7f3d0 !important;
+}
+
+body.madrasah-inertia-shell :is(.public-section-page, .public-organization) > .madrasah-profile-hero > p:last-child {
+    color: #d1fae5 !important;
+}
+
+body.madrasah-inertia-shell .public-section-page > .section-content {
+    width: min(1180px, calc(100% - 2rem));
+    padding-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+body.madrasah-inertia-shell .public-section-page :is(.info-card, .life-card, .contact-card, .facility-card) {
+    min-height: 0;
+    border-color: #dce7e3;
+    border-radius: 1rem;
+    background: #fff;
+}
+
+body.madrasah-inertia-shell :is(.public-section-page .section-footer, .public-organization > footer, .identity-watermark) {
+    display: none;
+}
+
+body.madrasah-inertia-shell .public-organization {
+    padding: 0 0 3rem;
+    background: #f8fafc;
+}
+
+body.madrasah-inertia-shell .public-organization .organization-tree {
+    width: min(1180px, calc(100% - 2rem));
+    margin-top: 2rem;
+}
+
+body.madrasah-inertia-shell .public-organization .tree-flow {
+    background: #fff;
+    border-color: #dce7e3;
+}
+
+body.madrasah-inertia-shell .article-page {
+    background: #f8fafc;
+    padding: 2rem 1rem 3rem;
+}
+
+body.madrasah-inertia-shell .article-page article {
+    margin-top: 0;
+    background: #fff;
+    border-color: #dce7e3;
+}
+
+body.madrasah-inertia-shell .public-section-page .facility-gallery {
+    margin-block: 0 clamp(1.5rem, 4vw, 3rem);
+}
+
+body.madrasah-inertia-shell .public-section-page .facility-gallery h2 {
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+
+body.madrasah-inertia-shell .public-section-page .facility-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+}
+
+body.madrasah-inertia-shell .public-section-page .facility-card {
+    grid-column: auto;
+    grid-row: auto;
+    grid-template-rows: auto 1fr;
+}
+
+body.madrasah-inertia-shell .public-section-page .facility-card img {
+    height: auto;
+    aspect-ratio: 16 / 10;
+}
+
+body.madrasah-inertia-shell :is(#sambutan, #arah) {
     scroll-margin-top: 10rem;
+}
+
+/* Public service mastheads from the Madrasah portal. */
+[data-madrasah-service] .madrasah-service-label {
+    color: var(--public-primary);
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] {
+    --service-background: #f8fafc;
+    --service-hero: linear-gradient(135deg, #064e3b, #047857);
+    --service-on-hero: #fff;
+    --service-description: #d1fae5;
+    --service-label: #fef08a;
+    min-height: 100vh;
+    background: var(--service-background);
+    font-family: Inter, system-ui, sans-serif;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="legalization"] {
+    --service-hero: radial-gradient(ellipse at top, #0369a1, #0c4a6e 80%, #082f49);
+    --service-description: #e0f2fe;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="graduation"] {
+    --service-hero: linear-gradient(135deg, #0b1528, #11264c 45%, #1e40af);
+    --service-description: #dbeafe;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="mutation"] {
+    --service-hero: radial-gradient(ellipse at top, #0d5c3a, #064e3b 80%, #043829);
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="alumni"] {
+    --service-hero: linear-gradient(135deg, #022c22, #065f46 50%, #011c16);
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="complaint"] {
+    --service-hero: radial-gradient(ellipse at top right, #fecdd3, #fff1f2 65%);
+    --service-on-hero: #0f172a;
+    --service-description: #475569;
+    --service-label: #9f1239;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] .madrasah-service-hero {
+    padding: clamp(1.5rem, 4.5vw, 4.25rem);
+    border-radius: 1.25rem;
+    color: var(--service-on-hero);
+    background: var(--service-hero);
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] .madrasah-service-hero h1 {
+    max-width: 24ch;
+    margin: .6rem 0 .65rem;
+    color: var(--service-on-hero);
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+    font-size: clamp(1.85rem, 4.25vw, 3.3rem);
+    font-weight: 800;
+    letter-spacing: -.035em;
+    line-height: 1.13;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] .madrasah-service-hero p {
+    color: var(--service-description);
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] .madrasah-service-hero .madrasah-service-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .3rem .75rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    color: var(--service-label);
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] .madrasah-service-hero .flex {
+    flex-wrap: wrap;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .madrasah-service-hero,
+body.madrasah-inertia-shell [data-madrasah-service="graduation"] .madrasah-service-hero,
+body.madrasah-inertia-shell [data-madrasah-service="guestbook"] .madrasah-service-hero {
+    text-align: center;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .madrasah-service-hero :is(h1, p),
+body.madrasah-inertia-shell [data-madrasah-service="graduation"] .madrasah-service-hero :is(h1, p),
+body.madrasah-inertia-shell [data-madrasah-service="guestbook"] .madrasah-service-hero :is(h1, p) {
+    max-width: 62ch;
+    margin-inline: auto;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service] .portal-card {
+    box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+@media (max-width: 400px) {
+    body.madrasah-inertia-shell [data-madrasah-service] :is(.lookup-form, .form-grid) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .portal-container {
+    width: 100%;
+    padding-top: 0;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .madrasah-service-hero {
+    padding-block: clamp(2rem, 4vw, 3.75rem) clamp(3.75rem, 6vw, 5.5rem);
+    border-radius: 0;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .madrasah-service-hero h1 {
+    font-size: clamp(1.65rem, 3.4vw, 1.875rem);
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .portal-card {
+    width: min(960px, calc(100% - 2rem));
+    margin-inline: auto;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="tracking"] .madrasah-service-hero + .portal-card {
+    position: relative;
+    margin-top: -3.25rem;
+}
+
+.service-form-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.service-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 195px), 1fr));
+    gap: .75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.service-tiles > :is(li, a, label) {
+    display: grid;
+    gap: .3rem;
+    padding: 1rem;
+    border: 1px solid #dce7e3;
+    border-radius: .85rem;
+    background: #fff;
+    line-height: 1.4;
+}
+
+.service-tiles :is(span, small) {
+    display: block;
+    color: #475569;
+    font-size: .85rem;
+}
+
+.service-jump,
+.service-tiles > a {
+    color: var(--public-primary);
+    font-weight: 700;
+}
+
+.service-choice-group {
+    min-width: 0;
+    margin: 0;
+    padding: .65rem 0 0;
+    border: 0;
+}
+
+.service-tiles > .service-choice {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    cursor: pointer;
+}
+
+.service-choice:has(input:checked) {
+    border-color: var(--public-primary);
+    background: #ecfdf5;
+}
+
+body.madrasah-inertia-shell [data-madrasah-service="complaint"] .service-choice:has(input:checked) {
+    border-color: #be123c;
+    background: #fff1f2;
+}
+
+[data-madrasah-service] [id]:is(section, div, form) {
+    scroll-margin-top: 1.5rem;
+}
+
+@media (min-width: 850px) {
+    body.madrasah-inertia-shell [data-madrasah-service="guestbook"] .guestbook-layout {
+        width: min(1120px, calc(100% - 2rem));
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        align-items: start;
+    }
+
+    body.madrasah-inertia-shell [data-madrasah-service="guestbook"] .guestbook-welcome {
+        grid-column: 1;
+        grid-row: 1 / span 3;
+        min-height: 440px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    body.madrasah-inertia-shell [data-madrasah-service="guestbook"] .guestbook-layout > :not(.guestbook-welcome) {
+        grid-column: 2;
+    }
+}
+
+.operations-scan-hero {
+    padding: clamp(1rem, 3vw, 2rem);
+    border-radius: 1rem;
+    background: linear-gradient(125deg, #064e3b, #047857);
+    color: #fff;
+}
+
+.operations-scan-hero h1 {
+    margin-block: .25rem;
+    color: #fff;
+}
+
+.operations-scan-hero p {
+    color: #d1fae5;
+}
+
+.operations-scan-label {
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.operations-scan-panel {
+    display: grid;
+    gap: .65rem;
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid #d1fae5;
+    border-radius: .85rem;
+    background: #ecfdf5;
+    color: #064e3b;
+}
+
+.operations-scan-panel > p {
+    margin: 0;
+    font-size: .875rem;
+}
+
+.operations-pin-panel {
+    border-top: 4px solid #047857;
+}
+
+body.madrasah-inertia-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body.madrasah-inertia-shell > #main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.madrasah-loading-state {
+    width: min(42rem, calc(100% - 2rem));
+    margin: 2rem auto;
+    padding: 1rem 1.25rem;
+    border: 1px solid #dce7e3;
+    border-radius: .85rem;
+    background: #fff;
+    color: #065f46;
+}
+
+.madrasah-loading-state a {
+    font-weight: 700;
+    text-decoration: underline;
 }

@@ -94,37 +94,82 @@ const submitClearance = () => {
 <template>
     <Head :title="`Perpustakaan — ${school.name}`" />
 
-    <div class="min-h-screen bg-[#f8f6f0]" :style="themeStyle">
+    <div class="min-h-screen bg-[#f8f6f0]" data-madrasah-service="library" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <main class="mx-auto max-w-5xl px-4 py-10 space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Portal Perpustakaan &amp; Layanan Pustaka</h1>
+        <main class="mx-auto max-w-6xl px-4 py-10 space-y-6">
+            <div class="madrasah-service-hero grid gap-5 lg:grid-cols-12 items-center">
+                <div class="parity-hero-copy lg:col-span-8 space-y-3">
+                    <p class="madrasah-service-label"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i> E-Perpustakaan Digital · Khazanah Literasi Madrasah</p>
+                    <h1 class="text-2xl font-bold text-slate-900">Membuka Cakrawala Ilmu, Menumbuhkan Karakter Qur’ani Melalui Literasi</h1>
                     <p class="mt-1 text-xs text-slate-600">{{ sourceStatus.message }}</p>
-                </div>
-                <div class="flex gap-3 text-xs font-semibold text-slate-700">
-                    <span class="rounded-lg bg-white px-3 py-2 border border-slate-200">Koleksi: {{ stats.collections_count }}</span>
-                    <span class="rounded-lg bg-white px-3 py-2 border border-slate-200">Kunjungan Hari Ini: {{ stats.visits_today }}</span>
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
-                <h2 class="text-base font-bold text-slate-900">Katalog Buku &amp; E-Book</h2>
-                <div class="grid gap-3 md:grid-cols-4">
-                    <input v-model="search" type="text" placeholder="Cari judul, pengarang, kode..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-                    <select v-model="category" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                <form class="parity-hero-search" @submit.prevent="applyFilter">
+                    <input v-model="search" type="search" aria-label="Cari koleksi" @keydown.enter="applyFilter" placeholder="Cari judul, pengarang, kode..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <select v-model="category" aria-label="Kategori koleksi" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
                         <option value="">Semua Kategori</option>
                         <option v-for="c in categories" :key="c.value" :value="c.value">{{ c.label }}</option>
                     </select>
-                    <select v-model="format" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    <select v-model="format" aria-label="Format koleksi" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
                         <option value="">Semua Format</option>
                         <option value="physical">Cetak / Fisik</option>
                         <option value="ebook">Digital (E-Book)</option>
                         <option value="hybrid">Cetak &amp; E-Book</option>
                     </select>
-                    <AppButton type="button" @click="applyFilter">Cari Koleksi</AppButton>
+                    <AppButton type="submit">Cari</AppButton>
+                </form>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <a href="#katalog-pustaka" class="rounded-xl bg-amber-400 px-4 py-2 text-xs font-extrabold text-slate-950">Jelajahi Katalog</a>
+                        <a href="#kunjungan-pustaka" class="rounded-xl bg-white/15 border border-white/30 px-4 py-2 text-xs font-bold text-white">Presensi Pengunjung</a>
+                        <a v-if="isLoggedIn && students.length" href="#bebas-pustaka" class="rounded-xl bg-white/15 border border-white/30 px-4 py-2 text-xs font-bold text-white">Cek Bebas Pustaka</a>
+                    </div>
                 </div>
+                <div class="parity-hero-visual">
+                    <img src="/madrasah-theme/images/library.webp" alt="Ilustrasi ruang perpustakaan" />
+                    <div class="parity-hero-metrics">
+                        <span><strong>{{ stats.collections_count }}</strong> Koleksi</span>
+                        <span><strong>{{ stats.visits_today }}</strong> Kunjungan Hari Ini</span>
+                        <span><strong>{{ stats.active_loans }}</strong> Pinjaman Aktif</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav aria-labelledby="library-services-title">
+                <h2 id="library-services-title" class="service-form-title mb-3">Pusat Layanan Digital Mandiri</h2>
+                <div class="service-tiles">
+                    <a href="#katalog-pustaka"><strong>Katalog Buku &amp; E-Book</strong><span>Cari koleksi cetak dan e-book terpadu</span></a>
+                    <a href="#kunjungan-pustaka"><strong>Presensi Buku Tamu</strong><span>Catat kunjungan perpustakaan via QR/manual</span></a>
+                    <a href="#usulan-pustaka"><strong>Usul Pengadaan Buku</strong><span>Ajukan judul koleksi baru untuk madrasah</span></a>
+                    <a href="#bebas-pustaka"><strong>Cek Bebas Pustaka</strong><span>Verifikasi tanggungan pinjaman siswa</span></a>
+                </div>
+            </nav>
+
+            <section v-if="categories.length" aria-labelledby="library-categories-title" class="parity-library-categories space-y-3">
+                <h2 id="library-categories-title" class="service-form-title">Jelajahi Kategori Koleksi</h2>
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        class="rounded-xl px-3.5 py-2 text-xs font-bold border transition"
+                        :class="!category ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
+                        @click="category = ''; applyFilter()"
+                    >
+                        Semua Kategori
+                    </button>
+                    <button
+                        v-for="c in categories"
+                        :key="c.value"
+                        type="button"
+                        class="rounded-xl px-3.5 py-2 text-xs font-bold border transition"
+                        :class="category === c.value ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
+                        @click="category = c.value; applyFilter()"
+                    >
+                        {{ c.label }}
+                    </button>
+                </div>
+            </section>
+
+            <div id="katalog-pustaka" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+                <h2 class="text-base font-bold text-slate-900">Katalog Buku &amp; E-Book</h2>
+
 
                 <StateFeedback v-if="collections.length === 0" state="empty" title="Koleksi tidak ditemukan" description="Ubah kata kunci pencarian atau hubungi pustakawan." />
 
@@ -154,7 +199,7 @@ const submitClearance = () => {
             </div>
 
             <div class="grid gap-6 md:grid-cols-2">
-                <form @submit.prevent="submitVisit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
+                <form id="kunjungan-pustaka" @submit.prevent="submitVisit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
                     <h2 class="text-base font-bold text-slate-900">Presensi Kunjungan Perpustakaan</h2>
                     <div v-if="visitReceipt" class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
                         Kunjungan <strong>{{ visitReceipt.visitor_name }}</strong> tercatat ({{ visitReceipt.method }}).
@@ -172,7 +217,7 @@ const submitClearance = () => {
                 </form>
 
                 <div v-if="isLoggedIn" class="space-y-6">
-                    <form v-if="students.length" @submit.prevent="submitClearance" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
+                    <form id="bebas-pustaka" v-if="students.length" @submit.prevent="submitClearance" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
                         <h2 class="text-base font-bold text-slate-900">Bebas Pustaka</h2>
                         <FormField id="lib-clr-student" label="Pilih Siswa" required>
                             <select id="lib-clr-student" v-model="clearanceForm.student_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -189,7 +234,7 @@ const submitClearance = () => {
                         </div>
                     </form>
 
-                    <form @submit.prevent="submitProcurement" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
+                    <form id="usulan-pustaka" @submit.prevent="submitProcurement" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-3">
                         <h2 class="text-base font-bold text-slate-900">Usul Pengadaan Koleksi Baru</h2>
                         <FormField id="lib-proc-title" label="Judul Buku / Koleksi" :error="procurementForm.errors.title" required>
                             <input id="lib-proc-title" v-model="procurementForm.title" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />

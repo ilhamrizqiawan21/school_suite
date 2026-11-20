@@ -51,7 +51,7 @@ interface OrganizationMember {
 }
 
 const props = defineProps<{ school: SchoolProfile; news: NewsItem[]; gallery: GalleryPhoto[]; organization: OrganizationMember[] }>();
-const preview = computed(() => usePage().props.publicPortalTheme === 'man4-banjar');
+const preview = computed(() => usePage().props.publicPortalTheme === 'madrasah');
 const sampleMission = 'Menguatkan karakter dan kebiasaan belajar.\nMengembangkan literasi, riset, dan kepedulian lingkungan.';
 const principalMessage = computed(() => props.school.principal_message || (preview.value
     ? 'Selamat datang di Portal Madrasah. Mari membangun lingkungan belajar yang tertib, terbuka, dan mendorong rasa ingin tahu.'

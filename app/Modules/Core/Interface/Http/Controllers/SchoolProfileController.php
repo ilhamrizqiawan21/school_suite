@@ -28,7 +28,11 @@ class SchoolProfileController extends Controller
     {
         $school = School::query()->orderBy('id')->firstOrFail();
 
-        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+        if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($request->fullUrl());
+            }
+
             return response()->view('public.madrasah.profile', $this->portalService->madrasahShellData($school));
         }
 
@@ -40,16 +44,15 @@ class SchoolProfileController extends Controller
         $school = School::query()->orderBy('id')->firstOrFail();
 
         $npsn = (string) $school->npsn;
-        $isMan4 = $npsn === '30208801';
 
-        if ($this->schoolScope->usesMan4PublicTheme($npsn)) {
+        if ($this->schoolScope->usesMadrasahPublicTheme($npsn)) {
             if ($request->header('X-Inertia')) {
                 return Inertia::location(route('public.home'));
             }
 
-            $data = $isMan4 ? $this->publicData($school) : [];
+            $data = config('public_portal.theme') === 'madrasah' ? $this->publicData($school) : [];
 
-            return response()->view('public.man4-banjar', [
+            return response()->view('public.madrasah.home', [
                 'profile' => $data['school'] ?? [],
                 'news' => $data['news'] ?? [],
                 'gallery' => $data['gallery'] ?? [],

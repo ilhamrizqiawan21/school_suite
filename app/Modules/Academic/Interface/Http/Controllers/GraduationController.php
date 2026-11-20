@@ -31,6 +31,12 @@ class GraduationController extends Controller
     {
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
 
+        $batch = GraduationBatch::query()
+            ->where('school_id', $school['id'])
+            ->where('is_published', true)
+            ->latest('id')
+            ->first();
+
         return Inertia::render('Public/Services/Graduation', [
             'school' => [
                 'name' => $school['name'],
@@ -38,6 +44,11 @@ class GraduationController extends Controller
                 'theme' => $school['theme'] ?? [],
             ],
             'result' => $request->session()->get('graduation_lookup_result'),
+            'schedule' => [
+                'released' => $batch?->isReleased() ?? false,
+                'release_at' => $batch?->release_at?->toIso8601String(),
+                'title' => $batch?->title,
+            ],
         ]);
     }
 

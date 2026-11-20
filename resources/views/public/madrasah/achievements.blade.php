@@ -1,9 +1,10 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'PORTAL MADRASAH';
+  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
   $q = trim((string) request()->query('q', ''));
   $selectedLevel = trim((string) request()->query('tingkat', ''));
+  $selectedYear = trim((string) request()->query('tahun', ''));
 
   $dummyAchievements = [
       ['rank' => 'Medali Emas', 'year' => '2026', 'title' => 'Olimpiade Bahasa Arab (OBA) Tingkat Nasional', 'level' => 'Nasional', 'winner' => 'Tim Bahasa Arab Madrasah', 'image' => '/madrasah-theme/images/award.webp'],
@@ -24,13 +25,18 @@
       ])->all()
       : $dummyAchievements;
 
+  $levels = array_values(array_unique(array_column($list, 'level')));
+  $years = array_values(array_unique(array_column($list, 'year')));
+
+  if ($selectedYear !== '') {
+      $list = array_values(array_filter($list, fn ($i) => (string) $i['year'] === $selectedYear));
+  }
   if ($selectedLevel !== '') {
       $list = array_values(array_filter($list, fn ($i) => mb_strtolower($i['level']) === mb_strtolower($selectedLevel)));
   }
   if ($q !== '') {
       $list = array_values(array_filter($list, fn ($i) => str_contains(mb_strtolower($i['title'].' '.$i['winner']), mb_strtolower($q))));
   }
-  $levels = ['Nasional', 'Nasional Kemenag RI', 'Provinsi', 'Kabupaten / Kota'];
 @endphp
 
 @section('title', 'Rekam Jejak Prestasi & Tradisi Juara | ' . $schoolName)
@@ -52,12 +58,22 @@
         </p>
 
         <form action="/prestasi" method="GET" class="mt-6 flex flex-col sm:flex-row gap-2 max-w-2xl">
+          @if ($selectedLevel !== '')
+            <input type="hidden" name="tingkat" value="{{ $selectedLevel }}">
+          @endif
           <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" name="q" value="{{ $q }}" placeholder="Cari nama lomba atau tim peraih..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <input type="search" name="q" aria-label="Cari prestasi" value="{{ $q }}" placeholder="Cari nama lomba atau tim peraih..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
           </div>
-          <button type="submit" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm">
-            Cari Prestasi
+          <select name="tahun" aria-label="Filter tahun prestasi" class="py-3 px-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none">
+            <option value="">Semua Tahun</option>
+            @foreach ($years as $yr)
+              <option value="{{ $yr }}" @selected($selectedYear === (string) $yr)>Tahun {{ $yr }}</option>
+            @endforeach
+          </select>
+          <button type="submit" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm flex items-center justify-center gap-2">
+            <span>Cari Prestasi</span>
+            <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
           </button>
         </form>
       </div>
@@ -66,13 +82,17 @@
 
   <!-- ================= KONTEN UTAMA ================= -->
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
+    @if (empty($items))
+      <p class="mb-5 text-sm font-semibold text-slate-600">Konten contoh untuk pratinjau portal.</p>
+    @endif
+
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-4 border-b border-slate-200">
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+      <div class="madrasah-catalog-filters">
         <a href="/prestasi" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedLevel === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
           Semua Tingkat ({{ count($list) }})
         </a>
         @foreach ($levels as $lvl)
-          <a href="/prestasi?tingkat={{ urlencode($lvl) }}" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedLevel === $lvl ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+          <a href="/prestasi?tingkat={{ urlencode($lvl) }}&amp;q={{ urlencode($q) }}" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedLevel === $lvl ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
             {{ $lvl }}
           </a>
         @endforeach
@@ -90,16 +110,31 @@
               <span class="bg-amber-100 text-amber-900 font-extrabold text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-medal text-amber-500"></i> {{ $item['rank'] }}
               </span>
-              <span class="text-xs font-bold text-slate-400">{{ $item['year'] }}</span>
+              <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-lg">{{ $item['year'] }}</span>
             </div>
-            <div class="h-36 rounded-2xl overflow-hidden mb-4 border border-slate-200/60 bg-slate-100">
+            <button
+              type="button"
+              class="w-full h-44 rounded-2xl overflow-hidden mb-4 border border-slate-200/60 bg-slate-100 cursor-pointer block"
+              data-open-dialog="lightboxModal"
+              aria-haspopup="dialog"
+              data-image="{{ $item['image'] }}"
+              data-caption="{{ $item['title'] }} — {{ $item['winner'] }}"
+            >
               <img src="{{ $item['image'] }}" alt="{{ $item['title'] }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            </div>
-            <h2 class="font-bold text-slate-900 text-base leading-snug">{{ $item['title'] }}</h2>
-            <p class="text-xs text-kemenag-700 font-semibold mt-1.5">{{ $item['level'] }}</p>
+            </button>
+            <h2 class="font-extrabold text-slate-900 text-base leading-snug group-hover:text-kemenag-700 transition">{{ $item['title'] }}</h2>
+            <p class="text-xs text-kemenag-700 font-bold mt-1.5 inline-flex items-center gap-1">
+              <i class="fa-solid fa-award text-amber-500" aria-hidden="true"></i> {{ $item['level'] }}
+            </p>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600">
-            Peraih: <strong class="text-slate-800">{{ $item['winner'] }}</strong>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-emerald-100 text-kemenag-700 flex items-center justify-center font-bold text-xs shrink-0">
+              <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+            </div>
+            <div class="overflow-hidden">
+              <span class="text-[10px] text-slate-400 block font-medium">Peraih Juara:</span>
+              <strong class="text-xs text-slate-800 font-bold truncate block">{{ $item['winner'] }}</strong>
+            </div>
           </div>
         </div>
       @empty

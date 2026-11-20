@@ -11,16 +11,16 @@ use Illuminate\Support\Facades\Storage;
 
 class SchoolScopeService
 {
-    public function usesMan4PublicTheme(string $npsn): bool
+    public function usesMadrasahPublicTheme(string $npsn): bool
     {
-        return $npsn === '30208801' || (app()->isLocal() && $npsn === '20109988');
+        return config('public_portal.theme') === 'madrasah' || (app()->isLocal() && $npsn === '20109988');
     }
 
     public function primaryPublicTheme(): ?string
     {
         $npsn = (string) School::query()->orderBy('id')->value('npsn');
 
-        return $this->usesMan4PublicTheme($npsn) ? 'man4-banjar' : null;
+        return $this->usesMadrasahPublicTheme($npsn) ? 'madrasah' : null;
     }
 
     /** @return array{id:int, name:?string, level:?string, address:?string, phone:?string, email:?string, logo_path:?string, theme:array<string, mixed>} */

@@ -145,7 +145,11 @@ class SchoolGalleryController extends Controller
             ->map(fn (SchoolGalleryAlbum $album): array => $this->presentAlbum($album))
             ->values();
 
-        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+        if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($request->fullUrl());
+            }
+
             return response()->view('public.madrasah.gallery', [
                 ...$this->portalService->madrasahShellData($school),
                 'albums' => $albums->all(),
@@ -160,6 +164,18 @@ class SchoolGalleryController extends Controller
             ],
             'albums' => $albums,
         ]);
+    }
+
+    public function publicVideos(Request $request): HttpResponse
+    {
+        $school = School::query()->orderBy('id')->firstOrFail();
+        abort_unless($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn), 404);
+
+        if ($request->header('X-Inertia')) {
+            return Inertia::location($request->fullUrl());
+        }
+
+        return response()->view('public.madrasah.videos', $this->portalService->madrasahShellData($school));
     }
 
     public function photo(int $photo): StreamedResponse

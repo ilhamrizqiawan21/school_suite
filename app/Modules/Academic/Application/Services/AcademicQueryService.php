@@ -519,24 +519,42 @@ class AcademicQueryService
      * Public-safe GTK directory returning only approved public attributes (M4-PUB-03).
      * Never exposes NIP, email, phone, or private metadata.
      *
-     * @return list<array{id: int, name: string}>
+     * @return list<array{id: int, name: string, position: string, employment_status: ?string}>
      */
-    public function getPublicDirectoryTeachers(int $schoolId, ?string $search = null): array
+    public function getPublicDirectoryTeachers(int $schoolId, ?string $search = null, ?string $position = null): array
     {
         $cleanSearch = trim((string) $search);
+        $cleanPosition = trim((string) $position);
 
         return Teacher::query()
+            ->with(['teachingAssignments.subject:id,name'])
             ->where('school_id', $schoolId)
             ->where('is_active', true)
             ->when($cleanSearch !== '', function ($query) use ($cleanSearch): void {
                 $query->where('name', 'like', '%'.$cleanSearch.'%');
             })
             ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(static fn (Teacher $teacher): array => [
-                'id' => (int) $teacher->id,
-                'name' => (string) $teacher->name,
-            ])
+            ->get(['id', 'name', 'employment_status'])
+            ->map(static function (Teacher $teacher): array {
+                $subjects = $teacher->teachingAssignments
+                    ->map(static fn (TeachingAssignment $assignment): ?string => $assignment->subject?->name)
+                    ->filter(static fn (?string $name): bool => is_string($name) && trim($name) !== '')
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                return [
+                    'id' => (int) $teacher->id,
+                    'name' => (string) $teacher->name,
+                    'position' => $subjects !== [] ? implode(', ', $subjects) : 'Guru Mata Pelajaran',
+                    'employment_status' => $teacher->employment_status ?: null,
+                ];
+            })
+            ->when($cleanPosition !== '', function ($collection) use ($cleanPosition) {
+                return $collection->filter(
+                    static fn (array $row): bool => mb_strtolower($row['position']) === mb_strtolower($cleanPosition),
+                );
+            })
             ->values()
             ->all();
     }

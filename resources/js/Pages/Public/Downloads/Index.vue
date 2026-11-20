@@ -38,7 +38,7 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
     <main class="public-site public-portal-page" :style="themeStyle">
         <PublicHeader :school="school" />
         <section class="portal-container">
-            <header class="portal-hero">
+            <header class="portal-hero madrasah-profile-hero">
                 <p class="eyebrow">Pusat Unduh</p>
                 <h1>Dokumen &amp; Formulir Resmi {{ school.name }}</h1>
                 <p>Unduh versi terbit terbaru formulir, kalender akademik, tata tertib, brosur, dan SOP layanan.</p>

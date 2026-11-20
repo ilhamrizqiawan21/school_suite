@@ -75,12 +75,13 @@ const docTone = (status: string): 'success' | 'danger' | 'warning' | 'neutral' =
         <PublicHeader :school="school" />
 
         <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
-            <div>
+            <header class="madrasah-profile-hero">
+                <p class="eyebrow">Verifikasi Resmi Madrasah</p>
                 <h1 class="text-2xl font-bold text-slate-900">Verifikasi Siswa &amp; Keabsahan Dokumen</h1>
                 <p class="mt-1 text-sm text-slate-600">
                     Cek keabsahan kode/QR SKL, Ijazah Legalisir, Surat Kuasa, SPTJM, E-KTA Alumni, serta status keaktifan peserta didik tanpa menampilkan data pribadi sensitif.
                 </p>
-            </div>
+            </header>
 
             <div class="flex gap-2">
                 <AppButton type="button" :variant="activeMode === 'document' ? 'primary' : 'secondary'" @click="activeMode = 'document'">

@@ -147,7 +147,11 @@ class SchoolNewsController extends Controller
         $school = School::query()->orderBy('id')->firstOrFail();
         $news = $this->publishedQuery($school)->with('photos')->get()->map(fn (SchoolNews $item): array => $this->present($item))->values();
 
-        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+        if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($request->fullUrl());
+            }
+
             return response()->view('public.madrasah.news', [
                 ...$this->portalService->madrasahShellData($school),
                 'news' => $news->all(),

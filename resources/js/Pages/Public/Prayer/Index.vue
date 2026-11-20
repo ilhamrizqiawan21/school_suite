@@ -27,7 +27,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
     <main class="public-site public-portal-page" :style="themeStyle">
         <PublicHeader :school="school" />
         <section class="portal-container">
-            <header class="portal-hero">
+            <header class="portal-hero madrasah-profile-hero">
                 <p class="eyebrow">Jadwal Salat &amp; Statistik Portal</p>
                 <h1>Jadwal Salat Wilayah {{ prayerSchedule.location }}</h1>
                 <p>Menggunakan zona waktu sekolah ({{ prayerSchedule.timezone }}) untuk tanggal {{ prayerSchedule.date }}.</p>

@@ -663,6 +663,36 @@ class StudentLifecycleAndAlumniTest extends TestCase
             );
     }
 
+    public function test_public_graduation_schedule_excludes_drafts_and_exposes_only_release_metadata(): void
+    {
+        $draft = GraduationBatch::query()->create([
+            'school_id' => $this->schoolA->id,
+            'academic_year_id' => $this->yearA->id,
+            'title' => 'Draft internal kelulusan',
+            'skl_prefix' => 'SKL',
+            'release_at' => now()->addDay(),
+            'is_published' => false,
+        ]);
+
+        $this->get('/layanan/kelulusan')->assertInertia(fn (Assert $page) => $page
+            ->where('schedule.released', false)
+            ->where('schedule.release_at', null)
+            ->where('schedule.title', null));
+
+        $draft->update(['is_published' => true]);
+
+        $this->get('/layanan/kelulusan')->assertInertia(fn (Assert $page) => $page
+            ->where('schedule.released', false)
+            ->where('schedule.title', $draft->title)
+            ->where('schedule.release_at', $draft->fresh()->release_at->toIso8601String())
+            ->missing('schedule.records'));
+
+        $draft->update(['release_at' => now()->subMinute()]);
+
+        $this->get('/layanan/kelulusan')->assertInertia(fn (Assert $page) => $page
+            ->where('schedule.released', true));
+    }
+
     private function makeUser(School $school, int $roleId, string $email, string $username): User
     {
         return User::query()->create([

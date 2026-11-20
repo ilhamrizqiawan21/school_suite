@@ -42,13 +42,21 @@ class PublicPortalController extends Controller
     {
         $school = School::query()->orderBy('id')->firstOrFail();
         $search = trim((string) $request->query('q', ''));
-        $teachers = $this->academicQuery->getPublicDirectoryTeachers((int) $school->id, $search);
+        $position = trim((string) $request->query('mapel', ''));
+        $allTeachers = $this->academicQuery->getPublicDirectoryTeachers((int) $school->id);
+        $teachers = $this->academicQuery->getPublicDirectoryTeachers((int) $school->id, $search, $position);
 
-        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+        if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($request->fullUrl());
+            }
+
             return response()->view('public.madrasah.teachers', [
                 ...$this->portalService->madrasahShellData($school),
                 'teachers' => $teachers,
-                'filters' => ['q' => $search],
+                'availablePositions' => array_values(array_unique(array_column($allTeachers, 'position'))),
+                'usesDemoTeachers' => $allTeachers === [],
+                'filters' => ['q' => $search, 'mapel' => $position],
             ]);
         }
 
@@ -83,7 +91,11 @@ class PublicPortalController extends Controller
             ->values()
             ->all();
 
-        if ($this->schoolScope->usesMan4PublicTheme((string) $school->npsn) && ! $request->header('X-Inertia')) {
+        if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($request->fullUrl());
+            }
+
             return response()->view('public.madrasah.achievements', [
                 ...$this->portalService->madrasahShellData($school),
                 'items' => $items,

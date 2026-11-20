@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'PORTAL MADRASAH';
+  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
   $dummyTeachers = [
       ['name' => 'Drs. H. Ahmad Hidayat, M.Pd.', 'position' => 'Kepala Madrasah', 'badge' => 'Pembina Tk. I / IV b', 'avatar' => '/madrasah-theme/images/portrait.webp'],
       ['name' => 'Siti Aminah, S.Pd., M.Pd.', 'position' => 'Wakil Kepala Bidang Kurikulum', 'badge' => 'Guru Ahli Madya / IV a', 'avatar' => '/madrasah-theme/images/classroom.webp'],
@@ -13,7 +13,7 @@
       ['name' => 'Dewi Lestari, S.Psi.', 'position' => 'Guru Bimbingan Konseling (BK)', 'badge' => 'Guru Ahli Pertama', 'avatar' => '/madrasah-theme/images/library.webp'],
   ];
 
-  $displayTeachers = count($teachers ?? []) > 0
+  $displayTeachers = ! $usesDemoTeachers
       ? collect($teachers)->map(fn ($t) => [
           'name' => $t['name'] ?? 'Tenaga Pendidik',
           'position' => $t['position'] ?? ($t['subject_name'] ?? 'Guru Mata Pelajaran'),
@@ -23,7 +23,18 @@
       : $dummyTeachers;
 
   $q = trim((string) ($filters['q'] ?? ''));
-  if ($q !== '' && count($teachers ?? []) === 0) {
+  $selectedPosition = trim((string) ($filters['mapel'] ?? request()->query('mapel', '')));
+  $positions = ! $usesDemoTeachers && isset($availablePositions) && $availablePositions !== []
+      ? $availablePositions
+      : array_values(array_unique(array_column($displayTeachers, 'position')));
+
+  if ($selectedPosition !== '' && $usesDemoTeachers) {
+      $displayTeachers = array_values(array_filter(
+          $displayTeachers,
+          fn ($t) => mb_strtolower((string) $t['position']) === mb_strtolower($selectedPosition),
+      ));
+  }
+  if ($q !== '' && $usesDemoTeachers) {
       $displayTeachers = array_values(array_filter(
           $displayTeachers,
           fn ($t) => str_contains(mb_strtolower($t['name'].' '.$t['position']), mb_strtolower($q)),
@@ -53,22 +64,40 @@
           <form action="/direktori-gtk" method="GET" class="mt-6 flex flex-col sm:flex-row gap-2 max-w-2xl">
             <div class="relative flex-1">
               <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-              <input type="text" name="q" value="{{ $q }}" placeholder="Cari nama guru atau bidang tugas..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
+              <input type="search" name="q" aria-label="Cari guru atau tenaga kependidikan" value="{{ $q }}" placeholder="Cari nama guru, NIP, NUPTK, mapel..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
             </div>
-            <button type="submit" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm">
-              Cari GTK
+            <select name="mapel" aria-label="Filter bidang tugas atau mata pelajaran" class="py-3 px-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none">
+              <option value="">Semua Mata Pelajaran</option>
+              @foreach ($positions as $pos)
+                <option value="{{ $pos }}" @selected(mb_strtolower($selectedPosition) === mb_strtolower($pos))>{{ $pos }}</option>
+              @endforeach
+            </select>
+            <button type="submit" class="bg-accent-gold hover:bg-amber-500 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm flex items-center justify-center gap-2">
+              <span>Cari</span>
+              <i class="fa-solid fa-filter"></i>
             </button>
           </form>
         </div>
 
-        <div class="lg:col-span-4 hidden lg:grid grid-cols-2 gap-3">
-          <div class="bg-kemenag-900/80 border border-emerald-500/30 rounded-2xl p-4 text-center backdrop-blur-sm">
-            <span class="text-2xl font-black text-accent-yellow block">{{ count($displayTeachers) }}</span>
-            <span class="text-[11px] text-emerald-200 uppercase font-semibold">GTK Ditampilkan</span>
+        @php
+          $tendikCount = count(array_filter(
+              $displayTeachers,
+              fn ($t) => preg_match('/tata usaha|tendik|staf|staff|operator|security|scurity|pranata/i', (string) ($t['position'] ?? '')),
+          ));
+          $guruCount = max(0, count($displayTeachers) - $tendikCount);
+        @endphp
+        <div class="lg:col-span-4 grid grid-cols-3 gap-3 text-center">
+          <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
+            <span class="text-2xl sm:text-3xl font-black text-accent-yellow block font-sans">{{ count($displayTeachers) }}</span>
+            <span class="text-[10px] text-emerald-200 uppercase font-semibold">Total GTK</span>
           </div>
-          <div class="bg-kemenag-900/80 border border-emerald-500/30 rounded-2xl p-4 text-center backdrop-blur-sm">
-            <span class="text-2xl font-black text-white block">100%</span>
-            <span class="text-[11px] text-emerald-200 uppercase font-semibold">Tersertifikasi &amp; Aktif</span>
+          <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
+            <span class="text-2xl sm:text-3xl font-black text-white block font-sans">{{ $guruCount }}</span>
+            <span class="text-[10px] text-emerald-200 uppercase font-semibold">Guru Pengajar</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
+            <span class="text-2xl sm:text-3xl font-black text-accent-yellow block font-sans">{{ $tendikCount }}</span>
+            <span class="text-[10px] text-emerald-200 uppercase font-semibold">Tenaga Kependidikan</span>
           </div>
         </div>
       </div>
@@ -83,10 +112,10 @@
           Daftar Guru &amp; Tenaga Kependidikan
         </h2>
         <p class="text-xs text-slate-500 mt-0.5">
-          Menampilkan {{ count($displayTeachers) }} GTK terdaftar (data contoh disinkronkan dari direktori sekolah)
+          Menampilkan {{ count($displayTeachers) }} GTK terdaftar
         </p>
       </div>
-      @if ($q !== '')
+      @if ($q !== '' || $selectedPosition !== '')
         <a href="/direktori-gtk" class="text-xs font-bold text-kemenag-700 hover:underline">Reset Filter</a>
       @endif
     </div>
