@@ -54,10 +54,6 @@
 
   <!-- ================= KONTEN UTAMA ================= -->
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
-    @if (empty($albums))
-      <p class="mb-5 text-sm font-semibold text-slate-600">Konten contoh untuk pratinjau portal.</p>
-    @endif
-
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-4 border-b border-slate-200">
       <div class="madrasah-catalog-filters">
         <a href="/galeri" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">

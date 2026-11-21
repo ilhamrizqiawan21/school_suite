@@ -157,11 +157,11 @@ const flashError = computed(() => page.props.flash?.error);
 .ops-mode-scan :deep(.operations-scan-hero) { display: none; }
 .ops-mode-gate { background: radial-gradient(ellipse at center,#064e3b,#022c22); }
 .ops-mode-gate .ops-main { display: grid; align-content: center; min-height: 100svh; padding-block: 48px; }
+.ops-mode-gate :deep(.security-post-layout.is-locked) { display: flex; flex-direction: column; align-items: center; }
 .ops-mode-gate :deep(.is-locked > .operations-scan-hero) { display: none; }
-.ops-mode-gate :deep(.is-locked .operations-pin-panel) { max-width: 360px; margin: auto; padding: 32px; border-top: 0; }
-.ops-mode-gate :deep(.security-pin-configuration) { max-width: 640px; margin: 24px auto; }
-.ops-mode-gate :deep(.is-locked .security-pin-configuration) { order: 2; }
-.ops-mode-gate :deep(.security-pin-configuration > summary) { cursor: pointer; font-size: 13px; font-weight: 700; }
+.ops-mode-gate :deep(.is-locked .operations-pin-panel) { width: min(360px, 100%); margin: auto; padding: 32px; border-top: 0; order: 1; }
+.ops-mode-gate :deep(.security-pin-configuration) { width: min(360px, 100%); margin: 16px auto 0; order: 2; background: rgb(255 255 255 / 92%); }
+.ops-mode-gate :deep(.security-pin-configuration > summary) { cursor: pointer; font-size: 12px; font-weight: 700; text-align: center; }
 .ops-mode-kiosk .ops-main { width: 100%; max-width: none; padding: 0; }
 .ops-mode-kiosk :deep(.kiosk-display) { min-height: 100svh; padding: 0; border-radius: 0; background: radial-gradient(ellipse at center,#022c22,#0f172a 70%); display: flex; flex-direction: column; }
 .ops-mode-kiosk :deep(.kiosk-head) { padding: 16px 24px; border-bottom: 1px solid #1e293b; background: #0f172a; }

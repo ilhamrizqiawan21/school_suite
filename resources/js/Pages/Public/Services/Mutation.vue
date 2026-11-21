@@ -33,6 +33,7 @@ const props = defineProps<{
 }>();
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const activeTab = ref<'alur' | 'form'>(props.issuedReceipt || props.myMutations.length > 0 ? 'form' : 'alur');
 const revisingItem = ref<MutationItem | null>(null);
 
 const form = useForm({
@@ -102,22 +103,28 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <p class="madrasah-service-label"><i class="fa-solid fa-right-left" aria-hidden="true"></i> Layanan Kesiswaan</p>
-                    <h1 class="text-2xl font-bold text-slate-900">Mutasi Masuk &amp; Keluar Siswa</h1>
+                    <p class="madrasah-service-label"><i class="fa-solid fa-right-left" aria-hidden="true"></i> LAYANAN MUTASI SISWA ONLINE</p>
+                    <h1 class="text-2xl font-bold text-slate-900">{{ school.name }}</h1>
+                    <p class="mt-1 text-sm font-semibold text-sky-200">Tahun Pelajaran 2026/2027</p>
                     <p class="mt-1 text-sm text-slate-600">
-                        Semester aktif: <strong>{{ activeTermName || 'Belum dibuka' }}</strong>. Histori kelas dan nilai lama selalu tetap terjaga.
+                        Informasi alur prosedur &amp; formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.
                     </p>
+                    <div class="mt-3">
+                        <span class="inline-flex items-center rounded-full px-4 py-1 text-xs font-extrabold text-white" :class="periodAvailable ? 'bg-emerald-600' : 'bg-rose-600'">
+                            {{ periodAvailable ? `Semester aktif: ${activeTermName}` : 'Pendaftaran Mutasi Masuk Ditutup' }}
+                        </span>
+                    </div>
                 </div>
 
             </div>
 
                 <nav class="parity-document-nav" aria-label="Navigasi layanan">
-                    <a href="#alur-mutasi" class="rounded-lg bg-white/15 border border-white/30 px-3 py-2 text-xs font-bold text-white">Alur &amp; Persyaratan</a>
-                    <a v-if="periodAvailable" href="#form-mutasi" class="rounded-lg bg-amber-400 px-3 py-2 text-xs font-extrabold text-slate-950">Formulir Mutasi</a>
+                    <button type="button" :class="{ 'is-active': activeTab === 'alur' }" @click="activeTab = 'alur'">Alur &amp; Persyaratan Mutasi</button>
+                    <button type="button" :class="{ 'is-active': activeTab === 'form' }" @click="activeTab = 'form'">Formulir Permohonan Mutasi</button>
                     <a href="/lacak?category=mutasi" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white">Cek Status Pengajuan</a>
                 </nav>
 
-            <div id="alur-mutasi"><MutationProcedure /></div>
+            <div v-show="activeTab === 'alur'" id="alur-mutasi"><MutationProcedure /></div>
 
             <div v-if="!periodAvailable" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                 Periode/semester aktif belum tersedia sehingga pengajuan mutasi sementara ditutup.
@@ -128,7 +135,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 <p>Kode Mutasi: <strong class="font-mono">{{ issuedReceipt.mutation_code }}</strong> | Tiket Lacak: <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> | PIN: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
             </div>
 
-            <form id="form-mutasi" v-if="periodAvailable" @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+            <form id="form-mutasi" v-show="activeTab === 'form' || !!issuedReceipt || !!revisingItem" v-if="periodAvailable" @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
                 <fieldset class="service-choice-group">
                     <legend class="service-form-title">Jenis Mutasi</legend>
                     <div class="service-tiles">

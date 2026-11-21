@@ -179,24 +179,26 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             </details>
 
             <div v-if="!unlocked" class="operations-pin-panel mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                <div class="text-center">
-                    <h2 class="text-lg font-bold text-slate-900">Buka Kunci Pos Jaga</h2>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Masukkan PIN numerik pos jaga sebelum memvalidasi pass keluar-masuk siswa.
-                    </p>
+                <div class="text-center space-y-1">
+                    <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 7v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V7l-8-4Z"/><path d="m9.5 12 1.7 1.7 3.8-3.8"/></svg>
+                    </div>
+                    <h2 class="text-lg font-extrabold tracking-wide text-slate-900 uppercase">AKSES POS JAGA</h2>
+                    <p class="text-xs font-semibold text-slate-500">Scan Kartu Izin Siswa di Gerbang</p>
+                    <p class="text-xs text-slate-400">Masukkan PIN Keamanan Satpam</p>
                 </div>
 
                 <div
                     v-if="!hasPin"
-                    class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+                    class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
                 >
                     <p class="font-semibold">PIN Pos Jaga belum dikonfigurasi</p>
-                    <p class="mt-0.5 text-xs">Minta Admin atau Operator sekolah mengatur PIN Pos Jaga terlebih dahulu.</p>
+                    <p class="mt-0.5">Minta Admin atau Operator sekolah mengatur PIN Pos Jaga terlebih dahulu.</p>
                 </div>
 
                 <div class="space-y-4">
-                    <div class="rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-center font-mono text-2xl tracking-[0.4em] text-slate-900">
-                        {{ pinForm.pin ? '•'.repeat(pinForm.pin.length) : '----' }}
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center font-mono text-2xl tracking-[0.4em] text-slate-900">
+                        {{ pinForm.pin ? '•'.repeat(pinForm.pin.length) : '' }}
                     </div>
                     <p v-if="pinForm.errors.pin" class="text-center text-sm font-medium text-rose-600">
                         {{ pinForm.errors.pin }}
@@ -214,10 +216,11 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         </button>
                         <button
                             type="button"
-                            class="rounded-xl border border-slate-200 bg-slate-100 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                            @click="clearPin"
+                            class="rounded-xl border border-rose-100 bg-rose-50 py-3 text-sm font-bold text-rose-700 hover:bg-rose-100"
+                            aria-label="Hapus PIN"
+                            @click="backspacePin"
                         >
-                            Hapus
+                            ⌫
                         </button>
                         <button
                             type="button"
@@ -228,21 +231,18 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         </button>
                         <button
                             type="button"
-                            class="rounded-xl border border-slate-200 bg-slate-100 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-                            @click="backspacePin"
+                            class="rounded-xl border border-emerald-600 bg-emerald-600 py-3 text-lg font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            :disabled="pinForm.processing || !hasPin || pinForm.pin.length < 4"
+                            aria-label="Buka Panel Pos Jaga"
+                            @click="submitPinUnlock"
                         >
-                            Koreksi
+                            ✓
                         </button>
                     </div>
 
-                    <AppButton
-                        type="button"
-                        class="w-full"
-                        :disabled="pinForm.processing || !hasPin || pinForm.pin.length < 4"
-                        @click="submitPinUnlock"
-                    >
-                        {{ pinForm.processing ? 'Memverifikasi...' : 'Buka Panel Pos Jaga' }}
-                    </AppButton>
+                    <div class="text-center pt-1">
+                        <a href="/" class="text-xs font-medium text-slate-500 hover:text-slate-800">← Batal &amp; Kembali ke Beranda</a>
+                    </div>
                 </div>
             </div>
 

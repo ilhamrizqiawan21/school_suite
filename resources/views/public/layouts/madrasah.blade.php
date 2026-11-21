@@ -11,7 +11,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield("title", $schoolName . " - Madrasah Mandiri Berprestasi & Unggul Riset")</title>
-  <link rel="icon" href="/madrasah-theme/images/logo-kemenag.png">
+  <link rel="icon" href="{{ $schoolLogo }}">
+  <link rel="apple-touch-icon" href="{{ $schoolLogo }}">
   @include('public.madrasah.assets')
 </head>
 <body data-portal-path="{{ request()->path() }}" data-portal-layout="{{ request()->is('profil-sekolah', 'direktori-gtk') ? 'profile' : (request()->is('berita*', 'prestasi', 'galeri*') ? 'catalogue' : (request()->path() === '/' ? 'home' : 'service')) }}" class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen">

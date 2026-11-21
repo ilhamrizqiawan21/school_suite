@@ -78,6 +78,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 
 const selectedCategory = ref('all');
 const showReviewStep = ref(false);
+const showCatalog = ref(props.catalog.length > 0 || Boolean(props.activeDraft) || props.myRequests.length > 0);
 const fileInputs = ref<Record<string, File | null>>({});
 
 const filteredCatalog = computed(() => {
@@ -189,6 +190,17 @@ const submitFinal = () => {
     });
 };
 
+const quickLoginForm = useForm({
+    email: '',
+    password: '',
+});
+
+const submitQuickLogin = () => {
+    quickLoginForm.post('/layanan/ptsp/akun/masuk', {
+        onFinish: () => quickLoginForm.reset('password'),
+    });
+};
+
 const removeDraftAttachment = (requestId: number, documentId: number) => {
     router.delete(`/layanan/ptsp/draf/${requestId}/lampiran/${documentId}`, { preserveScroll: true });
 };
@@ -208,118 +220,142 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
                     <p>Layanan Permohonan, Informasi, Konsultasi, Pengaduan dan Legalisir.</p>
                 </div>
                 <div class="hero-actions">
-                    <a :href="selectedService ? '#form-ptsp' : '#katalog-ptsp'" class="ui-button ui-button--primary ui-button--md parity-ptsp-btn-apply">
+                    <a :href="selectedService ? '#form-ptsp' : '#katalog-ptsp'" class="btn-ajukan-hero parity-ptsp-btn-apply" @click="showCatalog = true">
                         AJUKAN PERMOHONAN <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
                     </a>
 
-                    <Link href="/lacak?category=ptsp" class="ui-button ui-button--secondary ui-button--md parity-ptsp-btn-check">
-                        CEK PERMOHONAN <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <Link href="/lacak?category=ptsp" class="btn-cek-hero parity-ptsp-btn-check">
+                        Cek Permohonan <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     </Link>
                 </div>
             </header>
 
-            <div v-if="flashMessage" class="alert-banner" role="status">{{ flashMessage }}</div>
+            <div v-if="flashMessage" class="alert-banner parity-ptsp-container mt-4" role="status">{{ flashMessage }}</div>
 
-            <section id="tentang-ptsp" class="portal-card parity-ptsp-about" aria-labelledby="ptsp-about-title">
-                <div class="parity-ptsp-about__media">
-                    <img src="/madrasah-theme/images/logo-cek.png" alt="PTSP Online" />
-                </div>
-                <div class="parity-ptsp-about__copy">
-                    <span class="parity-ptsp-pill"><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Pelayanan Publik Digital Resmi</span>
-                    <h2 id="ptsp-about-title">PTSP Online</h2>
-                    <p>
-                        <em>Pelayanan Terpadu dalam Satu Pintu Online (PTSP Online)</em> adalah aplikasi website resmi yang dibangun untuk memberikan pelayanan administrasi permohonan surat dan perizinan kepada masyarakat, siswa, alumni, dan orang tua wali secara terpadu dan efisien.
-                        <a href="#katalog-ptsp" class="parity-ptsp-inline-cta">Buka Layanan <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-                    </p>
-                    <ul class="parity-ptsp-checklist">
-                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Proses Aman &amp; Tervalidasi</li>
-                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Respon Cepat Terjadwal</li>
-                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Alur Mudah &amp; Transparan</li>
-                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Hemat Waktu Tanpa Antre Fisik</li>
-                    </ul>
-                </div>
-            </section>
-
-            <section class="portal-card parity-ptsp-benefits" aria-labelledby="ptsp-benefits-title">
-                <div class="section-head">
-                    <div>
-                        <span class="parity-ptsp-pill">KEUNGGULAN SISTEM</span>
-                        <h2 id="ptsp-benefits-title">Keunggulan Layanan PTSP Online</h2>
-                        <p class="muted">Pelayanan Terpadu dalam Satu Pintu Online memberikan kemudahan administrasi bagi guru, siswa, alumni, dan masyarakat umum dalam pengajuan permohonan berbagai macam kebutuhan sekolah dalam satu portal resmi.</p>
+            <section id="tentang-ptsp" class="parity-ptsp-about-band" aria-labelledby="ptsp-about-title">
+                <div class="parity-ptsp-container parity-ptsp-about">
+                    <div class="parity-ptsp-about__media">
+                        <img src="/madrasah-theme/images/logo-cek.png" alt="PTSP Online" />
+                    </div>
+                    <div class="parity-ptsp-about__copy">
+                        <span class="parity-ptsp-pill"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Pelayanan Publik Digital Resmi</span>
+                        <h2 id="ptsp-about-title">PTSP Online</h2>
+                        <p>
+                            <em>Pelayanan Terpadu dalam Satu Pintu Online (PTSP Online)</em> adalah aplikasi website resmi yang dibangun untuk memberikan pelayanan administrasi permohonan surat dan perizinan kepada masyarakat, siswa, alumni, dan orang tua wali secara terpadu dan efisien.
+                            <a href="#katalog-ptsp" class="parity-ptsp-inline-cta" @click="showCatalog = true">Buka Layanan <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                        </p>
+                        <ul class="parity-ptsp-checklist">
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Proses Aman &amp; Tervalidasi</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Respon Cepat Terjadwal</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Alur Mudah &amp; Transparan</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Hemat Waktu Tanpa Antre Fisik</li>
+                        </ul>
                     </div>
                 </div>
-                <div class="benefit-grid parity-ptsp-benefit-grid">
-                    <article class="benefit-card">
-                        <span class="benefit-icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
-                        <div>
-                            <h3>Hemat Waktu</h3>
-                            <p>Sistem online memudahkan pengurusan perizinan lebih cepat dan menghemat waktu tanpa perlu datang antre langsung.</p>
-                        </div>
-                    </article>
-                    <article class="benefit-card">
-                        <span class="benefit-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
-                        <div>
-                            <h3>Proses Aman</h3>
-                            <p>Sistem PTSP ONLINE menerapkan nomor resi dan verifikasi berkas berstandar digital guna menjamin keaslian dokumen.</p>
-                        </div>
-                    </article>
-                    <article class="benefit-card">
-                        <span class="benefit-icon"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i></span>
-                        <div>
-                            <h3>Respon Cepat</h3>
-                            <p>Petugas langsung memproses dan memvalidasi berkas yang masuk dengan notifikasi status berkala.</p>
-                        </div>
-                    </article>
-                    <article class="benefit-card">
-                        <span class="benefit-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-                        <div>
-                            <h3>Mudah &amp; Transparan</h3>
-                            <p>Kemudahan menyeluruh dari pendaftaran, pengunggahan berkas syarat, pemantauan resi, hingga unduh dokumen jadi.</p>
-                        </div>
-                    </article>
+            </section>
+
+            <section class="parity-ptsp-benefits-band" aria-labelledby="ptsp-benefits-title">
+                <div class="parity-ptsp-container">
+                    <div class="parity-ptsp-benefits__head">
+                        <span class="parity-ptsp-pill">KEUNGGULAN SISTEM</span>
+                        <h2 id="ptsp-benefits-title">Keunggulan Layanan PTSP Online</h2>
+                        <p class="parity-ptsp-benefits__desc">Pelayanan Terpadu dalam Satu Pintu Online memberikan kemudahan administrasi bagi guru, siswa, alumni, dan masyarakat umum dalam pengajuan permohonan berbagai macam kebutuhan sekolah dalam satu portal resmi.</p>
+                    </div>
+                    <div class="parity-ptsp-benefit-grid">
+                        <article class="parity-feature-box">
+                            <span class="parity-feature-box__icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
+                            <div>
+                                <h3>Hemat Waktu</h3>
+                                <p>Sistem online memudahkan pengurusan perizinan lebih cepat dan menghemat waktu tanpa perlu datang antre langsung.</p>
+                            </div>
+                        </article>
+                        <article class="parity-feature-box">
+                            <span class="parity-feature-box__icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                            <div>
+                                <h3>Proses Aman</h3>
+                                <p>Sistem PTSP ONLINE menerapkan nomor resi dan verifikasi berkas berstandar digital guna menjamin keaslian dokumen.</p>
+                            </div>
+                        </article>
+                        <article class="parity-feature-box">
+                            <span class="parity-feature-box__icon"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i></span>
+                            <div>
+                                <h3>Respon Cepat</h3>
+                                <p>Petugas langsung memproses dan memvalidasi berkas yang masuk dengan notifikasi status berkala.</p>
+                            </div>
+                        </article>
+                        <article class="parity-feature-box">
+                            <span class="parity-feature-box__icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                            <div>
+                                <h3>Mudah &amp; Transparan</h3>
+                                <p>Kemudahan menyeluruh dari pendaftaran, pengunggahan berkas syarat, pemantauan resi, hingga unduh dokumen jadi.</p>
+                            </div>
+                        </article>
+                    </div>
                 </div>
             </section>
 
-            <section class="portal-card service-process parity-ptsp-procedure" aria-labelledby="ptsp-procedure">
-                <div class="parity-ptsp-procedure__head">
-                    <span class="parity-ptsp-pill">PANDUAN ALUR</span>
-                    <h2 id="ptsp-procedure">Prosedur Pengajuan PTSP Online</h2>
-                    <p class="muted">Ikuti tata cara pengajuan berikut untuk memastikan berkas Anda diproses dengan lancar.</p>
+            <section class="parity-ptsp-procedure-band" aria-labelledby="ptsp-procedure">
+                <div class="parity-ptsp-container">
+                    <div class="parity-ptsp-procedure__head">
+                        <span class="parity-ptsp-pill">PANDUAN ALUR</span>
+                        <h2 id="ptsp-procedure">Prosedur Pengajuan PTSP Online</h2>
+                        <p>Ikuti tata cara pengajuan berikut untuk memastikan berkas Anda diproses dengan lancar.</p>
+                    </div>
+                    <div class="parity-ptsp-procedure__grid">
+                        <ol class="parity-ptsp-steps">
+                            <li><span>1</span><div><strong>Pendaftaran Akun</strong><p>Lakukan pendaftaran untuk mendapatkan akun pemohon dengan mengisi formulir identitas NIK &amp; No. WhatsApp aktif.</p></div></li>
+                            <li><span>2</span><div><strong>Login Pemohon</strong><p>Setelah terdaftar, masuk ke aplikasi menggunakan NIK dan No. WhatsApp/Password yang telah Anda daftarkan.</p></div></li>
+                            <li><span>3</span><div><strong>Pilih Layanan &amp; Unggah Berkas</strong><p>Pilih jenis surat/layanan yang Anda butuhkan dan unggah dokumen persyaratan yang diminta (PDF/JPG/ZIP).</p></div></li>
+                            <li><span>4</span><div><strong>Verifikasi Petugas</strong><p>Petugas PTSP madrasah akan mengecek keabsahan syarat administrasi dan kelengkapan dokumen permohonan Anda.</p></div></li>
+                            <li><span>5</span><div><strong>Cek Status Resi</strong><p>Simpan nomor resi yang terbit. Buka menu Cek Permohonan untuk memantau apakah permohonan sedang diproses atau butuh revisi.</p></div></li>
+                            <li><span>6</span><div><strong>Penyelesaian Dokumen</strong><p>Setelah ditandatangani pejabat berwenang, status tiket berubah menjadi Selesai.</p></div></li>
+                            <li><span>7</span><div><strong>Unduh / Pengambilan Surat</strong><p>Unduh file hasil surat jadi langsung dari aplikasi atau ambil berkas fisik di loket PTSP madrasah.</p></div></li>
+                        </ol>
+                        <aside class="parity-ptsp-login-box">
+                            <div class="parity-ptsp-login-box__head">
+                                <span class="parity-ptsp-login-box__icon"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i></span>
+                                <h3>LOGIN PTSP ONLINE</h3>
+                                <p>Masuk untuk mengajukan atau memantau permohonan Anda</p>
+                            </div>
+                            <form v-if="!applicant" class="parity-ptsp-login-form" autocomplete="off" @submit.prevent="submitQuickLogin">
+                                <div class="parity-ptsp-login-field">
+                                    <label for="ptsp_home_login_email">Email / NIK</label>
+                                    <input id="ptsp_home_login_email" v-model="quickLoginForm.email" name="ptsp_home_login_nik" type="text" autocomplete="off" placeholder="Masukkan Email atau NIK" required />
+                                    <p v-if="quickLoginForm.errors.email" class="mt-1 text-xs font-semibold text-rose-600" role="alert">{{ quickLoginForm.errors.email }}</p>
+                                </div>
+                                <div class="parity-ptsp-login-field">
+                                    <label for="ptsp_home_login_pass">Password / No. HP</label>
+                                    <input id="ptsp_home_login_pass" v-model="quickLoginForm.password" name="ptsp_home_login_pass" type="password" autocomplete="new-password" placeholder="Masukkan Password atau No. HP" required />
+                                    <p v-if="quickLoginForm.errors.password" class="mt-1 text-xs font-semibold text-rose-600" role="alert">{{ quickLoginForm.errors.password }}</p>
+                                </div>
+                                <div class="parity-ptsp-login-box__actions">
+                                    <button type="submit" class="parity-ptsp-login-submit" :disabled="quickLoginForm.processing">
+                                        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Masuk Aplikasi
+                                    </button>
+                                    <Link href="/layanan/ptsp/akun" class="parity-ptsp-login-register">
+                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Buat Akun Baru
+                                    </Link>
+                                </div>
+                                <div class="parity-ptsp-login-help">
+                                    <Link href="/kontak"><i class="fa-solid fa-comments" aria-hidden="true"></i> Bantuan / Lupa Password? Hubungi Live Chat</Link>
+                                </div>
+                            </form>
+                            <div v-else class="parity-ptsp-login-box__actions">
+                                <Link href="/layanan/ptsp/akun" class="parity-ptsp-login-submit">
+                                    <i class="fa-solid fa-user-check" aria-hidden="true"></i> Akun: {{ applicant.full_name }}
+                                </Link>
+                                <a href="#katalog-ptsp" class="parity-ptsp-login-register" @click="showCatalog = true">Buka Katalog</a>
+                            </div>
+                            <hr class="parity-ptsp-login-divider" />
+                            <p class="parity-ptsp-login-box__note">
+                                Dengan mengklik Buat Akun Baru, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi dari {{ school.name }}.
+                            </p>
+                        </aside>
+                    </div>
                 </div>
-                <div class="parity-ptsp-procedure__grid">
-                    <ol class="parity-ptsp-steps">
-                        <li><span>1</span><div><strong>Pendaftaran Akun</strong><p>Lakukan pendaftaran untuk mendapatkan akun pemohon dengan mengisi formulir identitas NIK &amp; No. WhatsApp aktif.</p></div></li>
-                        <li><span>2</span><div><strong>Login Pemohon</strong><p>Setelah terdaftar, masuk ke aplikasi menggunakan NIK dan No. WhatsApp/Password yang telah Anda daftarkan.</p></div></li>
-                        <li><span>3</span><div><strong>Pilih Layanan &amp; Unggah Berkas</strong><p>Pilih jenis surat/layanan yang Anda butuhkan dan unggah dokumen persyaratan yang diminta (PDF/JPG/ZIP).</p></div></li>
-                        <li><span>4</span><div><strong>Verifikasi Petugas</strong><p>Petugas PTSP madrasah akan mengecek keabsahan syarat administrasi dan kelengkapan dokumen permohonan Anda.</p></div></li>
-                        <li><span>5</span><div><strong>Cek Status Resi</strong><p>Simpan nomor resi yang terbit. Buka menu Cek Permohonan untuk memantau apakah permohonan sedang diproses atau butuh revisi.</p></div></li>
-                        <li><span>6</span><div><strong>Penyelesaian Dokumen</strong><p>Setelah ditandatangani pejabat berwenang, status tiket berubah menjadi Selesai.</p></div></li>
-                        <li><span>7</span><div><strong>Unduh / Pengambilan Surat</strong><p>Unduh file hasil surat jadi langsung dari aplikasi atau ambil berkas fisik di loket PTSP madrasah.</p></div></li>
-                    </ol>
-                    <aside class="parity-ptsp-login-box">
-                        <div class="parity-ptsp-login-box__head">
-                            <span class="parity-ptsp-login-box__icon"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i></span>
-                            <h3>LOGIN PTSP ONLINE</h3>
-                            <p>Masuk untuk mengajukan atau memantau permohonan Anda</p>
-                        </div>
-                        <div class="parity-ptsp-login-box__actions">
-                            <Link href="/layanan/ptsp/akun" class="ui-button ui-button--primary ui-button--md">
-                                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
-                                {{ applicant ? `Akun: ${applicant.full_name}` : 'Masuk Aplikasi' }}
-                            </Link>
-                            <Link v-if="!applicant" href="/layanan/ptsp/akun" class="ui-button ui-button--secondary ui-button--md">
-                                <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Buat Akun Baru
-                            </Link>
-                        </div>
-                        <p class="parity-ptsp-login-box__note">
-                            Dengan menggunakan portal PTSP Online, Anda menyetujui ketentuan layanan dan kebijakan privasi dari {{ school.name }}.
-                        </p>
-                    </aside>
-                </div>
-                <a href="#katalog-ptsp" class="service-jump">Buka Katalog Layanan ↓</a>
             </section>
 
-            <section id="katalog-ptsp" class="portal-card">
+            <section v-if="showCatalog" id="katalog-ptsp" class="portal-card">
                     <Link href="/layanan/ptsp/akun" class="ui-button ui-button--secondary ui-button--md">
                         {{ applicant ? `Akun: ${applicant.full_name}` : 'Masuk / Daftar Akun Pemohon' }}
                     </Link>

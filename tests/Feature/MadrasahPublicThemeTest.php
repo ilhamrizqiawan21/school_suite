@@ -113,4 +113,12 @@ class MadrasahPublicThemeTest extends TestCase
 
         $this->assertFileExists(public_path('madrasah-theme/images/videos/tur-kampus.webm'));
     }
+
+    public function test_navigation_dropdown_has_hover_bridge_in_parity_css(): void
+    {
+        $css = file_get_contents(public_path('madrasah-theme/parity.css'));
+
+        $this->assertIsString($css);
+        $this->assertStringContainsString('[data-madrasah-navigation] .portal-mega-menu-group:hover > [data-portal-menu]::after', $css);
+    }
 }

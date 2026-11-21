@@ -1,6 +1,6 @@
 @php
-    $usesMadrasahShell = str_starts_with($page['component'] ?? '', 'Public/')
-        && ($page['props']['publicPortalTheme'] ?? null) === 'madrasah';
+    $isMadrasahTheme = ($page['props']['publicPortalTheme'] ?? null) === 'madrasah';
+    $usesMadrasahShell = str_starts_with($page['component'] ?? '', 'Public/') && $isMadrasahTheme;
 
     if ($usesMadrasahShell) {
         $portalSchool = \App\Modules\Core\Infrastructure\Models\School::query()->orderBy('id')->firstOrFail();
@@ -11,6 +11,11 @@
         $schoolPhone = ($profile['phone'] ?? null) ?: 'Telepon belum tersedia';
         $schoolEmail = ($profile['email'] ?? null) ?: 'humas@madrasah.example';
         $schoolLogo = ($profile['logo_url'] ?? null) ?: '/madrasah-theme/images/logo-kemenag.png';
+        $madrasahFavicon = ($profile['favicon_url'] ?? null) ?: $schoolLogo;
+    } elseif ($isMadrasahTheme) {
+        $madrasahFavicon = ($page['props']['branding']['favicon_url'] ?? null)
+            ?: ($page['props']['branding']['logo_url'] ?? null)
+            ?: '/madrasah-theme/images/logo-kemenag.png';
     }
 @endphp
 <!DOCTYPE html>
@@ -22,12 +27,17 @@
         <meta name="app-base-path" content="{{ rtrim(parse_url(config('app.url'), PHP_URL_PATH) ?: '', '/') }}">
         <title inertia>{{ config('app.name', 'School Suite') }}</title>
 
-        <link rel="icon" href="{{ asset('brand/favicon/favicon.ico') }}" sizes="any">
-        <link rel="icon" href="{{ asset('brand/favicon/favicon.svg') }}" type="image/svg+xml">
-        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('brand/favicon/favicon-32x32.png') }}">
-        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('brand/favicon/favicon-16x16.png') }}">
-        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('brand/favicon/apple-touch-icon.png') }}">
-        <link rel="manifest" href="{{ asset('brand/favicon/site.webmanifest') }}">
+        @if ($isMadrasahTheme)
+            <link rel="icon" href="{{ $madrasahFavicon }}">
+            <link rel="apple-touch-icon" href="{{ $madrasahFavicon }}">
+        @else
+            <link rel="icon" href="{{ asset('brand/favicon/favicon.ico') }}" sizes="any">
+            <link rel="icon" href="{{ asset('brand/favicon/favicon.svg') }}" type="image/svg+xml">
+            <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('brand/favicon/favicon-32x32.png') }}">
+            <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('brand/favicon/favicon-16x16.png') }}">
+            <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('brand/favicon/apple-touch-icon.png') }}">
+            <link rel="manifest" href="{{ asset('brand/favicon/site.webmanifest') }}">
+        @endif
         <meta name="theme-color" content="#0D3B66">
 
         <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">

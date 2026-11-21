@@ -79,12 +79,16 @@ const submit = () => {
 
         <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero grid gap-5 lg:grid-cols-12 items-center">
-                <div class="lg:col-span-8 space-y-3">
-                    <p class="madrasah-service-label"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Ikatan Keluarga Alumni (IKA)</p>
-                    <h1 class="text-2xl font-bold text-slate-900">Temu Silaturahmi, Keluarga Besar Alumni &amp; Karir</h1>
-                    <p class="mt-1 text-sm text-slate-600">Pembaruan karier, studi lanjut, beasiswa, testimoni, serta kontrol persetujuan publikasi direktori.</p>
+                <div class="lg:col-span-7 space-y-4">
+                    <p class="madrasah-service-label"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> OFFICIAL ALUMNI NETWORK &amp; CAREER HUB</p>
+                    <h1 class="text-2xl font-bold text-slate-900">
+                        Temu Silaturahmi,<br />
+                        <span class="text-amber-300">Keluarga Besar Alumni</span><br />
+                        &amp; Karir
+                    </h1>
+                    <p class="mt-1 text-sm text-slate-600">Wadah resmi penelusuran lulusan (tracer study), jejaring karir profesional, peluang beasiswa perguruan tinggi, bursa kerja aktif, dan kontribusi nyata bagi almamater tercinta {{ school.name }}.</p>
                     <form action="/alumni/direktori" method="get" class="parity-hero-search">
-                        <input name="search" type="search" aria-label="Cari alumni" placeholder="Cari nama alumni, kampus, atau instansi..." />
+                        <input name="search" type="search" aria-label="Cari alumni" placeholder="Cari nama alumni, kampus (PTN/PTS), instansi, atau profesi..." />
                         <button type="submit">Cari Alumni</button>
                     </form>
                     <div class="flex flex-wrap gap-2 pt-1">
@@ -93,10 +97,22 @@ const submit = () => {
                             Lihat Direktori Alumni
                         </Link>
                     </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-white/15 text-center text-xs">
+                        <div class="rounded-xl bg-white/10 p-2.5"><strong class="block text-lg font-extrabold text-amber-300">1.200+</strong><span class="text-blue-100">Alumni Terdata</span></div>
+                        <div class="rounded-xl bg-white/10 p-2.5"><strong class="block text-lg font-extrabold text-white">45+</strong><span class="text-blue-100">Kampus Mitra</span></div>
+                        <div class="rounded-xl bg-white/10 p-2.5"><strong class="block text-lg font-extrabold text-white">E-KTA</strong><span class="text-blue-100">Kartu Digital</span></div>
+                        <div class="rounded-xl bg-white/10 p-2.5"><strong class="block text-lg font-extrabold text-emerald-300">Tracer</strong><span class="text-blue-100">Aktif 24 Jam</span></div>
+                    </div>
                 </div>
-                <div class="parity-alumni-visual lg:col-span-4 rounded-2xl border border-white/20 bg-white/10 p-4 text-xs text-emerald-50 space-y-2">
-                    <img src="/madrasah-theme/images/classroom.webp" alt="Ilustrasi jejaring alumni" class="parity-alumni-image" />
-                    <p class="font-extrabold uppercase tracking-wider text-amber-300">Jejaring Almamater</p>
+                <div class="parity-alumni-visual lg:col-span-5 rounded-2xl border border-white/20 bg-white/10 p-4 text-xs text-emerald-50 space-y-3 relative">
+                    <div class="relative">
+                        <img src="/madrasah-theme/images/classroom.webp" alt="Ilustrasi jejaring alumni" class="parity-alumni-image" />
+                        <div class="absolute top-3 left-3 rounded-xl bg-slate-950/85 border border-white/20 px-3 py-1.5">
+                            <span class="block text-[9px] font-bold uppercase text-amber-300">Jejaring Kuat</span>
+                            <strong class="text-xs text-white">Lintas Angkatan Nusantara</strong>
+                        </div>
+                    </div>
+                    <p class="font-extrabold uppercase tracking-wider text-amber-300">Membangun Kolaborasi Lulusan Berkelanjutan</p>
                     <div class="flex flex-wrap gap-1.5">
                         <Link href="/alumni/direktori?current_status=studying" class="rounded-lg bg-white/15 px-2.5 py-1 hover:bg-white/25">🎓 Kuliah</Link>
                         <Link href="/alumni/direktori?current_status=working" class="rounded-lg bg-white/15 px-2.5 py-1 hover:bg-white/25">💼 Bekerja</Link>

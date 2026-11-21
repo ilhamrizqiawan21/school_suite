@@ -65,10 +65,11 @@ const submit = () => {
 
         <main class="mx-auto max-w-3xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero">
-                <p class="madrasah-service-label"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Informasi Akademik</p>
-                <h1 class="text-2xl font-bold text-slate-900">Pengumuman Kelulusan &amp; Unduh SKL</h1>
+                <p class="madrasah-service-label"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Pengumuman Kelulusan Resmi</p>
+                <h1 class="text-2xl font-bold text-slate-900">{{ school.name }}</h1>
+                <p class="mt-1 text-sm font-semibold text-amber-200">Tahun Pelajaran 2026/2027</p>
                 <p class="mt-1 text-sm text-slate-600">
-                    Hasil kelulusan hanya dibuka sesuai jadwal rilis resmi sekolah bagi pemilik NISN dan PIN akses yang sah.
+                    Layanan resmi pengecekan status kelulusan peserta didik dan pengunduhan Surat Keterangan Lulus (SKL) digital mandiri secara online.
                 </p>
             </div>
 

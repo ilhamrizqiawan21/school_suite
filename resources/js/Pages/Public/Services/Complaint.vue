@@ -22,6 +22,25 @@ const props = defineProps<{
 }>();
 
 const quickTab = ref<'write' | 'track'>('write');
+const quickType = ref<'pengaduan' | 'aspirasi' | 'info'>('pengaduan');
+
+const completionRate = computed(() => {
+    const total = props.transparency?.totals.total ?? 0;
+    const resolved = props.transparency?.totals.resolved ?? 0;
+    return total > 0 ? Math.round((resolved / total) * 100) : 0;
+});
+
+const newCount = computed(() => {
+    const total = props.transparency?.totals.total ?? 0;
+    const inProgress = props.transparency?.totals.in_progress ?? 0;
+    const resolved = props.transparency?.totals.resolved ?? 0;
+    return Math.max(0, total - inProgress - resolved);
+});
+
+const chooseCategoryCard = (value: string) => {
+    form.category = value;
+    document.getElementById('form-lapor')?.scrollIntoView({ behavior: 'smooth' });
+};
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 
@@ -61,38 +80,50 @@ const submit = () => {
 
         <main class="mx-auto max-w-5xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero grid gap-5 lg:grid-cols-12 items-center">
-                <div class="lg:col-span-8 space-y-3">
-                    <p class="madrasah-service-label"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Siap Lapor · Portal Pengaduan &amp; Aspirasi Terpadu</p>
-                    <h1 class="text-2xl font-bold text-slate-900">Suara Anda Lindungi Madrasah. Laporkan Kendala &amp; Sampaikan Ide.</h1>
+                <div class="lg:col-span-7 space-y-3">
+                    <p class="madrasah-service-label"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Whistleblowing &amp; Layanan Aspirasi Terpadu | 100% Bebas Intimidasi</p>
+                    <h1 class="text-2xl font-bold text-slate-900">
+                        Suara Anda Lindungi Madrasah.<br />
+                        <span class="bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent">Laporkan Kendala &amp; Sampaikan Ide.</span>
+                    </h1>
                     <p class="mt-1 text-sm text-slate-600">
-                        Sampaikan laporan bernama atau anonim. Identitas pelapor anonim tidak disimpan dan laporan diproses khusus oleh Satgas berwenang.
+                        Saluran pengaduan resmi {{ school.name }}. Tangani perundungan, sarana belajar, ketertiban, dan layanan madrasah secara aman dengan opsi <strong>Kirim Sebagai Anonim</strong>.
                     </p>
-                    <div v-if="transparency" class="parity-complaint-stats">
-                        <h2>Statistik Penanganan Madrasah</h2>
-                        <div>
-                            <span><strong>{{ transparency.totals.total }}</strong>Total Laporan</span>
-                            <span><strong>{{ transparency.totals.in_progress }}</strong>Diproses</span>
-                            <span><strong>{{ transparency.totals.resolved }}</strong>Tuntas</span>
+                    <div v-if="transparency" class="rounded-2xl border border-slate-200 bg-white p-4 space-y-3 shadow-sm">
+                        <div class="flex items-center justify-between gap-2">
+                            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Statistik Penanganan Madrasah</h2>
+                            <span class="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">Tingkat Selesai: {{ completionRate }}%</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                            <div class="rounded-xl bg-slate-50 border border-slate-100 p-2.5"><span class="block text-[10px] font-bold text-slate-500">TOTAL MASUK</span><strong class="text-xl font-black text-slate-900">{{ transparency.totals.total }}</strong></div>
+                            <div class="rounded-xl bg-sky-50 border border-sky-100 p-2.5"><span class="block text-[10px] font-bold text-sky-700">BARU MASUK</span><strong class="text-xl font-black text-sky-700">{{ newCount }}</strong></div>
+                            <div class="rounded-xl bg-amber-50 border border-amber-100 p-2.5"><span class="block text-[10px] font-bold text-amber-700">DIPROSES</span><strong class="text-xl font-black text-amber-700">{{ transparency.totals.in_progress }}</strong></div>
+                            <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-2.5"><span class="block text-[10px] font-bold text-emerald-700">TUNTAS</span><strong class="text-xl font-black text-emerald-700">{{ transparency.totals.resolved }}</strong></div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <a href="#form-lapor" class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-rose-700">Tulis Pengaduan</a>
-                        <Link href="/lacak?category=aduan" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white">Cek Tiket Laporan</Link>
-                        <Link href="/lapor/transparansi" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700">Transparansi Publik</Link>
+                    <div class="grid grid-cols-3 gap-2 pt-1">
+                        <div class="rounded-xl border border-slate-200 bg-white p-3 text-xs"><strong class="block text-slate-900">100% Anonim</strong><span class="text-[11px] text-slate-500">Identitas tersimpan rahasia</span></div>
+                        <div class="rounded-xl border border-slate-200 bg-white p-3 text-xs"><strong class="block text-slate-900">Respon Cepat</strong><span class="text-[11px] text-slate-500">Maks. 3×24 jam kerja</span></div>
+                        <div class="rounded-xl border border-slate-200 bg-white p-3 text-xs"><strong class="block text-slate-900">Lacak Tiket</strong><span class="text-[11px] text-slate-500">Pantau progres real-time</span></div>
                     </div>
                 </div>
-                <div class="parity-complaint-quick">
+                <div class="parity-complaint-quick lg:col-span-5">
                     <div class="parity-complaint-tabs">
                         <button type="button" :aria-pressed="quickTab === 'write'" @click="quickTab = 'write'">Tulis Pengaduan</button>
                         <button type="button" :aria-pressed="quickTab === 'track'" @click="quickTab = 'track'">Cek Tiket Laporan</button>
                     </div>
                     <form v-if="quickTab === 'write'" @submit.prevent="focusFullComplaint">
+                        <div class="flex gap-1.5 mb-2">
+                            <button type="button" class="rounded-full px-3 py-1 text-[11px] font-bold border" :class="quickType === 'pengaduan' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-100 text-slate-600 border-slate-200'" @click="quickType = 'pengaduan'">Pengaduan</button>
+                            <button type="button" class="rounded-full px-3 py-1 text-[11px] font-bold border" :class="quickType === 'aspirasi' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-100 text-slate-600 border-slate-200'" @click="quickType = 'aspirasi'">Aspirasi</button>
+                            <button type="button" class="rounded-full px-3 py-1 text-[11px] font-bold border" :class="quickType === 'info' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-100 text-slate-600 border-slate-200'" @click="quickType = 'info'">Info</button>
+                        </div>
                         <label for="quick-complaint-category">Pilih Kategori Permasalahan</label>
                         <select id="quick-complaint-category" v-model="form.category">
                             <option v-for="item in categories" :key="item.value" :value="item.value">{{ item.label }}</option>
                         </select>
-                        <label for="quick-complaint-description">Pesan Masalah / Keluhan</label>
-                        <textarea id="quick-complaint-description" v-model="form.description" rows="5" placeholder="Tulis kronologi singkat laporan..." />
+                        <label for="quick-complaint-description">Pokok Masalah / Keluhan</label>
+                        <textarea id="quick-complaint-description" v-model="form.description" rows="4" placeholder="Ketik ringkasan kejadian..." />
                         <button type="submit">Lanjutkan ke Formulir Lengkap</button>
                     </form>
                     <form v-else action="/lacak" method="get">
@@ -101,28 +132,46 @@ const submit = () => {
                         <input id="quick-complaint-ticket" name="code" required placeholder="Masukkan nomor tiket laporan" />
                         <button type="submit">Lacak Status Tindak Lanjut</button>
                     </form>
-                    <p>Identitas dan bukti laporan dilindungi.</p>
+                    <p>Identitas dan bukti laporan dilindungi. Tersedia Opsi Anonim.</p>
                 </div>
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                    <span class="text-xs font-extrabold text-rose-700">01 · Tulis Kronologi</span>
-                    <p class="mt-1 text-xs text-slate-600">Pilih kategori masalah dan jelaskan kejadian atau aspirasi Anda.</p>
+            <section id="kategori-kasus" class="space-y-4">
+                <div class="text-center">
+                    <h2 class="text-xl font-extrabold text-slate-900">Pilih Kategori Masalah</h2>
+                    <p class="text-xs text-slate-500 mt-1">Klik kategori di bawah untuk langsung mengisi formulir laporan</p>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                    <span class="text-xs font-extrabold text-rose-700">02 · Telaah Satgas</span>
-                    <p class="mt-1 text-xs text-slate-600">Satgas berwenang menelaah laporan secara rahasia dan teraudit.</p>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <button
+                        v-for="item in categories"
+                        :key="item.value"
+                        type="button"
+                        class="text-left rounded-2xl border p-4 transition bg-white hover:border-rose-400"
+                        :class="form.category === item.value ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-slate-200'"
+                        @click="chooseCategoryCard(item.value)"
+                    >
+                        <h3 class="text-sm font-extrabold text-slate-900">{{ item.label }}</h3>
+                        <p class="text-xs text-slate-500 mt-1">Laporkan kendala terkait {{ item.label.toLowerCase() }} secara aman.</p>
+                    </button>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                    <span class="text-xs font-extrabold text-rose-700">03 · Tindak Lanjut</span>
-                    <p class="mt-1 text-xs text-slate-600">Penanganan lapangan oleh tim terkait sesuai SOP sekolah.</p>
+            </section>
+
+            <section id="alur-jaminan" class="grid gap-5 lg:grid-cols-12">
+                <div class="lg:col-span-7 rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+                    <h3 class="text-lg font-extrabold text-slate-900">Alur Penyelesaian Laporan</h3>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3.5"><span class="text-xs font-extrabold text-rose-700">01 · Tulis Kronologi</span><p class="mt-1 text-xs text-slate-600">Pilih kategori masalah dan jelaskan kejadian atau aspirasi Anda.</p></div>
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3.5"><span class="text-xs font-extrabold text-rose-700">02 · Telaah Satgas</span><p class="mt-1 text-xs text-slate-600">Satgas berwenang menelaah laporan secara rahasia dan teraudit.</p></div>
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3.5"><span class="text-xs font-extrabold text-rose-700">03 · Tindak Lanjut</span><p class="mt-1 text-xs text-slate-600">Penanganan lapangan oleh tim terkait sesuai SOP sekolah.</p></div>
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3.5"><span class="text-xs font-extrabold text-rose-700">04 · Laporan Balik</span><p class="mt-1 text-xs text-slate-600">Pantau balasan dan status penyelesaian lewat halaman Lacak Tiket.</p></div>
+                    </div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                    <span class="text-xs font-extrabold text-rose-700">04 · Laporan Balik</span>
-                    <p class="mt-1 text-xs text-slate-600">Pantau balasan dan status penyelesaian lewat halaman Lacak Tiket.</p>
-                </div>
-            </div>
+                <aside class="lg:col-span-5 rounded-2xl bg-slate-900 text-white p-6 space-y-3">
+                    <h3 class="text-lg font-extrabold text-white">Kerahasiaan Anda Terlindungi Penuh</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">Mode laporan anonim tidak menyimpan nama, akun, maupun kontak pelapor. Seluruh bukti unggahan hanya dapat diakses oleh Satgas TPPK dan BK yang berwenang.</p>
+                    <Link href="/lapor/transparansi" class="inline-block rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white">Lihat Transparansi Publik →</Link>
+                </aside>
+            </section>
 
             <div v-if="issuedReceipt" class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950 space-y-1">
                 <p class="font-bold">Laporan Pengaduan Diterima!</p>

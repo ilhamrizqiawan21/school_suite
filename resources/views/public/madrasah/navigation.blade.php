@@ -31,11 +31,11 @@
   <header data-madrasah-navigation class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12">
       <div class="flex items-center justify-between h-20 gap-4">
-        <a href="/" class="flex items-center gap-3 shrink-0">
-          <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-11 h-11 object-contain">
-          <div>
-            <span class="block font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-none">{{ $schoolName }}</span>
-            <span class="text-[11px] text-slate-500 font-medium tracking-wide">Portal Informasi &amp; Akademik Terpadu</span>
+        <a href="/" class="flex items-center gap-3 min-w-0 flex-1 xl:flex-initial">
+          <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-11 h-11 object-contain shrink-0">
+          <div class="min-w-0">
+            <span class="block font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-none truncate">{{ $schoolName }}</span>
+            <span class="text-[11px] text-slate-500 font-medium tracking-wide block truncate">Portal Informasi &amp; Akademik Terpadu</span>
           </div>
         </a>
 
@@ -94,10 +94,10 @@
   <!-- ================= NAVBAR HIJAU PTSP ================= -->
   <header data-madrasah-navigation class="ptsp-header sticky top-0 z-40 shadow-md">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-4">
-      <a href="/layanan/ptsp" class="flex items-center gap-2.5 text-white shrink-0">
-        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain">
-        <span class="font-extrabold text-sm sm:text-base tracking-tight uppercase">{{ $schoolName }}</span>
-        <span class="ptsp-badge">PTSP DIGITAL</span>
+      <a href="/layanan/ptsp" class="flex items-center gap-2.5 text-white min-w-0 flex-1 md:flex-initial">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain shrink-0">
+        <span class="font-extrabold text-sm sm:text-base tracking-tight uppercase truncate">{{ $schoolName }}</span>
+        <span class="ptsp-badge shrink-0">PTSP DIGITAL</span>
       </a>
 
       <nav class="hidden lg:flex items-center gap-5 text-xs font-semibold text-emerald-50">
@@ -110,7 +110,7 @@
         <a href="/layanan/ptsp/akun" class="text-accent-yellow font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-circle-user"></i> Masuk</a>
       </nav>
 
-      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="ptsp-mobile-toggle w-9 h-9 rounded-lg text-white flex items-center justify-center hover:bg-white/10 transition">
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="ptsp-mobile-toggle shrink-0 w-9 h-9 rounded-lg text-white flex items-center justify-center hover:bg-white/10 transition">
         <i class="fa-solid fa-bars"></i>
       </button>
 
@@ -119,6 +119,291 @@
         <a href="/galeri/video">Video</a>
       </span>
     </div>
+  </header>
+@elseif (request()->is('lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
+  <!-- ================= TOP BAR APLIKASI DATABASE SISWA ================= -->
+  <div data-portal-identity class="bg-slate-900 text-slate-200 text-xs py-2 border-b border-slate-800">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 font-semibold">
+        <i class="fa-solid fa-graduation-cap text-amber-400"></i>
+        <span>{{ strtoupper($schoolName) }} • TA 2026/2027</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="/login?portal=siswa" class="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3 py-1 rounded-lg transition">
+          <i class="fa-solid fa-user-graduate"></i> Portal Siswa / Wali
+        </a>
+        <a href="/login" class="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-3 py-1 rounded-lg border border-slate-700 transition">
+          <i class="fa-solid fa-lock"></i> Login Admin
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NAVBAR APLIKASI DATABASE SISWA ================= -->
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-2.5 shrink-0">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain">
+        <div>
+          <span class="block font-extrabold text-sm text-emerald-700 leading-none">APLIKASI DATABASE SISWA</span>
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{{ strtoupper($schoolName) }}</span>
+        </div>
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-4 text-xs font-semibold text-slate-600">
+        <a href="/" class="hover:text-blue-600 transition">Home</a>
+        <a href="/direktori-gtk" class="hover:text-blue-600 transition">Data Siswa</a>
+        <a href="/alumni" class="hover:text-blue-600 transition">Data Alumni</a>
+        <a href="/layanan/legalisir" class="{{ request()->is('layanan/legalisir') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Legalisir</a>
+        <a href="/layanan/izin-siswa" class="{{ request()->is('layanan/izin-siswa') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Surat Izin</a>
+        <a href="/layanan/mutasi" class="{{ request()->is('layanan/mutasi') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Mutasi</a>
+        <a href="/lacak" class="{{ request()->is('lacak') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'text-emerald-600 font-bold hover:text-emerald-700 transition' }}">Lacak Terpadu</a>
+        <a href="/layanan/lapor" class="hover:text-blue-600 transition">Pengaduan</a>
+        <a href="/layanan/kelulusan" class="{{ request()->is('layanan/kelulusan') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Cek Kelulusan</a>
+      </nav>
+
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="lg:hidden w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <span class="sr-only">
+        <a href="/layanan/buku-tamu">Buku Tamu</a>
+        <a href="/galeri/video">Video</a>
+      </span>
+    </div>
+  </header>
+@elseif (request()->is('layanan/surat-dinas'))
+  <!-- ================= NAVBAR E-SURAT MASUK ================= -->
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-emerald-900/95 backdrop-blur-md text-white border-b border-emerald-700/60 shadow-md">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-10 h-10 object-contain shrink-0">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200 truncate">KEMENTERIAN AGAMA REPUBLIK INDONESIA</span>
+            <span class="hidden sm:inline-block shrink-0 bg-emerald-700 text-emerald-100 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/40">PORTAL PERSURATAN RESMI</span>
+          </div>
+          <span class="block font-extrabold text-base sm:text-lg text-white leading-tight truncate">{{ strtoupper($schoolName) }}</span>
+          <span class="text-[11px] text-emerald-200/80 block truncate">Layanan Penerimaan &amp; Disposisi Surat Dinas Eksternal (E-Surat Masuk)</span>
+        </div>
+      </a>
+
+      <div class="hidden md:flex items-center gap-2.5 shrink-0">
+        <a href="/" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition">Portal Utama</a>
+        <a href="/layanan/ptsp" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition">Layanan PTSP</a>
+        <a href="/login" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-md transition">Meja Petugas TU</a>
+      </div>
+
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="md:hidden shrink-0 w-9 h-9 rounded-lg bg-white/10 text-white flex items-center justify-center">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <span class="sr-only">
+        <a href="/layanan/buku-tamu">Buku Tamu</a>
+        <a href="/galeri/video">Video</a>
+      </span>
+    </div>
+  </header>
+@elseif (request()->is('layanan/buku-tamu'))
+  <!-- ================= HEADER BUKU TAMU DIGITAL ================= -->
+  <div data-portal-identity class="bg-[#2e7d32] text-white text-xs py-1.5 px-4 sm:px-8 lg:px-12 border-b-2 border-[#1b5e20]">
+    <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+      <span class="font-bold tracking-wide flex items-center gap-2"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> STATUS TAMU HARI INI :</span>
+      <span class="font-semibold text-emerald-50 truncate">Resepsionis Digital Aktif</span>
+    </div>
+  </div>
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-[#006666]/60 backdrop-blur-md text-white border-b border-white/15 shadow-md">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-11 h-11 object-contain shrink-0">
+        <div class="min-w-0">
+          <span class="block text-[10px] font-semibold uppercase tracking-widest text-teal-100/85 truncate">SISTEM BUKU TAMU DIGITAL</span>
+          <span class="block font-extrabold text-base sm:text-lg text-white leading-tight truncate">{{ strtoupper($schoolName) }}</span>
+        </div>
+      </a>
+      <div class="flex items-center gap-3 shrink-0">
+        <span class="hidden sm:inline text-xs font-semibold text-teal-50">{{ now($schoolTimezone ?? 'Asia/Jakarta')->locale('id')->translatedFormat('l, j F Y') }}</span>
+        <a href="/zona-integritas" class="bg-[#2e7d32] hover:bg-[#1b5e20] text-white font-extrabold text-xs px-4 py-2 rounded-lg shadow transition">IKM</a>
+      </div>
+      <span class="sr-only">
+        <a href="/layanan/buku-tamu">Buku Tamu</a>
+        <a href="/galeri/video">Video</a>
+      </span>
+    </div>
+    <div class="bg-[#003c3c]/70 border-t border-white/15 py-2 px-4 sm:px-8 lg:px-12 text-xs">
+      <div class="max-w-[1400px] mx-auto flex items-center gap-3 overflow-hidden">
+        <span class="shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r from-[#008f8f] to-[#00b3b3] text-white font-bold px-3.5 py-1 rounded-full border border-white/35 text-[11px] shadow-sm">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i> INFORMASI
+        </span>
+        <span class="text-white font-semibold truncate">Jam Layanan {{ $schoolName }} : Senin - Kamis (07.30 - 15.00), Jumat (07.30 - 11.30). Terima kasih atas kerjasama Anda.</span>
+      </div>
+    </div>
+  </header>
+@elseif (request()->is('layanan/lapor*'))
+  <!-- ================= NAVBAR SIAP LAPOR ================= -->
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-4">
+      <a href="/layanan/lapor" class="flex items-center gap-2.5 shrink-0">
+        <span class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-sm">
+          <i class="fa-solid fa-shield-heart"></i>
+        </span>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-sm text-slate-900">Siap Lapor</span>
+            <span class="bg-rose-100 text-rose-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">PORTAL RESMI</span>
+          </div>
+          <span class="block text-[10px] font-bold text-slate-500 uppercase">{{ strtoupper($schoolName) }}</span>
+        </div>
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-6 text-xs font-semibold text-slate-600">
+        <a href="/" class="text-rose-600 font-bold">Beranda</a>
+        <a href="#kategori-kasus" class="hover:text-rose-600 transition">Kategori Kasus</a>
+        <a href="#alur-jaminan" class="hover:text-rose-600 transition">Alur &amp; Jaminan</a>
+        <a href="/lapor/transparansi" class="hover:text-rose-600 transition">Transparansi Laporan</a>
+      </nav>
+
+      <div class="hidden md:flex items-center gap-2 shrink-0">
+        <a href="/lacak?category=aduan" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">Lacak Tiket</a>
+        <a href="#form-lapor" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-sm transition">Tulis Laporan</a>
+        <a href="/satgas/aduan" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition">Petugas</a>
+      </div>
+
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="lg:hidden w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <span class="sr-only">
+        <a href="/layanan/buku-tamu">Buku Tamu</a>
+        <a href="/galeri/video">Video</a>
+      </span>
+    </div>
+    <div class="bg-[#9f1239] text-white py-2 px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4 text-xs">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <span class="bg-white text-rose-800 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] shrink-0">INFO TERKINI</span>
+        <span class="truncate text-rose-50">Deklarasi Madrasah Ramah Anak &amp; Bebas Bullying: {{ $schoolName }} berkomitmen penuh melindungi pelapor.</span>
+      </div>
+      <span class="hidden sm:inline-flex items-center px-3 py-0.5 rounded-full bg-rose-950/60 border border-rose-400/30 text-[11px] font-bold shrink-0">100% Terlindungi &amp; Anonim</span>
+    </div>
+  </header>
+@elseif (request()->is('alumni*'))
+  <!-- ================= HEADER PORTAL ALUMNI (IKA) ================= -->
+  <div data-portal-identity class="bg-slate-950 text-slate-200 text-xs py-2 border-b border-slate-800 hidden md:block">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-5">
+        <span><i class="fa-solid fa-id-card text-amber-400"></i> NPSN: {{ ($profile['npsn'] ?? null) ?: 'Belum tersedia' }}</span>
+        <span><i class="fa-solid fa-location-dot text-amber-400"></i> {{ $schoolAddress }}</span>
+        <span><i class="fa-solid fa-phone text-amber-400"></i> {{ $schoolPhone }}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="bg-slate-800 px-2.5 py-0.5 rounded-full text-[11px]">Layanan IKA: <strong class="text-emerald-300">Aktif</strong></span>
+      </div>
+    </div>
+  </div>
+  <div class="bg-slate-900 text-white py-2 px-4 sm:px-8 lg:px-12 border-b border-slate-800 hidden md:block">
+    <div class="max-w-[1600px] mx-auto flex items-center gap-3 text-xs">
+      <span class="bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-[10px] shrink-0">AGENDA IKA</span>
+      <span class="text-slate-200 truncate">Selamat Datang di Portal Resmi Ikatan Keluarga Alumni (IKA) {{ strtoupper($schoolName) }} • Pengisian Tracer Study Mandiri Lulusan Terbuka Untuk Seluruh Angkatan</span>
+    </div>
+  </div>
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2.5 flex items-center justify-between gap-4">
+      <a href="/alumni" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain shrink-0">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="font-extrabold text-sm sm:text-base text-slate-900 truncate">IKATAN KELUARGA ALUMNI (IKA)</span>
+            <span class="hidden sm:inline-block shrink-0 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2 py-0.5 rounded-md border border-amber-200">OFFICIAL HUB</span>
+          </div>
+          <span class="text-[10px] text-slate-500 block truncate">{{ strtoupper($schoolName) }} • Penelusuran Lulusan &amp; Jejaring Karir</span>
+        </div>
+      </a>
+      <div class="hidden md:flex items-center gap-2">
+        <a href="#tracer-alumni" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-extrabold shadow-sm">Isi Tracer Study</a>
+        <a href="#tracer-alumni" class="px-3.5 py-2 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-extrabold shadow-sm">KTA Digital</a>
+        <a href="/layanan/legalisir" class="px-3.5 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold">Legalisir Ijazah ↗</a>
+      </div>
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="md:hidden shrink-0 w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+    <div class="hidden md:block bg-slate-50 border-t border-slate-200">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2 flex items-center justify-between text-xs font-semibold text-slate-700">
+        <nav class="flex flex-wrap items-center gap-5">
+          <a href="/" class="hover:text-blue-700">Beranda</a>
+          <a href="/alumni/direktori" class="hover:text-blue-700">Direktori Alumni</a>
+          <a href="#tracer-alumni" class="hover:text-blue-700">Tracer Study</a>
+          <a href="/alumni/direktori" class="hover:text-blue-700">Bursa Karir</a>
+          <a href="/alumni/direktori" class="hover:text-blue-700">Beasiswa</a>
+          <a href="#tracer-alumni" class="hover:text-blue-700">KTA Digital</a>
+          <a href="/layanan/legalisir" class="text-rose-600 font-bold">Legalisir Online ↗</a>
+        </nav>
+        <span class="text-emerald-700 font-bold text-[11px]">Portal Resmi Alumni Terintegrasi</span>
+      </div>
+    </div>
+    <span class="sr-only">
+      <a href="/layanan/buku-tamu">Buku Tamu</a>
+      <a href="/galeri/video">Video</a>
+    </span>
+  </header>
+@elseif (request()->is('perpustakaan*'))
+  <!-- ================= HEADER E-PERPUSTAKAAN DIGITAL ================= -->
+  <div data-portal-identity class="bg-kemenag-900 text-emerald-100 text-xs py-2 border-b border-kemenag-700/60 hidden md:block">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-5">
+        <span class="font-bold">{{ strtoupper($schoolName) }} • E-LIBRARY</span>
+        <span>{{ now($schoolTimezone ?? 'Asia/Jakarta')->locale('id')->translatedFormat('j F Y') }}</span>
+        <span class="bg-kemenag-950/70 px-2.5 py-0.5 rounded-full border border-emerald-500/30">Online: <strong>{{ number_format($visits['today'] ?? 1, 0, ',', '.') }}</strong></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span>Waktu Sholat: <strong class="text-accent-yellow">{{ $prayer['next_prayer']['name'] }} {{ $prayer['next_prayer']['time'] }}</strong></span>
+        <a href="/" class="hover:text-accent-yellow transition">Beranda Utama</a>
+      </div>
+    </div>
+  </div>
+  <div class="bg-kemenag-950 text-white py-2 px-4 sm:px-8 lg:px-12 border-b border-emerald-800/60 hidden md:block">
+    <div class="max-w-[1600px] mx-auto flex items-center gap-3 text-xs">
+      <span class="bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-[10px] shrink-0">WARTA PUSTAKA</span>
+      <span class="text-emerald-100 truncate">E-Library 24 Jam: Tersedia koleksi buku teks, referensi keislaman, dan modul digital bebas akses untuk warga madrasah.</span>
+    </div>
+  </div>
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2.5 flex items-center justify-between gap-4">
+      <a href="/perpustakaan" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain shrink-0">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="font-extrabold text-sm sm:text-base text-slate-900 truncate">{{ strtoupper($schoolName) }}</span>
+            <span class="shrink-0 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2 py-0.5 rounded-md">E-LIBRARY</span>
+          </div>
+          <span class="text-[10px] text-slate-500 block truncate">E-Perpustakaan Digital • Khazanah Literasi Madrasah</span>
+        </div>
+      </a>
+      <div class="hidden md:flex items-center gap-2">
+        <a href="#kunjungan-pustaka" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">Buku Tamu</a>
+        <a href="/login?portal=siswa" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-extrabold">Login Siswa</a>
+        <a href="/perpustakaan/kelola" class="px-3.5 py-1.5 rounded-xl bg-kemenag-700 text-white text-xs font-extrabold">Pustakawan</a>
+      </div>
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="md:hidden shrink-0 w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+    <div class="hidden md:block bg-slate-50 border-t border-slate-200">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2 flex items-center justify-between text-xs font-semibold text-slate-700">
+        <nav class="flex flex-wrap items-center gap-5">
+          <a href="/perpustakaan" class="text-emerald-700 font-bold">Beranda Perpus</a>
+          <a href="#katalog-pustaka" class="hover:text-emerald-700">Semua Katalog (OPAC)</a>
+          <a href="#katalog-pustaka" class="text-amber-600 font-bold">E-Book Digital</a>
+          <a href="#kunjungan-pustaka" class="hover:text-emerald-700">Layanan Mandiri</a>
+          <a href="/lacak" class="hover:text-emerald-700">Tracking Berkas</a>
+          <a href="/" class="hover:text-emerald-700">Portal Madrasah</a>
+        </nav>
+      </div>
+    </div>
+    <span class="sr-only">
+      <a href="/layanan/buku-tamu">Buku Tamu</a>
+      <a href="/galeri/video">Video</a>
+    </span>
   </header>
 @else
   <!-- ================= TOP BAR INFO & JADWAL SHOLAT ================= -->
@@ -601,11 +886,14 @@
           <a href="/galeri" class="hover:text-kemenag-700 transition py-1">Galeri</a>
           <a href="/galeri/video" class="hover:text-kemenag-700 transition py-1">Video</a>
           <a href="/#kontak" class="hover:text-kemenag-700 transition py-1">Kontak</a>
+          @if (request()->is('galeri/video*'))
+            <a href="#videoModal" data-open-video-featured class="portal-video-subscribe">Subscribe</a>
+          @endif
           <a href="/login" class="portal-desktop-catalogue-login">Login Sistem</a>
         </nav>
 
         <!-- Quick Info Kanan Sub-Navbar -->
-        <div class="hidden lg:flex items-center gap-3 text-xs text-slate-500 font-medium">
+        <div class="portal-subnav-quick hidden lg:flex items-center gap-3 text-xs text-slate-500 font-medium">
           <a href="/lacak" class="hover:text-kemenag-700 flex items-center gap-1.5 transition">
             <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i>
             <span>Tracking Berkas</span>

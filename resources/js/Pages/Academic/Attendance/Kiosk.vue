@@ -193,19 +193,24 @@ onBeforeUnmount(() => {
     <OperationsLayout mode="kiosk" title="Kios Presensi">
         <div ref="kioskRootRef" class="kiosk-shell kiosk-display">
             <header class="kiosk-head">
-                <div>
-                    <h1>Kios Presensi — {{ school.name }}</h1>
-                    <p>Mode tap kartu RFID atau pindai QR. Jendela deduplikasi: {{ operations.kiosk_dedup_seconds }} detik.</p>
+                <div class="kiosk-brand">
+                    <span class="kiosk-logo-dot" aria-hidden="true"></span>
+                    <div>
+                        <h1>{{ school.name }}</h1>
+                        <p><span class="kiosk-dot">●</span> KIOS PRESENSI SISWA <span class="kiosk-gate-pill">Gate Utama</span></p>
+                    </div>
+                </div>
+                <div class="kiosk-clock-box">
+                    <strong v-if="currentClock" class="kiosk-clock-time">{{ currentClock }}</strong>
+                    <span class="kiosk-clock-date">{{ new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()) }}</span>
                 </div>
                 <div class="kiosk-controls">
-                    <span v-if="currentClock" class="rounded-lg bg-white/10 px-3 py-1.5 font-mono text-sm font-bold text-amber-300 border border-white/20">
-                        {{ currentClock }}
-                    </span>
                     <StatusBadge :status="isOnline ? 'active' : 'warning'" :label="isOnline ? 'Online' : 'Offline'" />
-                    <AppButton variant="secondary" size="sm" @click="scanMode = 'rfid'; inputRef?.focus()">Tap Kartu RFID</AppButton>
+                    <AppButton variant="secondary" size="sm" @click="scanMode = 'rfid'; inputRef?.focus()">Tap Kartu</AppButton>
                     <AppButton variant="secondary" size="sm" @click="scanMode = 'qr'">QR Kamera</AppButton>
                     <AppButton variant="secondary" size="sm" @click="triggerGate">Gate</AppButton>
-                    <AppButton variant="secondary" size="sm" @click="toggleFullscreen">{{ isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh' }}</AppButton>
+                    <AppButton variant="secondary" size="sm" @click="toggleFullscreen">{{ isFullscreen ? 'Keluar' : 'Fullscreen' }}</AppButton>
+                    <a href="/dashboard" class="kiosk-dash-link">Dashboard</a>
                 </div>
             </header>
 
@@ -218,7 +223,7 @@ onBeforeUnmount(() => {
             <section class="scanner-card" aria-labelledby="kiosk-scanner-title">
                 <div class="kiosk-scan-prompt">
                     <h2 id="kiosk-scanner-title">{{ scanMode === 'rfid' ? 'Tempelkan Kartu Pelajar' : 'Pindai Kode QR' }}</h2>
-                    <p>{{ scanMode === 'rfid' ? 'Dekatkan kartu ke pembaca RFID.' : 'Arahkan kamera ke kode QR kartu pelajar.' }}</p>
+                    <p>{{ scanMode === 'rfid' ? 'Dekatkan kartu RFID atau arahkan Barcode kartu ke alat scanner untuk presensi mandiri.' : 'Arahkan kamera ke kode QR kartu pelajar.' }}</p>
                 </div>
                 <form class="scan-form" @submit.prevent="submitScan">
                     <input
@@ -226,7 +231,7 @@ onBeforeUnmount(() => {
                         v-model="codeInput"
                         type="text"
                         autofocus
-                        :placeholder="scanMode === 'rfid' ? 'Tempelkan kartu RFID pada reader atau ketik UID...' : 'Arahkan QR ke kamera atau ketik token QR...'"
+                        :placeholder="scanMode === 'rfid' ? 'Scanner Aktif & Siap Menerima Tap (atau ketik UID)...' : 'Arahkan QR ke kamera atau ketik token QR...'"
                         aria-label="Input kartu RFID atau token QR"
                     />
                     <AppButton type="submit">Catat Scan</AppButton>
@@ -241,8 +246,14 @@ onBeforeUnmount(() => {
             </section>
 
             <section class="panel-card">
-                <h2>Log Pemindaian Terbaru (Data Minimal)</h2>
-                <ul v-if="feed.length" class="feed-list">
+                <div class="kiosk-footer-bar">
+                    <div class="kiosk-stats-pills">
+                        <span>Tercatat Sesi: <strong>{{ feed.length }}</strong></span>
+                        <span>Deduplikasi: <strong>{{ operations.kiosk_dedup_seconds }}s</strong></span>
+                    </div>
+                    <span class="sub-text">Mode USB Keyboard RFID / Barcode Auto-Focus</span>
+                </div>
+                <ul v-if="feed.length" class="feed-list mt-2">
                     <li v-for="(item, idx) in feed" :key="idx" class="feed-item">
                         <div>
                             <strong>{{ item.student_name }}</strong>
@@ -255,7 +266,6 @@ onBeforeUnmount(() => {
                         />
                     </li>
                 </ul>
-                <p v-else class="sub-text">Belum ada pemindaian pada sesi ini.</p>
             </section>
         </div>
     </OperationsLayout>
@@ -282,10 +292,21 @@ onBeforeUnmount(() => {
 .kiosk-scan-prompt h2 { margin: 0 0 .35rem; font-size: clamp(1.35rem, 4vw, 2.2rem); font-weight: 800; }
 .kiosk-scan-prompt p { margin: 0; }
 .scan-form input { min-width: 0; }
-.kiosk-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
-.kiosk-head h1 { margin: 0; font-size: 1.45rem; }
-.kiosk-head p { margin: .2rem 0 0; color: var(--ink-soft, #536174); }
-.kiosk-controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.kiosk-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; }
+.kiosk-brand { display: flex; align-items: center; gap: .75rem; }
+.kiosk-dot { color: #34d399; }
+.kiosk-gate-pill { margin-left: .4rem; padding: .15rem .55rem; border-radius: 999px; background: rgb(16 185 129 / 15%); border: 1px solid rgb(52 211 153 / 30%); color: #6ee7b7; font-size: .68rem; font-weight: 700; }
+.kiosk-clock-box { text-align: center; }
+.kiosk-clock-time { display: block; font-family: ui-monospace, monospace; font-size: 2rem; font-weight: 900; letter-spacing: .04em; color: #fff; line-height: 1; }
+.kiosk-clock-date { display: block; font-size: .72rem; color: #94a3b8; margin-top: .2rem; }
+.kiosk-dash-link { padding: .35rem .75rem; border-radius: .5rem; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: .75rem; font-weight: 700; text-decoration: none; }
+.kiosk-footer-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; }
+.kiosk-stats-pills { display: flex; flex-wrap: wrap; gap: .5rem; }
+.kiosk-stats-pills span { padding: .25rem .7rem; border-radius: .5rem; background: #1e293b; border: 1px solid #334155; font-size: .75rem; color: #cbd5e1; }
+.kiosk-head h1 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+.kiosk-head p { margin: .15rem 0 0; color: #34d399; font-size: .75rem; font-weight: 700; }
+.kiosk-controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: flex-end; }
+@media (max-width: 900px) { .kiosk-head { grid-template-columns: 1fr; text-align: center; } .kiosk-controls { justify-content: center; } }
 .scanner-card, .panel-card { background: var(--surface, #fff); border: 1px solid var(--line, #dee4ee); border-radius: 14px; padding: 1.25rem; display: grid; gap: 1rem; }
 .scan-form { display: flex; flex-wrap: wrap; gap: .6rem; }
 .scan-form input { flex: 1 1 280px; min-height: 48px; padding: .6rem .9rem; border: 2px solid var(--primary, #3157a4); border-radius: 10px; font-size: 1rem; }

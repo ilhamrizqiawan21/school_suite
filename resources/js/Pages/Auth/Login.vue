@@ -56,14 +56,26 @@ const submit = () => {
         <Head :title="`Masuk — ${schoolName}`" />
         <section class="login-layout" aria-label="Login portal sekolah">
             <aside class="welcome-panel">
-                <div class="school-brand">
-                    <img v-if="branding?.logo_url" :src="branding.logo_url" :alt="`Logo ${schoolName}`" />
-                    <span v-else class="brand-fallback" aria-hidden="true">{{ schoolInitial }}</span>
-                    <span class="brand-copy"><strong>{{ schoolName }}</strong><small>School Suite</small></span>
+                <div class="welcome-top-row">
+                    <div class="school-brand">
+                        <img v-if="branding?.logo_url" :src="branding.logo_url" :alt="`Logo ${schoolName}`" />
+                        <span v-else class="brand-fallback" aria-hidden="true">{{ schoolInitial }}</span>
+                        <span class="brand-copy">
+                            <span v-if="man4" class="brand-pill">{{ studentPortal ? 'Portal Siswa & Wali Murid' : 'Sistem Informasi Akademik' }}</span>
+                            <strong>{{ schoolName }}</strong>
+                            <small v-if="!man4">School Suite</small>
+                        </span>
+                    </div>
+                    <a v-if="man4" class="back-home-pill" href="/">← Kembali ke Beranda</a>
                 </div>
                 <div class="welcome-copy">
-                    <p class="welcome-kicker">{{ studentPortal ? 'Portal Siswa & Wali Murid' : man4 ? 'Portal Database Madrasah' : 'Portal warga sekolah' }}</p>
+                    <p class="welcome-kicker">{{ studentPortal ? 'Layanan Informasi Akademik Mandiri' : man4 ? 'Portal Satu Pintu Terpadu' : 'Portal warga sekolah' }}</p>
                     <h1>{{ studentPortal ? 'Pantau Perkembangan Akademik & Administrasi Siswa' : man4 ? 'Pusat Manajemen Database & Layanan Administrasi Digital' : 'Semua kebutuhan belajar, dalam satu tempat.' }}</h1>
+                    <p v-if="man4" class="welcome-sublead">
+                        {{ studentPortal
+                            ? 'Kemudahan bagi siswa dan orang tua untuk melihat profil, mengajukan izin, cek pelanggaran & prestasi, serta mengakses perpustakaan madrasah secara real-time.'
+                            : 'Kelola data kesiswaan, kepegawaian guru, mutasi, presensi terintegrasi, dan layanan madrasah dalam satu platform modern yang aman & cepat.' }}
+                    </p>
 
                     <div v-if="man4" class="madrasah-feature-grid">
                         <template v-if="studentPortal">
@@ -132,12 +144,25 @@ const submit = () => {
                     <a href="/">Beranda</a>
                 </div>
                 <header class="login-heading">
-                    <span v-if="man4" class="login-heading-mark" aria-hidden="true"></span>
+                    <a v-if="man4" href="/" class="login-panel-back">{{ studentPortal ? 'Beranda' : 'Portal Utama' }}</a>
+                    <span v-if="man4" class="login-heading-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 9l10 6 10-6-10-6Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
+                    </span>
                     <p v-else class="login-kicker">Akun sekolah</p>
                     <h2 id="login-title">{{ studentPortal ? 'Login Siswa' : man4 ? 'Selamat Datang' : 'Masuk ke portal' }}</h2>
-                    <p>Gunakan akun yang diberikan sekolah.</p>
-
+                    <p>{{ studentPortal ? 'Masuk dengan akun Anda untuk melihat informasi dan layanan siswa.' : man4 ? 'Masuk dengan kredensial akun Anda untuk mengakses sistem database.' : 'Gunakan akun yang diberikan sekolah.' }}</p>
                 </header>
+
+                <div v-if="man4" class="login-info-box">
+                    <template v-if="studentPortal">
+                        <strong>Petunjuk Login:</strong>
+                        <span>Gunakan username/email atau NISN akun siswa yang diberikan oleh operator sekolah.</span>
+                    </template>
+                    <template v-else>
+                        <span class="info-dot">● Akses Terpadu:</span>
+                        <span class="info-tags"><b>Admin</b><b>Guru</b><b>Staf TU</b></span>
+                    </template>
+                </div>
 
                 <div v-if="status" class="status-message" role="status">{{ status }}</div>
 
@@ -203,7 +228,7 @@ const submit = () => {
                             <path opacity=".8" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                         </svg></template>
 
-                        <span>{{ form.processing ? 'Memproses…' : 'Masuk' }}</span>
+                        <span>{{ form.processing ? 'Memproses…' : studentPortal ? 'Masuk ke Akun Siswa' : man4 ? 'Masuk ke Dashboard' : 'Masuk' }}</span>
                     </AppButton>
                 </form>
                 <p v-if="man4" class="login-portal-switch">
@@ -420,7 +445,18 @@ const submit = () => {
     .form-field input { transition: none; }
 }
  .login-mobile-brand { display: none; }
-.login-heading-mark { display: block; width: 48px; height: 48px; margin-bottom: 1.5rem; border-radius: 12px; background: linear-gradient(135deg,#34d399,#0d9488); }
+.welcome-top-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.brand-pill { display: inline-block; width: fit-content; padding: .2rem .6rem; border-radius: 999px; background: rgb(16 185 129 / 18%); border: 1px solid rgb(52 211 153 / 35%); color: #6ee7b7; font-size: .7rem; font-weight: 700; margin-bottom: .25rem; }
+.back-home-pill { padding: .5rem .9rem; border-radius: .65rem; background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 16%); color: #e2e8f0; font-size: .75rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.back-home-pill:hover { background: rgb(255 255 255 / 15%); }
+.welcome-sublead { margin: -.5rem 0 1.5rem; color: #cbd5e1; font-size: .875rem; line-height: 1.6; }
+.login-panel-back { display: inline-block; margin-bottom: 1.5rem; padding: .4rem .85rem; border-radius: .6rem; background: rgb(255 255 255 / 6%); border: 1px solid #334155; color: #cbd5e1; font-size: .75rem; font-weight: 600; text-decoration: none; }
+.login-info-box { margin-bottom: 1.25rem; padding: .75rem 1rem; border-radius: .75rem; background: rgb(6 78 59 / 35%); border: 1px solid rgb(16 185 129 / 30%); font-size: .75rem; color: #d1fae5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
+.login-info-box strong { color: #6ee7b7; }
+.info-tags { display: flex; gap: .35rem; }
+.info-tags b { padding: .15rem .5rem; border-radius: .4rem; background: rgb(255 255 255 / 10%); font-weight: 700; color: #f8fafc; }
+.login-heading-mark { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 1.25rem; border-radius: 12px; background: linear-gradient(135deg,#34d399,#0d9488); color: #fff; }
+.login-heading-mark svg { width: 24px; height: 24px; }
 .login-portal-switch { margin: 1.5rem 0; font-size: .8rem; color: #5eead4; }
 .is-madrasah-login .form-field input { background: #1e293b; color: #f8fafc; border-color: #334155; }
 .is-madrasah-login .form-field input::placeholder { color: #94a3b8; }

@@ -99,12 +99,15 @@ const submitClearance = () => {
 
         <main class="mx-auto max-w-6xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero grid gap-5 lg:grid-cols-12 items-center">
-                <div class="parity-hero-copy lg:col-span-8 space-y-3">
-                    <p class="madrasah-service-label"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i> E-Perpustakaan Digital · Khazanah Literasi Madrasah</p>
-                    <h1 class="text-2xl font-bold text-slate-900">Membuka Cakrawala Ilmu, Menumbuhkan Karakter Qur’ani Melalui Literasi</h1>
+                <div class="parity-hero-copy lg:col-span-7 space-y-3">
+                    <p class="madrasah-service-label"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i> Pusat Sumber Belajar &amp; Khazanah Literasi Digital Madrasah</p>
+                    <h1 class="text-2xl font-bold text-slate-900">
+                        Membuka Cakrawala Ilmu,<br />
+                        <span class="text-amber-300">Menumbuhkan Karakter Qur’ani</span> Melalui Literasi
+                    </h1>
                     <p class="mt-1 text-xs text-slate-600">{{ sourceStatus.message }}</p>
                 <form class="parity-hero-search" @submit.prevent="applyFilter">
-                    <input v-model="search" type="search" aria-label="Cari koleksi" @keydown.enter="applyFilter" placeholder="Cari judul, pengarang, kode..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <input v-model="search" type="search" aria-label="Cari koleksi" @keydown.enter="applyFilter" placeholder="Ketik judul, penulis, penerbit, atau kode..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     <select v-model="category" aria-label="Kategori koleksi" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
                         <option value="">Semua Kategori</option>
                         <option v-for="c in categories" :key="c.value" :value="c.value">{{ c.label }}</option>
@@ -117,14 +120,21 @@ const submitClearance = () => {
                     </select>
                     <AppButton type="submit">Cari</AppButton>
                 </form>
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <a href="#katalog-pustaka" class="rounded-xl bg-amber-400 px-4 py-2 text-xs font-extrabold text-slate-950">Jelajahi Katalog</a>
-                        <a href="#kunjungan-pustaka" class="rounded-xl bg-white/15 border border-white/30 px-4 py-2 text-xs font-bold text-white">Presensi Pengunjung</a>
-                        <a v-if="isLoggedIn && students.length" href="#bebas-pustaka" class="rounded-xl bg-white/15 border border-white/30 px-4 py-2 text-xs font-bold text-white">Cek Bebas Pustaka</a>
+                    <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+                        <span class="text-emerald-100/80 font-semibold">Topik Cepat:</span>
+                        <button type="button" class="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-white hover:bg-white/20" @click="search = 'Kurikulum'; applyFilter()">#KurikulumMerdeka</button>
+                        <button type="button" class="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-white hover:bg-white/20" @click="format = 'ebook'; applyFilter()">#E-BookDigital</button>
+                        <button type="button" class="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-white hover:bg-white/20" @click="search = 'Sains'; applyFilter()">#SainsTeknologi</button>
                     </div>
                 </div>
-                <div class="parity-hero-visual">
-                    <img src="/madrasah-theme/images/library.webp" alt="Ilustrasi ruang perpustakaan" />
+                <div class="parity-hero-visual lg:col-span-5 relative">
+                    <div class="relative">
+                        <img src="/madrasah-theme/images/library.webp" alt="Ilustrasi ruang perpustakaan" />
+                        <div class="absolute top-3 left-3 rounded-xl bg-kemenag-950/90 border border-emerald-400/30 px-3 py-1.5 text-xs">
+                            <span class="block text-[9px] font-bold uppercase text-amber-300">Akreditasi Pustaka</span>
+                            <strong class="text-white">OPAC 4.0 Terakreditasi</strong>
+                        </div>
+                    </div>
                     <div class="parity-hero-metrics">
                         <span><strong>{{ stats.collections_count }}</strong> Koleksi</span>
                         <span><strong>{{ stats.visits_today }}</strong> Kunjungan Hari Ini</span>
@@ -246,6 +256,11 @@ const submitClearance = () => {
                     </form>
                 </div>
             </div>
+
+            <section class="rounded-3xl bg-gradient-to-r from-kemenag-900 to-emerald-800 p-8 text-center text-white space-y-2">
+                <h2 class="text-xl font-extrabold">Membangun Generasi Emas Melalui Kegemaran Membaca</h2>
+                <h3 class="text-sm font-semibold text-amber-300">“Iqra’ — Membaca untuk Berakhlak, Berkarya, dan Memimpin”</h3>
+            </section>
         </main>
     </div>
 </template>

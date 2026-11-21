@@ -2,6 +2,33 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Audit & Penyelarasan Presisi Visual 23 Halaman Paritas (`M4-UX` / `M4-PUB` / `M4-TU` / `M4-OPS` / `M4-LIF` / `M4-SERV`) — 21 November 2026
+
+- **Task & Requirement**: Audit visual komparatif antara 23 halaman referensi `screenshot_halaman_asli/` (plus halaman beranda) dengan tampilan live School Suite pada desktop (`1280×720`) dan mobile (`390×844`), serta penyelarasan tata letak, masthead, komponen hero, tab, kartu, dan responsivitas tanpa hardcoding identitas `MAN 4 BANJAR` / `man4banjar.com`.
+- **Ringkasan**:
+  - **Portal Publik & Katalog (`home`, `news`, `achievements`, `gallery`, `navigation`)**: Penyelarasan paragraf hero dan 4 kartu micro-stats di beranda, pembersihan teks pratinjau berlebih pada katalog berita/prestasi/galeri, penyembunyian tautan cepat subnav pada layout katalog/layanan, tombol `Subscribe` pada galeri video, serta penambahan varian masthead khusus (`Aplikasi Database Siswa`, `E-Surat Masuk`, `Buku Tamu Digital`, `Siap Lapor`, `Portal Alumni IKA`, `E-Perpustakaan Digital`) dengan tetap menjaga `data-madrasah-navigation` dan tautan `.sr-only` dinamis.
+  - **Layanan Publik & Sub-Portal (`Ptsp`, `Tracking/Index`, `Guestbook`, `Legalization`, `Mutation`, `Graduation`, `Alumni/Portal`, `Complaint`, `Library/Index`)**: Penyelarasan penuh 100% halaman PTSP menjadi section full-bleed (putih `#ffffff` → `#f8fafc` → putih `#ffffff`), breakpoint `< 1024px` 1 kolom dengan checklist vertikal 1 kolom di `#tentang-ptsp`, overlay hero cerah + tombol `.btn-ajukan-hero`/`.btn-cek-hero`, kotak fitur `.parity-feature-box` 2×2, prosedur 7 langkah `.p-icon` `44px`, dan formulir `LOGIN PTSP ONLINE` fungsional (`Email / NIK`, `Password / No. HP` ke `/layanan/ptsp/akun/masuk`), toggle `showCatalog`, search pill terpadu + 4 kartu panduan di Lacak, penggabungan panel kamera `Foto Kunjungan` ke `REGISTER TAMU`, tab `alur`/`form` di Legalisir & Mutasi, serta penyelarasan hero & fitur di Alumni, Siap Lapor, dan E-Perpustakaan.
+  - **Login & Operasi (`Login`, `Attendance/Kiosk`, `OperationsScanner`, `SecurityPost/Index`, `OperationsLayout`)**: Penambahan pill brand + tombol kembali, kotak info login siswa/GTK, header 3-kolom + footer statistik di Kiosk, tombol kembali & placeholder NISN di scanner piket/BK, serta ikon perisai, tombol keypad `⌫`/`✓`, dan pemisahan panel konfigurasi PIN Pos Jaga.
+  - **Responsivitas Mobile & CSS (`parity.css`, `procedures.css`, `navigation.blade.php`)**: Perbaikan grid 2-kolom `.parity-letter-hero .hero-inner` di desktop & 1-kolom di mobile (`<= 767px`), pemulihan foto `.parity-alumni-image` di mobile agar badge `JEJARING KUAT` tidak bertabrakan dengan teks, pembatasan `.parity-complaint-quick button[type="submit"]`, pill aktif header PTSP (`rgba(0,0,0,0.25)` + ring kuning), utilitas horizontal SOP `.reference-legalisir`/`.reference-mutasi`, perbaikan overflow horizontal `390px` pada 6 masthead mobile, dan pemulihan utilitas responsif (`.sm:inline-block`, `.md:flex`, `.lg:inline`, `.lg:hidden`) di `parity.css`.
+- **File yang Diubah**:
+  - CSS: `public/madrasah-theme/parity.css`, `public/madrasah-theme/procedures.css`
+  - Blade: `resources/views/public/madrasah/{achievements,gallery,home,navigation,news}.blade.php`
+  - Vue/Layout: `resources/js/Pages/Academic/Attendance/Kiosk.vue`, `resources/js/Pages/Auth/Login.vue`, `resources/js/Pages/Homeroom/SecurityPost/Index.vue`, `resources/js/Pages/Public/Alumni/Portal.vue`, `resources/js/Pages/Public/Library/Index.vue`, `resources/js/Pages/Public/Services/{Complaint,Graduation,Guestbook,Legalization,Mutation,Ptsp}.vue`, `resources/js/Pages/Public/Tracking/Index.vue`, `resources/js/components/OperationsScanner.vue`, `resources/js/layouts/OperationsLayout.vue`
+- **Keputusan & Asumsi**:
+  - Tidak ada perubahan skema DB, rute, otorisasi, atau hardcoding nama sekolah; seluruh identitas sekolah tetap dinamis melalui prop `$schoolName` / `school.name`.
+  - Pengujian visual Playwright dijalankan menggunakan database SQLite sementara (`/tmp/parity_visual.sqlite`) hasil seed `PilotSchoolSeeder` karena MySQL tidak aktif di sandbox.
+- **Verifikasi & Hasil**:
+  - `vue-tsc --noEmit`: lulus (exit code 0).
+  - `vite build`: lulus (`built in 3.74s`, 984 modules transformed).
+  - `php artisan test --compact`: lulus (`tests: 500, passed: 498, skipped: 2, assertions: 5436`).
+  - Playwright (`1280×720`, `945×900` half-screen PTSP, & `390×844` mobile) pada seluruh 23 rute paritas: `overflow: false` (`scrollWidth === innerWidth`), full-bleed band `#tentang-ptsp` selebar `1280px`, `pageErrors: []`, `brokenImgs: []`, `badResponses: []`, serta perbandingan visual `ptsp-945-about2` & `ptsp-1280-full2` sesuai referensi `PTSP ONLINE - MAN 4 BANJAR`.
+- **Risiko Tersisa**:
+  - `./vendor/bin/pint --test` tidak dijalankan ulang pada pass terakhir karena tidak ada file `.php` controller/service yang diubah (hanya Blade/Vue/CSS); baseline Pint sebelumnya memiliki 4 kegagalan pra-eksis di luar scope.
+  - 2 test berstatus `skipped` dalam `php artisan test --compact` berasal dari suite bawaan repo.
+- **Langkah Review Manual**:
+  - Jalankan `npm run build` / cek halaman publik dan operasional pada viewport desktop (`1280×720`) dan mobile (`390×844`) dengan data sekolah nyata.
+- **Rollback**: `git checkout -- public/madrasah-theme/parity.css public/madrasah-theme/procedures.css resources/views/public/madrasah resources/js` bila ingin mengembalikan tampilan sebelum penyesuaian visual ini.
+
 ## Paket Proposal, LPJ dan Koneksi Eksternal (`M4-INT-01` s.d. `M4-INT-04`) — 19 November 2026
 
 - **Task & Requirement**: Implementasi lengkap modul proposal kegiatan guru, portal proposal & LPJ mandiri, serta integrasi sistem eksternal dan kanal komunikasi (`M4-INT-01` s.d. `M4-INT-04`).

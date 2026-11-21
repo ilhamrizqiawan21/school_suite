@@ -451,6 +451,9 @@
       </div>
     </div>
   </div>
-  <a class="portal-help" href="/kontak" aria-label="Hubungi layanan madrasah">
-    <i class="fa-solid fa-comments" aria-hidden="true"></i>
+  <a class="portal-help" href="/kontak" aria-label="Hubungi layanan madrasah" title="Live Chat &amp; Bantuan">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z"/>
+      <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>
+    </svg>
   </a>

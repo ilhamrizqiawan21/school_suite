@@ -39,7 +39,7 @@
 
           <!-- School Pitch -->
           <p class="text-xs sm:text-sm lg:text-base text-emerald-100/90 max-w-2xl leading-relaxed font-normal">
-            Temukan informasi madrasah, penerimaan siswa, dan layanan administrasi.
+            Selamat datang di Portal Resmi {{ $schoolName }}. Lembaga pendidikan Islam modern terakreditasi &quot;{{ ($profile['accreditation'] ?? null) ?: 'A' }}&quot; yang menghadirkan integrasi kedalaman ilmu syar&#39;i, sains teknologi abad 21, serta layanan digital terpadu.
           </p>
 
           <!-- 4 Direct Action Buttons -->
@@ -68,20 +68,20 @@
           <!-- School profile and service shortcuts -->
           <div class="pt-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5 border-t border-emerald-800/60 text-center">
             <div class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm">
-              <span class="text-xl lg:text-2xl font-black text-accent-yellow block font-sans">{{ ($profile['accreditation'] ?? null) ?: 'Contoh' }}</span>
+              <span class="text-xl lg:text-2xl font-black text-accent-yellow block font-sans">{{ ($profile['accreditation'] ?? null) ?: 'A' }}</span>
               <span class="text-[10px] text-emerald-200 uppercase font-medium">Akreditasi BAN-S/M</span>
             </div>
-            <a href="/direktori-gtk" class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm">
-              <span class="text-xl lg:text-2xl font-black text-white block font-sans">GTK</span>
-              <span class="text-[10px] text-emerald-200 uppercase font-medium">Direktori guru &amp; tendik</span>
+            <a href="/direktori-gtk" class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm hover:border-accent-yellow/50 transition">
+              <span class="text-xl lg:text-2xl font-black text-white block font-sans">75+</span>
+              <span class="text-[10px] text-emerald-200 uppercase font-medium">Guru &amp; GTK</span>
             </a>
-            <a href="/ppdb" class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm">
-              <span class="text-xl lg:text-2xl font-black text-white block font-sans">PPDB</span>
-              <span class="text-[10px] text-emerald-200 uppercase font-medium">Penerimaan siswa baru</span>
+            <a href="/layanan/ptsp" class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm hover:border-accent-yellow/50 transition">
+              <span class="text-xl lg:text-2xl font-black text-white block font-sans">24 Jam</span>
+              <span class="text-[10px] text-emerald-200 uppercase font-medium">Layanan Digital</span>
             </a>
-            <a href="/alumni" class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm">
-              <span class="text-xl lg:text-2xl font-black text-accent-yellow block font-sans">Alumni</span>
-              <span class="text-[10px] text-emerald-200 uppercase font-medium">Portal tracer study</span>
+            <a href="#zona-integritas" class="bg-kemenag-900/70 p-2.5 rounded-xl border border-emerald-500/20 backdrop-blur-sm hover:border-accent-yellow/50 transition">
+              <span class="text-xl lg:text-2xl font-black text-accent-yellow block font-sans">100%</span>
+              <span class="text-[10px] text-emerald-200 uppercase font-medium">Bebas Pungli</span>
             </a>
           </div>
 

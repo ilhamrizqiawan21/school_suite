@@ -68,27 +68,25 @@ const categoryIcon = (value: string): string => {
         <PublicHeader :school="school" />
 
         <section class="portal-container">
-            <header class="portal-hero madrasah-service-hero">
-                <p class="madrasah-service-label"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Pusat Layanan Informasi &amp; Pelacakan Resmi</p>
+            <header class="portal-hero madrasah-service-hero text-center">
+                <p class="madrasah-service-label mx-auto"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> PUSAT LAYANAN INFORMASI &amp; PELACAKAN RESMI</p>
                 <h1>Pusat Lacak Status Layanan Terpadu</h1>
-                <p>Pantau progres permohonan PTSP, izin siswa, legalisir, mutasi, surat dinas eksternal, dan pengaduan dari satu pintu.</p>
+                <p class="font-bold tracking-wider uppercase text-emerald-100">{{ school.name }}</p>
+                <p class="mx-auto">Lacak progres seluruh permohonan online Anda secara transparan dan realtime cukup dengan memasukkan Nomor Tiket, NISN, atau PIN verifikasi.</p>
             </header>
 
-            <section class="portal-card">
-                <form class="lookup-form" @submit.prevent="submitLookup">
-                    <FormField id="track-code" label="Nomor Tiket / Referensi" required :error="form.errors.code" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.code" type="text" required placeholder="Contoh: PTSP-2026-XXXXXXXX atau SRT-2026-XXXXXXXX" :aria-describedby="describedBy" :aria-invalid="invalid" />
-                    </FormField>
-
-                    <FormField id="track-secret" label="Kode Verifikasi / PIN Pemohon" hint="Wajib diisi kecuali Anda masuk dengan akun pemilik tiket." :error="form.errors.verification_secret" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.verification_secret" type="password" autocomplete="off" placeholder="Masukkan PIN verifikasi resi" :aria-describedby="describedBy" :aria-invalid="invalid" />
-                    </FormField>
-
-                    <div class="form-action">
-                        <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="form.processing">
-                            Periksa Status
-                        </button>
-                    </div>
+            <section class="portal-card parity-tracking-card">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <strong class="text-slate-800">Masukkan Kata Kunci Pencarian:</strong>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-500">Tiket • NISN • PIN Verifikasi</span>
+                </div>
+                <form class="parity-tracking-pill" @submit.prevent="submitLookup">
+                    <input id="track-code" v-model="form.code" type="text" required placeholder="Contoh: PTSP-2026-XXXXXXXX, IZN-2026-..., atau SRT-2026-..." aria-label="Nomor Tiket atau Referensi" />
+                    <input id="track-secret" v-model="form.verification_secret" type="password" autocomplete="off" placeholder="PIN (Opsional jika login)" aria-label="Kode Verifikasi atau PIN Pemohon" class="parity-pin-input" />
+                    <button type="submit" class="parity-tracking-btn" :disabled="form.processing">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <span>Lacak Status</span>
+                    </button>
                 </form>
 
                 <div class="chip-row" role="group" aria-label="Filter kategori layanan pelacakan">
@@ -105,15 +103,27 @@ const categoryIcon = (value: string): string => {
                         <span>{{ cat.label }}</span>
                     </button>
                 </div>
+            </section>
 
-                <div class="tracking-hints">
-                    <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Contoh format tiket:</span>
-                    <code>PTSP-2026-...</code>
-                    <code>IZN-2026-...</code>
-                    <code>LEG-2026-...</code>
-                    <code>MTS-2026-...</code>
-                    <code>SRT-2026-...</code>
-                    <code>ADU-2026-...</code>
+            <section class="parity-tracking-guides" aria-label="Panduan kata kunci berdasarkan layanan">
+                <p class="parity-guides-label">PANDUAN KATA KUNCI BERDASARKAN LAYANAN</p>
+                <div class="parity-guides-grid">
+                    <article class="guide-card guide-card--blue">
+                        <div class="guide-card__head"><strong>Surat Izin</strong><span>BK &amp; Piket</span></div>
+                        <p>Gunakan <strong>Kode Tiket IZN-2026-...</strong> dan PIN untuk memantau verifikasi wali kelas.</p>
+                    </article>
+                    <article class="guide-card guide-card--amber">
+                        <div class="guide-card__head"><strong>Legalisir Ijazah</strong><span>Alumni</span></div>
+                        <p>Gunakan <strong>Kode Tiket LEG-2026-...</strong> untuk melihat status verifikasi berkas &amp; pengesahan.</p>
+                    </article>
+                    <article class="guide-card guide-card--emerald">
+                        <div class="guide-card__head"><strong>Mutasi Siswa</strong><span>Kesiswaan</span></div>
+                        <p>Gunakan <strong>Kode Tiket MTS-2026-...</strong> untuk memantau proses mutasi masuk atau keluar.</p>
+                    </article>
+                    <article class="guide-card guide-card--indigo">
+                        <div class="guide-card__head"><strong>Layanan PTSP</strong><span>Pelayanan</span></div>
+                        <p>Gunakan <strong>Kode Tiket PTSP-2026-...</strong> atau <strong>SRT-2026-...</strong> dari resi pengajuan.</p>
+                    </article>
                 </div>
             </section>
 
