@@ -33,6 +33,26 @@ class LibraryController extends Controller
         private readonly ServiceDocumentService $documentService,
     ) {}
 
+    /**
+     * Salinan tampilan statis halaman Perpustakaan MAN 4 Banjar (snapshot REA).
+     * Fitur aktif (kunjungan, usulan, bebas pustaka, katalog) tetap di `/perpustakaan`.
+     */
+    public function replica(): \Illuminate\Http\Response
+    {
+        return response()->view('public.madrasah.perpustakaan');
+    }
+
+    /**
+     * Stub aman untuk panggilan AJAX milik salinan tampilan: tidak membaca/menyimpan data apa pun.
+     */
+    public function replicaAction(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Halaman ini hanya salinan tampilan. Gunakan portal /perpustakaan untuk layanan aktif.',
+        ]);
+    }
+
     public function publicIndex(Request $request): Response
     {
         $school = $this->schoolScope->getPrimaryPublicSnapshot();

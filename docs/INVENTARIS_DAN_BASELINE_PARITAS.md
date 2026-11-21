@@ -61,7 +61,7 @@ Dokumen ini memenuhi **Checklist awal** pada [TODO paritas](TODO_PARITAS_MAN4_BA
 | Surat Izin Siswa | `/akademik/surat_izin.php` | Belum ada snapshot REA | **Belum diuji visual** (termasuk alur token dispensasi & validasi wali). |
 | Legalisir & Kuasa/SPTJM | `/akademik/legalisir.php` | Belum ada snapshot REA | **Belum diuji visual**. |
 | Siap Lapor (Pengaduan) | `/akademik/lapor.php` | Belum ada snapshot REA | **Belum diuji visual**. |
-| Perpustakaan | `/akademik/perpustakaan.php` | Belum ada snapshot REA | **Belum diuji visual**. |
+| Perpustakaan | `/akademik/perpustakaan.php` | Snapshot REA tersedia (`screenshot_halaman_asli/E-Perpustakaan Digital …`); salinan statis di `/perpustakaan/man4` | **Belum diuji visual & tes belum dijalankan** (lihat HANDOFF 21 Nov 2026). |
 | Buku Tamu, Surat Dinas Eksternal, Mutasi, SKL, PPDB Publik, Alumni/Tracer, Pusat Unduh, Zona Integritas/IKM, Jadwal Salat, Profil/Direktori GTK | Berbagai sub-halaman publik & `/rdm/` | Belum ada snapshot REA terpisah | **Belum diuji visual**. |
 | Seluruh Panel Internal di Balik Login (TU, Piket, Satpam, BK, Satgas, Pustakawan, Kepala, Panitia, Wali, Siswa, Alumni) | Di balik autentikasi acuan | Tidak ada akses | **Menunggu demo resmi / akun uji / materi pengelola**. |
 

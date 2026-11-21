@@ -29,6 +29,22 @@ Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk 
   - Jalankan `npm run build` / cek halaman publik dan operasional pada viewport desktop (`1280×720`) dan mobile (`390×844`) dengan data sekolah nyata.
 - **Rollback**: `git checkout -- public/madrasah-theme/parity.css public/madrasah-theme/procedures.css resources/views/public/madrasah resources/js` bila ingin mengembalikan tampilan sebelum penyesuaian visual ini.
 
+## Salinan Tampilan Perpustakaan MAN 4 Banjar — 21 November 2026
+
+- **Task & Requirement**: Menduplikasi tampilan halaman perpustakaan man4banjar.com dari snapshot REA yang sudah ada di repo. Tanpa requirement ID baru; tercatat di `docs/TODO_PARITAS_MAN4_BANJAR.md` sebagai item belum dicentang.
+- **Ringkasan**:
+  - Halaman statis di `GET /perpustakaan/man4` (`LibraryController::replica`) memakai view `public.madrasah.perpustakaan`, dibangun dari `screenshot_halaman_asli/E-Perpustakaan Digital …html` dan dibungkus `@verbatim`.
+  - Aset (Tailwind runtime, jQuery, Chart.js, ikon, sampul buku) disalin ke `public/madrasah-theme/perpustakaan/`; font memakai `madrasah-theme/fonts.css` lokal; webfont Font Awesome 6 diarahkan ke `madrasah-theme/fonts/`.
+  - Tautan absolut `man4banjar.com` dipetakan ke rute lokal (`/`, `/login`, `/login?portal=siswa`, `/lacak`, `/layanan/ptsp`, `/perpustakaan/man4`).
+  - Panggilan AJAX asli (`crud_perpus_web.php`, `ajax_traffic.php`) diarahkan ke `GET /perpustakaan/man4/aksi`, stub yang hanya mengembalikan `status: error` dan tidak membaca/menyimpan data. Satu `$.ajaxPrefilter` mengubahnya menjadi GET tanpa data sehingga tidak ada data formulir terkirim dan tidak butuh pengecualian CSRF.
+  - Portal aktif `/perpustakaan` (Vue/Inertia) **tidak diubah**.
+- **File & Migrasi**: `app/Modules/Library/Interface/Http/Controllers/LibraryController.php`, `app/Modules/Library/Interface/Routes/web.php`, `resources/views/public/madrasah/perpustakaan.blade.php`, `public/madrasah-theme/perpustakaan/*`, `tests/Feature/LibraryReplicaTest.php`, dokumen paritas. Tanpa migrasi.
+- **Keputusan/Asumsi**: Salinan dipasang di rute terpisah agar tidak mengubah perilaku portal aktif; apakah menggantikan `/perpustakaan` adalah keputusan produk. Isi (teks, sampul, foto) masih milik MAN 4 Banjar dan perlu diganti sebelum dipakai untuk sekolah lain.
+- **Tes & Hasil**: `tests/Feature/LibraryReplicaTest.php` (2 tes) ditulis **tetapi belum dijalankan**: lingkungan penulis tidak memiliki PHP/Composer. Verifikasi yang dilakukan hanya: seluruh 21 aset lokal yang dirujuk ada, tidak ada URL `man4banjar.com` tersisa. Belum ada uji visual di browser.
+- **Risiko Tersisa**: Pencarian/filter katalog (`?q=`, `?kat=`, `?ebook=`) dan semua formulir asli bergantung pada backend PHP MAN 4 Banjar sehingga tidak berfungsi di salinan; widget sholat/online bisa memakai data statis. Berkas aset ±3,2 MB.
+- **Langkah Review Manual**: jalankan `php artisan test tests/Feature/LibraryReplicaTest.php`, buka `/perpustakaan/man4`, bandingkan dengan snapshot asli (tata letak desktop & mobile, ikon, modal).
+- **Rollback**: `git revert` commit ini; tidak ada migrasi atau perubahan data.
+
 ## Paket Proposal, LPJ dan Koneksi Eksternal (`M4-INT-01` s.d. `M4-INT-04`) — 19 November 2026
 
 - **Task & Requirement**: Implementasi lengkap modul proposal kegiatan guru, portal proposal & LPJ mandiri, serta integrasi sistem eksternal dan kanal komunikasi (`M4-INT-01` s.d. `M4-INT-04`).
