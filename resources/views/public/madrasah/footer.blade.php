@@ -60,6 +60,24 @@
       <p>© 2026 <strong class="text-white">{{ $schoolName }}</strong> • Pelayanan Terpadu Satu Pintu (PTSP) Digital Terpadu.</p>
     </div>
   </footer>
+@elseif (request()->is('data-siswa', 'lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa', 'layanan/surat-kuasa'))
+  @php
+    $akademikFooterTitle = match (true) {
+        request()->is('data-siswa*') => 'Aplikasi Database & Informasi Data Siswa',
+        request()->is('layanan/mutasi*') => 'Aplikasi Database & Administrasi Mutasi Siswa',
+        request()->is('layanan/legalisir*') => 'Aplikasi Database & Administrasi Legalisir Ijazah',
+        request()->is('layanan/izin-siswa*') => 'Aplikasi Database & Administrasi Surat Izin Siswa',
+        request()->is('layanan/kelulusan*') => 'Aplikasi Database & Administrasi Kelulusan Siswa',
+        request()->is('layanan/surat-kuasa*') => 'Aplikasi Database & Administrasi Surat Kuasa & SPTJM',
+        default => 'Aplikasi Database & Lacak Layanan Terpadu',
+    };
+  @endphp
+  <footer class="parity-akademik-footer mt-auto">
+    <div class="parity-akademik-footer-inner">
+      <p class="parity-akademik-footer-title">{{ $akademikFooterTitle }} © {{ now()->year }} {{ strtoupper($schoolName) }}</p>
+      <small class="parity-akademik-footer-sub">{{ $schoolName }} - Melayani dengan Sepenuh Hati</small>
+    </div>
+  </footer>
 @else
   <footer class="bg-kemenag-950 text-white pt-10 pb-6 border-t border-kemenag-800 mt-auto">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12">

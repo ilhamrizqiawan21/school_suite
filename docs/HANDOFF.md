@@ -2,6 +2,73 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Halaman Publik Data Siswa (`/data-siswa`, `M4-LIF-04`) — 21 November 2026
+
+- **Task & Requirement**: Membuat halaman publik **Data Siswa** (`/data-siswa`) dalam shell **Aplikasi Database Siswa** tanpa membocorkan PII daftar siswa mentah (`M4-LIF-04`).
+- **Ringkasan**:
+  - **Ringkasan Agregat & Verifikasi Aman (`AcademicQueryService`, `VerificationController`, `routes/web.php`)**: Menambahkan `publicStudentSummary(int $schoolId)` (total siswa aktif, jumlah rombel aktif, rekap rombel per tingkat tanpa PII individu) serta endpoint `GET /data-siswa` dan `POST /data-siswa/cek` (rate-limited `throttle:sensitive`) yang memanggil `verifyPublicStudentStatus` berbasis NISN + Nama.
+  - **Halaman Vue & Shell (`Public/Students/Index.vue`, `navigation.blade.php`, `footer.blade.php`)**: Membangun halaman dengan hero banner biru, 3 kartu statistik, form cek keaktifan siswa, rekapitulasi rombel per tingkat, sidebar tautan layanan terkait & perlindungan data, serta menghubungkan menu `Data Siswa` pada navbar desktop/mobile ke `/data-siswa` dengan footer `.parity-akademik-footer`.
+- **File & Migrasi**: `app/Modules/Academic/Application/Services/AcademicQueryService.php`, `app/Modules/Core/Interface/Http/Controllers/VerificationController.php`, `app/Modules/Core/Interface/Routes/web.php`, `resources/js/Pages/Public/Students/Index.vue`, `resources/views/public/madrasah/navigation.blade.php`, `resources/views/public/madrasah/footer.blade.php`, `tests/Feature/StudentLifecycleAndAlumniTest.php`, `public/build/`, dan `docs/HANDOFF.md`. Tanpa migrasi DB.
+- **Rollback**: `git checkout -- app/Modules/Academic/Application/Services/AcademicQueryService.php app/Modules/Core/Interface/Http/Controllers/VerificationController.php app/Modules/Core/Interface/Routes/web.php resources/views/public/madrasah/navigation.blade.php resources/views/public/madrasah/footer.blade.php tests/Feature/StudentLifecycleAndAlumniTest.php public/build && rm -f resources/js/Pages/Public/Students/Index.vue`
+
+## Penyelarasan Presisi Halaman Mutasi Siswa (`M4-LIF-02`) — 21 November 2026
+
+- **Task & Requirement**: Penyelarasan 100% tampilan `/layanan/mutasi` (`M4-LIF-02`) terhadap referensi `screenshot_halaman_asli/MUTASI SISWA _ MADRASAH ALIYAH NEGERI 4 BANJAR.html` dan screenshot pembanding, sambil menjaga identitas sekolah dinamis, alur pengajuan/revisi mutasi masuk & keluar, serta status periode aktif.
+- **Ringkasan**:
+  - **Hero Banner, Tab & Formulir (`Mutation.vue`)**: Mengganti layout sempit `max-w-4xl` menjadi hero banner full-bleed `.mutasi-hero-banner` (`#0f4c81 → #1b85df`, `border-radius: 0 0 20px 20px`) + kontainer `1140px`, menyelaraskan 3 tombol tab `.btn-mutasi-tab` berikon (`Alur & Persyaratan Mutasi`, `Formulir Permohonan Mutasi`, `Cek Status Pengajuan`), serta menata formulir `#form-mutasi`, riwayat pengajuan, dan perbaikan berkas dalam `.card-custom` + `.form-section-header` biru.
+  - **Komponen SOP & CSS Prosedur (`MutationProcedure.vue`, `procedures.css`)**: Membungkus aturan stacking mobile `.reference-mutasi` di `procedures.css` ke dalam `@media (max-width: 767.98px)` agar baris SOP kembali horizontal (`row` + kotak `Estimasi Waktu` `135px`) pada desktop/half-screen; menambahkan pembungkus pill `.sop-toggle-wrap` + `.sop-toggle-group` untuk pemilih `SOP Mutasi Masuk (Siswa Pindahan)` / `Alur Mutasi Keluar (Pindah Sekolah)`; mengganti teks sekolah statis dengan prop `schoolName` dinamis; mengganti ikon FA4 yang hilang (`fa-calendar-check-o`, `fa-heart`, `fa-check-circle`) ke kelas FA6 lokal; serta melengkapi utilitas CSS pendukung (`.mr-2`, `.d-none`, `.d-md-block`, `.text-primary`, `.text-warning`, `.text-info`, `.text-muted`).
+  - **Footer Halaman Aplikasi Database Siswa (`footer.blade.php`, `parity.css`)**: Mengganti footer portal hijau besar pada rute `lacak`, `layanan/legalisir`, `layanan/mutasi`, `layanan/kelulusan`, `layanan/izin-siswa`, dan `layanan/surat-kuasa` dengan `.parity-akademik-footer` (`#343a40`, judul dinamis per layanan + subteks sekolah `- Melayani dengan Sepenuh Hati`) sesuai referensi.
+- **File & Migrasi**: `public/madrasah-theme/procedures.css`, `public/madrasah-theme/parity.css`, `resources/views/public/madrasah/footer.blade.php`, `resources/js/components/MutationProcedure.vue`, `resources/js/Pages/Public/Services/Mutation.vue`, `public/build/`, serta `docs/{HANDOFF,TODO_PARITAS_MAN4_BANJAR,INVENTARIS_DAN_BASELINE_PARITAS}.md`. Tanpa migrasi DB.
+- **Tes & Hasil**:
+  - `./node_modules/.bin/vue-tsc --noEmit` -> lulus (exit code 0).
+  - `./node_modules/.bin/vite build` -> lulus (`987 modules transformed`, `built in 3.25s`).
+  - `php artisan optimize:clear` -> lulus (`config`, `cache`, `compiled`, `events`, `routes`, `views` bersih).
+  - `php artisan test --compact tests/Feature/StudentLifecycleAndAlumniTest.php tests/Feature/MadrasahPublicThemeTest.php` -> **10 tes lulus (302 assertions)**.
+  - Playwright MCP pada `/layanan/mutasi` (`PilotSchoolSeeder` SQLite sementara): `1280×720` (`overflow: false`, Tab 1 Masuk/Keluar & Tab 2 Formulir), `950×900` (`overflow: false`, `stepRowFlexDir: row`), dan `390×844` (`overflow: false`, `stepRowFlexDir: column`, `scrollWidth: 382`).
+- **Rollback**: `git checkout -- public/madrasah-theme/procedures.css resources/js/components/MutationProcedure.vue resources/js/Pages/Public/Services/Mutation.vue public/build`
+
+## Penyelarasan Presisi Halaman Legalisir Ijazah Online (`M4-LIF-05`) — 21 November 2026
+
+- **Task & Requirement**: Penyelarasan 100% tampilan `/layanan/legalisir` (`M4-LIF-05`) terhadap referensi `screenshot_halaman_asli/LEGALISIR IJAZAH _ MADRASAH ALIYAH NEGERI 4 BANJAR.html` dan screenshot pembanding, sambil menjaga identitas sekolah dinamis dan seluruh alur pengajuan/verifikasi server-side.
+- **Ringkasan**:
+  - **Hero, Tab Navigasi & Layout (`Legalization.vue`)**: Mengganti pembungkus `max-w-4xl` menjadi hero full-bleed `.legalisir-hero-banner` (`#0f4c81 → #1b85df`, `border-radius: 0 0 24px 24px`) dan kontainer `1140px`, menampilkan 5 tombol tab `.btn-tab-menu` berikon (`Alur & Ketentuan`, `Formulir Pengajuan`, `Cetak Surat Kuasa`, `Cetak SPTJM`, `Cek Status Pengajuan`), menyelaraskan breakpoint 2-kolom pada `>= 992px` dan 1-kolom pada `< 992px` (termasuk `950×900`), mengganti sidebar tunggal dengan 3 kartu `.card-custom` (`Ringkasan Persyaratan`, `Jadwal Pelayanan TU`, `Lokasi & Layanan`), menghapus `.service-tiles` berlebih, serta menyelaraskan Tab 2 `Formulir Pengajuan` dengan `.form-section-header` biru dan canvas tanda tangan digital interaktif.
+  - **Komponen SOP & Controller (`LegalizationProcedure.vue`, `LegalizationController.php`)**: Menambahkan prop `schoolName` dinamis pada `LegalizationProcedure` serta menyertakan `address` sekolah pada `LegalizationController::publicIndex`.
+- **File & Migrasi**: `app/Modules/Administration/Interface/Http/Controllers/LegalizationController.php`, `resources/js/components/LegalizationProcedure.vue`, `resources/js/Pages/Public/Services/Legalization.vue`, `public/build/`, serta `docs/{HANDOFF,TODO_PARITAS_MAN4_BANJAR,INVENTARIS_DAN_BASELINE_PARITAS}.md`. Tanpa migrasi DB.
+- **Tes & Hasil**:
+  - `./node_modules/.bin/vue-tsc --noEmit` -> lulus (exit code 0).
+  - `./node_modules/.bin/vite build` -> lulus (`986 modules transformed`, `built in 5.00s`).
+  - `./vendor/bin/pint --test app/Modules/Administration/Interface/Http/Controllers/LegalizationController.php` -> lulus (`passed`).
+  - `php artisan test --compact tests/Feature/StudentLifecycleAndAlumniTest.php` -> **5 tes lulus (222 assertions)**.
+  - Playwright MCP pada `/layanan/legalisir` (`PilotSchoolSeeder` SQLite sementara): `950×900` (`overflow: false`), `1280×720` (`overflow: false`, Tab 1 & Tab 2), dan `390×844` (`overflow: false`, `scrollWidth: 382`).
+- **Rollback**: `git checkout -- app/Modules/Administration/Interface/Http/Controllers/LegalizationController.php resources/js/components/LegalizationProcedure.vue resources/js/Pages/Public/Services/Legalization.vue public/build`
+
+## Penyelarasan Presisi Kios Presensi Mandiri Siswa (`M4-OPS-03`) — 21 November 2026
+
+- **Task & Requirement**: Penyelarasan 100% tampilan dan interaksi halaman Kios Presensi Mandiri Siswa (`/kios-presensi`, `M4-OPS-03`) terhadap referensi `screenshot_halaman_asli/Kios Presensi Mandiri Siswa — MADRASAH ALIYAH NEGERI 4 BANJAR.html` dan screenshot pembanding, sambil menjaga nama/logo sekolah dinamis, otorisasi `auth` + `role:admin,operator,picket`, dan aturan data minimal di layar (tanpa `nis`/`nisn`).
+- **Ringkasan**:
+  - **Tata Letak & Tipografi Kios (`Kiosk.vue`)**: Menetapkan `line-height: normal` pada `.kiosk-shell-man4` serta kontrol `.btn-kiosk`, `.stat-pill`, dan `.gate-badge-indicator` agar tidak mewarisi `line-height` longgar dari `app.css` (tinggi header tepat `85px`, tombol `34px`, footer `57px` di `1280×720`); menyelaraskan logo `52px × 52px`, judul `20px`, dan layout header/footer 1 baris pada desktop maupun half-screen (`950×900`) tanpa wrap yang melompat; memperbaiki wrap responsif pada viewport ponsel (`390×844`) dengan `overflow: false` (`scrollWidth: 375`).
+  - **Status Hasil Scan, Audio & Auto-Refresh Statistik (`Kiosk.vue`, `StudentCardKioskService`, `StudentCardKioskController`)**: Menambahkan animasi `kioskCardAppear`, avatar `100px × 100px` dengan fallback `/madrasah-theme/images/kiosk/avatar-1.png`, 4 varian badge (`.success`, `.warning`, `.info` untuk `PRESENSI PULANG`, `.error`), kolom `Keterlambatan` (`0 Menit` / `X Menit` / `-`), `Status Hari Ini` dengan warna dinamis, sambutan suara `speechSynthesis` (`id-ID`), serta endpoint terotorisasi `GET /kios-presensi/stats` untuk auto-polling statistik tiap 15 detik.
+- **File & Migrasi**:
+  - Backend: `app/Modules/Academic/Application/Services/StudentCardKioskService.php`, `app/Modules/Academic/Interface/Http/Controllers/StudentCardKioskController.php`, `app/Modules/Academic/Interface/Routes/web.php`
+  - Frontend: `resources/js/Pages/Academic/Attendance/Kiosk.vue` (plus hasil build `public/build/`)
+  - Tes & Docs: `tests/Feature/OperationsPermitKioskPicketBkTest.php`, `docs/HANDOFF.md`, `docs/TODO_PARITAS_MAN4_BANJAR.md`, `docs/INVENTARIS_DAN_BASELINE_PARITAS.md`
+  - Tanpa migrasi DB.
+- **Keputusan & Asumsi**:
+  - Identitas sekolah (nama dan logo) tetap dinamis dari profil sekolah (`SchoolScopeService`), dan respons `/kios-presensi/scan` tetap membatasi data siswa hanya pada `name` dan `class_name` sesuai `M4-OPS-03`.
+  - Karena `SecurityHeadersMiddleware` menerapkan `font-src 'self' data:` dan belum ada berkas `.woff2` `JetBrains Mono` di `public/madrasah-theme/fonts/`, jam digital dan angka monospaced memakai fallback `ui-monospace, monospace` sampai aset `.woff2` lokal ditambahkan.
+- **Tes & Hasil**:
+  - `./node_modules/.bin/vue-tsc --noEmit` -> lulus (exit code 0).
+  - `./node_modules/.bin/vite build` -> lulus (`984 modules transformed`, `built in 6.54s`).
+  - `./vendor/bin/pint --test` pada 4 file PHP yang disentuh -> lulus (`passed`).
+  - `php artisan test --compact` -> **503 tes: 501 lulus, 2 dilewati (MySQL-only existing), 5.471 assertions**.
+  - Playwright MCP pada `/kios-presensi` (database SQLite sementara `/tmp/kiosk_visual.sqlite` hasil `PilotSchoolSeeder`, kini sudah dibersihkan): `1280×720` (idle, hasil scan valid `HADIR TEPAT WAKTU`, scan berulang `SUDAH HADIR`, kartu asing `GAGAL / TIDAK DIKENALI` 422), `950×900` (`overflow: false`), dan `390×844` (`overflow: false`, `scrollWidth: 375`), tanpa error runtime JS/Vue.
+- **Risiko Tersisa**:
+  - Kontrak perangkat keras `Gate` fisik dan status `checked_out` penuh masih menunggu konfirmasi K-04; saat ini `late_minutes` mengembalikan `0` sampai aturan jam masuk per sekolah dikonfigurasi.
+  - Font `JetBrains Mono` belum tersedia lokal di `public/madrasah-theme/fonts/`.
+- **Langkah Review Manual**:
+  - Login sebagai operator/admin/piket, buka `/kios-presensi`, uji tap kartu terdaftar, tap ulang (deduplikasi), tap kartu asing, modal `QR Kamera` dan `Gate`, serta cek tampilan di lebar penuh (`1280px`), setengah layar (`950px`), dan ponsel (`390px`).
+- **Rollback**: `git checkout -- app/Modules/Academic resources/js/Pages/Academic/Attendance/Kiosk.vue tests/Feature/OperationsPermitKioskPicketBkTest.php public/build`
+
 ## Audit & Penyelarasan Presisi Visual 23 Halaman Paritas (`M4-UX` / `M4-PUB` / `M4-TU` / `M4-OPS` / `M4-LIF` / `M4-SERV`) — 21 November 2026
 
 - **Task & Requirement**: Audit visual komparatif antara 23 halaman referensi `screenshot_halaman_asli/` (plus halaman beranda) dengan tampilan live School Suite pada desktop (`1280×720`) dan mobile (`390×844`), serta penyelarasan tata letak, masthead, komponen hero, tab, kartu, dan responsivitas tanpa hardcoding identitas `MAN 4 BANJAR` / `man4banjar.com`.

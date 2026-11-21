@@ -1,13 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-const direction = ref('incoming');
+import { computed, ref } from 'vue';
+
+const props = withDefaults(
+    defineProps<{
+        schoolName?: string;
+    }>(),
+    {
+        schoolName: 'Madrasah Contoh Nusantara',
+    },
+);
+
+const direction = ref<'incoming' | 'outgoing'>('incoming');
+const displaySchoolName = computed(() => (props.schoolName || 'Madrasah Contoh Nusantara').toUpperCase());
 </script>
 <template>
 <section class="reference-mutasi">
-<nav class="reference-sop-tabs" aria-label="Prosedur mutasi">
-<button type="button" :aria-pressed="direction === 'incoming'" @click="direction = 'incoming'">SOP Mutasi Masuk</button>
-<button type="button" :aria-pressed="direction === 'outgoing'" @click="direction = 'outgoing'">Alur Mutasi Keluar</button>
-</nav>
+<div class="sop-toggle-wrap">
+<div class="sop-toggle-group" role="group" aria-label="Prosedur mutasi">
+<button
+    type="button"
+    class="sop-flow-toggle-btn btn-masuk"
+    :class="{ active: direction === 'incoming' }"
+    :aria-pressed="direction === 'incoming'"
+    @click="direction = 'incoming'"
+>
+    <i class="fa-solid fa-right-to-bracket mr-2" aria-hidden="true"></i>SOP Mutasi Masuk (Siswa Pindahan)
+</button>
+<button
+    type="button"
+    class="sop-flow-toggle-btn btn-keluar"
+    :class="{ active: direction === 'outgoing' }"
+    :aria-pressed="direction === 'outgoing'"
+    @click="direction = 'outgoing'"
+>
+    <i class="fa-solid fa-right-from-bracket mr-2" aria-hidden="true"></i>Alur Mutasi Keluar (Pindah Sekolah)
+</button>
+</div>
+</div>
 <div v-show="direction === 'incoming'"><div class="sop-poster mb-4">
                     
                     <div class="sop-header-banner">
@@ -84,7 +113,7 @@ const direction = ref('incoming');
                             </div>
                             <div class="sop-content-wrap">
                                 <div class="mb-2">
-                                    Murid membuat surat permohonan mutasi yang telah disediakan oleh <strong>Madrasah Contoh Nusantara</strong>, dan dimasukkan ke dalam <strong class="text-danger" style="background:#fee2e2; padding:2px 8px; border-radius:6px; border:1px solid #fca5a5;">MAP MERAH</strong>, dengan melampirkan:
+                                    Murid membuat surat permohonan mutasi yang telah disediakan oleh <strong>{{ displaySchoolName }}</strong>, dan dimasukkan ke dalam <strong class="text-danger" style="background:#fee2e2; padding:2px 8px; border-radius:6px; border:1px solid #fca5a5;">MAP MERAH</strong>, dengan melampirkan:
                                 </div>
                                 <div class="sop-sub-item">
                                     <span class="sop-badge-num">1</span>
@@ -133,11 +162,11 @@ const direction = ref('incoming');
                                 </div>
                             </div>
                             <div class="sop-content-wrap">
-                                <div>Pengecekan data kesiswaan oleh <strong>Operator EMIS Madrasah Contoh Nusantara</strong>.</div>
+                                <div>Pengecekan data kesiswaan oleh <strong>Operator EMIS {{ displaySchoolName }}</strong>.</div>
                             </div>
                             <div class="sop-estimasi-box">
                                 <div class="sop-estimasi-head">
-                                    <i class="fa fa-calendar-check-o text-success mr-1"></i> Estimasi Waktu
+                                    <i class="fa-regular fa-calendar-check text-success mr-1" aria-hidden="true"></i> Estimasi Waktu
                                     <span class="sop-days">2 HARI</span>
                                 </div>
                                 <div class="sop-estimasi-foot">Berlaku di Hari Kerja</div>
@@ -200,7 +229,7 @@ const direction = ref('incoming');
                             </div>
                             <div class="sop-estimasi-box">
                                 <div class="sop-estimasi-head">
-                                    <i class="fa fa-calendar-check-o text-success mr-1"></i> Estimasi Waktu
+                                    <i class="fa-regular fa-calendar-check text-success mr-1" aria-hidden="true"></i> Estimasi Waktu
                                     <span class="sop-days">1 HARI</span>
                                 </div>
                                 <div class="sop-estimasi-foot">Berlaku di Hari Kerja</div>
@@ -238,7 +267,7 @@ const direction = ref('incoming');
                             </div>
                             <div class="sop-estimasi-box">
                                 <div class="sop-estimasi-head">
-                                    <i class="fa fa-calendar-check-o text-success mr-1"></i> Estimasi Waktu
+                                    <i class="fa-regular fa-calendar-check text-success mr-1" aria-hidden="true"></i> Estimasi Waktu
                                     <span class="sop-days">2 HARI</span>
                                 </div>
                                 <div class="sop-estimasi-foot">Berlaku di Hari Kerja</div>
@@ -293,7 +322,7 @@ const direction = ref('incoming');
                                 </div>
                             </div>
                             <div class="sop-content-wrap">
-                                <div>Jika murid dinyatakan <strong>diterima</strong>, Madrasah Contoh Nusantara akan melanjutkan <strong>proses administrasi penerimaan</strong>.</div>
+                                <div>Jika murid dinyatakan <strong>diterima</strong>, {{ displaySchoolName }} akan melanjutkan <strong>proses administrasi penerimaan</strong>.</div>
                             </div>
                         </div>
 
@@ -320,11 +349,11 @@ const direction = ref('incoming');
                                 </div>
                             </div>
                             <div class="sop-content-wrap">
-                                <div><strong>Penerbitan Surat Menerima Murid Mutasi</strong> resmi dari Madrasah Contoh Nusantara.</div>
+                                <div><strong>Penerbitan Surat Menerima Murid Mutasi</strong> resmi dari {{ displaySchoolName }}.</div>
                             </div>
                             <div class="sop-estimasi-box">
                                 <div class="sop-estimasi-head">
-                                    <i class="fa fa-calendar-check-o text-success mr-1"></i> Estimasi Waktu
+                                    <i class="fa-regular fa-calendar-check text-success mr-1" aria-hidden="true"></i> Estimasi Waktu
                                     <span class="sop-days">1 HARI</span>
                                 </div>
                                 <div class="sop-estimasi-foot">Berlaku di Hari Kerja</div>
@@ -333,7 +362,7 @@ const direction = ref('incoming');
 
                         
                         <div class="sop-info-bar">
-                            <i class="fa fa-calendar-check-o fa-2x mr-3 text-success"></i>
+                            <i class="fa-regular fa-calendar-check fa-2x mr-3 text-success" aria-hidden="true"></i>
                             <div>
                                 <strong>KETERANGAN PENTING:</strong>
                                 <span class="d-block text-muted" style="font-size: 13px;">Estimasi waktu dihitung dalam <strong>hari kerja</strong> dan dapat berubah sesuai kondisi operasional madrasah.</span>
@@ -361,7 +390,7 @@ const direction = ref('incoming');
                             </div>
 
                             <div class="sop-footer-quote">
-                                <i class="fa fa-heart mr-2 text-warning" style="font-size: 20px;"></i>
+                                <i class="fa-solid fa-heart mr-2 text-warning" style="font-size: 20px;" aria-hidden="true"></i>
                                 <span>Kami berkomitmen memberikan layanan terbaik demi pendidikan yang berkualitas dan berkarakter.</span>
                             </div>
                         </div>
@@ -451,7 +480,7 @@ const direction = ref('incoming');
                             </div>
                             <div class="sop-estimasi-box blue">
                                 <div class="sop-estimasi-head blue">
-                                    <i class="fa fa-calendar-check-o mr-1"></i> Estimasi Waktu
+                                    <i class="fa-regular fa-calendar-check mr-1" aria-hidden="true"></i> Estimasi Waktu
                                     <span class="sop-days">1 HARI</span>
                                 </div>
                                 <div class="sop-estimasi-foot blue">Berlaku di Hari Kerja</div>
@@ -485,7 +514,7 @@ const direction = ref('incoming');
                             </div>
                             <div class="sop-estimasi-box blue">
                                 <div class="sop-estimasi-head blue">
-                                    <i class="fa fa-calendar-check-o mr-1"></i> Estimasi Waktu
+                                    <i class="fa-regular fa-calendar-check mr-1" aria-hidden="true"></i> Estimasi Waktu
                                     <span class="sop-days">1 HARI</span>
                                 </div>
                                 <div class="sop-estimasi-foot blue">Berlaku di Hari Kerja</div>
@@ -520,7 +549,7 @@ const direction = ref('incoming');
 
                         
                         <div class="sop-info-bar blue">
-                            <i class="fa fa-calendar-check-o fa-2x mr-3 text-primary"></i>
+                            <i class="fa-regular fa-calendar-check fa-2x mr-3 text-primary" aria-hidden="true"></i>
                             <div>
                                 <strong>KETERANGAN PENTING:</strong>
                                 <span class="d-block text-muted" style="font-size: 13px;">Estimasi waktu dihitung dalam <strong>hari kerja</strong> dan dapat diselesaikan lebih cepat jika seluruh berkas persyaratan telah lengkap.</span>
@@ -548,7 +577,7 @@ const direction = ref('incoming');
                             </div>
 
                             <div class="sop-footer-quote">
-                                <i class="fa fa-check-circle mr-2 text-info" style="font-size: 20px;"></i>
+                                <i class="fa-solid fa-circle-check mr-2 text-info" style="font-size: 20px;" aria-hidden="true"></i>
                                 <span>Layanan administrasi mutasi keluar cepat, transparan, dan terintegrasi.</span>
                             </div>
                         </div>

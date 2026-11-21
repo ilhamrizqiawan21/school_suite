@@ -69,14 +69,20 @@ const stats = ref<KioskStats>(
 
 const lastResult = ref<{
     status: string;
+    code?: string;
+    attendance_status?: string;
+    late_minutes?: number;
     message: string;
     scanned_at?: string;
-    student?: { name: string; class_name: string } | null;
+    student?: { name: string; class_name: string; photo_url?: string | null } | null;
 } | null>(null);
 
 let resetTimer: ReturnType<typeof setTimeout> | null = null;
+let speakTimer: ReturnType<typeof setTimeout> | null = null;
 let focusInterval: ReturnType<typeof setInterval> | null = null;
 let clockInterval: ReturnType<typeof setInterval> | null = null;
+let statsInterval: ReturnType<typeof setInterval> | null = null;
+let audioCtx: AudioContext | null = null;
 
 const clockHm = ref('00:00');
 const clockSec = ref('00');
@@ -121,40 +127,118 @@ const saveQueue = () => {
     }
 };
 
+const getAudioContext = (): AudioContext | null => {
+    if (typeof window === 'undefined') return null;
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return null;
+    if (!audioCtx || audioCtx.state === 'closed') {
+        audioCtx = new Ctx();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+};
+
+const scheduleToneNote = (
+    ctx: AudioContext,
+    freq: number,
+    startTime: number,
+    duration: number,
+    type: OscillatorType,
+    peakGain: number,
+) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+
+    const attack = Math.min(0.012, duration * 0.25);
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.linearRampToValueAtTime(peakGain, startTime + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.01);
+};
+
 const playTone = (kind: 'success' | 'warning' | 'error') => {
-    if (typeof window === 'undefined') return;
     try {
-        const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const base = ctx.currentTime + 0.01;
         if (kind === 'success') {
-            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.18, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.35);
+            scheduleToneNote(ctx, 523.25, base, 0.14, 'sine', 0.15);
+            scheduleToneNote(ctx, 659.25, base + 0.11, 0.22, 'sine', 0.16);
         } else if (kind === 'warning') {
-            osc.frequency.setValueAtTime(349.23, ctx.currentTime);
-            osc.frequency.setValueAtTime(293.66, ctx.currentTime + 0.15);
-            gain.gain.setValueAtTime(0.2, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.38);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.38);
+            scheduleToneNote(ctx, 440, base, 0.15, 'triangle', 0.14);
+            scheduleToneNote(ctx, 349.23, base + 0.14, 0.2, 'triangle', 0.14);
         } else {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180, ctx.currentTime);
-            gain.gain.setValueAtTime(0.22, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.28);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.28);
+            scheduleToneNote(ctx, 220, base, 0.14, 'triangle', 0.16);
+            scheduleToneNote(ctx, 164.81, base + 0.13, 0.2, 'triangle', 0.16);
         }
     } catch {
         // Ignore audio errors
+    }
+};
+
+const pickIndonesianVoice = (): SpeechSynthesisVoice | null => {
+    const voices = window.speechSynthesis.getVoices();
+    const idVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('id'));
+    if (idVoices.length === 0) return null;
+    return (
+        idVoices.find((v) => v.lang.toLowerCase() === 'id-id' && !v.name.toLowerCase().includes('espeak'))
+        ?? idVoices.find((v) => !v.name.toLowerCase().includes('espeak'))
+        ?? idVoices[0]
+    );
+};
+
+const speakGreeting = (text: string, delayMs = 360) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !text) return;
+    try {
+        if (speakTimer) {
+            clearTimeout(speakTimer);
+            speakTimer = null;
+        }
+        window.speechSynthesis.cancel();
+
+        const voices = window.speechSynthesis.getVoices();
+        const idVoice = pickIndonesianVoice();
+        // Skip TTS if voices are loaded and no Indonesian voice is available (prevents garbled English pronunciation)
+        if (voices.length > 0 && !idVoice) return;
+
+        speakTimer = setTimeout(() => {
+            speakTimer = null;
+            try {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = idVoice?.lang ?? 'id-ID';
+                if (idVoice) utterance.voice = idVoice;
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            } catch {
+                // Ignore speech synthesis errors
+            }
+        }, delayMs);
+    } catch {
+        // Ignore speech synthesis errors
+    }
+};
+
+const refreshStats = async () => {
+    if (!isOnline.value) return;
+    try {
+        const res = await fetch('/kios-presensi/stats', { headers: { Accept: 'application/json' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.stats) {
+            stats.value = data.stats;
+        }
+    } catch {
+        // Ignore transient polling errors
     }
 };
 
@@ -211,7 +295,15 @@ const submitScan = async (rawCode: string, method: 'rfid' | 'qr' = 'rfid') => {
         if (data.stats) stats.value = data.stats;
 
         if (data.status === 'recorded') {
+            playTone(data.attendance_status === 'late' || (data.late_minutes ?? 0) > 0 ? 'warning' : 'success');
+            if (data.student?.name) {
+                speakGreeting(`Selamat datang, ${data.student.name}`);
+            }
+        } else if (data.status === 'checked_out') {
             playTone('success');
+            if (data.student?.name) {
+                speakGreeting(`Hati-hati di jalan, ${data.student.name}`);
+            }
         } else if (data.status === 'duplicate') {
             playTone('warning');
         } else {
@@ -228,7 +320,7 @@ const submitScan = async (rawCode: string, method: 'rfid' | 'qr' = 'rfid') => {
             });
             feed.value = feed.value.slice(0, 15);
         }
-        scheduleIdleReset(3500);
+        scheduleIdleReset(data.status === 'rejected' ? 3000 : 3500);
     } catch {
         offlineQueue.value.push({ code, scan_method: method, client_event_id: eventId, scanned_at: nowIso });
         saveQueue();
@@ -336,23 +428,95 @@ const toggleFullscreen = async () => {
 };
 
 const resultBadgeMeta = computed(() => {
-    const st = lastResult.value?.status;
-    if (st === 'recorded') return { tone: 'success', icon: 'fa-solid fa-circle-check', label: 'HADIR TEPAT WAKTU' };
-    if (st === 'duplicate' || st === 'queued') return { tone: 'warning', icon: 'fa-solid fa-circle-info', label: st === 'queued' ? 'TERSIMPAN OFFLINE' : 'SUDAH TERCATAT' };
-    return { tone: 'error', icon: 'fa-solid fa-triangle-exclamation', label: 'GAGAL / TIDAK DIKENALI' };
+    const res = lastResult.value;
+    const st = res?.status;
+    if (st === 'checked_out') {
+        return {
+            tone: 'info',
+            icon: 'fa-solid fa-person-walking-arrow-right',
+            label: 'PRESENSI PULANG',
+            subLabel: 'Sudah Pulang',
+            subColor: '#38bdf8',
+            lateText: '-',
+            lateColor: '#ffffff',
+        };
+    }
+    if (st === 'duplicate') {
+        return {
+            tone: 'warning',
+            icon: 'fa-solid fa-circle-info',
+            label: 'SUDAH HADIR',
+            subLabel: 'Tercatat Hadir',
+            subColor: '#fbbf24',
+            lateText: '-',
+            lateColor: '#ffffff',
+        };
+    }
+    if (st === 'queued') {
+        return {
+            tone: 'warning',
+            icon: 'fa-solid fa-circle-info',
+            label: 'TERSIMPAN OFFLINE',
+            subLabel: 'Antrean Lokal',
+            subColor: '#fbbf24',
+            lateText: '-',
+            lateColor: '#ffffff',
+        };
+    }
+    if (st === 'recorded') {
+        const lateMinutes = Number(res?.late_minutes ?? 0);
+        if (res?.attendance_status === 'late' || lateMinutes > 0) {
+            return {
+                tone: 'warning',
+                icon: 'fa-solid fa-clock',
+                label: lateMinutes > 0 ? `TERLAMBAT ${lateMinutes} MENIT` : 'HADIR TERLAMBAT',
+                subLabel: 'Terlambat',
+                subColor: '#fbbf24',
+                lateText: lateMinutes > 0 ? `${lateMinutes} Menit` : '-',
+                lateColor: '#fbbf24',
+            };
+        }
+        return {
+            tone: 'success',
+            icon: 'fa-solid fa-circle-check',
+            label: 'HADIR TEPAT WAKTU',
+            subLabel: 'Tepat Waktu',
+            subColor: '#34d399',
+            lateText: '0 Menit',
+            lateColor: '#34d399',
+        };
+    }
+    return {
+        tone: 'error',
+        icon: 'fa-solid fa-triangle-exclamation',
+        label: 'GAGAL / TIDAK DIKENALI',
+        subLabel: 'Gagal',
+        subColor: '#fb7185',
+        lateText: '-',
+        lateColor: '#ffffff',
+    };
 });
 
 const formattedResultTime = computed(() => {
+    if (lastResult.value?.status === 'rejected') return '-';
     const iso = lastResult.value?.scanned_at;
     if (!iso) return `${clockHm.value} WIB`;
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return `${clockHm.value} WIB`;
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} WIB`;
 });
+
+const onAvatarError = (event: Event) => {
+    const img = event.target as HTMLImageElement | null;
+    if (img && !img.src.endsWith('/madrasah-theme/images/kiosk/avatar-1.png')) {
+        img.src = '/madrasah-theme/images/kiosk/avatar-1.png';
+    }
+};
 
 const onOnline = () => {
     isOnline.value = true;
     syncOfflineQueue();
+    refreshStats();
 };
 const onOffline = () => {
     isOnline.value = false;
@@ -362,16 +526,29 @@ onMounted(() => {
     loadLocalState();
     updateClock();
     clockInterval = setInterval(updateClock, 1000);
+    statsInterval = setInterval(refreshStats, 15000);
     focusRfidInput();
     focusInterval = setInterval(focusRfidInput, 1500);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+    }
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
 });
 
 onBeforeUnmount(() => {
     if (resetTimer) clearTimeout(resetTimer);
+    if (speakTimer) clearTimeout(speakTimer);
     if (focusInterval) clearInterval(focusInterval);
     if (clockInterval) clearInterval(clockInterval);
+    if (statsInterval) clearInterval(statsInterval);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
+    }
     window.removeEventListener('online', onOnline);
     window.removeEventListener('offline', onOffline);
 });
@@ -399,10 +576,12 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="kiosk-clock-man4">
-                    <div class="kiosk-clock-time">
-                        {{ clockHm }}<span class="sec">:{{ clockSec }}</span>
+                    <div>
+                        <div class="kiosk-clock-time">
+                            {{ clockHm }}<span class="sec">:{{ clockSec }}</span>
+                        </div>
+                        <div class="kiosk-clock-date">{{ clockDate }}</div>
                     </div>
-                    <div class="kiosk-clock-date">{{ clockDate }}</div>
                 </div>
 
                 <div class="kiosk-actions-man4">
@@ -452,10 +631,10 @@ onBeforeUnmount(() => {
                         </div>
                         <h2 class="idle-title">Tempelkan Kartu Pelajar</h2>
                         <p class="idle-desc">Dekatkan kartu RFID atau arahkan Barcode kartu ke alat scanner untuk presensi mandiri.</p>
-                        <button type="button" class="gate-badge-indicator" @click.stop="qrModalOpen = true">
+                        <div class="gate-badge-indicator">
                             <i class="fa-solid fa-bolt" aria-hidden="true"></i>
                             <span>Scanner Aktif &amp; Siap Menerima Tap</span>
-                        </button>
+                        </div>
                     </div>
 
                     <div v-else class="result-state" role="status">
@@ -465,14 +644,19 @@ onBeforeUnmount(() => {
                         </div>
 
                         <div class="student-profile-box">
-                            <img src="/madrasah-theme/images/kiosk/avatar-1.png" alt="Avatar Siswa" class="student-avatar" />
+                            <img
+                                :src="lastResult.student?.photo_url || '/madrasah-theme/images/kiosk/avatar-1.png'"
+                                alt="Foto Siswa"
+                                class="student-avatar"
+                                @error="onAvatarError"
+                            />
                             <div class="student-info">
                                 <h2>{{ lastResult.student?.name ?? 'Kartu Tidak Dikenali' }}</h2>
                                 <div class="meta-tag">
                                     <span class="student-class-badge">{{ lastResult.student?.class_name ?? 'Tidak Terdaftar' }}</span>
                                 </div>
                                 <div class="meta-tag meta-status">
-                                    <span>Status: <b>{{ resultBadgeMeta.label }}</b></span>
+                                    <span>Status Hari Ini: <b :style="{ color: resultBadgeMeta.subColor }">{{ resultBadgeMeta.subLabel }}</b></span>
                                 </div>
                             </div>
                         </div>
@@ -487,8 +671,8 @@ onBeforeUnmount(() => {
                                 <div class="val is-cyan">{{ currentGate }}</div>
                             </div>
                             <div class="meta-col">
-                                <div class="label">Koneksi</div>
-                                <div class="val is-emerald">{{ isOnline ? 'Online' : 'Offline' }}</div>
+                                <div class="label">Keterlambatan</div>
+                                <div class="val" :style="{ color: resultBadgeMeta.lateColor }">{{ resultBadgeMeta.lateText }}</div>
                             </div>
                         </div>
 
@@ -582,6 +766,8 @@ onBeforeUnmount(() => {
         radial-gradient(circle at 15% 15%, rgba(5, 150, 105, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: normal;
+    user-select: none;
 }
 
 .kiosk-topbar-man4 {
@@ -593,28 +779,31 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    flex-wrap: wrap;
     z-index: 10;
 }
 
 .kiosk-brand-man4 {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
     min-width: 0;
 }
 
 .kiosk-logo-man4 {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     object-fit: contain;
     flex-shrink: 0;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
 }
 
+.kiosk-brand-copy {
+    min-width: 0;
+}
+
 .kiosk-brand-copy h1 {
-    margin: 0 0 3px;
-    font-size: 18px;
+    margin: 0 0 2px;
+    font-size: 20px;
     font-weight: 800;
     letter-spacing: -0.3px;
     color: #ffffff;
@@ -623,13 +812,14 @@ onBeforeUnmount(() => {
 
 .kiosk-brand-copy p {
     margin: 0;
-    font-size: 12.5px;
+    font-size: 13px;
     color: #10b981;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
+    line-height: normal;
 }
 
 .kiosk-status-dot {
@@ -638,7 +828,7 @@ onBeforeUnmount(() => {
     border-radius: 50%;
     background: #10b981;
     display: inline-block;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.55);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
     animation: kioskBlink 1.5s infinite;
 }
 
@@ -659,6 +849,10 @@ onBeforeUnmount(() => {
 
 .kiosk-clock-man4 {
     text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
 }
 
 .kiosk-clock-time {
@@ -680,13 +874,14 @@ onBeforeUnmount(() => {
     color: #94a3b8;
     margin-top: 4px;
     font-weight: 500;
+    line-height: normal;
 }
 
 .kiosk-actions-man4 {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .btn-kiosk {
@@ -697,12 +892,14 @@ onBeforeUnmount(() => {
     border-radius: 10px;
     font-size: 12.5px;
     font-weight: 600;
+    line-height: normal;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 7px;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .btn-kiosk:hover {
@@ -793,6 +990,7 @@ onBeforeUnmount(() => {
     text-align: center;
     position: relative;
     overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nfc-icon-wrapper {
@@ -805,6 +1003,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     animation: kioskPulseRing 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
@@ -826,6 +1025,7 @@ onBeforeUnmount(() => {
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.5px;
+    line-height: 1.25;
 }
 
 .idle-desc {
@@ -846,12 +1046,21 @@ onBeforeUnmount(() => {
     border-radius: 30px;
     font-size: 13px;
     font-weight: 600;
+    line-height: normal;
     color: #cbd5e1;
-    cursor: pointer;
 }
 
 .gate-badge-indicator i {
     color: #06b6d4;
+}
+
+.result-state {
+    animation: kioskCardAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes kioskCardAppear {
+    from { opacity: 0; transform: scale(0.94) translateY(15px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .result-badge-top {
@@ -862,6 +1071,7 @@ onBeforeUnmount(() => {
     border-radius: 30px;
     font-size: 15px;
     font-weight: 800;
+    line-height: normal;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     margin-bottom: 24px;
@@ -879,6 +1089,13 @@ onBeforeUnmount(() => {
     color: #fbbf24;
     border: 1.5px solid rgba(251, 191, 36, 0.4);
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.result-badge-top.info {
+    background: rgba(6, 182, 212, 0.2);
+    color: #38bdf8;
+    border: 1.5px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
 }
 
 .result-badge-top.error {
@@ -901,20 +1118,22 @@ onBeforeUnmount(() => {
 }
 
 .student-avatar {
-    width: 96px;
-    height: 96px;
+    width: 100px;
+    height: 100px;
     border-radius: 18px;
     object-fit: cover;
+    flex-shrink: 0;
     border: 2px solid rgba(255, 255, 255, 0.15);
     background: #1e293b;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .student-info h2 {
-    margin: 0 0 6px;
+    margin: 0 0 4px;
     font-size: 22px;
     font-weight: 800;
     color: #ffffff;
+    line-height: 1.2;
 }
 
 .meta-tag {
@@ -930,10 +1149,6 @@ onBeforeUnmount(() => {
     margin-bottom: 0;
 }
 
-.meta-status b {
-    color: #34d399;
-}
-
 .student-class-badge {
     background: rgba(6, 182, 212, 0.15);
     color: #38bdf8;
@@ -942,6 +1157,8 @@ onBeforeUnmount(() => {
     border-radius: 8px;
     font-size: 12px;
     font-weight: 700;
+    line-height: normal;
+    display: inline-block;
 }
 
 .result-meta-row {
@@ -952,6 +1169,10 @@ onBeforeUnmount(() => {
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.04);
     margin-bottom: 20px;
+}
+
+.meta-col {
+    text-align: center;
 }
 
 .meta-col .label {
@@ -971,7 +1192,6 @@ onBeforeUnmount(() => {
 }
 
 .meta-col .val.is-cyan { color: #06b6d4; }
-.meta-col .val.is-emerald { color: #34d399; }
 
 .result-message-text {
     margin: 0;
@@ -987,8 +1207,7 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 14px;
-    flex-wrap: wrap;
+    gap: 16px;
     font-size: 13px;
     z-index: 10;
 }
@@ -996,7 +1215,7 @@ onBeforeUnmount(() => {
 .stats-pills {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
@@ -1005,11 +1224,12 @@ onBeforeUnmount(() => {
     border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 5px 12px;
     border-radius: 8px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: #e2e8f0;
+    line-height: normal;
+    color: #f8fafc;
 }
 
 .stat-pill .num {
@@ -1032,6 +1252,8 @@ onBeforeUnmount(() => {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .kiosk-modal-backdrop {
@@ -1114,9 +1336,29 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 767px) {
-    .kiosk-topbar-man4 { padding: 14px 16px; }
+    .kiosk-topbar-man4 {
+        padding: 14px 16px;
+        flex-wrap: wrap;
+    }
+    .kiosk-brand-man4,
+    .kiosk-clock-man4 {
+        width: 100%;
+        text-align: left;
+    }
+    .kiosk-actions-man4 {
+        flex-wrap: wrap;
+        flex-shrink: 1;
+        width: 100%;
+        max-width: 100%;
+    }
     .terminal-card { padding: 28px 20px; }
     .student-profile-box { flex-direction: column; text-align: center; }
-    .kiosk-footer-man4 { padding: 14px 16px; }
+    .kiosk-footer-man4 {
+        padding: 14px 16px;
+        flex-wrap: wrap;
+    }
+    .kiosk-footer-mode {
+        white-space: normal;
+    }
 }
 </style>

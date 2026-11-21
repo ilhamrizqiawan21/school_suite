@@ -763,4 +763,71 @@ class AcademicQueryService
             'message' => 'Data keaktifan siswa ditemukan dan terkonfirmasi.',
         ];
     }
+
+    /**
+     * Publicly aggregated student and class-group counts without exposing student PII.
+     *
+     * @return array{
+     *     academic_year: string,
+     *     term_name: string,
+     *     active_students_count: int,
+     *     active_classes_count: int,
+     *     grade_levels: list<array{grade_level: int, students_count: int, classes: list<array{id: int, name: string, students_count: int}>}>
+     * }
+     */
+    public function publicStudentSummary(int $schoolId): array
+    {
+        $activeTerm = Term::query()
+            ->with('academicYear:id,name')
+            ->whereHas('academicYear', fn ($q) => $q->where('school_id', $schoolId))
+            ->where('is_active', true)
+            ->first();
+
+        $activeStudentsCount = Student::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->count();
+
+        $classGroups = ClassGroup::query()
+            ->where('school_id', $schoolId)
+            ->when($activeTerm !== null, fn ($q) => $q->where('academic_year_id', $activeTerm->academic_year_id))
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get(['id', 'name', 'grade_level']);
+
+        $enrollmentCounts = $activeTerm !== null
+            ? Enrollment::query()
+                ->select('class_group_id', DB::raw('COUNT(*) as total'))
+                ->where('term_id', $activeTerm->id)
+                ->where('status', 'active')
+                ->groupBy('class_group_id')
+                ->pluck('total', 'class_group_id')
+            : collect();
+
+        $gradeLevels = $classGroups
+            ->groupBy('grade_level')
+            ->map(function (BaseCollection $groups, int|string $gradeLevel) use ($enrollmentCounts): array {
+                $classes = $groups->map(fn (ClassGroup $cg): array => [
+                    'id' => (int) $cg->id,
+                    'name' => (string) $cg->name,
+                    'students_count' => (int) ($enrollmentCounts->get($cg->id) ?? 0),
+                ])->values()->all();
+
+                return [
+                    'grade_level' => (int) $gradeLevel,
+                    'students_count' => array_sum(array_column($classes, 'students_count')),
+                    'classes' => $classes,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'academic_year' => (string) ($activeTerm?->academicYear?->name ?? '2026/2027'),
+            'term_name' => (string) ($activeTerm?->name ?? 'Semester Aktif'),
+            'active_students_count' => $activeStudentsCount,
+            'active_classes_count' => $classGroups->count(),
+            'grade_levels' => $gradeLevels,
+        ];
+    }
 }

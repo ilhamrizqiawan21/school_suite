@@ -5,7 +5,7 @@ import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 interface MutationItem {
@@ -97,47 +97,76 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 <template>
     <Head :title="`Mutasi Siswa — ${school.name}`" />
 
-    <div class="min-h-screen bg-[#f8f6f0]" data-madrasah-service="mutation" :style="themeStyle">
+    <div class="mutasi-page" data-madrasah-service="mutation" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
-            <div class="madrasah-service-hero flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <p class="madrasah-service-label"><i class="fa-solid fa-right-left" aria-hidden="true"></i> LAYANAN MUTASI SISWA ONLINE</p>
-                    <h1 class="text-2xl font-bold text-slate-900">{{ school.name }}</h1>
-                    <p class="mt-1 text-sm font-semibold text-sky-200">Tahun Pelajaran 2026/2027</p>
-                    <p class="mt-1 text-sm text-slate-600">
-                        Informasi alur prosedur &amp; formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.
-                    </p>
-                    <div class="mt-3">
-                        <span class="inline-flex items-center rounded-full px-4 py-1 text-xs font-extrabold text-white" :class="periodAvailable ? 'bg-emerald-600' : 'bg-rose-600'">
-                            {{ periodAvailable ? `Semester aktif: ${activeTermName}` : 'Pendaftaran Mutasi Masuk Ditutup' }}
-                        </span>
-                    </div>
+        <section class="mutasi-hero-banner">
+            <div class="mutasi-container mutasi-hero-inner">
+                <div class="mutasi-hero-pill">
+                    <i class="fa-solid fa-right-left" aria-hidden="true"></i>
+                    <span>Layanan Mutasi Siswa Online</span>
                 </div>
+                <h1>{{ school.name.toUpperCase() }}</h1>
+                <h4>Tahun Pelajaran 2026/2027</h4>
+                <p>
+                    Informasi alur prosedur &amp; formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.
+                </p>
+                <div class="mutasi-hero-badge-wrap">
+                    <span class="mutasi-badge-status" :class="periodAvailable ? 'is-open' : 'is-closed'">
+                        <i :class="periodAvailable ? 'fa-solid fa-circle-check' : 'fa-solid fa-ban'" aria-hidden="true"></i>
+                        <span>{{ periodAvailable ? `Semester aktif: ${activeTermName}` : 'Pendaftaran Mutasi Masuk Ditutup' }}</span>
+                    </span>
+                </div>
+            </div>
+        </section>
 
+        <div class="mutasi-container mutasi-tabs-wrap">
+            <nav class="mutasi-tabs" aria-label="Navigasi layanan">
+                <button type="button" class="btn-mutasi-tab" :class="{ active: activeTab === 'alur' }" @click="activeTab = 'alur'">
+                    <i class="fa-solid fa-sitemap" aria-hidden="true"></i>
+                    <span>Alur &amp; Persyaratan Mutasi</span>
+                </button>
+                <button type="button" class="btn-mutasi-tab" :class="{ active: activeTab === 'form' }" @click="activeTab = 'form'">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                    <span>Formulir Permohonan Mutasi</span>
+                </button>
+                <Link href="/lacak?category=mutasi" class="btn-mutasi-tab">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <span>Cek Status Pengajuan</span>
+                </Link>
+            </nav>
+        </div>
+
+        <main class="mutasi-container mutasi-main">
+            <div v-show="activeTab === 'alur'" id="alur-mutasi">
+                <MutationProcedure :school-name="school.name" />
             </div>
 
-                <nav class="parity-document-nav" aria-label="Navigasi layanan">
-                    <button type="button" :class="{ 'is-active': activeTab === 'alur' }" @click="activeTab = 'alur'">Alur &amp; Persyaratan Mutasi</button>
-                    <button type="button" :class="{ 'is-active': activeTab === 'form' }" @click="activeTab = 'form'">Formulir Permohonan Mutasi</button>
-                    <a href="/lacak?category=mutasi" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white">Cek Status Pengajuan</a>
-                </nav>
-
-            <div v-show="activeTab === 'alur'" id="alur-mutasi"><MutationProcedure /></div>
-
-            <div v-if="!periodAvailable" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div
+                v-if="!periodAvailable"
+                v-show="activeTab === 'form'"
+                class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 mb-6"
+            >
                 Periode/semester aktif belum tersedia sehingga pengajuan mutasi sementara ditutup.
             </div>
 
-            <div v-if="issuedReceipt" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 space-y-1">
+            <div v-if="issuedReceipt" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 space-y-1 mb-6">
                 <p class="font-bold">Permohonan Mutasi Terkirim!</p>
                 <p>Kode Mutasi: <strong class="font-mono">{{ issuedReceipt.mutation_code }}</strong> | Tiket Lacak: <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> | PIN: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
             </div>
 
-            <form id="form-mutasi" v-show="activeTab === 'form' || !!issuedReceipt || !!revisingItem" v-if="periodAvailable" @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+            <form
+                id="form-mutasi"
+                v-show="activeTab === 'form' || !!issuedReceipt || !!revisingItem"
+                v-if="periodAvailable"
+                @submit.prevent="submit"
+                class="card-custom mutasi-form-card space-y-5"
+            >
+                <div class="form-section-header">
+                    <i class="fa-solid fa-sliders mr-2" aria-hidden="true"></i>1. Pilihan Jenis Mutasi
+                </div>
                 <fieldset class="service-choice-group">
-                    <legend class="service-form-title">Jenis Mutasi</legend>
+                    <legend class="sr-only">Jenis Mutasi</legend>
                     <div class="service-tiles">
                         <label class="service-choice">
                             <input v-model="form.direction" name="mutation-direction" type="radio" value="incoming" />
@@ -151,6 +180,9 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     <p v-if="form.errors.direction" class="text-sm text-rose-700" role="alert">{{ form.errors.direction }}</p>
                 </fieldset>
 
+                <div class="form-section-header">
+                    <i class="fa-solid fa-user-graduate mr-2" aria-hidden="true"></i>2. Data Siswa &amp; Sekolah
+                </div>
                 <div v-if="form.direction === 'outgoing'" class="grid gap-3 md:grid-cols-2">
                     <FormField id="mts-student-id" label="Pilih Siswa Aktif" :error="form.errors.student_id" required>
                         <select id="mts-student-id" v-model="form.student_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -182,6 +214,9 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     </FormField>
                 </div>
 
+                <div class="form-section-header">
+                    <i class="fa-solid fa-file-signature mr-2" aria-hidden="true"></i>3. Kontak Pemohon &amp; Berkas Persyaratan
+                </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <FormField id="mts-applicant-name" label="Nama Pemohon / Wali">
                         <input id="mts-applicant-name" v-model="form.applicant_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
@@ -204,8 +239,10 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </AppButton>
             </form>
 
-            <div v-if="myMutations.length" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
-                <h2 class="text-base font-semibold text-slate-900">Riwayat Pengajuan Mutasi Anda</h2>
+            <div v-if="myMutations.length" class="card-custom mutasi-form-card space-y-4 mt-6">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-clock-rotate-left mr-2" aria-hidden="true"></i>Riwayat Pengajuan Mutasi Anda
+                </div>
                 <div v-for="m in myMutations" :key="m.id" class="rounded-xl border border-slate-200 p-4 text-sm space-y-2">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <p class="font-semibold">{{ m.mutation_code }} — {{ m.student_name }} ({{ m.direction === 'incoming' ? 'Masuk' : 'Keluar' }})</p>
@@ -236,8 +273,10 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </div>
             </div>
 
-            <form v-if="revisingItem" @submit.prevent="submitRevision" class="rounded-2xl border border-amber-300 bg-white p-6 space-y-3">
-                <h3 class="text-base font-semibold">Perbaikan Permohonan {{ revisingItem.mutation_code }}</h3>
+            <form v-if="revisingItem" @submit.prevent="submitRevision" class="card-custom mutasi-form-card border border-amber-300 space-y-3 mt-6">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-pen-clip mr-2" aria-hidden="true"></i>Perbaikan Permohonan {{ revisingItem.mutation_code }}
+                </div>
                 <FormField id="mts-rev-school" label="Nama Sekolah Asal / Tujuan">
                     <input id="mts-rev-school" v-model="revisionForm.school_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 </FormField>
@@ -252,3 +291,187 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         </main>
     </div>
 </template>
+
+<style scoped>
+.mutasi-page {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+.mutasi-container {
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding-inline: 15px;
+}
+
+.mutasi-hero-banner {
+    background: linear-gradient(135deg, #0f4c81 0%, #1b85df 100%);
+    color: #ffffff;
+    padding: 40px 0;
+    margin-bottom: 30px;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 10px 25px rgba(15, 76, 129, 0.14);
+    text-align: center;
+}
+
+.mutasi-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 12px;
+    font-weight: 700;
+    color: #fef08a;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.mutasi-hero-banner h1 {
+    margin: 0 0 6px;
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #ffffff;
+    line-height: 1.25;
+}
+
+.mutasi-hero-banner h4 {
+    margin: 0 0 10px;
+    font-weight: 600;
+    font-size: 16px;
+    opacity: 0.95;
+    color: #93c5fd;
+    line-height: 1.3;
+}
+
+.mutasi-hero-banner p {
+    font-size: 14.5px;
+    opacity: 0.9;
+    max-width: 680px;
+    margin: 0 auto;
+    line-height: 1.6;
+    color: #ffffff;
+}
+
+.mutasi-hero-badge-wrap {
+    margin-top: 14px;
+}
+
+.mutasi-badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 7px 14px;
+    border-radius: 50px;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.mutasi-badge-status.is-open {
+    background-color: #059669;
+}
+
+.mutasi-badge-status.is-closed {
+    background-color: #dc3545;
+}
+
+.mutasi-tabs-wrap {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.mutasi-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-mutasi-tab {
+    color: #495057;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 12px 24px;
+    margin: 0 8px 10px 8px;
+    border: 1px solid #ced4da;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.btn-mutasi-tab:hover {
+    background-color: #e9ecef;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.btn-mutasi-tab.active {
+    color: #ffffff;
+    background-color: #007bff;
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35);
+}
+
+.mutasi-main {
+    padding-bottom: 48px;
+}
+
+.card-custom {
+    background: #ffffff;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.mutasi-form-card {
+    padding: 28px;
+}
+
+.form-section-header {
+    background: #eef5ff;
+    padding: 10px 15px;
+    border-left: 4px solid #007bff;
+    border-radius: 4px;
+    font-weight: 700;
+    color: #0056b3;
+    margin-bottom: 18px;
+    font-size: 15px;
+}
+
+@media (max-width: 767.98px) {
+    .mutasi-hero-banner {
+        padding: 32px 16px;
+        margin-bottom: 20px;
+    }
+
+    .mutasi-hero-banner h1 {
+        font-size: 22px;
+    }
+
+    .btn-mutasi-tab {
+        font-size: 13.5px;
+        padding: 10px 16px;
+        margin: 0 4px 8px 4px;
+    }
+
+    .mutasi-form-card {
+        padding: 18px;
+    }
+}
+</style>

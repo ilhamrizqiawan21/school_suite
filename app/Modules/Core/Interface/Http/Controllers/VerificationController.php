@@ -76,4 +76,41 @@ class VerificationController extends Controller
             'studentResult' => $studentResult,
         ]);
     }
+
+    public function studentData(): Response
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+
+        return Inertia::render('Public/Students/Index', [
+            'school' => [
+                'name' => $school['name'],
+                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'theme' => $school['theme'] ?? [],
+            ],
+            'summary' => $this->academicQuery->publicStudentSummary($schoolId),
+            'studentResult' => null,
+        ]);
+    }
+
+    public function checkStudentData(Request $request): Response
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+
+        $validated = $request->validate([
+            'nisn' => ['required', 'string', 'max:30'],
+            'name' => ['required', 'string', 'min:3', 'max:120'],
+        ]);
+
+        return Inertia::render('Public/Students/Index', [
+            'school' => [
+                'name' => $school['name'],
+                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'theme' => $school['theme'] ?? [],
+            ],
+            'summary' => $this->academicQuery->publicStudentSummary($schoolId),
+            'studentResult' => $this->academicQuery->verifyPublicStudentStatus($schoolId, $validated['nisn'], $validated['name']),
+        ]);
+    }
 }

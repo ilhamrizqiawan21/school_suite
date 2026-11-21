@@ -1,3 +1,18 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+
+const props = withDefaults(
+    defineProps<{
+        schoolName?: string;
+    }>(),
+    {
+        schoolName: 'Madrasah Contoh Nusantara',
+    },
+);
+
+const displaySchoolName = computed(() => props.schoolName.toUpperCase());
+</script>
+
 <template>
 <section class="reference-legalisir">
 <div class="sop-poster mb-4">
@@ -38,7 +53,7 @@
                                     </div>
                                     <div class="sop-content-wrap">
                                         <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Kedatangan Pemohon ke Ruang Tata Usaha</div>
-                                        <div>Pemohon datang langsung ke ruang <strong>Tata Usaha (TU) Madrasah Contoh Nusantara</strong> pada hari dan jam kerja yang telah ditentukan, atau dapat mengirimkan <strong>perwakilan resmi</strong>.</div>
+                                        <div>Pemohon datang langsung ke ruang <strong>Tata Usaha (TU) {{ displaySchoolName }}</strong> pada hari dan jam kerja yang telah ditentukan, atau dapat mengirimkan <strong>perwakilan resmi</strong>.</div>
                                     </div>
                                 </div>
 
@@ -108,7 +123,7 @@
                                     </div>
                                     <div class="sop-estimasi-box">
                                         <div class="sop-estimasi-head">
-                                            <i class="fa fa-clock-o mr-1"></i> Estimasi Waktu
+                                            <i class="fa-regular fa-clock mr-1" aria-hidden="true"></i> Estimasi Waktu
                                             <span class="sop-days">10-15 MENIT</span>
                                         </div>
                                         <div class="sop-estimasi-foot">Layanan Langsung</div>
@@ -176,11 +191,11 @@
                                     </div>
                                     <div class="sop-content-wrap">
                                         <div class="font-weight-bold mb-1" style="color: #0369a1; font-size: 14.5px;">Proses Legalisir Resmi</div>
-                                        <div>Dokumen salinan fotokopi ijazah dibubuhi <strong>cap/stempel resmi basah Madrasah Contoh Nusantara</strong> dan ditandatangani oleh <strong>Kepala Madrasah/Sekolah</strong> atau pejabat yang berwenang.</div>
+                                        <div>Dokumen salinan fotokopi ijazah dibubuhi <strong>cap/stempel resmi basah {{ displaySchoolName }}</strong> dan ditandatangani oleh <strong>Kepala Madrasah/Sekolah</strong> atau pejabat yang berwenang.</div>
                                     </div>
                                     <div class="sop-estimasi-box">
                                         <div class="sop-estimasi-head">
-                                            <i class="fa fa-calendar-check-o mr-1"></i> Estimasi Waktu
+                                            <i class="fa-regular fa-calendar-check mr-1" aria-hidden="true"></i> Estimasi Waktu
                                             <span class="sop-days">1 HARI</span>
                                         </div>
                                         <div class="sop-estimasi-foot">Maksimal / Hari Kerja</div>
@@ -216,10 +231,10 @@
 
                                 
                                 <div class="sop-info-bar mb-0">
-                                    <i class="fa fa-shield fa-2x mr-3 text-success"></i>
+                                    <i class="fa-solid fa-shield-halved fa-2x mr-3 text-success" aria-hidden="true"></i>
                                     <div>
                                         <strong>PELAYANAN BEBAS BIAYA (GRATIS):</strong>
-                                        <span class="d-block" style="font-size: 12.5px; opacity: 0.9;">Seluruh proses pengesahan &amp; legalisir ijazah di Madrasah Contoh Nusantara adalah <strong>Rp 0,- (Bebas Pungli)</strong>.</span>
+                                        <span class="d-block" style="font-size: 12.5px; opacity: 0.9;">Seluruh proses pengesahan &amp; legalisir ijazah di {{ displaySchoolName }} adalah <strong>Rp 0,- (Bebas Pungli)</strong>.</span>
                                     </div>
                                 </div>
                             </div>

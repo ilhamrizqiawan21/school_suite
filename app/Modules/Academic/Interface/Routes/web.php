@@ -152,6 +152,7 @@ Route::prefix('alumni')->name('academic.alumni.public.')->group(function (): voi
 // Kios Presensi RFID & QR (M4-OPS-03)
 Route::middleware(['auth', 'role:admin,operator,picket', 'throttle:sensitive'])->prefix('kios-presensi')->name('academic.kiosk.')->group(function (): void {
     Route::get('/', [StudentCardKioskController::class, 'kioskIndex'])->name('index');
+    Route::get('/stats', [StudentCardKioskController::class, 'stats'])->name('stats');
     Route::post('/scan', [StudentCardKioskController::class, 'scan'])->name('scan');
     Route::post('/sinkron', [StudentCardKioskController::class, 'syncBatch'])->name('sync');
     Route::post('/gate', [StudentCardKioskController::class, 'triggerGate'])->name('gate');

@@ -120,19 +120,19 @@
       </span>
     </div>
   </header>
-@elseif (request()->is('lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
+@elseif (request()->is('data-siswa', 'lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
   <!-- ================= TOP BAR APLIKASI DATABASE SISWA ================= -->
-  <div data-portal-identity class="bg-slate-900 text-slate-200 text-xs py-2 border-b border-slate-800">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-2 font-semibold">
+  <div data-portal-identity class="db-topbar text-slate-200 text-xs py-1.5 border-b border-white/10">
+    <div class="db-nav-container flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-2 font-bold text-[12px]">
         <i class="fa-solid fa-graduation-cap text-amber-400"></i>
         <span>{{ strtoupper($schoolName) }} • TA 2026/2027</span>
       </div>
       <div class="flex items-center gap-2">
-        <a href="/login?portal=siswa" class="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3 py-1 rounded-lg transition">
+        <a href="/login?portal=siswa" class="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-3 py-1 rounded-full text-[12px] shadow-sm transition">
           <i class="fa-solid fa-user-graduate"></i> Portal Siswa / Wali
         </a>
-        <a href="/login" class="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-3 py-1 rounded-lg border border-slate-700 transition">
+        <a href="/login" class="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/10 text-white font-semibold px-3 py-1 rounded-full text-[12px] border border-white/30 transition">
           <i class="fa-solid fa-lock"></i> Login Admin
         </a>
       </div>
@@ -140,29 +140,29 @@
   </div>
 
   <!-- ================= NAVBAR APLIKASI DATABASE SISWA ================= -->
-  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-4">
+  <header data-madrasah-navigation class="db-navbar sticky top-0 z-40 bg-white border-b border-slate-200">
+    <div class="db-nav-container db-nav-inner py-1 flex items-center justify-between gap-4">
       <a href="/" class="flex items-center gap-2.5 shrink-0">
-        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="db-nav-logo">
         <div>
-          <span class="block font-extrabold text-sm text-emerald-700 leading-none">APLIKASI DATABASE SISWA</span>
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">{{ strtoupper($schoolName) }}</span>
+          <span class="db-nav-title block font-bold text-emerald-700 leading-tight">APLIKASI DATABASE SISWA</span>
+          <span class="db-nav-sub block font-medium text-slate-500 uppercase tracking-tight">{{ strtoupper($schoolName) }}</span>
         </div>
       </a>
 
-      <nav class="hidden lg:flex items-center gap-4 text-xs font-semibold text-slate-600">
-        <a href="/" class="hover:text-blue-600 transition">Home</a>
-        <a href="/direktori-gtk" class="hover:text-blue-600 transition">Data Siswa</a>
-        <a href="/alumni" class="hover:text-blue-600 transition">Data Alumni</a>
-        <a href="/layanan/legalisir" class="{{ request()->is('layanan/legalisir') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Legalisir</a>
-        <a href="/layanan/izin-siswa" class="{{ request()->is('layanan/izin-siswa') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Surat Izin</a>
-        <a href="/layanan/mutasi" class="{{ request()->is('layanan/mutasi') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Mutasi</a>
-        <a href="/lacak" class="{{ request()->is('lacak') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'text-emerald-600 font-bold hover:text-emerald-700 transition' }}">Lacak Terpadu</a>
-        <a href="/layanan/lapor" class="hover:text-blue-600 transition">Pengaduan</a>
-        <a href="/layanan/kelulusan" class="{{ request()->is('layanan/kelulusan') ? 'bg-blue-600 text-white font-bold px-4 py-1.5 rounded-full shadow-sm' : 'hover:text-blue-600 transition' }}">Cek Kelulusan</a>
+      <nav class="db-nav-desktop items-center gap-1" aria-label="Menu aplikasi database siswa">
+        <a href="/" class="db-nav-link">Home</a>
+        <a href="/data-siswa" class="db-nav-link {{ request()->is('data-siswa') ? 'is-active' : '' }}">Data Siswa</a>
+        <a href="/alumni" class="db-nav-link">Data Alumni</a>
+        <a href="/layanan/legalisir" class="db-nav-link {{ request()->is('layanan/legalisir') ? 'is-active' : '' }}">Legalisir</a>
+        <a href="/layanan/izin-siswa" class="db-nav-link {{ request()->is('layanan/izin-siswa') ? 'is-active' : '' }}">Surat Izin</a>
+        <a href="/layanan/mutasi" class="db-nav-link {{ request()->is('layanan/mutasi') ? 'is-active' : '' }}">Mutasi</a>
+        <a href="/lacak" class="db-nav-link {{ request()->is('lacak') ? 'is-active' : 'is-tracking' }}"><i class="fa-solid fa-magnifying-glass mr-1"></i>Lacak Terpadu</a>
+        <a href="/layanan/lapor" class="db-nav-link">Pengaduan</a>
+        <a href="/layanan/kelulusan" class="db-nav-link {{ request()->is('layanan/kelulusan') ? 'is-active' : '' }}">Cek Kelulusan</a>
       </nav>
 
-      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="lg:hidden w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="db-nav-mobile-btn w-9 h-9 rounded-lg bg-slate-100 text-slate-700 items-center justify-center">
         <i class="fa-solid fa-bars"></i>
       </button>
 
@@ -978,6 +978,61 @@
   <!-- Mobile Drawer Menu -->
   <div id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu navigasi" tabindex="-1" class="fixed inset-0 bg-slate-900/60 z-50 hidden backdrop-blur-sm">
     <div class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white p-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
+      @if (request()->is('lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain shrink-0">
+            <div class="min-w-0">
+              <span class="block font-extrabold text-sm text-emerald-700 leading-tight truncate">APLIKASI DATABASE SISWA</span>
+              <span class="block text-[10px] font-bold text-slate-500 uppercase truncate">{{ strtoupper($schoolName) }}</span>
+            </div>
+          </div>
+          <button data-close-dialog aria-label="Tutup menu" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <nav class="mt-5 flex flex-col space-y-1.5 font-semibold text-slate-700 text-sm" aria-label="Menu aplikasi database siswa">
+          <a href="/" class="px-3.5 py-2.5 rounded-xl hover:bg-slate-100 hover:text-blue-600 transition flex items-center gap-2.5">
+            <i class="fa-solid fa-house w-4 text-slate-400"></i> Home
+          </a>
+          <a href="/data-siswa" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('data-siswa') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
+            <i class="fa-solid fa-users w-4 {{ request()->is('data-siswa') ? 'text-white' : 'text-slate-400' }}"></i> Data Siswa
+          </a>
+          <a href="/alumni" class="px-3.5 py-2.5 rounded-xl hover:bg-slate-100 hover:text-blue-600 transition flex items-center gap-2.5">
+            <i class="fa-solid fa-user-graduate w-4 text-slate-400"></i> Data Alumni
+          </a>
+          <a href="/layanan/legalisir" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/legalisir') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
+            <i class="fa-solid fa-certificate w-4 {{ request()->is('layanan/legalisir') ? 'text-white' : 'text-slate-400' }}"></i> Legalisir
+          </a>
+          <a href="/layanan/izin-siswa" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/izin-siswa') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
+            <i class="fa-solid fa-file-signature w-4 {{ request()->is('layanan/izin-siswa') ? 'text-white' : 'text-slate-400' }}"></i> Surat Izin
+          </a>
+          <a href="/layanan/mutasi" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/mutasi') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
+            <i class="fa-solid fa-people-arrows w-4 {{ request()->is('layanan/mutasi') ? 'text-white' : 'text-slate-400' }}"></i> Mutasi
+          </a>
+          <a href="/lacak" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('lacak') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'text-emerald-600 font-bold hover:bg-emerald-50' }}">
+            <i class="fa-solid fa-magnifying-glass w-4"></i> Lacak Terpadu
+          </a>
+          <a href="/layanan/lapor" class="px-3.5 py-2.5 rounded-xl hover:bg-slate-100 hover:text-blue-600 transition flex items-center gap-2.5">
+            <i class="fa-solid fa-bullhorn w-4 text-slate-400"></i> Pengaduan
+          </a>
+          <a href="/layanan/kelulusan" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/kelulusan') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
+            <i class="fa-solid fa-award w-4 {{ request()->is('layanan/kelulusan') ? 'text-white' : 'text-slate-400' }}"></i> Cek Kelulusan
+          </a>
+        </nav>
+      </div>
+
+      <div class="pt-5 border-t border-slate-100 grid grid-cols-2 gap-2">
+        <a href="/login?portal=siswa" class="py-2.5 px-3 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold rounded-full text-center text-xs shadow-sm flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-user-graduate"></i> Portal Siswa
+        </a>
+        <a href="/login" class="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-full text-center text-xs flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-lock"></i> Login Admin
+        </a>
+      </div>
+      @else
       <div>
         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
           <div class="flex items-center gap-2">
@@ -1104,5 +1159,6 @@
         <a href="/#ppdb" class="w-full bg-kemenag-700 text-white font-bold py-3 rounded-xl shadow-md text-center block">
           Daftar PPDB        </a>
       </div>
+      @endif
     </div>
   </div>

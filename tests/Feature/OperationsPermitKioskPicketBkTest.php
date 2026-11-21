@@ -621,6 +621,30 @@ class OperationsPermitKioskPicketBkTest extends TestCase
                 ->assertJsonPath('results.0.status', 'recorded')
                 ->assertJsonPath('results.1.status', 'rejected');
 
+            // Kiosk index renders Inertia component & stats endpoint enforces auth/role
+            $this->actingAs($this->picketUser)
+                ->get('/kios-presensi')
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->component('Academic/Attendance/Kiosk')
+                    ->has('stats.total_students')
+                    ->has('stats.present')
+                    ->has('stats.absent')
+                );
+
+            $this->actingAs($this->picketUser)
+                ->getJson('/kios-presensi/stats')
+                ->assertOk()
+                ->assertJsonPath('success', true)
+                ->assertJsonStructure([
+                    'success',
+                    'stats' => ['total_students', 'present', 'on_time', 'late', 'checked_out', 'absent'],
+                ]);
+
+            $this->actingAs($this->studentA1User)
+                ->getJson('/kios-presensi/stats')
+                ->assertForbidden();
+
             // Revoke card A1 -> subsequent scan rejected
             $this->actingAs($this->operatorA)
                 ->post("/akademik/kartu-siswa/{$card->id}/cabut", [

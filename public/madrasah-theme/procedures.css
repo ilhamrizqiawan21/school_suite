@@ -12,14 +12,30 @@
 .reference-mutasi .mb-4 { margin-bottom: 1.25rem; }
 .reference-legalisir .mr-1,
 .reference-mutasi .mr-1 { margin-right: 0.25rem; }
+.reference-legalisir .mr-2,
+.reference-mutasi .mr-2 { margin-right: 0.5rem; }
 .reference-legalisir .mr-3,
 .reference-mutasi .mr-3 { margin-right: 0.75rem; }
 .reference-legalisir .d-block,
 .reference-mutasi .d-block { display: block; }
+.reference-legalisir .d-none,
+.reference-mutasi .d-none { display: none; }
+@media (min-width: 768px) {
+.reference-legalisir .d-md-block,
+.reference-mutasi .d-md-block { display: block; }
+}
 .reference-legalisir .text-success,
 .reference-mutasi .text-success { color: #059669; }
 .reference-legalisir .text-danger,
 .reference-mutasi .text-danger { color: #dc2626; }
+.reference-legalisir .text-primary,
+.reference-mutasi .text-primary { color: #007bff; }
+.reference-legalisir .text-warning,
+.reference-mutasi .text-warning { color: #f59e0b; }
+.reference-legalisir .text-info,
+.reference-mutasi .text-info { color: #38bdf8; }
+.reference-legalisir .text-muted,
+.reference-mutasi .text-muted { color: #64748b; }
 
 .reference-legalisir .sop-poster {
             background: #ffffff;
@@ -245,6 +261,7 @@
             display: flex;
             align-items: center;
         }
+@media (max-width: 767.98px) {
 .reference-legalisir .sop-step-row {
                 flex-direction: column;
                 align-items: flex-start;
@@ -275,6 +292,7 @@
 .reference-legalisir .sop-main-title {
                 font-size: 20px;
             }
+}
 .reference-mutasi .sop-poster {
             background: #ffffff;
             border-radius: 20px;
@@ -582,6 +600,26 @@
             color: #ffffff;
             box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
         }
+.reference-mutasi .sop-toggle-wrap {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+.reference-mutasi .sop-toggle-group {
+            display: inline-flex;
+            padding: 4px;
+            background: #ffffff;
+            border-radius: 9999px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+            gap: 6px;
+        }
+@media (max-width: 767.98px) {
+.reference-mutasi .sop-toggle-group {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                border-radius: 16px;
+            }
 .reference-mutasi .sop-step-row {
                 flex-direction: column;
                 align-items: flex-start;
@@ -612,6 +650,7 @@
 .reference-mutasi .sop-main-title {
                 font-size: 20px;
             }
+}
 .reference-sop-tabs { display:flex; justify-content:center; gap:8px; margin-bottom:20px; }
 .reference-sop-tabs button { padding:12px 20px; border:1px solid #059669; border-radius:24px; color:#047857; background:white; font-size:13px; font-weight:700; }
 .reference-sop-tabs button[aria-pressed="true"] { background:#047857; color:white; }

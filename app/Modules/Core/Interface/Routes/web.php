@@ -45,6 +45,8 @@ Route::get('/jadwal-salat', [PublicPortalController::class, 'prayerAndStats'])->
 // Pelacakan Terpadu & Verifikasi Dokumen/Siswa Publik (M4-TU-01, M4-TU-04, M4-LIF-04)
 Route::get('/lacak', [UnifiedTrackingController::class, 'index'])->name('core.tracking.index');
 Route::post('/lacak', [UnifiedTrackingController::class, 'lookup'])->middleware('throttle:sensitive')->name('core.tracking.lookup');
+Route::get('/data-siswa', [VerificationController::class, 'studentData'])->name('core.public.students');
+Route::post('/data-siswa/cek', [VerificationController::class, 'checkStudentData'])->middleware('throttle:sensitive')->name('core.public.students.check');
 Route::get('/verifikasi', [VerificationController::class, 'index'])->name('core.verification.index');
 Route::post('/verifikasi', [VerificationController::class, 'verify'])->middleware('throttle:sensitive')->name('core.verification.check');
 

@@ -54,6 +54,7 @@ class LegalizationController extends Controller
         return Inertia::render('Public/Services/Legalization', [
             'school' => [
                 'name' => $school['name'],
+                'address' => $school['address'] ?? null,
                 'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
                 'theme' => $school['theme'] ?? [],
             ],

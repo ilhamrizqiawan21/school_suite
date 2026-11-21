@@ -693,6 +693,41 @@ class StudentLifecycleAndAlumniTest extends TestCase
             ->where('schedule.released', true));
     }
 
+    public function test_public_student_data_page_exposes_aggregated_summary_and_verifies_student_status(): void
+    {
+        $this->get('/data-siswa')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Students/Index')
+                ->where('summary.active_students_count', 2)
+                ->where('summary.active_classes_count', 1)
+                ->where('summary.term_name', $this->activeTerm->name)
+                ->where('studentResult', null)
+            );
+
+        $this->post('/data-siswa/cek', [
+            'nisn' => $this->studentA1->nisn,
+            'name' => 'Zahra',
+        ])
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Students/Index')
+                ->where('studentResult.found', true)
+                ->where('studentResult.status_code', 'active')
+                ->where('studentResult.student_name', $this->studentA1->name)
+            );
+
+        $this->post('/data-siswa/cek', [
+            'nisn' => $this->studentA1->nisn,
+            'name' => 'NamaSalah',
+        ])
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Students/Index')
+                ->where('studentResult.found', false)
+            );
+    }
+
     private function makeUser(School $school, int $roleId, string $email, string $username): User
     {
         return User::query()->create([

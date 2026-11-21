@@ -337,6 +337,8 @@ class StudentCardKioskService
             return [
                 'status' => 'recorded',
                 'code' => 'recorded',
+                'attendance_status' => (string) $attendance->status,
+                'late_minutes' => 0,
                 'message' => 'Presensi berhasil dicatat.',
                 'student' => [
                     'name' => $student['name'],

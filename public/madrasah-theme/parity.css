@@ -1893,6 +1893,68 @@ body[data-portal-path="layanan/ptsp"] .portal-primary-navigation > a:first-child
 .parity-guest-photo p[role="alert"] { color: #9f1239; }
 
 .portal-desktop-catalogue-login { display: none; }
+
+/* Database-app masthead (Legalisir, Izin, Mutasi, Kelulusan, Lacak) matching reference navbar-expand-lg (992px) */
+.db-topbar { background: #0b1528; }
+.db-navbar { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+.db-nav-container { width: 100%; max-width: 1140px; margin-inline: auto; padding-inline: 15px; }
+.db-nav-inner { min-height: 68px; }
+.db-nav-logo { height: 58px; width: auto; object-fit: contain; flex-shrink: 0; }
+.db-nav-title { font-size: 15px; }
+.db-nav-sub { font-size: 11.5px; }
+.db-nav-desktop { display: none; }
+.db-nav-mobile-btn { display: inline-flex; }
+.db-nav-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  padding: 7px 11px;
+  border-radius: 50px;
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.db-nav-link:hover { color: #005BEA; background: #f1f5f9; }
+.db-nav-link.is-active {
+  background: #005BEA;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(0, 91, 234, 0.3);
+}
+.db-nav-link.is-tracking { color: #059669; font-weight: 700; }
+.db-nav-link.is-tracking:hover { color: #047857; background: #ecfdf5; }
+@media (min-width: 992px) {
+  .db-nav-desktop { display: flex; }
+  .db-nav-mobile-btn { display: none; }
+}
+@media (min-width: 992px) and (max-width: 1139.98px) {
+  .db-nav-link { padding: 6px 7px; font-size: 12px; }
+}
+.parity-akademik-footer {
+  margin-top: auto;
+  padding: 24px 15px;
+  background-color: #343a40;
+  color: #ffffff;
+  text-align: center;
+}
+.parity-akademik-footer-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+.parity-akademik-footer-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.5;
+}
+.parity-akademik-footer-sub {
+  display: inline-block;
+  font-size: 12.8px;
+  color: #94a3b8;
+}
 @media(min-width:768px) {
   body[data-portal-layout="catalogue"] .portal-primary-navigation > .portal-mega-menu-group,
   body[data-portal-layout="catalogue"] .portal-primary-navigation > a[href="/e-layanan"],

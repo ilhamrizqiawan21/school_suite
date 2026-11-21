@@ -157,6 +157,16 @@ class StudentCardKioskController extends Controller
         ]);
     }
 
+    public function stats(Request $request): JsonResponse
+    {
+        $schoolId = (int) $request->user()->school_id;
+
+        return response()->json([
+            'success' => true,
+            'stats' => $this->kioskService->todayStats($schoolId),
+        ]);
+    }
+
     public function triggerGate(Request $request): JsonResponse
     {
         return response()->json([

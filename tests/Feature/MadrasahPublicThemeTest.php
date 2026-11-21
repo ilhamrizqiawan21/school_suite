@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Modules\Core\Infrastructure\Models\PublicVisitStat;
 use App\Modules\Core\Infrastructure\Models\School;
+use Database\Seeders\PilotSchoolSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -120,5 +121,15 @@ class MadrasahPublicThemeTest extends TestCase
 
         $this->assertIsString($css);
         $this->assertStringContainsString('[data-madrasah-navigation] .portal-mega-menu-group:hover > [data-portal-menu]::after', $css);
+    }
+
+    public function test_public_student_data_page_uses_aplikasi_database_siswa_shell_and_footer(): void
+    {
+        $this->seed(PilotSchoolSeeder::class);
+
+        $this->get('/data-siswa')
+            ->assertOk()
+            ->assertSee('APLIKASI DATABASE SISWA')
+            ->assertSee('Aplikasi Database &amp; Informasi Data Siswa', false);
     }
 }
