@@ -7,6 +7,7 @@ namespace App\Modules\Academic\Application\Services;
 use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\AttendanceKioskDevice;
 use App\Modules\Academic\Infrastructure\Models\AttendanceKioskScan;
+use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\Student;
 use App\Modules\Academic\Infrastructure\Models\StudentCard;
 use App\Modules\Core\Application\Services\SchoolScopeService;
@@ -438,5 +439,37 @@ class StudentCardKioskService
         );
 
         return $device;
+    }
+
+    /**
+     * @return array{total_students: int, present: int, on_time: int, late: int, checked_out: int, absent: int}
+     */
+    public function todayStats(int $schoolId): array
+    {
+        $today = $this->schoolScope->localNow($schoolId)->toDateString();
+        $totalStudents = Student::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->count();
+
+        $dailyRows = AttendanceRecord::query()
+            ->where('school_id', $schoolId)
+            ->whereDate('date', $today)
+            ->where('type', 'daily')
+            ->get(['enrollment_id', 'status'])
+            ->unique('enrollment_id');
+
+        $onTime = $dailyRows->where('status', 'present')->count();
+        $late = $dailyRows->where('status', 'late')->count();
+        $present = $onTime + $late;
+
+        return [
+            'total_students' => $totalStudents,
+            'present' => $present,
+            'on_time' => $onTime,
+            'late' => $late,
+            'checked_out' => 0,
+            'absent' => max(0, $totalStudents - $present),
+        ];
     }
 }

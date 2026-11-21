@@ -173,3 +173,18 @@ updateScrollTop();
 
 const ikmFeedback = document.querySelector('[data-ikm-submitted]');
 if (ikmFeedback) openDialog(byId('ziModal'), document.querySelector('[data-open-dialog="ziModal"]'));
+
+const guestbookClock = document.querySelector('[data-guestbook-clock]');
+if (guestbookClock) {
+    const updateGuestbookClock = () => {
+        const now = new Date();
+        guestbookClock.textContent = now.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        }).replaceAll('.', ':');
+    };
+    updateGuestbookClock();
+    window.setInterval(updateGuestbookClock, 1000);
+}

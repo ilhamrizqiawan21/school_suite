@@ -204,73 +204,91 @@
       </span>
     </div>
   </header>
-@elseif (request()->is('layanan/buku-tamu'))
+@elseif (request()->is('layanan/buku-tamu*'))
   <!-- ================= HEADER BUKU TAMU DIGITAL ================= -->
-  <div data-portal-identity class="bg-[#2e7d32] text-white text-xs py-1.5 px-4 sm:px-8 lg:px-12 border-b-2 border-[#1b5e20]">
-    <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-      <span class="font-bold tracking-wide flex items-center gap-2"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> STATUS TAMU HARI INI :</span>
-      <span class="font-semibold text-emerald-50 truncate">Resepsionis Digital Aktif</span>
+  <div data-portal-identity class="parity-gb-ticker">
+    <div class="parity-gb-container parity-gb-ticker-inner">
+      <span class="parity-gb-ticker-label"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> STATUS TAMU HARI INI :</span>
+      <div class="parity-gb-marquee-wrap">
+        <span class="inline-block animate-marquee-slow parity-gb-ticker-text">
+          Resepsionis Digital Aktif &nbsp; | &nbsp; Silakan Lakukan Registrasi Tamu pada Formulir Kunjungan &nbsp; | &nbsp; Data Pengunjung Bersifat Privat &amp; Terjaga Kerahasiaannya
+        </span>
+      </div>
     </div>
   </div>
-  <header data-madrasah-navigation class="sticky top-0 z-40 bg-[#006666]/60 backdrop-blur-md text-white border-b border-white/15 shadow-md">
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between gap-4">
-      <a href="/" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
-        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-11 h-11 object-contain shrink-0">
-        <div class="min-w-0">
-          <span class="block text-[10px] font-semibold uppercase tracking-widest text-teal-100/85 truncate">SISTEM BUKU TAMU DIGITAL</span>
-          <span class="block font-extrabold text-base sm:text-lg text-white leading-tight truncate">{{ strtoupper($schoolName) }}</span>
+  <header data-madrasah-navigation class="parity-gb-header">
+    <div class="parity-gb-container parity-gb-header-inner">
+      <a href="/" class="parity-gb-brand">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="parity-gb-logo">
+        <div class="parity-gb-title">
+          <span class="parity-gb-subtitle">SISTEM BUKU TAMU DIGITAL</span>
+          <span class="parity-gb-schoolname">{{ strtoupper($schoolName) }}</span>
         </div>
       </a>
-      <div class="flex items-center gap-3 shrink-0">
-        <span class="hidden sm:inline text-xs font-semibold text-teal-50">{{ now($schoolTimezone ?? 'Asia/Jakarta')->locale('id')->translatedFormat('l, j F Y') }}</span>
-        <a href="/zona-integritas" class="bg-[#2e7d32] hover:bg-[#1b5e20] text-white font-extrabold text-xs px-4 py-2 rounded-lg shadow transition">IKM</a>
+      <div class="parity-gb-right">
+        <div class="parity-gb-datetime">
+          <span class="parity-gb-date">{{ now($schoolTimezone ?? 'Asia/Jakarta')->locale('id')->translatedFormat('l, j F Y') }}</span>
+          <span data-guestbook-clock class="parity-gb-clock">{{ now($schoolTimezone ?? 'Asia/Jakarta')->format('H:i:s') }}</span>
+        </div>
+        <a href="/zona-integritas" class="parity-gb-ikm">IKM</a>
       </div>
       <span class="sr-only">
         <a href="/layanan/buku-tamu">Buku Tamu</a>
         <a href="/galeri/video">Video</a>
       </span>
     </div>
-    <div class="bg-[#003c3c]/70 border-t border-white/15 py-2 px-4 sm:px-8 lg:px-12 text-xs">
-      <div class="max-w-[1400px] mx-auto flex items-center gap-3 overflow-hidden">
-        <span class="shrink-0 inline-flex items-center gap-1.5 bg-gradient-to-r from-[#008f8f] to-[#00b3b3] text-white font-bold px-3.5 py-1 rounded-full border border-white/35 text-[11px] shadow-sm">
-          <i class="fa-solid fa-circle-info" aria-hidden="true"></i> INFORMASI
-        </span>
-        <span class="text-white font-semibold truncate">Jam Layanan {{ $schoolName }} : Senin - Kamis (07.30 - 15.00), Jumat (07.30 - 11.30). Terima kasih atas kerjasama Anda.</span>
+  </header>
+  <div class="parity-gb-info">
+    <div class="parity-gb-container parity-gb-info-inner">
+      <span class="parity-gb-info-label">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i> INFORMASI
+      </span>
+      <div class="parity-gb-marquee-wrap">
+        <span class="inline-block animate-marquee-slow parity-gb-info-text">Jam Layanan {{ $schoolName }} : Senin - Kamis (07.30 - 15.00), Jumat (07.30 - 11.30). Terima kasih atas kerjasama Anda.</span>
       </div>
     </div>
-  </header>
+  </div>
 @elseif (request()->is('layanan/lapor*'))
   <!-- ================= NAVBAR SIAP LAPOR ================= -->
-  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between gap-4">
-      <a href="/layanan/lapor" class="flex items-center gap-2.5 shrink-0">
-        <span class="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-sm">
-          <i class="fa-solid fa-shield-heart"></i>
+  <header data-madrasah-navigation class="parity-lapor-header">
+    <div class="parity-lapor-container parity-lapor-header-inner">
+      <a href="/layanan/lapor" class="parity-lapor-brand">
+        <span class="parity-lapor-brand-icon">
+          <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
         </span>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <span class="font-extrabold text-sm text-slate-900">Siap Lapor</span>
-            <span class="bg-rose-100 text-rose-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full">PORTAL RESMI</span>
+        <div class="parity-lapor-brand-text">
+          <div class="parity-lapor-brand-top">
+            <span class="parity-lapor-brand-name">Siap Lapor</span>
+            <span class="parity-lapor-brand-badge">PORTAL RESMI</span>
           </div>
-          <span class="block text-[10px] font-bold text-slate-500 uppercase">{{ strtoupper($schoolName) }}</span>
+          <span class="parity-lapor-brand-school">{{ strtoupper($schoolName) }}</span>
         </div>
       </a>
 
-      <nav class="hidden lg:flex items-center gap-6 text-xs font-semibold text-slate-600">
-        <a href="/" class="text-rose-600 font-bold">Beranda</a>
-        <a href="#kategori-kasus" class="hover:text-rose-600 transition">Kategori Kasus</a>
-        <a href="#alur-jaminan" class="hover:text-rose-600 transition">Alur &amp; Jaminan</a>
-        <a href="/lapor/transparansi" class="hover:text-rose-600 transition">Transparansi Laporan</a>
+      <nav class="parity-lapor-nav" aria-label="Navigasi Siap Lapor">
+        <a href="/layanan/lapor" class="parity-lapor-nav-link is-active">Beranda</a>
+        <a href="#kategori-kasus" class="parity-lapor-nav-link">Kategori Kasus</a>
+        <a href="#alur-jaminan" class="parity-lapor-nav-link">Alur &amp; Jaminan</a>
+        <a href="/lapor/transparansi" class="parity-lapor-nav-link">Transparansi Laporan</a>
       </nav>
 
-      <div class="hidden md:flex items-center gap-2 shrink-0">
-        <a href="/lacak?category=aduan" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">Lacak Tiket</a>
-        <a href="#form-lapor" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-sm transition">Tulis Laporan</a>
-        <a href="/satgas/aduan" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition">Petugas</a>
+      <div class="parity-lapor-cta">
+        <a href="/lacak?category=aduan" class="parity-lapor-btn-track">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <span>Lacak Tiket</span>
+        </a>
+        <a href="#form-lapor" class="parity-lapor-btn-write">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          <span>Tulis Laporan</span>
+        </a>
+        <a href="/satgas/aduan" class="parity-lapor-btn-staff" title="Login Petugas Satgas Madrasah" aria-label="Login Petugas Satgas Madrasah">
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          <span class="parity-lapor-staff-label">Petugas</span>
+        </a>
       </div>
 
-      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="lg:hidden w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-        <i class="fa-solid fa-bars"></i>
+      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="parity-lapor-mobile-toggle">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
       </button>
 
       <span class="sr-only">
@@ -278,14 +296,61 @@
         <a href="/galeri/video">Video</a>
       </span>
     </div>
-    <div class="bg-[#9f1239] text-white py-2 px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4 text-xs">
-      <div class="flex items-center gap-3 overflow-hidden">
-        <span class="bg-white text-rose-800 font-extrabold px-2.5 py-0.5 rounded-full text-[10px] shrink-0">INFO TERKINI</span>
-        <span class="truncate text-rose-50">Deklarasi Madrasah Ramah Anak &amp; Bebas Bullying: {{ $schoolName }} berkomitmen penuh melindungi pelapor.</span>
-      </div>
-      <span class="hidden sm:inline-flex items-center px-3 py-0.5 rounded-full bg-rose-950/60 border border-rose-400/30 text-[11px] font-bold shrink-0">100% Terlindungi &amp; Anonim</span>
-    </div>
   </header>
+  <div class="parity-lapor-ticker">
+    <div class="parity-lapor-container parity-lapor-ticker-inner">
+      <div class="parity-lapor-ticker-left">
+        <span class="parity-lapor-info-pill">
+          <span class="parity-lapor-pulse-dot" aria-hidden="true"></span>
+          INFO TERKINI
+        </span>
+      </div>
+      <div class="parity-lapor-ticker-wrap">
+        <div class="parity-lapor-ticker-track">
+          <span class="parity-lapor-ticker-item">
+            <span class="parity-lapor-tag parity-lapor-tag--amber"><i class="fa-solid fa-bullhorn"></i> PENGUMUMAN</span>
+            <strong class="parity-lapor-ticker-hl">Deklarasi Madrasah Ramah Anak &amp; Bebas Bullying:</strong>
+            <span>{{ $schoolName }} berkomitmen penuh memberantas segala bentuk intimidasi dan perundungan. Setiap laporan ditangani secara rahasia oleh Tim Satgas.</span>
+            <span class="parity-lapor-sep">◆</span>
+          </span>
+          <span class="parity-lapor-ticker-item">
+            <span class="parity-lapor-tag parity-lapor-tag--emerald"><i class="fa-solid fa-user-shield"></i> JAMINAN WHISTLEBLOWER</span>
+            <strong class="parity-lapor-ticker-hl">Identitas 100% Terlindungi:</strong>
+            <span>Gunakan opsi "Kirim Sebagai Anonim" agar nama dan data pribadi Anda aman terlindungi.</span>
+            <span class="parity-lapor-sep">◆</span>
+          </span>
+          <span class="parity-lapor-ticker-item">
+            <span class="parity-lapor-tag parity-lapor-tag--sky"><i class="fa-solid fa-stopwatch"></i> RESPON SATGAS</span>
+            <strong class="parity-lapor-ticker-hl">SOP Tindak Lanjut &lt; 24 Jam:</strong>
+            <span>Setiap aduan yang masuk diverifikasi maksimal 1 hari kerja untuk penanganan terukur.</span>
+            <span class="parity-lapor-sep">◆</span>
+          </span>
+          <span class="parity-lapor-ticker-item">
+            <span class="parity-lapor-tag parity-lapor-tag--purple"><i class="fa-solid fa-ticket"></i> LACAK STATUS</span>
+            <strong class="parity-lapor-ticker-hl">Pantau Progres Tiket:</strong>
+            <span>Simpan nomor tiket untuk memeriksa status perkembangan penanganan petugas secara real-time.</span>
+            <span class="parity-lapor-sep">◆</span>
+          </span>
+          <span class="parity-lapor-ticker-item" aria-hidden="true">
+            <span class="parity-lapor-tag parity-lapor-tag--amber"><i class="fa-solid fa-bullhorn"></i> PENGUMUMAN</span>
+            <strong class="parity-lapor-ticker-hl">Deklarasi Madrasah Ramah Anak &amp; Bebas Bullying:</strong>
+            <span>{{ $schoolName }} berkomitmen penuh memberantas segala bentuk intimidasi dan perundungan. Setiap laporan ditangani secara rahasia oleh Tim Satgas.</span>
+            <span class="parity-lapor-sep">◆</span>
+          </span>
+          <span class="parity-lapor-ticker-item" aria-hidden="true">
+            <span class="parity-lapor-tag parity-lapor-tag--emerald"><i class="fa-solid fa-user-shield"></i> JAMINAN WHISTLEBLOWER</span>
+            <strong class="parity-lapor-ticker-hl">Identitas 100% Terlindungi:</strong>
+            <span>Gunakan opsi "Kirim Sebagai Anonim" agar nama dan data pribadi Anda aman terlindungi.</span>
+            <span class="parity-lapor-sep">◆</span>
+          </span>
+        </div>
+      </div>
+      <div class="parity-lapor-ticker-right">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        <span>100% Terlindungi &amp; Anonim</span>
+      </div>
+    </div>
+  </div>
 @elseif (request()->is('alumni*'))
   <!-- ================= HEADER PORTAL ALUMNI (IKA) ================= -->
   <div data-portal-identity class="bg-slate-950 text-slate-200 text-xs py-2 border-b border-slate-800 hidden md:block">

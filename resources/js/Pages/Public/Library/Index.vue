@@ -65,7 +65,7 @@ const clearanceForm = useForm({
 });
 
 const applyFilter = () => {
-    router.get('/perpustakaan', {
+    router.get('/perpustakaan/portal', {
         search: search.value || undefined,
         category: category.value || undefined,
         format: format.value || undefined,

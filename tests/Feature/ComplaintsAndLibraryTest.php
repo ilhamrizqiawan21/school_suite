@@ -226,7 +226,7 @@ class ComplaintsAndLibraryTest extends TestCase
 
         // Guest sees ONLY public metadata (1), blocked 403 on members_only/staff_only
         auth()->logout();
-        $this->get('/perpustakaan')
+        $this->get('/perpustakaan/portal')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('collections', 1)
@@ -239,7 +239,7 @@ class ComplaintsAndLibraryTest extends TestCase
 
         // Logged-in student sees public + members_only (2, still NOT staff_only) & can download members_only
         $this->actingAs($this->studentUser)
-            ->get('/perpustakaan')
+            ->get('/perpustakaan/portal')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->has('collections', 2));
 

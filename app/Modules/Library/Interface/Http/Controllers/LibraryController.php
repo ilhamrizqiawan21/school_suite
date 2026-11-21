@@ -34,8 +34,8 @@ class LibraryController extends Controller
     ) {}
 
     /**
-     * Salinan tampilan statis halaman Perpustakaan MAN 4 Banjar (snapshot REA).
-     * Fitur aktif (kunjungan, usulan, bebas pustaka, katalog) tetap di `/perpustakaan`.
+     * Salinan tampilan statis halaman Perpustakaan pada `/perpustakaan`.
+     * Fitur aktif (kunjungan, usulan, bebas pustaka, katalog) tersedia di `/perpustakaan/portal`.
      */
     public function replica(): \Illuminate\Http\Response
     {
@@ -49,7 +49,7 @@ class LibraryController extends Controller
     {
         return response()->json([
             'status' => 'error',
-            'message' => 'Halaman ini hanya salinan tampilan. Gunakan portal /perpustakaan untuk layanan aktif.',
+            'message' => 'Halaman ini hanya salinan tampilan. Gunakan portal /perpustakaan/portal untuk layanan aktif.',
         ]);
     }
 

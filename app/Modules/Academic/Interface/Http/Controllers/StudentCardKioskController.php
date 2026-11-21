@@ -87,11 +87,16 @@ class StudentCardKioskController extends Controller
     {
         $schoolId = (int) $request->user()->school_id;
         $school = $this->schoolScope->getSchoolDetails($schoolId);
+        $schoolModel = $request->user()->school;
 
         return Inertia::render('Academic/Attendance/Kiosk', [
-            'school' => $school,
+            'school' => [
+                ...$school,
+                'logo_url' => $schoolModel?->logo_path ? route('branding.school', [$schoolId, 'logo']) : null,
+            ],
             'devices' => $this->kioskService->listDevices($schoolId),
             'recentScans' => $this->kioskService->listRecentScans($schoolId),
+            'stats' => $this->kioskService->todayStats($schoolId),
             'operations' => $this->schoolScope->getOperationsSettings($schoolId),
         ]);
     }
@@ -120,6 +125,7 @@ class StudentCardKioskController extends Controller
         );
 
         $statusCode = $result['status'] === 'rejected' ? 422 : 200;
+        $result['stats'] = $this->kioskService->todayStats($schoolId);
 
         return response()->json($result, $statusCode);
     }

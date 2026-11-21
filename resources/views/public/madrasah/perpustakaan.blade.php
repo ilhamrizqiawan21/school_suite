@@ -1,6 +1,6 @@
 @verbatim
 <!DOCTYPE html>
-<!-- saved from url=(0048)/perpustakaan/man4 -->
+<!-- saved from url=(0048)/perpustakaan -->
 <html lang="id" class="scroll-smooth"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -651,7 +651,7 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2.5 flex items-center justify-between gap-4">
       
       <!-- Brand Logo -->
-      <a href="/perpustakaan/man4" class="flex items-center gap-2.5 sm:gap-3 group">
+      <a href="/perpustakaan" class="flex items-center gap-2.5 sm:gap-3 group">
                   <img src="/madrasah-theme/perpustakaan/logo239.png" alt="Logo MADRASAH ALIYAH NEGERI 4 BANJAR" class="w-9 h-9 sm:w-10 sm:h-10 object-contain group-hover:scale-105 transition-transform">
                 <div class="flex flex-col justify-center">
           <div class="flex items-center gap-2">
@@ -708,24 +708,24 @@
       <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-1.5 flex items-center justify-between">
         
         <nav class="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] font-semibold text-slate-700">
-          <a href="/perpustakaan/man4" class="text-kemenag-700 hover:text-kemenag-800 transition py-1 flex items-center gap-1.5 font-bold">
+          <a href="/perpustakaan" class="text-kemenag-700 hover:text-kemenag-800 transition py-1 flex items-center gap-1.5 font-bold">
             <i class="fa-solid fa-house text-xs text-kemenag-600"></i> Beranda Perpus
           </a>
 
-          <a href="/perpustakaan/man4" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
+          <a href="/perpustakaan" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
             <i class="fa-solid fa-book-open text-xs text-slate-400"></i> Semua Katalog (OPAC)
           </a>
 
-          <a href="/perpustakaan/man4?ebook=1" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1.5 text-amber-700 font-bold">
+          <a href="/perpustakaan?ebook=1" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1.5 text-amber-700 font-bold">
             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
             <i class="fa-solid fa-file-pdf text-xs text-amber-600"></i> E-Book Digital
           </a>
 
-          <a href="/perpustakaan/man4?q=Kurikulum+Merdeka" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
+          <a href="/perpustakaan?q=Kurikulum+Merdeka" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
             <i class="fa-solid fa-graduation-cap text-xs text-slate-400"></i> Kurikulum Merdeka
           </a>
 
-          <a href="/perpustakaan/man4?q=Agama" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
+          <a href="/perpustakaan?q=Agama" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
             <i class="fa-solid fa-moon text-xs text-slate-400"></i> Referensi Islam
           </a>
 
@@ -753,7 +753,7 @@
             </div>
           </div>
 
-          <a href="/perpustakaan/man4#tata-tertib" class="hover:text-kemenag-700 transition py-1">Tata Tertib</a>
+          <a href="/perpustakaan#tata-tertib" class="hover:text-kemenag-700 transition py-1">Tata Tertib</a>
           <a href="/" class="hover:text-kemenag-700 transition py-1 text-slate-500"><i class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1"></i> Portal Madrasah</a>
         </nav>
 
@@ -789,7 +789,7 @@
         </div>
 
         <nav class="mt-6 flex flex-col space-y-2.5 font-semibold text-slate-700 text-sm">
-          <a href="/perpustakaan/man4" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700">Beranda Perpus</a>
+          <a href="/perpustakaan" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700">Beranda Perpus</a>
           
           <div class="grid grid-cols-2 gap-2 my-1">
             <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalLoginSiswa').modal('show');" class="p-2.5 bg-amber-50 hover:bg-orange-100 rounded-xl text-orange-900 font-bold flex items-center justify-center gap-1.5 text-xs border border-orange-200">
@@ -803,7 +803,7 @@
           <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalBukuTamu').modal('show');" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
             <i class="fa-solid fa-qrcode text-kemenag-600"></i> Presensi Buku Tamu (QR)
           </a>
-          <a href="/perpustakaan/man4?ebook=1" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
+          <a href="/perpustakaan?ebook=1" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
             <i class="fa-solid fa-file-pdf text-amber-600"></i> Koleksi E-Book Digital
           </a>
           <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalCekBebas').modal('show');" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
@@ -822,7 +822,7 @@
       </div>
 
       <div class="pt-6 border-t border-slate-100">
-        <a href="/perpustakaan/man4?ebook=1" onclick="toggleMobileMenu()" class="w-full bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl shadow-md text-center block">
+        <a href="/perpustakaan?ebook=1" onclick="toggleMobileMenu()" class="w-full bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl shadow-md text-center block">
           <i class="fa-solid fa-book-open mr-1"></i> Buka E-Book Reader Digital
         </a>
       </div>
@@ -854,7 +854,7 @@
         </p>
 
         <!-- FLOATING SEARCH HUB & FILTER -->
-        <form method="GET" action="/perpustakaan/man4" class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/20 text-slate-800">
+        <form method="GET" action="/perpustakaan" class="bg-white/95 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-white/20 text-slate-800">
           <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
             <div class="sm:col-span-6 flex items-center px-3 gap-2">
               <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
@@ -877,14 +877,14 @@
         <!-- Quick Tags -->
         <div class="flex flex-wrap items-center gap-2 pt-1 text-xs">
           <span class="text-emerald-200 font-medium">Topik Cepat:</span>
-          <a href="/perpustakaan/man4?q=Kurikulum+Merdeka" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#KurikulumMerdeka</a>
-          <a href="/perpustakaan/man4?q=Agama" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#PendidikanAgama</a>
-          <a href="/perpustakaan/man4?ebook=1" class="bg-accent-gold/20 hover:bg-accent-gold/30 border border-amber-400/40 text-accent-yellow px-2.5 py-1 rounded-lg transition font-bold">#E-BookDigital</a>
-          <a href="/perpustakaan/man4?q=Sains" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#SainsTeknologi</a>
+          <a href="/perpustakaan?q=Kurikulum+Merdeka" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#KurikulumMerdeka</a>
+          <a href="/perpustakaan?q=Agama" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#PendidikanAgama</a>
+          <a href="/perpustakaan?ebook=1" class="bg-accent-gold/20 hover:bg-accent-gold/30 border border-amber-400/40 text-accent-yellow px-2.5 py-1 rounded-lg transition font-bold">#E-BookDigital</a>
+          <a href="/perpustakaan?q=Sains" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#SainsTeknologi</a>
         </div>
 
         <div class="pt-2 flex flex-wrap items-center gap-3">
-          <a href="/perpustakaan/man4?ebook=1" class="bg-accent-gold hover:bg-amber-400 text-slate-900 font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
+          <a href="/perpustakaan?ebook=1" class="bg-accent-gold hover:bg-amber-400 text-slate-900 font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
             <i class="fa-solid fa-file-pdf"></i>
             <span>Buka E-Book Reader</span>
           </a>
@@ -1154,14 +1154,14 @@
             Jelajahi Kategori Koleksi
           </h2>
         </div>
-        <a href="/perpustakaan/man4" class="text-xs font-bold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1">
+        <a href="/perpustakaan" class="text-xs font-bold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1">
           <span>Semua Kategori</span>
           <i class="fa-solid fa-chevron-right text-[10px]"></i>
         </a>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                <a href="/perpustakaan/man4?kat=1" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="/perpustakaan?kat=1" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-slate-50 text-slate-700 border-slate-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-folder-open"></i>
           </div>
@@ -1169,7 +1169,7 @@
             AGAMA          </h4>
           <span class="text-[11px] text-slate-500 font-medium mt-0.5">9 Judul</span>
         </a>
-                <a href="/perpustakaan/man4?kat=4" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="/perpustakaan?kat=4" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-orange-50 text-orange-700 border-orange-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-pen-nib"></i>
           </div>
@@ -1177,7 +1177,7 @@
             Fiksi &amp; Sastra          </h4>
           <span class="text-[11px] text-slate-500 font-medium mt-0.5">6 Judul</span>
         </a>
-                <a href="/perpustakaan/man4?kat=2" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="/perpustakaan?kat=2" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-blue-50 text-blue-700 border-blue-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-graduation-cap"></i>
           </div>
@@ -1185,7 +1185,7 @@
             Buku Pelajaran Umum          </h4>
           <span class="text-[11px] text-slate-500 font-medium mt-0.5">6 Judul</span>
         </a>
-                <a href="/perpustakaan/man4?kat=5" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="/perpustakaan?kat=5" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-teal-50 text-teal-700 border-teal-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-laptop-code"></i>
           </div>
@@ -1193,7 +1193,7 @@
             Teknologi &amp; Komputer          </h4>
           <span class="text-[11px] text-slate-500 font-medium mt-0.5">4 Judul</span>
         </a>
-                <a href="/perpustakaan/man4?kat=6" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="/perpustakaan?kat=6" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-rose-50 text-rose-700 border-rose-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-newspaper"></i>
           </div>
@@ -1201,7 +1201,7 @@
             Karya Tulis &amp; Majalah          </h4>
           <span class="text-[11px] text-slate-500 font-medium mt-0.5">3 Judul</span>
         </a>
-                <a href="/perpustakaan/man4?kat=3" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="/perpustakaan?kat=3" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-purple-50 text-purple-700 border-purple-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-book"></i>
           </div>
@@ -2336,7 +2336,7 @@
             <button type="button" onclick="$('#modalBukuTamu').modal('show')" class="px-5 py-2.5 rounded-xl bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold text-xs transition flex items-center gap-2 shadow-sm">
               <i class="fa-solid fa-qrcode text-accent-yellow"></i> Presensi Tamu Hari Ini
             </button>
-            <a href="/perpustakaan/man4?ebook=1" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-2 border border-slate-200">
+            <a href="/perpustakaan?ebook=1" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-2 border border-slate-200">
               <i class="fa-solid fa-book-open"></i> Jelajah Modul Digital
             </a>
           </div>
@@ -2355,7 +2355,7 @@
         <p class="text-xs text-emerald-200">Perpustakaan Digital Terakreditasi MAN 4 Banjar siap mendampingi perjalanan akademik Anda.</p>
       </div>
       <div class="shrink-0 flex items-center gap-3">
-        <a href="/perpustakaan/man4?ebook=1" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-xs sm:text-sm flex items-center gap-2">
+        <a href="/perpustakaan?ebook=1" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-xs sm:text-sm flex items-center gap-2">
           <i class="fa-solid fa-book"></i> Baca E-Book Hari Ini
         </a>
       </div>
@@ -2398,8 +2398,8 @@
       <div class="lg:col-span-3 space-y-3">
         <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">Layanan Pustaka</h4>
         <ul class="space-y-2">
-          <li><a href="/perpustakaan/man4" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Katalog Buku (OPAC)</a></li>
-          <li><a href="/perpustakaan/man4?ebook=1" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Koleksi E-Book Digital</a></li>
+          <li><a href="/perpustakaan" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Katalog Buku (OPAC)</a></li>
+          <li><a href="/perpustakaan?ebook=1" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Koleksi E-Book Digital</a></li>
           <li><a href="javascript:void(0)" onclick="$('#modalBukuTamu').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Presensi Tamu (Scan QR)</a></li>
           <li><a href="javascript:void(0)" onclick="$('#modalCekBebas').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Cek Bebas Pustaka Online</a></li>
           <li><a href="javascript:void(0)" onclick="$('#modalUsulanBuku').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Usulan Pengadaan Buku</a></li>
@@ -2468,10 +2468,10 @@
       <div class="pt-3 text-xs text-slate-500 space-y-1">
         <span class="block font-bold text-slate-700">Pintasan Cepat:</span>
         <div class="flex flex-wrap gap-1.5 pt-1">
-          <a href="/perpustakaan/man4" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Semua Katalog</a>
-          <a href="/perpustakaan/man4?ebook=1" class="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold">E-Book Digital</a>
-          <a href="/perpustakaan/man4?q=Kurikulum+Merdeka" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Kurikulum Merdeka</a>
-          <a href="/perpustakaan/man4?q=Agama" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Pendidikan Agama</a>
+          <a href="/perpustakaan" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Semua Katalog</a>
+          <a href="/perpustakaan?ebook=1" class="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold">E-Book Digital</a>
+          <a href="/perpustakaan?q=Kurikulum+Merdeka" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Kurikulum Merdeka</a>
+          <a href="/perpustakaan?q=Agama" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Pendidikan Agama</a>
           <a href="javascript:void(0)" onclick="closeSearchModal(); $('#modalBukuTamu').modal('show');" class="px-2 py-1 rounded bg-emerald-50 text-kemenag-800 font-bold">Buku Tamu QR</a>
         </div>
       </div>
@@ -3603,7 +3603,7 @@
 
     <!-- SCRIPTS -->
     <script src="/madrasah-theme/perpustakaan/jquery-3.3.1.min.js"></script>
-<script>$.ajaxPrefilter(function(o){if(String(o.url).indexOf('/perpustakaan/man4/aksi')===0){o.type='GET';o.data='';}});</script>
+<script>$.ajaxPrefilter(function(o){if(String(o.url).indexOf('/perpustakaan/aksi')===0){o.type='GET';o.data='';}});</script>
     <script src="/madrasah-theme/perpustakaan/popper.min.js"></script>
     <script src="/madrasah-theme/perpustakaan/bootstrap.min.js"></script>
     <script src="/madrasah-theme/perpustakaan/iziToast.min.js"></script>
@@ -4161,7 +4161,7 @@
     }
 
     function lihatDetailBuku(idBuku) {
-        $.getJSON('/perpustakaan/man4/aksi?pg=detail_buku&id=' + idBuku, function(res) {
+        $.getJSON('/perpustakaan/aksi?pg=detail_buku&id=' + idBuku, function(res) {
             if (res.status === 'success') {
                 currentDetailBook = res;
 
@@ -4295,7 +4295,7 @@
         $('#btn-submit-usulan').prop('disabled', true);
         $.ajax({
             type: 'POST',
-            url: '/perpustakaan/man4/aksi?pg=usulkan_buku',
+            url: '/perpustakaan/aksi?pg=usulkan_buku',
             data: $(this).serialize(),
             dataType: 'json',
             success: function(res) {
@@ -4458,7 +4458,7 @@
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=buku_tamu',
+            url: '/perpustakaan/aksi?pg=buku_tamu',
             type: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -4484,7 +4484,7 @@
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=buku_tamu',
+            url: '/perpustakaan/aksi?pg=buku_tamu',
             type: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -4510,7 +4510,7 @@
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Menyimpan...');
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=buku_tamu',
+            url: '/perpustakaan/aksi?pg=buku_tamu',
             type: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -4607,7 +4607,7 @@
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Masuk...');
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=login_siswa',
+            url: '/perpustakaan/aksi?pg=login_siswa',
             type: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -4652,7 +4652,7 @@
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Memproses...');
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=booking_pinjam',
+            url: '/perpustakaan/aksi?pg=booking_pinjam',
             type: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -4692,7 +4692,7 @@
         $result.slideUp();
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=cek_bebas_pustaka',
+            url: '/perpustakaan/aksi?pg=cek_bebas_pustaka',
             type: 'POST',
             data: $(this).serialize(),
             dataType: 'json',
@@ -4745,7 +4745,7 @@
     // 7. LOGOUT SISWA
     function logoutSiswa() {
         sessionStorage.removeItem('perpus_guestbook_verified');
-        $.getJSON('/perpustakaan/man4/aksi?pg=logout_siswa', function(res) {
+        $.getJSON('/perpustakaan/aksi?pg=logout_siswa', function(res) {
             iziToast.info({ title: 'Keluar', message: res.message, position: 'topRight' });
             setTimeout(function() {
                 location.reload();
@@ -4769,7 +4769,7 @@
         $('#stat-content').hide();
 
         $.ajax({
-            url: '/perpustakaan/man4/aksi?pg=statistik_kunjungan',
+            url: '/perpustakaan/aksi?pg=statistik_kunjungan',
             type: 'GET',
             dataType: 'json',
             success: function(res) {
@@ -5143,7 +5143,7 @@
         }
 
         function fetchLiveTraffic() {
-            fetch('/perpustakaan/man4/aksi?pg=traffic&t=' + Date.now())
+            fetch('/perpustakaan/aksi?pg=traffic&t=' + Date.now())
                 .then(function(res) {
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     return res.json();

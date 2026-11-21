@@ -20,6 +20,33 @@
       </div>
     </div>
   </footer>
+@elseif (request()->is('layanan/buku-tamu*'))
+  {{-- Halaman Buku Tamu Digital menggunakan tampilan penuh tanpa footer sesuai desain acuan --}}
+@elseif (request()->is('layanan/lapor*'))
+  <footer class="parity-lapor-footer">
+    <div class="parity-lapor-container">
+      <div class="parity-lapor-footer-top">
+        <div class="parity-lapor-footer-brand">
+          <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="parity-lapor-footer-logo">
+          <div>
+            <div class="parity-lapor-footer-title">Siap Lapor — {{ strtoupper($schoolName) }}</div>
+            <p class="parity-lapor-footer-sub">Sistem Pengelolaan Aspirasi &amp; Pengaduan Pelayanan Publik Terpadu</p>
+          </div>
+        </div>
+        <div class="parity-lapor-footer-links">
+          <a href="/">Website Madrasah</a>
+          <span>•</span>
+          <a href="/layanan/ptsp">Layanan PTSP</a>
+          <span>•</span>
+          <a href="/satgas/aduan">Login Satgas</a>
+        </div>
+      </div>
+      <div class="parity-lapor-footer-bottom">
+        <p>© 2026 {{ strtoupper($schoolName) }}. Hak Cipta Dilindungi Undang-Undang.</p>
+        <p>Portal Pengaduan &amp; Aspirasi Digital Terpadu.</p>
+      </div>
+    </div>
+  </footer>
 @elseif (request()->is('layanan/ptsp'))
   <footer class="bg-kemenag-950 text-emerald-100 pt-6 pb-6 border-t border-kemenag-800 mt-auto">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 text-center text-xs space-y-2">

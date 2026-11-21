@@ -58,6 +58,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
         @if ($usesMadrasahShell)
             @include('public.madrasah.assets')
+        @elseif (($page['component'] ?? '') === 'Academic/Attendance/Kiosk')
+            <link rel="stylesheet" href="{{ asset('madrasah-theme/fonts.css') }}">
         @endif
         @inertiaHead
     </head>

@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Route;
 
 // Portal & Katalog Perpustakaan Publik / Anggota (M4-SERV-03, M4-SERV-04)
 Route::prefix('perpustakaan')->name('library.')->group(function (): void {
-    Route::get('/', [LibraryController::class, 'publicIndex'])->name('index');
-    Route::get('/man4', [LibraryController::class, 'replica'])->name('replica');
-    Route::get('/man4/aksi', [LibraryController::class, 'replicaAction'])->middleware('throttle:sensitive')->name('replica.action');
+    Route::get('/', [LibraryController::class, 'replica'])->name('index');
+    Route::get('/aksi', [LibraryController::class, 'replicaAction'])->middleware('throttle:sensitive')->name('replica.action');
+    Route::get('/portal', [LibraryController::class, 'publicIndex'])->name('portal');
+    Route::redirect('/man4', '/perpustakaan', 301)->name('replica');
+    Route::get('/man4/aksi', [LibraryController::class, 'replicaAction'])->middleware('throttle:sensitive')->name('replica.legacy_action');
     Route::get('/koleksi/{collection}/unduh', [LibraryController::class, 'downloadEbook'])->whereNumber('collection')->name('collections.download');
     Route::post('/kunjungan', [LibraryController::class, 'recordVisit'])->middleware('throttle:sensitive')->name('visits.store');
 
