@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -42,16 +44,20 @@ const filteredEvents = computed(() => {
 });
 watch(() => form.action, (action) => { if (!['promoted', 'retained'].includes(action)) { form.target_term_id = ''; form.target_class_group_id = ''; } });
 watch(() => form.target_term_id, () => { if (!targetClasses.value.some((item) => String(item.id) === String(form.target_class_group_id))) form.target_class_group_id = ''; });
-const submit = () => {
-    if (['graduated', 'withdrawn'].includes(form.action) && !window.confirm(`Konfirmasi keputusan “${actionLabels[form.action]}” untuk siswa ini? Status siswa akan diperbarui.`)) return;
+const submit = async () => {
+    if (['graduated', 'withdrawn'].includes(form.action) && !await requestConfirmation(`Konfirmasi keputusan “${actionLabels[form.action]}” untuk siswa ini? Status siswa akan diperbarui.`)) return;
     form.post('/akademik/siklus-siswa', { preserveScroll: true, onSuccess: () => form.reset('enrollment_id', 'target_term_id', 'target_class_group_id', 'notes') });
 };
 const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+const showLifecycleEditor = ref(false);
+const requestLifecycleEditorClose = useConfirmedDialogClose(form, () => { showLifecycleEditor.value = false; form.reset(); form.clearErrors(); });
+watch(() => form.wasSuccessful, (success) => { if (success) form.defaults(); });
 </script>
 
 <template>
     <AppLayout title="Siklus Siswa">
-        <Head title="Siklus Siswa — School Suite" />
+        <Head title="Siklus Siswa" />
         <div class="lifecycle-page space-y-6">
             <div v-if="message" class="lifecycle-success" role="status">{{ message }}</div>
             <section class="lifecycle-hero panel">
@@ -66,8 +72,10 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
             </section>
 
             <section v-if="can_manage" class="lifecycle-workspace">
-                <form class="lifecycle-form panel" @submit.prevent="submit">
-                    <div class="lifecycle-section-heading"><div><p class="lifecycle-kicker">Langkah 01</p><h2>Proses keputusan siswa</h2><p>Pilih siswa aktif lalu tentukan keputusan akademiknya.</p></div><span class="lifecycle-form-status">{{ form.processing ? 'Menyimpan…' : 'Siap diproses' }}</span></div>
+                <AppButton variant="primary" type="button" @click="showLifecycleEditor = true">Perbarui status akademik siswa</AppButton>
+<Teleport to="body"><div v-if="showLifecycleEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Perbarui status akademik siswa" @click.self="requestLifecycleEditorClose" @keydown.esc.stop.prevent="requestLifecycleEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Perbarui status akademik siswa</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup perbarui status akademik siswa" title="Tutup formulir" :disabled="form.processing" @click="requestLifecycleEditorClose" /></header>
+<form class="lifecycle-form panel" @submit.prevent="submit">
+                    <div class="lifecycle-section-heading"><div><p class="lifecycle-kicker">Langkah 01</p><p>Pilih siswa aktif lalu tentukan keputusan akademiknya.</p></div><span class="lifecycle-form-status">{{ form.processing ? 'Menyimpan…' : 'Siap diproses' }}</span></div>
                     <div class="lifecycle-fields">
                         <label class="lifecycle-field lifecycle-field-wide"><span>Siswa aktif <b>*</b></span><select v-model="form.enrollment_id" required><option value="">{{ enrollments.length ? 'Pilih siswa dan rombel saat ini' : 'Tidak ada siswa aktif pada periode ini' }}</option><option v-for="enrollment in enrollments" :key="enrollment.id" :value="String(enrollment.id)">{{ enrollment.student?.nis }} — {{ enrollment.student?.name }} · {{ enrollment.class_group?.name ?? 'Tanpa rombel' }}</option></select><small v-if="form.errors.enrollment_id" class="lifecycle-error">{{ form.errors.enrollment_id }}</small></label>
                         <div v-if="!enrollments.length" class="lifecycle-empty-guidance lifecycle-field-wide" role="status">Belum ada enrollment aktif pada periode ini. Tambahkan enrollment siswa terlebih dahulu di menu Data Siswa sebelum memproses siklus.</div>
@@ -82,6 +90,7 @@ const formatDate = (value: string) => new Date(value).toLocaleDateString('id-ID'
                     </div>
                     <div class="lifecycle-form-footer"><p v-if="form.errors.action" class="lifecycle-error">{{ form.errors.action }}</p><p v-else class="lifecycle-action-hint">{{ currentActionDescription }}</p><AppButton variant="primary" type="submit" class="primary-button lifecycle-submit !text-white" :disabled="form.processing || !activeTerm || !enrollments.length"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg></template>Proses keputusan</AppButton></div>
                 </form>
+</div></div></Teleport>
 
                 <aside class="lifecycle-guide panel"><div class="lifecycle-section-heading"><div><p class="lifecycle-kicker">Panduan</p><h2>Bagaimana proses ini bekerja?</h2></div></div><div class="lifecycle-guide-list"><article><span class="lifecycle-guide-number">01</span><div><strong>Naik / tinggal kelas</strong><p>Enrollment baru dibuat pada periode dan kelas tujuan. Histori lama tetap tersimpan.</p></div></article><article><span class="lifecycle-guide-number">02</span><div><strong>Lulus / keluar</strong><p>Enrollment aktif ditutup dan status siswa diperbarui otomatis.</p></div></article><article><span class="lifecycle-guide-number">03</span><div><strong>Audit tercatat</strong><p>Setiap keputusan masuk ke audit log dan riwayat siklus sekolah.</p></div></article></div><div class="lifecycle-warning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 4.7 2.8 18a2 2 0 001.75 3h14.9a2 2 0 001.75-3L13.7 4.7a2 2 0 00-3.4 0z" /></svg><span>Pastikan keputusan dan tanggal efektif sudah benar sebelum disimpan.</span></div></aside>
             </section>

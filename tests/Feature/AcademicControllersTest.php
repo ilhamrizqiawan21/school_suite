@@ -13,6 +13,7 @@ use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
+use App\Shared\Navigation\SidebarNavigationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -319,6 +320,12 @@ class AcademicControllersTest extends TestCase
         $this->assertTrue($operator->fresh()->hasRole('teacher'));
         $this->actingAs($operator)->get('/pembelajaran')->assertOk();
         $this->assertDatabaseHas('teachers', ['id' => $teacher->id, 'user_id' => $operator->id]);
+
+        $teacher->update(['is_active' => false]);
+        $this->assertTrue($operator->fresh()->hasRole('operator'));
+        $this->assertFalse($operator->fresh()->hasRole('teacher'));
+        $this->actingAs($operator->fresh())->get('/pembelajaran')->assertForbidden();
+        $this->assertNotContains('learning', app(SidebarNavigationService::class)->visibleKeys($operator->fresh()));
     }
 
     public function test_admin_can_manage_classes_and_assign_homeroom(): void

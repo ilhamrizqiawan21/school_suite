@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { router } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
@@ -17,6 +19,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const submitSearch = () => {
     router.get('/direktori-gtk', { q: search.value || undefined }, { preserveState: true, replace: true });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -25,15 +28,15 @@ const submitSearch = () => {
         <PublicHeader :school="school" active="profile" />
         <section class="portal-container">
             <header class="madrasah-profile-hero portal-hero">
-                <p class="eyebrow">Direktori Guru &amp; Tenaga Kependidikan</p>
-                <h1>Direktori GTK {{ school.name }}</h1>
-                <p>Daftar pendidik dan tenaga kependidikan aktif. Hanya menampilkan atribut publik yang disetujui.</p>
+                <p class="eyebrow">{{ publicText("copy.vue_directory_teachers", "text_001", "Direktori Guru & Tenaga Kependidikan") }}</p>
+                <h1>{{ publicText("copy.vue_directory_teachers", "text_9001", "Direktori GTK") }} {{ school.name }}</h1>
+                <p>{{ publicText("copy.vue_directory_teachers", "text_002", "Daftar pendidik dan tenaga kependidikan aktif. Hanya menampilkan atribut publik yang disetujui.") }}</p>
             </header>
 
             <form class="portal-search-form" @submit.prevent="submitSearch">
-                <label class="sr-only" for="gtk-search">Cari nama GTK</label>
-                <input id="gtk-search" v-model="search" type="search" class="portal-search-input" placeholder="Cari nama guru atau tenaga kependidikan..." />
-                <button type="submit" class="ui-button ui-button--primary ui-button--md">Cari</button>
+                <label class="sr-only" for="gtk-search">{{ publicText("copy.vue_directory_teachers", "text_003", "Cari nama GTK") }}</label>
+                <input id="gtk-search" v-model="search" type="search" class="portal-search-input" :placeholder="publicText('copy.vue_directory_teachers', 'placeholder_006', 'Cari nama guru atau tenaga kependidikan...')" />
+                <button type="submit" class="ui-button ui-button--primary ui-button--md">{{ publicText("copy.vue_directory_teachers", "text_004", "Cari") }}</button>
             </form>
 
             <div v-if="teachers.length" class="gtk-grid">
@@ -41,12 +44,12 @@ const submitSearch = () => {
                     <span class="gtk-avatar" aria-hidden="true">{{ teacher.name.charAt(0).toUpperCase() }}</span>
                     <div>
                         <strong>{{ teacher.name }}</strong>
-                        <small>Pendidik / Tenaga Kependidikan Aktif</small>
+                        <small>{{ publicText("copy.vue_directory_teachers", "text_005", "Pendidik / Tenaga Kependidikan Aktif") }}</small>
                     </div>
                 </article>
             </div>
 
-            <StateFeedback v-else state="empty" title="Data GTK belum ditemukan" description="Coba ubah kata kunci pencarian Anda." />
+            <StateFeedback v-else state="empty" :title="publicText('copy.vue_directory_teachers', 'title_007', 'Data GTK belum ditemukan')" :description="publicText('copy.vue_directory_teachers', 'description_008', 'Coba ubah kata kunci pencarian Anda.')" />
         </section>
     </main>
 </template>

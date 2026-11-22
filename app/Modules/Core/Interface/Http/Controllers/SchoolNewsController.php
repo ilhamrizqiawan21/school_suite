@@ -11,9 +11,11 @@ use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use App\Modules\Core\Infrastructure\Models\SchoolNewsPhoto;
 use App\Shared\Audit\AuditLogger;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -47,88 +49,100 @@ class SchoolNewsController extends Controller
         return Inertia::render('Core/News/Index', [
             'news' => $news,
             'can_manage' => true,
+            'schoolTimezone' => $request->user()->school?->timezone ?: config('app.timezone'),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $this->authorizeManager($request);
-        $validated = $this->validated($request);
-        $status = $validated['status'];
+        return DB::transaction(function () use ($request): RedirectResponse {
+            $this->authorizeManager($request);
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $validated = $this->validated($request);
+            $status = $validated['status'];
 
-        $photos = $validated['photos'] ?? [];
-        $captions = $validated['photo_captions'] ?? [];
-        $isArchived = (bool) ($validated['is_archived'] ?? false);
-        unset($validated['status'], $validated['photos'], $validated['photo_captions']);
-        $news = SchoolNews::create([
-            ...$validated,
-            'school_id' => $request->user()->school_id,
-            'author_id' => $request->user()->id,
-            'slug' => $this->uniqueSlug((string) $validated['title'], (int) $request->user()->school_id),
-            'status' => $status,
-            'is_archived' => $isArchived,
-            'published_at' => $status === 'published' ? ($validated['published_at'] ?? now()) : null,
-        ]);
-        $this->storePhotos($photos, $news, $captions);
+            $photos = $validated['photos'] ?? [];
+            $captions = $validated['photo_captions'] ?? [];
+            $isArchived = (bool) ($validated['is_archived'] ?? false);
+            unset($validated['status'], $validated['photos'], $validated['photo_captions']);
+            $news = SchoolNews::create([
+                ...$validated,
+                'school_id' => $request->user()->school_id,
+                'author_id' => $request->user()->id,
+                'slug' => $this->uniqueSlug((string) $validated['title'], (int) $request->user()->school_id),
+                'status' => $status,
+                'is_archived' => $isArchived,
+                'published_at' => $status === 'published' ? ($validated['published_at'] ?? now()) : null,
+            ]);
+            $this->storePhotos($photos, $news, $captions);
 
-        $this->auditLogger->log('core.school_news.created', 'SchoolNews', (string) $news->id, [
-            'title' => $news->title,
-            'status' => $news->status,
-        ], actor: $request->user(), schoolId: (int) $news->school_id);
+            $this->auditLogger->log('core.school_news.created', 'SchoolNews', (string) $news->id, [
+                'title' => $news->title,
+                'status' => $news->status,
+            ], actor: $request->user(), schoolId: (int) $news->school_id);
 
-        return redirect()->route('core.news.index')->with('message', 'Berita sekolah berhasil disimpan.');
+            return redirect()->route('core.news.index')->with('message', 'Berita sekolah berhasil disimpan.');
+
+        });
     }
 
     public function update(Request $request, int $news): RedirectResponse
     {
-        $this->authorizeManager($request);
-        $item = SchoolNews::query()
-            ->where('school_id', $request->user()->school_id)
-            ->findOrFail($news);
-        $validated = $this->validated($request);
-        $status = $validated['status'];
-        $oldValues = $item->only(['title', 'excerpt', 'body', 'status', 'published_at']);
+        return DB::transaction(function () use ($request, $news): RedirectResponse {
+            $this->authorizeManager($request);
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $item = SchoolNews::query()
+                ->where('school_id', $request->user()->school_id)
+                ->findOrFail($news);
+            $validated = $this->validated($request);
+            $status = $validated['status'];
+            $oldValues = $item->only(['title', 'excerpt', 'body', 'status', 'published_at']);
 
-        $photos = $validated['photos'] ?? [];
-        $captions = $validated['photo_captions'] ?? [];
-        $isArchived = array_key_exists('is_archived', $validated)
-            ? (bool) $validated['is_archived']
-            : (bool) $item->is_archived;
-        unset($validated['status'], $validated['photos'], $validated['photo_captions']);
-        if ($item->photos()->count() + count($photos) > 5) {
-            throw ValidationException::withMessages(['photos' => 'Maksimal 5 foto per berita. Hapus foto lama terlebih dahulu.']);
-        }
-        $item->update([
-            ...$validated,
-            'status' => $status,
-            'is_archived' => $isArchived,
-            'published_at' => $status === 'published' ? ($validated['published_at'] ?? $item->published_at ?? now()) : null,
-        ]);
-        $this->storePhotos($photos, $item, $captions);
+            $photos = $validated['photos'] ?? [];
+            $captions = $validated['photo_captions'] ?? [];
+            $isArchived = array_key_exists('is_archived', $validated)
+                ? (bool) $validated['is_archived']
+                : (bool) $item->is_archived;
+            unset($validated['status'], $validated['photos'], $validated['photo_captions']);
+            if ($item->photos()->count() + count($photos) > 5) {
+                throw ValidationException::withMessages(['photos' => 'Maksimal 5 foto per berita. Hapus foto lama terlebih dahulu.']);
+            }
+            if (($item->status === 'published' && $status !== 'published') || $isArchived) {
+                $item->load('photos');
+                $this->assertNewsPhotosNotReferenced($item, false);
+            }
+            $item->update([
+                ...$validated,
+                'status' => $status,
+                'is_archived' => $isArchived,
+                'published_at' => $status === 'published' ? ($validated['published_at'] ?? $item->published_at ?? now()) : null,
+            ]);
+            $this->storePhotos($photos, $item, $captions);
 
-        $this->auditLogger->log('core.school_news.updated', 'SchoolNews', (string) $item->id, [
-            'title' => $item->title,
-            'status' => $item->status,
-        ], oldValues: $oldValues, actor: $request->user(), schoolId: (int) $item->school_id);
+            $this->auditLogger->log('core.school_news.updated', 'SchoolNews', (string) $item->id, [
+                'title' => $item->title,
+                'status' => $item->status,
+            ], oldValues: $oldValues, actor: $request->user(), schoolId: (int) $item->school_id);
 
-        return redirect()->route('core.news.index')->with('message', 'Berita sekolah berhasil diperbarui.');
+            return redirect()->route('core.news.index')->with('message', 'Berita sekolah berhasil diperbarui.');
+
+        });
     }
 
     public function destroy(Request $request, int $news): RedirectResponse
     {
         $this->authorizeManager($request);
-        $item = SchoolNews::query()
-            ->where('school_id', $request->user()->school_id)
-            ->findOrFail($news);
-        $item->load('photos');
-        foreach ($item->photos as $photo) {
-            Storage::disk('local')->delete($photo->path);
-        }
-        $item->delete();
-
-        $this->auditLogger->log('core.school_news.deleted', 'SchoolNews', (string) $news, [
-            'title' => $item->title,
-        ], actor: $request->user(), schoolId: (int) $request->user()->school_id);
+        DB::transaction(function () use ($request, $news): void {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $item = SchoolNews::query()->with('photos')->where('school_id', $request->user()->school_id)->lockForUpdate()->findOrFail($news);
+            $this->assertNewsPhotosNotReferenced($item);
+            $paths = $item->photos->pluck('path')->all();
+            $this->auditLogger->log('core.school_news.deleted', 'SchoolNews', (string) $news, [
+                'title' => $item->title,
+            ], actor: $request->user(), schoolId: (int) $item->school_id);
+            $item->delete();
+            DB::afterCommit(static fn () => Storage::disk('local')->delete($paths));
+        });
 
         return redirect()->route('core.news.index')->with('message', 'Berita sekolah berhasil dihapus.');
     }
@@ -136,14 +150,19 @@ class SchoolNewsController extends Controller
     public function destroyPhoto(Request $request, int $news, int $photo): RedirectResponse
     {
         $this->authorizeManager($request);
-        $item = SchoolNews::query()->where('school_id', $request->user()->school_id)->findOrFail($news);
-        $image = $item->photos()->findOrFail($photo);
-        Storage::disk('local')->delete($image->path);
-        $image->delete();
-
-        $this->auditLogger->log('core.school_news.photo_deleted', 'SchoolNewsPhoto', (string) $photo, [
-            'news_id' => $item->id,
-        ], actor: $request->user(), schoolId: (int) $item->school_id);
+        DB::transaction(function () use ($request, $news, $photo): void {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $item = SchoolNews::query()->with('photos')->where('school_id', $request->user()->school_id)->lockForUpdate()->findOrFail($news);
+            $image = $item->photos->firstWhere('id', $photo);
+            abort_unless($image !== null, 404);
+            $this->assertNewsPhotosNotReferenced($item, true, $photo);
+            $path = $image->path;
+            $image->delete();
+            $this->auditLogger->log('core.school_news.photo_deleted', 'SchoolNewsPhoto', (string) $photo, [
+                'news_id' => $item->id,
+            ], actor: $request->user(), schoolId: (int) $item->school_id);
+            DB::afterCommit(static fn () => Storage::disk('local')->delete($path));
+        });
 
         return redirect()->route('core.news.index')->with('message', 'Foto berita berhasil dihapus.');
     }
@@ -172,7 +191,7 @@ class SchoolNewsController extends Controller
         return Inertia::render('Public/News/Index', [
             'school' => [
                 ...$school->only(['name', 'about']),
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'logo_url' => $school->publicBrandingUrl('logo'),
                 'theme' => $school->publicTheme(),
             ],
             'news' => $news,
@@ -187,7 +206,7 @@ class SchoolNewsController extends Controller
         return Inertia::render('Public/News/Show', [
             'school' => [
                 ...$school->only(['name', 'about']),
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'logo_url' => $school->publicBrandingUrl('logo'),
                 'theme' => $school->publicTheme(),
             ],
             'news' => $this->present($item, true),
@@ -201,13 +220,13 @@ class SchoolNewsController extends Controller
         $image = $item->photos()->findOrFail($photo);
         abort_unless(Storage::disk('local')->exists($image->path), 404);
 
-        return Storage::disk('local')->response($image->path, null, ['Cache-Control' => 'public, max-age=3600']);
+        return Storage::disk('local')->response($image->path, null, ['Cache-Control' => 'public, no-cache, must-revalidate']);
     }
 
     /** @return array<string, mixed> */
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'category' => ['sometimes', 'required', 'string', 'max:50'],
             'excerpt' => ['nullable', 'string', 'max:500'],
@@ -220,6 +239,12 @@ class SchoolNewsController extends Controller
             'photo_captions' => ['nullable', 'array', 'max:5'],
             'photo_captions.*' => ['nullable', 'string', 'max:255'],
         ]);
+        if (! empty($validated['published_at'])) {
+            $validated['published_at'] = CarbonImmutable::parse($validated['published_at'], $request->user()->school?->timezone ?: config('app.timezone'))
+                ->setTimezone(config('app.timezone'));
+        }
+
+        return $validated;
     }
 
     private function authorizeManager(Request $request): void
@@ -250,12 +275,36 @@ class SchoolNewsController extends Controller
             if (! $photo instanceof UploadedFile) {
                 continue;
             }
+            $path = $photo->store('school-news/'.$item->school_id.'/'.$item->id, 'local');
+            if (! is_string($path) || $path === '') {
+                throw ValidationException::withMessages(['photos' => 'Foto gagal disimpan. Coba unggah kembali.']);
+            }
+            DB::afterRollBack(static fn () => Storage::disk('local')->delete($path));
             $item->photos()->create([
-                'path' => $photo->store('school-news/'.$item->school_id.'/'.$item->id, 'local'),
+                'path' => $path,
                 'original_name' => $photo->getClientOriginalName(),
                 'caption' => is_string($captions[$index] ?? null) ? trim($captions[$index]) : null,
                 'sort_order' => $nextOrder++,
             ]);
+        }
+    }
+
+    private function assertNewsPhotosNotReferenced(SchoolNews $item, bool $includeHistory = true, ?int $onlyPhoto = null): void
+    {
+        $school = School::query()->whereKey($item->school_id)->lockForUpdate()->firstOrFail();
+        $registry = $school->publicContentRegistry();
+        if (! $includeHistory) {
+            unset($registry['revisions']);
+        }
+        $content = json_encode($registry, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        foreach ($item->photos as $photo) {
+            if ($onlyPhoto !== null && (int) $photo->id !== $onlyPhoto) {
+                continue;
+            }
+            $path = (string) parse_url(route('core.news.photo', [$item->slug, $photo->id]), PHP_URL_PATH);
+            if (preg_match('~'.preg_quote($path, '~').'(?=[?\x23"]|$)~', $content)) {
+                throw ValidationException::withMessages(['photos' => 'Foto berita masih dirujuk oleh konten, draf, jadwal, atau riwayat publikasi. Ganti rujukan tersebut lebih dahulu.']);
+            }
         }
     }
 

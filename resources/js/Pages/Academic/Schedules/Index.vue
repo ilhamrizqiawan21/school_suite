@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -258,17 +259,17 @@ const exportPdfUrl = computed(() => {
     return qs ? `/akademik/jadwal/export/pdf?${qs}` : '/akademik/jadwal/export/pdf';
 });
 
-const publishAll = () => {
+const publishAll = async () => {
     if (!props.active_term) return;
-    if (confirm(`Terbitkan ${props.draft_count} jadwal draf untuk seluruh kelas pada semester ini? Filter kelas/guru tidak membatasi penerbitan.`)) {
+    if (await requestConfirmation(`Terbitkan ${props.draft_count} jadwal draf untuk seluruh kelas pada semester ini? Filter kelas/guru tidak membatasi penerbitan.`)) {
         router.post('/akademik/jadwal/terbitkan', {
             term_id: props.active_term.id,
         });
     }
 };
 
-const deleteSchedule = (id: number) => {
-    if (confirm('Hapus slot jadwal ini? Jadwal yang sudah dipakai untuk pertemuan atau guru pengganti tidak dapat dihapus.')) {
+const deleteSchedule = async (id: number) => {
+    if (await requestConfirmation('Hapus slot jadwal ini? Jadwal yang sudah dipakai untuk pertemuan atau guru pengganti tidak dapat dihapus.')) {
         router.delete(`/akademik/jadwal/${id}`, { preserveScroll: true });
     }
 };
@@ -276,7 +277,7 @@ const deleteSchedule = (id: number) => {
 
 <template>
     <AppLayout title="Jadwal Pelajaran">
-        <Head title="Jadwal Pelajaran — School Suite" />
+        <Head title="Jadwal Pelajaran" />
 
         <div class="view space-y-5 schedule-page">
             <!-- Header Halaman -->
@@ -672,7 +673,7 @@ const deleteSchedule = (id: number) => {
                             </thead>
                             <tbody>
                                 <tr v-for="s in filteredSchedules" :key="s.id">
-                                    <td class="font-semibold text-slate-900 whitespace-nowrap">
+                                    <td class="font-semibold text-[var(--ink)] whitespace-nowrap">
                                         {{ dayNameMap[s.day_of_week] ?? `Hari ${s.day_of_week}` }}
                                     </td>
                                     <td class="whitespace-nowrap">
@@ -681,18 +682,18 @@ const deleteSchedule = (id: number) => {
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="font-bold text-slate-900">{{ s.subject.name }}</div>
-                                        <div class="text-meta text-slate-600 font-mono">{{ s.subject.code }}</div>
+                                        <div class="font-bold text-[var(--ink)]">{{ s.subject.name }}</div>
+                                        <div class="text-meta text-[var(--ink-soft)] font-mono">{{ s.subject.code }}</div>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <span class="schedule-class-chip">Kelas {{ s.class_group.name }}</span>
                                     </td>
                                     <td>
-                                        <span class="text-slate-700 font-medium">{{ s.teacher.name }}</span>
+                                        <span class="text-[var(--ink-soft)] font-medium">{{ s.teacher.name }}</span>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <span v-if="s.room" class="schedule-room">{{ s.room }}</span>
-                                        <span v-else class="text-meta text-slate-600">—</span>
+                                        <span v-else class="text-meta text-[var(--ink-soft)]">—</span>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <span
@@ -760,7 +761,7 @@ const deleteSchedule = (id: number) => {
                         <p class="text-meta font-bold uppercase tracking-wider text-indigo-600">
                             {{ active_term?.academic_year?.name }} · {{ active_term?.name }}
                         </p>
-                        <h3 id="schedule-form-title" class="text-lg font-bold text-slate-900">
+                        <h3 id="schedule-form-title" class="text-lg font-bold text-[var(--ink)]">
                             {{ editingId ? 'Ubah Jadwal Pelajaran' : 'Tambah Slot Jadwal Pelajaran' }}
                         </h3>
                     </div>
@@ -784,13 +785,13 @@ const deleteSchedule = (id: number) => {
                 <form @submit.prevent="submitAdd" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="schedule-day" class="block text-meta font-semibold text-slate-700 mb-1">Hari *</label>
+                            <label for="schedule-day" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Hari *</label>
                             <select id="schedule-day" v-model="form.day_of_week" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <label for="schedule-class" class="block text-meta font-semibold text-slate-700 mb-1">Rombel (kelas) *</label>
+                            <label for="schedule-class" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Rombel (kelas) *</label>
                             <select id="schedule-class" v-model="form.class_group_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">Pilih rombel...</option>
                                 <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
@@ -800,14 +801,14 @@ const deleteSchedule = (id: number) => {
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="schedule-subject" class="block text-meta font-semibold text-slate-700 mb-1">Mata pelajaran *</label>
+                            <label for="schedule-subject" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Mata pelajaran *</label>
                             <select id="schedule-subject" v-model="form.subject_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">Pilih mapel...</option>
                                 <option v-for="s in subjects" :key="s.id" :value="String(s.id)">{{ s.name }} ({{ s.code }})</option>
                             </select>
                         </div>
                         <div>
-                            <label for="schedule-teacher" class="block text-meta font-semibold text-slate-700 mb-1">Guru pengajar *</label>
+                            <label for="schedule-teacher" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Guru pengajar *</label>
                             <select id="schedule-teacher" v-model="form.teacher_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">Pilih guru...</option>
                                 <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
@@ -817,16 +818,16 @@ const deleteSchedule = (id: number) => {
 
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label for="schedule-start" class="block text-meta font-semibold text-slate-700 mb-1">Mulai *</label>
+                            <label for="schedule-start" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Mulai *</label>
                             <input id="schedule-start" v-model="form.start_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label for="schedule-end" class="block text-meta font-semibold text-slate-700 mb-1">Selesai *</label>
+                            <label for="schedule-end" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Selesai *</label>
                             <input id="schedule-end" v-model="form.end_time" type="time" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label for="schedule-room" class="block text-meta font-semibold text-slate-700 mb-1">Ruang / lab</label>
-                            <input id="schedule-room" v-model="form.room" type="text" placeholder="contoh: Lab IPA" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                            <label for="schedule-room" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Ruang / lab</label>
+                            <input id="schedule-room" v-model="form.room" type="text" placeholder="Lab IPA" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 

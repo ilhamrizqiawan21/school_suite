@@ -29,7 +29,7 @@ function print() { frame.value?.contentWindow?.focus(); frame.value?.contentWind
     <Head :title="`Dokumen · ${pack.name}`" />
     <AppLayout title="Dokumen Paket Soal">
         <div class="documents-page">
-            <header><div><Link href="/penilaian/paket-soal">← Paket soal</Link><h1>{{ pack.name }}</h1><p>{{ exam.paper.ukuran }} · {{ exam.paper.orientasi }} · {{ exam.paper.columns }} kolom</p></div><div class="actions"><button :disabled="busy" @click="word">{{ busy ? 'Menyiapkan…' : 'Unduh Word' }}</button><AppButton variant="secondary" @click="print">Cetak / Simpan PDF</AppButton></div></header>
+            <header><div><Link href="/penilaian/paket-soal">← Paket soal</Link><h1>{{ pack.name }}</h1><p>{{ exam.paper.ukuran }} · {{ exam.paper.orientasi }} · {{ exam.paper.columns }} kolom</p></div><div class="actions"><AppButton icon="word" :loading="busy" @click="word">Unduh Word</AppButton><AppButton variant="secondary" icon="pdf" @click="print">Cetak / Simpan PDF</AppButton></div></header>
             <nav aria-label="Jenis dokumen"><button v-for="(label, key) in labels" :key="key" :aria-pressed="mode === key" @click="mode = key">{{ label }}</button></nav>
             <p>Untuk PDF, pilih “Simpan sebagai PDF” pada dialog cetak, ukuran {{ exam.paper.ukuran }}, orientasi {{ exam.paper.orientasi }}. Gunakan skala 100% dan nonaktifkan header/footer browser.</p>
             <p v-if="error" role="alert">{{ error }}</p>

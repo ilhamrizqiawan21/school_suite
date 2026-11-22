@@ -51,7 +51,7 @@ class StudentPermitController extends Controller
         return Inertia::render('Public/Services/StudentPermit', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'contentBlocks' => $school['content_blocks'] ?? [],

@@ -35,7 +35,7 @@
         <tr><td class="lbl">Keperluan / Pernyataan</td><td>: {{ $payload['purpose'] }}</td></tr>
     </table>
 
-    <p>Demikian Surat Pernyataan Tanggung Jawab Mutlak ini dibuat dengan sebenarnya untuk digunakan pada pengurusan layanan administrasi sekolah@if(! empty($payload['legalization_code'])) (Register Legalisir: <strong>{{ $payload['legalization_code'] }}</strong>)@endif.</p>
+    <p>Demikian Surat Pernyataan Tanggung Jawab Mutlak ini dibuat dengan sebenarnya untuk digunakan pada pengurusan layanan administrasi sekolah @if(! empty($payload['legalization_code'])) (Register Legalisir: <strong>{{ $payload['legalization_code'] }}</strong>)@endif.</p>
 
     <div class="sign-box">
         <p>Pembuat Pernyataan,</p>

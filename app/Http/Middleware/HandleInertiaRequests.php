@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Core\Application\Services\SchoolScopeService;
+use App\Modules\Core\Infrastructure\Models\School;
 use App\Shared\Navigation\SidebarNavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -41,6 +42,9 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $brandingSchool = $request->routeIs('private.file.download')
+            ? null
+            : ($user?->school ?? School::query()->orderBy('id')->first());
         $activeTerm = $user?->school_id
             ? Term::query()
                 ->with('academicYear')
@@ -60,7 +64,8 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'publicPortalTheme' => fn () => app(SchoolScopeService::class)->primaryPublicTheme(),
-            'appName' => config('app.name', 'School Suite'),
+            'publicContentBlocks' => fn () => app(SchoolScopeService::class)->findPrimaryPublicSnapshot()['content_blocks'] ?? [],
+            'appName' => data_get($brandingSchool?->settings, 'application_name') ?: config('app.name', 'School Suite'),
             'auth' => fn () => $user ? [
                 'user' => [
                     'id' => $user->id,
@@ -76,8 +81,8 @@ class HandleInertiaRequests extends Middleware
                     'id' => $user->school->id,
                     'name' => $user->school->name,
                     'npsn' => $user->school->npsn,
-                    'logo_url' => $user->school->logo_path ? route('branding.school', [$user->school, 'logo']) : null,
-                    'favicon_url' => $user->school->favicon_path ? route('branding.school', [$user->school, 'favicon']) : null,
+                    'logo_url' => $user->school->publicBrandingUrl('logo'),
+                    'favicon_url' => $user->school->publicBrandingUrl('favicon'),
                     'theme_primary' => data_get($user->school->settings, 'theme_primary', '#3157a4'),
                 ] : null,
             ] : null,
@@ -85,10 +90,11 @@ class HandleInertiaRequests extends Middleware
                 'visible_keys' => $user ? app(SidebarNavigationService::class)->visibleKeys($user) : [],
             ],
             'school' => [
-                'name' => $user?->school?->name ?? config('app.school_name', 'Sekolah Pilot School Suite'),
-                'logo_url' => $user?->school?->logo_path ? route('branding.school', [$user->school, 'logo']) : null,
-                'favicon_url' => $user?->school?->favicon_path ? route('branding.school', [$user->school, 'favicon']) : null,
-                'theme_primary' => data_get($user?->school?->settings, 'theme_primary', '#3157a4'),
+                'name' => $brandingSchool?->name ?? 'Sekolah',
+                'logo_url' => $brandingSchool?->publicBrandingUrl('logo'),
+                'favicon_url' => $brandingSchool?->publicBrandingUrl('favicon'),
+                'theme_primary' => data_get($brandingSchool?->settings, 'theme_primary', '#3157a4'),
+                'admin_theme' => $user?->school?->adminTheme(),
             ],
             'activePeriod' => $activePeriod,
             'flash' => [

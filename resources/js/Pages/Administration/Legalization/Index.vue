@@ -95,10 +95,10 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         <div class="space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Register &amp; Pengesahan Legalisir Tata Usaha</h1>
-                    <p class="text-sm text-slate-600">Catat verifikasi berkas asli, sahkan PDF ber-QR verifikasi, dan catat serah terima pengambilan langsung maupun kuasa.</p>
+                    <h1 class="text-xl font-bold text-[var(--ink)]">Register &amp; Pengesahan Legalisir Tata Usaha</h1>
+                    <p class="text-sm text-[var(--ink-soft)]">Catat verifikasi berkas asli, sahkan PDF ber-QR verifikasi, dan catat serah terima pengambilan langsung maupun kuasa.</p>
                 </div>
-                <select v-model="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilter">
+                <select v-model="statusFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilter">
                     <option value="">Semua Status</option>
                     <option value="submitted">Diajukan</option>
                     <option value="verified_original">Asli Terverifikasi</option>
@@ -108,7 +108,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </select>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                 <StateFeedback
                     v-if="requests.length === 0"
                     state="empty"
@@ -118,7 +118,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2.5 text-center">Kode &amp; Alumni</th>
                                 <th class="px-3 py-2.5 text-center">Dokumen</th>
@@ -135,7 +135,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                 </td>
                                 <td class="px-3 py-3 text-xs">
                                     <p class="font-semibold uppercase">{{ r.document_type }} — {{ r.copy_count }} lbr</p>
-                                    <p class="text-slate-600">No. {{ r.certificate_number }}</p>
+                                    <p class="text-[var(--ink-soft)]">No. {{ r.certificate_number }}</p>
                                 </td>
                                 <td class="px-3 py-3 text-xs">
                                     <p>{{ r.delivery_method === 'pickup_proxy' ? `Kuasa: ${r.proxy_name || '-'}` : 'Ambil Langsung' }}</p>
@@ -174,33 +174,33 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             @click.self="activeModal = null"
             @keydown.esc="activeModal = null"
         >
-            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 class="text-base font-bold text-slate-900">
+            <div class="w-full max-w-md rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[var(--line)] pb-3">
+                    <h3 class="text-base font-bold text-[var(--ink)]">
                         {{ activeModal.type === 'pickup' ? 'Catat Pengambilan Dokumen' : 'Revisi / Tolak Permohonan' }}
                     </h3>
-                    <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="activeModal = null">Tutup</button>
+                    <button type="button" class="text-sm text-[var(--ink-faint)] hover:text-[var(--ink-soft)]" @click="activeModal = null">Tutup</button>
                 </div>
 
                 <form v-if="activeModal.type === 'pickup'" class="space-y-3" @submit.prevent="submitPickup">
                     <div>
-                        <label for="legal-pickup-name" class="block text-xs font-semibold text-slate-700">Nama Pengambil Dokumen</label>
+                        <label for="legal-pickup-name" class="block text-xs font-semibold text-[var(--ink-soft)]">Nama Pengambil Dokumen</label>
                         <input
                             id="legal-pickup-name"
                             v-model="actionForm.picked_up_by_name"
                             type="text"
                             required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                         />
                     </div>
                     <div>
-                        <label for="legal-pickup-relation" class="block text-xs font-semibold text-slate-700">Status Pengambil</label>
+                        <label for="legal-pickup-relation" class="block text-xs font-semibold text-[var(--ink-soft)]">Status Pengambil</label>
                         <input
                             id="legal-pickup-relation"
                             v-model="actionForm.relation"
                             type="text"
                             required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                         />
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
@@ -211,20 +211,20 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <form v-else class="space-y-3" @submit.prevent="submitDecision">
                     <div>
-                        <label for="legal-decide-action" class="block text-xs font-semibold text-slate-700">Tindakan</label>
-                        <select id="legal-decide-action" v-model="actionForm.action" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <label for="legal-decide-action" class="block text-xs font-semibold text-[var(--ink-soft)]">Tindakan</label>
+                        <select id="legal-decide-action" v-model="actionForm.action" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option value="revision">Minta Revisi Berkas</option>
                             <option value="reject">Tolak Permohonan</option>
                         </select>
                     </div>
                     <div>
-                        <label for="legal-decide-reason" class="block text-xs font-semibold text-slate-700">Catatan / Alasan</label>
+                        <label for="legal-decide-reason" class="block text-xs font-semibold text-[var(--ink-soft)]">Catatan / Alasan</label>
                         <textarea
                             id="legal-decide-reason"
                             v-model="actionForm.reason"
                             rows="3"
                             required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                         />
                     </div>
                     <div class="flex justify-end gap-2 pt-2">

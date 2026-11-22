@@ -1,5 +1,6 @@
 import '../css/app.css';
-import { createApp, h, type DefineComponent } from 'vue';
+import { createApp, Fragment, h, type DefineComponent } from 'vue';
+import ActionConfirmationHost from './components/ActionConfirmationHost.vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { setPageTheme, setupThemeSync } from './composables/useTheme';
 
@@ -105,7 +106,11 @@ const setupTableScrollAffordances = () => {
 };
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — School Suite` : 'School Suite'),
+    nonce: document.querySelector<HTMLMetaElement>('meta[name="csp-nonce"]')?.content,
+    title: (title) => {
+        const name = document.documentElement.dataset.applicationName || 'School Suite';
+        return title ? `${title} — ${name}` : name;
+    },
     resolve: (name) => {
         setPageTheme(name);
         const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue');
@@ -116,7 +121,8 @@ createInertiaApp({
         return page();
     },
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        document.documentElement.dataset.applicationName = String(props.initialPage.props.appName || 'School Suite');
+        createApp({ render: () => h(Fragment, [h(App, props), h(ActionConfirmationHost)]) })
             .use(plugin)
             .mount(el);
         setupTableScrollAffordances();

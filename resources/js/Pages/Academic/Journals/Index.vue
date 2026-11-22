@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
@@ -499,8 +500,8 @@ const createSession = () => {
     });
 };
 
-const deleteJournal = (session: SessionItem) => {
-    if (!window.confirm(`Hapus jurnal pertemuan ${session.meeting_number} untuk ${session.subject.name} · ${session.class_group.name}?`)) return;
+const deleteJournal = async (session: SessionItem) => {
+    if (!await requestConfirmation(`Hapus jurnal pertemuan ${session.meeting_number} untuk ${session.subject.name} · ${session.class_group.name}?`)) return;
 
     router.delete(`/akademik/jurnal/${session.id}`, { preserveScroll: true });
 };
@@ -626,8 +627,8 @@ const chart = computed(() => {
                         <div class="history-actions">
                             <AppButton variant="secondary" type="button" class="secondary-button" @click="openHistorySession(session)">{{ session.journal ? 'Buka / edit' : 'Isi jurnal' }}</AppButton>
                             <AppButton variant="secondary" v-if="session.journal" type="button" class="secondary-button" @click="openNewSession(session)">Duplikat</AppButton>
-                            <AppButton variant="secondary" as="a" v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/word`" :download="`Jurnal_${session.id}.docx`">Unduh Word</AppButton>
-                            <AppButton variant="secondary" as="a" v-if="session.journal" class="secondary-button" :href="`/akademik/jurnal/${session.id}/pdf`" :download="`Jurnal_${session.id}.pdf`">Unduh PDF</AppButton>
+                            <AppButton variant="secondary" icon="word" as="a" v-if="session.journal" class="file-action-button file-action-button--word" :href="`/akademik/jurnal/${session.id}/word`" :download="`Jurnal_${session.id}.docx`">Unduh Word</AppButton>
+                            <AppButton variant="secondary" icon="pdf" as="a" v-if="session.journal" class="file-action-button file-action-button--pdf" :href="`/akademik/jurnal/${session.id}/pdf`" :download="`Jurnal_${session.id}.pdf`">Unduh PDF</AppButton>
                             <AppButton variant="danger" size="sm" icon="delete" v-if="session.journal" class="secondary-button danger-action" type="button" @click="deleteJournal(session)">Hapus</AppButton>
                         </div>
                     </article>
@@ -682,7 +683,7 @@ const chart = computed(() => {
                         </label>
                         <div class="form-grid">
                             <label>Topik / tema (opsional)
-                                <input v-model="ensureDraft(activeJournalSession).theme" placeholder="Contoh: Panca Cinta" />
+                                <input v-model="ensureDraft(activeJournalSession).theme" placeholder="Panca Cinta" />
                             </label>
                             <label>Alokasi waktu (JP)
                                 <input v-model.number="ensureDraft(activeJournalSession).period_count" type="number" min="1" max="10" required />

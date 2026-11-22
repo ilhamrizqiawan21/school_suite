@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import { applyAdminBranding, type AdminTheme } from '@/lib/adminBranding';
 import { useTheme } from '@/composables/useTheme';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, ref, onMounted, onBeforeUnmount, watch } from 'vue';
@@ -7,13 +8,14 @@ import TopNavbar from '../components/TopNavbar.vue';
 import SidebarNavigation from '../components/SidebarNavigation.vue';
 import Breadcrumbs from '../components/Breadcrumbs.vue';
 
+
 const layoutProps = defineProps<{
     title?: string;
 }>();
 
 interface PageProps {
     appName?: string;
-    school?: { name?: string; logo_url?: string | null; favicon_url?: string | null; theme_primary?: string };
+    school?: { name?: string; logo_url?: string | null; favicon_url?: string | null; theme_primary?: string; admin_theme?: AdminTheme };
     activePeriod?: { label?: string };
     auth?: { user?: { id?: number; role?: string } };
     [key: string]: unknown;
@@ -22,9 +24,10 @@ interface PageProps {
 const page = usePage<PageProps>();
 const activePeriodLabel = computed(() => (page.props.activePeriod?.label ?? 'Periode belum diatur').replace(/Semester\s+Semester/gi, 'Semester'));
 const appBasePath = document.querySelector<HTMLMetaElement>('meta[name="app-base-path"]')?.content?.replace(/\/+$/, '') ?? '';
-const fallbackLogoUrl = `${appBasePath}/brand/logos/school-suite-logo-symbol-transparent.png`;
-const appName = computed(() => !page.props.appName || page.props.appName === 'Laravel' || String(page.props.appName).toLowerCase().includes('e-school') ? 'School Suite' : page.props.appName);
+const adminLogoUrl = `${appBasePath}/madrasah-theme/images/logo-kemenag.png`;
+const appName = computed(() => String(page.props.appName ?? '').trim() || 'School Suite');
 const currentRole = computed(() => page.props.auth?.user?.role);
+watch(appName, (name) => { document.documentElement.dataset.applicationName = name; }, { immediate: true });
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
 const { theme, toggleTheme } = useTheme();
 const darkTheme = computed(() => theme.value === 'dark');
@@ -64,6 +67,22 @@ const searchFocused = ref(false);
 const activeSearchIndex = ref(0);
 const menuEntries = ref<Array<{ label: string; href: string; section: string }>>([]);
 const sidebarOpen = ref(false);
+const sidebarCollapsed = ref(false);
+const sidebarPreferenceKey = computed(() => `school-sidebar:${page.props.auth?.user?.id ?? 'guest'}`);
+const toggleDesktopSidebar = () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+    try { localStorage.setItem(sidebarPreferenceKey.value, String(sidebarCollapsed.value)); } catch { /* Storage may be unavailable. */ }
+};
+const restoreSidebarPreference = () => {
+    try { sidebarCollapsed.value = localStorage.getItem(sidebarPreferenceKey.value) === 'true'; } catch { sidebarCollapsed.value = false; }
+};
+watch(sidebarPreferenceKey, restoreSidebarPreference);
+const offline = ref(!navigator.onLine);
+const updateConnection = () => { offline.value = !navigator.onLine; };
+const removeNetworkErrorListener = router.on('networkError', (event) => {
+    event.preventDefault();
+    pushToast('Koneksi terputus. Perubahan belum dikonfirmasi tersimpan. Periksa koneksi lalu coba lagi.', 'error');
+});
 const isMobileViewport = ref(false);
 let removeNavigateListener: VoidFunction | null = null;
 let mobileMediaQuery: MediaQueryList | null = null;
@@ -87,7 +106,7 @@ const searchOpen = computed(() => searchFocused.value && searchQuery.value.trim(
 const collectMenuEntries = () => {
     const entries = Array.from(document.querySelectorAll<HTMLAnchorElement>('.topbar-navigation a.nav-item, .sidebar a.nav-item'))
         .map((link) => ({
-            label: link.querySelector('span')?.textContent?.trim() || link.textContent?.trim() || '',
+            label: link.getAttribute('aria-label') || link.querySelector('span')?.textContent?.trim() || link.textContent?.trim() || '',
             href: link.getAttribute('href') || '',
             section: link.closest('.nav-section')?.querySelector('.nav-section-trigger .nav-label')?.textContent?.trim() || 'Menu',
         }))
@@ -139,6 +158,7 @@ const handleDocumentPointerdown = (event: PointerEvent) => {
 };
 
 const applySchoolTheme = (primary?: string) => {
+    primary = page.props.school?.admin_theme?.primary ?? primary;
     if (primary && CSS.supports('color', primary)) document.documentElement.style.setProperty('--school-primary', primary);
     else document.documentElement.style.removeProperty('--school-primary');
 };
@@ -166,6 +186,7 @@ const handleViewportMediaChange = (event: MediaQueryListEvent | MediaQueryList) 
 };
 
 const closeOnEscape = (event: KeyboardEvent) => {
+    if (event.defaultPrevented) return;
     if (event.key === 'Escape') {
         if (sidebarOpen.value) {
             closeSidebar();
@@ -186,6 +207,9 @@ const closeOnEscape = (event: KeyboardEvent) => {
 };
 
 onMounted(() => {
+    restoreSidebarPreference();
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
     applySchoolTheme(page.props.school?.theme_primary);
     showFlashToast();
     // Let the active light/dark token decide --primary. Login branding may
@@ -209,9 +233,24 @@ onMounted(() => {
 });
 
 watch(() => page.props.school?.theme_primary, applySchoolTheme);
+watch(() => page.props.school?.favicon_url, (url) => {
+    const icons = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]'));
+    const icon = icons.shift() ?? document.createElement('link');
+    icon.rel = 'icon';
+    icon.removeAttribute('sizes');
+    icon.removeAttribute('type');
+    icon.href = url || `${appBasePath}/brand/favicon/favicon.ico`;
+    icons.forEach((extra) => extra.remove());
+    if (!icon.isConnected) document.head.appendChild(icon);
+}, { immediate: true });
+watch(() => page.props.school?.admin_theme, applyAdminBranding, { immediate: true, deep: true });
 watch(() => page.props.flash, showFlashToast, { deep: true });
 
 onBeforeUnmount(() => {
+    window.removeEventListener('online', updateConnection);
+    window.removeEventListener('offline', updateConnection);
+    removeNetworkErrorListener();
+    applyAdminBranding(null);
     toastTimers.forEach((timer) => clearTimeout(timer));
     toastTimers.clear();
     document.removeEventListener('keydown', closeOnEscape);
@@ -222,7 +261,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="app-shell" :class="{ 'role-guru-shell': isTeacherWorkspace }">
+    <div class="app-shell blueprint-shell" :class="{ 'role-guru-shell': isTeacherWorkspace, 'is-sidebar-rail': sidebarCollapsed && !isMobileViewport }">
         <Head :title="title" />
 
         <!-- Accessibility: Skip Link -->
@@ -235,11 +274,11 @@ onBeforeUnmount(() => {
 
         <template v-if="isMobileViewport">
             <div class="sidebar-backdrop" :class="{ 'is-visible': sidebarOpen }" aria-hidden="true" @click="closeSidebar" />
-            <aside id="mobile-sidebar" class="sidebar" :class="{ 'is-open': sidebarOpen }" aria-label="Menu navigasi">
+            <aside id="mobile-sidebar" class="sidebar" :class="{ 'is-open': sidebarOpen }" :role="sidebarOpen ? 'dialog' : undefined" :aria-modal="sidebarOpen ? true : undefined" :inert="!sidebarOpen" aria-label="Menu navigasi">
                 <div class="sidebar-header">
-                    <Link href="/dashboard" class="brand" aria-label="Buka beranda School Suite" @click="closeSidebar">
+                    <Link href="/dashboard" class="brand" :aria-label="`Buka beranda ${appName}`" @click="closeSidebar">
                         <div class="brand-mark" aria-hidden="true">
-                            <img :src="page.props.school?.logo_url || fallbackLogoUrl" alt="">
+                            <img :src="adminLogoUrl" alt="Logo Kementerian Agama">
                         </div>
                         <div class="brand-copy">
                             <strong>{{ appName }}</strong>
@@ -258,27 +297,35 @@ onBeforeUnmount(() => {
             </aside>
         </template>
 
+        <aside v-else id="desktop-sidebar" class="sidebar desktop-sidebar" aria-label="Navigasi utama">
+            <div class="sidebar-nav-scroll">
+                <SidebarNavigation mode="sidebar" :collapsed="sidebarCollapsed" />
+            </div>
+            <AppButton variant="ghost" type="button" class="sidebar-collapse" :aria-expanded="!sidebarCollapsed" aria-controls="desktop-sidebar" :aria-label="sidebarCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'" :title="sidebarCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'" @click="toggleDesktopSidebar">
+                <span aria-hidden="true">{{ sidebarCollapsed ? '»' : '«' }}</span><span v-if="!sidebarCollapsed">Ciutkan sidebar</span>
+            </AppButton>
+        </aside>
+
         <div class="workspace">
             <header class="topbar">
                 <div class="topbar-main">
                     <AppButton
-                        v-if="isMobileViewport"
                         variant="secondary"
                         icon-only
                         type="button"
                         class="icon-button sidebar-toggle"
-                        aria-controls="mobile-sidebar"
-                        :aria-expanded="sidebarOpen"
-                        aria-label="Buka menu navigasi"
-                        @click="toggleSidebar"
+                        :aria-controls="isMobileViewport ? 'mobile-sidebar' : 'desktop-sidebar'"
+                        :aria-expanded="isMobileViewport ? sidebarOpen : !sidebarCollapsed"
+                        aria-label="Buka atau tutup menu navigasi"
+                        @click="isMobileViewport ? toggleSidebar() : toggleDesktopSidebar()"
                     >
                         <template #icon>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
                         </template>
                     </AppButton>
-                    <Link href="/dashboard" class="brand topbar-brand" aria-label="Buka dashboard School Suite">
+                    <Link href="/dashboard" class="brand topbar-brand" :aria-label="`Buka dashboard ${appName}`">
                         <div class="brand-mark" aria-hidden="true">
-                            <img :src="page.props.school?.logo_url || fallbackLogoUrl" alt="">
+                            <img :src="adminLogoUrl" alt="Logo Kementerian Agama">
                         </div>
                         <div class="brand-copy">
                             <strong>{{ appName }}</strong>
@@ -287,15 +334,17 @@ onBeforeUnmount(() => {
                     </Link>
                     <div ref="searchRoot" class="global-search" :class="{ 'is-focused': searchFocused }">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        <span class="sr-only">Cari di School Suite</span>
+                        <span class="sr-only">Cari di {{ appName }}</span>
                         <input
                             ref="searchInput"
                             v-model="searchQuery"
                             type="search"
                             role="combobox"
                             aria-autocomplete="list"
+                            aria-label="Cari menu sekolah"
                             aria-controls="global-search-results"
                             :aria-expanded="searchOpen"
+                            :aria-activedescendant="searchOpen && searchResults.length ? `menu-result-${activeSearchIndex}` : undefined"
                             placeholder="Cari menu…"
                             @focus="searchFocused = true; refreshMenuSearch()"
                             @input="refreshMenuSearch"
@@ -306,6 +355,7 @@ onBeforeUnmount(() => {
                                 <Link
                                     v-for="(entry, index) in searchResults"
                                     :key="entry.href + '-' + entry.label"
+                                    :id="`menu-result-${index}`"
                                     :href="entry.href"
                                     class="global-search-result"
                                     :class="{ 'is-highlighted': index === activeSearchIndex }"
@@ -328,14 +378,13 @@ onBeforeUnmount(() => {
                     <AppButton variant="secondary" icon-only type="button" class="icon-button theme-toggle" :aria-pressed="darkTheme" :aria-label="darkTheme ? 'Gunakan tema terang' : 'Gunakan tema gelap'" @click="toggleTheme"><template #icon><svg viewBox="0 0 24 24" aria-hidden="true"><template v-if="darkTheme"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></template><path v-else d="M20.9 13.2A9 9 0 0 1 10.8 3.1a9 9 0 1 0 10.1 10.1Z"/></svg></template></AppButton>
                     <TopNavbar />
                 </div>
-                <div v-if="!isMobileViewport" class="topbar-navigation">
-                    <SidebarNavigation mode="topbar" />
-                </div>
             </header>
             <main id="main-content" tabindex="-1" :class="{ 'role-guru-main': isTeacherWorkspace }">
                 <Breadcrumbs :title="layoutProps.title" />
+                <p v-if="offline" class="connection-notice" role="status">Koneksi terputus. Perubahan yang belum dikirim tetap ada di formulir.</p>
                 <slot />
             </main>
+            <footer class="workspace-footer">© {{ new Date().getFullYear() }} {{ appName }}<span>{{ page.props.school?.name }}</span></footer>
         </div>
         <div v-if="toasts.length" class="app-toast-stack" role="region" aria-label="Notifikasi sistem" aria-live="polite">
             <div v-for="item in toasts" :key="item.id" class="app-toast" :class="`app-toast--${item.kind}`" :role="item.kind === 'error' ? 'alert' : 'status'">
@@ -348,7 +397,31 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.blueprint-shell { --sidebar: 240px; --topbar: 56px; }
+.blueprint-shell.is-sidebar-rail { display: block; }
+.blueprint-shell .workspace { display: flex; flex-direction: column; padding-top: 56px; }
+.blueprint-shell .topbar { position: fixed; inset: 0 0 auto; min-height: 56px; padding-inline: 20px; background: var(--surface); backdrop-filter: none; }
+.blueprint-shell .topbar-main { min-height: 56px; }
+.blueprint-shell main { flex: 1; min-width: 0; }
+.blueprint-shell .brand-mark { width: 32px; height: 32px; flex-basis: 32px; border-radius: 6px; }
+.blueprint-shell .sidebar-toggle { display: grid; }
+.workspace-footer { display: flex; justify-content: space-between; gap: 16px; padding: 16px 24px; border-top: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: var(--type-meta); }
+.sidebar-collapse { flex-shrink: 0; justify-content: flex-start; gap: 8px; width: 100%; }
+@media (min-width: 961px) {
+    .blueprint-shell .desktop-sidebar { display: flex; top: 56px; width: 240px; padding: 10px 12px; }
+    .blueprint-shell .workspace { margin-left: 240px; }
+    .blueprint-shell.is-sidebar-rail .desktop-sidebar { width: 64px; padding-inline: 8px; }
+    .blueprint-shell.is-sidebar-rail .workspace { margin-left: 64px; }
+    .blueprint-shell.is-sidebar-rail .sidebar-collapse { justify-content: center; }
+}
+@media (max-width: 960px) {
+    .blueprint-shell .workspace { margin-left: 0; }
+    .workspace-footer { justify-content: center; padding: 14px 16px; }
+    .workspace-footer > span { display: none; }
+}
+.app-toast-stack { top: 72px; bottom: auto; }
 .brand-mark { overflow: hidden; }
+.connection-notice { padding: .75rem 1rem; margin: 0 0 1rem; border: 1px solid var(--gold); border-radius: var(--radius-sm); background: var(--gold-soft); color: var(--gold); }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brand-copy { min-width: 0; }
 .topbar-spacer { flex: 1; }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Core\Application\Services\PublicPortalService;
 use App\Modules\Core\Application\Services\SchoolOrganizationTreeService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
@@ -22,6 +23,7 @@ class SchoolProfileController extends Controller
         private readonly SchoolOrganizationTreeService $organizationTree,
         private readonly PublicPortalService $portalService,
         private readonly SchoolScopeService $schoolScope,
+        private readonly AcademicQueryService $academicQuery,
     ) {}
 
     public function index(Request $request): Response|HttpResponse
@@ -46,7 +48,7 @@ class SchoolProfileController extends Controller
 
         return Inertia::render('Public/School/Profile', [
             ...$this->publicData($school),
-            'contentBlocks' => $isDraftPreview ? $registry['draft'] : $registry['published'],
+            'contentBlocks' => $this->schoolScope->publicContentForRequest($school, $isDraftPreview),
             'isDraftPreview' => $isDraftPreview,
         ]);
     }
@@ -62,7 +64,7 @@ class SchoolProfileController extends Controller
                 return Inertia::location(route('public.home'));
             }
 
-            $data = config('public_portal.theme') === 'madrasah' ? $this->publicData($school) : [];
+            $data = $this->publicData($school);
             $shell = $this->portalService->madrasahShellData($school, true);
 
             return $this->portalService->applyPreviewResponseHeaders(
@@ -71,6 +73,8 @@ class SchoolProfileController extends Controller
                     'profile' => $data['school'] ?? $shell['profile'],
                     'news' => $data['news'] ?? [],
                     'gallery' => $data['gallery'] ?? [],
+                    'achievements' => $this->portalService->publishedAchievements((int) $school->id, 4),
+                    'activeTeacherCount' => $this->academicQuery->countPublicDirectoryTeachers((int) $school->id),
                 ]),
                 (bool) ($shell['isDraftPreview'] ?? false),
             );
@@ -84,7 +88,7 @@ class SchoolProfileController extends Controller
             'school' => $data['school'],
             'news' => $data['news'],
             'gallery' => $data['gallery'],
-            'contentBlocks' => $isDraftPreview ? $registry['draft'] : $registry['published'],
+            'contentBlocks' => $this->schoolScope->publicContentForRequest($school, $isDraftPreview),
             'isDraftPreview' => $isDraftPreview,
             'visitStats' => $this->portalService->recordAnonymousVisit((int) $school->id),
             'prayerSchedule' => $this->portalService->prayerTimesForSchool($school),
@@ -106,6 +110,7 @@ class SchoolProfileController extends Controller
             'school' => $data['school'],
             'news' => $data['news'],
             'gallery' => $data['gallery'],
+            'contentBlocks' => $data['contentBlocks'],
         ]);
     }
 
@@ -117,6 +122,7 @@ class SchoolProfileController extends Controller
             'school' => $data['school'],
             'news' => $data['news'],
             'gallery' => $data['gallery'],
+            'contentBlocks' => $data['contentBlocks'],
         ]);
     }
 
@@ -191,12 +197,13 @@ class SchoolProfileController extends Controller
                     'address', 'phone', 'email', 'principal_name', 'website',
                     'about', 'principal_message', 'vision', 'mission',
                 ]),
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'logo_url' => $school->publicBrandingUrl('logo'),
                 'theme' => $school->publicTheme(),
             ],
-            'news' => $news,
-            'gallery' => $gallery,
+            'news' => $news->all(),
+            'gallery' => $gallery->all(),
             'organization' => $organization,
+            'contentBlocks' => $this->schoolScope->publicContentForRequest($school),
         ];
     }
 }

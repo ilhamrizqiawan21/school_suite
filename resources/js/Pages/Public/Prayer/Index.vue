@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -20,6 +21,7 @@ const props = defineProps<{
 }>();
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -28,15 +30,15 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         <PublicHeader :school="school" />
         <section class="portal-container">
             <header class="portal-hero madrasah-profile-hero">
-                <p class="eyebrow">Jadwal Salat &amp; Statistik Portal</p>
-                <h1>Jadwal Salat Wilayah {{ prayerSchedule.location }}</h1>
-                <p>Menggunakan zona waktu sekolah ({{ prayerSchedule.timezone }}) untuk tanggal {{ prayerSchedule.date }}.</p>
+                <p class="eyebrow">{{ publicText("copy.vue_prayer_index", "text_001", "Jadwal Salat & Statistik Portal") }}</p>
+                <h1>{{ publicText("copy.vue_prayer_index", "text_9001", "Jadwal Salat Wilayah") }} {{ prayerSchedule.location }}</h1>
+                <p>{{ publicText("copy.vue_prayer_index", "text_9002", "Menggunakan zona waktu sekolah (") }}{{ prayerSchedule.timezone }}{{ publicText("copy.vue_prayer_index", "text_9003", ") untuk tanggal") }} {{ prayerSchedule.date }}.</p>
             </header>
 
             <article class="prayer-card">
                 <div class="prayer-card__head">
                     <div>
-                        <small>Waktu berikutnya</small>
+                        <small>{{ publicText("copy.vue_prayer_index", "text_002", "Waktu berikutnya") }}</small>
                         <h2>{{ prayerSchedule.next_prayer.name }} · {{ prayerSchedule.next_prayer.time }}</h2>
                     </div>
                     <StatusBadge
@@ -54,12 +56,12 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
             </article>
 
             <article class="prayer-card">
-                <h2>Statistik Kunjungan Anonim</h2>
-                <p class="stats-note">Penghitung agregat tanpa menyimpan data pribadi atau identitas pengunjung.</p>
+                <h2>{{ publicText("copy.vue_prayer_index", "text_003", "Statistik Kunjungan Anonim") }}</h2>
+                <p class="stats-note">{{ publicText("copy.vue_prayer_index", "text_004", "Penghitung agregat tanpa menyimpan data pribadi atau identitas pengunjung.") }}</p>
                 <div class="stats-grid">
-                    <div class="prayer-slot"><span>Hari Ini</span><strong>{{ visitStats.today }}</strong></div>
-                    <div class="prayer-slot"><span>Bulan Ini</span><strong>{{ visitStats.month }}</strong></div>
-                    <div class="prayer-slot"><span>Total Kunjungan</span><strong>{{ visitStats.total }}</strong></div>
+                    <div class="prayer-slot"><span>{{ publicText("copy.vue_prayer_index", "text_005", "Hari Ini") }}</span><strong>{{ visitStats.today }}</strong></div>
+                    <div class="prayer-slot"><span>{{ publicText("copy.vue_prayer_index", "text_006", "Bulan Ini") }}</span><strong>{{ visitStats.month }}</strong></div>
+                    <div class="prayer-slot"><span>{{ publicText("copy.vue_prayer_index", "text_007", "Total Kunjungan") }}</span><strong>{{ visitStats.total }}</strong></div>
                 </div>
             </article>
         </section>

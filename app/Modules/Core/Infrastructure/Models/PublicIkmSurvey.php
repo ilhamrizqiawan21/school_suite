@@ -20,18 +20,35 @@ class PublicIkmSurvey extends Model
         'comment',
         'is_approved',
         'submitted_ip_hash',
+        'instrument_snapshot',
     ];
 
     protected $hidden = [
         'submitted_ip_hash',
+        'instrument_snapshot',
     ];
 
     protected function casts(): array
     {
         return [
             'rating' => 'integer',
+            'instrument_snapshot' => 'array',
             'is_approved' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(static function (self $survey): void {
+            if ($survey->isDirty('instrument_snapshot') || $survey->isDirty('rating')) {
+                throw new \LogicException('Survey scores and instrument snapshots are immutable.');
+            }
+        });
+    }
+
+    public function getRatingAttribute(mixed $value): float
+    {
+        return (float) ($this->instrument_snapshot['score'] ?? $value);
     }
 
     /** @return BelongsTo<School, $this> */

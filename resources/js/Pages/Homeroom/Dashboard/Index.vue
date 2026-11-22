@@ -63,28 +63,28 @@ const changeClass = () => {
 
 <template>
     <AppLayout title="Ruang Kerja Wali Kelas">
-        <Head title="Ruang Kerja Wali Kelas — School Suite" />
+        <Head title="Ruang Kerja Wali Kelas" />
 
         <div class="view space-y-6 homeroom-page">
             <!-- Header bar -->
             <div class="homeroom-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+                    <h1 class="text-2xl font-bold tracking-tight text-[var(--ink)]">
                         Ruang Kerja Wali Kelas
                         <span v-if="selected_class" class="text-indigo-600"> — Kelas {{ selected_class.name }}</span>
                     </h1>
-                    <p class="text-sm text-slate-600 mt-1">
+                    <p class="text-sm text-[var(--ink-soft)] mt-1">
                         Monitoring perkembangan peserta didik, deteksi dini ketidakhadiran, catatan observasi, dan rekam prestasi.
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <label class="text-meta font-semibold text-slate-600">Pilih Rombel:</label>
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Pilih Rombel:</label>
                         <select
                             v-model="selectedClassId"
                             @change="changeClass"
-                            class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500 font-medium"
+                            class="px-3 py-1.5 text-sm border border-[var(--line)] rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500 font-medium"
                         >
                             <option v-for="c in classes" :key="c.id" :value="String(c.id)">
                                 Kelas {{ c.name }}
@@ -94,7 +94,7 @@ const changeClass = () => {
 
                     <Link
                         href="/wali-kelas/catatan"
-                        class="px-3.5 py-2 text-sm font-medium text-slate-700 bg-[var(--surface)] border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-xs"
+                        class="px-3.5 py-2 text-sm font-medium text-[var(--ink-soft)] bg-[var(--surface)] border border-[var(--line)] rounded-lg hover:bg-[var(--surface-subtle)] transition shadow-xs"
                     >
                         Catatan Siswa
                     </Link>
@@ -110,27 +110,27 @@ const changeClass = () => {
             <!-- Metric Stats Grid -->
             <div class="homeroom-metrics">
                 <div class="homeroom-metric">
-                    <div class="text-meta font-semibold text-slate-600 uppercase tracking-wider">Total Peserta Didik</div>
-                    <div class="text-2xl font-bold text-slate-900 mt-2">{{ summary?.total_students || 0 }} Siswa</div>
-                    <div class="text-meta text-slate-600 mt-1">Terdaftar pada rombel aktif</div>
+                    <div class="text-meta font-semibold text-[var(--ink-soft)] uppercase tracking-wider">Total Peserta Didik</div>
+                    <div class="text-2xl font-bold text-[var(--ink)] mt-2">{{ summary?.total_students || 0 }} Siswa</div>
+                    <div class="text-meta text-[var(--ink-soft)] mt-1">Terdaftar pada rombel aktif</div>
                 </div>
 
                 <div class="homeroom-metric">
-                    <div class="text-meta font-semibold text-slate-600 uppercase tracking-wider">Rata-rata Kehadiran</div>
+                    <div class="text-meta font-semibold text-[var(--ink-soft)] uppercase tracking-wider">Rata-rata Kehadiran</div>
                     <div class="text-2xl font-bold text-emerald-600 mt-2">{{ summary?.average_attendance_percentage ?? 0 }}%</div>
-                    <div class="text-meta text-slate-600 mt-1">Presensi semester berjalan</div>
+                    <div class="text-meta text-[var(--ink-soft)] mt-1">Presensi semester berjalan</div>
                 </div>
 
                 <div class="homeroom-metric">
-                    <div class="text-meta font-semibold text-slate-600 uppercase tracking-wider">Perlu Perhatian (Early Warning)</div>
+                    <div class="text-meta font-semibold text-[var(--ink-soft)] uppercase tracking-wider">Perlu Perhatian (Early Warning)</div>
                     <div class="text-2xl font-bold text-rose-600 mt-2">{{ summary?.students_needing_attention_count || 0 }} Siswa</div>
-                    <div class="text-meta text-slate-600 mt-1">Alpa ≥ 3 hari / kehadiran &lt; 85%</div>
+                    <div class="text-meta text-[var(--ink-soft)] mt-1">Alpa ≥ 3 hari / kehadiran &lt; 85%</div>
                 </div>
 
                 <div class="homeroom-metric">
-                    <div class="text-meta font-semibold text-slate-600 uppercase tracking-wider">Prestasi & Insiden</div>
+                    <div class="text-meta font-semibold text-[var(--ink-soft)] uppercase tracking-wider">Prestasi & Insiden</div>
                     <div class="text-2xl font-bold text-indigo-600 mt-2">{{ stats.achievements_count }} / {{ stats.incidents_count }}</div>
-                    <div class="text-meta text-slate-600 mt-1">{{ stats.achievements_count }} Prestasi, {{ stats.incidents_count }} Pelanggaran</div>
+                    <div class="text-meta text-[var(--ink-soft)] mt-1">{{ stats.achievements_count }} Prestasi, {{ stats.incidents_count }} Pelanggaran</div>
                 </div>
             </div>
 
@@ -147,8 +147,8 @@ const changeClass = () => {
                         class="p-2.5 bg-[var(--surface)] rounded-lg border border-rose-200 text-meta flex flex-col justify-between"
                     >
                         <div>
-                            <span class="font-bold text-slate-900">{{ s.name }}</span>
-                            <span class="text-slate-600 font-mono text-meta block">NIS: {{ s.nis }}</span>
+                            <span class="font-bold text-[var(--ink)]">{{ s.name }}</span>
+                            <span class="text-[var(--ink-soft)] font-mono text-meta block">NIS: {{ s.nis }}</span>
                         </div>
                         <div class="text-rose-600 font-semibold mt-1">
                             {{ s.attention_reason }}
@@ -159,14 +159,14 @@ const changeClass = () => {
 
             <!-- Student Attendance Summary Table -->
             <div class="homeroom-table-card bg-[var(--surface)] rounded-xl border border-[var(--line)] overflow-hidden shadow-xs">
-                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="font-bold text-slate-900 text-sm">Rekapitulasi Kehadiran & Status Siswa</h3>
-                    <span class="text-meta text-slate-600">Semester {{ active_term?.name || 'Aktif' }}</span>
+                <div class="px-5 py-4 border-b border-[var(--line)] flex items-center justify-between">
+                    <h3 class="font-bold text-[var(--ink)] text-sm">Rekapitulasi Kehadiran & Status Siswa</h3>
+                    <span class="text-meta text-[var(--ink-soft)]">Semester {{ active_term?.name || 'Aktif' }}</span>
                 </div>
 
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table w-full text-left border-collapse text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-meta font-semibold uppercase tracking-wider text-slate-600">
+                        <thead class="bg-[var(--surface-subtle)] border-b border-[var(--line)] text-meta font-semibold uppercase tracking-wider text-[var(--ink-soft)]">
                             <tr>
                                 <th scope="col" class="px-5 py-3.5 w-16">Absen</th>
                                 <th scope="col" class="px-5 py-3.5">NIS</th>
@@ -179,15 +179,15 @@ const changeClass = () => {
                                 <th scope="col" class="px-5 py-3.5">Status Peringatan</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tbody class="divide-y divide-slate-100 text-[var(--ink-soft)]">
                             <tr v-for="s in summary?.students" :key="s.student_id" class="hover:bg-slate-50/80 transition-colors">
-                                <td class="px-5 py-3 font-mono text-meta text-slate-600">
+                                <td class="px-5 py-3 font-mono text-meta text-[var(--ink-soft)]">
                                     {{ s.roll_number || '-' }}
                                 </td>
-                                <td class="px-5 py-3 font-mono text-meta text-slate-600">
+                                <td class="px-5 py-3 font-mono text-meta text-[var(--ink-soft)]">
                                     {{ s.nis }}
                                 </td>
-                                <td class="px-5 py-3 font-semibold text-slate-900">
+                                <td class="px-5 py-3 font-semibold text-[var(--ink)]">
                                     {{ s.name }}
                                 </td>
                                 <td class="px-5 py-3 text-center font-bold text-emerald-600">
@@ -224,7 +224,7 @@ const changeClass = () => {
                                 </td>
                             </tr>
                             <tr v-if="!summary || summary.students.length === 0">
-                                <td colspan="9" class="px-5 py-12 text-center text-slate-600">
+                                <td colspan="9" class="px-5 py-12 text-center text-[var(--ink-soft)]">
                                     Belum ada data siswa pada rombel ini.
                                 </td>
                             </tr>

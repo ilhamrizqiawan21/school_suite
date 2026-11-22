@@ -92,16 +92,16 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         <div class="space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Antrean Mutasi Masuk &amp; Keluar Siswa</h1>
-                    <p class="text-sm text-slate-600">Review permohonan mutasi, terbitkan surat resmi PDF, atau cabut persetujuan secara aman tanpa menghapus histori enrollment.</p>
+                    <h1 class="text-xl font-bold text-[var(--ink)]">Antrean Mutasi Masuk &amp; Keluar Siswa</h1>
+                    <p class="text-sm text-[var(--ink-soft)]">Review permohonan mutasi, terbitkan surat resmi PDF, atau cabut persetujuan secara aman tanpa menghapus histori enrollment.</p>
                 </div>
                 <div class="flex gap-2">
-                    <select v-model="directionFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilter">
+                    <select v-model="directionFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilter">
                         <option value="">Semua Jenis</option>
                         <option value="incoming">Mutasi Masuk</option>
                         <option value="outgoing">Mutasi Keluar</option>
                     </select>
-                    <select v-model="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilter">
+                    <select v-model="statusFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilter">
                         <option value="">Semua Status</option>
                         <option value="submitted">Diajukan</option>
                         <option value="needs_revision">Perlu Perbaikan</option>
@@ -112,7 +112,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                 <StateFeedback
                     v-if="mutations.length === 0"
                     state="empty"
@@ -122,7 +122,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2.5">Kode &amp; Jenis</th>
                                 <th class="px-3 py-2.5">Siswa</th>
@@ -135,21 +135,21 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             <tr v-for="m in mutations" :key="m.id">
                                 <td class="px-3 py-3">
                                     <p class="font-mono text-xs font-bold">{{ m.mutation_code }}</p>
-                                    <p class="text-xs text-slate-500">{{ m.direction === 'incoming' ? 'Mutasi Masuk' : 'Mutasi Keluar' }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">{{ m.direction === 'incoming' ? 'Mutasi Masuk' : 'Mutasi Keluar' }}</p>
                                 </td>
                                 <td class="px-3 py-3">
-                                    <p class="font-medium text-slate-900">{{ m.student_name }}</p>
-                                    <p class="text-xs text-slate-500">NIS: {{ m.nis || '-' }} • NISN: {{ m.nisn || '-' }}</p>
+                                    <p class="font-medium text-[var(--ink)]">{{ m.student_name }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">NIS: {{ m.nis || '-' }} • NISN: {{ m.nisn || '-' }}</p>
                                 </td>
-                                <td class="px-3 py-3 text-xs text-slate-600">
+                                <td class="px-3 py-3 text-xs text-[var(--ink-soft)]">
                                     <p>{{ m.origin_school || m.destination_school || '-' }}</p>
-                                    <p class="text-slate-500">{{ m.reason }}</p>
+                                    <p class="text-[var(--ink-faint)]">{{ m.reason }}</p>
                                 </td>
                                 <td class="px-3 py-3">
                                     <StatusBadge :status="m.status" :tone="statusTone(m.status)" size="sm" />
                                 </td>
                                 <td class="px-3 py-3 text-right space-x-2">
-                                    <a
+                                    <AppButton icon="pdf" as="a"
                                         v-if="m.has_official_letter"
                                         :href="`/layanan/mutasi/${m.id}/surat.pdf`"
                                         target="_blank"
@@ -157,11 +157,11 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                         class="text-xs font-semibold text-emerald-700 underline"
                                     >
                                         Surat PDF
-                                    </a>
+                                    </AppButton>
                                     <button
                                         v-if="m.status === 'submitted' || m.status === 'needs_revision'"
                                         type="button"
-                                        class="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700"
+                                        class="rounded-md border border-[var(--line)] px-2.5 py-1 text-xs font-semibold text-[var(--ink-soft)]"
                                         @click="openModal(m, 'decide')"
                                     >
                                         Proses
@@ -183,13 +183,13 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         </div>
 
         <div v-if="selected" role="dialog" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" @click.self="selected = null" @keydown.esc="selected = null">
-            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
+            <div class="w-full max-w-md rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-4">
                 <h3 class="text-base font-semibold">
                     {{ modalMode === 'decide' ? `Putuskan Mutasi ${selected.mutation_code}` : `Cabut Mutasi ${selected.mutation_code}` }}
                 </h3>
                 <div v-if="modalMode === 'decide'" class="space-y-3">
                     <FormField id="mut-decision" label="Keputusan" required>
-                        <select id="mut-decision" v-model="decideForm.decision" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="mut-decision" v-model="decideForm.decision" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-if="canPublish" value="approve">Setujui &amp; Terbitkan Surat</option>
                             <option value="request_revision">Minta Perbaikan Berkas</option>
                             <option value="reject">Tolak Permohonan</option>
@@ -197,17 +197,17 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     </FormField>
                     <div v-if="decideForm.decision === 'approve' && selected.direction === 'incoming'" class="grid gap-2 md:grid-cols-2">
                         <FormField id="mut-nis" label="NIS Baru (Opsional)">
-                            <input id="mut-nis" v-model="decideForm.nis" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <input id="mut-nis" v-model="decideForm.nis" type="text" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                         </FormField>
                         <FormField id="mut-class" label="Kelas Penempatan">
-                            <select id="mut-class" v-model="decideForm.target_class_group_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <select id="mut-class" v-model="decideForm.target_class_group_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                                 <option value="">Pilih kelas...</option>
                                 <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
                             </select>
                         </FormField>
                     </div>
                     <FormField id="mut-note" label="Catatan / Alasan" :error="decideForm.errors.decision_note">
-                        <textarea id="mut-note" v-model="decideForm.decision_note" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <textarea id="mut-note" v-model="decideForm.decision_note" rows="3" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <div class="flex justify-end gap-2">
                         <AppButton type="button" variant="secondary" @click="selected = null">Tutup</AppButton>
@@ -216,7 +216,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </div>
                 <div v-else class="space-y-3">
                     <FormField id="mut-revoke-reason" label="Alasan Pencabutan" :error="revokeForm.errors.reason" required>
-                        <textarea id="mut-revoke-reason" v-model="revokeForm.reason" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <textarea id="mut-revoke-reason" v-model="revokeForm.reason" rows="3" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <div class="flex justify-end gap-2">
                         <AppButton type="button" variant="secondary" @click="selected = null">Tutup</AppButton>

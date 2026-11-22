@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
@@ -294,12 +296,13 @@ const openSubmission = (assignment: Assignment) => {
     const existing = assignment.submissions[0];
     submissionForm.content = existing?.content ?? '';
     submissionForm.files = [];
+    submissionForm.defaults();
 };
 
-const submitWork = () => {
+const submitWork = async () => {
     if (!selectedAssignment.value) return;
     const action = selectedAssignment.value.submissions.length ? 'Kirim revisi' : 'Kirim jawaban';
-    if (!window.confirm(`${action} untuk tugas “${selectedAssignment.value.title}”? Jawaban akan dicatat untuk diperiksa guru.`)) return;
+    if (!await requestConfirmation(`${action} untuk tugas “${selectedAssignment.value.title}”? Jawaban akan dicatat untuk diperiksa guru.`)) return;
     submissionForm.post(studentEndpoint(`/tugas/${selectedAssignment.value.id}/${props.capabilities.submit ? 'kumpul' : 'kumpulkan'}`), {
         forceFormData: true,
         onSuccess: () => {
@@ -314,6 +317,7 @@ const openGrade = (submission: Submission) => {
     gradeForm.score = submission.score === null || submission.score === undefined ? null : Number(submission.score);
     gradeForm.feedback = submission.feedback ?? '';
     gradeForm.review_status = submission.review_status === 'needs_revision' ? 'needs_revision' : 'approved';
+    gradeForm.defaults();
 };
 
 const submitGrade = () => {
@@ -326,11 +330,23 @@ const submitGrade = () => {
     });
 };
 
-const removeResource = (url: string) => {
-    if (window.confirm('Hapus data ini? Tindakan ini tidak dapat dibatalkan.')) {
+const removeResource = async (url: string) => {
+    if (await requestConfirmation('Hapus data ini? Tindakan ini tidak dapat dibatalkan.')) {
         router.delete(url, { preserveScroll: true });
     }
 };
+const requestMaterialClose = useConfirmedDialogClose(materialForm, () => { showMaterialForm.value = false; materialForm.reset(); materialForm.clearErrors(); });
+const requestAssignmentClose = useConfirmedDialogClose(assignmentForm, () => { showAssignmentForm.value = false; assignmentForm.reset(); assignmentForm.clearErrors(); });
+const requestSubmissionClose = useConfirmedDialogClose(submissionForm, () => { selectedAssignment.value = null; submissionForm.reset(); submissionForm.clearErrors(); });
+const requestGradeClose = useConfirmedDialogClose(gradeForm, () => { selectedSubmission.value = null; gradeForm.reset(); gradeForm.clearErrors(); });
+
+const showInlineMaterialEditor = ref(false);
+const requestInlineMaterialEditorClose = useConfirmedDialogClose(materialForm, () => { showInlineMaterialEditor.value = false; materialForm.reset(); materialForm.clearErrors(); });
+watch(() => materialForm.wasSuccessful, (success) => { if (success) materialForm.defaults(); });
+
+const showInlineAssignmentEditor = ref(false);
+const requestInlineAssignmentEditorClose = useConfirmedDialogClose(assignmentForm, () => { showInlineAssignmentEditor.value = false; assignmentForm.reset(); assignmentForm.clearErrors(); });
+watch(() => assignmentForm.wasSuccessful, (success) => { if (success) assignmentForm.defaults(); });
 </script>
 
 <template>
@@ -442,14 +458,17 @@ const removeResource = (url: string) => {
             <template v-if="isMaterialSection && capabilities.manage">
                 <section class="material-upload-panel panel">
                     <div class="task-panel-heading"><div><p class="eyebrow">Unggah materi</p><h2>Bagikan bahan ajar</h2><p>Materi yang diterbitkan hanya dapat dilihat oleh pengguna yang memiliki akses kelas.</p></div><span class="task-panel-icon material-panel-icon">↥</span></div>
-                    <form class="material-inline-form" @submit.prevent="submitMaterial">
+                    <AppButton variant="primary" type="button" @click="showInlineMaterialEditor = true">Bagikan bahan ajar</AppButton>
+<Teleport to="body"><div v-if="showInlineMaterialEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Bagikan bahan ajar" @click.self="requestInlineMaterialEditorClose" @keydown.esc.stop.prevent="requestInlineMaterialEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Bagikan bahan ajar</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup bagikan bahan ajar" title="Tutup formulir" :disabled="materialForm.processing" @click="requestInlineMaterialEditorClose" /></header>
+<form class="material-inline-form" @submit.prevent="submitMaterial">
                         <label>Kelas dan mata pelajaran<select v-model="materialForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.class_group.name }} · {{ item.subject.name }}</option></select></label>
-                        <label>Judul *<input v-model="materialForm.title" required maxlength="180" placeholder="Contoh: Modul pembelajaran minggu ini" /></label>
+                        <label>Judul *<input v-model="materialForm.title" required maxlength="180" placeholder="Modul pembelajaran minggu ini" /></label>
                         <label>Deskripsi<textarea v-model="materialForm.description" rows="4" placeholder="Tambahkan keterangan singkat untuk siswa." /></label>
                         <label>File materi *<input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" required @change="handleMaterialFile" /><small>PDF, DOCX, JPG, JPEG, PNG · Maks. 10 MB</small></label>
                         <p v-if="materialForm.hasErrors" class="form-error">Periksa kembali data materi dan format file yang dipilih.</p>
                         <AppButton variant="primary" :loading="materialForm.processing" class="material-upload-button" type="submit" :disabled="materialForm.processing">{{ materialForm.processing ? 'Mengunggah...' : 'Unggah materi' }}</AppButton>
                     </form>
+</div></div></Teleport>
                 </section>
 
                 <section class="material-list-panel panel">
@@ -474,9 +493,11 @@ const removeResource = (url: string) => {
 
                 <section v-if="!taskClassView" class="task-create-panel panel">
                     <div class="task-panel-heading"><div><p class="eyebrow">Buat tugas baru</p><h2>Bagikan aktivitas ke kelas</h2><p>Pilih satu atau beberapa kelas tujuan. Sistem membuat satu tugas untuk setiap kelas yang dipilih.</p></div><span class="task-panel-icon">＋</span></div>
-                    <form class="task-create-form" @submit.prevent="submitAssignment">
+                    <AppButton variant="primary" type="button" @click="showInlineAssignmentEditor = true">Bagikan aktivitas ke kelas</AppButton>
+<Teleport to="body"><div v-if="showInlineAssignmentEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Bagikan aktivitas ke kelas" @click.self="requestInlineAssignmentEditorClose" @keydown.esc.stop.prevent="requestInlineAssignmentEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Bagikan aktivitas ke kelas</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup bagikan aktivitas ke kelas" title="Tutup formulir" :disabled="assignmentForm.processing" @click="requestInlineAssignmentEditorClose" /></header>
+<form class="task-create-form" @submit.prevent="submitAssignment">
                         <div class="task-form-main">
-                            <label>Judul tugas *<input v-model="assignmentForm.title" required maxlength="180" placeholder="Contoh: Mencari ayat nama-nama Al-Qur'an" /></label>
+                            <label>Judul tugas *<input v-model="assignmentForm.title" required maxlength="180" placeholder="Mencari ayat nama-nama Al-Qur'an" /></label>
                             <label>Deskripsi / instruksi<textarea v-model="assignmentForm.instructions" rows="4" placeholder="Jelaskan pekerjaan, sumber belajar, dan bentuk jawaban yang diharapkan." /></label>
                             <div class="task-form-grid"><label>Deadline<input v-model="assignmentForm.due_at" type="datetime-local" /></label><label>Nilai maksimal<input v-model.number="assignmentForm.max_score" type="number" min="1" max="1000" /></label></div>
                             <label class="task-check-row"><input v-model="assignmentForm.allow_late" type="checkbox" /> Izinkan pengumpulan setelah batas waktu</label>
@@ -494,6 +515,7 @@ const removeResource = (url: string) => {
                         </div>
                         <div class="task-form-footer"><p v-if="assignmentForm.hasErrors" class="form-error">Pilih minimal satu kelas dan periksa kembali data tugas.</p><AppButton variant="primary" class="task-save-button" type="submit" :disabled="assignmentForm.processing || selectedTaskClassIds.length === 0">{{ assignmentForm.processing ? 'Menyimpan...' : 'Simpan tugas' }}</AppButton></div>
                     </form>
+</div></div></Teleport>
                 </section>
 
                 <section v-if="!taskClassView" class="task-class-panel panel">
@@ -706,49 +728,49 @@ const removeResource = (url: string) => {
             </section>
         </div>
 
-        <div v-if="showMaterialForm" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="material-modal-title" @click.self="showMaterialForm = false">
+        <div v-if="showMaterialForm" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="material-modal-title" @click.self="requestMaterialClose" @keydown.esc.stop.prevent="requestMaterialClose">
             <form class="modal-card" @submit.prevent="submitMaterial">
-                <div class="modal-heading"><div><p class="eyebrow">Materi baru</p><h2 id="material-modal-title">Terbitkan bahan ajar</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir materi" @click="showMaterialForm = false">×</AppButton></div>
+                <div class="modal-heading"><div><p class="eyebrow">Materi baru</p><h2 id="material-modal-title">Terbitkan bahan ajar</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir materi" @click="requestMaterialClose">×</AppButton></div>
                 <label>Kelas dan mata pelajaran<select v-model="materialForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option></select></label>
                 <label>Judul<input v-model="materialForm.title" required maxlength="180" /></label>
                 <label>Deskripsi<textarea v-model="materialForm.description" rows="4" /></label>
                 <label>Berkas materi *<input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" required @change="handleMaterialFile" /></label>
                 <p class="form-hint">Format: PDF, DOCX, JPG, JPEG, PNG. Maksimal 10 MB. File disimpan privat dan hanya dapat diunduh pengguna yang berwenang.</p>
                 <p v-if="materialForm.hasErrors" class="form-error">Periksa kembali data materi yang diisi.</p>
-                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="showMaterialForm = false">Batal</AppButton><AppButton variant="primary" :loading="materialForm.processing" type="submit" class="primary-button" :disabled="materialForm.processing">Terbitkan</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestMaterialClose">Batal</AppButton><AppButton variant="primary" :loading="materialForm.processing" type="submit" class="primary-button" :disabled="materialForm.processing">Terbitkan</AppButton></div>
             </form>
         </div>
 
-        <div v-if="showAssignmentForm" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title" @click.self="showAssignmentForm = false">
+        <div v-if="showAssignmentForm" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title" @click.self="requestAssignmentClose" @keydown.esc.stop.prevent="requestAssignmentClose">
             <form class="modal-card" @submit.prevent="submitAssignment">
-                <div class="modal-heading"><div><p class="eyebrow">Tugas baru</p><h2 id="assignment-modal-title">Buat aktivitas siswa</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir tugas" @click="showAssignmentForm = false">×</AppButton></div>
+                <div class="modal-heading"><div><p class="eyebrow">Tugas baru</p><h2 id="assignment-modal-title">Buat aktivitas siswa</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir tugas" @click="requestAssignmentClose">×</AppButton></div>
                 <label>Kelas dan mata pelajaran<select v-model="assignmentForm.teaching_assignment_id" required><option v-for="item in teaching_assignments" :key="item.id" :value="item.id">{{ item.subject.name }} · {{ item.class_group.name }}</option></select></label>
                 <label>Judul<input v-model="assignmentForm.title" required maxlength="180" /></label>
                 <label>Instruksi<textarea v-model="assignmentForm.instructions" rows="5" /></label>
                 <div class="form-grid"><label>Tenggat<input v-model="assignmentForm.due_at" type="datetime-local" /></label><label>Nilai maksimal<input v-model.number="assignmentForm.max_score" type="number" min="1" max="1000" /></label></div>
                 <label>Batas revisi<input v-model.number="assignmentForm.revision_limit" type="number" min="0" max="10" /></label>
                 <label class="check-row"><input v-model="assignmentForm.allow_late" type="checkbox" /> Izinkan pengumpulan setelah tenggat</label>
-                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="showAssignmentForm = false">Batal</AppButton><AppButton variant="primary" :loading="assignmentForm.processing" type="submit" class="primary-button" :disabled="assignmentForm.processing">Terbitkan tugas</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestAssignmentClose">Batal</AppButton><AppButton variant="primary" :loading="assignmentForm.processing" type="submit" class="primary-button" :disabled="assignmentForm.processing">Terbitkan tugas</AppButton></div>
             </form>
         </div>
 
-        <div v-if="selectedAssignment" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-modal-title" @click.self="selectedAssignment = null">
+        <div v-if="selectedAssignment" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-modal-title" @click.self="requestSubmissionClose" @keydown.esc.stop.prevent="requestSubmissionClose">
             <form class="modal-card" @submit.prevent="submitWork">
-                <div class="modal-heading"><div><p class="eyebrow">Pengumpulan tugas</p><h2 id="submission-modal-title">{{ selectedAssignment.title }}</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup pengumpulan tugas" @click="selectedAssignment = null">×</AppButton></div>
+                <div class="modal-heading"><div><p class="eyebrow">Pengumpulan tugas</p><h2 id="submission-modal-title">{{ selectedAssignment.title }}</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup pengumpulan tugas" @click="requestSubmissionClose">×</AppButton></div>
                 <label>Jawaban teks<textarea v-model="submissionForm.content" rows="7" placeholder="Tulis jawaban atau catatan untuk guru" /></label>
                 <label>Lampiran (maksimal 5)<input type="file" multiple @change="handleSubmissionFiles" /></label>
                 <p v-if="submissionForm.hasErrors" class="form-error">Isi jawaban teks atau pilih minimal satu berkas.</p>
-                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="selectedAssignment = null">Batal</AppButton><AppButton variant="primary" :loading="submissionForm.processing" type="submit" class="primary-button" :disabled="submissionForm.processing">Kirim tugas</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestSubmissionClose">Batal</AppButton><AppButton variant="primary" :loading="submissionForm.processing" type="submit" class="primary-button" :disabled="submissionForm.processing">Kirim tugas</AppButton></div>
             </form>
         </div>
 
-        <div v-if="selectedSubmission" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="grade-modal-title" @click.self="selectedSubmission = null">
+        <div v-if="selectedSubmission" ref="overlayRoot" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="grade-modal-title" @click.self="requestGradeClose" @keydown.esc.stop.prevent="requestGradeClose">
             <form class="modal-card" @submit.prevent="submitGrade">
-                <div class="modal-heading"><div><p class="eyebrow">Penilaian tugas</p><h2 id="grade-modal-title">{{ selectedSubmission.enrollment?.student?.name }}</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup penilaian tugas" @click="selectedSubmission = null">×</AppButton></div>
+                <div class="modal-heading"><div><p class="eyebrow">Penilaian tugas</p><h2 id="grade-modal-title">{{ selectedSubmission.enrollment?.student?.name }}</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup penilaian tugas" @click="requestGradeClose">×</AppButton></div>
                 <label>Keputusan<select v-model="gradeForm.review_status"><option value="approved">Setujui & beri nilai</option><option value="needs_revision">Minta perbaikan</option></select></label>
                 <label v-if="gradeForm.review_status === 'approved'">Nilai<input v-model.number="gradeForm.score" type="number" min="0" required /></label>
                 <label>Umpan balik<textarea v-model="gradeForm.feedback" rows="5" /></label>
-                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="selectedSubmission = null">Batal</AppButton><AppButton variant="primary" :loading="gradeForm.processing" type="submit" class="primary-button" :disabled="gradeForm.processing">Simpan nilai</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestGradeClose">Batal</AppButton><AppButton variant="primary" :loading="gradeForm.processing" type="submit" class="primary-button" :disabled="gradeForm.processing">Simpan nilai</AppButton></div>
             </form>
         </div>
     </AppLayout>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
@@ -169,8 +170,8 @@ const openEdit = (student: Student) => {
     showEditModal.value = true;
 };
 
-const closeEdit = (saved = false) => {
-    if (!saved && editForm.isDirty && !window.confirm('Perubahan belum disimpan. Tutup formulir dan buang perubahan?')) return;
+const closeEdit = async (saved = false) => {
+    if (!saved && editForm.isDirty && !await requestConfirmation('Perubahan belum disimpan. Tutup formulir dan buang perubahan?')) return;
     showEditModal.value = false;
     editingStudent.value = null;
     editForm.reset();
@@ -226,14 +227,14 @@ const exportPdfUrl = () => {
     return `/akademik/siswa/export/pdf?${params.toString()}`;
 };
 
-const resetPassword = (student: Student) => {
-    if (!student.user_id || !['default', 'changed'].includes(student.account_status ?? '') || !window.confirm(`Buat sandi sementara baru untuk ${student.name}? Sandi akan ditampilkan setelah reset. Sampaikan secara pribadi kepada siswa.`)) return;
+const resetPassword = async (student: Student) => {
+    if (!student.user_id || !['default', 'changed'].includes(student.account_status ?? '') || !await requestConfirmation(`Buat sandi sementara baru untuk ${student.name}? Sandi akan ditampilkan setelah reset. Sampaikan secara pribadi kepada siswa.`)) return;
 
     router.post(`/akademik/siswa/${student.id}/reset-password`, {}, { preserveScroll: true });
 };
 
-const deleteStudent = (student: Student) => {
-    if (!window.confirm(`Hapus data siswa ${student.name}? Hanya siswa tanpa riwayat akademik yang dapat dihapus. Akun pengguna tidak ikut dihapus. Tindakan ini tidak dapat dibatalkan.`)) return;
+const deleteStudent = async (student: Student) => {
+    if (!await requestConfirmation(`Hapus data siswa ${student.name}? Hanya siswa tanpa riwayat akademik yang dapat dihapus. Akun pengguna tidak ikut dihapus. Tindakan ini tidak dapat dibatalkan.`)) return;
 
     router.delete(`/akademik/siswa/${student.id}`, { preserveScroll: true });
 };
@@ -241,7 +242,7 @@ const deleteStudent = (student: Student) => {
 
 <template>
     <AppLayout title="Data Siswa">
-        <Head title="Data Siswa — School Suite" />
+        <Head title="Data Siswa" />
 
         <div class="view student-page space-y-5">
             <!-- Header bar -->
@@ -389,13 +390,13 @@ const deleteStudent = (student: Student) => {
                                 <th scope="col" v-if="can_manage" class="student-actions-heading px-5 py-3.5 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tbody class="divide-y divide-slate-100 text-[var(--ink-soft)]">
                             <tr v-for="s in students.data" :key="s.id" class="student-data-row">
-                                <td class="px-5 py-3.5 font-medium text-slate-900">
+                                <td class="px-5 py-3.5 font-medium text-[var(--ink)]">
                                     <div>{{ s.nis }}</div>
-                                    <div class="text-meta text-slate-600 font-normal">{{ s.nisn || '-' }}</div>
+                                    <div class="text-meta text-[var(--ink-soft)] font-normal">{{ s.nisn || '-' }}</div>
                                 </td>
-                                <td class="px-5 py-3.5 font-medium text-slate-900">
+                                <td class="px-5 py-3.5 font-medium text-[var(--ink)]">
                                     {{ s.name }}
                                 </td>
                                 <td class="px-5 py-3.5">
@@ -411,9 +412,9 @@ const deleteStudent = (student: Student) => {
                                         Belum Ada Rombel
                                     </span>
                                 </td>
-                                <td class="px-5 py-3.5 text-meta text-slate-600">
+                                <td class="px-5 py-3.5 text-meta text-[var(--ink-soft)]">
                                     <div>{{ s.parent_name || '-' }}</div>
-                                    <div class="text-slate-600">{{ s.parent_phone || '' }}</div>
+                                    <div class="text-[var(--ink-soft)]">{{ s.parent_phone || '' }}</div>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span :class="s.status === 'active' ? 'text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full text-meta font-medium' : 'text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full text-meta'">
@@ -442,7 +443,7 @@ const deleteStudent = (student: Student) => {
                                 </td>
                             </tr>
                             <tr v-if="students.data.length === 0">
-                                <td :colspan="can_manage ? 8 : 6" class="px-5 py-12 text-center text-slate-600">
+                                <td :colspan="can_manage ? 8 : 6" class="px-5 py-12 text-center text-[var(--ink-soft)]">
                                     Tidak ada data siswa yang cocok dengan filter.
                                 </td>
                             </tr>
@@ -488,7 +489,7 @@ const deleteStudent = (student: Student) => {
                                 :href="link.url"
                                 v-html="link.label"
                                 :class="link.active ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-600 hover:bg-slate-100'"
-                                class="px-2.5 py-1 rounded-sm border border-slate-200 transition"
+                                class="px-2.5 py-1 rounded-sm border border-[var(--line)] transition"
                             />
                         </template>
                     </div>
@@ -500,39 +501,39 @@ const deleteStudent = (student: Student) => {
         <div v-if="showAddModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="student-add-title" class="student-overlay">
             <div class="student-drawer space-y-4">
                 <div class="student-drawer-header flex items-center justify-between border-b pb-3">
-                    <h3 id="student-add-title" class="text-lg font-bold text-slate-900">Tambah siswa</h3>
+                    <h3 id="student-add-title" class="text-lg font-bold text-[var(--ink)]">Tambah siswa</h3>
                     <AppButton variant="ghost" icon-only icon="close" type="button" @click="showAddModal = false" class="modal-close-button" aria-label="Tutup formulir tambah siswa">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label for="student-add-nis" class="block text-meta font-semibold text-slate-700 mb-1">NIS *</label>
+                            <label for="student-add-nis" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">NIS *</label>
                             <input id="student-add-nis" v-model="form.nis" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                             <div v-if="form.errors.nis" class="text-meta text-red-600 mt-1">{{ form.errors.nis }}</div>
                         </div>
                         <div>
-                            <label for="student-add-nisn" class="block text-meta font-semibold text-slate-700 mb-1">NISN</label>
+                            <label for="student-add-nisn" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">NISN</label>
                             <input id="student-add-nisn" v-model="form.nisn" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
 
                     <div>
-                        <label for="student-add-name" class="block text-meta font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+                        <label for="student-add-name" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama Lengkap *</label>
                         <input id="student-add-name" v-model="form.name" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <div v-if="form.errors.name" class="text-meta text-red-600 mt-1">{{ form.errors.name }}</div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label for="student-add-gender" class="block text-meta font-semibold text-slate-700 mb-1">Jenis Kelamin *</label>
+                            <label for="student-add-gender" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Jenis Kelamin *</label>
                             <select id="student-add-gender" v-model="form.gender" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="L">Laki-laki (L)</option>
                                 <option value="P">Perempuan (P)</option>
                             </select>
                         </div>
                         <div>
-                            <label for="student-add-class" class="block text-meta font-semibold text-slate-700 mb-1">Daftarkan ke Rombel</label>
+                            <label for="student-add-class" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Daftarkan ke Rombel</label>
                             <select id="student-add-class" v-model="form.class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="">(Belum Ditempatkan)</option>
                                 <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
@@ -541,21 +542,21 @@ const deleteStudent = (student: Student) => {
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div><label for="student-add-birth-place" class="block text-meta font-semibold text-slate-700 mb-1">Tempat lahir</label><input id="student-add-birth-place" v-model="form.birth_place" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
-                        <div><label for="student-add-birth-date" class="block text-meta font-semibold text-slate-700 mb-1">Tanggal lahir</label><input id="student-add-birth-date" v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                        <div><label for="student-add-birth-place" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tempat lahir</label><input id="student-add-birth-place" v-model="form.birth_place" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                        <div><label for="student-add-birth-date" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tanggal lahir</label><input id="student-add-birth-date" v-model="form.birth_date" type="date" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div><label for="student-add-religion" class="block text-meta font-semibold text-slate-700 mb-1">Agama</label><input id="student-add-religion" v-model="form.religion" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
-                        <div><label for="student-add-address" class="block text-meta font-semibold text-slate-700 mb-1">Alamat</label><input id="student-add-address" v-model="form.address" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                        <div><label for="student-add-religion" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Agama</label><input id="student-add-religion" v-model="form.religion" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
+                        <div><label for="student-add-address" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Alamat</label><input id="student-add-address" v-model="form.address" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" /></div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <label for="student-add-parent" class="block text-meta font-semibold text-slate-700 mb-1">Nama Wali / Orang Tua</label>
+                            <label for="student-add-parent" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama Wali / Orang Tua</label>
                             <input id="student-add-parent" v-model="form.parent_name" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label for="student-add-phone" class="block text-meta font-semibold text-slate-700 mb-1">No. HP Orang Tua</label>
+                            <label for="student-add-phone" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">No. HP Orang Tua</label>
                             <input id="student-add-phone" v-model="form.parent_phone" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
@@ -578,7 +579,7 @@ const deleteStudent = (student: Student) => {
                 <div class="student-drawer-header flex items-center justify-between border-b pb-3">
                     <div>
                         <p class="text-meta font-bold uppercase tracking-[.12em] text-indigo-600">Perbarui data</p>
-                        <h3 id="student-edit-title" class="text-lg font-bold text-slate-900">Edit data siswa</h3>
+                        <h3 id="student-edit-title" class="text-lg font-bold text-[var(--ink)]">Edit data siswa</h3>
                         <p v-if="editingStudent" class="student-edit-context">{{ editingStudent.name }} · NIS {{ editingStudent.nis }}</p>
                     </div>
                     <AppButton variant="ghost" icon-only icon="close" type="button" @click="closeEdit()" class="modal-close-button" aria-label="Tutup formulir edit siswa">✕</AppButton>
@@ -586,28 +587,28 @@ const deleteStudent = (student: Student) => {
 
                 <form @submit.prevent="submitEdit" class="space-y-4">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label class="text-meta font-semibold text-slate-700">NIS
-                            <input v-model="editForm.nis" type="text" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">NIS
+                            <input v-model="editForm.nis" type="text" required class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                             <span v-if="editForm.errors.nis" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.nis }}</span>
                         </label>
-                        <label class="text-meta font-semibold text-slate-700">NISN
-                            <input v-model="editForm.nisn" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">NISN
+                            <input v-model="editForm.nisn" type="text" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                             <span v-if="editForm.errors.nisn" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.nisn }}</span>
                         </label>
                     </div>
-                    <label class="block text-meta font-semibold text-slate-700">Nama lengkap
-                        <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <label class="block text-meta font-semibold text-[var(--ink-soft)]">Nama lengkap
+                        <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                         <span v-if="editForm.errors.name" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.name }}</span>
                     </label>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label class="text-meta font-semibold text-slate-700">Gender
-                            <select v-model="editForm.gender" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm">
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Gender
+                            <select v-model="editForm.gender" class="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm">
                                 <option value="L">Laki-laki</option>
                                 <option value="P">Perempuan</option>
                             </select>
                         </label>
-                        <label class="text-meta font-semibold text-slate-700">Status
-                            <select v-model="editForm.status" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm">
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Status
+                            <select v-model="editForm.status" class="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm">
                                 <option value="active">Aktif</option>
                                 <option value="graduated">Lulus</option>
                                 <option value="transferred">Pindah</option>
@@ -616,31 +617,31 @@ const deleteStudent = (student: Student) => {
                         </label>
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label class="text-meta font-semibold text-slate-700">Tempat lahir
-                            <input v-model="editForm.birth_place" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Tempat lahir
+                            <input v-model="editForm.birth_place" type="text" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                             <span v-if="editForm.errors.birth_place" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.birth_place }}</span>
                         </label>
-                        <label class="text-meta font-semibold text-slate-700">Tanggal lahir
-                            <input v-model="editForm.birth_date" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Tanggal lahir
+                            <input v-model="editForm.birth_date" type="date" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                             <span v-if="editForm.errors.birth_date" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.birth_date }}</span>
                         </label>
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label class="text-meta font-semibold text-slate-700">Agama
-                            <input v-model="editForm.religion" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Agama
+                            <input v-model="editForm.religion" type="text" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                             <span v-if="editForm.errors.religion" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.religion }}</span>
                         </label>
-                        <label class="text-meta font-semibold text-slate-700">Alamat
-                            <input v-model="editForm.address" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Alamat
+                            <input v-model="editForm.address" type="text" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                             <span v-if="editForm.errors.address" class="mt-1 block text-meta font-medium text-red-600">{{ editForm.errors.address }}</span>
                         </label>
                     </div>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label class="text-meta font-semibold text-slate-700">Nama wali / orang tua
-                            <input v-model="editForm.parent_name" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">Nama wali / orang tua
+                            <input v-model="editForm.parent_name" type="text" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                         </label>
-                        <label class="text-meta font-semibold text-slate-700">No. HP orang tua
-                            <input v-model="editForm.parent_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <label class="text-meta font-semibold text-[var(--ink-soft)]">No. HP orang tua
+                            <input v-model="editForm.parent_phone" type="text" class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                         </label>
                     </div>
                     <div class="student-drawer-footer flex justify-end gap-2 border-t pt-4">
@@ -656,7 +657,7 @@ const deleteStudent = (student: Student) => {
         <div v-if="showImportModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="student-import-title" class="student-overlay">
             <div class="student-drawer space-y-4">
                 <div class="student-drawer-header flex items-center justify-between border-b pb-3">
-                    <h3 id="student-import-title" class="text-lg font-bold text-slate-900">Impor Massal Siswa</h3>
+                    <h3 id="student-import-title" class="text-lg font-bold text-[var(--ink)]">Impor Massal Siswa</h3>
                     <AppButton variant="ghost" icon-only icon="close" type="button" @click="showImportModal = false" class="modal-close-button" aria-label="Tutup formulir impor siswa">✕</AppButton>
                 </div>
 
@@ -665,19 +666,19 @@ const deleteStudent = (student: Student) => {
                     <p>Kolom Kelas harus cocok dengan satu kelas tujuan yang dipilih. Impor tidak membuat kelas atau akun pengguna.</p>
                     <p>NIK dan kolom yang tidak didukung akan ditandai di preview dan tidak disimpan.</p>
                     <code class="block font-mono text-meta text-indigo-900">NIS, NISN, NIK, Nama Lengkap, Kelas, L/P, Tempat Lahir, Tanggal Lahir, Agama, Alamat, Nama Orang Tua, No. HP, Status</code>
-                    <div class="flex flex-wrap gap-3 pt-2"><a href="/akademik/siswa/template?format=xlsx" class="font-medium text-indigo-600 underline">Unduh template Excel</a><a href="/akademik/siswa/template" class="font-medium text-indigo-600 underline">Template CSV</a></div>
+                    <div class="flex flex-wrap gap-3 pt-2"><AppButton icon="excel" keep-label as="a" href="/akademik/siswa/template?format=xlsx" class="font-medium text-indigo-600 underline">Unduh template Excel</AppButton><AppButton icon="excel" keep-label as="a" href="/akademik/siswa/template" class="font-medium text-indigo-600 underline">Template CSV</AppButton></div>
                 </div>
 
                 <form @submit.prevent="submitImport" class="space-y-4">
                     <div>
-                        <label for="student-import-file" class="block text-meta font-semibold text-slate-700 mb-1">Pilih Berkas CSV atau XLSX (maks. 5 MB) *</label>
+                        <label for="student-import-file" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Pilih Berkas CSV atau XLSX (maks. 5 MB) *</label>
                         <input id="student-import-file" type="file" accept=".csv,.txt,.xlsx" @change="handleFileUpload" required class="w-full text-sm border rounded-lg p-2" />
-                        <p class="mt-1 text-meta text-slate-600">Maksimal 1.000 siswa per berkas. Periksa data melalui preview sebelum menyimpan.</p>
+                        <p class="mt-1 text-meta text-[var(--ink-soft)]">Maksimal 1.000 siswa per berkas. Periksa data melalui preview sebelum menyimpan.</p>
                         <div v-if="importForm.errors.csv_file" class="text-meta text-red-600 mt-1 font-medium">{{ importForm.errors.csv_file }}</div>
                     </div>
 
                     <div>
-                        <label for="student-import-class" class="block text-meta font-semibold text-slate-700 mb-1">Kelas tujuan (wajib jika kolom Kelas terisi)</label>
+                        <label for="student-import-class" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kelas tujuan (wajib jika kolom Kelas terisi)</label>
                         <select id="student-import-class" v-model="importForm.enroll_class_group_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">(Hanya simpan data siswa, jangan tempatkan ke rombel)</option>
                             <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
@@ -37,6 +39,7 @@ const categories = computed(() => {
     if (selectedCategory.value === 'all') return filtered;
     return filtered.filter((category) => category.key === selectedCategory.value);
 });
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -46,25 +49,25 @@ const categories = computed(() => {
 
         <section class="portal-container">
             <header class="portal-hero madrasah-profile-hero">
-                <p class="eyebrow">Katalog E-Layanan</p>
-                <h1>Layanan Digital {{ school.name }}</h1>
-                <p>Cari dan buka layanan persuratan, kesiswaan, aduan, perpustakaan, pusat unduh, dan zona integritas.</p>
+                <p class="eyebrow">{{ publicText("copy.vue_services_index", "text_001", "Katalog E-Layanan") }}</p>
+                <h1>{{ publicText("copy.vue_services_index", "text_9001", "Layanan Digital") }} {{ school.name }}</h1>
+                <p>{{ publicText("copy.vue_services_index", "text_002", "Cari dan buka layanan persuratan, kesiswaan, aduan, perpustakaan, pusat unduh, dan zona integritas.") }}</p>
             </header>
 
             <div class="portal-toolbar">
-                <label class="sr-only" for="catalog-search">Cari layanan</label>
+                <label class="sr-only" for="catalog-search">{{ publicText("copy.vue_services_index", "text_003", "Cari layanan") }}</label>
                 <input
                     id="catalog-search"
                     v-model="query"
                     type="search"
                     class="portal-search-input"
-                    placeholder="Cari nama layanan atau kata kunci (mis. PTSP, izin, legalisir, pustaka)..."
+                    :placeholder="publicText('copy.vue_services_index', 'placeholder_009', 'Cari nama layanan atau kata kunci (mis. PTSP, izin, legalisir, pustaka)...')"
                 />
-                <div class="portal-chips" role="group" aria-label="Filter kategori layanan">
-                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'all' }" @click="selectedCategory = 'all'">Semua</button>
-                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'correspondence' }" @click="selectedCategory = 'correspondence'">Persuratan &amp; Tamu</button>
-                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'students' }" @click="selectedCategory = 'students'">Siswa &amp; Alumni</button>
-                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'order_facilities' }" @click="selectedCategory = 'order_facilities'">Ketertiban &amp; Pustaka</button>
+                <div class="portal-chips" role="group" :aria-label="publicText('copy.vue_services_index', 'aria_label_010', 'Filter kategori layanan')">
+                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'all' }" @click="selectedCategory = 'all'">{{ publicText("copy.vue_services_index", "text_004", "Semua") }}</button>
+                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'correspondence' }" @click="selectedCategory = 'correspondence'">{{ publicText("copy.vue_services_index", "text_005", "Persuratan & Tamu") }}</button>
+                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'students' }" @click="selectedCategory = 'students'">{{ publicText("copy.vue_services_index", "text_006", "Siswa & Alumni") }}</button>
+                    <button type="button" class="portal-chip" :class="{ 'is-active': selectedCategory === 'order_facilities' }" @click="selectedCategory = 'order_facilities'">{{ publicText("copy.vue_services_index", "text_007", "Ketertiban & Pustaka") }}</button>
                 </div>
             </div>
 
@@ -75,13 +78,13 @@ const categories = computed(() => {
                         <p>{{ category.subtitle }}</p>
                     </div>
                     <div class="catalog-grid">
-                        <Link v-for="item in category.items" :key="item.id" :href="item.href" class="catalog-card">
+                        <component :is="item.available ? Link : 'div'" v-for="item in category.items" :key="item.id" :href="item.available ? item.href : undefined" :aria-disabled="!item.available || undefined" class="catalog-card">
                             <div class="catalog-card__top">
                                 <strong>{{ item.title }}</strong>
                                 <span v-if="item.badge" class="catalog-badge" :class="{ 'is-soon': !item.available }">{{ item.badge }}</span>
                             </div>
                             <p>{{ item.description }}</p>
-                        </Link>
+                        </component>
                     </div>
                 </section>
             </div>
@@ -89,12 +92,12 @@ const categories = computed(() => {
             <StateFeedback
                 v-else
                 state="empty"
-                title="Layanan tidak ditemukan"
+                :title="publicText('copy.vue_services_index', 'title_011', 'Layanan tidak ditemukan')"
                 :description="`Tidak ada layanan yang cocok dengan kata kunci '${query}'.`"
             >
                 <template #actions>
                     <button type="button" class="ui-button ui-button--secondary ui-button--md" @click="query = ''; selectedCategory = 'all'">
-                        Tampilkan semua layanan
+                        {{ publicText("copy.vue_services_index", "text_008", "Tampilkan semua layanan") }}
                     </button>
                 </template>
             </StateFeedback>

@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+  $schoolName = ($profile['name'] ?? null) ?: 'Sekolah';
   $dummyTeachers = [
       ['name' => 'Drs. H. Ahmad Hidayat, M.Pd.', 'position' => 'Kepala Madrasah', 'badge' => 'Pembina Tk. I / IV b', 'avatar' => '/madrasah-theme/images/portrait.webp'],
       ['name' => 'Siti Aminah, S.Pd., M.Pd.', 'position' => 'Wakil Kepala Bidang Kurikulum', 'badge' => 'Guru Ahli Madya / IV a', 'avatar' => '/madrasah-theme/images/classroom.webp'],
@@ -52,10 +52,10 @@
       <div class="grid lg:grid-cols-12 gap-8 items-center">
         <div class="lg:col-span-8">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-3 border border-emerald-400/30">
-            <i class="fa-solid fa-chalkboard-user text-accent-yellow"></i> Pendidik Berintegritas
+            <i class="fa-solid fa-chalkboard-user text-accent-yellow"></i> {{ ($contentBlocks['copy.blade_teachers']['text_001'] ?? 'Pendidik Berintegritas') }}
           </div>
           <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3 leading-tight">
-            Direktori Guru &amp; Tenaga Kependidikan
+            {{ ($contentBlocks['copy.blade_teachers']['text_002'] ?? 'Direktori Guru & Tenaga Kependidikan') }}
           </h1>
           <p class="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
             Mengenal lebih dekat tenaga pendidik dan kependidikan profesional {{ $schoolName }} yang berdedikasi membimbing santri berakhlak mulia, unggul riset sains, dan berprestasi nasional.
@@ -64,16 +64,16 @@
           <form action="/direktori-gtk" method="GET" class="mt-6 flex flex-col sm:flex-row gap-2 max-w-2xl">
             <div class="relative flex-1">
               <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-              <input type="search" name="q" aria-label="Cari guru atau tenaga kependidikan" value="{{ $q }}" placeholder="Cari nama guru, NIP, NUPTK, mapel..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
+              <input type="search" name="q" aria-label="{{ ($contentBlocks['copy.blade_teachers']['aria_label_010'] ?? 'Cari guru atau tenaga kependidikan') }}" value="{{ $q }}" placeholder="{{ ($contentBlocks['copy.blade_teachers']['placeholder_011'] ?? 'Cari nama guru, NIP, NUPTK, mapel...') }}" class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
             </div>
-            <select name="mapel" aria-label="Filter bidang tugas atau mata pelajaran" class="py-3 px-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none">
-              <option value="">Semua Mata Pelajaran</option>
+            <select name="mapel" aria-label="{{ ($contentBlocks['copy.blade_teachers']['aria_label_012'] ?? 'Filter bidang tugas atau mata pelajaran') }}" class="py-3 px-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none">
+              <option value="">{{ ($contentBlocks['copy.blade_teachers']['text_003'] ?? 'Semua Mata Pelajaran') }}</option>
               @foreach ($positions as $pos)
                 <option value="{{ $pos }}" @selected(mb_strtolower($selectedPosition) === mb_strtolower($pos))>{{ $pos }}</option>
               @endforeach
             </select>
             <button type="submit" class="bg-accent-gold hover:bg-amber-500 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm flex items-center justify-center gap-2">
-              <span>Cari</span>
+              <span>{{ ($contentBlocks['copy.blade_teachers']['text_004'] ?? 'Cari') }}</span>
               <i class="fa-solid fa-filter"></i>
             </button>
           </form>
@@ -89,15 +89,15 @@
         <div class="lg:col-span-4 grid grid-cols-3 gap-3 text-center">
           <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
             <span class="text-2xl sm:text-3xl font-black text-accent-yellow block font-sans">{{ count($displayTeachers) }}</span>
-            <span class="text-[10px] text-emerald-200 uppercase font-semibold">Total GTK</span>
+            <span class="text-[10px] text-emerald-200 uppercase font-semibold">{{ ($contentBlocks['copy.blade_teachers']['text_005'] ?? 'Total GTK') }}</span>
           </div>
           <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
             <span class="text-2xl sm:text-3xl font-black text-white block font-sans">{{ $guruCount }}</span>
-            <span class="text-[10px] text-emerald-200 uppercase font-semibold">Guru Pengajar</span>
+            <span class="text-[10px] text-emerald-200 uppercase font-semibold">{{ ($contentBlocks['copy.blade_teachers']['text_006'] ?? 'Guru Pengajar') }}</span>
           </div>
           <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
             <span class="text-2xl sm:text-3xl font-black text-accent-yellow block font-sans">{{ $tendikCount }}</span>
-            <span class="text-[10px] text-emerald-200 uppercase font-semibold">Tenaga Kependidikan</span>
+            <span class="text-[10px] text-emerald-200 uppercase font-semibold">{{ ($contentBlocks['copy.blade_teachers']['text_007'] ?? 'Tenaga Kependidikan') }}</span>
           </div>
         </div>
       </div>
@@ -109,14 +109,14 @@
     <div class="flex flex-col sm:flex-row items-center justify-between pb-6 mb-6 border-b border-slate-200 gap-3">
       <div>
         <h2 class="text-lg font-bold text-slate-900">
-          Daftar Guru &amp; Tenaga Kependidikan
+          {{ ($contentBlocks['copy.blade_teachers']['text_008'] ?? 'Daftar Guru & Tenaga Kependidikan') }}
         </h2>
         <p class="text-xs text-slate-500 mt-0.5">
           Menampilkan {{ count($displayTeachers) }} GTK terdaftar
         </p>
       </div>
       @if ($q !== '' || $selectedPosition !== '')
-        <a href="/direktori-gtk" class="text-xs font-bold text-kemenag-700 hover:underline">Reset Filter</a>
+        <a href="{{ ($contentBlocks['copy.blade_teachers']['href_013'] ?? '/direktori-gtk') }}" class="text-xs font-bold text-kemenag-700 hover:underline">{{ ($contentBlocks['copy.blade_teachers']['text_009'] ?? 'Reset Filter') }}</a>
       @endif
     </div>
 

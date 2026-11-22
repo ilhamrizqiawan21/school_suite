@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -99,8 +100,8 @@ function applyBulkStatus() {
     indices.forEach(index => { form.records[index].status = bulkStatus.value; });
     bulkMessage.value = `${indices.length} guru ditandai ${statuses.find(status => status.value === bulkStatus.value)?.label}. Periksa lalu klik Simpan absensi.`;
 }
-function resetChanges() {
-    if (busy.value || !changedCount.value || !window.confirm('Batalkan perubahan absensi yang belum disimpan?')) return;
+async function resetChanges() {
+    if (busy.value || !changedCount.value || !await requestConfirmation('Batalkan perubahan absensi yang belum disimpan?')) return;
     form.records = initialRecords();
     bulkMessage.value = '';
     form.clearErrors();
@@ -119,10 +120,19 @@ const warnBeforeUnload = (event: BeforeUnloadEvent) => {
     if (changedCount.value > 0) { event.preventDefault(); event.returnValue = ''; }
 };
 let removeBeforeListener: (() => void) | undefined;
+let leaveApproved = false;
 onMounted(() => {
     window.addEventListener('beforeunload', warnBeforeUnload);
     removeBeforeListener = router.on('before', event => {
-        if (event.detail.visit.method === 'get' && changedCount.value > 0 && !window.confirm('Ada perubahan absensi yang belum disimpan. Tinggalkan perubahan?')) event.preventDefault();
+        if (!leaveApproved && event.detail.visit.method === 'get' && changedCount.value > 0) {
+            event.preventDefault();
+            const visit = event.detail.visit;
+            void requestConfirmation('Ada perubahan absensi yang belum disimpan. Tinggalkan perubahan?').then((accepted) => {
+                if (!accepted) { selectedDate.value = props.date; return; }
+                leaveApproved = true;
+                router.visit(visit.url, { ...visit, onStart: () => { loadingDate.value = true; }, onFinish: () => { leaveApproved = false; loadingDate.value = false; } });
+            });
+        }
     });
 });
 onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnload); removeBeforeListener?.(); });
@@ -171,12 +181,12 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                     <AppButton variant="secondary" type="button" class="secondary-button" :disabled="busy || date >= today" @click="shiftDate(1)">Hari berikutnya</AppButton>
                     <AppButton variant="secondary" class="secondary-button" :disabled="busy || date === today" type="button" @click="showDate(today)">Hari ini</AppButton>
                 </form>
-                <p class="mt-3 text-sm text-slate-600">{{ can_manage_all ? 'Kelola seluruh guru aktif di sekolah.' : 'Anda hanya dapat mengisi absensi sendiri.' }}</p>
+                <p class="mt-3 text-sm text-[var(--ink-soft)]">{{ can_manage_all ? 'Kelola seluruh guru aktif di sekolah.' : 'Anda hanya dapat mengisi absensi sendiri.' }}</p>
                 <p v-if="page.props.errors?.date" class="mt-2 text-sm text-red-700" role="alert">{{ page.props.errors.date }}</p>
             </section>
             <section class="panel attendance-list-panel overflow-hidden">
-                <header class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4"><div><h2 class="text-base font-semibold">{{ formatDate(date) }}</h2><p class="mt-1 text-sm text-slate-600">Isian awal Hadir adalah usulan, belum tercatat sampai disimpan.</p></div><span class="text-sm text-slate-600">{{ visibleRows.length }} dari {{ rows.length }} guru</span></header>
-                <div v-if="!rows.length" class="px-6 py-14 text-center text-sm text-slate-600">{{ can_manage_all ? 'Belum ada guru aktif untuk dicatat.' : 'Data guru aktif Anda belum tersedia.' }}</div>
+                <header class="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4"><div><h2 class="text-base font-semibold">{{ formatDate(date) }}</h2><p class="mt-1 text-sm text-[var(--ink-soft)]">Isian awal Hadir adalah usulan, belum tercatat sampai disimpan.</p></div><span class="text-sm text-[var(--ink-soft)]">{{ visibleRows.length }} dari {{ rows.length }} guru</span></header>
+                <div v-if="!rows.length" class="px-6 py-14 text-center text-sm text-[var(--ink-soft)]">{{ can_manage_all ? 'Belum ada guru aktif untuk dicatat.' : 'Data guru aktif Anda belum tersedia.' }}</div>
                 <form v-else @submit.prevent="save">
                     <div v-if="can_manage_all" class="space-y-4 border-b px-5 py-4">
                         <div class="flex flex-wrap gap-3">
@@ -191,28 +201,28 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', warnBeforeUnl
                             <AppButton variant="secondary" type="button" class="secondary-button" :disabled="busy || !bulkIndices.length" @click="applyBulkStatus">Terapkan ke {{ bulkIndices.length }} guru</AppButton>
                             <AppButton variant="secondary" v-if="selectedIds.length" type="button" class="secondary-button" :disabled="busy" @click="selectedIds = []">Batalkan pilihan</AppButton>
                         </div>
-                        <p class="text-meta text-slate-600">Aksi massal hanya mengubah status; keterangan dipertahankan. Pilihan guru tetap berlaku saat filter berubah. Perubahan menunggu tombol Simpan absensi.</p>
+                        <p class="text-meta text-[var(--ink-soft)]">Aksi massal hanya mengubah status; keterangan dipertahankan. Pilihan guru tetap berlaku saat filter berubah. Perubahan menunggu tombol Simpan absensi.</p>
                     </div>
                     <p v-if="bulkMessage" class="px-5 py-3 text-sm text-blue-700" role="status">{{ bulkMessage }}</p>
                     <ul v-if="Object.keys(form.errors).length" class="px-5 py-3 text-sm text-red-700" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
-                    <div class="flex flex-wrap gap-4 border-b px-5 py-3 text-meta text-slate-600" aria-label="Ringkasan status isian"><span v-for="status in statuses" :key="status.value">{{ status.label }}: {{ attendanceSummary[status.value] }}</span><span>Termasuk usulan yang belum disimpan</span></div>
+                    <div class="flex flex-wrap gap-4 border-b px-5 py-3 text-meta text-[var(--ink-soft)]" aria-label="Ringkasan status isian"><span v-for="status in statuses" :key="status.value">{{ status.label }}: {{ attendanceSummary[status.value] }}</span><span>Termasuk usulan yang belum disimpan</span></div>
                     <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                         <table class="app-table attendance-table w-full text-left text-sm">
                             <thead><tr><th scope="col" v-if="can_manage_all"><input type="checkbox" :checked="allVisibleSelected" :indeterminate="someVisibleSelected && !allVisibleSelected" :disabled="busy || !visibleRows.length" aria-label="Pilih semua guru hasil filter" @change="toggleVisible(($event.target as HTMLInputElement).checked)" /></th><th scope="col">Guru</th><th scope="col">Status</th><th scope="col">Keterangan</th><th scope="col">Pencatatan &amp; pengganti</th></tr></thead>
                             <tbody>
                                 <tr v-for="{ row, index } in visibleRows" :key="row.teacher_id">
                                     <td v-if="can_manage_all" data-label="Pilih"><input v-model="selectedIds" type="checkbox" :value="row.teacher_id" :disabled="busy" :aria-label="`Pilih ${row.name}`" /></td>
-                                    <td data-label="Guru"><strong class="block">{{ row.name }}</strong><small class="text-slate-600">NIP {{ row.nip || '—' }}</small><span v-if="isChanged(index)" class="attendance-badge is-pending">Diubah</span></td>
+                                    <td data-label="Guru"><strong class="block">{{ row.name }}</strong><small class="text-[var(--ink-soft)]">NIP {{ row.nip || '—' }}</small><span v-if="isChanged(index)" class="attendance-badge is-pending">Diubah</span></td>
                                     <td data-label="Status"><select v-model="form.records[index].status" :disabled="busy" :aria-label="`Status ${row.name}`"><option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option></select><small v-if="recordError(index, 'status')" class="block text-red-700">{{ recordError(index, 'status') }}</small></td>
                                     <td data-label="Keterangan"><input v-model="form.records[index].notes" :disabled="busy" :aria-label="`Keterangan ${row.name}`" maxlength="255" placeholder="Keterangan opsional" /><small v-if="recordError(index, 'notes')" class="block text-red-700">{{ recordError(index, 'notes') }}</small></td>
-                                    <td data-label="Pencatatan"><span class="attendance-badge" :class="row.record_id ? 'is-saved' : 'is-pending'">{{ row.record_id ? 'Tercatat' : 'Belum dicatat' }}</span><small v-if="row.updated_at" class="mt-1 block text-slate-600">{{ formatUpdated(row.updated_at) }}{{ row.recorded_by ? ` · ${row.recorded_by}` : '' }}</small><Link v-if="row.substitute_url && !isChanged(index)" class="mt-2 block text-sm font-semibold text-blue-700" :href="row.substitute_url">Atur pengganti</Link><small v-else-if="form.records[index].status !== 'present'" class="mt-2 block text-slate-600">{{ isChanged(index) || !row.record_id ? 'Simpan untuk mengatur pengganti.' : '' }}</small></td>
+                                    <td data-label="Pencatatan"><span class="attendance-badge" :class="row.record_id ? 'is-saved' : 'is-pending'">{{ row.record_id ? 'Tercatat' : 'Belum dicatat' }}</span><small v-if="row.updated_at" class="mt-1 block text-[var(--ink-soft)]">{{ formatUpdated(row.updated_at) }}{{ row.recorded_by ? ` · ${row.recorded_by}` : '' }}</small><Link v-if="row.substitute_url && !isChanged(index)" class="mt-2 block text-sm font-semibold text-blue-700" :href="row.substitute_url">Atur pengganti</Link><small v-else-if="form.records[index].status !== 'present'" class="mt-2 block text-[var(--ink-soft)]">{{ isChanged(index) || !row.record_id ? 'Simpan untuk mengatur pengganti.' : '' }}</small></td>
                                 </tr>
-                                <tr v-if="!visibleRows.length"><td :colspan="can_manage_all ? 5 : 4" class="py-10 text-center text-slate-600">Tidak ada guru sesuai filter. <button class="font-semibold underline" type="button" @click="search = ''; statusFilter = ''; recordingFilter = ''">Reset filter</button></td></tr>
+                                <tr v-if="!visibleRows.length"><td :colspan="can_manage_all ? 5 : 4" class="py-10 text-center text-[var(--ink-soft)]">Tidak ada guru sesuai filter. <button class="font-semibold underline" type="button" @click="search = ''; statusFilter = ''; recordingFilter = ''">Reset filter</button></td></tr>
                             </tbody>
                         </table>
                     </div>
                     <footer class="attendance-save-bar">
-                        <div><strong>{{ pendingIndices.length }} catatan perlu disimpan</strong><p class="mt-1 text-meta text-slate-600">Mencakup guru baru dan perubahan, termasuk yang tidak terlihat karena filter.</p></div>
+                        <div><strong>{{ pendingIndices.length }} catatan perlu disimpan</strong><p class="mt-1 text-meta text-[var(--ink-soft)]">Mencakup guru baru dan perubahan, termasuk yang tidak terlihat karena filter.</p></div>
                         <div class="flex flex-wrap gap-2"><AppButton variant="secondary" type="button" class="secondary-button" :disabled="busy || !changedCount" @click="resetChanges">Batalkan perubahan</AppButton><AppButton variant="primary" type="submit" class="primary-button" :disabled="busy || !pendingIndices.length">{{ form.processing ? 'Menyimpan…' : 'Simpan absensi' }}</AppButton></div>
                     </footer>
                 </form>

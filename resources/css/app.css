@@ -9,6 +9,18 @@
 @import './buttons.css';
 @import './theme.css';
 
+.admin-form-overlay { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / 56%); }
+.admin-form-dialog { width: min(1080px, 100%); max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.admin-form-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+.admin-form-header h2 { font-weight: var(--weight-bold); }
+.admin-form-dialog > .admin-form-header { position: sticky; top: 0; z-index: 2; padding: .5rem 0; background: var(--surface); }
+.admin-form-dialog :where(form, fieldset, label, .grid, .grid > *) { min-width: 0; }
+.admin-form-dialog :where(input, select, textarea) { max-width: 100%; min-width: 0; }
+.admin-form-dialog label { overflow-wrap: anywhere; }
+.password-field { display: flex; align-items: center; gap: .5rem; }
+.password-field input { flex: 1; min-width: 0; }
+@media (max-width: 600px) { .admin-form-overlay { padding: .5rem; } .admin-form-dialog { padding: .75rem; max-height: calc(100dvh - 1rem); } }
+
 .app-toast { position: fixed; z-index: 100; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: flex-start; gap: 12px; width: min(440px, calc(100vw - 32px)); padding: 14px 16px; color: #fff; background: #26344d; border: 1px solid #26344d; border-radius: 12px; box-shadow: var(--shadow-md); font-size: var(--type-md); overflow-wrap: anywhere; }
 .app-toast--error { color: var(--red); background: var(--red-soft); border-color: var(--delete-line); }
 .app-toast-mark { display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; color: #bde2d1; font-weight: var(--weight-bold); }

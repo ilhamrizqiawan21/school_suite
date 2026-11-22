@@ -1,5 +1,55 @@
 :root { color-scheme: light; }
+.error-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: #f8fafc; color: #0f172a; }
+.error-panel { width: min(680px, 100%); display: grid; justify-items: center; gap: 20px; padding: clamp(24px, 6vw, 72px); text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+.error-panel h1 { margin: 0; font-size: clamp(24px, 4vw, 30px); line-height: 1.3; }
+.error-code { margin: 0; padding: 6px 14px; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 12px; }
+.error-description { margin: 0; color: #475569; line-height: 1.6; }
+.error-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+.error-action { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 6px; color: inherit; text-decoration: none; font-size: 14px; }
+.error-action--primary { color: #fff; background: #047857; border-color: #047857; }
+.error-action:focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
+.error-panel--403 { border-color: #d97706; }
+.error-panel--500 { border-color: #dc2626; }
+@media (prefers-color-scheme: dark) {
+    .error-page { background: #020617; color: #f8fafc; }
+    .error-panel { background: #0f172a; border-color: #334155; }
+    .error-description { color: #cbd5e1; }
+    .error-code, .error-action { border-color: #475569; }
+    .error-action--primary { background: #047857; border-color: #047857; }
+}
 html[data-theme='dark'] { color-scheme: dark; }
+
+html[data-admin-branding] {
+    --school-primary: var(--admin-primary);
+    --font-ui: var(--admin-font);
+    --button-radius: var(--admin-radius);
+    --radius-sm: var(--admin-radius);
+    --radius-md: var(--admin-radius);
+    --radius-lg: var(--admin-radius);
+    --card-radius: var(--admin-radius);
+    --card-radius-compact: var(--admin-radius);
+    --card-radius-featured: var(--admin-radius);
+    --card-padding: var(--admin-padding);
+    --violet: var(--admin-accent);
+    --green: var(--admin-success);
+    --gold: var(--admin-warning);
+    --red: var(--admin-danger);
+    --delete: var(--admin-danger);
+    --primary-soft: color-mix(in srgb, var(--admin-primary) 10%, var(--surface));
+    --violet-soft: color-mix(in srgb, var(--violet) 10%, var(--surface));
+    --green-soft: color-mix(in srgb, var(--green) 10%, var(--surface));
+    --gold-soft: color-mix(in srgb, var(--gold) 10%, var(--surface));
+    --red-soft: color-mix(in srgb, var(--red) 10%, var(--surface));
+    --delete-soft: var(--red-soft);
+    --delete-line: color-mix(in srgb, var(--delete) 35%, var(--line));
+}
+html[data-admin-branding][data-theme='dark'] {
+    --violet: color-mix(in srgb, var(--admin-accent) 45%, white);
+    --green: color-mix(in srgb, var(--admin-success) 45%, white);
+    --gold: color-mix(in srgb, var(--admin-warning) 45%, white);
+    --red: color-mix(in srgb, var(--admin-danger) 45%, white);
+    --delete: var(--red);
+}
 
 ::view-transition-old(root),
 ::view-transition-new(root) {

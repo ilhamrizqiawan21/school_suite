@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import FormField from '@/components/FormField.vue';
 import LegalizationProcedure from '@/components/LegalizationProcedure.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, onMounted, ref } from 'vue';
 
 interface LegalizationItem {
@@ -144,6 +146,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     if (status === 'rejected') return 'danger';
     return 'info';
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -152,7 +155,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     <div class="legalisir-page" data-madrasah-service="legalization" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <section class="legalisir-hero-banner">
+        <section v-if="contentBlocks?.['legalization.hero']?.visible !== false" class="legalisir-hero-banner">
             <div class="legalisir-container legalisir-hero-inner">
                 <div class="legalisir-hero-pill">
                     <i class="fa-solid fa-certificate" aria-hidden="true"></i>
@@ -167,26 +170,26 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         </section>
 
         <div class="legalisir-container legalisir-tabs-wrap">
-            <nav class="legalisir-tabs" aria-label="Navigasi layanan">
+            <nav class="legalisir-tabs" :aria-label="publicText('copy.vue_services_legalization', 'aria_label_053', 'Navigasi layanan')">
                 <button type="button" class="btn-tab-menu" :class="{ active: activeTab === 'alur' }" @click="activeTab = 'alur'">
                     <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
-                    <span>Alur &amp; Ketentuan</span>
+                    <span>{{ publicText("copy.vue_services_legalization", "text_001", "Alur & Ketentuan") }}</span>
                 </button>
                 <button type="button" class="btn-tab-menu" :class="{ active: activeTab === 'form' }" @click="openFormTab">
                     <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                    <span>Formulir Pengajuan</span>
+                    <span>{{ publicText("copy.vue_services_legalization", "text_002", "Formulir Pengajuan") }}</span>
                 </button>
                 <Link href="/layanan/surat-kuasa?jenis=power_of_attorney" class="btn-tab-menu">
                     <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
-                    <span>Cetak Surat Kuasa</span>
+                    <span>{{ publicText("copy.vue_services_legalization", "text_003", "Cetak Surat Kuasa") }}</span>
                 </Link>
                 <Link href="/layanan/surat-kuasa?jenis=sptjm" class="btn-tab-menu">
                     <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-                    <span>Cetak SPTJM</span>
+                    <span>{{ publicText("copy.vue_services_legalization", "text_004", "Cetak SPTJM") }}</span>
                 </Link>
                 <Link href="/lacak?category=legalisir" class="btn-tab-menu">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <span>Cek Status Pengajuan</span>
+                    <span>{{ publicText("copy.vue_services_legalization", "text_005", "Cek Status Pengajuan") }}</span>
                 </Link>
             </nav>
         </div>
@@ -201,24 +204,24 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     <div class="card-custom">
                         <div class="sidebar-card-header">
                             <i class="fa-solid fa-circle-check text-primary" aria-hidden="true"></i>
-                            <span>Ringkasan Persyaratan</span>
+                            <span>{{ publicText("copy.vue_services_legalization", "text_006", "Ringkasan Persyaratan") }}</span>
                         </div>
                         <div class="sidebar-card-body">
                             <div class="check-item">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                <span>Membawa <strong>Ijazah Asli</strong> untuk verifikasi fisik.</span>
+                                <span>{{ publicText("copy.vue_services_legalization", "text_007", "Membawa") }} <strong>{{ publicText("copy.vue_services_legalization", "text_008", "Ijazah Asli") }}</strong> {{ publicText("copy.vue_services_legalization", "text_009", "untuk verifikasi fisik.") }}</span>
                             </div>
                             <div class="check-item">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                <span>Salinan <strong>Fotokopi Ijazah</strong> (kualitas cetak bersih &amp; jelas).</span>
+                                <span>{{ publicText("copy.vue_services_legalization", "text_010", "Salinan") }} <strong>{{ publicText("copy.vue_services_legalization", "text_011", "Fotokopi Ijazah") }}</strong> {{ publicText("copy.vue_services_legalization", "text_012", "(kualitas cetak bersih & jelas).") }}</span>
                             </div>
                             <div class="check-item">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                <span>Maksimal pengajuan disarankan <strong>5 - 10 lembar</strong> per permohonan.</span>
+                                <span>{{ publicText("copy.vue_services_legalization", "text_013", "Maksimal pengajuan disarankan") }} <strong>{{ publicText("copy.vue_services_legalization", "text_014", "5 - 10 lembar") }}</strong> {{ publicText("copy.vue_services_legalization", "text_015", "per permohonan.") }}</span>
                             </div>
                             <div class="check-item">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                <span>Jika diwakilkan: Wajib menyertakan <strong>Surat Kuasa bermaterai Rp 10.000</strong> &amp; <strong>SPTJM</strong>.</span>
+                                <span>{{ publicText("copy.vue_services_legalization", "text_016", "Jika diwakilkan: Wajib menyertakan") }} <strong>{{ publicText("copy.vue_services_legalization", "text_017", "Surat Kuasa bermaterai Rp 10.000") }}</strong> &amp; <strong>{{ publicText("copy.vue_services_legalization", "text_018", "SPTJM") }}</strong>.</span>
                             </div>
                         </div>
                     </div>
@@ -226,26 +229,26 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     <div class="card-custom">
                         <div class="sidebar-card-header">
                             <i class="fa-regular fa-clock text-warning" aria-hidden="true"></i>
-                            <span>Jadwal Pelayanan TU</span>
+                            <span>{{ publicText("copy.vue_services_legalization", "text_019", "Jadwal Pelayanan TU") }}</span>
                         </div>
                         <div class="sidebar-card-body">
                             <table class="table-jam">
                                 <tbody>
                                     <tr>
-                                        <td><strong>Senin - Kamis</strong></td>
-                                        <td class="text-right text-primary font-bold">08.00 - 14.00 WITA</td>
+                                        <td><strong>{{ publicText("copy.vue_services_legalization", "text_020", "Senin - Kamis") }}</strong></td>
+                                        <td class="text-right text-primary font-bold">{{ publicText("copy.vue_services_legalization", "text_021", "08.00 - 14.00 WITA") }}</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Jumat</strong></td>
-                                        <td class="text-right text-primary font-bold">08.00 - 11.00 WITA</td>
+                                        <td><strong>{{ publicText("copy.vue_services_legalization", "text_022", "Jumat") }}</strong></td>
+                                        <td class="text-right text-primary font-bold">{{ publicText("copy.vue_services_legalization", "text_023", "08.00 - 11.00 WITA") }}</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Sabtu - Minggu</strong></td>
-                                        <td class="text-right text-danger font-bold">Tutup / Libur</td>
+                                        <td><strong>{{ publicText("copy.vue_services_legalization", "text_024", "Sabtu - Minggu") }}</strong></td>
+                                        <td class="text-right text-danger font-bold">{{ publicText("copy.vue_services_legalization", "text_025", "Tutup / Libur") }}</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Hari Libur Nasional</strong></td>
-                                        <td class="text-right text-danger font-bold">Tutup / Libur</td>
+                                        <td><strong>{{ publicText("copy.vue_services_legalization", "text_026", "Hari Libur Nasional") }}</strong></td>
+                                        <td class="text-right text-danger font-bold">{{ publicText("copy.vue_services_legalization", "text_025", "Tutup / Libur") }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -255,7 +258,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     <div class="card-custom">
                         <div class="sidebar-card-header">
                             <i class="fa-solid fa-building-columns text-info" aria-hidden="true"></i>
-                            <span>Lokasi &amp; Layanan</span>
+                            <span>{{ publicText("copy.vue_services_legalization", "text_027", "Lokasi & Layanan") }}</span>
                         </div>
                         <div class="sidebar-card-body">
                             <p class="sidebar-school-name">{{ school.name.toUpperCase() }}</p>
@@ -265,11 +268,11 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             </p>
                             <Link href="/alumni/direktori" class="sidebar-btn sidebar-btn-outline">
                                 <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
-                                <span>Cek Data Alumni</span>
+                                <span>{{ publicText("copy.vue_services_legalization", "text_028", "Cek Data Alumni") }}</span>
                             </Link>
                             <Link href="/" class="sidebar-btn sidebar-btn-light">
                                 <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                                <span>Kembali ke Beranda</span>
+                                <span>{{ publicText("copy.vue_services_legalization", "text_029", "Kembali ke Beranda") }}</span>
                             </Link>
                         </div>
                     </div>
@@ -277,15 +280,13 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             </div>
 
             <div v-if="issuedReceipt" class="legalisir-receipt-alert" role="status">
-                <p class="font-bold">Permohonan Legalisir Diterima!</p>
+                <p class="font-bold">{{ publicText("copy.vue_services_legalization", "text_030", "Permohonan Legalisir Diterima!") }}</p>
                 <p>
-                    Kode Legalisir: <strong class="font-mono">{{ issuedReceipt.legalization_code }}</strong> |
-                    Tiket Lacak: <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> |
-                    PIN: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong>
+                    {{ publicText("copy.vue_services_legalization", "text_031", "Kode Legalisir:") }} <strong class="font-mono">{{ issuedReceipt.legalization_code }}</strong> {{ publicText("copy.vue_services_legalization", "text_032", "|\n                    Tiket Lacak:") }} <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> {{ publicText("copy.vue_services_legalization", "text_033", "|\n                    PIN:") }} <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong>
                 </p>
                 <p class="text-xs">
-                    Jika diwakilkan, lanjutkan pembuatan
-                    <Link :href="`/layanan/surat-kuasa?kode=${issuedReceipt.legalization_code}`" class="font-semibold underline">Surat Kuasa / SPTJM</Link>.
+                    {{ publicText("copy.vue_services_legalization", "text_034", "Jika diwakilkan, lanjutkan pembuatan") }}
+                    <Link :href="`/layanan/surat-kuasa?kode=${issuedReceipt.legalization_code}`" class="font-semibold underline">{{ publicText("copy.vue_services_legalization", "text_035", "Surat Kuasa / SPTJM") }}</Link>.
                 </p>
             </div>
 
@@ -294,101 +295,101 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     <div>
                         <h2 id="legalization-form-title">
                             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                            <span>Formulir Pengajuan Legalisir Online</span>
+                            <span>{{ publicText("copy.vue_services_legalization", "text_036", "Formulir Pengajuan Legalisir Online") }}</span>
                         </h2>
-                        <small>Isi data permohonan untuk mendapatkan nomor registrasi resmi</small>
+                        <small>{{ publicText("copy.vue_services_legalization", "text_037", "Isi data permohonan untuk mendapatkan nomor registrasi resmi") }}</small>
                     </div>
                 </div>
 
                 <form aria-labelledby="legalization-form-title" class="space-y-4" @submit.prevent="submit">
                     <div class="form-section-header">
                         <i class="fa-solid fa-user" aria-hidden="true"></i>
-                        <span>Data Alumni / Pemohon</span>
+                        <span>{{ publicText("copy.vue_services_legalization", "text_038", "Data Alumni / Pemohon") }}</span>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-3">
-                        <FormField id="leg-name" label="Nama Lengkap Alumni" :error="form.errors.applicant_name" required>
-                            <input id="leg-name" v-model="form.applicant_name" type="text" placeholder="Nama lengkap sesuai Ijazah" class="legalisir-input" />
+                        <FormField id="leg-name" :label="publicText('copy.vue_services_legalization', 'label_10001', 'Nama Lengkap Alumni')" :error="form.errors.applicant_name" required>
+                            <input id="leg-name" v-model="form.applicant_name" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_054', 'Nama lengkap sesuai Ijazah')" class="legalisir-input" />
                         </FormField>
-                        <FormField id="leg-nisn" label="NISN Alumni" :error="form.errors.applicant_nisn">
-                            <input id="leg-nisn" v-model="form.applicant_nisn" type="text" placeholder="Masukkan 10 digit NISN..." class="legalisir-input" />
+                        <FormField id="leg-nisn" :label="publicText('copy.vue_services_legalization', 'label_10002', 'NISN Alumni')" :error="form.errors.applicant_nisn">
+                            <input id="leg-nisn" v-model="form.applicant_nisn" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_055', 'Masukkan 10 digit NISN...')" class="legalisir-input" />
                         </FormField>
-                        <FormField id="leg-year" label="Tahun Kelulusan" :error="form.errors.graduation_year" required>
+                        <FormField id="leg-year" :label="publicText('copy.vue_services_legalization', 'label_10003', 'Tahun Kelulusan')" :error="form.errors.graduation_year" required>
                             <input id="leg-year" v-model.number="form.graduation_year" type="number" class="legalisir-input" />
                         </FormField>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-3">
-                        <FormField id="leg-phone" label="No. Telepon / WhatsApp Aktif" :error="form.errors.phone" required>
-                            <input id="leg-phone" v-model="form.phone" type="text" placeholder="08xxxxxxxxxx" class="legalisir-input" />
+                        <FormField id="leg-phone" :label="publicText('copy.vue_services_legalization', 'label_10004', 'No. Telepon / WhatsApp Aktif')" :error="form.errors.phone" required>
+                            <input id="leg-phone" v-model="form.phone" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_056', '08xxxxxxxxxx')" class="legalisir-input" />
                         </FormField>
-                        <FormField id="leg-email" label="Email (Opsional)" :error="form.errors.email">
-                            <input id="leg-email" v-model="form.email" type="email" placeholder="nama@email.com" class="legalisir-input" />
+                        <FormField id="leg-email" :label="publicText('copy.vue_services_legalization', 'label_10005', 'Email (Opsional)')" :error="form.errors.email">
+                            <input id="leg-email" v-model="form.email" type="email" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_10006', 'nama@email.com')" class="legalisir-input" />
                         </FormField>
-                        <FormField id="leg-cert-no" label="Nomor Seri Ijazah" :error="form.errors.certificate_number" required>
-                            <input id="leg-cert-no" v-model="form.certificate_number" type="text" placeholder="Contoh: DN-01/MA/13/..." class="legalisir-input" />
+                        <FormField id="leg-cert-no" :label="publicText('copy.vue_services_legalization', 'label_10007', 'Nomor Seri Ijazah')" :error="form.errors.certificate_number" required>
+                            <input id="leg-cert-no" v-model="form.certificate_number" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_057', 'Contoh: DN-01/MA/13/...')" class="legalisir-input" />
                         </FormField>
                     </div>
 
                     <div class="form-section-header">
                         <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
-                        <span>Rincian Permohonan Legalisir</span>
+                        <span>{{ publicText("copy.vue_services_legalization", "text_039", "Rincian Permohonan Legalisir") }}</span>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-3">
-                        <FormField id="leg-doc-type" label="Jenis Dokumen" required>
+                        <FormField id="leg-doc-type" :label="publicText('copy.vue_services_legalization', 'label_10008', 'Jenis Dokumen')" required>
                             <select id="leg-doc-type" v-model="form.document_type" class="legalisir-input">
-                                <option value="ijazah">Ijazah</option>
-                                <option value="skl">SKL</option>
-                                <option value="transkrip">Transkrip Nilai</option>
-                                <option value="rapor">Rapor</option>
+                                <option value="ijazah">{{ publicText("copy.vue_services_legalization", "text_040", "Ijazah") }}</option>
+                                <option value="skl">{{ publicText("copy.vue_services_legalization", "text_041", "SKL") }}</option>
+                                <option value="transkrip">{{ publicText("copy.vue_services_legalization", "text_042", "Transkrip Nilai") }}</option>
+                                <option value="rapor">{{ publicText("copy.vue_services_legalization", "text_043", "Rapor") }}</option>
                             </select>
                         </FormField>
-                        <FormField id="leg-copies" label="Jumlah Lembar Legalisir" :error="form.errors.copy_count" required>
+                        <FormField id="leg-copies" :label="publicText('copy.vue_services_legalization', 'label_10009', 'Jumlah Lembar Legalisir')" :error="form.errors.copy_count" required>
                             <input id="leg-copies" v-model.number="form.copy_count" type="number" min="1" max="20" class="legalisir-input" />
                         </FormField>
-                        <FormField id="leg-delivery" label="Metode Pengambilan" required>
+                        <FormField id="leg-delivery" :label="publicText('copy.vue_services_legalization', 'label_10010', 'Metode Pengambilan')" required>
                             <select id="leg-delivery" v-model="form.delivery_method" class="legalisir-input">
-                                <option value="pickup_direct">Hadir Sendiri</option>
-                                <option value="pickup_proxy">Diwakilkan (Melalui Surat Kuasa)</option>
+                                <option value="pickup_direct">{{ publicText("copy.vue_services_legalization", "text_044", "Hadir Sendiri") }}</option>
+                                <option value="pickup_proxy">{{ publicText("copy.vue_services_legalization", "text_045", "Diwakilkan (Melalui Surat Kuasa)") }}</option>
                             </select>
                         </FormField>
                     </div>
 
                     <div v-if="form.delivery_method === 'pickup_proxy'" class="legalisir-proxy-box">
-                        <h6><i class="fa-solid fa-users" aria-hidden="true"></i> Data Perwakilan / Penerima Kuasa:</h6>
+                        <h6><i class="fa-solid fa-users" aria-hidden="true"></i> {{ publicText("copy.vue_services_legalization", "text_046", "Data Perwakilan / Penerima Kuasa:") }}</h6>
                         <div class="grid gap-3 md:grid-cols-4">
-                            <FormField id="leg-proxy-name" label="Nama Penerima Kuasa" :error="form.errors.proxy_name" required>
-                                <input id="leg-proxy-name" v-model="form.proxy_name" type="text" placeholder="Nama perwakilan..." class="legalisir-input" />
+                            <FormField id="leg-proxy-name" :label="publicText('copy.vue_services_legalization', 'label_10011', 'Nama Penerima Kuasa')" :error="form.errors.proxy_name" required>
+                                <input id="leg-proxy-name" v-model="form.proxy_name" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_058', 'Nama perwakilan...')" class="legalisir-input" />
                             </FormField>
-                            <FormField id="leg-proxy-nik" label="NIK / No. KTP Penerima Kuasa">
-                                <input id="leg-proxy-nik" v-model="form.proxy_nik" type="text" placeholder="16 digit NIK..." class="legalisir-input" />
+                            <FormField id="leg-proxy-nik" :label="publicText('copy.vue_services_legalization', 'label_10012', 'NIK / No. KTP Penerima Kuasa')">
+                                <input id="leg-proxy-nik" v-model="form.proxy_nik" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_059', '16 digit NIK...')" class="legalisir-input" />
                             </FormField>
-                            <FormField id="leg-proxy-rel" label="Hubungan">
-                                <input id="leg-proxy-rel" v-model="form.proxy_relation" type="text" placeholder="Ortu/Kakak/dll" class="legalisir-input" />
+                            <FormField id="leg-proxy-rel" :label="publicText('copy.vue_services_legalization', 'label_10013', 'Hubungan')">
+                                <input id="leg-proxy-rel" v-model="form.proxy_relation" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_060', 'Ortu/Kakak/dll')" class="legalisir-input" />
                             </FormField>
-                            <FormField id="leg-proxy-phone" label="No. HP Kuasa">
-                                <input id="leg-proxy-phone" v-model="form.proxy_phone" type="text" placeholder="08xxxxxxxxxx" class="legalisir-input" />
+                            <FormField id="leg-proxy-phone" :label="publicText('copy.vue_services_legalization', 'label_10014', 'No. HP Kuasa')">
+                                <input id="leg-proxy-phone" v-model="form.proxy_phone" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_056', '08xxxxxxxxxx')" class="legalisir-input" />
                             </FormField>
                         </div>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2">
-                        <FormField id="leg-purpose" label="Keperluan Pengesahan / Legalisir" :error="form.errors.purpose" required>
-                            <input id="leg-purpose" v-model="form.purpose" type="text" placeholder="Contoh: Melanjutkan Kuliah / Daftar Kerja / CPNS" class="legalisir-input" />
+                        <FormField id="leg-purpose" :label="publicText('copy.vue_services_legalization', 'label_10015', 'Keperluan Pengesahan / Legalisir')" :error="form.errors.purpose" required>
+                            <input id="leg-purpose" v-model="form.purpose" type="text" :placeholder="publicText('copy.vue_services_legalization', 'placeholder_061', 'Contoh: Melanjutkan Kuliah / Daftar Kerja / CPNS')" class="legalisir-input" />
                         </FormField>
-                        <FormField id="leg-attachments" label="Unggah Pindaian Dokumen (Ijazah / KTP / Syarat)">
+                        <FormField id="leg-attachments" :label="publicText('copy.vue_services_legalization', 'label_10016', 'Unggah Pindaian Dokumen (Ijazah / KTP / Syarat)')">
                             <input id="leg-attachments" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" class="legalisir-input" @change="pickFiles" />
                         </FormField>
                     </div>
 
                     <div class="form-section-header">
                         <i class="fa-solid fa-pen" aria-hidden="true"></i>
-                        <span>Tanda Tangan Digital Pemohon</span>
+                        <span>{{ publicText("copy.vue_services_legalization", "text_047", "Tanda Tangan Digital Pemohon") }}</span>
                     </div>
 
                     <div>
-                        <label class="sig-label">Goreskan Tanda Tangan Pemohon di Kotak Bawah Ini:</label>
+                        <label class="sig-label">{{ publicText("copy.vue_services_legalization", "text_048", "Goreskan Tanda Tangan Pemohon di Kotak Bawah Ini:") }}</label>
                         <div class="sig-container">
                             <canvas
                                 ref="sigCanvasRef"
@@ -400,9 +401,9 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             ></canvas>
                         </div>
                         <div class="sig-toolbar">
-                            <small><i class="fa-solid fa-arrow-pointer" aria-hidden="true"></i> Gunakan mouse atau sentuhan layar HP/tablet.</small>
+                            <small><i class="fa-solid fa-arrow-pointer" aria-hidden="true"></i> {{ publicText("copy.vue_services_legalization", "text_049", "Gunakan mouse atau sentuhan layar HP/tablet.") }}</small>
                             <button type="button" class="btn-clear-sig" @click="clearSignature">
-                                <i class="fa-solid fa-eraser" aria-hidden="true"></i> Hapus / Ulangi TTD
+                                <i class="fa-solid fa-eraser" aria-hidden="true"></i> {{ publicText("copy.vue_services_legalization", "text_050", "Hapus / Ulangi TTD") }}
                             </button>
                         </div>
                     </div>
@@ -419,12 +420,12 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             </div>
 
             <div v-if="myRequests.length" class="card-custom legalisir-history-card">
-                <h2>Permohonan Legalisir Anda</h2>
+                <h2>{{ publicText("copy.vue_services_legalization", "text_051", "Permohonan Legalisir Anda") }}</h2>
                 <div class="space-y-3">
                     <div v-for="req in myRequests" :key="req.id" class="legalisir-history-item">
                         <div>
-                            <p class="font-semibold">{{ req.legalization_code }} — {{ req.document_type.toUpperCase() }} ({{ req.copy_count }} lembar)</p>
-                            <p class="text-xs text-slate-600">No. {{ req.certificate_number }} • {{ req.picked_up_at ? `Diambil: ${req.picked_up_by_name}` : req.delivery_method }}</p>
+                            <p class="font-semibold">{{ req.legalization_code }} — {{ req.document_type.toUpperCase() }} ({{ req.copy_count }} {{ publicText("copy.vue_services_legalization", "text_9001", "lembar)") }}</p>
+                            <p class="text-xs text-slate-600">{{ publicText("copy.vue_services_legalization", "text_9002", "No.") }} {{ req.certificate_number }} • {{ req.picked_up_at ? `Diambil: ${req.picked_up_by_name}` : req.delivery_method }}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <StatusBadge :status="req.status" :tone="statusTone(req.status)" size="sm" />
@@ -435,7 +436,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                 rel="noopener noreferrer"
                                 class="text-xs font-semibold text-emerald-700 underline"
                             >
-                                Unduh Lembar Pengesahan
+                                {{ publicText("copy.vue_services_legalization", "text_052", "Unduh Lembar Pengesahan") }}
                             </a>
                         </div>
                     </div>

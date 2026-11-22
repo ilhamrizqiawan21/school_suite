@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref, watch } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -205,6 +207,7 @@ const submitQuickLogin = () => {
 const removeDraftAttachment = (requestId: number, documentId: number) => {
     router.delete(`/layanan/ptsp/draf/${requestId}/lampiran/${documentId}`, { preserveScroll: true });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -213,20 +216,20 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
         <PublicHeader :school="school" />
 
         <section class="portal-container">
-            <header class="portal-hero madrasah-service-hero parity-ptsp-hero">
+            <header v-if="contentBlocks?.['ptsp.hero']?.visible !== false" class="portal-hero madrasah-service-hero parity-ptsp-hero">
                 <div>
-                    <p class="madrasah-service-label"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> {{ contentBlocks?.['ptsp.hero']?.label || 'Pelayanan Terpadu Satu Pintu (PTSP)' }}</p>
+                    <p class="madrasah-service-label"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> {{ contentBlocks?.['ptsp.hero']?.label ?? 'Pelayanan Terpadu Satu Pintu (PTSP)' }}</p>
                     <img class="parity-ptsp-logo" :src="school.logo_url || '/madrasah-theme/images/logo-kemenag.png'" alt="" />
-                    <h1>Layanan Online Terintegrasi<br />{{ school.name }}<br /><span>(PTSP Online)</span></h1>
-                    <p>{{ contentBlocks?.['ptsp.hero']?.subtitle || 'Layanan Permohonan, Informasi, Konsultasi, Pengaduan dan Legalisir.' }}</p>
+                    <h1>{{ contentBlocks?.['ptsp.hero']?.use_custom_title === true ? (contentBlocks['ptsp.hero'].title ?? '') : publicText("copy.vue_services_ptsp", "text_001", "Layanan Online Terintegrasi") }}<br />{{ school.name }}<br /><span>{{ publicText("copy.vue_services_ptsp", "text_002", "(PTSP Online)") }}</span></h1>
+                    <p>{{ contentBlocks?.['ptsp.hero']?.subtitle ?? 'Layanan Permohonan, Informasi, Konsultasi, Pengaduan dan Legalisir.' }}</p>
                 </div>
                 <div class="hero-actions">
                     <a :href="selectedService ? '#form-ptsp' : '#katalog-ptsp'" class="btn-ajukan-hero parity-ptsp-btn-apply" @click="showCatalog = true">
-                        AJUKAN PERMOHONAN <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                        {{ publicText("copy.vue_services_ptsp", "text_003", "AJUKAN PERMOHONAN") }} <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
                     </a>
 
                     <Link href="/lacak?category=ptsp" class="btn-cek-hero parity-ptsp-btn-check">
-                        Cek Permohonan <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        {{ publicText("copy.vue_services_ptsp", "text_004", "Cek Permohonan") }} <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     </Link>
                 </div>
             </header>
@@ -236,20 +239,20 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
             <section id="tentang-ptsp" class="parity-ptsp-about-band" aria-labelledby="ptsp-about-title">
                 <div class="parity-ptsp-container parity-ptsp-about">
                     <div class="parity-ptsp-about__media">
-                        <img src="/madrasah-theme/images/logo-cek.png" alt="PTSP Online" />
+                        <img :src="publicText('copy.vue_services_ptsp', 'src_066', '/madrasah-theme/images/logo-cek.png')" :alt="publicText('copy.vue_services_ptsp', 'alt_067', 'PTSP Online')" />
                     </div>
                     <div class="parity-ptsp-about__copy">
-                        <span class="parity-ptsp-pill"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Pelayanan Publik Digital Resmi</span>
-                        <h2 id="ptsp-about-title">PTSP Online</h2>
+                        <span class="parity-ptsp-pill"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_005", "Pelayanan Publik Digital Resmi") }}</span>
+                        <h2 id="ptsp-about-title">{{ publicText("copy.vue_services_ptsp", "text_006", "PTSP Online") }}</h2>
                         <p>
-                            <em>Pelayanan Terpadu dalam Satu Pintu Online (PTSP Online)</em> adalah aplikasi website resmi yang dibangun untuk memberikan pelayanan administrasi permohonan surat dan perizinan kepada masyarakat, siswa, alumni, dan orang tua wali secara terpadu dan efisien.
-                            <a href="#katalog-ptsp" class="parity-ptsp-inline-cta" @click="showCatalog = true">Buka Layanan <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                            <em>{{ publicText("copy.vue_services_ptsp", "text_007", "Pelayanan Terpadu dalam Satu Pintu Online (PTSP Online)") }}</em> {{ publicText("copy.vue_services_ptsp", "text_008", "adalah aplikasi website resmi yang dibangun untuk memberikan pelayanan administrasi permohonan surat dan perizinan kepada masyarakat, siswa, alumni, dan orang tua wali secara terpadu dan efisien.") }}
+                            <a :href="publicText('copy.vue_services_ptsp', 'href_068', '#katalog-ptsp')" class="parity-ptsp-inline-cta" @click="showCatalog = true">{{ publicText("copy.vue_services_ptsp", "text_009", "Buka Layanan") }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                         </p>
                         <ul class="parity-ptsp-checklist">
-                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Proses Aman &amp; Tervalidasi</li>
-                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Respon Cepat Terjadwal</li>
-                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Alur Mudah &amp; Transparan</li>
-                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Hemat Waktu Tanpa Antre Fisik</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_010", "Proses Aman & Tervalidasi") }}</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_011", "Respon Cepat Terjadwal") }}</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_012", "Alur Mudah & Transparan") }}</li>
+                            <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_013", "Hemat Waktu Tanpa Antre Fisik") }}</li>
                         </ul>
                     </div>
                 </div>
@@ -258,37 +261,37 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
             <section class="parity-ptsp-benefits-band" aria-labelledby="ptsp-benefits-title">
                 <div class="parity-ptsp-container">
                     <div class="parity-ptsp-benefits__head">
-                        <span class="parity-ptsp-pill">KEUNGGULAN SISTEM</span>
-                        <h2 id="ptsp-benefits-title">Keunggulan Layanan PTSP Online</h2>
-                        <p class="parity-ptsp-benefits__desc">Pelayanan Terpadu dalam Satu Pintu Online memberikan kemudahan administrasi bagi guru, siswa, alumni, dan masyarakat umum dalam pengajuan permohonan berbagai macam kebutuhan sekolah dalam satu portal resmi.</p>
+                        <span class="parity-ptsp-pill">{{ publicText("copy.vue_services_ptsp", "text_014", "KEUNGGULAN SISTEM") }}</span>
+                        <h2 id="ptsp-benefits-title">{{ publicText("copy.vue_services_ptsp", "text_015", "Keunggulan Layanan PTSP Online") }}</h2>
+                        <p class="parity-ptsp-benefits__desc">{{ publicText("copy.vue_services_ptsp", "text_016", "Pelayanan Terpadu dalam Satu Pintu Online memberikan kemudahan administrasi bagi guru, siswa, alumni, dan masyarakat umum dalam pengajuan permohonan berbagai macam kebutuhan sekolah dalam satu portal resmi.") }}</p>
                     </div>
                     <div class="parity-ptsp-benefit-grid">
                         <article class="parity-feature-box">
                             <span class="parity-feature-box__icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
                             <div>
-                                <h3>Hemat Waktu</h3>
-                                <p>Sistem online memudahkan pengurusan perizinan lebih cepat dan menghemat waktu tanpa perlu datang antre langsung.</p>
+                                <h3>{{ publicText("copy.vue_services_ptsp", "text_017", "Hemat Waktu") }}</h3>
+                                <p>{{ publicText("copy.vue_services_ptsp", "text_018", "Sistem online memudahkan pengurusan perizinan lebih cepat dan menghemat waktu tanpa perlu datang antre langsung.") }}</p>
                             </div>
                         </article>
                         <article class="parity-feature-box">
                             <span class="parity-feature-box__icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
                             <div>
-                                <h3>Proses Aman</h3>
-                                <p>Sistem PTSP ONLINE menerapkan nomor resi dan verifikasi berkas berstandar digital guna menjamin keaslian dokumen.</p>
+                                <h3>{{ publicText("copy.vue_services_ptsp", "text_019", "Proses Aman") }}</h3>
+                                <p>{{ publicText("copy.vue_services_ptsp", "text_020", "Sistem PTSP ONLINE menerapkan nomor resi dan verifikasi berkas berstandar digital guna menjamin keaslian dokumen.") }}</p>
                             </div>
                         </article>
                         <article class="parity-feature-box">
                             <span class="parity-feature-box__icon"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i></span>
                             <div>
-                                <h3>Respon Cepat</h3>
-                                <p>Petugas langsung memproses dan memvalidasi berkas yang masuk dengan notifikasi status berkala.</p>
+                                <h3>{{ publicText("copy.vue_services_ptsp", "text_021", "Respon Cepat") }}</h3>
+                                <p>{{ publicText("copy.vue_services_ptsp", "text_022", "Petugas langsung memproses dan memvalidasi berkas yang masuk dengan notifikasi status berkala.") }}</p>
                             </div>
                         </article>
                         <article class="parity-feature-box">
                             <span class="parity-feature-box__icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
                             <div>
-                                <h3>Mudah &amp; Transparan</h3>
-                                <p>Kemudahan menyeluruh dari pendaftaran, pengunggahan berkas syarat, pemantauan resi, hingga unduh dokumen jadi.</p>
+                                <h3>{{ publicText("copy.vue_services_ptsp", "text_023", "Mudah & Transparan") }}</h3>
+                                <p>{{ publicText("copy.vue_services_ptsp", "text_024", "Kemudahan menyeluruh dari pendaftaran, pengunggahan berkas syarat, pemantauan resi, hingga unduh dokumen jadi.") }}</p>
                             </div>
                         </article>
                     </div>
@@ -298,58 +301,58 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
             <section class="parity-ptsp-procedure-band" aria-labelledby="ptsp-procedure">
                 <div class="parity-ptsp-container">
                     <div class="parity-ptsp-procedure__head">
-                        <span class="parity-ptsp-pill">PANDUAN ALUR</span>
-                        <h2 id="ptsp-procedure">Prosedur Pengajuan PTSP Online</h2>
-                        <p>Ikuti tata cara pengajuan berikut untuk memastikan berkas Anda diproses dengan lancar.</p>
+                        <span class="parity-ptsp-pill">{{ publicText("copy.vue_services_ptsp", "text_025", "PANDUAN ALUR") }}</span>
+                        <h2 id="ptsp-procedure">{{ publicText("copy.vue_services_ptsp", "text_026", "Prosedur Pengajuan PTSP Online") }}</h2>
+                        <p>{{ publicText("copy.vue_services_ptsp", "text_027", "Ikuti tata cara pengajuan berikut untuk memastikan berkas Anda diproses dengan lancar.") }}</p>
                     </div>
                     <div class="parity-ptsp-procedure__grid">
                         <ol class="parity-ptsp-steps">
-                            <li><span>1</span><div><strong>Pendaftaran Akun</strong><p>Lakukan pendaftaran untuk mendapatkan akun pemohon dengan mengisi formulir identitas NIK &amp; No. WhatsApp aktif.</p></div></li>
-                            <li><span>2</span><div><strong>Login Pemohon</strong><p>Setelah terdaftar, masuk ke aplikasi menggunakan NIK dan No. WhatsApp/Password yang telah Anda daftarkan.</p></div></li>
-                            <li><span>3</span><div><strong>Pilih Layanan &amp; Unggah Berkas</strong><p>Pilih jenis surat/layanan yang Anda butuhkan dan unggah dokumen persyaratan yang diminta (PDF/JPG/ZIP).</p></div></li>
-                            <li><span>4</span><div><strong>Verifikasi Petugas</strong><p>Petugas PTSP madrasah akan mengecek keabsahan syarat administrasi dan kelengkapan dokumen permohonan Anda.</p></div></li>
-                            <li><span>5</span><div><strong>Cek Status Resi</strong><p>Simpan nomor resi yang terbit. Buka menu Cek Permohonan untuk memantau apakah permohonan sedang diproses atau butuh revisi.</p></div></li>
-                            <li><span>6</span><div><strong>Penyelesaian Dokumen</strong><p>Setelah ditandatangani pejabat berwenang, status tiket berubah menjadi Selesai.</p></div></li>
-                            <li><span>7</span><div><strong>Unduh / Pengambilan Surat</strong><p>Unduh file hasil surat jadi langsung dari aplikasi atau ambil berkas fisik di loket PTSP madrasah.</p></div></li>
+                            <li><span>1</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_028", "Pendaftaran Akun") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_029", "Lakukan pendaftaran untuk mendapatkan akun pemohon dengan mengisi formulir identitas NIK & No. WhatsApp aktif.") }}</p></div></li>
+                            <li><span>2</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_030", "Login Pemohon") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_031", "Setelah terdaftar, masuk ke aplikasi menggunakan NIK dan No. WhatsApp/Password yang telah Anda daftarkan.") }}</p></div></li>
+                            <li><span>3</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_032", "Pilih Layanan & Unggah Berkas") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_033", "Pilih jenis surat/layanan yang Anda butuhkan dan unggah dokumen persyaratan yang diminta (PDF/JPG/ZIP).") }}</p></div></li>
+                            <li><span>4</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_034", "Verifikasi Petugas") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_035", "Petugas PTSP madrasah akan mengecek keabsahan syarat administrasi dan kelengkapan dokumen permohonan Anda.") }}</p></div></li>
+                            <li><span>5</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_036", "Cek Status Resi") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_037", "Simpan nomor resi yang terbit. Buka menu Cek Permohonan untuk memantau apakah permohonan sedang diproses atau butuh revisi.") }}</p></div></li>
+                            <li><span>6</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_038", "Penyelesaian Dokumen") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_039", "Setelah ditandatangani pejabat berwenang, status tiket berubah menjadi Selesai.") }}</p></div></li>
+                            <li><span>7</span><div><strong>{{ publicText("copy.vue_services_ptsp", "text_040", "Unduh / Pengambilan Surat") }}</strong><p>{{ publicText("copy.vue_services_ptsp", "text_041", "Unduh file hasil surat jadi langsung dari aplikasi atau ambil berkas fisik di loket PTSP madrasah.") }}</p></div></li>
                         </ol>
                         <aside class="parity-ptsp-login-box">
                             <div class="parity-ptsp-login-box__head">
                                 <span class="parity-ptsp-login-box__icon"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i></span>
-                                <h3>LOGIN PTSP ONLINE</h3>
-                                <p>Masuk untuk mengajukan atau memantau permohonan Anda</p>
+                                <h3>{{ publicText("copy.vue_services_ptsp", "text_042", "LOGIN PTSP ONLINE") }}</h3>
+                                <p>{{ publicText("copy.vue_services_ptsp", "text_043", "Masuk untuk mengajukan atau memantau permohonan Anda") }}</p>
                             </div>
                             <form v-if="!applicant" class="parity-ptsp-login-form" autocomplete="off" @submit.prevent="submitQuickLogin">
                                 <div class="parity-ptsp-login-field">
-                                    <label for="ptsp_home_login_email">Email / NIK</label>
-                                    <input id="ptsp_home_login_email" v-model="quickLoginForm.email" name="ptsp_home_login_nik" type="text" autocomplete="off" placeholder="Masukkan Email atau NIK" required />
+                                    <label for="ptsp_home_login_email">{{ publicText("copy.vue_services_ptsp", "text_044", "Email / NIK") }}</label>
+                                    <input id="ptsp_home_login_email" v-model="quickLoginForm.email" name="ptsp_home_login_nik" type="text" autocomplete="off" :placeholder="publicText('copy.vue_services_ptsp', 'placeholder_069', 'Masukkan Email atau NIK')" required />
                                     <p v-if="quickLoginForm.errors.email" class="mt-1 text-xs font-semibold text-rose-600" role="alert">{{ quickLoginForm.errors.email }}</p>
                                 </div>
                                 <div class="parity-ptsp-login-field">
-                                    <label for="ptsp_home_login_pass">Password / No. HP</label>
-                                    <input id="ptsp_home_login_pass" v-model="quickLoginForm.password" name="ptsp_home_login_pass" type="password" autocomplete="new-password" placeholder="Masukkan Password atau No. HP" required />
+                                    <label for="ptsp_home_login_pass">{{ publicText("copy.vue_services_ptsp", "text_045", "Password / No. HP") }}</label>
+                                    <input id="ptsp_home_login_pass" v-model="quickLoginForm.password" name="ptsp_home_login_pass" type="password" autocomplete="new-password" :placeholder="publicText('copy.vue_services_ptsp', 'placeholder_070', 'Masukkan Password atau No. HP')" required />
                                     <p v-if="quickLoginForm.errors.password" class="mt-1 text-xs font-semibold text-rose-600" role="alert">{{ quickLoginForm.errors.password }}</p>
                                 </div>
                                 <div class="parity-ptsp-login-box__actions">
                                     <button type="submit" class="parity-ptsp-login-submit" :disabled="quickLoginForm.processing">
-                                        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Masuk Aplikasi
+                                        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_046", "Masuk Aplikasi") }}
                                     </button>
                                     <Link href="/layanan/ptsp/akun" class="parity-ptsp-login-register">
-                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Buat Akun Baru
+                                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_047", "Buat Akun Baru") }}
                                     </Link>
                                 </div>
                                 <div class="parity-ptsp-login-help">
-                                    <Link href="/kontak"><i class="fa-solid fa-comments" aria-hidden="true"></i> Bantuan / Lupa Password? Hubungi Live Chat</Link>
+                                    <Link href="/kontak"><i class="fa-solid fa-comments" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_048", "Bantuan / Lupa Password? Hubungi Live Chat") }}</Link>
                                 </div>
                             </form>
                             <div v-else class="parity-ptsp-login-box__actions">
                                 <Link href="/layanan/ptsp/akun" class="parity-ptsp-login-submit">
-                                    <i class="fa-solid fa-user-check" aria-hidden="true"></i> Akun: {{ applicant.full_name }}
+                                    <i class="fa-solid fa-user-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_ptsp", "text_9001", "Akun:") }} {{ applicant.full_name }}
                                 </Link>
-                                <a href="#katalog-ptsp" class="parity-ptsp-login-register" @click="showCatalog = true">Buka Katalog</a>
+                                <a :href="publicText('copy.vue_services_ptsp', 'href_068', '#katalog-ptsp')" class="parity-ptsp-login-register" @click="showCatalog = true">{{ publicText("copy.vue_services_ptsp", "text_049", "Buka Katalog") }}</a>
                             </div>
                             <hr class="parity-ptsp-login-divider" />
                             <p class="parity-ptsp-login-box__note">
-                                Dengan mengklik Buat Akun Baru, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi dari {{ school.name }}.
+                                {{ publicText("copy.vue_services_ptsp", "text_9002", "Dengan mengklik Buat Akun Baru, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi dari") }} {{ school.name }}.
                             </p>
                         </aside>
                     </div>
@@ -361,9 +364,9 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
                         {{ applicant ? `Akun: ${applicant.full_name}` : 'Masuk / Daftar Akun Pemohon' }}
                     </Link>
                 <div class="section-head">
-                    <h2>Katalog Layanan PTSP</h2>
-                    <div class="chip-row" role="group" aria-label="Filter kategori layanan PTSP">
-                        <button type="button" class="chip-btn" :class="{ 'is-active': selectedCategory === 'all' }" @click="selectedCategory = 'all'">Semua</button>
+                    <h2>{{ publicText("copy.vue_services_ptsp", "text_050", "Katalog Layanan PTSP") }}</h2>
+                    <div class="chip-row" role="group" :aria-label="publicText('copy.vue_services_ptsp', 'aria_label_071', 'Filter kategori layanan PTSP')">
+                        <button type="button" class="chip-btn" :class="{ 'is-active': selectedCategory === 'all' }" @click="selectedCategory = 'all'">{{ publicText("copy.vue_services_ptsp", "text_051", "Semua") }}</button>
                         <button v-for="cat in categories" :key="cat.value" type="button" class="chip-btn" :class="{ 'is-active': selectedCategory === cat.value }" @click="selectedCategory = cat.value">
                             {{ cat.label }}
                         </button>
@@ -387,8 +390,8 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
                         <strong>{{ item.name }}</strong>
                         <p v-if="item.description">{{ item.description }}</p>
                         <div class="service-meta">
-                            <span>Estimasi: {{ item.estimated_duration }}</span>
-                            <span v-if="item.service_hours">Jam: {{ item.service_hours }}</span>
+                            <span>{{ publicText("copy.vue_services_ptsp", "text_9003", "Estimasi:") }} {{ item.estimated_duration }}</span>
+                            <span v-if="item.service_hours">{{ publicText("copy.vue_services_ptsp", "text_9004", "Jam:") }} {{ item.service_hours }}</span>
                         </div>
                     </button>
                 </div>
@@ -396,71 +399,71 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
                 <StateFeedback
                     v-else
                     state="empty"
-                    title="Belum ada layanan tersedia"
-                    description="Tidak ada layanan PTSP pada kategori ini saat ini."
+                    :title="publicText('copy.vue_services_ptsp', 'title_072', 'Belum ada layanan tersedia')"
+                    :description="publicText('copy.vue_services_ptsp', 'description_073', 'Tidak ada layanan PTSP pada kategori ini saat ini.')"
                 />
             </section>
 
             <section v-if="selectedService" id="form-ptsp" class="portal-card">
                 <div class="section-head">
                     <div>
-                        <h2>Formulir Pengajuan — {{ selectedService.name }}</h2>
+                        <h2>{{ publicText("copy.vue_services_ptsp", "text_9005", "Formulir Pengajuan —") }} {{ selectedService.name }}</h2>
                         <p class="muted">
-                            Estimasi selesai: {{ selectedService.estimated_duration }}
-                            <template v-if="selectedService.service_hours"> · Jam layanan: {{ selectedService.service_hours }}</template>
+                            {{ publicText("copy.vue_services_ptsp", "text_9006", "Estimasi selesai:") }} {{ selectedService.estimated_duration }}
+                            <template v-if="selectedService.service_hours"> {{ publicText("copy.vue_services_ptsp", "text_9007", "· Jam layanan:") }} {{ selectedService.service_hours }}</template>
                         </p>
                     </div>
-                    <StatusBadge v-if="activeDraft" status="draft" label="Mengedit Draf" />
+                    <StatusBadge v-if="activeDraft" status="draft" :label="publicText('copy.vue_services_ptsp', 'label_10001', 'Mengedit Draf')" />
                 </div>
 
                 <div v-if="currentRequirements.length" class="requirements-box">
-                    <strong>Persyaratan Layanan:</strong>
+                    <strong>{{ publicText("copy.vue_services_ptsp", "text_052", "Persyaratan Layanan:") }}</strong>
                     <ul>
                         <li v-for="(req, idx) in currentRequirements" :key="idx">{{ req }}</li>
                     </ul>
                 </div>
 
                 <form class="form-grid" @submit.prevent="submitFinal">
-                    <FormField id="ptsp-applicant-type" label="Kategori Pemohon" required :error="form.errors.applicant_type" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="ptsp-applicant-type" :label="publicText('copy.vue_services_ptsp', 'label_10002', 'Kategori Pemohon')" required :error="form.errors.applicant_type" v-slot="{ inputId, describedBy, invalid }">
                         <select :id="inputId" v-model="form.applicant_type" :aria-describedby="describedBy" :aria-invalid="invalid">
                             <option v-for="t in applicantTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
                         </select>
                     </FormField>
 
-                    <FormField id="ptsp-applicant-name" label="Nama Lengkap Pemohon" required :error="form.errors.applicant_name" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="ptsp-applicant-name" :label="publicText('copy.vue_services_ptsp', 'label_10003', 'Nama Lengkap Pemohon')" required :error="form.errors.applicant_name" v-slot="{ inputId, describedBy, invalid }">
                         <input :id="inputId" v-model="form.applicant_name" type="text" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
-                    <FormField id="ptsp-applicant-phone" label="Nomor HP / WhatsApp" :error="form.errors.applicant_phone" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.applicant_phone" type="text" placeholder="08xxxxxxxxxx" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                    <FormField id="ptsp-applicant-phone" :label="publicText('copy.vue_services_ptsp', 'label_10004', 'Nomor HP / WhatsApp')" :error="form.errors.applicant_phone" v-slot="{ inputId, describedBy, invalid }">
+                        <input :id="inputId" v-model="form.applicant_phone" type="text" :placeholder="publicText('copy.vue_services_ptsp', 'placeholder_074', '08xxxxxxxxxx')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
-                    <FormField id="ptsp-applicant-email" label="Email" :error="form.errors.applicant_email" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="ptsp-applicant-email" :label="publicText('copy.vue_services_ptsp', 'label_10005', 'Email')" :error="form.errors.applicant_email" v-slot="{ inputId, describedBy, invalid }">
                         <input :id="inputId" v-model="form.applicant_email" type="email" :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
-                    <FormField id="ptsp-applicant-org" label="Kelas / Angkatan / Instansi Asal" :error="form.errors.applicant_organization" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="ptsp-applicant-org" :label="publicText('copy.vue_services_ptsp', 'label_10006', 'Kelas / Angkatan / Instansi Asal')" :error="form.errors.applicant_organization" v-slot="{ inputId, describedBy, invalid }">
                         <input :id="inputId" v-model="form.applicant_organization" type="text" :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
-                    <FormField id="ptsp-secret" label="PIN Verifikasi Resi (Opsional)" hint="Kosongkan agar sistem membuat PIN otomatis 6 digit." :error="form.errors.verification_secret" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.verification_secret" type="text" minlength="4" maxlength="24" placeholder="Contoh: 123456" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                    <FormField id="ptsp-secret" :label="publicText('copy.vue_services_ptsp', 'label_10007', 'PIN Verifikasi Resi (Opsional)')" :hint="publicText('copy.vue_services_ptsp', 'hint_10008', 'Kosongkan agar sistem membuat PIN otomatis 6 digit.')" :error="form.errors.verification_secret" v-slot="{ inputId, describedBy, invalid }">
+                        <input :id="inputId" v-model="form.verification_secret" type="text" minlength="4" maxlength="24" :placeholder="publicText('copy.vue_services_ptsp', 'placeholder_075', 'Contoh: 123456')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
                     <div class="full-span">
-                        <FormField id="ptsp-purpose" label="Keperluan / Judul Permohonan" required :error="form.errors.purpose" v-slot="{ inputId, describedBy, invalid }">
-                            <input :id="inputId" v-model="form.purpose" type="text" required placeholder="Contoh: Pengajuan Surat Keterangan Aktif untuk Beasiswa" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                        <FormField id="ptsp-purpose" :label="publicText('copy.vue_services_ptsp', 'label_10009', 'Keperluan / Judul Permohonan')" required :error="form.errors.purpose" v-slot="{ inputId, describedBy, invalid }">
+                            <input :id="inputId" v-model="form.purpose" type="text" required :placeholder="publicText('copy.vue_services_ptsp', 'placeholder_076', 'Contoh: Pengajuan Surat Keterangan Aktif untuk Beasiswa')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                         </FormField>
                     </div>
 
                     <div class="full-span">
-                        <FormField id="ptsp-notes" label="Catatan Tambahan" :error="form.errors.notes" v-slot="{ inputId, describedBy, invalid }">
+                        <FormField id="ptsp-notes" :label="publicText('copy.vue_services_ptsp', 'label_10010', 'Catatan Tambahan')" :error="form.errors.notes" v-slot="{ inputId, describedBy, invalid }">
                             <textarea :id="inputId" v-model="form.notes" rows="3" :aria-describedby="describedBy" :aria-invalid="invalid" />
                         </FormField>
                     </div>
 
                     <div v-if="currentRequiredDocs.length" class="full-span docs-section">
-                        <h3>Lampiran Persyaratan (PDF/JPG/PNG/WEBP, maks. 5 MB)</h3>
+                        <h3>{{ publicText("copy.vue_services_ptsp", "text_053", "Lampiran Persyaratan (PDF/JPG/PNG/WEBP, maks. 5 MB)") }}</h3>
                         <div class="docs-grid">
                             <FormField
                                 v-for="docRule in currentRequiredDocs"
@@ -473,44 +476,44 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
                             >
                                 <input :id="inputId" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" :aria-describedby="describedBy" :aria-invalid="invalid" @change="onFileChange(docRule.key, $event)" />
                                 <div v-if="draftUploadedMap[docRule.key]" class="draft-file-chip">
-                                    <span>Tersimpan: {{ draftUploadedMap[docRule.key].original_name }}</span>
-                                    <button v-if="activeDraft" type="button" class="link-danger" @click="removeDraftAttachment(activeDraft.id, draftUploadedMap[docRule.key].document_id)">Hapus</button>
+                                    <span>{{ publicText("copy.vue_services_ptsp", "text_9008", "Tersimpan:") }} {{ draftUploadedMap[docRule.key].original_name }}</span>
+                                    <button v-if="activeDraft" type="button" class="link-danger" @click="removeDraftAttachment(activeDraft.id, draftUploadedMap[docRule.key].document_id)">{{ publicText("copy.vue_services_ptsp", "text_054", "Hapus") }}</button>
                                 </div>
                             </FormField>
                         </div>
                     </div>
 
                     <div v-if="showReviewStep" class="full-span summary-box">
-                        <h3>Ringkasan Pengajuan</h3>
-                        <p><strong>Layanan:</strong> {{ selectedService.name }}</p>
-                        <p><strong>Pemohon:</strong> {{ form.applicant_name || '-' }} ({{ form.applicant_phone || form.applicant_email || '-' }})</p>
-                        <p><strong>Keperluan:</strong> {{ form.purpose || '-' }}</p>
+                        <h3>{{ publicText("copy.vue_services_ptsp", "text_055", "Ringkasan Pengajuan") }}</h3>
+                        <p><strong>{{ publicText("copy.vue_services_ptsp", "text_056", "Layanan:") }}</strong> {{ selectedService.name }}</p>
+                        <p><strong>{{ publicText("copy.vue_services_ptsp", "text_057", "Pemohon:") }}</strong> {{ form.applicant_name || '-' }} ({{ form.applicant_phone || form.applicant_email || '-' }})</p>
+                        <p><strong>{{ publicText("copy.vue_services_ptsp", "text_058", "Keperluan:") }}</strong> {{ form.purpose || '-' }}</p>
                     </div>
 
                     <div class="full-span agreement-row">
                         <label class="checkbox-label">
                             <input v-model="form.agreement_accepted" type="checkbox" />
-                            <span>Saya menyatakan data dan berkas yang diajukan adalah benar dan siap diverifikasi oleh Tata Usaha.</span>
+                            <span>{{ publicText("copy.vue_services_ptsp", "text_059", "Saya menyatakan data dan berkas yang diajukan adalah benar dan siap diverifikasi oleh Tata Usaha.") }}</span>
                         </label>
                         <p v-if="form.errors.agreement_accepted" class="field-error" role="alert">{{ form.errors.agreement_accepted }}</p>
                     </div>
 
                     <div class="full-span action-row">
                         <button type="button" class="ui-button ui-button--secondary ui-button--md" :disabled="form.processing" @click="saveDraft">
-                            Simpan Draf
+                            {{ publicText("copy.vue_services_ptsp", "text_060", "Simpan Draf") }}
                         </button>
                         <button type="button" class="ui-button ui-button--secondary ui-button--md" @click="showReviewStep = !showReviewStep">
                             {{ showReviewStep ? 'Tutup Ringkasan' : 'Lihat Ringkasan' }}
                         </button>
                         <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="form.processing">
-                            Kirim &amp; Terbitkan Resi
+                            {{ publicText("copy.vue_services_ptsp", "text_061", "Kirim & Terbitkan Resi") }}
                         </button>
                     </div>
                 </form>
             </section>
 
             <section v-if="myRequests.length" class="portal-card">
-                <h2>Riwayat &amp; Draf Permohonan Saya</h2>
+                <h2>{{ publicText("copy.vue_services_ptsp", "text_062", "Riwayat & Draf Permohonan Saya") }}</h2>
                 <div class="history-list">
                     <article v-for="req in myRequests" :key="req.id" class="history-item">
                         <div>
@@ -520,13 +523,13 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
                             </div>
                             <p class="history-title">{{ req.service_snapshot.name }} — {{ req.purpose }}</p>
                             <p v-if="req.revision_note && req.status === 'needs_revision'" class="revision-callout">
-                                Catatan Perbaikan: {{ req.revision_note }}
+                                {{ publicText("copy.vue_services_ptsp", "text_9009", "Catatan Perbaikan:") }} {{ req.revision_note }}
                             </p>
                         </div>
                         <div class="history-actions">
-                            <Link v-if="req.status === 'draft'" :href="`/layanan/ptsp?draf=${req.id}`" class="ui-button ui-button--secondary ui-button--sm">Lanjutkan Draf</Link>
-                            <Link v-if="req.ticket_code" :href="`/layanan/ptsp/resi/${req.ticket_code}`" class="ui-button ui-button--secondary ui-button--sm">Lihat Resi</Link>
-                            <Link v-if="req.ticket_code && req.status === 'needs_revision'" :href="`/layanan/ptsp/${req.ticket_code}/perbaiki`" class="ui-button ui-button--primary ui-button--sm">Perbaiki</Link>
+                            <Link v-if="req.status === 'draft'" :href="`/layanan/ptsp?draf=${req.id}`" class="ui-button ui-button--secondary ui-button--sm">{{ publicText("copy.vue_services_ptsp", "text_063", "Lanjutkan Draf") }}</Link>
+                            <Link v-if="req.ticket_code" :href="`/layanan/ptsp/resi/${req.ticket_code}`" class="ui-button ui-button--secondary ui-button--sm">{{ publicText("copy.vue_services_ptsp", "text_064", "Lihat Resi") }}</Link>
+                            <Link v-if="req.ticket_code && req.status === 'needs_revision'" :href="`/layanan/ptsp/${req.ticket_code}/perbaiki`" class="ui-button ui-button--primary ui-button--sm">{{ publicText("copy.vue_services_ptsp", "text_065", "Perbaiki") }}</Link>
                         </div>
                     </article>
                 </div>

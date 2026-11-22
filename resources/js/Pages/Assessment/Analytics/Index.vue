@@ -128,7 +128,7 @@ function formatDate(value: string) {
                     <h1 class="mt-1 text-2xl font-semibold text-[var(--ink)]">{{ can_manage_question_bank ? 'Analisis Bank Soal & Ujian' : 'Analisis Asesmen & Ujian' }}</h1>
                     <p class="analytics-description">Tinjau komposisi bank soal dan capaian hasil ujian.</p>
                 </div>
-                <a :href="exportUrl" class="analytics-export-btn inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M8 13l4 4m0-4l-4 4"/></svg>Ekspor XLSX</a>
+                <AppButton icon="excel" as="a" :href="exportUrl" class="analytics-export-btn inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M8 13l4 4m0-4l-4 4"/></svg>Ekspor XLSX</AppButton>
             </header>
 
             <form @submit.prevent="applyFilters" class="analytics-filters rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">

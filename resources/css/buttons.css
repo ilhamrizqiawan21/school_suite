@@ -91,6 +91,10 @@
     border-color: var(--red, #dc2626) !important;
 }
 .ui-button--icon-only { width: var(--button-size); padding: 0; }
+html[data-admin-branding] .ui-button--icon-edit svg,
+html[data-admin-branding] .ui-button--icon-view svg { color: var(--ink) !important; }
+html[data-admin-branding] .ui-button--icon-edit:hover:not(:disabled),
+html[data-admin-branding] .ui-button--icon-view:hover:not(:disabled) { border-color: var(--line-strong) !important; }
 .ui-button-label { min-width: 0; overflow-wrap: anywhere; }
 .ui-button--icon-only .ui-button-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ui-button .ui-button-icon,

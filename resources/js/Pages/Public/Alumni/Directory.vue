@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 
 interface DirectoryEntry {
@@ -38,6 +40,7 @@ const applyFilter = () => {
         current_status: currentStatus.value || undefined,
     }, { preserveState: true, replace: true });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -49,42 +52,42 @@ const applyFilter = () => {
         <main class="mx-auto max-w-5xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <p class="madrasah-service-label"><i class="fa-solid fa-users" aria-hidden="true"></i> Ikatan Keluarga Alumni</p>
-                    <h1 class="text-2xl font-bold text-slate-900">Direktori Temu Alumni &amp; Jejaring Almamater</h1>
-                    <p class="mt-1 text-sm text-slate-600">Hanya menampilkan alumni yang telah dimoderasi dan menyetujui publikasi atribut profil.</p>
+                    <p class="madrasah-service-label"><i class="fa-solid fa-users" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_directory", "text_001", "Ikatan Keluarga Alumni") }}</p>
+                    <h1 class="text-2xl font-bold text-slate-900">{{ publicText("copy.vue_alumni_directory", "text_002", "Direktori Temu Alumni & Jejaring Almamater") }}</h1>
+                    <p class="mt-1 text-sm text-slate-600">{{ publicText("copy.vue_alumni_directory", "text_003", "Hanya menampilkan alumni yang telah dimoderasi dan menyetujui publikasi atribut profil.") }}</p>
                 </div>
-                <a href="/layanan/tracer-alumni" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">
-                    Perbarui Data Tracer / E-KTA
+                <a :href="publicText('copy.vue_alumni_directory', 'href_007', '/layanan/tracer-alumni')" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">
+                    {{ publicText("copy.vue_alumni_directory", "text_004", "Perbarui Data Tracer / E-KTA") }}
                 </a>
             </div>
 
             <div class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-4">
-                <input v-model="search" type="text" placeholder="Cari nama, kampus, perusahaan..." class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-                <input v-model="graduationYear" type="number" placeholder="Angkatan (tahun lulus)" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                <input v-model="search" type="text" :placeholder="publicText('copy.vue_alumni_directory', 'placeholder_008', 'Cari nama, kampus, perusahaan...')" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                <input v-model="graduationYear" type="number" :placeholder="publicText('copy.vue_alumni_directory', 'placeholder_009', 'Angkatan (tahun lulus)')" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 <select v-model="currentStatus" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                    <option value="">Semua Status</option>
+                    <option value="">{{ publicText("copy.vue_alumni_directory", "text_005", "Semua Status") }}</option>
                     <option v-for="s in statusOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
                 </select>
-                <AppButton type="button" @click="applyFilter">Cari Direktori</AppButton>
+                <AppButton type="button" @click="applyFilter">{{ publicText("copy.vue_alumni_directory", "text_006", "Cari Direktori") }}</AppButton>
             </div>
 
-            <StateFeedback v-if="alumni.length === 0" state="empty" title="Belum ada alumni terpublikasi" description="Alumni akan muncul setelah profil dimoderasi dan disetujui untuk publikasi." />
+            <StateFeedback v-if="alumni.length === 0" state="empty" :title="publicText('copy.vue_alumni_directory', 'title_010', 'Belum ada alumni terpublikasi')" :description="publicText('copy.vue_alumni_directory', 'description_011', 'Alumni akan muncul setelah profil dimoderasi dan disetujui untuk publikasi.')" />
 
             <div v-else class="grid gap-4 md:grid-cols-2">
                 <article v-for="entry in alumni" :key="entry.id" class="rounded-xl border border-slate-200 bg-white p-5 space-y-2 text-sm">
                     <div class="flex items-start justify-between gap-2">
                         <div>
                             <h2 class="font-bold text-slate-900">{{ entry.full_name }}</h2>
-                            <p class="text-xs text-slate-500">Angkatan {{ entry.graduation_year }} {{ entry.major_or_class ? `• ${entry.major_or_class}` : '' }}</p>
+                            <p class="text-xs text-slate-500">{{ publicText("copy.vue_alumni_directory", "text_9001", "Angkatan") }} {{ entry.graduation_year }} {{ entry.major_or_class ? `• ${entry.major_or_class}` : '' }}</p>
                         </div>
                         <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">{{ entry.status_label }}</span>
                     </div>
                     <p v-if="entry.institution_or_company" class="text-xs text-slate-700">
                         {{ entry.position_or_program ? `${entry.position_or_program} di ` : '' }}<strong>{{ entry.institution_or_company }}</strong>
                     </p>
-                    <p v-if="entry.scholarship_info" class="text-xs text-emerald-700">Beasiswa/Prestasi: {{ entry.scholarship_info }}</p>
+                    <p v-if="entry.scholarship_info" class="text-xs text-emerald-700">{{ publicText("copy.vue_alumni_directory", "text_9002", "Beasiswa/Prestasi:") }} {{ entry.scholarship_info }}</p>
                     <p v-if="entry.testimonial" class="text-xs italic text-slate-600">"{{ entry.testimonial }}"</p>
-                    <p v-if="entry.contact_email" class="text-xs text-slate-500">Kontak: {{ entry.contact_email }}</p>
+                    <p v-if="entry.contact_email" class="text-xs text-slate-500">{{ publicText("copy.vue_alumni_directory", "text_9003", "Kontak:") }} {{ entry.contact_email }}</p>
                 </article>
             </div>
         </main>

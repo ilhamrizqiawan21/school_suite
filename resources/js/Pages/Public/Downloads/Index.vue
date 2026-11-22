@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { router } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
@@ -31,6 +33,7 @@ const selectCategory = (category: string) => {
 };
 
 const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -39,13 +42,13 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
         <PublicHeader :school="school" />
         <section class="portal-container">
             <header class="portal-hero madrasah-profile-hero">
-                <p class="eyebrow">Pusat Unduh</p>
-                <h1>Dokumen &amp; Formulir Resmi {{ school.name }}</h1>
-                <p>Unduh versi terbit terbaru formulir, kalender akademik, tata tertib, brosur, dan SOP layanan.</p>
+                <p class="eyebrow">{{ publicText("copy.vue_downloads_index", "text_001", "Pusat Unduh") }}</p>
+                <h1>{{ publicText("copy.vue_downloads_index", "text_9001", "Dokumen & Formulir Resmi") }} {{ school.name }}</h1>
+                <p>{{ publicText("copy.vue_downloads_index", "text_002", "Unduh versi terbit terbaru formulir, kalender akademik, tata tertib, brosur, dan SOP layanan.") }}</p>
             </header>
 
-            <div class="portal-chips" role="group" aria-label="Kategori unduhan">
-                <button type="button" class="portal-chip" :class="{ 'is-active': !selectedCategory }" @click="selectCategory('')">Semua</button>
+            <div class="portal-chips" role="group" :aria-label="publicText('copy.vue_downloads_index', 'aria_label_005', 'Kategori unduhan')">
+                <button type="button" class="portal-chip" :class="{ 'is-active': !selectedCategory }" @click="selectCategory('')">{{ publicText("copy.vue_downloads_index", "text_003", "Semua") }}</button>
                 <button
                     v-for="(label, key) in categories"
                     :key="key"
@@ -63,18 +66,18 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
                     <div class="download-row__info">
                         <div class="download-row__meta">
                             <StatusBadge status="published" :label="doc.category_label" size="sm" />
-                            <span>Versi {{ doc.version }}</span>
+                            <span>{{ publicText("copy.vue_downloads_index", "text_9002", "Versi") }} {{ doc.version }}</span>
                             <span>{{ formatSize(doc.size_bytes) }}</span>
-                            <span>{{ doc.download_count }} unduhan</span>
+                            <span>{{ doc.download_count }} {{ publicText("copy.vue_downloads_index", "text_9003", "unduhan") }}</span>
                         </div>
                         <h2>{{ doc.title }}</h2>
                         <p v-if="doc.description">{{ doc.description }}</p>
                     </div>
-                    <a :href="doc.download_url" class="ui-button ui-button--primary ui-button--md">Unduh Berkas</a>
+                    <a :href="doc.download_url" class="ui-button ui-button--primary ui-button--md">{{ publicText("copy.vue_downloads_index", "text_004", "Unduh Berkas") }}</a>
                 </article>
             </div>
 
-            <StateFeedback v-else state="empty" title="Belum ada dokumen terbit" description="Dokumen resmi pada kategori ini belum tersedia." />
+            <StateFeedback v-else state="empty" :title="publicText('copy.vue_downloads_index', 'title_006', 'Belum ada dokumen terbit')" :description="publicText('copy.vue_downloads_index', 'description_007', 'Dokumen resmi pada kategori ini belum tersedia.')" />
         </section>
     </main>
 </template>

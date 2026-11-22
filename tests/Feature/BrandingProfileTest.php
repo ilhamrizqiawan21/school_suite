@@ -45,6 +45,23 @@ class BrandingProfileTest extends TestCase
         Storage::disk('local')->assertExists($this->school->favicon_path);
     }
 
+    public function test_replacing_logo_changes_the_public_asset_url_and_keeps_identity_consistent(): void
+    {
+        Storage::fake('local');
+        $urls = [];
+        foreach (['first.png', 'replacement.png'] as $name) {
+            $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+                'name' => $this->school->name, 'npsn' => $this->school->npsn, 'level' => 'SMP',
+                'logo' => UploadedFile::fake()->image($name, 128, 128),
+            ])->assertSessionHasNoErrors();
+            $school = $this->school->fresh();
+            $urls[] = $school->publicBrandingUrl('logo');
+            $this->get('/profil-sekolah')->assertInertia(fn ($page) => $page->where('school.logo_url', $school->publicBrandingUrl('logo')));
+            $this->get($school->publicBrandingUrl('logo'))->assertOk();
+        }
+        $this->assertNotSame($urls[0], $urls[1]);
+    }
+
     public function test_partial_school_update_preserves_existing_public_theme_copy(): void
     {
         $this->school->update([
@@ -79,6 +96,59 @@ class BrandingProfileTest extends TestCase
         $this->assertSame('Tumbuh bersama', $theme['hero_accent']);
         $this->assertSame('Lihat program', $theme['hero_primary_label']);
         $this->assertSame('Hubungi kami', $theme['hero_secondary_label']);
+    }
+
+    public function test_removing_branding_clears_only_the_requested_asset_and_invalidates_its_url(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('branding/logo.png', 'logo');
+        Storage::disk('local')->put('branding/favicon.png', 'favicon');
+        $this->school->update(['logo_path' => 'branding/logo.png', 'favicon_path' => 'branding/favicon.png']);
+        $oldUrl = $this->school->publicBrandingUrl('logo');
+
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name, 'npsn' => $this->school->npsn, 'level' => 'SMP',
+            'remove_logo' => true,
+        ])->assertSessionHasNoErrors();
+
+        $this->assertNull($this->school->fresh()->logo_path);
+        $this->assertSame('branding/favicon.png', $this->school->fresh()->favicon_path);
+        $this->get($oldUrl)->assertNotFound();
+    }
+
+    public function test_removal_and_replacement_are_mutually_exclusive_and_validation_is_atomic(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('branding/logo.png', 'logo');
+        $this->school->update(['logo_path' => 'branding/logo.png']);
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => 'Must not persist', 'npsn' => $this->school->npsn, 'level' => 'SMP',
+            'remove_logo' => true, 'logo' => UploadedFile::fake()->image('new.png'),
+        ])->assertSessionHasErrors('logo');
+        $this->assertSame('Sekolah Branding', $this->school->fresh()->name);
+        Storage::disk('local')->assertExists('branding/logo.png');
+    }
+
+    public function test_admin_branding_is_validated_persisted_and_shared_without_overwriting_other_settings(): void
+    {
+        $this->school->update(['settings' => ['service_hours' => '07.00–15.00']]);
+        $theme = ['primary' => '#244f83', 'accent' => '#7255ae', 'success' => '#167149',
+            'warning' => '#855400', 'danger' => '#b42318', 'font' => 'system', 'radius' => 6, 'density' => 'compact'];
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name, 'npsn' => $this->school->npsn, 'level' => 'SMP',
+            'application_name' => 'Portal Akademik Literasi', 'admin_theme' => $theme,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('07.00–15.00', data_get($this->school->fresh()->settings, 'service_hours'));
+        $this->actingAs($this->admin->fresh())->get('/dashboard')->assertInertia(fn ($page) => $page
+            ->where('appName', 'Portal Akademik Literasi')->where('school.admin_theme.primary', '#244f83'));
+
+        foreach ([['primary' => '#eeeeee'], ['font' => 'url(https://outside.test/font)'], ['radius' => 80]] as $invalid) {
+            $this->post('/pengaturan/sekolah', [
+                'name' => $this->school->name, 'npsn' => $this->school->npsn, 'level' => 'SMP',
+                'admin_theme' => array_replace($theme, $invalid),
+            ])->assertSessionHasErrors();
+        }
+        $this->assertSame('#244f83', data_get($this->school->fresh()->settings, 'admin_theme.primary'));
     }
 
     public function test_user_can_update_own_profile_and_avatar(): void

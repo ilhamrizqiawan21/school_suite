@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
     cards: {
@@ -61,8 +63,9 @@ const submitDevice = () => {
     });
 };
 
-const submitRevoke = () => {
-    if (!revokingCardId.value) return;
+const submitRevoke = async () => {
+    if (!revokingCardId.value || revokeForm.processing) return;
+    if (!await requestConfirmation('Cabut kartu siswa ini? Kartu tidak dapat dipakai lagi untuk presensi dan gerbang.')) return;
     revokeForm.post(`/akademik/kartu-siswa/${revokingCardId.value}/cabut`, {
         preserveScroll: true,
         onSuccess: () => {
@@ -71,6 +74,15 @@ const submitRevoke = () => {
         },
     });
 };
+
+const showCardEditor = ref(false);
+const requestCardEditorClose = useConfirmedDialogClose(cardForm, () => { showCardEditor.value = false; cardForm.reset(); cardForm.clearErrors(); });
+watch(() => cardForm.wasSuccessful, (success) => { if (success) cardForm.defaults(); });
+
+const showDeviceEditor = ref(false);
+const requestDeviceEditorClose = useConfirmedDialogClose(deviceForm, () => { showDeviceEditor.value = false; deviceForm.reset(); deviceForm.clearErrors(); });
+watch(() => deviceForm.wasSuccessful, (success) => { if (success) deviceForm.defaults(); });
+const requestRevokeClose = useConfirmedDialogClose(revokeForm, () => { revokingCardId.value = null; revokeForm.reset(); revokeForm.clearErrors(); });
 </script>
 
 <template>
@@ -88,7 +100,9 @@ const submitRevoke = () => {
             <div class="grid-two">
                 <section class="panel-card">
                     <h2>Daftarkan Kartu Baru</h2>
-                    <form class="form-stack" @submit.prevent="submitCard">
+                    <AppButton variant="primary" type="button" @click="showCardEditor = true">Daftarkan kartu siswa</AppButton>
+<Teleport to="body"><div v-if="showCardEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Daftarkan kartu siswa" @click.self="requestCardEditorClose" @keydown.esc.stop.prevent="requestCardEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Daftarkan kartu siswa</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup daftarkan kartu siswa" title="Tutup formulir" :disabled="cardForm.processing" @click="requestCardEditorClose" /></header>
+<form class="form-stack" @submit.prevent="submitCard">
                         <FormField id="card-student" label="Siswa" required :error="cardForm.errors.student_id" v-slot="{ inputId }">
                             <select :id="inputId" v-model="cardForm.student_id" required>
                                 <option v-for="s in students" :key="s.student_id" :value="s.student_id">
@@ -104,11 +118,14 @@ const submitRevoke = () => {
                         </FormField>
                         <AppButton type="submit" :disabled="cardForm.processing">Terbitkan Kartu</AppButton>
                     </form>
+</div></div></Teleport>
                 </section>
 
                 <section class="panel-card">
                     <h2>Daftarkan Perangkat Kios</h2>
-                    <form class="form-stack" @submit.prevent="submitDevice">
+                    <AppButton variant="primary" type="button" @click="showDeviceEditor = true">Daftarkan perangkat kios</AppButton>
+<Teleport to="body"><div v-if="showDeviceEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Daftarkan perangkat kios" @click.self="requestDeviceEditorClose" @keydown.esc.stop.prevent="requestDeviceEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Daftarkan perangkat kios</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup daftarkan perangkat kios" title="Tutup formulir" :disabled="deviceForm.processing" @click="requestDeviceEditorClose" /></header>
+<form class="form-stack" @submit.prevent="submitDevice">
                         <FormField id="dev-name" label="Nama Perangkat / Lokasi Pos" required :error="deviceForm.errors.name" v-slot="{ inputId }">
                             <input :id="inputId" v-model="deviceForm.name" type="text" required placeholder="Kios Gerbang Utama" />
                         </FormField>
@@ -117,10 +134,11 @@ const submitRevoke = () => {
                         </FormField>
                         <label class="inline-check">
                             <input v-model="deviceForm.gate_enabled" type="checkbox" />
-                            <span>Aktifkan tombol kontrol Gate (K-04)</span>
+                            <span>Aktifkan tombol kontrol gerbang</span>
                         </label>
                         <AppButton type="submit" variant="secondary" :disabled="deviceForm.processing">Simpan Perangkat</AppButton>
                     </form>
+</div></div></Teleport>
                 </section>
             </div>
 
@@ -161,14 +179,14 @@ const submitRevoke = () => {
                     </table>
                 </div>
 
-                <StateFeedback v-else state="empty" title="Belum ada kartu terdaftar" description="Daftarkan kartu RFID/QR untuk siswa pada formulir di atas." />
+                <StateFeedback v-else state="empty" title="Belum ada kartu terdaftar" description="Daftarkan kartu RFID/QR untuk siswa melalui tombol daftarkan kartu." />
             </section>
 
-            <div v-if="revokingCardId" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="rev-card-title">
+            <div v-if="revokingCardId" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="rev-card-title" @click.self="requestRevokeClose" @keydown.esc.stop.prevent="requestRevokeClose">
                 <div class="modal-card">
                     <header class="modal-head">
                         <h2 id="rev-card-title">Cabut Kartu Siswa</h2>
-                        <button type="button" class="close-btn" @click="revokingCardId = null" aria-label="Tutup">×</button>
+                        <button type="button" class="close-btn" @click="requestRevokeClose" aria-label="Tutup">×</button>
                     </header>
                     <form class="form-stack" @submit.prevent="submitRevoke">
                         <FormField id="rev-card-reason" label="Alasan Pencabutan" required :error="revokeForm.errors.reason" v-slot="{ inputId }">

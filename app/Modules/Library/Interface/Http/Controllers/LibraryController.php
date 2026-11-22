@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Library\Interface\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Core\Application\Services\AccessScopeService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
@@ -19,7 +20,11 @@ use App\Modules\Library\Infrastructure\Models\LibraryVisit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -34,20 +39,30 @@ class LibraryController extends Controller
         private readonly ServiceDocumentService $documentService,
     ) {}
 
-    /**
-     * Halaman publik utama Perpustakaan (`/perpustakaan`) yang terhubung ke `LibraryService`.
-     */
-    public function replica(): \Illuminate\Http\Response
+    public function replica(Request $request): \Illuminate\Http\Response
     {
         $school = $this->schoolScope->findPrimaryPublicSnapshot();
-        $stats = $school !== null
-            ? $this->libraryService->statistics((int) $school['id'])
-            : ['collections_count' => 0, 'visits_today' => 0, 'active_loans' => 0];
+        $schoolId = (int) ($school['id'] ?? 0);
+        $legacyCategories = ['1' => 'agama', '2' => 'buku_teks', '3' => 'referensi', '4' => 'fiksi', '6' => 'jurnal'];
+        $category = (string) $request->query('kategori', $legacyCategories[(string) $request->query('kat', '')] ?? '');
+        $search = (string) $request->query('q', $request->query('kat') === '5' ? 'teknologi' : '');
+        $featuredId = (int) ($school['content_blocks']['library.spotlight']['collection_id'] ?? 0);
+        $featured = $schoolId > 0 ? $this->libraryService->searchCatalog($schoolId, ['id' => $featuredId], $request->user())['items'][0] ?? null : null;
+        $catalog = $schoolId > 0 ? $this->libraryService->searchCatalog($schoolId, [
+            'search' => $search,
+            'category' => $category,
+            'format' => $request->query('format', ''),
+        ], $request->user()) : ['items' => []];
 
         return response()->view('public.madrasah.perpustakaan', [
             'school' => $school,
-            'stats' => $stats,
-        ]);
+            'stats' => $schoolId > 0 ? $this->libraryService->statistics($schoolId) : [],
+            'collections' => $catalog['items'],
+            'featuredCollection' => $featured, 'selectedCategory' => $category, 'search' => $search,
+            'contentBlocks' => $school['content_blocks'] ?? [],
+            'categories' => LibraryService::CATEGORIES,
+            'memberLoggedIn' => $request->user() !== null && $request->user()->is_active && (int) $request->user()->school_id === $schoolId,
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     /**
@@ -66,6 +81,53 @@ class LibraryController extends Controller
         $schoolId = (int) $school['id'];
         $pg = trim((string) $request->query('pg', ''));
         $user = $request->user();
+        if ($user !== null && (! $user->is_active || (int) $user->school_id !== $schoolId)) {
+            $user = null;
+        }
+
+        if ($pg === 'login_siswa') {
+            abort_unless($request->isMethod('post'), 405);
+            $data = $request->validate(['username' => ['required', 'string', 'max:150'], 'password' => ['required', 'string', 'max:255']]);
+            $key = 'library-login:'.hash('sha256', mb_strtolower($data['username']).'|'.$request->ip());
+            if (RateLimiter::tooManyAttempts($key, 5)) {
+                return response()->json(['status' => 'error', 'message' => 'Terlalu banyak percobaan. Coba lagi beberapa menit.'], 429);
+            }
+            $studentUserId = $this->academicQuery->resolveActiveStudentUserId($schoolId, $data['username']);
+            $candidate = User::query()->where('school_id', $schoolId)->where('is_active', true)
+                ->where(fn ($q) => $q->where('username', $data['username'])->orWhere('email', $data['username'])
+                    ->when($studentUserId !== null, fn ($sub) => $sub->orWhere('id', $studentUserId)))
+                ->first();
+            if ($candidate === null || ! $candidate->hasRole(RoleEnum::STUDENT->value) || ! Hash::check($data['password'], $candidate->password)) {
+                RateLimiter::hit($key, 300);
+
+                return response()->json(['status' => 'error', 'message' => 'Akun atau password tidak sesuai.'], 422);
+            }
+            Auth::login($candidate);
+            $request->session()->regenerate();
+            RateLimiter::clear($key);
+
+            return response()->json(['status' => 'success', 'message' => 'Berhasil masuk ke perpustakaan.', 'csrf_token' => csrf_token()]);
+        }
+
+        if ($pg === 'logout_siswa') {
+            abort_unless($request->isMethod('post'), 405);
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return response()->json(['status' => 'success', 'message' => 'Anda sudah keluar.', 'csrf_token' => csrf_token()]);
+        }
+
+        if ($pg === 'booking_pinjam') {
+            abort_unless($request->isMethod('post'), 405);
+            if ($user === null || ! $user->is_active || (int) $user->school_id !== $schoolId) {
+                return response()->json(['status' => 'need_login', 'message' => 'Silakan masuk ke akun siswa.'], 401);
+            }
+            $data = $request->validate(['id_buku' => ['required', 'integer', 'min:1'], 'catatan' => ['nullable', 'string', 'max:1500']]);
+            $loan = $this->libraryService->reserveCollection($user, (int) $data['id_buku'], $data['catatan'] ?? null);
+
+            return response()->json(['status' => 'success', 'message' => 'Kode reservasi: '.$loan->loan_code.'. Tunjukkan kode ini kepada pustakawan.', 'loan_code' => $loan->loan_code]);
+        }
 
         if ($pg === 'katalog') {
             $catalog = $this->libraryService->searchCatalog($schoolId, [
@@ -102,30 +164,36 @@ class LibraryController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Anda tidak memiliki akses ke koleksi ini.'], 403);
             }
 
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'id' => (int) $collection->id,
-                    'judul' => $collection->title,
-                    'penulis' => $collection->author ?? '-',
-                    'penerbit' => $collection->publisher ?? '-',
-                    'isbn' => $collection->isbn ?? $collection->code,
-                    'kategori' => LibraryService::CATEGORIES[$collection->category] ?? $collection->category,
-                    'stok' => (int) $collection->total_copies,
-                    'tersedia' => (int) $collection->available_copies,
-                    'rak' => $collection->shelf_location ?? '-',
-                    'format' => $collection->format,
-                    'access_level' => $collection->access_level,
-                    'download_url' => $collection->ebook_document_id !== null ? route('library.collections.download', $collection->id) : null,
-                ],
-            ]);
+            $book = [
+                'id' => (int) $collection->id,
+                'id_buku' => (int) $collection->id,
+                'nama_kategori' => LibraryService::CATEGORIES[$collection->category] ?? $collection->category,
+                'lokasi_rak' => $collection->shelf_location ?? '-',
+                'kode_buku' => $collection->code,
+                'jumlah_total' => (int) $collection->total_copies,
+                'jumlah_tersedia' => (int) $collection->available_copies,
+                'tahun_terbit' => $collection->publish_year,
+                'deskripsi' => $collection->description ?? '',
+                'cover_url' => '/madrasah-theme/perpustakaan/database.png',
+                'ebook_url' => $collection->ebook_document_id !== null ? route('library.collections.download', $collection->id) : $collection->ebook_url,
+                'judul' => $collection->title,
+                'penulis' => $collection->author ?? '-',
+                'penerbit' => $collection->publisher ?? '-',
+                'isbn' => $collection->isbn ?? $collection->code,
+                'kategori' => LibraryService::CATEGORIES[$collection->category] ?? $collection->category,
+                'stok' => (int) $collection->total_copies,
+                'tersedia' => (int) $collection->available_copies,
+                'rak' => $collection->shelf_location ?? '-',
+                'format' => $collection->format,
+                'access_level' => $collection->access_level,
+                'download_url' => $collection->ebook_document_id !== null ? route('library.collections.download', $collection->id) : null,
+            ];
+
+            return response()->json(['status' => 'success', 'data' => $book, ...$book]);
         }
 
         if ($pg === 'statistik_kunjungan') {
-            return response()->json([
-                'status' => 'success',
-                'kpi' => $this->libraryService->statistics($schoolId),
-            ]);
+            return response()->json(['status' => 'success', ...$this->libraryService->publicVisitStatistics($schoolId)]);
         }
 
         if ($pg === 'traffic') {
@@ -139,13 +207,28 @@ class LibraryController extends Controller
 
         if ($pg === 'buku_tamu') {
             abort_unless($request->isMethod('post'), 405);
+            $request->merge([
+                'visitor_name' => $request->input('visitor_name', $request->input('nama_tamu', $request->input('nama_guru'))),
+                'visitor_role' => $request->input('visitor_role', match ($request->input('tipe_tamu')) {
+                    'siswa' => 'student', 'guru' => 'teacher', default => 'guest'
+                }),
+                'purpose' => $request->input('purpose', $request->input('keperluan') === 'Lainnya' ? $request->input('keperluan_lainnya') : $request->input('keperluan')),
+            ]);
             $validated = $request->validate([
                 'card_token' => ['nullable', 'string', 'max:80'],
+                'nisn_or_nis' => ['nullable', 'string', 'max:60'],
                 'visitor_name' => ['nullable', 'string', 'max:150'],
                 'visitor_identifier' => ['nullable', 'string', 'max:60'],
                 'visitor_role' => ['nullable', Rule::in(['student', 'teacher', 'guest'])],
                 'purpose' => ['nullable', 'string', 'max:180'],
             ]);
+            if ($request->filled('nisn_or_nis')) {
+                $studentId = $this->academicQuery->resolveActiveStudentIdByNumber($schoolId, (string) $request->input('nisn_or_nis'));
+                if ($studentId === null) {
+                    throw ValidationException::withMessages(['nisn_or_nis' => 'Identitas siswa tidak valid.']);
+                }
+                $validated['student_id'] = $studentId;
+            }
             $visit = $this->libraryService->recordVisit($schoolId, $validated, $user);
 
             return response()->json([
@@ -159,6 +242,11 @@ class LibraryController extends Controller
             if ($user === null) {
                 return response()->json(['status' => 'error', 'message' => 'Silakan masuk terlebih dahulu untuk mengusulkan pengadaan buku.'], 401);
             }
+            $request->merge([
+                'title' => $request->input('title', $request->input('judul_buku')),
+                'author' => $request->input('author', $request->input('penulis')),
+                'reason' => $request->input('reason', $request->input('alasan')),
+            ]);
             $validated = $request->validate([
                 'title' => ['required', 'string', 'max:200'],
                 'author' => ['nullable', 'string', 'max:150'],
@@ -175,22 +263,23 @@ class LibraryController extends Controller
         }
 
         if ($pg === 'cek_bebas_pustaka') {
-            if ($user === null || (int) $user->school_id !== $schoolId) {
-                return response()->json(['status' => 'error', 'message' => 'Silakan masuk ke akun anggota untuk memeriksa status bebas pustaka.'], 401);
+            abort_unless($request->isMethod('post'), 405);
+            if ($user === null) {
+                return response()->json(['status' => 'need_login', 'message' => 'Silakan masuk untuk memeriksa bebas pustaka.'], 401);
             }
-            $studentIds = array_column($this->academicQuery->getStudentsForUserScope($schoolId, $user), 'student_id');
-            $clearances = $studentIds === []
-                ? []
-                : LibraryClearanceCertificate::query()
-                    ->where('school_id', $schoolId)
-                    ->whereIn('student_id', $studentIds)
-                    ->latest('id')
-                    ->get()
-                    ->toArray();
+            $data = $request->validate(['nisn_or_nis' => ['required', 'string', 'max:60']]);
+            $students = $this->academicQuery->getStudentsForUserScope($schoolId, $user);
+            $student = collect($students)->first(fn ($s) => in_array($data['nisn_or_nis'], [(string) $s['nis'], (string) ($s['nisn'] ?? '')], true));
+            abort_unless($student !== null, 403);
+            $loans = LibraryLoan::query()->with('collection:id,title')->where('school_id', $schoolId)
+                ->where('student_id', $student['student_id'])->whereIn('status', ['borrowed', 'overdue', 'lost'])->get();
+            $certificate = $loans->isEmpty() ? $this->libraryService->checkOrIssueClearance($schoolId, (int) $student['student_id'], $user) : null;
 
             return response()->json([
-                'status' => 'success',
-                'clearances' => $clearances,
+                'status' => 'success', 'is_bebas' => $loans->isEmpty(), 'nama_siswa' => $student['name'],
+                'kelas' => $student['class_group_name'] ?? '—', 'nisn' => $student['nisn'] ?? $student['nis'],
+                'tanggungan' => $loans->count(), 'list_buku' => $loans->map(fn ($loan) => ['judul' => $loan->collection?->title ?? '—', 'tgl_jatuh_tempo' => $loan->due_at?->toDateString()])->all(),
+                'print_url' => $certificate !== null ? route('library.clearance.pdf', $certificate->id) : null,
             ]);
         }
 
@@ -232,7 +321,7 @@ class LibraryController extends Controller
         return Inertia::render('Public/Library/Index', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'collections' => $catalog['items'],
@@ -284,6 +373,7 @@ class LibraryController extends Controller
 
         $validated = $request->validate([
             'card_token' => ['nullable', 'string', 'max:80'],
+            'nisn_or_nis' => ['nullable', 'string', 'max:60'],
             'student_id' => ['nullable', 'integer'],
             'visitor_name' => ['nullable', 'string', 'max:150'],
             'visitor_identifier' => ['nullable', 'string', 'max:60'],
@@ -463,6 +553,13 @@ class LibraryController extends Controller
         $this->libraryService->returnLoan($request->user(), $loan);
 
         return back()->with('message', 'Pengembalian koleksi berhasil dicatat.');
+    }
+
+    public function confirmReservation(Request $request, LibraryLoan $loan): RedirectResponse
+    {
+        $this->libraryService->confirmReservation($request->user(), $loan);
+
+        return back()->with('message', 'Reservasi dikonfirmasi menjadi peminjaman.');
     }
 
     public function decideProcurement(Request $request, LibraryProcurementRequest $procurement): RedirectResponse

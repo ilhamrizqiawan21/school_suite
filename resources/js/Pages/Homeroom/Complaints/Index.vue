@@ -97,15 +97,15 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         <div class="space-y-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Antrean Terbatas Satgas Pengaduan</h1>
-                    <p class="text-sm text-slate-600">Telaah aduan bernama/anonim, alokasi petugas, unggah bukti selesai privat, balasan tiket, serta ringkasan publik termoderasi.</p>
+                    <h1 class="text-xl font-bold text-[var(--ink)]">Antrean Terbatas Satgas Pengaduan</h1>
+                    <p class="text-sm text-[var(--ink-soft)]">Telaah aduan bernama/anonim, alokasi petugas, unggah bukti selesai privat, balasan tiket, serta ringkasan publik termoderasi.</p>
                 </div>
                 <div class="flex gap-2">
-                    <select v-model="categoryFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilters">
+                    <select v-model="categoryFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilters">
                         <option value="">Semua Kategori</option>
                         <option v-for="c in categories" :key="c.value" :value="c.value">{{ c.label }}</option>
                     </select>
-                    <select v-model="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilters">
+                    <select v-model="statusFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilters">
                         <option value="">Semua Status</option>
                         <option value="submitted">Diajukan</option>
                         <option value="in_review">Ditelaah Satgas</option>
@@ -116,7 +116,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                 <StateFeedback
                     v-if="reports.length === 0"
                     state="empty"
@@ -126,7 +126,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2.5 text-center">Kode &amp; Pelapor</th>
                                 <th class="px-3 py-2.5 text-center">Laporan</th>
@@ -139,12 +139,12 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             <tr v-for="r in reports" :key="r.id">
                                 <td class="px-3 py-3">
                                     <p class="font-mono text-xs font-bold">{{ r.report_code }}</p>
-                                    <p class="text-xs font-medium text-slate-800">{{ r.reporter_label }}</p>
-                                    <p class="text-xs text-slate-500">{{ r.category_label }}</p>
+                                    <p class="text-xs font-medium text-[var(--ink)]">{{ r.reporter_label }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">{{ r.category_label }}</p>
                                 </td>
                                 <td class="px-3 py-3">
-                                    <p class="font-medium text-slate-900">{{ r.title }}</p>
-                                    <p class="text-xs text-slate-600 line-clamp-2">{{ r.description }}</p>
+                                    <p class="font-medium text-[var(--ink)]">{{ r.title }}</p>
+                                    <p class="text-xs text-[var(--ink-soft)] line-clamp-2">{{ r.description }}</p>
                                 </td>
                                 <td class="px-3 py-3 text-xs space-x-2">
                                     <a
@@ -180,11 +180,11 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             @click.self="activeReport = null"
             @keydown.esc="activeReport = null"
         >
-            <div class="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl space-y-3">
+            <div class="w-full max-w-lg rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-3">
                 <h3 class="text-base font-bold">Tangani Aduan {{ activeReport.report_code }}</h3>
                 <div class="grid gap-3 grid-cols-2">
                     <FormField id="satgas-status" label="Status" required>
-                        <select id="satgas-status" v-model="handleForm.status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="satgas-status" v-model="handleForm.status" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option value="in_review">Ditelaah Satgas</option>
                             <option value="needs_revision">Butuh Info Pelapor</option>
                             <option value="completed">Selesai Ditindaklanjuti</option>
@@ -192,22 +192,22 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         </select>
                     </FormField>
                     <FormField id="satgas-assignee" label="Penanggung Jawab">
-                        <select id="satgas-assignee" v-model="handleForm.assigned_to_user_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="satgas-assignee" v-model="handleForm.assigned_to_user_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option value="">Otomatis Anda</option>
                             <option v-for="u in assignees" :key="u.id" :value="u.id">{{ u.name }}</option>
                         </select>
                     </FormField>
                 </div>
                 <FormField id="satgas-reply" label="Balasan untuk Tiket Pelapor">
-                    <textarea id="satgas-reply" v-model="handleForm.task_force_reply" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <textarea id="satgas-reply" v-model="handleForm.task_force_reply" rows="2" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                 </FormField>
                 <FormField id="satgas-res-summary" label="Catatan Tindak Lanjut Internal">
-                    <textarea id="satgas-res-summary" v-model="handleForm.resolution_summary" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <textarea id="satgas-res-summary" v-model="handleForm.resolution_summary" rows="2" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                 </FormField>
                 <FormField id="satgas-public-summary" label="Ringkasan Transparansi Publik (Bebas PII)">
-                    <textarea id="satgas-public-summary" v-model="handleForm.moderated_public_summary" rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <textarea id="satgas-public-summary" v-model="handleForm.moderated_public_summary" rows="2" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                 </FormField>
-                <label class="flex items-center gap-2 text-xs font-medium text-slate-700">
+                <label class="flex items-center gap-2 text-xs font-medium text-[var(--ink-soft)]">
                     <input v-model="handleForm.publish_to_transparency" type="checkbox" />
                     Tampilkan ringkasan bebas PII pada halaman Transparansi Publik
                 </label>

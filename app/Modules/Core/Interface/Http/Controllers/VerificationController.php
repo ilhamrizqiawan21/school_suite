@@ -32,7 +32,7 @@ class VerificationController extends Controller
         return Inertia::render('Public/Verification/Index', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'mode' => trim((string) $request->query('mode', 'document')),
@@ -68,7 +68,7 @@ class VerificationController extends Controller
         return Inertia::render('Public/Verification/Index', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'mode' => $mode,
@@ -88,7 +88,7 @@ class VerificationController extends Controller
         return Inertia::render('Public/Students/Index', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'summary' => $this->academicQuery->publicStudentSummary($schoolId),
@@ -112,7 +112,7 @@ class VerificationController extends Controller
         return Inertia::render('Public/Students/Index', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'summary' => $this->academicQuery->publicStudentSummary($schoolId),

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const props = defineProps<{
@@ -147,6 +149,7 @@ const submit = () => {
         },
     });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -156,7 +159,7 @@ const submit = () => {
         <PublicHeader :school="school" />
 
         <main class="parity-lapor-main">
-            <section class="parity-lapor-hero-mesh">
+            <section v-if="contentBlocks?.['complaint.hero']?.visible !== false" class="parity-lapor-hero-mesh">
                 <div class="parity-lapor-container parity-lapor-hero-grid">
                     <div class="parity-lapor-hero-copy">
                         <div class="parity-lapor-trust-pill">
@@ -173,7 +176,7 @@ const submit = () => {
                             </h1>
                             <p class="parity-lapor-lead">
                                 <template v-if="heroBlock.lead">{{ heroBlock.lead }}</template>
-                                <template v-else>Saluran pengaduan resmi {{ school.name }}. Tangani perundungan, sarana belajar, ketertiban, dan layanan madrasah secara aman dengan opsi <strong>Kirim Sebagai Anonim</strong>.</template>
+                                <template v-else>{{ publicText("copy.vue_services_complaint", "text_9001", "Saluran pengaduan resmi") }} {{ school.name }}{{ publicText("copy.vue_services_complaint", "text_9002", ". Tangani perundungan, sarana belajar, ketertiban, dan layanan madrasah secara aman dengan opsi") }} <strong>{{ publicText("copy.vue_services_complaint", "text_001", "Kirim Sebagai Anonim") }}</strong>.</template>
                             </p>
                         </div>
 
@@ -181,29 +184,29 @@ const submit = () => {
                             <div class="parity-lapor-stats-head">
                                 <span class="parity-lapor-stats-title">
                                     <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
-                                    STATISTIK PENANGANAN MADRASAH
+                                    {{ publicText("copy.vue_services_complaint", "text_002", "STATISTIK PENANGANAN MADRASAH") }}
                                 </span>
                                 <div class="parity-lapor-stats-rate">
-                                    <span>Tingkat Selesai:</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_003", "Tingkat Selesai:") }}</span>
                                     <span class="parity-lapor-rate-badge">{{ completionRate }}%</span>
                                 </div>
                             </div>
 
                             <div class="parity-lapor-metrics">
                                 <div class="parity-lapor-metric parity-lapor-metric--slate">
-                                    <span>TOTAL MASUK</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_004", "TOTAL MASUK") }}</span>
                                     <strong>{{ transparency.totals.total }}</strong>
                                 </div>
                                 <div class="parity-lapor-metric parity-lapor-metric--sky">
-                                    <span>BARU MASUK</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_005", "BARU MASUK") }}</span>
                                     <strong>{{ newCount }}</strong>
                                 </div>
                                 <div class="parity-lapor-metric parity-lapor-metric--amber">
-                                    <span>DIPROSES</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_006", "DIPROSES") }}</span>
                                     <strong>{{ transparency.totals.in_progress }}</strong>
                                 </div>
                                 <div class="parity-lapor-metric parity-lapor-metric--emerald">
-                                    <span>TUNTAS</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_007", "TUNTAS") }}</span>
                                     <strong>{{ transparency.totals.resolved }}</strong>
                                 </div>
                             </div>
@@ -215,9 +218,9 @@ const submit = () => {
                                     <div class="parity-lapor-bar-sky" :style="{ width: `${newPercent}%` }"></div>
                                 </div>
                                 <div class="parity-lapor-progress-legend">
-                                    <span><i class="parity-dot-emerald"></i> Selesai</span>
-                                    <span><i class="parity-dot-amber"></i> Ditangani Satgas</span>
-                                    <span><i class="parity-dot-sky"></i> Verifikasi Awal</span>
+                                    <span><i class="parity-dot-emerald"></i> {{ publicText("copy.vue_services_complaint", "text_008", "Selesai") }}</span>
+                                    <span><i class="parity-dot-amber"></i> {{ publicText("copy.vue_services_complaint", "text_009", "Ditangani Satgas") }}</span>
+                                    <span><i class="parity-dot-sky"></i> {{ publicText("copy.vue_services_complaint", "text_010", "Verifikasi Awal") }}</span>
                                 </div>
                             </div>
                         </div>
@@ -228,8 +231,8 @@ const submit = () => {
                                     <i class="fa-solid fa-user-secret" aria-hidden="true"></i>
                                 </span>
                                 <div>
-                                    <strong>100% Anonim</strong>
-                                    <span>Identitas tersimpan rahasia</span>
+                                    <strong>{{ publicText("copy.vue_services_complaint", "text_011", "100% Anonim") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_012", "Identitas tersimpan rahasia") }}</span>
                                 </div>
                             </div>
                             <div class="parity-lapor-pillar">
@@ -237,8 +240,8 @@ const submit = () => {
                                     <i class="fa-solid fa-bolt" aria-hidden="true"></i>
                                 </span>
                                 <div>
-                                    <strong>Respon Cepat</strong>
-                                    <span>Maks. 3×24 jam kerja</span>
+                                    <strong>{{ publicText("copy.vue_services_complaint", "text_013", "Respon Cepat") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_014", "Maks. 3×24 jam kerja") }}</span>
                                 </div>
                             </div>
                             <div class="parity-lapor-pillar">
@@ -246,8 +249,8 @@ const submit = () => {
                                     <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
                                 </span>
                                 <div>
-                                    <strong>Lacak Tiket</strong>
-                                    <span>Pantau progres real-time</span>
+                                    <strong>{{ publicText("copy.vue_services_complaint", "text_015", "Lacak Tiket") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_016", "Pantau progres real-time") }}</span>
                                 </div>
                             </div>
                         </div>
@@ -258,33 +261,33 @@ const submit = () => {
                             <div class="parity-complaint-tabs">
                                 <button type="button" :aria-pressed="quickTab === 'write'" @click="quickTab = 'write'">
                                     <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                                    <span>Tulis Pengaduan</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_017", "Tulis Pengaduan") }}</span>
                                 </button>
                                 <button type="button" :aria-pressed="quickTab === 'track'" @click="quickTab = 'track'">
                                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                                    <span>Cek Tiket Laporan</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_018", "Cek Tiket Laporan") }}</span>
                                 </button>
                             </div>
                             <form v-if="quickTab === 'write'" @submit.prevent="focusFullComplaint">
                                 <div class="parity-lapor-type-pills">
                                     <button type="button" :class="{ 'is-active': quickType === 'pengaduan' }" @click="quickType = 'pengaduan'">
-                                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Pengaduan
+                                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_019", "Pengaduan") }}
                                     </button>
                                     <button type="button" :class="{ 'is-active': quickType === 'aspirasi' }" @click="quickType = 'aspirasi'">
-                                        <i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Aspirasi
+                                        <i class="fa-solid fa-lightbulb" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_020", "Aspirasi") }}
                                     </button>
                                     <button type="button" :class="{ 'is-active': quickType === 'info' }" @click="quickType = 'info'">
-                                        <i class="fa-solid fa-circle-question" aria-hidden="true"></i> Info
+                                        <i class="fa-solid fa-circle-question" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_021", "Info") }}
                                     </button>
                                 </div>
-                                <label for="quick-complaint-category">Pilih Kategori Permasalahan</label>
+                                <label for="quick-complaint-category">{{ publicText("copy.vue_services_complaint", "text_022", "Pilih Kategori Permasalahan") }}</label>
                                 <select id="quick-complaint-category" v-model="form.category">
                                     <option v-for="item in categories" :key="item.value" :value="item.value">{{ item.label }}</option>
                                 </select>
-                                <label for="quick-complaint-description">Pokok Masalah / Keluhan</label>
-                                <textarea id="quick-complaint-description" v-model="form.description" rows="3" placeholder="Ketik ringkasan kejadian (misal: AC kelas XI-A rusak / Kejadian intimidasi di lorong barat)..." />
+                                <label for="quick-complaint-description">{{ publicText("copy.vue_services_complaint", "text_023", "Pokok Masalah / Keluhan") }}</label>
+                                <textarea id="quick-complaint-description" v-model="form.description" rows="3" :placeholder="publicText('copy.vue_services_complaint', 'placeholder_073', 'Ketik ringkasan kejadian (misal: AC kelas XI-A rusak / Kejadian intimidasi di lorong barat)...')" />
                                 <button type="submit" class="parity-lapor-quick-submit">
-                                    <span>Lanjutkan ke Formulir Lengkap</span>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_024", "Lanjutkan ke Formulir Lengkap") }}</span>
                                     <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </form>
@@ -292,19 +295,19 @@ const submit = () => {
                                 <input type="hidden" name="category" value="aduan" />
                                 <div class="parity-lapor-track-banner">
                                     <span class="parity-lapor-track-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span>
-                                    <strong>Lacak Status Tindak Lanjut</strong>
-                                    <span>Masukkan nomor tiket resmi pengaduan yang Anda dapatkan saat melapor.</span>
+                                    <strong>{{ publicText("copy.vue_services_complaint", "text_025", "Lacak Status Tindak Lanjut") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_complaint", "text_026", "Masukkan nomor tiket resmi pengaduan yang Anda dapatkan saat melapor.") }}</span>
                                 </div>
-                                <label for="quick-complaint-ticket">Nomor Tiket Laporan</label>
+                                <label for="quick-complaint-ticket">{{ publicText("copy.vue_services_complaint", "text_027", "Nomor Tiket Laporan") }}</label>
                                 <div class="parity-lapor-ticket-input-wrap">
-                                    <input id="quick-complaint-ticket" name="code" required placeholder="CONTOH: LPR-2026-XXXX" />
-                                    <button type="submit" class="parity-lapor-ticket-btn">Cek Status</button>
+                                    <input id="quick-complaint-ticket" name="code" required :placeholder="publicText('copy.vue_services_complaint', 'placeholder_074', 'CONTOH: LPR-2026-XXXX')" />
+                                    <button type="submit" class="parity-lapor-ticket-btn">{{ publicText("copy.vue_services_complaint", "text_028", "Cek Status") }}</button>
                                 </div>
-                                <p class="parity-lapor-ticket-hint">Kode tiket peka huruf kapital. Jika lupa nomor tiket, hubungi satgas madrasah.</p>
+                                <p class="parity-lapor-ticket-hint">{{ publicText("copy.vue_services_complaint", "text_029", "Kode tiket peka huruf kapital. Jika lupa nomor tiket, hubungi satgas madrasah.") }}</p>
                             </form>
                             <div class="parity-lapor-console-foot">
-                                <span><i class="fa-solid fa-camera" aria-hidden="true"></i> Lampirkan foto/bukti di formulir</span>
-                                <span class="parity-lapor-console-anon"><i class="fa-solid fa-lock" aria-hidden="true"></i> Tersedia Opsi Anonim</span>
+                                <span><i class="fa-solid fa-camera" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_030", "Lampirkan foto/bukti di formulir") }}</span>
+                                <span class="parity-lapor-console-anon"><i class="fa-solid fa-lock" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_031", "Tersedia Opsi Anonim") }}</span>
                             </div>
                         </div>
                     </div>
@@ -315,12 +318,12 @@ const submit = () => {
                 <div class="parity-lapor-container">
                     <div class="parity-lapor-section-head">
                         <div>
-                            <span class="parity-lapor-badge-rose">KLASIFIKASI PENGADUAN</span>
-                            <h2>Pilih Kategori Masalah</h2>
-                            <p>Setiap kategori ditangani langsung oleh divisi satgas berwenang (Guru BK, Sarpras, Kurikulum, atau Kepala Madrasah).</p>
+                            <span class="parity-lapor-badge-rose">{{ publicText("copy.vue_services_complaint", "text_032", "KLASIFIKASI PENGADUAN") }}</span>
+                            <h2>{{ publicText("copy.vue_services_complaint", "text_033", "Pilih Kategori Masalah") }}</h2>
+                            <p>{{ publicText("copy.vue_services_complaint", "text_034", "Setiap kategori ditangani langsung oleh divisi satgas berwenang (Guru BK, Sarpras, Kurikulum, atau Kepala Madrasah).") }}</p>
                         </div>
-                        <a href="#form-lapor" class="parity-lapor-head-link">
-                            <span>Buka Formulir Bebas</span>
+                        <a :href="publicText('copy.vue_services_complaint', 'href_075', '#form-lapor')" class="parity-lapor-head-link">
+                            <span>{{ publicText("copy.vue_services_complaint", "text_035", "Buka Formulir Bebas") }}</span>
                             <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                         </a>
                     </div>
@@ -339,13 +342,13 @@ const submit = () => {
                                     <span class="parity-lapor-cat-icon">
                                         <i :class="categoryTheme(idx).icon" aria-hidden="true"></i>
                                     </span>
-                                    <span class="parity-lapor-cat-status">AKTIF</span>
+                                    <span class="parity-lapor-cat-status">{{ publicText("copy.vue_services_complaint", "text_036", "AKTIF") }}</span>
                                 </div>
                                 <h3>{{ item.label }}</h3>
-                                <p>Laporkan kendala atau masukan terkait {{ item.label.toLowerCase() }} secara aman.</p>
+                                <p>{{ publicText("copy.vue_services_complaint", "text_9003", "Laporkan kendala atau masukan terkait") }} {{ item.label.toLowerCase() }} {{ publicText("copy.vue_services_complaint", "text_9004", "secara aman.") }}</p>
                             </div>
                             <div class="parity-lapor-cat-foot">
-                                <span>Pilih &amp; Laporkan</span>
+                                <span>{{ publicText("copy.vue_services_complaint", "text_037", "Pilih & Laporkan") }}</span>
                                 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                             </div>
                         </button>
@@ -357,45 +360,45 @@ const submit = () => {
                 <div class="parity-lapor-container parity-lapor-guide-grid">
                     <div class="parity-lapor-steps-card">
                         <div>
-                            <span class="parity-lapor-badge-rose">STANDAR OPERASIONAL</span>
-                            <h3>Alur Penyelesaian Laporan</h3>
-                            <p class="parity-lapor-steps-sub">Setiap pengaduan tercatat digital dan dapat dipantau perkembangannya.</p>
+                            <span class="parity-lapor-badge-rose">{{ publicText("copy.vue_services_complaint", "text_038", "STANDAR OPERASIONAL") }}</span>
+                            <h3>{{ publicText("copy.vue_services_complaint", "text_039", "Alur Penyelesaian Laporan") }}</h3>
+                            <p class="parity-lapor-steps-sub">{{ publicText("copy.vue_services_complaint", "text_040", "Setiap pengaduan tercatat digital dan dapat dipantau perkembangannya.") }}</p>
 
                             <div class="parity-lapor-steps-list">
                                 <div class="parity-lapor-step parity-lapor-step--slate">
                                     <span class="parity-lapor-step-num">01</span>
                                     <div>
-                                        <h4>Tulis Kronologi</h4>
-                                        <p>Isi data, lokasi, foto bukti &amp; tentukan mode anonim.</p>
+                                        <h4>{{ publicText("copy.vue_services_complaint", "text_041", "Tulis Kronologi") }}</h4>
+                                        <p>{{ publicText("copy.vue_services_complaint", "text_042", "Isi data, lokasi, foto bukti & tentukan mode anonim.") }}</p>
                                     </div>
                                 </div>
                                 <div class="parity-lapor-step parity-lapor-step--amber">
                                     <span class="parity-lapor-step-num">02</span>
                                     <div>
-                                        <h4>Telaah Satgas</h4>
-                                        <p>Tim satgas madrasah memverifikasi keabsahan laporan.</p>
+                                        <h4>{{ publicText("copy.vue_services_complaint", "text_043", "Telaah Satgas") }}</h4>
+                                        <p>{{ publicText("copy.vue_services_complaint", "text_044", "Tim satgas madrasah memverifikasi keabsahan laporan.") }}</p>
                                     </div>
                                 </div>
                                 <div class="parity-lapor-step parity-lapor-step--sky">
                                     <span class="parity-lapor-step-num">03</span>
                                     <div>
-                                        <h4>Tindak Lanjut Lapangan</h4>
-                                        <p>Mediasi Guru BK, perbaikan sarana, atau tindakan disiplin.</p>
+                                        <h4>{{ publicText("copy.vue_services_complaint", "text_045", "Tindak Lanjut Lapangan") }}</h4>
+                                        <p>{{ publicText("copy.vue_services_complaint", "text_046", "Mediasi Guru BK, perbaikan sarana, atau tindakan disiplin.") }}</p>
                                     </div>
                                 </div>
                                 <div class="parity-lapor-step parity-lapor-step--emerald">
                                     <span class="parity-lapor-step-num">04</span>
                                     <div>
-                                        <h4>Tuntas &amp; Laporan Balik</h4>
-                                        <p>Pelapor dapat melihat bukti penyelesaian via kode tiket.</p>
+                                        <h4>{{ publicText("copy.vue_services_complaint", "text_047", "Tuntas & Laporan Balik") }}</h4>
+                                        <p>{{ publicText("copy.vue_services_complaint", "text_048", "Pelapor dapat melihat bukti penyelesaian via kode tiket.") }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="parity-lapor-steps-foot">
-                            <span><i class="fa-solid fa-clock" aria-hidden="true"></i> Standar respon awal: <strong>&lt; 24 Jam</strong></span>
-                            <a href="#form-lapor">Mulai Lapor →</a>
+                            <span><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_049", "Standar respon awal:") }} <strong>{{ publicText("copy.vue_services_complaint", "text_050", "< 24 Jam") }}</strong></span>
+                            <a :href="publicText('copy.vue_services_complaint', 'href_075', '#form-lapor')">{{ publicText("copy.vue_services_complaint", "text_051", "Mulai Lapor →") }}</a>
                         </div>
                     </div>
 
@@ -403,26 +406,26 @@ const submit = () => {
                         <div>
                             <span class="parity-lapor-security-badge">
                                 <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-                                <span>Jaminan Whistleblower &amp; Ramah Anak</span>
+                                <span>{{ publicText("copy.vue_services_complaint", "text_052", "Jaminan Whistleblower & Ramah Anak") }}</span>
                             </span>
-                            <h3>Kerahasiaan Anda Terlindungi Penuh</h3>
-                            <p>Mode laporan anonim tidak menyimpan nama, akun, maupun kontak pelapor. Seluruh bukti unggahan hanya dapat diakses oleh Satgas TPPK dan BK yang berwenang.</p>
+                            <h3>{{ publicText("copy.vue_services_complaint", "text_053", "Kerahasiaan Anda Terlindungi Penuh") }}</h3>
+                            <p>{{ publicText("copy.vue_services_complaint", "text_054", "Mode laporan anonim tidak menyimpan nama, akun, maupun kontak pelapor. Seluruh bukti unggahan hanya dapat diakses oleh Satgas TPPK dan BK yang berwenang.") }}</p>
                             <ul class="parity-lapor-security-list">
-                                <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Opsi Anonim menyamarkan nama dari pandangan publik.</li>
-                                <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Data hanya dapat diakses Tim Satgas &amp; Kepala Madrasah.</li>
-                                <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Pendampingan konseling khusus dari Guru BK terlatih.</li>
+                                <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_055", "Opsi Anonim menyamarkan nama dari pandangan publik.") }}</li>
+                                <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_056", "Data hanya dapat diakses Tim Satgas & Kepala Madrasah.") }}</li>
+                                <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_057", "Pendampingan konseling khusus dari Guru BK terlatih.") }}</li>
                             </ul>
                         </div>
                         <div class="parity-lapor-security-foot">
                             <div class="parity-lapor-security-org">
                                 <span class="parity-lapor-security-icon"><i class="fa-solid fa-user-shield" aria-hidden="true"></i></span>
                                 <div>
-                                    <small>KANAL RESMI MADRASAH</small>
-                                    <strong>Bebas Pelacakan Identitas</strong>
+                                    <small>{{ publicText("copy.vue_services_complaint", "text_058", "KANAL RESMI MADRASAH") }}</small>
+                                    <strong>{{ publicText("copy.vue_services_complaint", "text_059", "Bebas Pelacakan Identitas") }}</strong>
                                 </div>
                             </div>
                             <button type="button" class="parity-lapor-security-btn" @click="openReportModal()">
-                                <i class="fa-solid fa-lock" aria-hidden="true"></i> Buat Laporan Rahasia
+                                <i class="fa-solid fa-lock" aria-hidden="true"></i> {{ publicText("copy.vue_services_complaint", "text_060", "Buat Laporan Rahasia") }}
                             </button>
                         </div>
                     </aside>
@@ -432,8 +435,8 @@ const submit = () => {
             <section v-if="issuedReceipt" class="parity-lapor-section-white">
                 <div class="parity-lapor-container">
                     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950 space-y-1" role="status">
-                        <p class="font-bold">Laporan Pengaduan Diterima!</p>
-                        <p>Kode Aduan: <strong class="font-mono">{{ issuedReceipt.report_code }}</strong> | Tiket Pelacakan (/lacak): <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> | PIN Rahasia: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
+                        <p class="font-bold">{{ publicText("copy.vue_services_complaint", "text_061", "Laporan Pengaduan Diterima!") }}</p>
+                        <p>{{ publicText("copy.vue_services_complaint", "text_062", "Kode Aduan:") }} <strong class="font-mono">{{ issuedReceipt.report_code }}</strong> {{ publicText("copy.vue_services_complaint", "text_063", "| Tiket Pelacakan (/lacak):") }} <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> {{ publicText("copy.vue_services_complaint", "text_064", "| PIN Rahasia:") }} <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
                         <p class="text-xs">{{ issuedReceipt.is_anonymous ? 'Mode Anonim Aktif — Identitas pelapor tidak disimpan di sistem.' : 'Laporan Bernama — Gunakan tiket dan PIN untuk memantau balasan Satgas.' }}</p>
                     </div>
                 </div>
@@ -446,11 +449,11 @@ const submit = () => {
                     <div class="parity-lapor-modal-title-wrap">
                         <span class="parity-lapor-modal-icon"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></span>
                         <div>
-                            <h2 id="modal-lapor-title">Formulir Pengaduan &amp; Aspirasi</h2>
-                            <p>Sampaikan laporan Anda dengan uraian kronologi yang jelas</p>
+                            <h2 id="modal-lapor-title">{{ publicText("copy.vue_services_complaint", "text_065", "Formulir Pengaduan & Aspirasi") }}</h2>
+                            <p>{{ publicText("copy.vue_services_complaint", "text_066", "Sampaikan laporan Anda dengan uraian kronologi yang jelas") }}</p>
                         </div>
                     </div>
-                    <button type="button" class="parity-lapor-modal-close" aria-label="Tutup formulir" @click="closeReportModal">
+                    <button type="button" class="parity-lapor-modal-close" :aria-label="publicText('copy.vue_services_complaint', 'aria_label_076', 'Tutup formulir')" @click="closeReportModal">
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -458,55 +461,55 @@ const submit = () => {
                     <div class="parity-lapor-anon-row">
                         <label class="parity-lapor-anon-toggle">
                             <input v-model="form.is_anonymous" type="checkbox" />
-                            <span>Kirim Sebagai Pelapor Anonim (Identitas &amp; kontak dirahasiakan penuh)</span>
+                            <span>{{ publicText("copy.vue_services_complaint", "text_067", "Kirim Sebagai Pelapor Anonim (Identitas & kontak dirahasiakan penuh)") }}</span>
                         </label>
                     </div>
 
                     <div v-if="!form.is_anonymous" class="grid gap-3 sm:grid-cols-3">
-                        <FormField id="adu-reporter-name" label="Nama Pelapor" :error="form.errors.reporter_name" required>
+                        <FormField id="adu-reporter-name" :label="publicText('copy.vue_services_complaint', 'label_10001', 'Nama Pelapor')" :error="form.errors.reporter_name" required>
                             <input id="adu-reporter-name" v-model="form.reporter_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
                         </FormField>
-                        <FormField id="adu-reporter-contact" label="Kontak / WA / Email">
+                        <FormField id="adu-reporter-contact" :label="publicText('copy.vue_services_complaint', 'label_10002', 'Kontak / WA / Email')">
                             <input id="adu-reporter-contact" v-model="form.reporter_contact" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
                         </FormField>
-                        <FormField id="adu-reporter-role" label="Status Pelapor">
+                        <FormField id="adu-reporter-role" :label="publicText('copy.vue_services_complaint', 'label_10003', 'Status Pelapor')">
                             <select id="adu-reporter-role" v-model="form.reporter_role" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs">
-                                <option value="siswa">Siswa</option>
-                                <option value="wali">Orang Tua / Wali</option>
-                                <option value="guru">Guru / Staf</option>
-                                <option value="umum">Masyarakat Umum</option>
+                                <option value="siswa">{{ publicText("copy.vue_services_complaint", "text_068", "Siswa") }}</option>
+                                <option value="wali">{{ publicText("copy.vue_services_complaint", "text_069", "Orang Tua / Wali") }}</option>
+                                <option value="guru">{{ publicText("copy.vue_services_complaint", "text_070", "Guru / Staf") }}</option>
+                                <option value="umum">{{ publicText("copy.vue_services_complaint", "text_071", "Masyarakat Umum") }}</option>
                             </select>
                         </FormField>
                     </div>
 
                     <div class="grid gap-3 sm:grid-cols-3">
-                        <FormField id="adu-category" label="Kategori Masalah" :error="form.errors.category" required>
+                        <FormField id="adu-category" :label="publicText('copy.vue_services_complaint', 'label_10004', 'Kategori Masalah')" :error="form.errors.category" required>
                             <select id="adu-category" v-model="form.category" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs">
                                 <option v-for="item in categories" :key="item.value" :value="item.value">{{ item.label }}</option>
                             </select>
                         </FormField>
-                        <FormField id="adu-date" label="Tanggal Kejadian">
+                        <FormField id="adu-date" :label="publicText('copy.vue_services_complaint', 'label_10005', 'Tanggal Kejadian')">
                             <input id="adu-date" v-model="form.incident_date" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
                         </FormField>
-                        <FormField id="adu-location" label="Lokasi Kejadian">
-                            <input id="adu-location" v-model="form.location" type="text" placeholder="Contoh: Gedung B" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
+                        <FormField id="adu-location" :label="publicText('copy.vue_services_complaint', 'label_10006', 'Lokasi Kejadian')">
+                            <input id="adu-location" v-model="form.location" type="text" :placeholder="publicText('copy.vue_services_complaint', 'placeholder_077', 'Contoh: Gedung B')" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
                         </FormField>
                     </div>
 
-                    <FormField id="adu-title" label="Judul Singkat Laporan" :error="form.errors.title" required>
-                        <input id="adu-title" v-model="form.title" type="text" placeholder="Contoh: Lampu proyektor di Lab mati" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
+                    <FormField id="adu-title" :label="publicText('copy.vue_services_complaint', 'label_10007', 'Judul Singkat Laporan')" :error="form.errors.title" required>
+                        <input id="adu-title" v-model="form.title" type="text" :placeholder="publicText('copy.vue_services_complaint', 'placeholder_078', 'Contoh: Lampu proyektor di Lab mati')" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
                     </FormField>
 
-                    <FormField id="adu-description" label="Kronologi Kejadian Lengkap" :error="form.errors.description" required>
-                        <textarea id="adu-description" v-model="form.description" rows="4" placeholder="Ceritakan kejadian, waktu kejadian, dan kronologi selengkap mungkin..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
+                    <FormField id="adu-description" :label="publicText('copy.vue_services_complaint', 'label_10008', 'Kronologi Kejadian Lengkap')" :error="form.errors.description" required>
+                        <textarea id="adu-description" v-model="form.description" rows="4" :placeholder="publicText('copy.vue_services_complaint', 'placeholder_079', 'Ceritakan kejadian, waktu kejadian, dan kronologi selengkap mungkin...')" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs" />
                     </FormField>
 
-                    <FormField id="adu-evidence" label="Unggah Foto / Bukti Pendukung (Akses Terbatas Satgas)">
+                    <FormField id="adu-evidence" :label="publicText('copy.vue_services_complaint', 'label_10009', 'Unggah Foto / Bukti Pendukung (Akses Terbatas Satgas)')">
                         <input id="adu-evidence" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" capture="environment" class="text-xs" @change="pickFiles" />
                     </FormField>
 
                     <div class="parity-lapor-modal-actions">
-                        <button type="button" class="parity-lapor-modal-cancel" @click="closeReportModal">Batal</button>
+                        <button type="button" class="parity-lapor-modal-cancel" @click="closeReportModal">{{ publicText("copy.vue_services_complaint", "text_072", "Batal") }}</button>
                         <AppButton type="submit" :disabled="form.processing">
                             {{ form.processing ? 'Mengirim Laporan...' : 'Kirim Laporan Sekarang' }}
                         </AppButton>

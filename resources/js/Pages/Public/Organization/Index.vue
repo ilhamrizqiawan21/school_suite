@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicOrganizationTreeNode from '@/components/PublicOrganizationTreeNode.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -44,6 +46,7 @@ const organizationTree = computed<TreeMember[]>(() => {
 
     return roots;
 });
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -53,21 +56,21 @@ const organizationTree = computed<TreeMember[]>(() => {
         <PublicHeader :school="school" active="organization" />
 
         <section class="madrasah-profile-hero page-intro" aria-labelledby="organization-title">
-            <p class="eyebrow">Struktur organisasi</p>
-            <h1 id="organization-title">Orang-orang yang menggerakkan sekolah.</h1>
-            <p>Kenali pengelola {{ school.name }} yang bekerja bersama untuk menjaga proses belajar tetap bertumbuh.</p>
+            <p class="eyebrow">{{ publicText("copy.vue_organization_index", "text_001", "Struktur organisasi") }}</p>
+            <h1 id="organization-title">{{ publicText("copy.vue_organization_index", "text_002", "Orang-orang yang menggerakkan sekolah.") }}</h1>
+            <p>{{ publicText("copy.vue_organization_index", "text_9001", "Kenali pengelola") }} {{ school.name }} {{ publicText("copy.vue_organization_index", "text_9002", "yang bekerja bersama untuk menjaga proses belajar tetap bertumbuh.") }}</p>
         </section>
 
-        <section class="organization-tree" aria-label="Bagan struktur organisasi">
+        <section class="organization-tree" :aria-label="publicText('copy.vue_organization_index', 'aria_label_006', 'Bagan struktur organisasi')">
             <div v-if="organizationTree.length" class="tree-flow">
                 <ul class="tree-root">
                     <PublicOrganizationTreeNode v-for="member in organizationTree" :key="member.id" :member="member" />
                 </ul>
             </div>
-            <div v-else class="empty-state"><strong>Struktur organisasi sedang disiapkan.</strong><p>Informasi pengelola sekolah akan tampil di halaman ini.</p></div>
+            <div v-else class="empty-state"><strong>{{ publicText("copy.vue_organization_index", "text_003", "Struktur organisasi sedang disiapkan.") }}</strong><p>{{ publicText("copy.vue_organization_index", "text_004", "Informasi pengelola sekolah akan tampil di halaman ini.") }}</p></div>
         </section>
 
-        <footer><Link href="/" class="back-link">← Kembali ke beranda</Link></footer>
+        <footer><Link href="/" class="back-link">{{ publicText("copy.vue_organization_index", "text_005", "← Kembali ke beranda") }}</Link></footer>
     </main>
 </template>
 

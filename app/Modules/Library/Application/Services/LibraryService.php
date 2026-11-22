@@ -80,45 +80,61 @@ class LibraryService
             ->where('school_id', $schoolId)
             ->where('is_active', true)
             ->when(! $isStaff, fn ($q) => $q->whereIn('access_level', $allowedAccess))
-            ->when($category !== '' && array_key_exists($category, self::CATEGORIES), fn ($q) => $q->where('category', $category))
+            ->when($category !== '', fn ($q) => $q->where('category', $category))
+            ->when(! empty($filters['id']), fn ($q) => $q->whereKey((int) $filters['id']))
             ->when(in_array($format, ['physical', 'ebook', 'hybrid'], true), fn ($q) => $q->where('format', $format))
             ->when($search !== '', function ($q) use ($search): void {
                 $q->where(fn ($sub) => $sub
                     ->where('title', 'like', "%{$search}%")
                     ->orWhere('author', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%"));
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('publisher', 'like', "%{$search}%")
+                    ->orWhere('isbn', 'like', "%{$search}%"));
             })
             ->orderBy('title')
             ->limit(80)
-            ->get()
-            ->map(function (LibraryCollection $c) use ($isMember, $isStaff): array {
-                $canAccess = match ($c->access_level) {
-                    'public' => true,
-                    'members_only' => $isMember,
-                    'staff_only' => $isStaff,
-                    default => false,
-                };
+            ->get();
 
-                return [
-                    'id' => (int) $c->id,
-                    'code' => (string) $c->code,
-                    'title' => (string) $c->title,
-                    'author' => $c->author,
-                    'publisher' => $c->publisher,
-                    'publish_year' => $c->publish_year,
-                    'category' => (string) $c->category,
-                    'category_label' => self::CATEGORIES[$c->category] ?? $c->category,
-                    'format' => (string) $c->format,
-                    'total_copies' => (int) $c->total_copies,
-                    'available_copies' => (int) $c->available_copies,
-                    'shelf_location' => $c->shelf_location,
-                    'description' => $c->description,
-                    'access_level' => (string) $c->access_level,
-                    'can_access_material' => $canAccess,
-                    'has_ebook_file' => $c->ebook_document_id !== null,
-                    'ebook_url' => $canAccess ? $c->ebook_url : null,
-                ];
-            })
+        $documentIds = $items->pluck('ebook_document_id')->filter()->map(static fn ($id): int => (int) $id)->values();
+        $storedDocumentIds = $this->documentService->storedDocumentIds($schoolId, $documentIds->all());
+        $missingLocalFiles = 0;
+
+        $items = $items->map(function (LibraryCollection $c) use ($isMember, $isStaff, $storedDocumentIds, &$missingLocalFiles): array {
+            $canAccess = match ($c->access_level) {
+                'public' => true,
+                'members_only' => $isMember,
+                'staff_only' => $isStaff,
+                default => false,
+            };
+
+            $hasEbookFile = $c->ebook_document_id !== null
+                && in_array((int) $c->ebook_document_id, $storedDocumentIds, true);
+            if ($c->ebook_document_id !== null && ! $hasEbookFile) {
+                $missingLocalFiles++;
+            }
+
+            return [
+                'id' => (int) $c->id,
+                'code' => (string) $c->code,
+                'title' => (string) $c->title,
+                'author' => $c->author,
+                'publisher' => $c->publisher,
+                'publish_year' => $c->publish_year,
+                'category' => (string) $c->category,
+                'category_label' => self::CATEGORIES[$c->category] ?? $c->category,
+                'format' => (string) $c->format,
+                'total_copies' => (int) $c->total_copies,
+                'available_copies' => (int) $c->available_copies,
+                'shelf_location' => $c->shelf_location,
+                'description' => $c->description,
+                'access_level' => (string) $c->access_level,
+                'can_access_material' => $canAccess,
+                'has_ebook_file' => $hasEbookFile,
+                'ebook_url' => $canAccess
+                    ? ($hasEbookFile ? route('library.collections.download', $c->id) : $c->ebook_url)
+                    : null,
+            ];
+        })
             ->values()
             ->all();
 
@@ -131,9 +147,15 @@ class LibraryService
             'source_status' => [
                 'mode' => $slimsConfigured ? 'slims_hybrid' : 'local_fallback',
                 'slims_available' => false,
-                'message' => $slimsConfigured
-                    ? 'Sinkronisasi SLiMS tidak aktif pada lingkungan saat ini; menampilkan katalog lokal terpadu.'
-                    : 'Menggunakan katalog perpustakaan lokal School Suite (mode fallback SLiMS siap).',
+                'source_of_truth' => 'school_suite_local_catalog',
+                'provider_configured' => $slimsConfigured,
+                'fallback_active' => true,
+                'missing_local_files' => $missingLocalFiles,
+                'message' => $missingLocalFiles > 0
+                    ? 'Sebagian berkas e-book lokal tidak tersedia; katalog tetap berjalan dan tautan eksternal dipakai bila dikonfigurasi.'
+                    : ($slimsConfigured
+                        ? 'Sinkronisasi SLiMS tidak aktif pada lingkungan saat ini; menampilkan katalog lokal terpadu.'
+                        : 'Menggunakan katalog perpustakaan lokal School Suite (mode fallback SLiMS siap).'),
             ],
         ];
     }
@@ -324,6 +346,68 @@ class LibraryService
         });
     }
 
+    public function reserveCollection(User $actor, int $collectionId, ?string $notes = null): LibraryLoan
+    {
+        abort_unless($actor->is_active && $actor->hasRole(RoleEnum::STUDENT->value), 403);
+        $schoolId = (int) $actor->school_id;
+        $studentIds = $this->academicQuery->getStudentIdsForUser($schoolId, (int) $actor->id);
+        abort_unless(count($studentIds) === 1, 403);
+        $student = $this->academicQuery->getStudentIdentitySnapshot($schoolId, (int) $studentIds[0]);
+        abort_unless($student !== null && $student['status'] === 'active', 403);
+
+        return DB::transaction(function () use ($actor, $schoolId, $collectionId, $student, $notes): LibraryLoan {
+            $collection = LibraryCollection::query()->where('school_id', $schoolId)->whereKey($collectionId)->lockForUpdate()->firstOrFail();
+            abort_unless($collection->is_active && in_array($collection->access_level, ['public', 'members_only'], true), 403);
+            if (! in_array($collection->format, ['physical', 'hybrid'], true)) {
+                throw ValidationException::withMessages(['id_buku' => 'Koleksi ini hanya tersedia dalam format digital.']);
+            }
+            $existing = LibraryLoan::query()->where('school_id', $schoolId)->where('collection_id', $collectionId)
+                ->where('student_id', $student['student_id'])->whereIn('status', ['reserved', 'borrowed', 'overdue'])->first();
+            if ($existing !== null) {
+                return $existing;
+            }
+            if ($collection->available_copies < 1) {
+                throw ValidationException::withMessages(['id_buku' => 'Stok buku sudah habis.']);
+            }
+            $collection->decrement('available_copies');
+            $loan = LibraryLoan::query()->create([
+                'school_id' => $schoolId, 'collection_id' => $collectionId,
+                'student_id' => $student['student_id'], 'borrower_user_id' => $actor->id,
+                'borrower_name' => $student['name'], 'borrower_identifier' => $student['nis'],
+                'loan_code' => 'RSV-'.$this->schoolScope->localNow($schoolId)->format('Y').'-'.Str::upper(Str::random(10)),
+                'borrowed_at' => $this->schoolScope->localNow($schoolId)->toDateString(),
+                'due_at' => $this->schoolScope->localNow($schoolId)->addDays(7)->toDateString(),
+                'status' => 'reserved', 'notes' => $notes, 'recorded_by' => $actor->id,
+            ]);
+            $this->audit->log(eventType: 'library.loan.reserved', targetType: 'LibraryLoan', targetId: (string) $loan->id,
+                newValues: ['collection_id' => $collectionId, 'student_id' => $student['student_id']], actor: $actor, schoolId: $schoolId);
+
+            return $loan;
+        });
+    }
+
+    public function confirmReservation(User $actor, LibraryLoan $loan): LibraryLoan
+    {
+        $this->assertLibrarian($actor);
+        abort_unless((int) $loan->school_id === (int) $actor->school_id, 404);
+
+        return DB::transaction(function () use ($actor, $loan): LibraryLoan {
+            $locked = LibraryLoan::query()->whereKey($loan->id)->lockForUpdate()->firstOrFail();
+            if ($locked->status === 'borrowed') {
+                return $locked;
+            }
+            if ($locked->status !== 'reserved') {
+                throw ValidationException::withMessages(['loan' => 'Reservasi ini sudah tidak aktif.']);
+            }
+            $locked->update(['status' => 'borrowed', 'borrowed_at' => now()->toDateString(),
+                'due_at' => $this->schoolScope->localNow((int) $actor->school_id)->addDays(7)->toDateString(), 'recorded_by' => $actor->id]);
+            $this->audit->log(eventType: 'library.reservation.confirmed', targetType: 'LibraryLoan', targetId: (string) $locked->id,
+                newValues: ['status' => 'borrowed'], actor: $actor, schoolId: (int) $actor->school_id);
+
+            return $locked;
+        });
+    }
+
     public function returnLoan(User $actor, LibraryLoan $loan): LibraryLoan
     {
         $this->assertLibrarian($actor);
@@ -375,7 +459,7 @@ class LibraryService
             $activeLoans = LibraryLoan::query()
                 ->where('school_id', $schoolId)
                 ->where('student_id', $studentId)
-                ->whereIn('status', ['borrowed', 'overdue'])
+                ->whereIn('status', ['borrowed', 'overdue', 'lost'])
                 ->count();
 
             $code = 'BP-'.$this->schoolScope->localNow($schoolId)->format('Y').'-'.Str::upper(Str::random(6));
@@ -504,16 +588,50 @@ class LibraryService
         return $req->refresh();
     }
 
-    /**
-     * @return array<string, int>
-     */
     public function statistics(int $schoolId): array
     {
+        $now = $this->schoolScope->localNow($schoolId);
+        $visits = LibraryVisit::query()->where('school_id', $schoolId)
+            ->whereBetween('visited_at', [$now->copy()->startOfDay()->timezone(config('app.timezone')), $now->copy()->endOfDay()->timezone(config('app.timezone'))])
+            ->selectRaw("COUNT(*) AS total, SUM(CASE WHEN visitor_role = 'student' THEN 1 ELSE 0 END) AS students, SUM(CASE WHEN visitor_role = 'teacher' THEN 1 ELSE 0 END) AS teachers, SUM(CASE WHEN visitor_role = 'guest' THEN 1 ELSE 0 END) AS guests")->first();
+        $collections = LibraryCollection::query()->where('school_id', $schoolId)->where('is_active', true)
+            ->selectRaw("COUNT(*) AS total, SUM(CASE WHEN access_level = 'public' THEN 1 ELSE 0 END) AS public_titles, SUM(CASE WHEN access_level = 'public' AND format IN ('physical', 'hybrid') THEN total_copies ELSE 0 END) AS public_copies, COUNT(DISTINCT CASE WHEN access_level = 'public' THEN category END) AS public_categories")->first();
+
         return [
-            'collections_count' => LibraryCollection::query()->where('school_id', $schoolId)->where('is_active', true)->count(),
-            'visits_today' => LibraryVisit::query()->where('school_id', $schoolId)->whereDate('visited_at', $this->schoolScope->localNow($schoolId)->toDateString())->count(),
-            'active_loans' => LibraryLoan::query()->where('school_id', $schoolId)->whereIn('status', ['borrowed', 'overdue'])->count(),
+            'collections_count' => (int) $collections->total,
+            'public_collections_count' => (int) $collections->public_titles,
+            'public_physical_copies' => (int) $collections->public_copies,
+            'public_categories_count' => (int) $collections->public_categories,
+            'visits_today' => (int) $visits->total,
+            'student_visits_today' => (int) $visits->students,
+            'teacher_visits_today' => (int) $visits->teachers,
+            'guest_visits_today' => (int) $visits->guests,
+            'active_loans' => LibraryLoan::query()->where('school_id', $schoolId)->whereIn('status', ['borrowed', 'overdue', 'lost'])->count(),
             'pending_procurements' => LibraryProcurementRequest::query()->where('school_id', $schoolId)->where('status', 'submitted')->count(),
+        ];
+    }
+
+    public function publicVisitStatistics(int $schoolId): array
+    {
+        $now = $this->schoolScope->localNow($schoolId);
+        $visits = LibraryVisit::query()->where('school_id', $schoolId)
+            ->where('visited_at', '>=', $now->copy()->subDays(29)->startOfDay()->timezone(config('app.timezone')))
+            ->get(['visited_at', 'visitor_role']);
+        $counts = $visits->groupBy(fn ($visit) => $visit->visited_at->timezone($now->timezone)->toDateString())->map->count();
+        $days = collect(range(29, 0))->map(fn ($i) => $now->copy()->subDays($i)->toDateString());
+        $roleCounts = $visits->countBy('visitor_role');
+        $today = (int) ($counts[$now->toDateString()] ?? 0);
+
+        return [
+            'kpi' => [...array_intersect_key($this->statistics($schoolId), array_flip(['collections_count', 'visits_today', 'active_loans'])), 'today' => $today,
+                'week' => $visits->where('visited_at', '>=', $now->copy()->subDays(6)->startOfDay()->utc())->count(),
+                'month' => LibraryVisit::query()->where('school_id', $schoolId)->where('visited_at', '>=', $now->copy()->startOfMonth()->timezone(config('app.timezone')))->count(),
+                'all' => LibraryVisit::query()->where('school_id', $schoolId)->count(),
+                'avg_daily' => round($visits->count() / 30, 1)],
+            'trend' => ['labels' => $days->all(), 'data' => $days->map(fn ($day) => (int) ($counts[$day] ?? 0))->all()],
+            'tipe' => ['labels' => ['Siswa', 'Guru', 'Tamu'], 'data' => [(int) ($roleCounts['student'] ?? 0), (int) ($roleCounts['teacher'] ?? 0), (int) ($roleCounts['guest'] ?? 0)]],
+            'kelas' => ['labels' => [], 'data' => []], 'keperluan' => ['labels' => [], 'data' => []],
+            'jam_sibuk' => ['labels' => range(0, 23), 'data' => collect(range(0, 23))->map(fn ($h) => $visits->filter(fn ($v) => $v->visited_at->timezone($now->timezone)->hour === $h)->count())->all()],
         ];
     }
 }

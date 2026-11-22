@@ -140,8 +140,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
             <header class="page-heading compact-heading schemes-heading">
                 <div>
                     <p class="eyebrow">Asesmen · Formula nilai</p>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Skema & Bobot Penilaian</h1>
-                    <p class="text-sm text-slate-600 mt-1">
+                    <h1 class="text-2xl font-bold tracking-tight text-[var(--ink)]">Skema & Bobot Penilaian</h1>
+                    <p class="text-sm text-[var(--ink-soft)] mt-1">
                         Konfigurasi formula pembobotan, aturan pembulatan, dan batas kelulusan KKTP berversi.
                     </p>
                 </div>
@@ -167,10 +167,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                     :key="scheme.id"
                     class="scheme-panel bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-hidden"
                 >
-                    <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50">
+                    <div class="p-5 border-b border-[var(--line)] flex flex-wrap items-center justify-between gap-4 bg-slate-50/50">
                         <div class="space-y-1">
                             <div class="flex items-center gap-3">
-                                <h2 class="text-lg font-bold text-slate-900">{{ scheme.name }}</h2>
+                                <h2 class="text-lg font-bold text-[var(--ink)]">{{ scheme.name }}</h2>
                                 <span class="scheme-version-pill">
                                     Versi {{ scheme.version }}
                                 </span>
@@ -182,7 +182,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                 </span>
                                 <span v-else class="scheme-status-pill is-inactive">Versi lama</span>
                             </div>
-                            <p class="text-meta text-slate-600 font-mono">Kode: {{ scheme.code }} | {{ roundingLabel(scheme.rounding_rule) }} ({{ scheme.decimal_places }} desimal) | KKTP default: {{ scheme.passing_grade_default }}</p>
+                            <p class="text-meta text-[var(--ink-soft)] font-mono">Kode: {{ scheme.code }} | {{ roundingLabel(scheme.rounding_rule) }} ({{ scheme.decimal_places }} desimal) | KKTP default: {{ scheme.passing_grade_default }}</p>
                         </div>
 
                         <div v-if="props.can_manage">
@@ -200,7 +200,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                     <!-- Komponen Bobot -->
                     <div class="p-5">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-meta font-semibold uppercase tracking-wider text-slate-600">
+                            <h3 class="text-meta font-semibold uppercase tracking-wider text-[var(--ink-soft)]">
                                 Komponen Penilaian & Bobot Persentase
                             </h3>
                             <div class="space-y-1 text-meta font-bold text-right">
@@ -212,8 +212,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                         </div>
 
                         <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
-                            <table class="app-table w-full text-left text-sm text-slate-600">
-                                <thead class="bg-slate-50 text-slate-700 text-meta uppercase font-semibold">
+                            <table class="app-table w-full text-left text-sm text-[var(--ink-soft)]">
+                                <thead class="bg-[var(--surface-subtle)] text-[var(--ink-soft)] text-meta uppercase font-semibold">
                                     <tr>
                                         <th scope="col" class="py-2.5 px-3 w-12 text-center">Urutan</th>
                                         <th scope="col" class="py-2.5 px-3 w-28">Kode</th>
@@ -224,19 +224,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    <tr v-for="comp in scheme.components" :key="comp.id" class="hover:bg-slate-50">
-                                        <td class="py-2.5 px-3 text-center text-meta text-slate-600">{{ comp.sequence }}</td>
-                                        <td class="py-2.5 px-3 font-mono text-meta text-slate-700 font-semibold">{{ comp.code }}</td>
-                                        <td class="py-2.5 px-4 font-medium text-slate-900">{{ comp.name }}</td>
+                                    <tr v-for="comp in scheme.components" :key="comp.id" class="hover:bg-[var(--surface-subtle)]">
+                                        <td class="py-2.5 px-3 text-center text-meta text-[var(--ink-soft)]">{{ comp.sequence }}</td>
+                                        <td class="py-2.5 px-3 font-mono text-meta text-[var(--ink-soft)] font-semibold">{{ comp.code }}</td>
+                                        <td class="py-2.5 px-4 font-medium text-[var(--ink)]">{{ comp.name }}</td>
                                         <td class="py-2.5 px-4">
                                             <span>{{ assignmentLabel(comp.teaching_assignment_id) }}</span>
                                             <button v-if="props.can_manage && comp.teaching_assignment_id === null" type="button" class="block text-sm font-semibold text-indigo-600 hover:text-indigo-700" @click="openBinding(scheme.id, comp)">Pilih mata pelajaran</button>
                                         </td>
-                                        <td class="py-2.5 px-3 text-center font-bold text-slate-800">{{ comp.weight_percentage }}%</td>
+                                        <td class="py-2.5 px-3 text-center font-bold text-[var(--ink)]">{{ comp.weight_percentage }}%</td>
                                         <td class="py-2.5 px-3 text-center text-meta font-semibold text-emerald-700">{{ comp.passing_grade }}</td>
                                     </tr>
                                     <tr v-if="scheme.components.length === 0">
-                                        <td colspan="6" class="py-6 text-center text-slate-600 text-meta">
+                                        <td colspan="6" class="py-6 text-center text-[var(--ink-soft)] text-meta">
                                             {{ props.can_manage ? 'Belum ada komponen penilaian. Tambahkan komponen agar skema dapat digunakan untuk menyusun rapor.' : 'Belum ada komponen penilaian pada skema ini.' }}
                                         </td>
                                     </tr>
@@ -247,7 +247,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                 </div>
 
                 <div v-if="props.schemes.length === 0" class="bg-[var(--surface)] p-12 rounded-xl border border-[var(--line)] text-center">
-                    <p class="text-slate-600 text-sm">Belum ada skema penilaian yang dibuat.</p>
+                    <p class="text-[var(--ink-soft)] text-sm">Belum ada skema penilaian yang dibuat.</p>
                 </div>
             </div>
 
@@ -258,7 +258,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
             >
                 <div class="scheme-dialog bg-[var(--surface)] rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-scheme-title">
                     <div class="flex items-center justify-between">
-                        <h2 id="new-scheme-title" class="text-lg font-bold text-slate-900">Buat Skema Penilaian Baru</h2>
+                        <h2 id="new-scheme-title" class="text-lg font-bold text-[var(--ink)]">Buat Skema Penilaian Baru</h2>
                         <AppButton variant="secondary"
                             type="button"
 
@@ -269,40 +269,40 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                             &times;
                         </AppButton>
                     </div>
-                    <p class="text-sm text-slate-600">Skema baru akan menjadi skema aktif sekolah. Versi sebelumnya tetap tersimpan untuk riwayat rapor yang sudah diterbitkan.</p>
+                    <p class="text-sm text-[var(--ink-soft)]">Skema baru akan menjadi skema aktif sekolah. Versi sebelumnya tetap tersimpan untuk riwayat rapor yang sudah diterbitkan.</p>
 
                     <form @submit.prevent="submitNewScheme" class="space-y-4">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Nama Skema</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama Skema</label>
                             <input
                                 v-model="schemeForm.name"
                                 type="text"
                                 required
-                                placeholder="Contoh: Kurikulum Merdeka 2024"
-                                class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Kurikulum Merdeka 2024"
+                                class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
                             <p v-if="schemeForm.errors.name" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.name }}</p>
                         </div>
 
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Kode Skema</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kode Skema</label>
                             <input
                                 v-model="schemeForm.code"
                                 type="text"
                                 required
                                 placeholder="KM-2024"
-                                class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
+                                class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
                             />
-                            <p class="text-meta text-slate-600 mt-1">Jika kode sama sudah ada, versi akan otomatis dinaikkan (+1).</p>
+                            <p class="text-meta text-[var(--ink-soft)] mt-1">Jika kode sama sudah ada, versi akan otomatis dinaikkan (+1).</p>
                             <p v-if="schemeForm.errors.code" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.code }}</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">Aturan Pembulatan</label>
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Aturan Pembulatan</label>
                                 <select
                                     v-model="schemeForm.rounding_rule"
-                                    class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 >
                                     <option value="half_up">Half Up (Baku)</option>
                                     <option value="floor">Floor (Kebawah)</option>
@@ -312,21 +312,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                             </div>
 
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">Digit Desimal</label>
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Digit Desimal</label>
                                 <input
                                     v-model.number="schemeForm.decimal_places"
                                     type="number"
                                     min="0"
                                     max="4"
                                     required
-                                    class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                                 <p v-if="schemeForm.errors.decimal_places" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.decimal_places }}</p>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">KKTP Default</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">KKTP Default</label>
                             <input
                                 v-model.number="schemeForm.passing_grade_default"
                                 type="number"
@@ -334,7 +334,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                 max="100"
                                 step="0.1"
                                 required
-                                class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
                             <p v-if="schemeForm.errors.passing_grade_default" class="mt-1 text-sm text-red-600">{{ schemeForm.errors.passing_grade_default }}</p>
                         </div>
@@ -362,10 +362,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 
             <div v-if="props.can_manage && bindingComponent" class="scheme-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
                 <form class="scheme-dialog bg-[var(--surface)] rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="binding-title" @submit.prevent="submitBinding">
-                    <h2 id="binding-title" class="text-lg font-bold text-slate-900">Petakan {{ bindingComponent.component.name }}</h2>
-                    <p class="text-sm text-slate-600">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
-                    <label for="binding-assignment" class="block text-sm font-semibold text-slate-700">Kelas & Mata Pelajaran</label>
-                    <select id="binding-assignment" v-model="bindingForm.teaching_assignment_id" required class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <h2 id="binding-title" class="text-lg font-bold text-[var(--ink)]">Petakan {{ bindingComponent.component.name }}</h2>
+                    <p class="text-sm text-[var(--ink-soft)]">Pilih mata pelajaran asal nilai komponen ini. Komponen yang sudah dipetakan tidak dapat dipindah ke mata pelajaran lain.</p>
+                    <label for="binding-assignment" class="block text-sm font-semibold text-[var(--ink-soft)]">Kelas & Mata Pelajaran</label>
+                    <select id="binding-assignment" v-model="bindingForm.teaching_assignment_id" required class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option :value="null" disabled>Pilih mata pelajaran</option>
                         <option v-for="assignment in props.teaching_assignments" :key="assignment.id" :value="assignment.id">{{ assignmentLabel(assignment.id) }}</option>
                     </select>
@@ -384,7 +384,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
             >
                 <div class="scheme-dialog bg-[var(--surface)] rounded-xl shadow-xl max-h-[90vh] max-w-lg w-full overflow-y-auto p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="new-component-title">
                     <div class="flex items-center justify-between">
-                        <h2 id="new-component-title" class="text-lg font-bold text-slate-900">Tambah Komponen Penilaian</h2>
+                        <h2 id="new-component-title" class="text-lg font-bold text-[var(--ink)]">Tambah Komponen Penilaian</h2>
                         <AppButton variant="secondary"
                             type="button"
 
@@ -397,45 +397,45 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 
                     <form @submit.prevent="submitNewComponent" class="space-y-4">
                         <div>
-                            <label for="component-assignment" class="block text-meta font-semibold text-slate-700 mb-1">Kelas & Mata Pelajaran</label>
-                            <select id="component-assignment" v-model="componentForm.teaching_assignment_id" class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="component-assignment" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kelas & Mata Pelajaran</label>
+                            <select id="component-assignment" v-model="componentForm.teaching_assignment_id" class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <option :value="null">Umum (hanya untuk kelas dengan satu mapel)</option>
                                 <option v-for="assignment in props.teaching_assignments" :key="assignment.id" :value="assignment.id">{{ assignmentLabel(assignment.id) }}</option>
                             </select>
                             <p v-if="componentForm.errors.teaching_assignment_id" class="mt-1 text-sm text-red-600">{{ componentForm.errors.teaching_assignment_id }}</p>
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Nama Komponen</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama Komponen</label>
                             <input
                                 v-model="componentForm.name"
                                 type="text"
                                 required
-                                placeholder="Contoh: Formatif 1 / Ulangan Harian"
-                                class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Formatif 1 / Ulangan Harian"
+                                class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                             />
                             <p v-if="componentForm.errors.name" class="mt-1 text-sm text-red-600">{{ componentForm.errors.name }}</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">Kode Komponen</label>
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kode Komponen</label>
                                 <input
                                     v-model="componentForm.code"
                                     type="text"
                                     required
                                     placeholder="F1 / UTS / UAS"
-                                    class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
+                                    class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase"
                                 />
                                 <p v-if="componentForm.errors.code" class="mt-1 text-sm text-red-600">{{ componentForm.errors.code }}</p>
                             </div>
 
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">Urutan</label>
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Urutan</label>
                                 <input
                                     v-model.number="componentForm.sequence"
                                     type="number"
                                     min="1"
-                                    class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                                 <p v-if="componentForm.errors.sequence" class="mt-1 text-sm text-red-600">{{ componentForm.errors.sequence }}</p>
                             </div>
@@ -443,7 +443,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">Bobot Persentase (%)</label>
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Bobot Persentase (%)</label>
                                 <input
                                     v-model.number="componentForm.weight_percentage"
                                     type="number"
@@ -451,13 +451,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                     max="100"
                                     step="0.1"
                                     required
-                                    class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                                 <p v-if="componentForm.errors.weight_percentage" class="mt-1 text-sm text-red-600">{{ componentForm.errors.weight_percentage }}</p>
                             </div>
 
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">KKTP / Batas Tuntas</label>
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">KKTP / Batas Tuntas</label>
                                 <input
                                     v-model.number="componentForm.passing_grade"
                                     type="number"
@@ -465,7 +465,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeActiveDialog));
                                     max="100"
                                     step="0.1"
                                     required
-                                    class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full rounded-lg border-[var(--line)] text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 />
                                 <p v-if="componentForm.errors.passing_grade" class="mt-1 text-sm text-red-600">{{ componentForm.errors.passing_grade }}</p>
                             </div>

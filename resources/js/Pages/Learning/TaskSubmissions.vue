@@ -148,7 +148,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
             </section>
         </div>
 
-        <div v-if="selected" ref="detailDialog" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-detail-title" @click.self="selected = null">
+        <div v-if="selected" ref="detailDialog" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="submission-detail-title" @click.self="selected = null" @keydown.esc.stop.prevent="selected = null">
             <form class="modal-card" @submit.prevent="submitGrade">
                 <div class="modal-heading"><div><p class="eyebrow">Detail pengumpulan</p><h2 id="submission-detail-title">{{ selected.student.name }}</h2></div><AppButton variant="secondary" type="button" aria-label="Tutup detail pengumpulan" @click="selected = null">×</AppButton></div>
                 <div class="submission-detail-meta"><span>Status: <strong>{{ statusLabel(selected) }}</strong></span><span>Tanggal kumpul: <strong>{{ formatDate(selected.submitted_at) }}</strong></span></div>

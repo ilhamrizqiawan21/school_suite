@@ -40,8 +40,8 @@ class AuthController extends Controller
             'status' => session('status'),
             'branding' => $school ? [
                 'school_name' => $school->name,
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
-                'favicon_url' => $school->favicon_path ? route('branding.school', [$school, 'favicon']) : null,
+                'logo_url' => $school->publicBrandingUrl('logo'),
+                'favicon_url' => $school->publicBrandingUrl('favicon'),
                 'theme_primary' => data_get($school->settings, 'theme_primary', '#3157a4'),
             ] : null,
         ]);

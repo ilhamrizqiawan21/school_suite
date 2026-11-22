@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface StudentProfile {
     id: number;
@@ -208,14 +210,14 @@ function uploadPhoto() {
     });
 }
 
-function deletePhoto() {
-    if (window.confirm(`Hapus foto ${props.student.name}?`)) {
+async function deletePhoto() {
+    if (await requestConfirmation(`Hapus foto ${props.student.name}?`)) {
         router.delete(`/akademik/buku-induk/${props.student.id}/foto`, { preserveScroll: true });
     }
 }
 
-function deleteDocument(document: LedgerDocument) {
-    if (window.confirm(`Hapus dokumen “${document.original_name}”?`)) {
+async function deleteDocument(document: LedgerDocument) {
+    if (await requestConfirmation(`Hapus dokumen “${document.original_name}”?`)) {
         router.delete(`/akademik/buku-induk/${props.student.id}/dokumen/${document.id}`, { preserveScroll: true });
     }
 }
@@ -223,6 +225,18 @@ function deleteDocument(document: LedgerDocument) {
 function sizeLabel(bytes: number) {
     return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+const showLedgerPhotoEditor = ref(false);
+const requestLedgerPhotoEditorClose = useConfirmedDialogClose(photoForm, () => { showLedgerPhotoEditor.value = false; photoForm.reset(); photoForm.clearErrors(); });
+watch(() => photoForm.wasSuccessful, (success) => { if (success) photoForm.defaults(); });
+
+const showLedgerDetailsEditor = ref(false);
+const requestLedgerDetailsEditorClose = useConfirmedDialogClose(detailsForm, () => { showLedgerDetailsEditor.value = false; detailsForm.reset(); detailsForm.clearErrors(); });
+watch(() => detailsForm.wasSuccessful, (success) => { if (success) detailsForm.defaults(); });
+
+const showLedgerDocumentEditor = ref(false);
+const requestLedgerDocumentEditorClose = useConfirmedDialogClose(documentForm, () => { showLedgerDocumentEditor.value = false; documentForm.reset(); documentForm.clearErrors(); });
+watch(() => documentForm.wasSuccessful, (success) => { if (success) documentForm.defaults(); });
 </script>
 
 <template>
@@ -262,26 +276,29 @@ function sizeLabel(bytes: number) {
             </section>
 
             <section class="panel flex flex-wrap items-center gap-5 p-5">
-                <img v-if="detail?.photo_url" :src="detail.photo_url" :alt="`Foto ${student.name}`" class="h-28 w-28 rounded-xl border border-slate-200 object-cover">
-                <div v-else class="flex h-28 w-28 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-600">Belum ada foto</div>
-                <form class="grid min-w-0 flex-1 gap-3 md:grid-cols-[1fr_auto] md:items-end" @submit.prevent="uploadPhoto">
+                <img v-if="detail?.photo_url" :src="detail.photo_url" :alt="`Foto ${student.name}`" class="h-28 w-28 rounded-xl border border-[var(--line)] object-cover">
+                <div v-else class="flex h-28 w-28 items-center justify-center rounded-xl border border-dashed border-[var(--line)] bg-[var(--surface-subtle)] text-sm text-[var(--ink-soft)]">Belum ada foto</div>
+                <AppButton variant="primary" type="button" @click="showLedgerPhotoEditor = true">Ubah foto siswa</AppButton>
+<Teleport to="body"><div v-if="showLedgerPhotoEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Ubah foto siswa" @click.self="requestLedgerPhotoEditorClose" @keydown.esc.stop.prevent="requestLedgerPhotoEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Ubah foto siswa</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup ubah foto siswa" title="Tutup formulir" :disabled="photoForm.processing" @click="requestLedgerPhotoEditorClose" /></header>
+<form class="grid min-w-0 flex-1 gap-3 md:grid-cols-[1fr_auto] md:items-end" @submit.prevent="uploadPhoto">
                     <label class="field-label">Foto siswa 3x4 (JPG/PNG, maks. 2 MB)
-                        <input class="field-input file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5" type="file" accept=".jpg,.jpeg,.png" required @input="photoForm.photo = ($event.target as HTMLInputElement).files?.[0] || null">
+                        <input class="field-input file:mr-3 file:rounded-md file:border-0 file:bg-[var(--surface-strong)] file:px-3 file:py-1.5" type="file" accept=".jpg,.jpeg,.png" required @input="photoForm.photo = ($event.target as HTMLInputElement).files?.[0] || null">
                         <span v-if="photoForm.errors.photo" class="field-error">{{ photoForm.errors.photo }}</span>
                     </label>
                     <div class="flex gap-2">
                         <AppButton variant="primary" class="primary-button" type="submit" :disabled="photoForm.processing || !photoForm.photo">{{ photoForm.processing ? 'Menyimpan…' : detail?.photo_url ? 'Ganti foto' : 'Simpan foto' }}</AppButton>
                         <AppButton variant="danger" size="sm" icon="delete" v-if="detail?.photo_url" class="danger-button" type="button" @click="deletePhoto">Hapus</AppButton>
                     </div>
-                    <p class="text-meta text-slate-600 md:col-span-2">Foto disimpan privat, ditampilkan untuk petugas berwenang, dan otomatis disertakan pada cetakan PDF Buku Induk.</p>
+                    <p class="text-meta text-[var(--ink-soft)] md:col-span-2">Foto disimpan privat, ditampilkan untuk petugas berwenang, dan otomatis disertakan pada cetakan PDF Buku Induk.</p>
                 </form>
+</div></div></Teleport>
             </section>
 
             <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,.75fr)]">
                 <section class="panel overflow-hidden">
-                    <header class="border-b border-slate-200 px-5 py-4">
-                        <h2 class="text-base font-bold text-slate-900">Identitas peserta didik</h2>
-                        <p class="mt-1 text-sm text-slate-600">Ringkasan identitas utama dan buku induk siswa.</p>
+                    <header class="border-b border-[var(--line)] px-5 py-4">
+                        <h2 class="text-base font-bold text-[var(--ink)]">Identitas peserta didik</h2>
+                        <p class="mt-1 text-sm text-[var(--ink-soft)]">Ringkasan identitas utama dan buku induk siswa.</p>
                     </header>
                     <dl class="grid gap-x-8 sm:grid-cols-2">
                         <div v-for="item in [
@@ -297,73 +314,75 @@ function sizeLabel(bytes: number) {
                             { label: 'Agama', value: student.religion || 'Belum diisi' },
                             { label: 'Golongan darah', value: detail?.blood_type || 'Belum diisi' },
                             { label: 'Status siswa', value: statusLabels[student.status] || student.status },
-                        ]" :key="item.label" class="border-b border-slate-100 px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">{{ item.label }}</dt>
-                            <dd class="mt-1 break-words text-sm font-semibold text-slate-800">{{ item.value }}</dd>
+                        ]" :key="item.label" class="border-b border-[var(--line)] px-5 py-3.5">
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">{{ item.label }}</dt>
+                            <dd class="mt-1 break-words text-sm font-semibold text-[var(--ink)]">{{ item.value }}</dd>
                         </div>
-                        <div class="border-b border-slate-100 px-5 py-3.5 sm:col-span-2">
-                            <dt class="text-meta font-medium text-slate-600">Alamat</dt>
-                            <dd class="mt-1 whitespace-pre-wrap text-sm font-semibold text-slate-800">{{ student.address || 'Belum diisi' }}</dd>
+                        <div class="border-b border-[var(--line)] px-5 py-3.5 sm:col-span-2">
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Alamat</dt>
+                            <dd class="mt-1 whitespace-pre-wrap text-sm font-semibold text-[var(--ink)]">{{ student.address || 'Belum diisi' }}</dd>
                         </div>
                         <div v-for="item in [
                             { label: 'RT / RW', value: [detail?.address_rt, detail?.address_rw].filter(Boolean).join(' / ') || 'Belum diisi' },
                             { label: 'Desa / kelurahan', value: detail?.village || 'Belum diisi' },
                             { label: 'Kecamatan', value: detail?.district || 'Belum diisi' },
                             { label: 'Kabupaten / kota', value: detail?.city || 'Belum diisi' },
-                        ]" :key="item.label" class="border-b border-slate-100 px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">{{ item.label }}</dt>
-                            <dd class="mt-1 break-words text-sm font-semibold text-slate-800">{{ item.value }}</dd>
+                        ]" :key="item.label" class="border-b border-[var(--line)] px-5 py-3.5">
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">{{ item.label }}</dt>
+                            <dd class="mt-1 break-words text-sm font-semibold text-[var(--ink)]">{{ item.value }}</dd>
                         </div>
                     </dl>
                 </section>
 
                 <section class="panel overflow-hidden">
-                    <header class="border-b border-slate-200 px-5 py-4">
-                        <h2 class="text-base font-bold text-slate-900">Orang tua / wali &amp; asal sekolah</h2>
-                        <p class="mt-1 text-sm text-slate-600">Informasi keluarga dan riwayat penerimaan siswa.</p>
+                    <header class="border-b border-[var(--line)] px-5 py-4">
+                        <h2 class="text-base font-bold text-[var(--ink)]">Orang tua / wali &amp; asal sekolah</h2>
+                        <p class="mt-1 text-sm text-[var(--ink-soft)]">Informasi keluarga dan riwayat penerimaan siswa.</p>
                     </header>
                     <dl class="divide-y divide-slate-100">
                         <div class="px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">Nama ayah / pekerjaan</dt>
-                            <dd class="mt-1 text-sm font-semibold text-slate-800">{{ detail?.father_name || 'Belum diisi' }} · {{ detail?.father_occupation || '—' }}</dd>
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Nama ayah / pekerjaan</dt>
+                            <dd class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ detail?.father_name || 'Belum diisi' }} · {{ detail?.father_occupation || '—' }}</dd>
                         </div>
                         <div class="px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">Nama ibu / pekerjaan</dt>
-                            <dd class="mt-1 text-sm font-semibold text-slate-800">{{ detail?.mother_name || 'Belum diisi' }} · {{ detail?.mother_occupation || '—' }}</dd>
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Nama ibu / pekerjaan</dt>
+                            <dd class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ detail?.mother_name || 'Belum diisi' }} · {{ detail?.mother_occupation || '—' }}</dd>
                         </div>
                         <div class="px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">Nama orang tua / wali</dt>
-                            <dd class="mt-1 text-sm font-semibold text-slate-800">{{ student.parent_name || 'Belum diisi' }}</dd>
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Nama orang tua / wali</dt>
+                            <dd class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ student.parent_name || 'Belum diisi' }}</dd>
                         </div>
                         <div class="px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">Nomor kontak wali</dt>
-                            <dd class="mt-1 text-sm font-semibold text-slate-800">{{ student.parent_phone || 'Belum diisi' }}</dd>
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Nomor kontak wali</dt>
+                            <dd class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ student.parent_phone || 'Belum diisi' }}</dd>
                         </div>
                         <div class="px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">Sekolah asal &amp; nomor ijazah</dt>
-                            <dd class="mt-1 text-sm font-semibold text-slate-800">{{ detail?.previous_school || 'Belum diisi' }} ({{ detail?.diploma_number || '—' }})</dd>
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Sekolah asal &amp; nomor ijazah</dt>
+                            <dd class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ detail?.previous_school || 'Belum diisi' }} ({{ detail?.diploma_number || '—' }})</dd>
                         </div>
                         <div class="px-5 py-3.5">
-                            <dt class="text-meta font-medium text-slate-600">Diterima di kelas / tanggal</dt>
-                            <dd class="mt-1 text-sm font-semibold text-slate-800">{{ detail?.accepted_grade || '—' }} · {{ dateLabel(detail?.accepted_date) }}</dd>
+                            <dt class="text-meta font-medium text-[var(--ink-soft)]">Diterima di kelas / tanggal</dt>
+                            <dd class="mt-1 text-sm font-semibold text-[var(--ink)]">{{ detail?.accepted_grade || '—' }} · {{ dateLabel(detail?.accepted_date) }}</dd>
                         </div>
                     </dl>
                 </section>
             </div>
 
             <section class="panel overflow-hidden">
-                <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                <header class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Formulir Lengkap Buku Induk (Format Hardcopy A–E)</h2>
-                        <p class="mt-1 text-sm text-slate-600">Lengkapi seluruh keterangan pribadi, alamat, kesehatan, orang tua/wali, penerimaan, dan kelulusan.</p>
+                        <h2 class="text-base font-bold text-[var(--ink)]">Formulir Lengkap Buku Induk (Format Hardcopy A–E)</h2>
+                        <p class="mt-1 text-sm text-[var(--ink-soft)]">Lengkapi seluruh keterangan pribadi, alamat, kesehatan, orang tua/wali, penerimaan, dan kelulusan.</p>
                     </div>
-                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
-                        <input v-model="editCoreIdentity" type="checkbox" class="rounded border-slate-300" />
+                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">
+                        <input v-model="editCoreIdentity" type="checkbox" class="rounded border-[var(--line)]" />
                         Sertakan koreksi identitas dasar (Nama, NISN, TTL, Alamat, Wali)
                     </label>
                 </header>
 
-                <form class="space-y-6 p-5" @submit.prevent="saveDetails(null)">
+                <AppButton variant="primary" type="button" @click="showLedgerDetailsEditor = true">Ubah data buku induk</AppButton>
+<Teleport to="body"><div v-if="showLedgerDetailsEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Ubah data buku induk" @click.self="requestLedgerDetailsEditorClose" @keydown.esc.stop.prevent="requestLedgerDetailsEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Ubah data buku induk</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup ubah data buku induk" title="Tutup formulir" :disabled="detailsForm.processing" @click="requestLedgerDetailsEditorClose" /></header>
+<form class="space-y-6 p-5" @submit.prevent="saveDetails(null)">
                     <div v-if="editCoreIdentity" class="rounded-xl border border-blue-200 bg-blue-50/40 p-4">
                         <h3 class="mb-3 text-sm font-bold uppercase tracking-wide text-blue-950">Koreksi Identitas Dasar Siswa</h3>
                         <div class="grid gap-4 sm:grid-cols-3">
@@ -380,7 +399,7 @@ function sizeLabel(bytes: number) {
                     </div>
 
                     <div>
-                        <h3 class="mb-3 border-b border-slate-200 pb-1.5 text-sm font-bold uppercase tracking-wide text-slate-800">A. Keterangan Pribadi Peserta Didik</h3>
+                        <h3 class="mb-3 border-b border-[var(--line)] pb-1.5 text-sm font-bold uppercase tracking-wide text-[var(--ink)]">A. Keterangan Pribadi Peserta Didik</h3>
                         <div class="grid gap-4 sm:grid-cols-3">
                             <label class="field-label">Nama panggilan<input v-model="detailsForm.nickname" class="field-input" maxlength="100"><span v-if="detailsForm.errors.nickname" class="field-error">{{ detailsForm.errors.nickname }}</span></label>
                             <label class="field-label">NIK (16 digit)<input v-model="detailsForm.nik" class="field-input" inputmode="numeric" maxlength="16"><span v-if="detailsForm.errors.nik" class="field-error">{{ detailsForm.errors.nik }}</span></label>
@@ -394,12 +413,12 @@ function sizeLabel(bytes: number) {
                                     <option v-for="st in ['Anak Kandung', 'Anak Tiri', 'Anak Angkat']" :key="st" :value="st">{{ st }}</option>
                                 </select>
                             </label>
-                            <label class="field-label sm:col-span-2">Bahasa sehari-hari<input v-model="detailsForm.daily_language" class="field-input" maxlength="60" placeholder="Contoh: Bahasa Indonesia"></label>
+                            <label class="field-label sm:col-span-2">Bahasa sehari-hari<input v-model="detailsForm.daily_language" class="field-input" maxlength="60" placeholder="Bahasa Indonesia"></label>
                         </div>
                     </div>
 
                     <div>
-                        <h3 class="mb-3 border-b border-slate-200 pb-1.5 text-sm font-bold uppercase tracking-wide text-slate-800">B. Tempat Tinggal, Kesehatan &amp; Kegemaran</h3>
+                        <h3 class="mb-3 border-b border-[var(--line)] pb-1.5 text-sm font-bold uppercase tracking-wide text-[var(--ink)]">B. Tempat Tinggal, Kesehatan &amp; Kegemaran</h3>
                         <div class="grid gap-4 sm:grid-cols-4">
                             <label class="field-label">RT<input v-model="detailsForm.address_rt" class="field-input" maxlength="5"><span v-if="detailsForm.errors.address_rt" class="field-error">{{ detailsForm.errors.address_rt }}</span></label>
                             <label class="field-label">RW<input v-model="detailsForm.address_rw" class="field-input" maxlength="5"><span v-if="detailsForm.errors.address_rw" class="field-error">{{ detailsForm.errors.address_rw }}</span></label>
@@ -430,7 +449,7 @@ function sizeLabel(bytes: number) {
                     </div>
 
                     <div>
-                        <h3 class="mb-3 border-b border-slate-200 pb-1.5 text-sm font-bold uppercase tracking-wide text-slate-800">C. Keterangan Orang Tua Kandung &amp; Wali</h3>
+                        <h3 class="mb-3 border-b border-[var(--line)] pb-1.5 text-sm font-bold uppercase tracking-wide text-[var(--ink)]">C. Keterangan Orang Tua Kandung &amp; Wali</h3>
                         <div class="grid gap-4 sm:grid-cols-3">
                             <label class="field-label">Nama ayah<input v-model="detailsForm.father_name" class="field-input" maxlength="100"><span v-if="detailsForm.errors.father_name" class="field-error">{{ detailsForm.errors.father_name }}</span></label>
                             <label class="field-label">NIK ayah (16 digit)<input v-model="detailsForm.father_nik" class="field-input" inputmode="numeric" maxlength="16"><span v-if="detailsForm.errors.father_nik" class="field-error">{{ detailsForm.errors.father_nik }}</span></label>
@@ -453,14 +472,14 @@ function sizeLabel(bytes: number) {
                     </div>
 
                     <div>
-                        <h3 class="mb-3 border-b border-slate-200 pb-1.5 text-sm font-bold uppercase tracking-wide text-slate-800">D. Pendidikan Sebelumnya &amp; Penerimaan</h3>
+                        <h3 class="mb-3 border-b border-[var(--line)] pb-1.5 text-sm font-bold uppercase tracking-wide text-[var(--ink)]">D. Pendidikan Sebelumnya &amp; Penerimaan</h3>
                         <div class="grid gap-4 sm:grid-cols-3">
                             <label class="field-label">Sekolah asal<input v-model="detailsForm.previous_school" class="field-input" maxlength="100"><span v-if="detailsForm.errors.previous_school" class="field-error">{{ detailsForm.errors.previous_school }}</span></label>
                             <label class="field-label">Nomor ijazah asal<input v-model="detailsForm.diploma_number" class="field-input" maxlength="50"><span v-if="detailsForm.errors.diploma_number" class="field-error">{{ detailsForm.errors.diploma_number }}</span></label>
                             <label class="field-label">Tanggal ijazah asal<input v-model="detailsForm.diploma_date" type="date" class="field-input"><span v-if="detailsForm.errors.diploma_date" class="field-error">{{ detailsForm.errors.diploma_date }}</span></label>
-                            <label class="field-label">Lama belajar asal<input v-model="detailsForm.study_duration_years" class="field-input" maxlength="30" placeholder="Contoh: 6 tahun"></label>
+                            <label class="field-label">Lama belajar asal<input v-model="detailsForm.study_duration_years" class="field-input" maxlength="30" placeholder="6 tahun"></label>
                             <label class="field-label">Tanggal diterima di sekolah ini<input v-model="detailsForm.accepted_date" type="date" class="field-input"></label>
-                            <label class="field-label">Diterima di kelas / tingkat<input v-model="detailsForm.accepted_grade" class="field-input" maxlength="30" placeholder="Contoh: VII / X"></label>
+                            <label class="field-label">Diterima di kelas / tingkat<input v-model="detailsForm.accepted_grade" class="field-input" maxlength="30" placeholder="VII / X"></label>
                             <label class="field-label">Jenis pendaftaran
                                 <select v-model="detailsForm.admission_type" class="field-input">
                                     <option value="">Pilih jenis</option>
@@ -471,7 +490,7 @@ function sizeLabel(bytes: number) {
                     </div>
 
                     <div>
-                        <h3 class="mb-3 border-b border-slate-200 pb-1.5 text-sm font-bold uppercase tracking-wide text-slate-800">E. Tamat Belajar / Meninggalkan Sekolah</h3>
+                        <h3 class="mb-3 border-b border-[var(--line)] pb-1.5 text-sm font-bold uppercase tracking-wide text-[var(--ink)]">E. Tamat Belajar / Meninggalkan Sekolah</h3>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <label class="field-label">Tanggal tamat / keluar<input v-model="detailsForm.graduation_date" type="date" class="field-input"></label>
                             <label class="field-label">Nomor ijazah kelulusan sekolah ini<input v-model="detailsForm.graduation_diploma_number" class="field-input" maxlength="60"></label>
@@ -480,7 +499,7 @@ function sizeLabel(bytes: number) {
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                    <div class="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--line)] pt-4">
                         <AppButton
                             v-if="adjacent_students?.next"
                             variant="secondary"
@@ -502,56 +521,60 @@ function sizeLabel(bytes: number) {
                         </AppButton>
                     </div>
                 </form>
+</div></div></Teleport>
             </section>
 
             <section class="panel overflow-hidden">
-                <header class="border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-base font-bold text-slate-900">Lemari dokumen pribadi</h2>
-                    <p class="mt-1 text-sm text-slate-600">Maksimal 10 dokumen PDF/JPG/PNG, masing-masing hingga 5 MB. Berkas hanya dapat diakses petugas sekolah.</p>
+                <header class="border-b border-[var(--line)] px-5 py-4">
+                    <h2 class="text-base font-bold text-[var(--ink)]">Lemari dokumen pribadi</h2>
+                    <p class="mt-1 text-sm text-[var(--ink-soft)]">Maksimal 10 dokumen PDF/JPG/PNG, masing-masing hingga 5 MB. Berkas hanya dapat diakses petugas sekolah.</p>
                 </header>
-                <form class="grid gap-3 border-b border-slate-100 p-5 md:grid-cols-[1fr_1.5fr_auto] md:items-end" @submit.prevent="uploadDocument">
-                    <label class="field-label">Jenis dokumen<input v-model="documentForm.document_type" class="field-input" maxlength="100" placeholder="Contoh: Akta kelahiran, ijazah, KK" required><span v-if="documentForm.errors.document_type" class="field-error">{{ documentForm.errors.document_type }}</span></label>
-                    <label class="field-label">Pilih berkas<input class="field-input file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5" type="file" accept=".pdf,.jpg,.jpeg,.png" required @input="documentForm.file = ($event.target as HTMLInputElement).files?.[0] || null"><span v-if="documentForm.errors.file" class="field-error">{{ documentForm.errors.file }}</span></label>
+                <AppButton variant="primary" type="button" @click="showLedgerDocumentEditor = true">Unggah dokumen siswa</AppButton>
+<Teleport to="body"><div v-if="showLedgerDocumentEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Unggah dokumen siswa" @click.self="requestLedgerDocumentEditorClose" @keydown.esc.stop.prevent="requestLedgerDocumentEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Unggah dokumen siswa</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup unggah dokumen siswa" title="Tutup formulir" :disabled="documentForm.processing" @click="requestLedgerDocumentEditorClose" /></header>
+<form class="grid gap-3 border-b border-[var(--line)] p-5 md:grid-cols-[1fr_1.5fr_auto] md:items-end" @submit.prevent="uploadDocument">
+                    <label class="field-label">Jenis dokumen<input v-model="documentForm.document_type" class="field-input" maxlength="100" placeholder="Akta kelahiran, ijazah, KK" required><span v-if="documentForm.errors.document_type" class="field-error">{{ documentForm.errors.document_type }}</span></label>
+                    <label class="field-label">Pilih berkas<input class="field-input file:mr-3 file:rounded-md file:border-0 file:bg-[var(--surface-strong)] file:px-3 file:py-1.5" type="file" accept=".pdf,.jpg,.jpeg,.png" required @input="documentForm.file = ($event.target as HTMLInputElement).files?.[0] || null"><span v-if="documentForm.errors.file" class="field-error">{{ documentForm.errors.file }}</span></label>
                     <AppButton variant="primary" class="primary-button" type="submit" :disabled="documentForm.processing || !documentForm.file">{{ documentForm.processing ? 'Mengunggah…' : 'Unggah dokumen' }}</AppButton>
                 </form>
+</div></div></Teleport>
                 <ul class="divide-y divide-slate-100">
                     <li v-for="document in documents" :key="document.id" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                        <div class="min-w-0"><p class="font-semibold text-slate-800">{{ document.document_type }}</p><p class="mt-1 truncate text-sm text-slate-600">{{ document.original_name }} · {{ sizeLabel(document.size_bytes) }}</p></div>
+                        <div class="min-w-0"><p class="font-semibold text-[var(--ink)]">{{ document.document_type }}</p><p class="mt-1 truncate text-sm text-[var(--ink-soft)]">{{ document.original_name }} · {{ sizeLabel(document.size_bytes) }}</p></div>
                         <div class="flex shrink-0 gap-2"><AppButton variant="secondary" as="a" class="secondary-button" :href="`/akademik/buku-induk/${student.id}/dokumen/${document.id}`">Unduh</AppButton><AppButton variant="danger" size="sm" icon="delete" class="danger-button" type="button" @click="deleteDocument(document)">Hapus</AppButton></div>
                     </li>
-                    <li v-if="documents.length === 0" class="px-5 py-10 text-center text-sm text-slate-600">Belum ada dokumen pribadi siswa.</li>
+                    <li v-if="documents.length === 0" class="px-5 py-10 text-center text-sm text-[var(--ink-soft)]">Belum ada dokumen pribadi siswa.</li>
                 </ul>
             </section>
 
             <section class="panel overflow-hidden">
-                <header class="border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-base font-bold text-slate-900">Riwayat kelas</h2>
-                    <p class="mt-1 text-sm text-slate-600">Penempatan rombel tercatat per semester, termasuk riwayat terdahulu.</p>
+                <header class="border-b border-[var(--line)] px-5 py-4">
+                    <h2 class="text-base font-bold text-[var(--ink)]">Riwayat kelas</h2>
+                    <p class="mt-1 text-sm text-[var(--ink-soft)]">Penempatan rombel tercatat per semester, termasuk riwayat terdahulu.</p>
                 </header>
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Tabel data">
                     <table class="app-table min-w-[680px] w-full border-collapse text-left text-sm">
-                        <thead class="bg-slate-50 text-meta uppercase tracking-wide text-slate-600">
+                        <thead class="bg-[var(--surface-subtle)] text-meta uppercase tracking-wide text-[var(--ink-soft)]">
                             <tr><th scope="col" class="px-5 py-3">Tahun ajaran</th><th scope="col" class="px-5 py-3">Semester</th><th scope="col" class="px-5 py-3">Kelas</th><th scope="col" class="px-5 py-3">No. absen</th><th scope="col" class="px-5 py-3">Status penempatan</th></tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="item in class_history" :key="item.id">
-                                <td class="px-5 py-3.5 text-slate-700">{{ item.academic_year || '—' }}</td>
-                                <td class="px-5 py-3.5 text-slate-700">{{ item.term || '—' }}</td>
-                                <td class="px-5 py-3.5 font-semibold text-slate-800">{{ item.class_name || '—' }}</td>
-                                <td class="px-5 py-3.5 text-slate-700">{{ item.roll_number ?? '—' }}</td>
-                                <td class="px-5 py-3.5 text-slate-700">{{ enrollmentLabels[item.status] || item.status }}</td>
+                                <td class="px-5 py-3.5 text-[var(--ink-soft)]">{{ item.academic_year || '—' }}</td>
+                                <td class="px-5 py-3.5 text-[var(--ink-soft)]">{{ item.term || '—' }}</td>
+                                <td class="px-5 py-3.5 font-semibold text-[var(--ink)]">{{ item.class_name || '—' }}</td>
+                                <td class="px-5 py-3.5 text-[var(--ink-soft)]">{{ item.roll_number ?? '—' }}</td>
+                                <td class="px-5 py-3.5 text-[var(--ink-soft)]">{{ enrollmentLabels[item.status] || item.status }}</td>
                             </tr>
-                            <tr v-if="class_history.length === 0"><td colspan="5" class="px-5 py-12 text-center text-sm text-slate-600">Belum ada riwayat penempatan kelas.</td></tr>
+                            <tr v-if="class_history.length === 0"><td colspan="5" class="px-5 py-12 text-center text-sm text-[var(--ink-soft)]">Belum ada riwayat penempatan kelas.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
             <section v-if="report_history && report_history.length > 0" class="panel overflow-hidden">
-                <header class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+                <header class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] px-5 py-4">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Rekapitulasi nilai rapor per semester</h2>
-                        <p class="mt-1 text-sm text-slate-600">Pilih tahun ajaran &amp; semester tertentu untuk melihat atau mencetak rapor spesifik tanpa mencetak seluruh semester sekaligus.</p>
+                        <h2 class="text-base font-bold text-[var(--ink)]">Rekapitulasi nilai rapor per semester</h2>
+                        <p class="mt-1 text-sm text-[var(--ink-soft)]">Pilih tahun ajaran &amp; semester tertentu untuk melihat atau mencetak rapor spesifik tanpa mencetak seluruh semester sekaligus.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <select v-model="selectedReportTermId" aria-label="Pilih semester rapor" class="field-input !w-auto min-w-[220px]">
@@ -566,8 +589,8 @@ function sizeLabel(bytes: number) {
                     <div v-for="rep in visibleReports" :key="rep.id" class="pt-4 first:pt-0">
                         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <strong class="text-sm text-slate-900">{{ rep.academic_year }} · {{ rep.term_name }} · Kelas {{ rep.class_name }}</strong>
-                                <span class="ml-2 text-xs text-slate-600">
+                                <strong class="text-sm text-[var(--ink)]">{{ rep.academic_year }} · {{ rep.term_name }} · Kelas {{ rep.class_name }}</strong>
+                                <span class="ml-2 text-xs text-[var(--ink-soft)]">
                                     Hadir: {{ rep.attendance?.present ?? 0 }} · Sakit: {{ rep.attendance?.sick ?? 0 }} · Izin: {{ rep.attendance?.permitted ?? 0 }} · Alpa: {{ rep.attendance?.absent ?? 0 }}
                                 </span>
                             </div>
@@ -612,7 +635,7 @@ function sizeLabel(bytes: number) {
                         </div>
                         <div class="overflow-x-auto">
                             <table class="app-table w-full border-collapse text-left text-xs">
-                                <thead class="bg-slate-50 text-slate-600">
+                                <thead class="bg-[var(--surface-subtle)] text-[var(--ink-soft)]">
                                     <tr>
                                         <th class="px-3 py-2">Mata Pelajaran</th>
                                         <th class="px-3 py-2">KKTP</th>
@@ -622,10 +645,10 @@ function sizeLabel(bytes: number) {
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     <tr v-for="(grade, gIdx) in rep.grades" :key="gIdx">
-                                        <td class="px-3 py-2 text-slate-800">{{ grade.subject_name || '—' }}</td>
-                                        <td class="px-3 py-2 text-slate-600">{{ grade.passing_grade ?? '—' }}</td>
-                                        <td class="px-3 py-2 font-bold text-slate-900">{{ grade.final_score ?? '—' }}</td>
-                                        <td class="px-3 py-2 text-slate-700">{{ grade.predicate || '—' }}</td>
+                                        <td class="px-3 py-2 text-[var(--ink)]">{{ grade.subject_name || '—' }}</td>
+                                        <td class="px-3 py-2 text-[var(--ink-soft)]">{{ grade.passing_grade ?? '—' }}</td>
+                                        <td class="px-3 py-2 font-bold text-[var(--ink)]">{{ grade.final_score ?? '—' }}</td>
+                                        <td class="px-3 py-2 text-[var(--ink-soft)]">{{ grade.predicate || '—' }}</td>
                                     </tr>
                                 </tbody>
                             </table>

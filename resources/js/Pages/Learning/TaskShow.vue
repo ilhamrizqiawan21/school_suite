@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 interface Assignment {
@@ -43,9 +45,9 @@ const handleFiles = (event: Event) => {
     form.files = Array.from((event.target as HTMLInputElement).files ?? []);
 };
 
-const submit = () => {
+const submit = async () => {
     const action = props.submission ? 'Kirim revisi' : 'Kirim jawaban';
-    if (!window.confirm(`${action} untuk tugas “${props.assignment.title}”? Jawaban akan dicatat untuk diperiksa guru.`)) return;
+    if (!await requestConfirmation(`${action} untuk tugas “${props.assignment.title}”? Jawaban akan dicatat untuk diperiksa guru.`)) return;
     form.post(props.submit_url, {
         forceFormData: true,
         preserveScroll: true,
@@ -56,6 +58,10 @@ const submit = () => {
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
     : 'Tanpa batas waktu';
+
+const showTaskSubmissionEditor = ref(false);
+const requestTaskSubmissionEditorClose = useConfirmedDialogClose(form, () => { showTaskSubmissionEditor.value = false; form.reset(); form.clearErrors(); });
+watch(() => form.wasSuccessful, (success) => { if (success) form.defaults(); });
 </script>
 
 <template>
@@ -96,13 +102,16 @@ const formatDate = (value?: string | null) => value
 
             <section v-if="can_submit" class="panel">
                 <div class="section-heading"><div><p class="eyebrow">Pengumpulan siswa</p><h2>{{ submission ? 'Kirim revisi' : 'Kirim jawaban' }}</h2></div></div>
-                <form class="submission-form" @submit.prevent="submit">
+                <AppButton variant="primary" type="button" @click="showTaskSubmissionEditor = true">Kirim jawaban tugas</AppButton>
+<Teleport to="body"><div v-if="showTaskSubmissionEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Kirim jawaban tugas" @click.self="requestTaskSubmissionEditorClose" @keydown.esc.stop.prevent="requestTaskSubmissionEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Kirim jawaban tugas</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup kirim jawaban tugas" title="Tutup formulir" :disabled="form.processing" @click="requestTaskSubmissionEditorClose" /></header>
+<form class="submission-form" @submit.prevent="submit">
                     <label>Jawaban teks<textarea v-model="form.content" rows="7" placeholder="Tulis jawaban atau catatan untuk guru" /></label>
                     <label>Lampiran (maksimal 5 file)<input :key="fileInputKey" type="file" multiple accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" @change="handleFiles" /></label>
                     <p class="form-hint">Format pengumpulan: PDF, JPG, JPEG. Maksimal 5 MB per file dan 20 MB total.</p>
                     <div v-if="form.hasErrors" role="alert"><p v-for="(error, field) in form.errors" :key="field" class="form-error">{{ error }}</p></div>
                     <div class="form-actions"><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Mengirim...' : 'Kirim tugas' }}</AppButton></div>
                 </form>
+</div></div></Teleport>
             </section>
             <section v-else-if="!can_manage" class="panel empty-state"><strong>Pengumpulan terkunci</strong><p>{{ submission?.review_status === 'approved' || submission?.status === 'graded' ? 'Tugas sudah dinilai. Periksa nilai dan umpan balik guru di atas.' : assignment.due_at && !assignment.allow_late && new Date(assignment.due_at).getTime() < Date.now() ? 'Tenggat sudah berakhir dan tugas ini tidak menerima pengumpulan terlambat.' : submission ? 'Jawaban sudah dikirim dan menunggu pemeriksaan guru.' : 'Pengumpulan belum tersedia untuk akun Anda.' }}</p></section>
         </div>

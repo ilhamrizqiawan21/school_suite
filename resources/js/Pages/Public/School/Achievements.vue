@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
@@ -11,6 +13,7 @@ const props = defineProps<{
 }>();
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -19,9 +22,9 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         <PublicHeader :school="school" active="student-life" />
         <section class="portal-container">
             <header class="portal-hero">
-                <p class="eyebrow">Prestasi &amp; Agenda Sekolah</p>
-                <h1>Prestasi &amp; Agenda {{ school.name }}</h1>
-                <p>Dokumentasi capaian siswa/guru serta agenda kegiatan resmi sekolah yang telah dipublikasikan.</p>
+                <p class="eyebrow">{{ publicText("copy.vue_school_achievements", "text_001", "Prestasi & Agenda Sekolah") }}</p>
+                <h1>{{ publicText("copy.vue_school_achievements", "text_9001", "Prestasi & Agenda") }} {{ school.name }}</h1>
+                <p>{{ publicText("copy.vue_school_achievements", "text_002", "Dokumentasi capaian siswa/guru serta agenda kegiatan resmi sekolah yang telah dipublikasikan.") }}</p>
             </header>
 
             <div v-if="items.length" class="achievement-grid">
@@ -32,7 +35,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                 </Link>
             </div>
 
-            <StateFeedback v-else state="empty" title="Belum ada prestasi atau agenda terbit" description="Publikasi prestasi dan agenda resmi akan tampil di sini setelah diterbitkan admin." />
+            <StateFeedback v-else state="empty" :title="publicText('copy.vue_school_achievements', 'title_003', 'Belum ada prestasi atau agenda terbit')" :description="publicText('copy.vue_school_achievements', 'description_004', 'Publikasi prestasi dan agenda resmi akan tampil di sini setelah diterbitkan admin.')" />
         </section>
     </main>
 </template>

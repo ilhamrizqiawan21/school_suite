@@ -118,31 +118,6 @@ class StudentMutationService
                 ]);
             }
 
-            $activeDuplicate = StudentMutation::query()
-                ->where('school_id', $schoolId)
-                ->where('direction', 'outgoing')
-                ->where('student_id', $student->id)
-                ->whereIn('status', ['submitted', 'in_review', 'needs_revision'])
-                ->exists();
-
-            if ($activeDuplicate) {
-                throw ValidationException::withMessages([
-                    'student_id' => 'Siswa ini sudah memiliki permohonan mutasi keluar yang sedang diproses.',
-                ]);
-            }
-        } elseif (! empty($data['nisn'])) {
-            $incomingDuplicate = StudentMutation::query()
-                ->where('school_id', $schoolId)
-                ->where('direction', 'incoming')
-                ->where('nisn', trim((string) $data['nisn']))
-                ->whereIn('status', ['submitted', 'in_review', 'needs_revision'])
-                ->exists();
-
-            if ($incomingDuplicate) {
-                throw ValidationException::withMessages([
-                    'nisn' => 'Permohonan mutasi masuk dengan NISN tersebut sedang dalam proses verifikasi.',
-                ]);
-            }
         }
 
         return DB::transaction(function () use ($schoolId, $activeTerm, $data, $direction, $student, $attachments, $actor, $idempotencyKey): array {
@@ -164,6 +139,19 @@ class StudentMutationService
                         'plain_verification_secret' => '',
                     ];
                 }
+            }
+
+            $duplicates = StudentMutation::query()->where('school_id', $schoolId)
+                ->where('direction', $direction)->whereIn('status', ['submitted', 'in_review', 'needs_revision']);
+            if ($direction === 'outgoing') {
+                $duplicates->where('student_id', $student->id);
+            } else {
+                $duplicates->where('nisn', trim((string) ($data['nisn'] ?? '')));
+            }
+            if (($direction === 'outgoing' || ! empty($data['nisn'])) && $duplicates->exists()) {
+                throw ValidationException::withMessages([
+                    $direction === 'outgoing' ? 'student_id' : 'nisn' => 'Siswa ini sudah memiliki permohonan mutasi yang sedang diproses.',
+                ]);
             }
 
             $plainSecret = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
@@ -436,7 +424,7 @@ class StudentMutationService
                 $targetEnrollment = null;
                 if ($targetClassGroupId !== null && $locked->term_id !== null) {
                     /** @var ClassGroup|null $classGroup */
-                    $classGroup = ClassGroup::query()->where('school_id', $schoolId)->find($targetClassGroupId);
+                    $classGroup = ClassGroup::query()->where('school_id', $schoolId)->lockForUpdate()->find($targetClassGroupId);
                     if ($classGroup !== null) {
                         $activeCount = Enrollment::query()
                             ->where('class_group_id', $classGroup->id)

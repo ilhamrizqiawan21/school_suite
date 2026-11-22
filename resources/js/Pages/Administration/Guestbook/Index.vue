@@ -88,9 +88,9 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
                     <p>Registrasi pengunjung, pencatatan pegawai tujuan, waktu datang/pulang, dan rekap resepsionis.</p>
                 </div>
                 <div class="head-actions">
-                    <a :href="`/administrasi/buku-tamu/ekspor?category=${filterState.category || ''}&status=${filterState.status || ''}&date_from=${filterState.date_from || ''}&date_to=${filterState.date_to || ''}`" class="ui-button ui-button--secondary ui-button--md">
+                    <AppButton icon="excel" as="a" :href="`/administrasi/buku-tamu/ekspor?category=${filterState.category || ''}&status=${filterState.status || ''}&date_from=${filterState.date_from || ''}&date_to=${filterState.date_to || ''}`" class="ui-button ui-button--secondary ui-button--md">
                         Ekspor CSV
-                    </a>
+                    </AppButton>
                     <AppButton @click="showCreateModal = true">Catat Tamu Baru</AppButton>
                 </div>
             </header>

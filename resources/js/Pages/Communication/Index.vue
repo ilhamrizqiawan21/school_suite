@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -15,6 +17,7 @@ const props = defineProps<{
     announcements: Announcement[];
     events: CalendarEvent[];
     notifications: NotificationItem[];
+    unread_count?: number;
     classes: ClassItem[];
     active_tab: string;
     can_manage: boolean;
@@ -56,7 +59,7 @@ const handleOverlayKeydown = (event: KeyboardEvent) => {
 };
 onMounted(() => document.addEventListener('keydown', handleOverlayKeydown));
 onBeforeUnmount(() => document.removeEventListener('keydown', handleOverlayKeydown));
-const unreadCount = computed(() => props.notifications.filter((item) => !item.read_at).length);
+const unreadCount = computed(() => props.unread_count ?? props.notifications.filter((item) => !item.read_at).length);
 
 const audienceOptions = [
     { value: '', label: 'Semua warga sekolah' },
@@ -95,13 +98,22 @@ const submitEvent = () => eventForm.post(`${communicationBase}/kalender`, {
     onSuccess: () => { eventForm.reset(); showEventForm.value = false; tab.value = 'calendar'; },
 });
 
-const remove = (url: string, label: string) => {
-    if (window.confirm(`Hapus ${label}?`)) router.delete(url, { preserveScroll: true });
+const remove = async (url: string, label: string) => {
+    if (await requestConfirmation(`Hapus ${label}?`)) router.delete(url, { preserveScroll: true });
 };
 
 const markRead = (notification: NotificationItem) => {
-    if (!notification.read_at) router.post(`${communicationBase}/notifikasi/${notification.id}/baca`, {}, { preserveScroll: true });
+    const followAction = () => {
+        if (notification.action_url) router.visit(notification.action_url);
+    };
+    if (!notification.read_at) {
+        router.post(`${communicationBase}/notifikasi/${notification.id}/baca`, {}, { preserveScroll: true, onSuccess: followAction });
+        return;
+    }
+    followAction();
 };
+const requestAnnouncementClose = useConfirmedDialogClose(announcementForm, () => { showAnnouncementForm.value = false; announcementForm.reset(); announcementForm.clearErrors(); });
+const requestEventClose = useConfirmedDialogClose(eventForm, () => { showEventForm.value = false; eventForm.reset(); eventForm.clearErrors(); });
 </script>
 
 <template>
@@ -185,7 +197,7 @@ const markRead = (notification: NotificationItem) => {
 
                 <div v-else class="comm-list">
                     <div class="list-heading"><div><h2>Notifikasi Anda</h2><p>Pilih notifikasi untuk menandainya telah dibaca.</p></div></div>
-                    <div class="notification-toolbar"><span>{{ unreadCount }} belum dibaca</span><AppButton variant="ghost" size="sm" v-if="unreadCount" type="button" class="text-button" @click="router.post('/komunikasi/notifikasi/baca-semua')">Tandai semua dibaca</AppButton></div>
+                    <div class="notification-toolbar"><span>{{ unreadCount }} belum dibaca</span><AppButton variant="ghost" size="sm" v-if="unreadCount" type="button" class="text-button" @click="router.post(`${communicationBase}/notifikasi/baca-semua`)">Tandai semua dibaca</AppButton></div>
                     <button v-for="item in notifications" :key="item.id" type="button" class="notification-item" :class="{ unread: !item.read_at }" @click="markRead(item)">
                         <span class="notification-dot"></span><span><strong>{{ item.title }}</strong><small>{{ item.body }} · {{ formatDate(item.created_at) }}</small></span>
                     </button>
@@ -194,30 +206,30 @@ const markRead = (notification: NotificationItem) => {
             </section>
         </div>
 
-        <div v-if="showAnnouncementForm" ref="overlayRoot" class="modal-backdrop" @click.self="showAnnouncementForm = false">
+        <div v-if="showAnnouncementForm" ref="overlayRoot" class="modal-backdrop" @click.self="requestAnnouncementClose" @keydown.esc.stop.prevent="requestAnnouncementClose">
             <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="announcement-title" @submit.prevent="submitAnnouncement">
-                <div class="modal-heading"><div><p class="eyebrow">Informasi baru</p><h2 id="announcement-title">Buat pengumuman</h2><p>Pengumuman langsung terbit. Notifikasi dibuat untuk akun aktif yang sesuai sasaran; jumlah penerima ditampilkan setelah terbit.</p></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir pengumuman" @click="showAnnouncementForm = false">×</AppButton></div>
-                <label>Judul <input v-model="announcementForm.title" required maxlength="180" placeholder="Contoh: Jadwal pembagian rapor" /><small v-if="announcementForm.errors.title" class="form-error">{{ announcementForm.errors.title }}</small></label>
+                <div class="modal-heading"><div><p class="eyebrow">Informasi baru</p><h2 id="announcement-title">Buat pengumuman</h2><p>Pengumuman langsung terbit. Notifikasi dibuat untuk akun aktif yang sesuai sasaran; jumlah penerima ditampilkan setelah terbit.</p></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir pengumuman" @click="requestAnnouncementClose">×</AppButton></div>
+                <label>Judul <input v-model="announcementForm.title" required maxlength="180" placeholder="Jadwal pembagian rapor" /><small v-if="announcementForm.errors.title" class="form-error">{{ announcementForm.errors.title }}</small></label>
                 <label>Isi pengumuman <textarea v-model="announcementForm.body" required rows="5" placeholder="Tuliskan informasi yang perlu diketahui penerima." /><small v-if="announcementForm.errors.body" class="form-error">{{ announcementForm.errors.body }}</small></label>
                 <div class="form-grid"><label>Sasaran<select v-model="announcementForm.audience_role"><option v-for="option in audienceOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select><small v-if="announcementForm.errors.audience_role" class="form-error">{{ announcementForm.errors.audience_role }}</small></label><label>Rombel (opsional)<select v-model="announcementForm.class_group_id" :disabled="!classAllowed(announcementForm.audience_role)"><option value="">Semua rombel</option><option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option></select><small v-if="announcementForm.errors.class_group_id" class="form-error">{{ announcementForm.errors.class_group_id }}</small></label></div>
                 <p class="form-hint">Jika memilih rombel, penerima dibatasi pada siswa terdaftar dan guru yang memiliki penugasan mengajar di rombel tersebut. Sasaran orang tua dan kepala sekolah berlaku untuk seluruh sekolah.</p>
                 <div class="form-grid"><label>Berlaku sampai (opsional)<input v-model="announcementForm.expires_at" type="datetime-local" /><small v-if="announcementForm.errors.expires_at" class="form-error">{{ announcementForm.errors.expires_at }}</small></label><label>Lampiran (opsional)<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="handleAttachment" /><small>PDF, Word, Excel, atau gambar · maks. 10 MB</small><small v-if="announcementForm.errors.attachment" class="form-error">{{ announcementForm.errors.attachment }}</small></label></div>
                 <p v-if="announcementForm.hasErrors" class="form-error" role="alert">Periksa kolom yang ditandai sebelum menerbitkan.</p>
-                <div class="modal-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="announcementForm.processing" @click="showAnnouncementForm = false">Batal</AppButton><AppButton variant="primary" :loading="announcementForm.processing" type="submit" class="primary-button" :disabled="announcementForm.processing">{{ announcementForm.processing ? 'Menerbitkan…' : 'Terbitkan pengumuman' }}</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="announcementForm.processing" @click="requestAnnouncementClose">Batal</AppButton><AppButton variant="primary" :loading="announcementForm.processing" type="submit" class="primary-button" :disabled="announcementForm.processing">{{ announcementForm.processing ? 'Menerbitkan…' : 'Terbitkan pengumuman' }}</AppButton></div>
             </form>
         </div>
 
-        <div v-if="showEventForm" ref="overlayRoot" class="modal-backdrop" @click.self="showEventForm = false">
+        <div v-if="showEventForm" ref="overlayRoot" class="modal-backdrop" @click.self="requestEventClose" @keydown.esc.stop.prevent="requestEventClose">
             <form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="event-title" @submit.prevent="submitEvent">
-                <div class="modal-heading"><div><p class="eyebrow">Kalender sekolah</p><h2 id="event-title">Tambah agenda</h2><p>Agenda tersimpan di halaman ini. Untuk mengirim notifikasi, buat pengumuman terpisah.</p></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir agenda" @click="showEventForm = false">×</AppButton></div>
-                <label>Nama agenda<input v-model="eventForm.title" required maxlength="180" placeholder="Contoh: Rapat orang tua" /><small v-if="eventForm.errors.title" class="form-error">{{ eventForm.errors.title }}</small></label>
+                <div class="modal-heading"><div><p class="eyebrow">Kalender sekolah</p><h2 id="event-title">Tambah agenda</h2><p>Agenda tersimpan di halaman ini. Untuk mengirim notifikasi, buat pengumuman terpisah.</p></div><AppButton variant="secondary" type="button" aria-label="Tutup formulir agenda" @click="requestEventClose">×</AppButton></div>
+                <label>Nama agenda<input v-model="eventForm.title" required maxlength="180" placeholder="Rapat orang tua" /><small v-if="eventForm.errors.title" class="form-error">{{ eventForm.errors.title }}</small></label>
                 <label>Keterangan (opsional)<textarea v-model="eventForm.description" rows="3" /><small v-if="eventForm.errors.description" class="form-error">{{ eventForm.errors.description }}</small></label>
                 <div class="form-grid"><label>Jenis<select v-model="eventForm.event_type"><option value="academic">Akademik</option><option value="exam">Ujian</option><option value="holiday">Libur</option><option value="meeting">Rapat</option><option value="activity">Kegiatan</option></select><small v-if="eventForm.errors.event_type" class="form-error">{{ eventForm.errors.event_type }}</small></label><label>Sasaran<select v-model="eventForm.audience_role"><option v-for="option in audienceOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select><small v-if="eventForm.errors.audience_role" class="form-error">{{ eventForm.errors.audience_role }}</small></label></div>
                 <div class="form-grid"><label>Mulai<input v-model="eventForm.starts_at" required type="datetime-local" /><small v-if="eventForm.errors.starts_at" class="form-error">{{ eventForm.errors.starts_at }}</small></label><label>Selesai (opsional)<input v-model="eventForm.ends_at" type="datetime-local" /><small v-if="eventForm.errors.ends_at" class="form-error">{{ eventForm.errors.ends_at }}</small></label></div>
                 <label>Rombel (opsional)<select v-model="eventForm.class_group_id" :disabled="!classAllowed(eventForm.audience_role)"><option value="">Semua rombel</option><option v-for="item in classes" :key="item.id" :value="item.id">{{ item.name }}</option></select><small v-if="eventForm.errors.class_group_id" class="form-error">{{ eventForm.errors.class_group_id }}</small></label>
                 <p class="form-hint">Sasaran orang tua dan kepala sekolah berlaku untuk seluruh sekolah.</p>
                 <p v-if="eventForm.hasErrors" class="form-error" role="alert">Periksa kolom yang ditandai sebelum menyimpan.</p>
-                <div class="modal-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="eventForm.processing" @click="showEventForm = false">Batal</AppButton><AppButton variant="primary" :loading="eventForm.processing" type="submit" class="primary-button" :disabled="eventForm.processing">{{ eventForm.processing ? 'Menyimpan…' : 'Simpan agenda' }}</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="eventForm.processing" @click="requestEventClose">Batal</AppButton><AppButton variant="primary" :loading="eventForm.processing" type="submit" class="primary-button" :disabled="eventForm.processing">{{ eventForm.processing ? 'Menyimpan…' : 'Simpan agenda' }}</AppButton></div>
             </form>
         </div>
     </AppLayout>

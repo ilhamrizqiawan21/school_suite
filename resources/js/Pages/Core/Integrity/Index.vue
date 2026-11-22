@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useUnsavedDialog } from '@/composables/useUnsavedDialog';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -24,7 +25,15 @@ const props = defineProps<{
         sop_category: string;
         areas: string[];
         service_options: string[];
+        questions: { id: string; label: string; weight: number }[];
+        answer_labels: Record<string, string>;
+        period: { id: string; label: string; starts_at: string | null; ends_at: string | null };
+        calculation_mode: 'weighted_mean' | 'simple_mean';
+        instrument_version: string;
+        config_revision: string;
+        is_open: boolean;
     };
+    schoolTimezone?: string;
     downloadCategories: Record<string, string>;
     can_manage: boolean;
 }>();
@@ -32,23 +41,51 @@ const props = defineProps<{
 const page = usePage<{ flash?: { message?: string } }>();
 const pendingDelete = ref<SurveyItem | null>(null);
 const deleting = ref(false);
+const pendingQuestionIndex = ref<number | null>(null);
+const localDateTime = (value: string | null) => {
+    if (!value) return '';
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: props.schoolTimezone || 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(value)).map((part) => [part.type, part.value]));
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
 
 const contentForm = useForm({
+    expected_revision: props.integrityConfig.config_revision,
     declaration: props.integrityConfig.declaration,
     sop_category: props.integrityConfig.sop_category,
     areasText: props.integrityConfig.areas.join('\n'),
     servicesText: props.integrityConfig.service_options.join('\n'),
+    questions: props.integrityConfig.questions.map((q) => ({ ...q })),
+    answer_labels: { ...props.integrityConfig.answer_labels },
+    calculation_mode: props.integrityConfig.calculation_mode,
+    period: { ...props.integrityConfig.period, starts_at: localDateTime(props.integrityConfig.period.starts_at), ends_at: localDateTime(props.integrityConfig.period.ends_at) },
 });
 
+const showContentEditor = ref(false);
+const { discardOpen, requestClose, discard } = useUnsavedDialog(contentForm, () => { contentForm.reset(); contentForm.clearErrors(); showContentEditor.value = false; });
 const saveContent = () => {
     contentForm.transform((data) => ({
+        expected_revision: data.expected_revision,
         declaration: data.declaration,
         sop_category: data.sop_category,
         areas: data.areasText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
         service_options: data.servicesText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean),
+        questions: data.questions, answer_labels: data.answer_labels, calculation_mode: data.calculation_mode,
+        period: { ...data.period, starts_at: data.period.starts_at || null, ends_at: data.period.ends_at || null },
     })).put('/pengaturan/zona-integritas/konten', {
         preserveScroll: true,
+        onSuccess: () => { contentForm.expected_revision = props.integrityConfig.config_revision; contentForm.defaults(); },
     });
+};
+
+const addQuestion = () => contentForm.questions.push({ id: crypto.randomUUID(), label: '', weight: 1 });
+const moveQuestion = (index: number, offset: number) => {
+    const next = index + offset;
+    if (next < 0 || next >= contentForm.questions.length) return;
+    [contentForm.questions[index], contentForm.questions[next]] = [contentForm.questions[next], contentForm.questions[index]];
+};
+const removeQuestion = () => {
+    if (pendingQuestionIndex.value !== null && contentForm.questions.length > 1) contentForm.questions.splice(pendingQuestionIndex.value, 1);
+    pendingQuestionIndex.value = null;
 };
 
 const moderate = (survey: SurveyItem, approved: boolean) => {
@@ -87,13 +124,16 @@ const confirmDelete = () => {
                         <span>Responden Disetujui</span>
                         <strong>{{ summary.total_responses }}</strong>
                     </div>
+                    <AppButton variant="secondary" as="a" href="/pengaturan/zona-integritas/ekspor" icon="excel" icon-only title="Unduh rekap IKM dalam CSV" aria-label="Unduh rekap IKM dalam CSV">Ekspor CSV</AppButton>
                     <AppButton variant="secondary" as="a" href="/zona-integritas" target="_blank" rel="noreferrer">Lihat halaman publik</AppButton>
                 </div>
             </section>
 
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
 
-            <section class="panel integrity-panel">
+            <section class="panel integrity-panel"><div class="admin-form-header"><h2>Konfigurasi Zona Integritas dan IKM</h2><AppButton v-if="can_manage" variant="primary" type="button" @click="showContentEditor = true">Ubah konfigurasi IKM</AppButton></div><p>{{ integrityConfig.period.label }} · {{ integrityConfig.questions.length }} unsur penilaian</p></section>
+            <Teleport to="body"><div v-if="showContentEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-labelledby="integrity-editor-title" @click.self="requestClose" @keydown.esc.prevent="requestClose">
+            <section class="panel integrity-panel admin-form-dialog"><header class="admin-form-header"><h2 id="integrity-editor-title">Konfigurasi Zona Integritas dan IKM</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup konfigurasi IKM" title="Tutup konfigurasi IKM" :disabled="contentForm.processing" @click="requestClose" /></header>
                 <form class="content-form" @submit.prevent="saveContent">
                     <h2>Konten maklumat & area perubahan Zona Integritas</h2>
                     <div class="form-grid">
@@ -116,6 +156,31 @@ const confirmDelete = () => {
                             <textarea v-model="contentForm.servicesText" rows="4"></textarea>
                         </label>
                     </div>
+                    <fieldset class="instrument-editor">
+                        <legend>Instrumen dan periode survei IKM</legend>
+                        <p>Perubahan hanya berlaku untuk jawaban baru. Pertanyaan dan bobot jawaban lama tetap tersimpan.</p>
+                        <div class="form-grid">
+                            <label><span>Kode periode *</span><input v-model="contentForm.period.id" required maxlength="80" pattern="[A-Za-z0-9_-]+" /></label>
+                            <label><span>Nama periode *</span><input v-model="contentForm.period.label" required maxlength="120" /></label>
+                            <label><span>Mulai menerima jawaban ({{ schoolTimezone || 'Asia/Jakarta' }})</span><input v-model="contentForm.period.starts_at" type="datetime-local" /></label>
+                            <label><span>Akhir penerimaan jawaban</span><input v-model="contentForm.period.ends_at" type="datetime-local" /></label>
+                            <label><span>Cara menghitung nilai</span><select v-model="contentForm.calculation_mode"><option value="weighted_mean">Rata-rata berbobot</option><option value="simple_mean">Rata-rata setiap unsur</option></select></label>
+                        </div>
+                        <article v-for="(question, index) in contentForm.questions" :key="question.id" class="instrument-question">
+                            <label><span>Unsur {{ index + 1 }} *</span><input v-model="question.label" required maxlength="240" /></label>
+                            <label><span>Bobot *</span><input v-model.number="question.weight" type="number" min="0.01" max="100" step="0.01" required /></label>
+                            <div class="flex gap-2">
+                                <AppButton type="button" variant="ghost" size="sm" :disabled="index === 0" @click="moveQuestion(index, -1)" aria-label="Pindah unsur ke atas">↑</AppButton>
+                                <AppButton type="button" variant="ghost" size="sm" :disabled="index === contentForm.questions.length - 1" @click="moveQuestion(index, 1)" aria-label="Pindah unsur ke bawah">↓</AppButton>
+                                <AppButton type="button" variant="danger" size="sm" :disabled="contentForm.questions.length === 1" @click="pendingQuestionIndex = index">Hapus unsur</AppButton>
+                            </div>
+                        </article>
+                        <AppButton type="button" variant="secondary" :disabled="contentForm.questions.length >= 20" @click="addQuestion">Tambah unsur penilaian</AppButton>
+                        <div class="form-grid">
+                            <label v-for="score in [5, 4, 3, 2, 1]" :key="score"><span>Label jawaban nilai {{ score }} *</span><input v-model="contentForm.answer_labels[String(score)]" required maxlength="100" /></label>
+                        </div>
+                    </fieldset>
+                    <div v-if="Object.keys(contentForm.errors).length" class="notice error" role="alert"><p v-for="(error, field) in contentForm.errors" :key="field">{{ error }}</p></div>
                     <div class="flex justify-end">
                         <AppButton variant="primary" type="submit" :loading="contentForm.processing" :disabled="contentForm.processing">
                             Simpan konten Zona Integritas
@@ -123,6 +188,8 @@ const confirmDelete = () => {
                     </div>
                 </form>
             </section>
+            </div></Teleport>
+            <ConfirmDialog :open="discardOpen" title="Buang perubahan IKM?" message="Perubahan konfigurasi yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discard" @cancel="discardOpen = false" />
 
             <section class="panel integrity-panel">
                 <h2>Antrean moderasi survei kepuasan masyarakat (IKM)</h2>
@@ -142,7 +209,7 @@ const confirmDelete = () => {
                             <tr v-for="item in surveys" :key="item.id">
                                 <td>
                                     <strong>{{ item.respondent_name }}</strong>
-                                    <small class="block text-xs text-slate-500">{{ item.respondent_role }}</small>
+                                    <small class="block text-xs text-[var(--ink-faint)]">{{ item.respondent_role }}</small>
                                 </td>
                                 <td class="text-center">{{ item.service_name }}</td>
                                 <td class="text-center"><strong>{{ item.rating }} / 5</strong></td>
@@ -196,11 +263,15 @@ const confirmDelete = () => {
                 @confirm="confirmDelete"
                 @cancel="pendingDelete = null"
             />
+            <ConfirmDialog :open="pendingQuestionIndex !== null" title="Hapus unsur penilaian?" message="Unsur akan dihapus dari instrumen baru. Jawaban lama tetap tersimpan bersama pertanyaannya." confirm-label="Hapus unsur" @confirm="removeQuestion" @cancel="pendingQuestionIndex = null" />
         </main>
     </AppLayout>
 </template>
 
 <style scoped>
+.instrument-editor { display: grid; gap: 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: 8px; }
+.instrument-question { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.instrument-editor legend { font-weight: 600; padding-inline: .5rem; }
 .integrity-admin-page { display: grid; gap: 1.25rem; max-width: 1100px; margin: auto; }
 .hero-card, .integrity-panel { padding: 1.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
 .hero-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -222,4 +293,10 @@ const confirmDelete = () => {
 .status-pill.pending { background: var(--gold-soft); color: var(--gold); }
 .empty-state { padding: 2.5rem 1rem; text-align: center; color: var(--ink-soft); }
 .notice.success { padding: .85rem 1rem; border-radius: 10px; background: var(--green-soft); color: var(--green); border: 1px solid var(--line); }
+
+.integrity-admin-page { width: 100%; min-width: 0; }
+.integrity-panel, .content-form, .instrument-editor, .instrument-question, .form-grid, .form-grid label { min-width: 0; }
+.hero-card > *, .instrument-editor legend { max-width: 100%; overflow-wrap: anywhere; }
+.form-grid input, .form-grid select, .form-grid textarea { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: minmax(0, 1fr); } .instrument-editor, .instrument-question { padding: .75rem; } }
 </style>

@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+  $schoolName = ($profile['name'] ?? null) ?: 'Sekolah';
   $q = trim((string) request()->query('q', ''));
   $selectedCategory = trim((string) request()->query('kategori', ''));
 
@@ -86,10 +86,10 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
       <div class="max-w-3xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-3">
-          <i class="fa-solid fa-newspaper text-accent-yellow"></i> Pusat Informasi &amp; Publikasi
+          <i class="fa-solid fa-newspaper text-accent-yellow"></i> {{ ($contentBlocks['copy.blade_news']['text_001'] ?? 'Pusat Informasi & Publikasi') }}
         </div>
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3">
-          Warta &amp; Kabar Madrasah
+          {{ ($contentBlocks['copy.blade_news']['text_002'] ?? 'Warta & Kabar Madrasah') }}
         </h1>
         <p class="text-sm sm:text-base text-emerald-100 leading-relaxed">
           Temukan liputan agenda sekolah, prestasi ilmiah, program adiwiyata, serta informasi terkini seputar civitas akademika {{ $schoolName }}.
@@ -101,10 +101,10 @@
           @endif
           <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="search" name="q" aria-label="Cari berita" value="{{ $q }}" placeholder="Cari judul berita, topik, kata kunci..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <input type="search" name="q" aria-label="{{ ($contentBlocks['copy.blade_news']['aria_label_009'] ?? 'Cari berita') }}" value="{{ $q }}" placeholder="{{ ($contentBlocks['copy.blade_news']['placeholder_010'] ?? 'Cari judul berita, topik, kata kunci...') }}" class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
           </div>
           <button type="submit" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm">
-            Cari <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            {{ ($contentBlocks['copy.blade_news']['text_003'] ?? 'Cari') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
           </button>
         </form>
       </div>
@@ -125,7 +125,7 @@
         @endforeach
       </div>
       <div class="text-xs text-slate-500">
-        Menampilkan <b>{{ count($articles) }}</b> warta berita
+        {{ ($contentBlocks['copy.blade_news']['text_004'] ?? 'Menampilkan') }} <b>{{ count($articles) }}</b> {{ ($contentBlocks['copy.blade_news']['text_005'] ?? 'warta berita') }}
       </div>
     </div>
 
@@ -137,7 +137,7 @@
               @if ($article['image'])
                 <img src="{{ $article['image'] }}" alt="{{ $article['title'] }}" class="w-full h-full object-cover hover:scale-105 transition duration-500">
               @else
-                <span class="news-reference-placeholder">Warta Madrasah</span>
+                <span class="news-reference-placeholder">{{ ($contentBlocks['copy.blade_news']['text_006'] ?? 'Warta Madrasah') }}</span>
               @endif
               <span class="news-reference-category absolute bottom-3 left-3 bg-kemenag-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">
                 {{ $categoryLabels[$article['category']] ?? $article['category'] }}
@@ -159,18 +159,18 @@
           <div class="px-6 pb-6 pt-0">
             @if ($article['slug'])
               <a href="{{ route('core.news.public.show', $article['slug']) }}" class="text-xs font-bold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1">
-                Baca Selengkapnya <i class="fa-solid fa-angle-right text-[10px]"></i>
+                {{ ($contentBlocks['copy.blade_news']['text_007'] ?? 'Baca Selengkapnya') }} <i class="fa-solid fa-angle-right text-[10px]"></i>
               </a>
             @else
               <button type="button" data-open-dialog="beritaModal" data-article="{{ json_encode($article) }}" class="text-xs font-bold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1">
-                Baca Selengkapnya <i class="fa-solid fa-angle-right text-[10px]"></i>
+                {{ ($contentBlocks['copy.blade_news']['text_007'] ?? 'Baca Selengkapnya') }} <i class="fa-solid fa-angle-right text-[10px]"></i>
               </button>
             @endif
           </div>
         </article>
       @empty
         <div class="col-span-full rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Belum ada berita yang cocok dengan filter pencarian Anda.
+          {{ ($contentBlocks['copy.blade_news']['text_008'] ?? 'Belum ada berita yang cocok dengan filter pencarian Anda.') }}
         </div>
       @endforelse
     </div>

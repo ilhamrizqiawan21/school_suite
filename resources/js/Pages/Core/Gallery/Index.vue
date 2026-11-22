@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useUnsavedDialog } from '@/composables/useUnsavedDialog';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -62,15 +63,18 @@ const selectPhotos = (event: Event) => {
     form.clearErrors('photos');
 };
 
+const initialForm = JSON.parse(JSON.stringify(form.data()));
 const reset = () => {
     showForm.value = false;
     editing.value = null;
+    form.defaults(structuredClone(initialForm));
     form.reset();
     form.clearErrors();
     clearPreviews();
     if (fileInput.value) fileInput.value.value = '';
 };
 
+const { discardOpen, requestClose, discard } = useUnsavedDialog(form, reset);
 const openCreate = () => {
     reset();
     showForm.value = true;
@@ -85,6 +89,7 @@ const edit = (album: GalleryAlbum) => {
     form.clearErrors();
     clearPreviews();
     if (fileInput.value) fileInput.value.value = '';
+    form.defaults();
     showForm.value = true;
 };
 
@@ -129,13 +134,16 @@ const videoForm = useForm({
     is_published: true,
 });
 
+const initialVideoForm = JSON.parse(JSON.stringify(videoForm.data()));
 const resetVideoForm = () => {
     showVideoForm.value = false;
     editingVideo.value = null;
+    videoForm.defaults(structuredClone(initialVideoForm));
     videoForm.reset();
     videoForm.clearErrors();
 };
 
+const { discardOpen: discardVideoOpen, requestClose: requestVideoClose, discard: discardVideo } = useUnsavedDialog(videoForm, resetVideoForm);
 const openCreateVideo = () => {
     resetVideoForm();
     showVideoForm.value = true;
@@ -152,6 +160,7 @@ const editVideo = (video: GalleryVideo) => {
     videoForm.is_featured = video.is_featured;
     videoForm.is_published = video.is_published;
     videoForm.clearErrors();
+    videoForm.defaults();
     showVideoForm.value = true;
 };
 
@@ -198,7 +207,7 @@ const confirmRemoveVideo = () => {
 
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
 
-            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title" class="modal-backdrop" @click.self="reset" @keydown.esc="reset">
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="gallery-modal-title" class="modal-backdrop" @click.self="requestClose" @keydown.esc="requestClose">
                 <form class="modal-card gallery-editor" @submit.prevent="submit">
                     <div class="section-heading">
                         <div>
@@ -206,16 +215,16 @@ const confirmRemoveVideo = () => {
                             <h2 id="gallery-modal-title">{{ editing ? 'Perbarui momen sekolah' : 'Tambahkan momen sekolah' }}</h2>
                             <p>Satu judul dapat memuat maksimal 4 foto dengan ukuran total maksimal 5 MB.</p>
                         </div>
-                        <AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir galeri" @click="reset">×</AppButton>
+                        <AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir galeri" @click="requestClose">×</AppButton>
                     </div>
                     <div class="gallery-fields">
                         <label class="wide"><span>Foto{{ editing ? ' pengganti (opsional)' : '' }}</span><span class="file-picker"><input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple :required="!editing" @change="selectPhotos" /><span class="file-picker-button">{{ form.photos.length ? `${form.photos.length} foto dipilih` : 'Pilih foto' }}</span><span class="file-picker-name">{{ form.photos.length ? form.photos.map((file) => file.name).join(', ') : 'Maksimal 4 foto · total 5 MB' }}</span></span><small>JPG, PNG, atau WebP. Pilihan lebih dari 4 foto akan dipotong menjadi 4 foto pertama.</small><em v-if="form.errors.photos">{{ form.errors.photos }}</em></label>
                         <div v-if="previewUrls.length" class="selected-previews wide"><figure v-for="(url, index) in previewUrls" :key="url"><img :src="url" :alt="form.photos[index]?.name || `Pratinjau foto ${index + 1}`" /><figcaption>Foto {{ index + 1 }}</figcaption></figure></div>
-                        <label><span>Judul grup foto</span><input v-model="form.title" maxlength="120" placeholder="Contoh: Kegiatan belajar di laboratorium" required /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
+                        <label><span>Judul grup foto</span><input v-model="form.title" maxlength="120" placeholder="Kegiatan belajar di laboratorium" required /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
                         <label><span>Keterangan grup</span><textarea v-model="form.caption" rows="3" maxlength="255" placeholder="Keterangan singkat untuk pengunjung portofolio."></textarea><em v-if="form.errors.caption">{{ form.errors.caption }}</em></label>
                         <label class="publish-choice"><input v-model="form.is_published" type="checkbox" /><span><strong>Tampilkan di portofolio</strong><small>Grup yang tidak dicentang hanya tersimpan di panel admin.</small></span></label>
                     </div>
-                    <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambahkan ke galeri' }}</AppButton></div>
+                    <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="requestClose">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambahkan ke galeri' }}</AppButton></div>
                 </form>
             </div>
 
@@ -261,14 +270,14 @@ const confirmRemoveVideo = () => {
                 <div v-else class="empty-state"><strong>Belum ada video dokumentasi</strong><p>Tambahkan video profil, kegiatan, prestasi, atau keagamaan untuk halaman `/galeri/video`.</p></div>
             </section>
 
-            <div v-if="showVideoForm" role="dialog" aria-modal="true" aria-labelledby="video-modal-title" class="modal-backdrop" @click.self="resetVideoForm" @keydown.esc="resetVideoForm">
+            <div v-if="showVideoForm" role="dialog" aria-modal="true" aria-labelledby="video-modal-title" class="modal-backdrop" @click.self="requestVideoClose" @keydown.esc="requestVideoClose">
                 <form class="modal-card gallery-editor" @submit.prevent="submitVideo">
                     <div class="section-heading">
                         <div>
                             <p class="eyebrow">{{ editingVideo ? 'Edit video' : 'Tambah video' }}</p>
                             <h2 id="video-modal-title">{{ editingVideo ? 'Perbarui video galeri' : 'Tambahkan video dokumentasi' }}</h2>
                         </div>
-                        <AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir video" @click="resetVideoForm">×</AppButton>
+                        <AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir video" @click="requestVideoClose">×</AppButton>
                     </div>
                     <div class="gallery-fields">
                         <label class="wide"><span>Judul video *</span><input v-model="videoForm.title" maxlength="160" required /><em v-if="videoForm.errors.title">{{ videoForm.errors.title }}</em></label>
@@ -282,7 +291,7 @@ const confirmRemoveVideo = () => {
                             </select>
                             <em v-if="videoForm.errors.category">{{ videoForm.errors.category }}</em>
                         </label>
-                        <label><span>Label tanggal rilis</span><input v-model="videoForm.date" maxlength="40" placeholder="Contoh: 11 Oct 2026" /><em v-if="videoForm.errors.date">{{ videoForm.errors.date }}</em></label>
+                        <label><span>Label tanggal rilis</span><input v-model="videoForm.date" maxlength="40" placeholder="11 Oct 2026" /><em v-if="videoForm.errors.date">{{ videoForm.errors.date }}</em></label>
                         <label><span>Path / URL poster thumbnail *</span><input v-model="videoForm.poster" maxlength="500" required /><em v-if="videoForm.errors.poster">{{ videoForm.errors.poster }}</em></label>
                         <label><span>Path / URL berkas video (.webm / .mp4) *</span><input v-model="videoForm.src" maxlength="500" required /><em v-if="videoForm.errors.src">{{ videoForm.errors.src }}</em></label>
                         <label class="wide"><span>Deskripsi singkat</span><textarea v-model="videoForm.description" rows="2" maxlength="500"></textarea><em v-if="videoForm.errors.description">{{ videoForm.errors.description }}</em></label>
@@ -290,7 +299,7 @@ const confirmRemoveVideo = () => {
                         <label class="publish-choice"><input v-model="videoForm.is_published" type="checkbox" /><span><strong>Tampilkan di galeri video publik</strong><small>Video yang tidak dicentang hanya tersimpan sebagai draf di panel admin.</small></span></label>
                     </div>
                     <div class="form-actions">
-                        <AppButton variant="secondary" type="button" :disabled="videoForm.processing" @click="resetVideoForm">Batal</AppButton>
+                        <AppButton variant="secondary" type="button" :disabled="videoForm.processing" @click="requestVideoClose">Batal</AppButton>
                         <AppButton variant="primary" type="submit" :loading="videoForm.processing" :disabled="videoForm.processing">{{ editingVideo ? 'Simpan video' : 'Tambahkan video' }}</AppButton>
                     </div>
                 </form>
@@ -316,6 +325,8 @@ const confirmRemoveVideo = () => {
                 @cancel="pendingDeleteVideo = null"
             />
         </main>
+        <ConfirmDialog :open="discardVideoOpen" title="Buang perubahan video?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discardVideo" @cancel="discardVideoOpen = false" />
+        <ConfirmDialog :open="discardOpen" title="Buang perubahan?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discard" @cancel="discardOpen = false" />
     </AppLayout>
 </template>
 

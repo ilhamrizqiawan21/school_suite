@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import ButtonIcon from '@/components/ButtonIcon.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 interface QuickDetail {
     nik: string | null;
@@ -114,7 +116,7 @@ function submitImport() {
 
 function toggleQuickEdit(student: StudentRow) {
     if (editingStudentId.value === student.id) {
-        editingStudentId.value = null;
+        void requestQuickClose();
         return;
     }
     editingStudentId.value = student.id;
@@ -127,16 +129,23 @@ function toggleQuickEdit(student: StudentRow) {
     quickForm.diploma_number = student.quick_detail?.diploma_number || '';
     quickForm.accepted_grade = student.quick_detail?.accepted_grade || '';
     quickForm.accepted_date = student.quick_detail?.accepted_date || '';
+    quickForm.defaults();
 }
 
 function saveQuickEdit(studentId: number) {
     quickForm.put(`/akademik/buku-induk/${studentId}/detail`, {
         preserveScroll: true,
         onSuccess: () => {
+            quickForm.defaults();
             editingStudentId.value = null;
         },
     });
 }
+
+const showLedgerImportEditor = ref(false);
+const requestLedgerImportEditorClose = useConfirmedDialogClose(importForm, () => { showLedgerImportEditor.value = false; importForm.reset(); importForm.clearErrors(); });
+watch(() => importForm.wasSuccessful, (success) => { if (success) importForm.defaults(); });
+const requestQuickClose = useConfirmedDialogClose(quickForm, () => { editingStudentId.value = null; quickForm.reset(); quickForm.clearErrors(); });
 </script>
 
 <template>
@@ -162,12 +171,12 @@ function saveQuickEdit(studentId: number) {
             </section>
 
             <section class="panel ledger-panel">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
-                    <div class="text-sm font-semibold text-slate-700">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--surface)] px-4 py-3">
+                    <div class="text-sm font-semibold text-[var(--ink-soft)]">
                         Operasi Massal &amp; Cetakan Buku Induk
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <AppButton
+                        <AppButton icon="excel" keep-label
                             variant="secondary"
                             as="a"
                             class="secondary-button"
@@ -183,7 +192,7 @@ function saveQuickEdit(studentId: number) {
                         >
                             {{ showImportPanel ? 'Tutup Impor Excel' : 'Impor / Update Massal Excel' }}
                         </AppButton>
-                        <AppButton
+                        <AppButton icon="pdf" keep-label
                             v-if="students.data.length > 0"
                             variant="primary"
                             as="a"
@@ -197,22 +206,24 @@ function saveQuickEdit(studentId: number) {
                     </div>
                 </div>
 
-                <form
+                <AppButton v-if="showImportPanel" variant="primary" type="button" @click="showLedgerImportEditor = true">Impor buku induk</AppButton>
+<Teleport to="body"><div v-if="showLedgerImportEditor && (showImportPanel)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Impor buku induk" @click.self="requestLedgerImportEditorClose" @keydown.esc.stop.prevent="requestLedgerImportEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Impor buku induk</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup impor buku induk" title="Tutup formulir" :disabled="importForm.processing" @click="requestLedgerImportEditorClose" /></header>
+<form
                     v-if="showImportPanel"
-                    class="border-b border-slate-200 bg-blue-50/60 p-4"
+                    class="border-b border-[var(--line)] bg-blue-50/60 p-4"
                     @submit.prevent="submitImport"
                 >
                     <div class="flex flex-wrap items-end justify-between gap-4">
                         <div class="min-w-[260px] flex-1">
-                            <p class="text-sm font-bold text-slate-900">Impor / Perbarui Buku Induk Massal (.xlsx / .csv)</p>
-                            <p class="mt-0.5 text-xs text-slate-600">
+                            <p class="text-sm font-bold text-[var(--ink)]">Impor / Perbarui Buku Induk Massal (.xlsx / .csv)</p>
+                            <p class="mt-0.5 text-xs text-[var(--ink-soft)]">
                                 Unduh terlebih dahulu file dari tombol <strong>Ekspor / Template Excel (.xlsx)</strong>, lengkapi kolom NIK, No. KK, Orang Tua, Sekolah Asal, atau Ijazah, lalu unggah kembali. Pencocokan otomatis menggunakan <strong>NIS</strong>.
                             </p>
                             <input
                                 type="file"
                                 accept=".xlsx,.csv,.txt"
                                 required
-                                class="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1"
+                                class="mt-2 block w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--ink)] file:mr-3 file:rounded-md file:border-0 file:bg-[var(--surface-strong)] file:px-3 file:py-1"
                                 @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null"
                             />
                             <p v-if="importForm.errors.file" class="mt-1 text-xs font-semibold text-red-700">{{ importForm.errors.file }}</p>
@@ -225,6 +236,7 @@ function saveQuickEdit(studentId: number) {
                         </div>
                     </div>
                 </form>
+</div></div></Teleport>
 
                 <form class="ledger-filterbar" @submit.prevent="applyFilters">
                     <label class="ledger-filter-field">
@@ -278,17 +290,17 @@ function saveQuickEdit(studentId: number) {
                             <template v-for="student in students.data" :key="student.id">
                                 <tr>
                                     <td class="px-5 py-3.5">
-                                        <strong class="block font-semibold text-slate-900">{{ student.name }}</strong>
-                                        <span class="mt-0.5 block text-meta text-slate-600">
+                                        <strong class="block font-semibold text-[var(--ink)]">{{ student.name }}</strong>
+                                        <span class="mt-0.5 block text-meta text-[var(--ink-soft)]">
                                             {{ student.gender === 'L' ? 'Laki-laki' : 'Perempuan' }}
                                             <span v-if="student.parent_name"> · Wali: {{ student.parent_name }}</span>
                                         </span>
                                     </td>
-                                    <td class="px-5 py-3.5 text-sm text-slate-700">
+                                    <td class="px-5 py-3.5 text-sm text-[var(--ink-soft)]">
                                         {{ student.nis }}
-                                        <span class="mt-0.5 block text-meta text-slate-600">NISN {{ student.nisn || '—' }}</span>
+                                        <span class="mt-0.5 block text-meta text-[var(--ink-soft)]">NISN {{ student.nisn || '—' }}</span>
                                     </td>
-                                    <td class="px-5 py-3.5 text-slate-700">{{ student.class_name || 'Belum ada rombel aktif' }}</td>
+                                    <td class="px-5 py-3.5 text-[var(--ink-soft)]">{{ student.class_name || 'Belum ada rombel aktif' }}</td>
                                     <td class="px-5 py-3.5 text-center">
                                         <span
                                             class="rounded-full px-2.5 py-1 text-meta font-semibold"
@@ -313,10 +325,10 @@ function saveQuickEdit(studentId: number) {
                                     <td class="px-5 py-3.5 text-center">
                                         <div class="inline-flex flex-wrap items-center justify-center gap-1.5">
                                             <Link
-                                                class="ledger-profile-action ui-button ui-button--secondary ui-button--md"
+                                                class="ledger-profile-action ui-button ui-button--secondary ui-button--sm ui-button--icon-only" title="Lihat profil siswa" :aria-label="`Lihat profil ${student.name}`"
                                                 :href="`/akademik/buku-induk/${student.id}`"
                                             >
-                                                Lihat profil
+                                                <ButtonIcon name="view" />
                                             </Link>
                                             <button
                                                 type="button"
@@ -325,79 +337,79 @@ function saveQuickEdit(studentId: number) {
                                             >
                                                 {{ editingStudentId === student.id ? 'Tutup' : 'Isi cepat' }}
                                             </button>
-                                            <a
+                                            <AppButton icon="pdf" as="a"
                                                 class="ui-button ui-button--secondary ui-button--md text-xs"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 :href="`/akademik/buku-induk/${student.id}/pdf`"
                                             >
                                                 Pratinjau PDF
-                                            </a>
+                                            </AppButton>
                                         </div>
                                     </td>
                                 </tr>
                                 <tr v-if="editingStudentId === student.id" class="bg-slate-50/90">
                                     <td colspan="6" class="px-5 py-4">
-                                        <form class="grid gap-3 sm:grid-cols-4" @submit.prevent="saveQuickEdit(student.id)">
-                                            <div class="sm:col-span-4 flex items-center justify-between border-b border-slate-200 pb-2">
-                                                <strong class="text-xs uppercase tracking-wide text-slate-700">
+                                        <Teleport to="body"><div class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Isi cepat buku induk" @click.self="requestQuickClose" @keydown.esc.stop.prevent="requestQuickClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Isi cepat buku induk</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup isi cepat buku induk" :disabled="quickForm.processing" @click="requestQuickClose" /></header><form class="grid gap-3 sm:grid-cols-4" @submit.prevent="saveQuickEdit(student.id)">
+                                            <div class="sm:col-span-4 flex items-center justify-between border-b border-[var(--line)] pb-2">
+                                                <strong class="text-xs uppercase tracking-wide text-[var(--ink-soft)]">
                                                     Isi Cepat Buku Induk · {{ student.name }} (NIS {{ student.nis }})
                                                 </strong>
                                                 <Link :href="`/akademik/buku-induk/${student.id}`" class="text-xs font-semibold text-blue-700 hover:underline">
                                                     Buka formulir lengkap &amp; dokumen →
                                                 </Link>
                                             </div>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 NIK Siswa (16 digit)
-                                                <input v-model="quickForm.nik" maxlength="16" inputmode="numeric" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.nik" maxlength="16" inputmode="numeric" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                                 <span v-if="quickForm.errors.nik" class="text-xs text-red-700">{{ quickForm.errors.nik }}</span>
                                             </label>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 Nomor KK (16 digit)
-                                                <input v-model="quickForm.kk_number" maxlength="16" inputmode="numeric" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.kk_number" maxlength="16" inputmode="numeric" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                                 <span v-if="quickForm.errors.kk_number" class="text-xs text-red-700">{{ quickForm.errors.kk_number }}</span>
                                             </label>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 Nama Ayah
-                                                <input v-model="quickForm.father_name" maxlength="100" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.father_name" maxlength="100" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                             </label>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 Nama Ibu
-                                                <input v-model="quickForm.mother_name" maxlength="100" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.mother_name" maxlength="100" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                             </label>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 Sekolah Asal
-                                                <input v-model="quickForm.previous_school" maxlength="100" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.previous_school" maxlength="100" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                             </label>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 Nomor Ijazah Asal
-                                                <input v-model="quickForm.diploma_number" maxlength="50" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.diploma_number" maxlength="50" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                             </label>
-                                            <label class="grid gap-1 text-xs font-semibold text-slate-700">
+                                            <label class="grid gap-1 text-xs font-semibold text-[var(--ink-soft)]">
                                                 Diterima di Kelas
-                                                <input v-model="quickForm.accepted_grade" maxlength="30" placeholder="Contoh: VII / X" class="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm" />
+                                                <input v-model="quickForm.accepted_grade" maxlength="30" placeholder="VII / X" class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm" />
                                             </label>
                                             <div class="flex items-end justify-end gap-2">
                                                 <AppButton variant="primary" type="submit" :disabled="quickForm.processing">
                                                     {{ quickForm.processing ? 'Menyimpan…' : 'Simpan' }}
                                                 </AppButton>
-                                                <AppButton variant="secondary" type="button" @click="editingStudentId = null">Batal</AppButton>
+                                                <AppButton variant="secondary" type="button" @click="requestQuickClose">Batal</AppButton>
                                             </div>
-                                        </form>
+                                        </form></div></div></Teleport>
                                     </td>
                                 </tr>
                             </template>
                             <tr v-if="students.data.length === 0">
                                 <td colspan="6" class="px-5 py-14 text-center">
-                                    <strong class="block text-sm font-semibold text-slate-800">Data siswa tidak ditemukan</strong>
-                                    <span class="mt-1 block text-sm text-slate-600">Ubah kata kunci atau filter untuk melihat data lainnya.</span>
+                                    <strong class="block text-sm font-semibold text-[var(--ink)]">Data siswa tidak ditemukan</strong>
+                                    <span class="mt-1 block text-sm text-[var(--ink-soft)]">Ubah kata kunci atau filter untuk melihat data lainnya.</span>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3.5 text-meta text-slate-600">
+                <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] px-5 py-3.5 text-meta text-[var(--ink-soft)]">
                     <span>Menampilkan {{ students.from ?? 0 }}–{{ students.to ?? 0 }} dari {{ students.total }} siswa</span>
                     <nav class="flex flex-wrap gap-1" aria-label="Halaman daftar buku induk">
                         <template v-for="(link, index) in students.links" :key="index">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import AppButton from '@/components/AppButton.vue';
 import QrScanPanel from '@/components/QrScanPanel.vue';
 import FormField from '@/components/FormField.vue';
@@ -6,7 +7,7 @@ import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 interface GatePassSummary {
     id: number;
@@ -33,6 +34,7 @@ const props = defineProps<{
     passes: GatePassSummary[];
 }>();
 
+const showConfiguredPin = ref(false);
 const pinForm = useForm({
     pin: '',
 });
@@ -132,6 +134,10 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     if (status === 'rejected' || status === 'cancelled' || status === 'expired') return 'danger';
     return 'neutral';
 };
+
+const showGatePinEditor = ref(false);
+const requestGatePinEditorClose = useConfirmedDialogClose(configurePinForm, () => { showGatePinEditor.value = false; configurePinForm.reset(); configurePinForm.clearErrors(); });
+watch(() => configurePinForm.wasSuccessful, (success) => { if (success) configurePinForm.defaults(); });
 </script>
 
 <template>
@@ -152,9 +158,11 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </AppButton>
             </header>
 
-            <details v-if="canConfigurePin" class="security-pin-configuration rounded-xl border border-slate-200 bg-white p-5">
+            <details v-if="canConfigurePin" class="security-pin-configuration rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                 <summary>Konfigurasi PIN Pos Jaga</summary>
-                <form @submit.prevent="savePinSetting" class="flex flex-wrap items-end gap-3">
+                <AppButton variant="primary" type="button" @click="showGatePinEditor = true">Ubah PIN pos jaga</AppButton>
+<Teleport to="body"><div v-if="showGatePinEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Ubah PIN pos jaga" @click.self="requestGatePinEditorClose" @keydown.esc.stop.prevent="requestGatePinEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Ubah PIN pos jaga</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup ubah pin pos jaga" title="Tutup formulir" :disabled="configurePinForm.processing" @click="requestGatePinEditorClose" /></header>
+<form @submit.prevent="savePinSetting" class="flex flex-wrap items-end gap-3">
                     <div class="min-w-[220px] flex-1">
                         <FormField
                             id="security-post-pin-config"
@@ -162,30 +170,31 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             :error="configurePinForm.errors.pin"
                             hint="Minimal 4 digit angka. Wajib dimasukkan petugas pos sebelum membuka panel validasi."
                         >
-                            <input
+                            <div class="password-field">                            <input
                                 id="security-post-pin-config"
                                 v-model="configurePinForm.pin"
-                                type="password"
+                                :type="showConfiguredPin ? 'text' : 'password'"
                                 inputmode="numeric"
-                                placeholder="Contoh: 2468"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                            />
+                                placeholder="2468"
+                                class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
+                            /><AppButton type="button" icon="view" icon-only :aria-label="showConfiguredPin ? 'Sembunyikan PIN baru' : 'Tampilkan PIN baru'" :title="showConfiguredPin ? 'Sembunyikan PIN baru' : 'Tampilkan PIN baru'" :aria-pressed="showConfiguredPin" @click="showConfiguredPin = !showConfiguredPin" /></div>
                         </FormField>
                     </div>
                     <AppButton type="submit" :disabled="configurePinForm.processing">
                         {{ hasPin ? 'Perbarui PIN' : 'Simpan PIN Pos Jaga' }}
                     </AppButton>
                 </form>
+</div></div></Teleport>
             </details>
 
-            <div v-if="!unlocked" class="operations-pin-panel mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+            <div v-if="!unlocked" class="operations-pin-panel mx-auto max-w-md rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-sm space-y-5">
                 <div class="text-center space-y-1">
                     <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 7v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V7l-8-4Z"/><path d="m9.5 12 1.7 1.7 3.8-3.8"/></svg>
                     </div>
-                    <h2 class="text-lg font-extrabold tracking-wide text-slate-900 uppercase">AKSES POS JAGA</h2>
-                    <p class="text-xs font-semibold text-slate-500">Scan Kartu Izin Siswa di Gerbang</p>
-                    <p class="text-xs text-slate-400">Masukkan PIN Keamanan Satpam</p>
+                    <h2 class="text-lg font-extrabold tracking-wide text-[var(--ink)] uppercase">AKSES POS JAGA</h2>
+                    <p class="text-xs font-semibold text-[var(--ink-faint)]">Scan Kartu Izin Siswa di Gerbang</p>
+                    <p class="text-xs text-[var(--ink-faint)]">Masukkan PIN Keamanan Satpam</p>
                 </div>
 
                 <div
@@ -197,7 +206,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 </div>
 
                 <div class="space-y-4">
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center font-mono text-2xl tracking-[0.4em] text-slate-900">
+                    <div class="rounded-xl border border-[var(--line)] bg-[var(--surface-subtle)] px-4 py-3 text-center font-mono text-2xl tracking-[0.4em] text-[var(--ink)]">
                         {{ pinForm.pin ? '•'.repeat(pinForm.pin.length) : '' }}
                     </div>
                     <p v-if="pinForm.errors.pin" class="text-center text-sm font-medium text-rose-600">
@@ -209,7 +218,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             v-for="digit in ['1', '2', '3', '4', '5', '6', '7', '8', '9']"
                             :key="digit"
                             type="button"
-                            class="rounded-xl border border-slate-200 bg-white py-3 text-lg font-bold text-slate-900 hover:bg-slate-100"
+                            class="rounded-xl border border-[var(--line)] bg-[var(--surface)] py-3 text-lg font-bold text-[var(--ink)] hover:bg-[var(--surface-strong)]"
                             @click="appendDigit(digit)"
                         >
                             {{ digit }}
@@ -224,7 +233,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         </button>
                         <button
                             type="button"
-                            class="rounded-xl border border-slate-200 bg-white py-3 text-lg font-bold text-slate-900 hover:bg-slate-100"
+                            class="rounded-xl border border-[var(--line)] bg-[var(--surface)] py-3 text-lg font-bold text-[var(--ink)] hover:bg-[var(--surface-strong)]"
                             @click="appendDigit('0')"
                         >
                             0
@@ -241,15 +250,15 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     </div>
 
                     <div class="text-center pt-1">
-                        <a href="/" class="text-xs font-medium text-slate-500 hover:text-slate-800">← Batal &amp; Kembali ke Beranda</a>
+                        <a href="/" class="text-xs font-medium text-[var(--ink-faint)] hover:text-[var(--ink)]">← Batal &amp; Kembali ke Beranda</a>
                     </div>
                 </div>
             </div>
 
             <div v-else class="space-y-6">
-                <div class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+                <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
                     <div class="operations-scan-panel">
-                        <h2 class="text-base font-semibold text-slate-900">Pindai / Input Kode Pass Gerbang</h2>
+                        <h2 class="text-base font-semibold text-[var(--ink)]">Pindai / Input Kode Pass Gerbang</h2>
                         <p>Validasi surat jalan keluar atau kembali ke madrasah.</p>
                         <QrScanPanel @detected="scanCode = $event" />
                     </div>
@@ -261,14 +270,14 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                     id="pos-scan-code"
                                     v-model="scanCode"
                                     type="text"
-                                    placeholder="Contoh: GP-ABCD1234"
-                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm uppercase"
+                                    placeholder="GP-ABCD1234"
+                                    class="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-mono text-sm uppercase"
                                     @keydown.enter.prevent="submitScan"
                                 />
                             </FormField>
                         </div>
                         <FormField id="pos-scan-mode" label="Mode Validasi">
-                            <select id="pos-scan-mode" v-model="scanMode" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <select id="pos-scan-mode" v-model="scanMode" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                                 <option value="auto">Otomatis (Keluar / Kembali)</option>
                                 <option value="exit">Catat Keluar Gerbang</option>
                                 <option value="return">Catat Kembali ke Sekolah</option>
@@ -280,7 +289,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                 v-model="handoverNotes"
                                 type="text"
                                 placeholder="Nama penjemput / catatan"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                             />
                         </FormField>
                     </div>
@@ -310,8 +319,8 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
-                    <h2 class="text-base font-semibold text-slate-900">Antrean Pass Aktif & Terbaru</h2>
+                <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
+                    <h2 class="text-base font-semibold text-[var(--ink)]">Antrean Pass Aktif & Terbaru</h2>
 
                     <StateFeedback
                         v-if="livePasses.length === 0"
@@ -322,7 +331,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                     <div v-else class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                            <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                                 <tr>
                                     <th class="px-3 py-2.5">Kode Pass</th>
                                     <th class="px-3 py-2.5">Siswa</th>
@@ -333,16 +342,16 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="pass in livePasses" :key="pass.id" class="hover:bg-slate-50/70">
-                                    <td class="px-3 py-3 font-mono text-xs font-bold text-slate-900">{{ pass.pass_code }}</td>
+                                    <td class="px-3 py-3 font-mono text-xs font-bold text-[var(--ink)]">{{ pass.pass_code }}</td>
                                     <td class="px-3 py-3">
-                                        <p class="font-medium text-slate-900">{{ pass.student_name }}</p>
-                                        <p class="text-xs text-slate-500">{{ pass.student_nis }} • {{ pass.class_name }}</p>
+                                        <p class="font-medium text-[var(--ink)]">{{ pass.student_name }}</p>
+                                        <p class="text-xs text-[var(--ink-faint)]">{{ pass.student_nis }} • {{ pass.class_name }}</p>
                                     </td>
                                     <td class="px-3 py-3">
-                                        <p class="text-slate-800">{{ pass.reason }}</p>
-                                        <p v-if="pass.handover_notes" class="text-xs text-slate-500">Serah terima: {{ pass.handover_notes }}</p>
+                                        <p class="text-[var(--ink)]">{{ pass.reason }}</p>
+                                        <p v-if="pass.handover_notes" class="text-xs text-[var(--ink-faint)]">Serah terima: {{ pass.handover_notes }}</p>
                                     </td>
-                                    <td class="px-3 py-3 text-xs text-slate-600">
+                                    <td class="px-3 py-3 text-xs text-[var(--ink-soft)]">
                                         <p>Berlaku: {{ pass.valid_from }} — {{ pass.valid_until }}</p>
                                         <p v-if="pass.exit_recorded_at">Keluar: {{ pass.exit_recorded_at }}</p>
                                         <p v-if="pass.return_recorded_at" class="text-emerald-700">Kembali: {{ pass.return_recorded_at }}</p>

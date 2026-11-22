@@ -62,11 +62,11 @@ const submitReject = () => {
 
         <div class="space-y-6">
             <div>
-                <h1 class="text-xl font-bold text-slate-900">Moderasi Profil Alumni, Tracer &amp; E-KTA</h1>
-                <p class="text-sm text-slate-600">Setujui publikasi profil alumni ke direktori dan terbitkan Kartu Alumni Elektronik (E-KTA).</p>
+                <h1 class="text-xl font-bold text-[var(--ink)]">Moderasi Profil Alumni, Tracer &amp; E-KTA</h1>
+                <p class="text-sm text-[var(--ink-soft)]">Setujui publikasi profil alumni ke direktori dan terbitkan Kartu Alumni Elektronik (E-KTA).</p>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5">
+            <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                 <StateFeedback
                     v-if="profiles.length === 0"
                     state="empty"
@@ -76,7 +76,7 @@ const submitReject = () => {
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2.5 text-center">Alumni</th>
                                 <th class="px-3 py-2.5 text-center">Status &amp; Instansi</th>
@@ -89,11 +89,11 @@ const submitReject = () => {
                             <tr v-for="p in profiles" :key="p.id">
                                 <td class="px-3 py-3">
                                     <p class="font-medium">{{ p.full_name }}</p>
-                                    <p class="text-xs text-slate-500">Angkatan {{ p.graduation_year }} • E-KTA: {{ p.ekta_number || '-' }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">Angkatan {{ p.graduation_year }} • E-KTA: {{ p.ekta_number || '-' }}</p>
                                 </td>
                                 <td class="px-3 py-3 text-xs">
                                     <p>{{ statusLabels[p.current_status] || p.current_status }}</p>
-                                    <p class="text-slate-500">{{ p.institution_or_company || '-' }}</p>
+                                    <p class="text-[var(--ink-faint)]">{{ p.institution_or_company || '-' }}</p>
                                 </td>
                                 <td class="px-3 py-3 text-xs">
                                     {{ p.opt_in_directory ? 'Opt-In Publikasi' : 'Privat' }}
@@ -121,21 +121,21 @@ const submitReject = () => {
             @click.self="rejectingProfile = null"
             @keydown.esc="rejectingProfile = null"
         >
-            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 class="text-base font-bold text-slate-900">Tolak Moderasi Alumni</h3>
-                    <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="rejectingProfile = null">Tutup</button>
+            <div class="w-full max-w-md rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[var(--line)] pb-3">
+                    <h3 class="text-base font-bold text-[var(--ink)]">Tolak Moderasi Alumni</h3>
+                    <button type="button" class="text-sm text-[var(--ink-faint)] hover:text-[var(--ink-soft)]" @click="rejectingProfile = null">Tutup</button>
                 </div>
                 <form class="space-y-3" @submit.prevent="submitReject">
-                    <p class="text-xs text-slate-600">Alumni: <strong>{{ rejectingProfile.full_name }}</strong></p>
+                    <p class="text-xs text-[var(--ink-soft)]">Alumni: <strong>{{ rejectingProfile.full_name }}</strong></p>
                     <div>
-                        <label for="alumni-reject-note" class="block text-xs font-semibold text-slate-700">Alasan Penolakan</label>
+                        <label for="alumni-reject-note" class="block text-xs font-semibold text-[var(--ink-soft)]">Alasan Penolakan</label>
                         <textarea
                             id="alumni-reject-note"
                             v-model="rejectionNote"
                             rows="3"
                             required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="mt-1 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                         />
                     </div>
                     <div class="flex justify-end gap-2 pt-2">

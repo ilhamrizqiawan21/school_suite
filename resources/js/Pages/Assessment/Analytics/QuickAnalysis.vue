@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { computed, reactive, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { assessmentRequest, saveBlob } from '@/lib/assessment-http';
@@ -36,7 +37,7 @@ onMounted(async () => {
     try {
         const { draft } = await (await assessmentRequest('/penilaian/analisis/cepat/draft', undefined, 'GET')).json();
         if (draft && engine.validateDraft(draft).valid) {
-            if (confirm('Ada draf analisis yang belum diekspor. Lanjutkan draf?')) restore(draft);
+            if (await requestConfirmation('Ada draf analisis yang belum diekspor. Lanjutkan draf?')) restore(draft);
             else await assessmentRequest('/penilaian/analisis/cepat/draft', undefined, 'DELETE');
         }
     } catch (e) { errors.value = [(e as Error).message]; }
@@ -76,10 +77,10 @@ function applyKey() {
     errors.value = r.errors ?? [];
     if (r.valid) setup.kunci = r.kunci;
 }
-function changeSetup(event: Event, field: 'jumlahSoal' | 'pilihan') {
+async function changeSetup(event: Event, field: 'jumlahSoal' | 'pilihan') {
     const value = Number((event.target as HTMLInputElement).value);
     let r = engine.applySetupChange(snapshot(), { [field]: value });
-    if (r.needsConfirm && confirm(`Mengurangi soal akan membuang ${r.impact.kunciDibuang} kunci dan jawaban nomor terakhir. Lanjutkan?`)) {
+    if (r.needsConfirm && await requestConfirmation(`Mengurangi soal akan membuang ${r.impact.kunciDibuang} kunci dan jawaban nomor terakhir. Lanjutkan?`)) {
         r = engine.applySetupChange(snapshot(), { [field]: value, confirm: true });
     }
     if (r.ok) { Object.assign(setup, {jumlahSoal:r.state.jumlahSoal,pilihan:r.state.pilihan,kunci:r.state.kunci}); students.value = r.state.siswa; errors.value = []; }
@@ -116,9 +117,9 @@ async function importFile(event: Event) {
     });
     input.value = '';
 }
-function confirmImport() {
+async function confirmImport() {
     const p = importPreview.value; if (!p) return;
-    if (students.value.some(s => s.jawaban) && !confirm('Ganti tes dan jawaban yang sudah diisi dengan data impor?')) return;
+    if (students.value.some(s => s.jawaban) && !await requestConfirmation('Ganti tes dan jawaban yang sudah diisi dengan data impor?')) return;
     const rows = p.validation.rows;
     restore({...p.candidate, siswa:rows.map((s:any)=>({absen:s.absen,jawaban:s.jawaban.map((v:any)=>v ?? '.').join('')})),langkah:2});
     if (!setupValid.value) step.value = 1;
@@ -143,7 +144,7 @@ async function exportPdf() {
     });
 }
 async function newTest() {
-    if (!confirm('Mulai tes baru? Ekspor Excel terlebih dahulu untuk menyimpan salinan tes ini.')) return;
+    if (!await requestConfirmation('Mulai tes baru? Ekspor Excel terlebih dahulu untuk menyimpan salinan tes ini.')) return;
     await run(async () => { await clearDraft(); draftReady.value=false; Object.assign(setup,blank());students.value=[{absen:'1',jawaban:''}];step.value=1;result.value=null;keyText.value='';await Promise.resolve();draftReady.value=true;draftStatus.value=''; });
 }
 </script>
@@ -156,7 +157,7 @@ async function newTest() {
   <section v-if="importPreview" class="panel import-preview" aria-label="Pratinjau impor"><h2>Pratinjau impor</h2><p>{{ importPreview.candidate.nama || 'Nama tes belum diisi' }} · {{ importPreview.candidate.jumlahSoal }} soal · {{ importPreview.validation.rows.length }} siswa valid</p><ul><li v-for="(e,i) in importPreview.errors" :key="i">Baris {{ e.baris ?? '—' }}: {{ e.pesan }}</li><li v-for="e in importPreview.validation.errors" :key="e">{{ e }}</li><li v-for="w in importPreview.warnings" :key="w">{{ w }}</li></ul><div class="actions"><AppButton variant="primary" class="primary-button" :disabled="!importPreview.validation.rows.length" @click="confirmImport">Impor baris valid</AppButton><AppButton variant="secondary" class="secondary-button" @click="importPreview=null">Batalkan</AppButton></div></section>
   <section v-if="step===1" class="panel analysis-panel">
    <h2>1. Siapkan tes dan kunci</h2>
-   <div class="setup"><label>Nama tes<input v-model="setup.nama" maxlength="100" placeholder="Contoh: PTS Ganjil"></label><label>Kelas<input v-model="setup.kelas" list="analysis-classes" maxlength="120" placeholder="Pilih atau ketik kelas"><datalist id="analysis-classes"><option v-for="c in classes" :key="c.name">{{ c.name }}</option></datalist></label><label>Jumlah soal (20–200)<input type="number" min="20" max="200" :value="setup.jumlahSoal" @change="changeSetup($event,'jumlahSoal')"></label><label>Pilihan jawaban<select :value="setup.pilihan" @change="changeSetup($event,'pilihan')"><option :value="3">A–C</option><option :value="4">A–D</option><option :value="5">A–E</option></select></label></div>
+   <div class="setup"><label>Nama tes<input v-model="setup.nama" maxlength="100" placeholder="PTS Ganjil"></label><label>Kelas<input v-model="setup.kelas" list="analysis-classes" maxlength="120" placeholder="Pilih atau ketik kelas"><datalist id="analysis-classes"><option v-for="c in classes" :key="c.name">{{ c.name }}</option></datalist></label><label>Jumlah soal (20–200)<input type="number" min="20" max="200" :value="setup.jumlahSoal" @change="changeSetup($event,'jumlahSoal')"></label><label>Pilihan jawaban<select :value="setup.pilihan" @change="changeSetup($event,'pilihan')"><option :value="3">A–C</option><option :value="4">A–D</option><option :value="5">A–E</option></select></label></div>
    <div class="paste-key"><label>Tempel kunci sekaligus<input v-model="keyText" placeholder="BADCAC… (spasi dan koma boleh)"></label><AppButton variant="secondary" type="button" class="secondary-button" @click="applyKey">Terapkan kunci</AppButton></div>
    <div class="key-grid"><div v-for="(_,i) in setup.kunci" :key="i" class="key-cell"><strong>{{ i+1 }}</strong><div role="group" :aria-label="`Kunci soal ${i+1}`"><button v-for="l in letters" :key="l" :aria-pressed="setup.kunci[i]===l" @click="setup.kunci[i]=l">{{ l }}</button></div></div></div>
    <div class="actions"><label class="secondary-button file-label">Impor Excel / CSV<input type="file" accept=".xlsx,.csv" :disabled="busy" @change="importFile"></label><AppButton variant="primary" class="primary-button" :disabled="!setupValid || busy" @click="next">Lanjutkan →</AppButton></div>

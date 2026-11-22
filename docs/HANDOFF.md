@@ -2,6 +2,198 @@
 
 Dokumen kerja ini diisi ulang oleh Gemini untuk perubahan yang diserahkan untuk review.
 
+## Verifikasi silang Fase 1–5 — Codex — 22 November 2026
+
+Verifikasi terarah lintas seluruh paket berjalan tanpa full suite:
+
+- Fase 1–2: **100 tes lulus, 1.110 assertions**.
+- Fase 3: **45 tes lulus, 588 assertions**.
+- Fase 4: **71 tes lulus, 1.113 assertions**.
+- Fase 5: **49 tes lulus, 420 assertions**.
+- Total: **265 tes lulus, 3.231 assertions**.
+- Build Vite (**1.018 modul**), `vue-tsc --noEmit`, Pint, lint PHP terkait, security grep terarah, dan `git diff --check` lulus.
+
+Selama verifikasi ditemukan dan diperbaiki dua regresi: katalog Library tidak lagi mengimpor model Infrastructure lintas modul (pemeriksaan storage dipindah ke API Application `ServiceDocumentService::storedDocumentIds()`), dan middleware Inertia tidak melakukan lookup sekolah pada route private-file sehingga test/endpoint 403/404 tidak bergantung pada tabel sekolah.
+
+Full suite, uji browser/E2E penuh, provider eksternal nyata, dan drill operasional produksi tetap di luar verifikasi ini sesuai instruksi pengguna.
+
+## Lanjutan Fase 5 — AP-21.10 — Codex — 22 November 2026 — IN_PROGRESS
+
+Perbaikan ruang kerja Komunikasi:
+
+- `CommunicationController::index()` menghitung `unread_count` dari seluruh notifikasi milik pengguna, sementara payload daftar tetap dibatasi 50 item terbaru.
+- `Communication/Index.vue` memakai counter penuh, mengikuti `action_url` setelah menandai notifikasi dibaca, dan memakai `communicationBase` untuk aksi tandai semua sehingga workspace guru tidak kembali ke rute `/komunikasi` yang salah.
+- Regresi `CommunicationAuthorizationTest` memverifikasi 55 notifikasi unread menghasilkan counter 55 dan daftar 50 item, tanpa membuka notifikasi sekolah/pengguna lain (**4 tes lulus, 31 assertions**).
+
+AP-21.10 masih `OPEN` untuk badge global di shell, pencarian internal, collapse menu, dan pergantian role/periode. Full suite tidak dijalankan tanpa instruksi terpisah.
+
+## Lanjutan Fase 4 — AP-18.12 — Codex — 22 November 2026 — IN_PROGRESS
+
+Edge case berkas e-book hilang ditutup pada sumber katalog, tanpa migrasi atau dependency baru:
+
+- `LibraryService::searchCatalog()` memuat metadata `ServiceDocument` yang dirujuk koleksi dan memeriksa objek private yang benar-benar ada sebelum mengisi `has_ebook_file` atau URL unduh lokal.
+- Tautan provider eksternal tetap dapat dipakai sebagai fallback terkonfigurasi; ketika tidak ada fallback, item tampil sebagai koleksi tanpa materi digital yang dapat diunduh.
+- `source_status` menegaskan `school_suite_local_catalog` sebagai sumber kebenaran, SLiMS sebagai provider opsional, `fallback_active=true`, dan `missing_local_files` sebagai sinyal operasional agar pustakawan mengetahui ada berkas yang perlu dipulihkan.
+- `ServiceDocumentService::hasStoredDocument()` memusatkan pemeriksaan storage tanpa query per-item tambahan.
+
+Bukti: `php artisan test --compact tests/Feature/LibraryReplicaTest.php tests/Feature/ComplaintsAndLibraryTest.php` — **6 tes lulus, 157 assertions**; `vendor/bin/pint --dirty`, lint PHP terkait, dan `git diff --check` lulus. Full suite, uji provider SLiMS nyata, dan skenario edge-case AP-18.12 lainnya belum dijalankan tanpa instruksi terpisah.
+
+## Lanjutan Fase 2 — Codex — 22 November 2026 — READY_REVIEW
+
+Pengguna meminta pekerjaan dilanjutkan setelah Fase 1, dengan aturan pengujian dijalankan di akhir dan full suite menunggu instruksi terpisah. Serena tidak digunakan. Desain `/login` tetap menjadi pengecualian publik yang disetujui.
+
+Perubahan yang sedang diserahkan:
+
+- Menambah blok konten publik `school.programs`, `school.student_life`, dan `home.notice` pada registry `School`. Blok mengikuti editor rekursif, sanitasi backend, revisi, preview, publish, unpublish, dan jadwal yang sudah ada; tidak ada migrasi atau dependency baru.
+- Menampilkan item program/fasilitas dan kesiswaan hanya jika memiliki judul terisi. Item kesiswaan tidak menampilkan identitas siswa dan memiliki flag `show_student_names` yang default `false` sebagai pagar moderasi.
+- Menambahkan banner pengumuman terjadwal di shell Vue dan `public/madrasah/home.blade.php`; banner nonaktif secara default, rentang tanggal memakai timezone sekolah pada Blade, dan tautan publik dibatasi ke path internal atau HTTPS.
+- Mengirim `contentBlocks` secara eksplisit dari `SchoolProfileController` ke halaman `/program` dan `/kehidupan-siswa`.
+- Menyembunyikan dokumen pusat unduh yang file privatnya hilang dari listing publik, mempertahankan 404 pada endpoint unduh, serta menormalkan nama file kosong/berisi control character untuk unduhan Unicode yang aman.
+
+Bukti verifikasi akhir: PHP lint pada file PHP/Blade terkait, `npm run typecheck`, `npm run build` (1.018 modul), `vendor/bin/pint --dirty`, `git diff --check`, dan `php artisan test --compact tests/Feature/PublicPortalTest.php tests/Feature/PublicEditableContentTest.php tests/Feature/PublicContentLifecycleTest.php tests/Feature/SchoolGalleryTest.php` — **39 tes lulus, 501 assertions**. Full suite tidak dijalankan sesuai instruksi pengguna.
+
+Batas yang masih terbuka: AP-05.03/05.05/05.09, AP-06.10, AP-07.09, dan AP-08.08 berstatus `READY_REVIEW` karena cakupannya lebih luas dari irisan implementasi ini; AP-08.08 sudah memiliki mapping modal, lightbox, bantuan, pustaka foto, unduhan/SOP, dan cetak, tetapi masih membutuhkan review kelengkapan produk. Tidak ada commit, deployment, perubahan `.env`, migrasi, dependency baru, atau penggunaan Serena.
+
+## Lanjutan Fase 3 — Codex — 22 November 2026 — READY_REVIEW
+
+AP-10.12 ditutup pada level implementasi menjadi `READY_REVIEW`. `ServiceDocumentService::issueGeneratedDocument()` sekarang menolak bytes kosong, memeriksa kegagalan storage, dan membersihkan file privat bila transaksi penerbitan gagal. Renderer PDF hasil PTSP membungkus error menjadi pesan pemulihan yang aman sehingga status/tiket tidak tersimpan setengah jalan. `SecurityHeadersMiddleware` mempertahankan `Cache-Control` eksplisit dari endpoint verifikasi surat, sehingga kontrak `no-store, private` tidak ditimpa header global.
+
+Verifikasi akhir: `php -l` pada file terkait, `vendor/bin/pint --dirty`, `git diff --check`, dan `php artisan test --compact tests/Feature/ParityFoundationTest.php tests/Feature/AdministrationCorrespondenceTest.php tests/Feature/PtspAndTataUsahaTest.php` — **39 tes lulus, 668 assertions**. Full suite dan provider/queue produksi tidak dijalankan tanpa instruksi terpisah.
+
+## Penyempurnaan Fase 1 — Codex — 22 November 2026 — IN_PROGRESS
+
+**Tujuan**: menutup kekurangan AP-01–AP-04 berdasarkan audit tanpa mengubah desain publik yang telah disetujui. Pengguna menyetujui mempertahankan desain `/login` sebagai pengecualian `D-02`/`AP-02.17`. Pengguna melarang Serena, meminta pengujian di akhir, serta memerlukan instruksi terpisah untuk full suite. Ketentuan ini berlaku untuk kelanjutan pekerjaan.
+
+**Hasil dan batas penerimaan**: 34/62 `VERIFIED`, 19 `READY_REVIEW`, 8 `IN_PROGRESS`, 1 `OPEN`. Jangan mengubah seluruh checkbox menjadi selesai hanya berdasarkan hasil build atau 25 tes terarah. Bagian historis di bawah mencatat batch sebelumnya, termasuk full suite; angka full suite tersebut bukan hasil pengujian ulang batch ini.
+
+### Perubahan yang diserahkan
+
+- **Akses** — `SidebarNavigationService` memakai Gate akun/sekolah dan `AdmissionsPolicy` untuk panitia aktif; principal melihat menu readonly yang sesuai endpoint, PTSP melihat korespondensi sesuai rute yang sudah ada. Pencabutan izin Core dan penugasan panitia mencabut menu serta akses langsung dalam sesi berjalan. Tidak menambahkan role/permission.
+- **Branding** — `SchoolController`/`School`, middleware Inertia dan `adminBranding.ts`: nama aplikasi nyata, lima warna semantic dengan ambang kontras putih 4,5:1, font system/serif, radius 6/8, density, navigasi active/expanded, preview/reset, favicon dan logo yang dapat dihapus. Hash revisi profil di bawah row lock menolak editor usang tanpa menimpa data. Identitas publik tetap memakai baseline warna kecuali toggle warna identitas diaktifkan.
+- **Dialog** — `ActionConfirmationHost`, `useActionConfirmation`, `useDialogAccessibility`, `bodyScrollLock`: konfirmasi/input tindakan asinkron, validasi input, fokus dan Tab trap, Escape, restore focus dan scroll lock berbasis pemilik. Host berada di root sehingga CBT/halaman mandiri ikut memperoleh konfirmasi. Form yang memakai `useConfirmedDialogClose` juga dijaga ketika navigasi GET/menutup tab; persetujuan meninggalkan halaman hanya berlaku untuk navigasi yang dikonfirmasi. Reload polling pada halaman sama tidak membatalkan dialog.
+- **CRUD** — profil sekolah, profil akun, IKM serta form perpustakaan, kartu/perangkat presensi, impor soal, kelulusan, lifecycle, SPMB, buku induk termasuk isi cepat, LMS termasuk pengumpulan tugas, proposal/LPJ, BK, piket dan PIN pos memakai overlay terpusat. Dialog lama yang disentuh memakai penjagaan perubahan belum tersimpan dan defaults edit yang benar. Grid presensi/nilai, chat composer dan keputusan status per baris tetap inline karena merupakan pekerjaan operasional, bukan formulir CRUD tambahan. Tidak membuat rute CRUD baru.
+- **Konten/media** — judul PTSP khusus memerlukan toggle; nilai kosong terkelola dipertahankan; ikon CTA memakai allowlist; metadata/canonical divalidasi dan tetap mengikuti publikasi; jadwal memakai timezone sekolah. Guru beranda dihitung dari guru aktif; persentase komitmen integritas adalah konten editorial berlabel jelas, bukan hasil IKM. Identitas demo tidak menjadi fallback produksi. Penggantian/penghapusan foto organisasi memakai transaksi, guard referensi draft/live/jadwal/histori dan cleanup setelah commit. Cache halaman publik/media wajib revalidate; halaman auth/preview no-store.
+- **Media orphan** — `php artisan school:media-orphans <school-id>` hanya memindai folder branding/galeri/berita/organisasi sekolah itu, mengabaikan file baru <24 jam dan seluruh referensi DB/settings. Default read-only. `--delete` memerlukan konfirmasi interaktif dan cadangan; tidak dijalankan terhadap media proyek dalam batch ini. Uji memakai filesystem fake.
+- **CSP** — nonce Inertia diselaraskan dengan nonce dokumen untuk style progress; tidak melonggarkan kebijakan CSP. Permukaan dan teks netral admin memakai token semantic; public/auth dikecualikan dari transformasi utility.
+
+### Matriks akses dan bukti yang tersedia
+
+Permission default bersumber dari `PermissionEnum::defaultForRole`; policy, status aktif, sekolah dan penugasan tetap mempersempit izin. Daftar ini memetakan tanggung jawab dan bukti, bukan mengklaim setiap aksi sudah diuji ulang. Admin tidak menghapus batas kepemilikan/sekolah pada object policy.
+
+| Role | Aksi/fitur yang dimaksud | Batas utama | GET akun/sekolah/galeri/keamanan pada fixture browser |
+|---|---|---|---|
+| admin | CRUD akun, konfigurasi, publikasi dan administrasi modul | Sekolah objek; larangan hapus diri | 200/200/200/200 |
+| operator | Lihat/buat akun, ubah sekolah, konten, administrasi akademik/layanan | Permission aktual; tidak otomatis ubah/hapus akun | 200/200/200/403 |
+| principal | Lihat akun/sekolah/audit; review, rilis/tanda tangan sesuai otoritas | Konfigurasi readonly; pemisahan verifikator | 200/200/403/200 |
+| teacher | Presensi, input nilai, LMS, ajukan proposal | Mapel/kelas ditugaskan; SPMB perlu penugasan | 403/403/403/403 |
+| homeroom | Presensi, catatan/disiplin, nilai/rapor, putuskan izin | Kelas/periode penugasan | 403/403/403/403 |
+| counselor | Catatan siswa, kelola/ekspor BK | Sekolah dan scope layanan | 403/403/403/403 |
+| librarian | Katalog, stok, konfirmasi pinjaman/pengembalian, usulan | Sekolah, stok atomik, permohonan terkait | 403/403/403/403 |
+| student | Belajar, ujian, izin dan proposal sendiri | Identitas siswa/kepemilikan | 403/403/403/403 |
+| parent | Ajukan izin anak terkait | Relasi anak terverifikasi | 403/403/403/403 |
+| alumni | Tracer/profil dan permohonan legalisir | Data/permohonan sendiri; bukan verifikator | 403/403/403/403 |
+| committee | Review kegiatan/SPMB | Penugasan panitia aktif | 403/403/403/403 |
+| ptsp | Lihat/proses PTSP, tamu, mutasi, legalisir | Verifikasi; tidak menerbitkan tanda tangan | 403/403/403/403 |
+| receptionist | Kelola buku tamu | Sekolah petugas | 403/403/403/403 |
+| picket | Putuskan izin, scan gerbang | Sekolah/status izin | 403/403/403/403 |
+| security_guard | Validasi gerbang | Izin valid; kredensial pos | 403/403/403/403 |
+| task_force | Lihat/tangani pengaduan | Penugasan kasus aktif | 403/403/403/403 |
+| signatory | Tanda tangan/rilis sesuai otoritas | Dokumen valid dan otoritas terpisah | 403/403/403/403 |
+
+Bukti kode/tes yang sudah ada: `CoreAuthorizationTest` (default deny, cross-school, akun nonaktif), `RoleMatrixAccessTest` (menu/endpoint, principal readonly, pencabutan izin), `AdmissionsControllersTest` (penugasan/revokasi/cross-school), `RouteAndPermissionStressTest` (aksi siswa/guru/wali/operator/principal/admin dan kelas), `DocumentIssuanceAuthorityTest` (verifikator vs penandatangan), `StudentLifecycleAndAlumniTest` (kepemilikan/lifecycle/status/dokumen). Hanya subset terarah di bawah dijalankan pada akhir batch; referensi tes lain bukan bukti rerun. Matriks fitur/aksi dan skenario negatif sudah tersedia untuk review (`AP-01.02/.12`); pembuktian penuh multirole, agregat/dropdown dan ekspor tetap `IN_PROGRESS` pada `AP-01.06/.07`.
+
+### Matriks fitur × aksi untuk review AP-01.02/AP-01.12
+
+Aksi yang tidak tersedia pada fitur tidak diada-adakan. `R` mencakup daftar/detail/pencarian; `W` mencakup buat/ubah/unggah; ekspor/unduh tetap melalui scope objek yang sama. Tabel memetakan kontrak yang harus diperiksa, bukan mengizinkan role melalui dokumentasi. Sumber otoritas tetap route → controller/policy → service yang disebutkan.
+
+| Fitur | R / pencarian | W / unggah | Aksi khusus / ekspor | Scope dan sumber otoritas |
+|---|---|---|---|---|
+| Akun internal | `core.users.view` | `.create`, `.update`, `.delete` terpisah | Role admin tidak dapat diberikan nonadmin; hapus diri ditolak | `UserPolicy`, `UserController`, sekolah objek |
+| Sekolah, tema, CMS | `SchoolPolicy::view`; principal readonly | `SchoolPolicy::update` | Draft/preview/publish/schedule/unpublish/restore; revisi wajib | `SchoolController`, row lock dan snapshot |
+| Galeri/berita/organisasi/unduhan/IKM | admin/operator | admin/operator | Publikasi/moderasi/hapus/ekspor IKM; media terpakai dilindungi | Route Core dan controller entitas, school_id |
+| Keamanan | admin/principal | admin | Blokir/cabut IP, tandai error selesai | `SecurityOperationsController`, principal readonly |
+| Siswa/guru/kelas/jadwal | Policy akademik dan role menu | admin/operator sesuai policy | Impor, template, reset sandi, ekspor Excel/PDF; jadwal terbit | Policy Student/Teacher/ClassGroup/Schedule dan tahun/kelas sekolah |
+| Buku induk | admin/operator | admin/operator | Dokumen/foto, impor, ekspor/cetak sesuai filter | `buku_induk.php`, controller buku induk |
+| Presensi/jurnal/kelas daring | teacher/homeroom; siswa kelas daring terkait | Guru/wali yang ditugaskan | Koreksi presensi, Word/PDF jurnal; principal rekap/ekspor | Rute Academic, lesson session/penugasan/kelas |
+| Presensi guru | admin/operator/teacher/homeroom | Pemilik atau pengelola sesuai aksi | Review izin, pengganti, rekap PDF | `teacher_operations.php` dan TeacherOperationsController |
+| Kartu/kios | admin/operator; petugas kios sesuai rute | admin/operator terbit/cabut kartu, daftar perangkat | Scan harus menolak kartu dicabut | StudentCardKioskController dan layanan presensi |
+| LMS | teacher/homeroom/student | Guru buat materi/tugas; siswa kirim sendiri | Nilai guru; unduhan dibatasi kelas/pemilik | `LearningPolicy`, LearningController |
+| Bank/paket/berbagi soal | teacher/homeroom | Pemilik membuat/versi/arsip/pulihkan | Impor/ekspor, salin, terima/tolak/cabut berbagi | Rute Assessment dan kepemilikan/share aktif |
+| Nilai/sikap/rapor/skema | Role rute dan AssessmentPolicy | Guru/wali pada penugasan; skema pengelola | Publish rapor melalui policy; ekspor mengikuti akses rapor | AssessmentAccessService, report snapshot dan periode |
+| CBT | Guru pengelola; siswa peserta | Pengelola ujian; jawaban milik attempt siswa | Publish, buka kunci, tambah waktu, paksa selesai, nilai esai, CSV | ExamController dan kepemilikan/roster/status |
+| Catatan/disiplin wali | homeroom | homeroom | Hapus catatan, tambah insiden/prestasi/bantuan | StudentNotePolicy dan kelas/periode wali |
+| Izin/piket/gerbang | Role rute sesuai tugas | Wali/piket putuskan; pos validasi | Koreksi/batal, token dispensasi, PIN pos; dokumen terkait | AccessScopeService, kelas/izin/status/identitas pemohon |
+| BK/pengaduan | admin/counselor; satgas pada antrean tanpa petugas atau miliknya | Role penanganan yang berwenang | Eviden dan CSV BK; penugasan ulang mencabut petugas lama | BkDiscipline/ComplaintReportService, sekolah dan assignee |
+| SPMB | admin/operator/principal; teacher/committee ditugaskan | Pengelola/panitia sesuai policy dan aksi | Verifikasi berkas, skor/ranking/keputusan, daftar ulang; konfigurasi panitia pengelola | AdmissionsPolicy, penugasan aktif dan sekolah objek |
+| Mutasi/kelulusan/legalisir/PTSP | Role antrean rute | Verifikator admin/operator/PTSP sesuai layanan | Persetujuan/tanda tangan admin/principal/signatory; pickup verifikator | AccessScopeService dan layanan penerbitan, status dan dokumen |
+| Persuratan | admin/operator/PTSP/principal | Pengelola sesuai controller | Disposisi/status, persetujuan principal; signature manual/BSrE sesuai otoritas; PDF | `correspondence.php`, CorrespondenceController dan status surat |
+| Buku tamu/sarpras/tugas staf | Role rute/policy | Pengelola; penanggung jawab hanya aksi tugasnya | Checkout tamu, foto, lampiran privat tugas | School_id, StaffTaskPolicy, ownership/assignment |
+| Komunikasi/notifikasi/chat | Role audiens dan kelas; notif user_id sendiri | Pengelola pengumuman; pembuat/anggota ruang chat | Hapus milik sendiri atau pengelola, moderasi dan unduhan | CommunicationController/EngagementController; nav principal memakai alias Kalender |
+| Proposal | Pemohon sendiri atau antrean reviewer | Pemohon isi/revisi/LPJ | Review sesuai otoritas; dokumen pemohon/reviewer | ProposalController/service, kepemilikan/penugasan/status |
+| Integrasi | admin/operator | admin/operator | Preview/commit impor, ekspor, retry log; secret tidak dikirim ulang | IntegrationSettingsController dan system key allowlist |
+| Portal/akun eksternal | Publik terbit atau pemohon terautentikasi pada guard eksternal | Pengajuan/revisi milik pemohon | Pelacakan/PIN/dokumen, consent alumni, recovery netral | AccessScopeService, external applicant service dan kontrak tiket |
+
+Matriks negatif untuk setiap kelompok: pengguna di luar role → 403; lintas sekolah/objek privat → 403/404 sesuai kontrak; pemilik/kelas/penugasan salah → ditolak; status belum layak → validasi; dokumen tidak terbit/dicabut → tidak diunduh sebagai dokumen valid. Bukti primer yang sudah tersedia dipetakan pada tabel role dan daftar tes di atas. Kasus yang belum mempunyai bukti granular tetap harus ditambahkan ke cakupan review; tabel bukan pengganti eksekusi tes.
+
+Multirole lokal bukan role bebas yang digabung: akun mempunyai satu `role_id`; pengecualian yang memang ada adalah operator dengan profil guru aktif (`User::hasRole`). Menonaktifkan profil guru mencabut akses LMS/menu guru sambil mempertahankan role operator; tambahan assertion ini lulus pada akhir batch. Pencabutan assignment panitia dan pergantian petugas aduan memakai pemeriksaan DB saat akses, bukan izin yang disimpan di session. Akun admin nonaktif dikeluarkan pada request berikutnya; tes tersebut juga dijalankan ulang.
+
+### Kontrak editor konten
+
+| Tipe | Kontrol/sumber yang digunakan | Batas/perilaku |
+|---|---|---|
+| Teks/teks panjang | Input/textarea rekursif `PublicContentFields` | Maksimum 5.000; kosong berbeda dari tidak ada override |
+| Rich text | Editor entitas yang sudah ada | Sanitasi backend; bukan HTML/JS bebas pada blok teks |
+| Angka/boolean | Number/checkbox | Number hingga 1.000.000; integer tidak menerima pecahan |
+| Ikon | Select allowlist server | Tidak menerima kelas/HTML arbitrer |
+| Gambar/alt/caption | Pilih media terbit, metadata, upload entitas | Guard referensi dan validasi ukuran/rasio; tidak ada crop/compression baru |
+| Warna/preset | Color dan preset tema | Hex, kontras server, preview dan reset dengan konfirmasi |
+| Tanggal/jam | Tanggal field dan jadwal publikasi | Waktu jadwal ditafsirkan dalam timezone sekolah |
+| Daftar/urutan | Editor list serta entitas galeri/berita/organisasi/unduhan | Maksimum 50 pada list; layout mengikuti template |
+| URL/embed | Field URL dan validasi server | Skema aman/allowlist; canonical harus HTTP(S) absolut |
+| Dokumen/relasi | Editor entitas dan pilihan data berscope | Bukan query database atau upload executable |
+| SEO | Title, deskripsi, gambar berbagi, canonical | Title 160, deskripsi 320; draft tidak menjadi metadata live |
+
+### Pengujian akhir yang benar-benar dijalankan
+
+- `npm run typecheck`, `npm run build`, `vendor/bin/pint --dirty`, `git diff --check`: lulus. Setelah temuan select perpustakaan terlalu sempit pada screenshot 390px, grid diubah responsif dan typecheck/build diulang untuk perubahan itu.
+- `php artisan test --compact tests/Feature/BrandingProfileTest.php tests/Feature/PublicEditableContentTest.php tests/Feature/PublicContentLifecycleTest.php tests/Feature/SchoolGalleryTest.php tests/Feature/RoleMatrixAccessTest.php tests/Feature/AdmissionsControllersTest.php --filter='branding|theme|media_orphan|media_used|media_kept|scheduled|metadata|empty_text|sidebar_visibility|revoked_core|dedicated_committee|principal_school'`: **25 passed, 269 assertions**. Tambahan filter `operator_account_can_be_linked|deactivated_admin_session` pada `AcademicControllersTest`/`CoreAuthorizationTest`: **2 passed, 13 assertions**. Total 27 tes unik, 282 assertions; tidak menjalankan full suite.
+- Browser pada SQLite terisolasi `storage/framework/testing/phase-one/database.sqlite`: profil sekolah 390/1280 × light/dark tanpa overflow; fokus, Tab, Escape, nested discard/cancel, restore focus dan body lock lulus. Perpustakaan: input belum disimpan tetap ada saat batal; discard menutup dan melepas scroll. Pengaturan akademik: buat mapel fixture → batal konfirmasi hapus → konfirmasi hapus; body lock pulih pada kedua jalur dan fixture dihapus. Login 390px: show/hide password dan tidak ada overflow. Tidak mengubah data operasional.
+- Browser setelah build terakhir: form perpustakaan berubah → navigasi GET → batal mempertahankan isian; ulangi → setuju membuka dashboard dan melepas scroll. Dialog perangkat kios pada 390px terbuka tanpa overflow; tidak ada page error pada alur ini.
+- Bukti browser tambahan sebelum penundaan tes: branding simpan/refresh, editor dua tab usang ditolak, empat route Core × 17 role dan 12 kombinasi dialog Core. Pemeriksaan tersebut mendahului perubahan root host; perilaku host terkait diperiksa ulang pada alur di atas.
+
+### Sisa yang belum boleh dicentang selesai
+
+1. Review matriks fitur/aksi yang sekarang tersedia (`AP-01.02/.12`) dan lengkapi bukti multirole, pencarian/counter/notifikasi/dropdown/ekspor di seluruh modul (`AP-01.06/.07`). Implementasi menu yang diperbaiki tidak membuktikan seluruh scope agregat.
+2. Audit aksi/ekspor, semua label/error/unsaved guard, seluruh elemen development dan kombinasi UI padat, zoom/screen reader/kamera/keyboard virtual pada semua layar (`AP-02.07/.08/.15/.19/.20/.22`). Pemeriksaan beberapa dialog bukan bukti semua halaman.
+3. Penerimaan lintas template untuk branding, setiap field no-code, cache, pemulihan dan media. Item `READY_REVIEW` memiliki implementasi, tetapi masih memerlukan review cakupan sesuai checklist aslinya.
+4. `AP-04.17`: UAT operator nonteknis yang mengubah tiap tipe, preview, publish, batal dan restore. Gate manusia; belum dilakukan oleh pengguna.
+
+Audit source tambahan: 17 aksi ekspor yang belum berikon diselaraskan dengan PDF/Word/Excel; label tetap tersedia melalui title/aria-label, dan beberapa keluaran sejenis mempertahankan label. Impor dan isi cepat yang masih inline dipindahkan ke overlay. Build/typecheck sempat mendeteksi wrapper/deklarasi ganda buku induk dan nama error field e-book yang salah; keduanya dikoreksi sebelum hasil akhir.
+
+Tidak ada dependency/skema baru dalam batch penyempurnaan ini, commit, deployment, perubahan `.env` atau pembersihan media/data operasional. Migrasi dan full suite yang tercatat di bagian historis berasal dari batch sebelumnya. Worktree memiliki perubahan sebelumnya; tidak di-reset.
+
+Evaluasi mandiri: akurasi 4/5 (hasil tes dan batas bukti eksplisit); kelengkapan 2/5 (Fase 1 belum 62/62, sisa tercantum); kejelasan 4/5 (status granular dan matriks tersedia); keterlaksanaan 4/5 (perintah/bukti/area tersisa konkret); keringkasan 3/5 (handoff panjang karena cakupan lintas modul). Rata-rata 3,4/5. Prioritas berikutnya adalah menutup matriks dan audit cakupan, lalu UAT; jangan menaikkan status berdasarkan klaim agen sendiri.
+
+## Konsolidasi hasil audit oleh Codex — 22 November 2026 — IN_PROGRESS
+
+Otorisasi: pengguna meminta menyelesaikan seluruh tugas setelah audit. Pekerjaan dan checkbox Gemini dipertahankan; penutupan tambahan hanya berdasarkan bukti baru.
+
+- Tujuan: menyelesaikan integrasi publik–admin dan kontrol konten tanpa mengubah baseline publik.
+- Area: Library, Core CMS/configuration, dashboard, akses per role, komponen modal admin, tes feature/browser, serta dokumentasi penerimaan yang sudah ada.
+- Urutan: integrasi perpustakaan → dashboard → lifecycle CMS dan pengamanan settings → konfigurasi konten → konsistensi akses/UI → regresi dan pemeriksaan browser → rekonsiliasi TODO.
+- Kriteria penerimaan: form publik memakai kontrak backend yang sama; retry tidak menggandakan stok/tiket; role dan kepemilikan berlaku pada endpoint; draft/jadwal tidak bocor; konten yang disembunyikan tidak dikirim ke tamu; modal mengelola fokus dan scroll; build/typecheck/tes relevan lulus.
+- Perubahan flow perpustakaan: sebelumnya katalog replika statis dan aksi login/booking tidak tersedia; sesudahnya katalog memakai koleksi aktif, login memakai akun akademik, booking menjadi reservasi stok atomik, pustakawan mengonfirmasi penyerahan, dan pengembalian mengembalikan stok sekali. Tabel pinjaman yang ada digunakan tanpa migrasi; role penerbit dan URL publik dipertahankan. Risiko kompatibilitas status `reserved` ditutup dengan dukungan antrean pustakawan dan tes retry/penyerahan/pengembalian.
+- Perubahan lifecycle CMS: sebelumnya draft/publish/restore; sesudahnya jadwal menyimpan snapshot, scheduler menerbitkan snapshot itu sekali, dan unpublish/archive menyembunyikan bagian terkelola dengan riwayat yang dapat dipulihkan. Form layanan tetap tersedia. Rollback aplikasi harus mempertahankan JSON histori dan tidak menghapus dokumen.
+- Risiko dan batas: UAT oleh pemilik produk, kredensial/provider nyata, pembersihan data development, perubahan skema, commit dan deployment mengikuti otorisasi tersendiri. Tidak ada dependency atau perubahan arsitektur yang direncanakan. Pengguna telah menyetujui kolom JSON nullable `public_ikm_surveys.instrument_snapshot`; migrasi khusus kolom tersebut sudah diterapkan pada database lokal. Migrasi pending lainnya tidak dijalankan.
+- Bukti akhir batch: full suite **597 tes: 595 lulus, 2 skipped, 6.531 assertions** (45,148 detik). Dua skip: drill MySQL membutuhkan socket pengujian terisolasi; pengujian failed-jobs tidak tersedia pada fixture terkait. `vendor/bin/pint --test`, `npm run typecheck`, `npm run build` (1.011 modul), `git diff --check`, serta lint PHP atas 107 template hasil kompilasi lulus. Setelah koreksi responsif terakhir, build/typecheck dan pemeriksaan browser pada halaman terkait dijalankan ulang.
+- Bukti browser: 35 halaman publik HTTP 200 tanpa page error pada desktop dan 390px; overflow perpustakaan/verifikasi yang ditemukan pada mobile diperbaiki dan diuji ulang pada 320/390/768/1280px. Panel sekolah, IKM, dan pusat unduh lulus 54 pemeriksaan gabungan 9 ukuran layar × 2 tema. Modal pusat unduh lulus fokus awal, Tab trap, scroll lock, Escape dan restore focus.
+- Bukti transaksi browser menggunakan SQLite terisolasi, bukan data proyek: editor konten → simpan draf → preview privat → live tetap lama → publish → live baru; konfigurasi dua unsur IKM berbobot 2:1 → jawaban 5 dan 1 → antrean admin bernilai 3,67 → persetujuan → ringkasan publik 3,67/5.
+- Perbaikan tambahan terverifikasi: route panitia khusus mengikuti policy dan penugasan; pencabutan penugasan panitia/satgas mencabut akses langsung; buku rekomendasi, filter katalog, NIS/NISN, counter dan tanggal perpustakaan menggunakan data aktif; logo/favicon memiliki URL berversi; riwayat media terpakai dilindungi; metadata halaman ikut lifecycle draf/publikasi; perubahan IKM dari editor usang ditolak dan snapshot jawaban tidak berubah.
+
+**IMPORTANT — Integrasi keseluruhan belum dinyatakan selesai.** Checkbox Gemini tetap utuh. Penambahan bukti batch ini hanya menutup `AP-24.12`, bukan otomatis menutup seluruh task dalam paket yang disentuh. Sisa teknis yang masih harus diselesaikan/dibuktikan: pemetaan semua elemen no-code termasuk teks dinamis, menu, cetak/PDF dan field legacy yang bertumpang tindih (contoh `ptsp.hero.title` belum menjadi sumber judul pada template PTSP); pengurutan/list editorial menyeluruh; kepatuhan seluruh halaman CRUD/modal/aksi terhadap standar UI; matriks akses positif-negatif dan transaksi ujung ke ujung untuk semua role/layanan; perbandingan screenshot dengan fixture tetap dan uji pemulihan. Registry konten dan tes contoh tidak membuktikan cakupan penuh setiap elemen publik.
+
+Gate manusia/operasional yang tetap terbuka: UAT pemilik produk/operator nonteknis, keputusan D-05 s.d. D-08 untuk aturan/template/provider nyata, drill backup/restore terisolasi, persetujuan pembersihan data development serta otorisasi deployment. Tidak ada commit, deployment, perubahan `.env`, dependency baru, atau penghapusan data proyek.
+
 ## Fase 5 (`AP-20` s.d. `AP-23`) — Pelacakan Terpadu, Verifikasi QR, Dashboard Per Role, Regresi Modul Internal & Integrasi Operasional — 22 November 2026
 
 - **Task / Status**:

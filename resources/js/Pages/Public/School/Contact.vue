@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import { Link } from '@inertiajs/vue3';
 import PublicSectionLayout from '@/components/PublicSectionLayout.vue';
 
@@ -16,44 +17,45 @@ defineProps<{
     serviceHours?: string;
     mapUrl?: string | null;
 }>();
+const publicText = usePublicContentText();
 </script>
 
 <template>
     <PublicSectionLayout
         :school="school"
-        title="Hubungi sekolah"
-        eyebrow="Kontak resmi"
+        :title="publicText('copy.vue_school_contact', 'title_011', 'Hubungi sekolah')"
+        :eyebrow="publicText('copy.vue_school_contact', 'eyebrow_012', 'Kontak resmi')"
         :description="`Temukan alamat dan kanal komunikasi resmi ${school.name}.`"
         active="contact"
     >
-        <section class="section-content" aria-label="Kontak sekolah">
+        <section class="section-content" :aria-label="publicText('copy.vue_school_contact', 'aria_label_013', 'Kontak sekolah')">
             <div class="contact-grid">
                 <article class="contact-card contact-card-main">
-                    <span class="card-label">Alamat sekolah</span>
+                    <span class="card-label">{{ publicText("copy.vue_school_contact", "text_001", "Alamat sekolah") }}</span>
                     <p>{{ school.address || 'Alamat sekolah belum diatur.' }}</p>
-                    <Link href="/profil-sekolah" class="card-link">Lihat profil sekolah →</Link>
+                    <Link href="/profil-sekolah" class="card-link">{{ publicText("copy.vue_school_contact", "text_002", "Lihat profil sekolah →") }}</Link>
                 </article>
                 <article class="contact-card">
-                    <span class="card-label">Telepon</span>
+                    <span class="card-label">{{ publicText("copy.vue_school_contact", "text_003", "Telepon") }}</span>
                     <a v-if="school.phone" :href="`tel:${school.phone}`">{{ school.phone }}</a>
-                    <p v-else>Nomor telepon belum diatur.</p>
+                    <p v-else>{{ publicText("copy.vue_school_contact", "text_004", "Nomor telepon belum diatur.") }}</p>
                 </article>
                 <article class="contact-card">
-                    <span class="card-label">Email</span>
+                    <span class="card-label">{{ publicText("copy.vue_school_contact", "text_005", "Email") }}</span>
                     <a v-if="school.email" :href="`mailto:${school.email}`">{{ school.email }}</a>
-                    <p v-else>Alamat email belum diatur.</p>
+                    <p v-else>{{ publicText("copy.vue_school_contact", "text_006", "Alamat email belum diatur.") }}</p>
                 </article>
                 <article v-if="school.website" class="contact-card">
-                    <span class="card-label">Website</span>
+                    <span class="card-label">{{ publicText("copy.vue_school_contact", "text_007", "Website") }}</span>
                     <a :href="school.website" target="_blank" rel="noreferrer">{{ school.website }}</a>
                 </article>
                 <article v-if="serviceHours" class="contact-card">
-                    <span class="card-label">Jam Layanan</span>
+                    <span class="card-label">{{ publicText("copy.vue_school_contact", "text_008", "Jam Layanan") }}</span>
                     <p>{{ serviceHours }}</p>
                 </article>
                 <article v-if="mapUrl" class="contact-card">
-                    <span class="card-label">Peta Lokasi</span>
-                    <a :href="mapUrl" target="_blank" rel="noreferrer">Buka peta sekolah →</a>
+                    <span class="card-label">{{ publicText("copy.vue_school_contact", "text_009", "Peta Lokasi") }}</span>
+                    <a :href="mapUrl" target="_blank" rel="noreferrer">{{ publicText("copy.vue_school_contact", "text_010", "Buka peta sekolah →") }}</a>
                 </article>
             </div>
         </section>

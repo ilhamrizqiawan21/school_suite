@@ -1,14 +1,27 @@
-@verbatim
+@php
+  $metadata = $contentBlocks['seo.current'] ?? [];
+@endphp
 <!DOCTYPE html>
 <!-- saved from url=(0048)/perpustakaan -->
 <html lang="id" class="scroll-smooth"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  @endverbatim<meta name="csrf-token" content="{{ csrf_token() }}">@verbatim
-  <title>E-Perpustakaan Digital | MADRASAH ALIYAH NEGERI 4 BANJAR - Khazanah Literasi Madrasah</title>
+  <style>
+    @media (max-width: 639px) {
+      .library-brand-row { flex-wrap: wrap; }
+      .library-brand-row > a { min-width: 0; max-width: 100%; }
+      .library-header-actions { width: 100%; margin-left: 0; justify-content: flex-end; }
+      .library-header-actions > * { flex-shrink: 0; }
+    }
+  </style>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{{ ($metadata['title'] ?? '') ?: ('E-Perpustakaan Digital | '.($school['name'] ?? 'Perpustakaan Sekolah').' - Khazanah Literasi Madrasah') }}</title>
   
-  <meta name="description" content="Katalog Buku Digital (OPAC), E-Book Reader Interaktif, dan Layanan Literasi Terpadu MADRASAH ALIYAH NEGERI 4 BANJAR">
-  <link rel="shortcut icon" href="/madrasah-theme/perpustakaan/logo239.png">
+  <meta name="description" content="{{ ($metadata['description'] ?? '') ?: ('Katalog Buku Digital (OPAC), E-Book Reader Interaktif, dan Layanan Literasi Terpadu '.($school['name'] ?? 'Perpustakaan Sekolah')) }}">
+  @if (!empty($metadata['image_url']))<meta property="og:image" content="{{ $metadata['image_url'] }}">@endif
+  @if (!empty($metadata['canonical_url']) && !request()->boolean('preview_draft'))<link rel="canonical" href="{{ $metadata['canonical_url'] }}">@endif
+  @if (request()->boolean('preview_draft'))<meta name="robots" content="noindex, nofollow">@endif
+  <link rel="shortcut icon" href="{{ $school['favicon_url'] ?? $school['logo_url'] ?? '/madrasah-theme/images/logo-kemenag.png' }}">
   
   <!-- Font Google: Inter & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com/">
@@ -563,35 +576,35 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center space-x-6">
         <span class="flex items-center gap-1.5 font-semibold text-emerald-100">
-          <i class="fa-solid fa-graduation-cap text-accent-yellow"></i> MADRASAH ALIYAH NEGERI 4 BANJAR • KEMENAG RI
+          <i class="fa-solid fa-graduation-cap text-accent-yellow"></i> {{ $school['name'] ?? 'Perpustakaan Sekolah' }} • KEMENAG RI
         </span>
         <span class="flex items-center gap-1.5 text-emerald-100 border-l border-kemenag-700/80 pl-5">
-          <i class="fa-solid fa-clock text-accent-yellow"></i> Layanan Hari Ini: <b class="text-white">TUTUP (Buka Besok 07.30 WITA)</b>
+          <i class="fa-solid fa-clock text-accent-yellow"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_001'] ?? 'Layanan Hari Ini:') }} <b class="text-white">{{ ($contentBlocks['copy.blade_perpustakaan']['text_002'] ?? 'TUTUP (Buka Besok 07.30 WITA)') }}</b>
         </span>
         <span class="flex items-center gap-1.5 text-emerald-100 border-l border-kemenag-700/80 pl-5 hidden lg:inline-flex">
-          <i class="fa-solid fa-calendar-check text-accent-yellow"></i> 19 November 2026        </span>
+          <i class="fa-solid fa-calendar-check text-accent-yellow"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_003'] ?? '19 November 2026') }}        </span>
 
         <!-- Live Traffic Counter Badge (Top Bar) -->
-        <span class="hidden lg:inline-flex items-center gap-1.5 bg-kemenag-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-[11px] text-emerald-100 font-semibold shadow-inner" title="Pengunjung sedang online di perpustakaan saat ini">
+        <span class="hidden lg:inline-flex items-center gap-1.5 bg-kemenag-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-[11px] text-emerald-100 font-semibold shadow-inner" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_314'] ?? 'Pengunjung sedang online di perpustakaan saat ini') }}">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
           </span>
-          <span>Online: <strong id="topbarLiveVisitors" class="text-accent-yellow font-bold">2</strong> User</span>
+          <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_004'] ?? 'Online:') }} <strong id="topbarLiveVisitors" class="text-accent-yellow font-bold">2</strong> {{ ($contentBlocks['copy.blade_perpustakaan']['text_005'] ?? 'User') }}</span>
         </span>
       </div>
       
       <div class="flex items-center space-x-4">
         <!-- Widget Sholat Dinamis Martapura -->
-        <div class="flex items-center gap-2 bg-kemenag-800/90 px-3 py-1 rounded-full border border-kemenag-600/50 cursor-pointer hover:bg-kemenag-700 transition" onclick="openPrayerModal()" title="Klik untuk lihat jadwal lengkap hari ini">
+        <div class="flex items-center gap-2 bg-kemenag-800/90 px-3 py-1 rounded-full border border-kemenag-600/50 cursor-pointer hover:bg-kemenag-700 transition" onclick="openPrayerModal()" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_315'] ?? 'Klik untuk lihat jadwal lengkap hari ini') }}">
           <i class="fa-solid fa-mosque text-accent-yellow"></i>
-          <span class="text-emerald-100">Waktu Sholat:</span>
-          <span id="activePrayerDisplay" class="font-bold text-accent-yellow">Subuh 05:04 WITA</span>
+          <span class="text-emerald-100">{{ ($contentBlocks['copy.blade_perpustakaan']['text_006'] ?? 'Waktu Sholat:') }}</span>
+          <span id="activePrayerDisplay" class="font-bold text-accent-yellow">{{ ($contentBlocks['copy.blade_perpustakaan']['text_007'] ?? 'Subuh 05:04 WITA') }}</span>
           <i class="fa-solid fa-chevron-down text-[10px] text-emerald-300"></i>
         </div>
 
         <div class="flex items-center space-x-3 text-emerald-200">
-          <a href="/" class="hover:text-accent-yellow transition flex items-center gap-1" title="Kembali ke Portal Madrasah"><i class="fa-solid fa-house text-xs"></i> <span>Beranda Utama</span></a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_316'] ?? '/') }}" class="hover:text-accent-yellow transition flex items-center gap-1" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_317'] ?? 'Kembali ke Portal Madrasah') }}"><i class="fa-solid fa-house text-xs"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_008'] ?? 'Beranda Utama') }}</span></a>
         </div>
       </div>
     </div>
@@ -601,44 +614,44 @@
   <div class="bg-kemenag-900 text-emerald-100 text-xs py-2 px-4 overflow-hidden border-b border-emerald-800/80 shadow-inner relative z-30">
     <div class="max-w-[1600px] mx-auto flex items-center gap-3">
       <span class="bg-accent-gold text-slate-950 font-extrabold uppercase px-3 py-0.5 rounded-full text-[10px] tracking-wider shrink-0 flex items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-bullhorn text-[10px] animate-bounce"></i> Warta Pustaka
+        <i class="fa-solid fa-bullhorn text-[10px] animate-bounce"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_009'] ?? 'Warta Pustaka') }}
       </span>
       <div class="overflow-hidden whitespace-nowrap flex-1 relative flex">
         <div class="flex animate-marquee-slow hover:pause-on-hover whitespace-nowrap">
           <div class="flex items-center space-x-6 shrink-0 pr-6">
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              Iqra' Bismi Rabbikalladzi Khalaq — Membaca adalah kunci peradaban ilmu dan kemuliaan akhlak.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_010'] ?? 'Iqra\' Bismi Rabbikalladzi Khalaq — Membaca adalah kunci peradaban ilmu dan kemuliaan akhlak.') }}
             </span>
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              E-Library 24 Jam: Tersedia ratusan judul e-book &amp; modul Kurikulum Merdeka bebas baca online.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_011'] ?? 'E-Library 24 Jam: Tersedia ratusan judul e-book & modul Kurikulum Merdeka bebas baca online.') }}
             </span>
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              Presensi Mandiri Cepat: Scan QR Code Kartu Pelajar atau masukkan NISN untuk absensi pengunjung.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_012'] ?? 'Presensi Mandiri Cepat: Scan QR Code Kartu Pelajar atau masukkan NISN untuk absensi pengunjung.') }}
             </span>
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              Layanan Bebas Pustaka Online: Cek tanggungan pinjaman buku kelulusan siswa secara mandiri tanpa antre.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_013'] ?? 'Layanan Bebas Pustaka Online: Cek tanggungan pinjaman buku kelulusan siswa secara mandiri tanpa antre.') }}
             </span>
           </div>
           <div class="flex items-center space-x-6 shrink-0 pr-6" aria-hidden="true">
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              Iqra' Bismi Rabbikalladzi Khalaq — Membaca adalah kunci peradaban ilmu dan kemuliaan akhlak.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_010'] ?? 'Iqra\' Bismi Rabbikalladzi Khalaq — Membaca adalah kunci peradaban ilmu dan kemuliaan akhlak.') }}
             </span>
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              E-Library 24 Jam: Tersedia ratusan judul e-book &amp; modul Kurikulum Merdeka bebas baca online.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_011'] ?? 'E-Library 24 Jam: Tersedia ratusan judul e-book & modul Kurikulum Merdeka bebas baca online.') }}
             </span>
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              Presensi Mandiri Cepat: Scan QR Code Kartu Pelajar atau masukkan NISN untuk absensi pengunjung.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_012'] ?? 'Presensi Mandiri Cepat: Scan QR Code Kartu Pelajar atau masukkan NISN untuk absensi pengunjung.') }}
             </span>
             <span class="inline-flex items-center gap-2 font-medium tracking-wide">
               <i class="fa-solid fa-circle-dot text-accent-yellow text-[8px]"></i>
-              Layanan Bebas Pustaka Online: Cek tanggungan pinjaman buku kelulusan siswa secara mandiri tanpa antre.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_013'] ?? 'Layanan Bebas Pustaka Online: Cek tanggungan pinjaman buku kelulusan siswa secara mandiri tanpa antre.') }}
             </span>
           </div>
         </div>
@@ -649,51 +662,51 @@
   <!-- ================= 3. MAIN NAVIGATION BAR (2 BARIS ELEGAN IDENTIK INDEX.PHP) ================= -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200">
     <!-- Baris 1: Brand Logo & Tombol Aksi Utama -->
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2.5 flex items-center justify-between gap-4">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2.5 flex items-center justify-between gap-4 library-brand-row">
       
       <!-- Brand Logo -->
-      <a href="/perpustakaan" class="flex items-center gap-2.5 sm:gap-3 group">
-                  <img src="/madrasah-theme/perpustakaan/logo239.png" alt="Logo MADRASAH ALIYAH NEGERI 4 BANJAR" class="w-9 h-9 sm:w-10 sm:h-10 object-contain group-hover:scale-105 transition-transform">
+      <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" class="flex items-center gap-2.5 sm:gap-3 group">
+                  <img src="{{ ($school['logo_url'] ?? $contentBlocks['copy.blade_perpustakaan']['src_319'] ?? '/madrasah-theme/images/logo-kemenag.png') }}" alt="Logo {{ $school['name'] ?? 'Perpustakaan Sekolah' }}" class="w-9 h-9 sm:w-10 sm:h-10 object-contain group-hover:scale-105 transition-transform">
                 <div class="flex flex-col justify-center">
           <div class="flex items-center gap-2">
             <h1 class="text-sm sm:text-base lg:text-lg font-bold font-sans text-slate-900 tracking-tight leading-tight group-hover:text-kemenag-700 transition-colors">
-              MADRASAH ALIYAH NEGERI 4 BANJAR            </h1>
-            <span class="hidden sm:inline-block bg-accent-gold/20 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded border border-amber-300/40">E-LIBRARY</span>
+              {{ $school['name'] ?? 'Perpustakaan Sekolah' }}            </h1>
+            <span class="hidden sm:inline-block bg-accent-gold/20 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded border border-amber-300/40">{{ ($contentBlocks['copy.blade_perpustakaan']['text_014'] ?? 'E-LIBRARY') }}</span>
           </div>
-          <span class="text-[10px] text-slate-500 font-medium -mt-0.5 block">E-Perpustakaan Digital • Khazanah Literasi Madrasah</span>
+          <span class="text-[10px] text-slate-500 font-medium -mt-0.5 block">{{ ($contentBlocks['copy.blade_perpustakaan']['text_015'] ?? 'E-Perpustakaan Digital • Khazanah Literasi Madrasah') }}</span>
         </div>
       </a>
 
       <!-- Quick Action Right: Search, Buku Tamu, Siswa, Admin, Mobile Toggle -->
-      <div class="flex items-center space-x-2 sm:space-x-3 ml-auto">
+      <div class="flex items-center space-x-2 sm:space-x-3 ml-auto library-header-actions">
         
         <!-- Tombol Search Modal -->
-        <button onclick="openSearchModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-kemenag-700 flex items-center justify-center transition shadow-sm" title="Pencarian Cepat">
+        <button onclick="openSearchModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-kemenag-700 flex items-center justify-center transition shadow-sm" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_320'] ?? 'Pencarian Cepat') }}">
           <i class="fa-solid fa-magnifying-glass text-xs sm:text-sm"></i>
         </button>
 
         <!-- Tombol Presensi Buku Tamu (High Priority) -->
-        <button type="button" onclick="$('#modalBukuTamu').modal('show')" class="hidden sm:inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-kemenag-800 text-xs sm:text-[13px] font-bold px-3 py-2 rounded-xl transition border border-emerald-200 shadow-sm" title="Presensi Buku Tamu">
+        <button type="button" onclick="$('#modalBukuTamu').modal('show')" class="hidden sm:inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-kemenag-800 text-xs sm:text-[13px] font-bold px-3 py-2 rounded-xl transition border border-emerald-200 shadow-sm" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_321'] ?? 'Presensi Buku Tamu') }}">
           <i class="fa-solid fa-qrcode text-kemenag-700"></i>
-          <span>Buku Tamu</span>
+          <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_016'] ?? 'Buku Tamu') }}</span>
         </button>
 
         <!-- Tombol Statistik Kunjungan -->
-        <button type="button" onclick="$('#modalStatistikKunjungan').modal('show')" class="hidden lg:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-[13px] font-bold px-3 py-2 rounded-xl transition border border-slate-200 shadow-sm" title="Grafik Statistik Kunjungan">
+        <button type="button" onclick="$('#modalStatistikKunjungan').modal('show')" class="hidden lg:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-[13px] font-bold px-3 py-2 rounded-xl transition border border-slate-200 shadow-sm" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_322'] ?? 'Grafik Statistik Kunjungan') }}">
           <i class="fa-solid fa-chart-pie text-amber-600"></i>
-          <span>Statistik</span>
+          <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_017'] ?? 'Statistik') }}</span>
         </button>
 
         <!-- Tombol Login Siswa (Nuansa Oranye-Emas Landing Page) -->
-                  <button type="button" onclick="$('#modalLoginSiswa').modal('show')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md hover:shadow-orange-500/30 transition-all border border-amber-300/30" title="Masuk Portal Siswa">
+                  <button type="button" onclick="$('#modalLoginSiswa').modal('show')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md hover:shadow-orange-500/30 transition-all border border-amber-300/30" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_323'] ?? 'Masuk Portal Siswa') }}">
             <i class="fa-solid fa-user-graduate text-amber-100 text-xs"></i>
-            <span>Login Siswa</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_018'] ?? 'Login Siswa') }}</span>
           </button>
         
         <!-- Tombol Login Admin / Pustakawan -->
-        <a href="/login" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-kemenag-700 to-kemenag-800 hover:from-kemenag-800 hover:to-kemenag-900 text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md hover:shadow-emerald-900/20 transition-all border border-emerald-600/30" title="Masuk Portal Pustakawan / Admin">
+        <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_324'] ?? '/login') }}" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-kemenag-700 to-kemenag-800 hover:from-kemenag-800 hover:to-kemenag-900 text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md hover:shadow-emerald-900/20 transition-all border border-emerald-600/30" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_325'] ?? 'Masuk Portal Pustakawan / Admin') }}">
           <i class="fa-solid fa-user-tie text-accent-yellow text-xs"></i>
-          <span>Pustakawan</span>
+          <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_019'] ?? 'Pustakawan') }}</span>
         </a>
 
         <!-- Mobile Menu Toggle -->
@@ -709,65 +722,65 @@
       <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-1.5 flex items-center justify-between">
         
         <nav class="flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] font-semibold text-slate-700">
-          <a href="/perpustakaan" class="text-kemenag-700 hover:text-kemenag-800 transition py-1 flex items-center gap-1.5 font-bold">
-            <i class="fa-solid fa-house text-xs text-kemenag-600"></i> Beranda Perpus
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" class="text-kemenag-700 hover:text-kemenag-800 transition py-1 flex items-center gap-1.5 font-bold">
+            <i class="fa-solid fa-house text-xs text-kemenag-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_020'] ?? 'Beranda Perpus') }}
           </a>
 
-          <a href="/perpustakaan" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
-            <i class="fa-solid fa-book-open text-xs text-slate-400"></i> Semua Katalog (OPAC)
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
+            <i class="fa-solid fa-book-open text-xs text-slate-400"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_021'] ?? 'Semua Katalog (OPAC)') }}
           </a>
 
-          <a href="/perpustakaan?ebook=1" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1.5 text-amber-700 font-bold">
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1.5 text-amber-700 font-bold">
             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-            <i class="fa-solid fa-file-pdf text-xs text-amber-600"></i> E-Book Digital
+            <i class="fa-solid fa-file-pdf text-xs text-amber-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_022'] ?? 'E-Book Digital') }}
           </a>
 
-          <a href="/perpustakaan?q=Kurikulum+Merdeka" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
-            <i class="fa-solid fa-graduation-cap text-xs text-slate-400"></i> Kurikulum Merdeka
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_327'] ?? '/perpustakaan?q=Kurikulum+Merdeka') }}" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
+            <i class="fa-solid fa-graduation-cap text-xs text-slate-400"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_023'] ?? 'Kurikulum Merdeka') }}
           </a>
 
-          <a href="/perpustakaan?q=Agama" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
-            <i class="fa-solid fa-moon text-xs text-slate-400"></i> Referensi Islam
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_328'] ?? '/perpustakaan?q=Agama') }}" class="hover:text-kemenag-700 transition py-1 flex items-center gap-1">
+            <i class="fa-solid fa-moon text-xs text-slate-400"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_024'] ?? 'Referensi Islam') }}
           </a>
 
           <!-- Dropdown Layanan Mandiri -->
           <div class="relative group">
             <button class="flex items-center gap-1 hover:text-kemenag-700 py-1 transition text-emerald-800 font-bold">
-              <span>Layanan Mandiri</span>
+              <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_025'] ?? 'Layanan Mandiri') }}</span>
               <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:rotate-180 transition-transform"></i>
             </button>
             <div class="absolute left-0 top-full pt-1.5 hidden group-hover:block w-64 z-50">
               <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 flex flex-col space-y-1">
                 <a href="javascript:void(0)" onclick="$('#modalBukuTamu').modal('show')" class="px-3 py-2 rounded-xl hover:bg-emerald-50 hover:text-kemenag-700 text-xs font-medium transition flex items-center gap-2">
-                  <i class="fa-solid fa-qrcode text-kemenag-600 w-4"></i> Presensi Buku Tamu (QR)
+                  <i class="fa-solid fa-qrcode text-kemenag-600 w-4"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_026'] ?? 'Presensi Buku Tamu (QR)') }}
                 </a>
                 <a href="javascript:void(0)" onclick="$('#modalCekBebas').modal('show')" class="px-3 py-2 rounded-xl hover:bg-emerald-50 hover:text-kemenag-700 text-xs font-medium transition flex items-center gap-2">
-                  <i class="fa-solid fa-certificate text-blue-600 w-4"></i> Cek Bebas Pustaka Online
+                  <i class="fa-solid fa-certificate text-blue-600 w-4"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_027'] ?? 'Cek Bebas Pustaka Online') }}
                 </a>
                 <a href="javascript:void(0)" onclick="$('#modalUsulanBuku').modal('show')" class="px-3 py-2 rounded-xl hover:bg-emerald-50 hover:text-kemenag-700 text-xs font-medium transition flex items-center gap-2">
-                  <i class="fa-solid fa-lightbulb text-amber-600 w-4"></i> Usul Pengadaan Buku Baru
+                  <i class="fa-solid fa-lightbulb text-amber-600 w-4"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_028'] ?? 'Usul Pengadaan Buku Baru') }}
                 </a>
                 <a href="javascript:void(0)" onclick="$('#modalStatistikKunjungan').modal('show')" class="px-3 py-2 rounded-xl hover:bg-emerald-50 hover:text-kemenag-700 text-xs font-medium transition flex items-center gap-2">
-                  <i class="fa-solid fa-chart-line text-purple-600 w-4"></i> Grafik Statistik Kunjungan
+                  <i class="fa-solid fa-chart-line text-purple-600 w-4"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_029'] ?? 'Grafik Statistik Kunjungan') }}
                 </a>
               </div>
             </div>
           </div>
 
-          <a href="/perpustakaan#tata-tertib" class="hover:text-kemenag-700 transition py-1">Tata Tertib</a>
-          <a href="/" class="hover:text-kemenag-700 transition py-1 text-slate-500"><i class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1"></i> Portal Madrasah</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_329'] ?? '/perpustakaan#tata-tertib') }}" class="hover:text-kemenag-700 transition py-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_030'] ?? 'Tata Tertib') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_316'] ?? '/') }}" class="hover:text-kemenag-700 transition py-1 text-slate-500"><i class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_031'] ?? 'Portal Madrasah') }}</a>
         </nav>
 
         <!-- Quick Info Kanan Sub-Navbar -->
         <div class="hidden lg:flex items-center gap-3 text-xs text-slate-500 font-medium">
-          <a href="/lacak" class="hover:text-kemenag-700 flex items-center gap-1.5 transition">
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_330'] ?? '/lacak') }}" class="hover:text-kemenag-700 flex items-center gap-1.5 transition">
             <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i>
-            <span>Tracking Berkas</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_032'] ?? 'Tracking Berkas') }}</span>
           </a>
           <span class="text-slate-300">•</span>
-          <a href="/login?portal=siswa" class="hover:text-kemenag-700 flex items-center gap-1.5 transition">
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_331'] ?? '/login?portal=siswa') }}" class="hover:text-kemenag-700 flex items-center gap-1.5 transition">
             <i class="fa-solid fa-user-graduate text-amber-500"></i>
-            <span>Portal Siswa</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_033'] ?? 'Portal Siswa') }}</span>
           </a>
         </div>
 
@@ -782,7 +795,7 @@
         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-book-bookmark text-kemenag-700 text-xl"></i>
-            <span class="font-extrabold text-slate-900 text-sm">MADRASAH ALIYAH NEGERI 4 BANJAR</span>
+            <span class="font-extrabold text-slate-900 text-sm">{{ $school['name'] ?? 'Perpustakaan Sekolah' }}</span>
           </div>
           <button onclick="toggleMobileMenu()" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center">
             <i class="fa-solid fa-xmark"></i>
@@ -790,41 +803,41 @@
         </div>
 
         <nav class="mt-6 flex flex-col space-y-2.5 font-semibold text-slate-700 text-sm">
-          <a href="/perpustakaan" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700">Beranda Perpus</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_020'] ?? 'Beranda Perpus') }}</a>
           
           <div class="grid grid-cols-2 gap-2 my-1">
             <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalLoginSiswa').modal('show');" class="p-2.5 bg-amber-50 hover:bg-orange-100 rounded-xl text-orange-900 font-bold flex items-center justify-center gap-1.5 text-xs border border-orange-200">
-              <i class="fa-solid fa-user-graduate text-orange-600"></i> Login Siswa
+              <i class="fa-solid fa-user-graduate text-orange-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_018'] ?? 'Login Siswa') }}
             </a>
-            <a href="/login" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-kemenag-800 font-bold flex items-center justify-center gap-1.5 text-xs border border-emerald-200">
-              <i class="fa-solid fa-user-tie text-kemenag-600"></i> Pustakawan
+            <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_324'] ?? '/login') }}" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-kemenag-800 font-bold flex items-center justify-center gap-1.5 text-xs border border-emerald-200">
+              <i class="fa-solid fa-user-tie text-kemenag-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_019'] ?? 'Pustakawan') }}
             </a>
           </div>
 
           <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalBukuTamu').modal('show');" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
-            <i class="fa-solid fa-qrcode text-kemenag-600"></i> Presensi Buku Tamu (QR)
+            <i class="fa-solid fa-qrcode text-kemenag-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_026'] ?? 'Presensi Buku Tamu (QR)') }}
           </a>
-          <a href="/perpustakaan?ebook=1" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
-            <i class="fa-solid fa-file-pdf text-amber-600"></i> Koleksi E-Book Digital
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" onclick="toggleMobileMenu()" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-amber-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_034'] ?? 'Koleksi E-Book Digital') }}
           </a>
           <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalCekBebas').modal('show');" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
-            <i class="fa-solid fa-certificate text-blue-600"></i> Cek Bebas Pustaka Online
+            <i class="fa-solid fa-certificate text-blue-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_027'] ?? 'Cek Bebas Pustaka Online') }}
           </a>
           <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalUsulanBuku').modal('show');" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
-            <i class="fa-solid fa-lightbulb text-amber-500"></i> Usulan Pengadaan Buku
+            <i class="fa-solid fa-lightbulb text-amber-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_035'] ?? 'Usulan Pengadaan Buku') }}
           </a>
           <a href="javascript:void(0)" onclick="toggleMobileMenu(); $('#modalStatistikKunjungan').modal('show');" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2">
-            <i class="fa-solid fa-chart-line text-purple-600"></i> Grafik Statistik Kunjungan
+            <i class="fa-solid fa-chart-line text-purple-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_029'] ?? 'Grafik Statistik Kunjungan') }}
           </a>
-          <a href="/" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2 border-t border-slate-100 mt-2">
-            <i class="fa-solid fa-house text-emerald-600"></i> Beranda Utama Madrasah
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_316'] ?? '/') }}" class="p-2 hover:bg-emerald-50 rounded-xl hover:text-kemenag-700 flex items-center gap-2 border-t border-slate-100 mt-2">
+            <i class="fa-solid fa-house text-emerald-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_036'] ?? 'Beranda Utama Madrasah') }}
           </a>
         </nav>
       </div>
 
       <div class="pt-6 border-t border-slate-100">
-        <a href="/perpustakaan?ebook=1" onclick="toggleMobileMenu()" class="w-full bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl shadow-md text-center block">
-          <i class="fa-solid fa-book-open mr-1"></i> Buka E-Book Reader Digital
+        <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" onclick="toggleMobileMenu()" class="w-full bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl shadow-md text-center block">
+          <i class="fa-solid fa-book-open mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_037'] ?? 'Buka E-Book Reader Digital') }}
         </a>
       </div>
     </div>
@@ -843,15 +856,15 @@
       <div class="lg:col-span-7 space-y-5">
         <div class="inline-flex items-center gap-2 bg-kemenag-700/80 border border-emerald-400/30 px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-200 shadow-sm">
           <span class="w-2 h-2 rounded-full bg-accent-yellow animate-pulse"></span>
-          <span>Pusat Sumber Belajar &amp; Khazanah Literasi Digital Madrasah</span>
+          <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_038'] ?? 'Pusat Sumber Belajar & Khazanah Literasi Digital Madrasah') }}</span>
         </div>
 
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-sans leading-tight tracking-tight text-white">
-          Membuka Cakrawala Ilmu, <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-yellow via-yellow-200 to-emerald-200">Menumbuhkan Karakter Qur’ani</span> Melalui Literasi
+          {{ ($contentBlocks['copy.blade_perpustakaan']['text_039'] ?? 'Membuka Cakrawala Ilmu,') }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-yellow via-yellow-200 to-emerald-200">{{ ($contentBlocks['copy.blade_perpustakaan']['text_040'] ?? 'Menumbuhkan Karakter Qur’ani') }}</span> {{ ($contentBlocks['copy.blade_perpustakaan']['text_041'] ?? 'Melalui Literasi') }}
         </h1>
 
         <p class="text-sm sm:text-base text-emerald-100 max-w-2xl leading-relaxed">
-          Selamat datang di E-Perpustakaan Digital MADRASAH ALIYAH NEGERI 4 BANJAR. Akses ribuan buku teks Kurikulum Merdeka, referensi keislaman, ensiklopedia, dan modul digital dengan fitur baca online interaktif, aman, dan terintegrasi 24 jam.
+          Selamat datang di E-Perpustakaan Digital {{ $school['name'] ?? 'Perpustakaan Sekolah' }}. Akses ribuan buku teks Kurikulum Merdeka, referensi keislaman, ensiklopedia, dan modul digital dengan fitur baca online interaktif, aman, dan terintegrasi 24 jam.
         </p>
 
         <!-- FLOATING SEARCH HUB & FILTER -->
@@ -859,17 +872,20 @@
           <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
             <div class="sm:col-span-6 flex items-center px-3 gap-2">
               <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
-              <input type="text" name="q" value="" placeholder="Ketik judul, penulis, penerbit, atau ISBN..." class="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400 py-1.5">
+              <input type="text" name="q" value="{{ $search }}" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_332'] ?? 'Ketik judul, penulis, penerbit, atau ISBN...') }}" class="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400 py-1.5">
             </div>
             <div class="sm:col-span-4 border-t sm:border-t-0 sm:border-l border-slate-200 px-3 py-1">
-              <select name="kat" class="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-700 font-medium">
-                <option value="0">Semua Kategori</option>
-                <option value="1">AGAMA</option><option value="2">Buku Pelajaran Umum</option><option value="4">Fiksi &amp; Sastra</option><option value="3">Kamus &amp; Ensiklopedia</option><option value="6">Karya Tulis &amp; Majalah</option><option value="5">Teknologi &amp; Komputer</option>              </select>
+              <select name="kategori" aria-label="Kategori koleksi" class="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-700 font-medium">
+                <option value="">{{ $contentBlocks['copy.blade_perpustakaan']['text_042'] ?? 'Semua Kategori' }}</option>
+                @foreach ($categories as $categoryCode => $categoryLabel)
+                  <option value="{{ $categoryCode }}" @selected($selectedCategory === $categoryCode)>{{ $categoryLabel }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="sm:col-span-2">
               <button type="submit" class="w-full bg-gradient-to-r from-kemenag-600 to-kemenag-800 hover:from-kemenag-700 hover:to-kemenag-900 text-white font-bold text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5">
                 <i class="fa-solid fa-search"></i>
-                <span>Cari</span>
+                <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_049'] ?? 'Cari') }}</span>
               </button>
             </div>
           </div>
@@ -877,46 +893,46 @@
 
         <!-- Quick Tags -->
         <div class="flex flex-wrap items-center gap-2 pt-1 text-xs">
-          <span class="text-emerald-200 font-medium">Topik Cepat:</span>
-          <a href="/perpustakaan?q=Kurikulum+Merdeka" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#KurikulumMerdeka</a>
-          <a href="/perpustakaan?q=Agama" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#PendidikanAgama</a>
-          <a href="/perpustakaan?ebook=1" class="bg-accent-gold/20 hover:bg-accent-gold/30 border border-amber-400/40 text-accent-yellow px-2.5 py-1 rounded-lg transition font-bold">#E-BookDigital</a>
-          <a href="/perpustakaan?q=Sains" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">#SainsTeknologi</a>
+          <span class="text-emerald-200 font-medium">{{ ($contentBlocks['copy.blade_perpustakaan']['text_050'] ?? 'Topik Cepat:') }}</span>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_327'] ?? '/perpustakaan?q=Kurikulum+Merdeka') }}" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">{{ ($contentBlocks['copy.blade_perpustakaan']['text_051'] ?? '#KurikulumMerdeka') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_328'] ?? '/perpustakaan?q=Agama') }}" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">{{ ($contentBlocks['copy.blade_perpustakaan']['text_052'] ?? '#PendidikanAgama') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="bg-accent-gold/20 hover:bg-accent-gold/30 border border-amber-400/40 text-accent-yellow px-2.5 py-1 rounded-lg transition font-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_053'] ?? '#E-BookDigital') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_333'] ?? '/perpustakaan?q=Sains') }}" class="bg-kemenag-800/80 hover:bg-kemenag-700 border border-emerald-500/30 text-emerald-100 px-2.5 py-1 rounded-lg transition">{{ ($contentBlocks['copy.blade_perpustakaan']['text_054'] ?? '#SainsTeknologi') }}</a>
         </div>
 
         <div class="pt-2 flex flex-wrap items-center gap-3">
-          <a href="/perpustakaan?ebook=1" class="bg-accent-gold hover:bg-amber-400 text-slate-900 font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="bg-accent-gold hover:bg-amber-400 text-slate-900 font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
             <i class="fa-solid fa-file-pdf"></i>
-            <span>Buka E-Book Reader</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_055'] ?? 'Buka E-Book Reader') }}</span>
           </a>
           <button type="button" onclick="$('#modalBukuTamu').modal('show')" class="bg-kemenag-700/90 hover:bg-kemenag-600 border border-emerald-400/40 text-white font-bold px-5 py-2.5 rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
             <i class="fa-solid fa-qrcode text-accent-yellow"></i>
-            <span>Presensi Pengunjung</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_056'] ?? 'Presensi Pengunjung') }}</span>
           </button>
           <button type="button" onclick="$('#modalCekBebas').modal('show')" class="bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 hover:text-white font-bold px-4 py-2.5 rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
             <i class="fa-solid fa-certificate text-accent-yellow"></i>
-            <span>Cek Bebas Pustaka</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_057'] ?? 'Cek Bebas Pustaka') }}</span>
           </button>
         </div>
 
         <!-- Metric Counter Badges (4 Kolom Sesuai index.php) -->
         <div class="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-emerald-700/60 text-center">
           <div class="bg-kemenag-800/60 p-3 rounded-xl border border-emerald-500/20">
-            <span class="text-2xl lg:text-3xl font-extrabold text-accent-yellow block font-sans">31+</span>
-            <span class="text-[11px] text-emerald-200 uppercase font-medium">Judul Buku</span>
+            <span class="text-2xl lg:text-3xl font-extrabold text-accent-yellow block font-sans">{{ $stats['public_collections_count'] ?? 0 }}</span>
+            <span class="text-[11px] text-emerald-200 uppercase font-medium">{{ ($contentBlocks['copy.blade_perpustakaan']['text_058'] ?? 'Judul Buku') }}</span>
           </div>
           <div class="bg-kemenag-800/60 p-3 rounded-xl border border-emerald-500/20">
-            <span class="text-2xl lg:text-3xl font-extrabold text-white block font-sans">234+</span>
-            <span class="text-[11px] text-emerald-200 uppercase font-medium">Eksemplar Fisik</span>
+            <span class="text-2xl lg:text-3xl font-extrabold text-white block font-sans">{{ $stats['public_physical_copies'] ?? 0 }}</span>
+            <span class="text-[11px] text-emerald-200 uppercase font-medium">{{ ($contentBlocks['copy.blade_perpustakaan']['text_059'] ?? 'Eksemplar Fisik') }}</span>
           </div>
           <div class="bg-kemenag-800/60 p-3 rounded-xl border border-emerald-500/20">
-            <span class="text-2xl lg:text-3xl font-extrabold text-accent-yellow block font-sans">6</span>
-            <span class="text-[11px] text-emerald-200 uppercase font-medium">Klasifikasi Bidang</span>
+            <span class="text-2xl lg:text-3xl font-extrabold text-accent-yellow block font-sans">{{ $stats['public_categories_count'] ?? 0 }}</span>
+            <span class="text-[11px] text-emerald-200 uppercase font-medium">{{ ($contentBlocks['copy.blade_perpustakaan']['text_060'] ?? 'Klasifikasi Bidang') }}</span>
           </div>
-          <div class="bg-kemenag-800/60 p-3 rounded-xl border border-emerald-500/20 cursor-pointer hover:bg-kemenag-700/60 transition" onclick="$('#modalStatistikKunjungan').modal('show')" title="Klik untuk lihat grafik live">
-            <span class="text-2xl lg:text-3xl font-extrabold text-emerald-300 block font-sans">0</span>
+          <div class="bg-kemenag-800/60 p-3 rounded-xl border border-emerald-500/20 cursor-pointer hover:bg-kemenag-700/60 transition" onclick="$('#modalStatistikKunjungan').modal('show')" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_334'] ?? 'Klik untuk lihat grafik live') }}">
+            <span class="text-2xl lg:text-3xl font-extrabold text-emerald-300 block font-sans">{{ $stats['visits_today'] ?? 0 }}</span>
             <span class="text-[11px] text-emerald-200 uppercase font-medium flex items-center justify-center gap-1">
-              <i class="fa-solid fa-chart-line text-[9px] text-accent-yellow"></i> Tamu Hari Ini
+              <i class="fa-solid fa-chart-line text-[9px] text-accent-yellow"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_061'] ?? 'Tamu Hari Ini') }}
             </span>
           </div>
         </div>
@@ -926,7 +942,7 @@
       <div class="lg:col-span-5 relative">
         <div class="relative mx-auto max-w-md lg:max-w-none">
           <div class="rounded-3xl overflow-hidden shadow-2xl border-4 border-emerald-500/30 bg-kemenag-800 relative group">
-            <img src="/madrasah-theme/perpustakaan/photo-1521587760476-6c12a4b040da" alt="Ruang Baca Modern MADRASAH ALIYAH NEGERI 4 BANJAR" class="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700">
+            <img src="{{ ($contentBlocks['copy.blade_perpustakaan']['src_335'] ?? '/madrasah-theme/perpustakaan/photo-1521587760476-6c12a4b040da') }}" alt="Ruang Baca Modern {{ $school['name'] ?? 'Perpustakaan Sekolah' }}" class="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700">
             <div class="absolute inset-0 bg-gradient-to-t from-kemenag-950 via-kemenag-950/30 to-transparent"></div>
             
             <!-- Floating Badge 1 (Top Left) -->
@@ -935,8 +951,8 @@
                 <i class="fa-solid fa-award"></i>
               </div>
               <div>
-                <span class="text-[10px] text-emerald-300 font-semibold block uppercase">Akreditasi Pustaka</span>
-                <span class="text-xs font-extrabold text-white">OPAC 4.0 Terakreditasi</span>
+                <span class="text-[10px] text-emerald-300 font-semibold block uppercase">{{ ($contentBlocks['copy.blade_perpustakaan']['text_062'] ?? 'Akreditasi Pustaka') }}</span>
+                <span class="text-xs font-extrabold text-white">{{ ($contentBlocks['copy.blade_perpustakaan']['text_063'] ?? 'OPAC 4.0 Terakreditasi') }}</span>
               </div>
             </div>
 
@@ -946,8 +962,8 @@
                 <i class="fa-solid fa-shield-halved"></i>
               </div>
               <div>
-                <span class="text-[10px] text-emerald-300 font-semibold block uppercase">Keamanan Dokumen</span>
-                <span class="text-xs font-extrabold text-white">E-Reader Anti-Copy 100%</span>
+                <span class="text-[10px] text-emerald-300 font-semibold block uppercase">{{ ($contentBlocks['copy.blade_perpustakaan']['text_064'] ?? 'Keamanan Dokumen') }}</span>
+                <span class="text-xs font-extrabold text-white">{{ ($contentBlocks['copy.blade_perpustakaan']['text_065'] ?? 'E-Reader Anti-Copy 100%') }}</span>
               </div>
             </div>
           </div>
@@ -964,19 +980,19 @@
       <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
         <div>
           <span class="text-xs font-extrabold text-kemenag-700 tracking-wider uppercase flex items-center gap-1.5 mb-1">
-            <i class="fa-solid fa-cubes-stacked"></i> E-Layanan Terpadu
+            <i class="fa-solid fa-cubes-stacked"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_066'] ?? 'E-Layanan Terpadu') }}
           </span>
           <h2 class="text-2xl sm:text-3xl font-extrabold font-sans text-slate-900 tracking-tight">
-            Pusat Layanan Digital Mandiri
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_067'] ?? 'Pusat Layanan Digital Mandiri') }}
           </h2>
           <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
-            Nikmati kemudahan presensi mandiri, pengecekan bebas pustaka kelulusan, dan pengajuan usulan buku baru secara cepat tanpa antre.
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_068'] ?? 'Nikmati kemudahan presensi mandiri, pengecekan bebas pustaka kelulusan, dan pengajuan usulan buku baru secara cepat tanpa antre.') }}
           </p>
         </div>
         <div class="flex items-center gap-2">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-kemenag-800 text-xs font-bold border border-emerald-200">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Layanan Aktif 24 Jam
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_069'] ?? 'Layanan Aktif 24 Jam') }}
           </span>
         </div>
       </div>
@@ -991,14 +1007,14 @@
               <i class="fa-solid fa-qrcode"></i>
             </div>
             <h3 class="font-bold text-base text-slate-900 group-hover:text-kemenag-700 transition-colors">
-              Presensi Buku Tamu
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_070'] ?? 'Presensi Buku Tamu') }}
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              Scan barcode kartu pelajar atau masukkan NISN saat berkunjung ke perpustakaan.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_071'] ?? 'Scan barcode kartu pelajar atau masukkan NISN saat berkunjung ke perpustakaan.') }}
             </p>
           </div>
           <div class="pt-4 flex items-center justify-between text-xs font-bold text-kemenag-700">
-            <span>Isi Kehadiran</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_072'] ?? 'Isi Kehadiran') }}</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         </div>
@@ -1010,14 +1026,14 @@
               <i class="fa-solid fa-certificate"></i>
             </div>
             <h3 class="font-bold text-base text-slate-900 group-hover:text-blue-700 transition-colors">
-              Cek Bebas Pustaka
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_057'] ?? 'Cek Bebas Pustaka') }}
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              Verifikasi mandiri status tanggungan pinjaman buku untuk syarat kelulusan &amp; mutasi.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_073'] ?? 'Verifikasi mandiri status tanggungan pinjaman buku untuk syarat kelulusan & mutasi.') }}
             </p>
           </div>
           <div class="pt-4 flex items-center justify-between text-xs font-bold text-blue-700">
-            <span>Cek Status Bebas</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_074'] ?? 'Cek Status Bebas') }}</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         </div>
@@ -1029,14 +1045,14 @@
               <i class="fa-solid fa-lightbulb"></i>
             </div>
             <h3 class="font-bold text-base text-slate-900 group-hover:text-amber-700 transition-colors">
-              Usul Pengadaan Buku
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_075'] ?? 'Usul Pengadaan Buku') }}
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              Rekomendasikan judul buku favorit yang Anda ingin ada di perpustakaan madrasah.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_076'] ?? 'Rekomendasikan judul buku favorit yang Anda ingin ada di perpustakaan madrasah.') }}
             </p>
           </div>
           <div class="pt-4 flex items-center justify-between text-xs font-bold text-amber-700">
-            <span>Kirim Rekomendasi</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_077'] ?? 'Kirim Rekomendasi') }}</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         </div>
@@ -1048,14 +1064,14 @@
               <i class="fa-solid fa-chart-pie"></i>
             </div>
             <h3 class="font-bold text-base text-slate-900 group-hover:text-purple-700 transition-colors">
-              Statistik Kunjungan
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_078'] ?? 'Statistik Kunjungan') }}
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              Lihat data trafik kunjungan harian, jam sibuk, dan daftar siswa teraktif membaca.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_079'] ?? 'Lihat data trafik kunjungan harian, jam sibuk, dan daftar siswa teraktif membaca.') }}
             </p>
           </div>
           <div class="pt-4 flex items-center justify-between text-xs font-bold text-purple-700">
-            <span>Lihat Grafik Live</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_080'] ?? 'Lihat Grafik Live') }}</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         </div>
@@ -1066,6 +1082,7 @@
   </section>
 
   <!-- ================= 6. SPOTLIGHT BUKU PILIHAN REDAKSI (EDITORIAL PICK) ================= -->
+  @if ($featuredCollection && ($contentBlocks['library.spotlight']['visible'] ?? true))
     <section class="py-10 bg-slate-50 border-b border-slate-200">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12">
       
@@ -1076,7 +1093,7 @@
           <div class="lg:col-span-3 text-center">
             <div class="inline-block group">
               <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790212410_412.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
+            <img src="{{ ($contentBlocks['copy.blade_library_book_card']['src_005'] ?? '/madrasah-theme/perpustakaan/database.png') }}" alt="{{ ($contentBlocks['copy.blade_perpustakaan']['alt_337'] ?? 'Cover') }}" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
         </div>            </div>
           </div>
 
@@ -1084,54 +1101,44 @@
           <div class="lg:col-span-6 space-y-3">
             <div class="flex flex-wrap items-center gap-2">
               <span class="bg-amber-100 text-amber-800 text-[11px] font-extrabold px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
-                <i class="fa-solid fa-star text-amber-500"></i> Rekomendasi Pustakawan Pekan Ini
+                <i class="fa-solid fa-star text-amber-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_081'] ?? 'Rekomendasi Pustakawan Pekan Ini') }}
               </span>
               <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
-                Fiksi &amp; Sastra              </span>
+                {{ $featuredCollection['category_label'] }}              </span>
             </div>
 
             <h3 class="text-xl sm:text-2xl font-extrabold font-sans text-slate-900 leading-snug">
-              DI SUDUT HYDE PARK            </h3>
+              {{ $featuredCollection['title'] }}            </h3>
 
             <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-              <span class="flex items-center gap-1"><i class="fa-solid fa-user-pen text-kemenag-600"></i> SUNARYO BASUKI KS</span>
-              <span class="flex items-center gap-1"><i class="fa-solid fa-building text-slate-400"></i> PT BALAI PUSTAKA</span>
-              <span class="flex items-center gap-1"><i class="fa-solid fa-calendar text-slate-400"></i> 1993</span>
+              <span class="flex items-center gap-1"><i class="fa-solid fa-user-pen text-kemenag-600"></i> {{ $featuredCollection['author'] ?: '—' }}</span>
+              <span class="flex items-center gap-1"><i class="fa-solid fa-building text-slate-400"></i> {{ $featuredCollection['publisher'] ?: '—' }}</span>
+              <span class="flex items-center gap-1"><i class="fa-solid fa-calendar text-slate-400"></i> {{ $featuredCollection['publish_year'] ?: '—' }}</span>
             </div>
 
             <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-h-20 overflow-hidden text-ellipsis line-clamp-3">
-              Koleksi istimewa khazanah madrasah yang sangat direkomendasikan untuk menambah wawasan keislaman, keilmuan, dan pembentukan karakter mulia peserta didik.            </p>
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_085'] ?? 'Koleksi istimewa khazanah madrasah yang sangat direkomendasikan untuk menambah wawasan keislaman, keilmuan, dan pembentukan karakter mulia peserta didik.') }}            </p>
 
             <div class="pt-2 flex flex-wrap items-center gap-3">
-                              <button type="button" class="btn-open-reader bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md text-xs sm:text-sm flex items-center gap-2 transition" data-file="assets/upload/buku/ebook_1790212410_636.pdf" data-judul="DI SUDUT HYDE PARK">
-                  <i class="fa-solid fa-file-pdf"></i>
-                  <span>Baca E-Book Sekarang</span>
-                </button>
-              
-              <button type="button" class="btn-detail-buku bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 transition" data-id="36" data-judul="DI SUDUT HYDE PARK" data-penulis="SUNARYO BASUKI KS" data-penerbit="PT BALAI PUSTAKA" data-tahun="1993" data-isbn="979-407-584-1" data-kategori="Fiksi &amp; Sastra" data-rak="800" data-stok="1" data-cover="assets/upload/buku/cover_1790212410_412.png" data-ebook="assets/upload/buku/ebook_1790212410_636.pdf" data-deskripsi="">
-                <i class="fa-solid fa-circle-info text-slate-500"></i>
-                <span>Detail Buku</span>
-              </button>
-
-                              <button type="button" onclick="bookingBuku(36, 'DI SUDUT HYDE PARK')" class="bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 transition">
-                  <i class="fa-solid fa-bookmark"></i>
-                  <span>Pinjam Buku</span>
-                </button>
-                          </div>
+              <button type="button" class="btn-detail-buku bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 transition" data-id="{{ $featuredCollection['id'] }}"><i class="fa-solid fa-circle-info text-slate-500"></i><span>{{ $contentBlocks['copy.blade_perpustakaan']['text_087'] ?? 'Detail Buku' }}</span></button>
+              @if ($featuredCollection['available_copies'] > 0 && in_array($featuredCollection['format'], ['physical', 'hybrid'], true))
+                <button type="button" class="btn-book-reserve bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 transition" data-id="{{ $featuredCollection['id'] }}" data-judul="{{ $featuredCollection['title'] }}"><i class="fa-solid fa-bookmark"></i><span>{{ $contentBlocks['copy.blade_perpustakaan']['text_088'] ?? 'Pinjam Buku' }}</span></button>
+              @endif
+            </div>
           </div>
 
           <!-- Review Pustakawan Kanan -->
           <div class="lg:col-span-3 lg:border-l border-slate-100 lg:pl-8">
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2.5">
               <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
-                <i class="fa-solid fa-quote-left text-amber-500"></i> Catatan Pustakawan
+                <i class="fa-solid fa-quote-left text-amber-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_089'] ?? 'Catatan Pustakawan') }}
               </div>
               <p class="text-xs text-slate-500 italic leading-relaxed">
-                "Koleksi terpilih dengan bahasa yang mudah dipahami, sangat relevan sebagai penunjang belajar dan pengayaan materi kelas."
+                {{ ($contentBlocks['copy.blade_perpustakaan']['text_090'] ?? '"Koleksi terpilih dengan bahasa yang mudah dipahami, sangat relevan sebagai penunjang belajar dan pengayaan materi kelas."') }}
               </p>
               <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                <span class="text-slate-500">Status Akses:</span>
-                <span class="font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">Bebas Akses Siswa</span>
+                <span class="text-slate-500">{{ ($contentBlocks['copy.blade_perpustakaan']['text_091'] ?? 'Status Akses:') }}</span>
+                <span class="font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">{{ ($contentBlocks['copy.blade_perpustakaan']['text_092'] ?? 'Bebas Akses Siswa') }}</span>
               </div>
             </div>
           </div>
@@ -1141,6 +1148,7 @@
 
     </div>
   </section>
+  @endif
   
   <!-- ================= 7. HUB KATEGORI KOLEKSI ================= -->
     <section class="py-10 bg-white border-b border-slate-200">
@@ -1149,66 +1157,66 @@
       <div class="flex items-center justify-between mb-6">
         <div>
           <span class="text-xs font-extrabold text-kemenag-700 tracking-wider uppercase flex items-center gap-1.5 mb-1">
-            <i class="fa-solid fa-tags"></i> Klasifikasi Ilmu
+            <i class="fa-solid fa-tags"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_093'] ?? 'Klasifikasi Ilmu') }}
           </span>
           <h2 class="text-xl sm:text-2xl font-extrabold font-sans text-slate-900 tracking-tight">
-            Jelajahi Kategori Koleksi
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_094'] ?? 'Jelajahi Kategori Koleksi') }}
           </h2>
         </div>
-        <a href="/perpustakaan" class="text-xs font-bold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1">
-          <span>Semua Kategori</span>
+        <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" class="text-xs font-bold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1">
+          <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_042'] ?? 'Semua Kategori') }}</span>
           <i class="fa-solid fa-chevron-right text-[10px]"></i>
         </a>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                <a href="/perpustakaan?kat=1" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_338'] ?? '/perpustakaan?kat=1') }}" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-slate-50 text-slate-700 border-slate-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-folder-open"></i>
           </div>
           <h4 class="font-bold text-xs text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-1">
-            AGAMA          </h4>
-          <span class="text-[11px] text-slate-500 font-medium mt-0.5">9 Judul</span>
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_043'] ?? 'AGAMA') }}          </h4>
+          <span class="text-[11px] text-slate-500 font-medium mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_095'] ?? '9 Judul') }}</span>
         </a>
-                <a href="/perpustakaan?kat=4" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_339'] ?? '/perpustakaan?kat=4') }}" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-orange-50 text-orange-700 border-orange-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-pen-nib"></i>
           </div>
           <h4 class="font-bold text-xs text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-1">
-            Fiksi &amp; Sastra          </h4>
-          <span class="text-[11px] text-slate-500 font-medium mt-0.5">6 Judul</span>
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_045'] ?? 'Fiksi & Sastra') }}          </h4>
+          <span class="text-[11px] text-slate-500 font-medium mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_096'] ?? '6 Judul') }}</span>
         </a>
-                <a href="/perpustakaan?kat=2" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_340'] ?? '/perpustakaan?kat=2') }}" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-blue-50 text-blue-700 border-blue-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-graduation-cap"></i>
           </div>
           <h4 class="font-bold text-xs text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-1">
-            Buku Pelajaran Umum          </h4>
-          <span class="text-[11px] text-slate-500 font-medium mt-0.5">6 Judul</span>
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_044'] ?? 'Buku Pelajaran Umum') }}          </h4>
+          <span class="text-[11px] text-slate-500 font-medium mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_096'] ?? '6 Judul') }}</span>
         </a>
-                <a href="/perpustakaan?kat=5" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_341'] ?? '/perpustakaan?kat=5') }}" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-teal-50 text-teal-700 border-teal-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-laptop-code"></i>
           </div>
           <h4 class="font-bold text-xs text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-1">
-            Teknologi &amp; Komputer          </h4>
-          <span class="text-[11px] text-slate-500 font-medium mt-0.5">4 Judul</span>
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_048'] ?? 'Teknologi & Komputer') }}          </h4>
+          <span class="text-[11px] text-slate-500 font-medium mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_097'] ?? '4 Judul') }}</span>
         </a>
-                <a href="/perpustakaan?kat=6" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_342'] ?? '/perpustakaan?kat=6') }}" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-rose-50 text-rose-700 border-rose-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-newspaper"></i>
           </div>
           <h4 class="font-bold text-xs text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-1">
-            Karya Tulis &amp; Majalah          </h4>
-          <span class="text-[11px] text-slate-500 font-medium mt-0.5">3 Judul</span>
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_047'] ?? 'Karya Tulis & Majalah') }}          </h4>
+          <span class="text-[11px] text-slate-500 font-medium mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_098'] ?? '3 Judul') }}</span>
         </a>
-                <a href="/perpustakaan?kat=3" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
+                <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_343'] ?? '/perpustakaan?kat=3') }}" class="bg-slate-50 hover:bg-white p-4 rounded-2xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition group text-center flex flex-col items-center">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg mb-2.5 bg-purple-50 text-purple-700 border-purple-200 border group-hover:scale-110 transition-transform">
             <i class="fa-solid fa-book"></i>
           </div>
           <h4 class="font-bold text-xs text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-1">
-            Kamus &amp; Ensiklopedia          </h4>
-          <span class="text-[11px] text-slate-500 font-medium mt-0.5">3 Judul</span>
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_046'] ?? 'Kamus & Ensiklopedia') }}          </h4>
+          <span class="text-[11px] text-slate-500 font-medium mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_098'] ?? '3 Judul') }}</span>
         </a>
               </div>
 
@@ -1223,1066 +1231,48 @@
         <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
           <div>
             <span class="text-xs font-extrabold text-kemenag-700 tracking-wider uppercase flex items-center gap-1.5 mb-1">
-              <i class="fa-solid fa-book-bookmark"></i> Katalog Pustaka Terpilih
+              <i class="fa-solid fa-book-bookmark"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_099'] ?? 'Katalog Pustaka Terpilih') }}
             </span>
             <h2 class="text-2xl sm:text-3xl font-extrabold font-sans text-slate-900 tracking-tight">
-              Koleksi Buku &amp; E-Book Terpadu
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_100'] ?? 'Koleksi Buku & E-Book Terpadu') }}
             </h2>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
-              Rekomendasi bahan pustaka paling banyak dibaca, koleksi terbaru masuk, dan modul e-book digital bebas akses.
+              {{ ($contentBlocks['copy.blade_perpustakaan']['text_101'] ?? 'Rekomendasi bahan pustaka paling banyak dibaca, koleksi terbaru masuk, dan modul e-book digital bebas akses.') }}
             </p>
           </div>
 
           <!-- TABS NAVIGATION -->
           <div class="flex items-center gap-1.5 bg-slate-200/80 p-1.5 rounded-2xl self-start sm:self-auto" id="koleksiTabs" role="tablist">
             <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition active-tab-btn bg-white text-kemenag-800 shadow-sm" id="btn-tab-populer" onclick="switchKoleksiTab('tab-populer', this)">
-              <i class="fa-solid fa-fire text-rose-500 mr-1"></i> Terpopuler
+              <i class="fa-solid fa-fire text-rose-500 mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_102'] ?? 'Terpopuler') }}
             </button>
             <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900" id="btn-tab-terbaru" onclick="switchKoleksiTab('tab-terbaru', this)">
-              <i class="fa-solid fa-star text-amber-500 mr-1"></i> Baru Masuk
+              <i class="fa-solid fa-star text-amber-500 mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_103'] ?? 'Baru Masuk') }}
             </button>
             <button class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900" id="btn-tab-ebook" onclick="switchKoleksiTab('tab-ebook', this)">
-              <i class="fa-solid fa-file-pdf text-amber-600 mr-1"></i> E-Book Bebas Baca
+              <i class="fa-solid fa-file-pdf text-amber-600 mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_104'] ?? 'E-Book Bebas Baca') }}
             </button>
           </div>
         </div>
 
-        <!-- TAB CONTENT 1: TERPOPULER -->
-        <div id="tab-populer" class="koleksi-tab-panel">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #581c87 0%, #7e22ce 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Kamus &amp; Ensi</span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Ensiklopedia Sains dan Teknologi Dunia">Ensiklopedia Sains dan Teknolog...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
 
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Ensiklopedia Sains dan Teknologi Dunia">
-                    Ensiklopedia Sains dan Teknologi Dunia                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dorling Kindersley (DK Publishing)</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> Rak C-02 (Ensiklopedia)</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">4 eks</span>
-                                      </div>
+        @foreach(['tab-populer', 'tab-terbaru', 'tab-ebook'] as $tab)
+            @php
+                $tabBooks = collect($collections);
+                if ($tab === 'tab-terbaru') { $tabBooks = $tabBooks->sortByDesc('id'); }
+                if ($tab === 'tab-ebook') { $tabBooks = $tabBooks->filter(fn ($book) => $book['has_ebook_file'] || !empty($book['ebook_url'])); }
+            @endphp
+            <div id="{{ $tab }}" class="koleksi-tab-panel {{ $loop->first ? '' : 'hidden' }}">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    @forelse($tabBooks as $book)
+                        @include('public.madrasah.library-book-card', ['book' => $book])
+                    @empty
+                        <p class="text-sm text-slate-500 py-8" role="status">{{ ($contentBlocks['copy.blade_perpustakaan']['text_105'] ?? 'Belum ada koleksi yang sesuai.') }}</p>
+                    @endforelse
                 </div>
+            </div>
+        @endforeach
 
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="16" data-judul="Ensiklopedia Sains dan Teknologi Dunia" data-penulis="Dorling Kindersley (DK Publishing)" data-penerbit="DK London / Gramedia" data-tahun="2024" data-isbn="978-024-122-593-6" data-kategori="Kamus &amp; Ensiklopedia" data-rak="Rak C-02 (Ensiklopedia)" data-stok="4" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_ensiklopedia_sains.pdf" data-deskripsi="Visualisasi lengkap penemuan sains terhebat, astronomi antariksa, robotika, energi terbarukan, dan bumi.">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(16, 'Ensiklopedia Sains dan Teknologi Dunia')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_ensiklopedia_sains.pdf" data-judul="Ensiklopedia Sains dan Teknologi Dunia">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #004d40 0%, #006747 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">AGAMA</span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Laskar Pelangi">Laskar Pelangi</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Laskar Pelangi">
-                    Laskar Pelangi                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Andrea Hirata</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> Rak A-03 (Sejarah Islam)</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">5 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="3" data-judul="Laskar Pelangi" data-penulis="Andrea Hirata" data-penerbit="Bentang Pustaka" data-tahun="2022" data-isbn="978-602-03-2478-4" data-kategori="AGAMA" data-rak="Rak A-03 (Sejarah Islam)" data-stok="5" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_sejarah_islam.pdf" data-deskripsi="Kajian komprehensif perkembangan peradaban Islam dari era Khulafaur Rasyidin, Dinasti Umayyah, hingga Abbasiyah.">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(3, 'Laskar Pelangi')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_sejarah_islam.pdf" data-judul="Laskar Pelangi">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790212410_412.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="DI SUDUT HYDE PARK">
-                    DI SUDUT HYDE PARK                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">SUNARYO BASUKI KS</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 800</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="36" data-judul="DI SUDUT HYDE PARK" data-penulis="SUNARYO BASUKI KS" data-penerbit="PT BALAI PUSTAKA" data-tahun="1993" data-isbn="979-407-584-1" data-kategori="Fiksi &amp; Sastra" data-rak="800" data-stok="1" data-cover="assets/upload/buku/cover_1790212410_412.png" data-ebook="assets/upload/buku/ebook_1790212410_636.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(36, 'DI SUDUT HYDE PARK')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790212410_636.pdf" data-judul="DI SUDUT HYDE PARK">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790045225_933.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Buat Apa Shalat - Dr Haidar Bagir">
-                    Buat Apa Shalat - Dr Haidar Bagir                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dr Haidar Bagir</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="35" data-judul="Buat Apa Shalat - Dr Haidar Bagir" data-penulis="Dr Haidar Bagir" data-penerbit="Penerbit Mizania" data-tahun="2026" data-isbn="978-979-8394-93-5" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790045225_933.png" data-ebook="assets/upload/buku/ebook_1790045225_976.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(35, 'Buat Apa Shalat - Dr Haidar Bagir')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790045225_976.pdf" data-judul="Buat Apa Shalat - Dr Haidar Bagir">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790044666_538.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?">
-                    ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dr. H. Miftah Faridl</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="32" data-judul="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?" data-penulis="Dr. H. Miftah Faridl" data-penerbit="GEMA INSANI" data-tahun="2007" data-isbn="979-56-0248-9" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790044666_538.png" data-ebook="assets/upload/buku/ebook_1790044666_133.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(32, 'ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790044666_133.pdf" data-judul="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790044397_466.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin">
-                    Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Al-‘Allâmah ‘Abdullâh al-Jibrîn</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="31" data-judul="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin" data-penulis="Al-‘Allâmah ‘Abdullâh al-Jibrîn" data-penerbit="Maktabah Abu Salma al-Atsari" data-tahun="2026" data-isbn="" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790044397_466.png" data-ebook="assets/upload/buku/ebook_1790044397_808.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(31, 'Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790044397_808.pdf" data-judul="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1789958034_919.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)">
-                    MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Ibnu Qayyim Al-Jauziyah</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="30" data-judul="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)" data-penulis="Ibnu Qayyim Al-Jauziyah" data-penerbit="PUSTAKA AL-KAUTSAR" data-tahun="1999" data-isbn="979-592-110-X" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1789958034_919.png" data-ebook="assets/upload/buku/ebook_1789958034_826.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(30, 'MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1789958034_826.pdf" data-judul="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-fire"></i> Populer
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #9a3412 0%, #c2410c 50%, #ea580c 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Fiksi &amp; Sast</span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Tenggelamnya Kapal Van Der Wijck">Tenggelamnya Kapal Van Der Wijck</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Tenggelamnya Kapal Van Der Wijck">
-                    Tenggelamnya Kapal Van Der Wijck                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Prof. Dr. HAMKA</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> Rak D-02 (Sastra Klasik)</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">4 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="20" data-judul="Tenggelamnya Kapal Van Der Wijck" data-penulis="Prof. Dr. HAMKA" data-penerbit="Bulan Bintang" data-tahun="2022" data-isbn="978-979-418-055-6" data-kategori="Fiksi &amp; Sastra" data-rak="Rak D-02 (Sastra Klasik)" data-stok="4" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_van_der_wijck.pdf" data-deskripsi="Mahakarya sastra klasik tentang cinta Zainuddin dan Hayati yang terhalang benteng adat Minangkabau.">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(20, 'Tenggelamnya Kapal Van Der Wijck')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_van_der_wijck.pdf" data-judul="Tenggelamnya Kapal Van Der Wijck">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                      </div>
-        </div>
-
-        <!-- TAB CONTENT 2: TERBARU -->
-        <div id="tab-terbaru" class="koleksi-tab-panel hidden">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790212410_412.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="DI SUDUT HYDE PARK">
-                    DI SUDUT HYDE PARK                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">SUNARYO BASUKI KS</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 800</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="36" data-judul="DI SUDUT HYDE PARK" data-penulis="SUNARYO BASUKI KS" data-penerbit="PT BALAI PUSTAKA" data-tahun="1993" data-isbn="979-407-584-1" data-kategori="Fiksi &amp; Sastra" data-rak="800" data-stok="1" data-cover="assets/upload/buku/cover_1790212410_412.png" data-ebook="assets/upload/buku/ebook_1790212410_636.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(36, 'DI SUDUT HYDE PARK')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790212410_636.pdf" data-judul="DI SUDUT HYDE PARK">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790045225_933.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Buat Apa Shalat - Dr Haidar Bagir">
-                    Buat Apa Shalat - Dr Haidar Bagir                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dr Haidar Bagir</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="35" data-judul="Buat Apa Shalat - Dr Haidar Bagir" data-penulis="Dr Haidar Bagir" data-penerbit="Penerbit Mizania" data-tahun="2026" data-isbn="978-979-8394-93-5" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790045225_933.png" data-ebook="assets/upload/buku/ebook_1790045225_976.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(35, 'Buat Apa Shalat - Dr Haidar Bagir')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790045225_976.pdf" data-judul="Buat Apa Shalat - Dr Haidar Bagir">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790044666_538.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?">
-                    ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dr. H. Miftah Faridl</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="32" data-judul="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?" data-penulis="Dr. H. Miftah Faridl" data-penerbit="GEMA INSANI" data-tahun="2007" data-isbn="979-56-0248-9" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790044666_538.png" data-ebook="assets/upload/buku/ebook_1790044666_133.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(32, 'ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790044666_133.pdf" data-judul="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790044397_466.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin">
-                    Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Al-‘Allâmah ‘Abdullâh al-Jibrîn</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="31" data-judul="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin" data-penulis="Al-‘Allâmah ‘Abdullâh al-Jibrîn" data-penerbit="Maktabah Abu Salma al-Atsari" data-tahun="2026" data-isbn="" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790044397_466.png" data-ebook="assets/upload/buku/ebook_1790044397_808.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(31, 'Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790044397_808.pdf" data-judul="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1789958034_919.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)">
-                    MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Ibnu Qayyim Al-Jauziyah</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> 100</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="30" data-judul="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)" data-penulis="Ibnu Qayyim Al-Jauziyah" data-penerbit="PUSTAKA AL-KAUTSAR" data-tahun="1999" data-isbn="979-592-110-X" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1789958034_919.png" data-ebook="assets/upload/buku/ebook_1789958034_826.pdf" data-deskripsi="">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(30, 'MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1789958034_826.pdf" data-judul="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #831843 0%, #be185d 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Karya Tulis </span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)">Pedoman Praktis Karya Tulis Ilm...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)">
-                    Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Badan Riset dan Inovasi Nasional (BRIN)</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> Rak F-01 (Karya Ilmiah/Jurnal)</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">10 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="29" data-judul="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)" data-penulis="Badan Riset dan Inovasi Nasional (BRIN)" data-penerbit="BRIN Press" data-tahun="2024" data-isbn="978-602-496-221-9" data-kategori="Karya Tulis &amp; Majalah" data-rak="Rak F-01 (Karya Ilmiah/Jurnal)" data-stok="10" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_pedoman_kir.pdf" data-deskripsi="Panduan metodologi penelitian ilmiah bagi siswa SMA/MA mulai dari perumusan masalah, tinjauan pustaka, hingga presentasi.">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(29, 'Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_pedoman_kir.pdf" data-judul="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #831843 0%, #be185d 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Karya Tulis </span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani">Buletin Pelajar Muslim: Inovasi...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani">
-                    Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Redaksi OSIM MAN 4 Banjar</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> Rak F-02 (Majalah/Buletin)</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">18 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="28" data-judul="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani" data-penulis="Redaksi OSIM MAN 4 Banjar" data-penerbit="OSIM Publishing" data-tahun="2026" data-isbn="ISSN-2987-1234" data-kategori="Karya Tulis &amp; Majalah" data-rak="Rak F-02 (Majalah/Buletin)" data-stok="18" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_buletin_pelajar.pdf" data-deskripsi="Buletin berkala madrasah menyajikan liputan kegiatan ekstrakurikuler, karya sastra siswa, cerpen, dan tips belajar efektif.">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(28, 'Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur\'ani')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_buletin_pelajar.pdf" data-judul="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-slate-50 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-sparkles"></i> Baru
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #831843 0%, #be185d 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Karya Tulis </span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026">Jurnal Ilmiah Madrasah: Riset S...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-kemenag-700 transition-colors line-clamp-2 leading-snug" title="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026">
-                    Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Tim Literasi &amp; Riset MAN 4 Banjar</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-boxes-stacked text-slate-400"></i> Rak F-01 (Karya Ilmiah/Jurnal)</span>
-                                          <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">15 eks</span>
-                                      </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="27" data-judul="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026" data-penulis="Tim Literasi &amp; Riset MAN 4 Banjar" data-penerbit="Madrasah Press" data-tahun="2026" data-isbn="978-602-555-101-2" data-kategori="Karya Tulis &amp; Majalah" data-rak="Rak F-01 (Karya Ilmiah/Jurnal)" data-stok="15" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_jurnal_madrasah_2026.pdf" data-deskripsi="Kompilasi artikel hasil penelitian karya ilmiah remaja (KIR) siswa madrasah di bidang robotika, biologi terapan, dan sosiologi.">
-                      <i class="fa-solid fa-circle-info mr-1"></i> Detail
-                    </button>
-
-                                          <button type="button" onclick="bookingBuku(27, 'Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026')" class="w-full bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold py-1.5 px-2 rounded-lg text-xs transition">
-                        <i class="fa-solid fa-bookmark mr-1"></i> Pinjam
-                      </button>
-                                      </div>
-
-                                      <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold py-2 px-3 rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_jurnal_madrasah_2026.pdf" data-judul="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026">
-                      <i class="fa-solid fa-file-pdf"></i>
-                      <span>Baca E-Book Online</span>
-                    </button>
-                                  </div>
-              </div>
-                      </div>
-        </div>
-
-        <!-- TAB CONTENT 3: E-BOOK DIGITAL -->
-        <div id="tab-ebook" class="koleksi-tab-panel hidden">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790212410_412.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="DI SUDUT HYDE PARK">
-                    DI SUDUT HYDE PARK                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">SUNARYO BASUKI KS</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790212410_636.pdf" data-judul="DI SUDUT HYDE PARK">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="36" data-judul="DI SUDUT HYDE PARK" data-penulis="SUNARYO BASUKI KS" data-penerbit="PT BALAI PUSTAKA" data-tahun="1993" data-isbn="979-407-584-1" data-kategori="Fiksi &amp; Sastra" data-rak="800" data-stok="1" data-cover="assets/upload/buku/cover_1790212410_412.png" data-ebook="assets/upload/buku/ebook_1790212410_636.pdf" data-deskripsi="">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790045225_933.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="Buat Apa Shalat - Dr Haidar Bagir">
-                    Buat Apa Shalat - Dr Haidar Bagir                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dr Haidar Bagir</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790045225_976.pdf" data-judul="Buat Apa Shalat - Dr Haidar Bagir">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="35" data-judul="Buat Apa Shalat - Dr Haidar Bagir" data-penulis="Dr Haidar Bagir" data-penerbit="Penerbit Mizania" data-tahun="2026" data-isbn="978-979-8394-93-5" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790045225_933.png" data-ebook="assets/upload/buku/ebook_1790045225_976.pdf" data-deskripsi="">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790044666_538.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?">
-                    ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Dr. H. Miftah Faridl</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790044666_133.pdf" data-judul="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="32" data-judul="ANTAR AKU KE TANAH SUCI: PANDUAN MUDAH HAJI, UMRAH, DAN ZIARA?" data-penulis="Dr. H. Miftah Faridl" data-penerbit="GEMA INSANI" data-tahun="2007" data-isbn="979-56-0248-9" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790044666_538.png" data-ebook="assets/upload/buku/ebook_1790044666_133.pdf" data-deskripsi="">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1790044397_466.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin">
-                    Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Al-‘Allâmah ‘Abdullâh al-Jibrîn</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1790044397_808.pdf" data-judul="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="31" data-judul="Tuntunan Sholat Menurut Al-Quran dan As-Sunah - Al-Alamah Abullah Jibrin" data-penulis="Al-‘Allâmah ‘Abdullâh al-Jibrîn" data-penerbit="Maktabah Abu Salma al-Atsari" data-tahun="2026" data-isbn="" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1790044397_466.png" data-ebook="assets/upload/buku/ebook_1790044397_808.pdf" data-deskripsi="">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    <div class="book-cover-3d-wrap">
-            <img src="/madrasah-theme/perpustakaan/cover_1789958034_919.png" alt="Cover" class="book-cover-3d-img" style="max-height: 172px; max-width: 100%; border-radius: 4px 8px 8px 4px; box-shadow: -4px 0 0 0 #0f172a, inset 4px 0 8px rgba(0,0,0,0.32), 5px 10px 22px rgba(0,0,0,0.22); object-fit: contain;">
-        </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)">
-                    MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Ibnu Qayyim Al-Jauziyah</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_1789958034_826.pdf" data-judul="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="30" data-judul="MADARIJUS-SALIKIN (PENDAKIAN MENUJU ALLAH)" data-penulis="Ibnu Qayyim Al-Jauziyah" data-penerbit="PUSTAKA AL-KAUTSAR" data-tahun="1999" data-isbn="979-592-110-X" data-kategori="AGAMA" data-rak="100" data-stok="1" data-cover="assets/upload/buku/cover_1789958034_919.png" data-ebook="assets/upload/buku/ebook_1789958034_826.pdf" data-deskripsi="">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #831843 0%, #be185d 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Karya Tulis </span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)">Pedoman Praktis Karya Tulis Ilm...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)">
-                    Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Badan Riset dan Inovasi Nasional (BRIN)</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_pedoman_kir.pdf" data-judul="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="29" data-judul="Pedoman Praktis Karya Tulis Ilmiah Remaja (KIR)" data-penulis="Badan Riset dan Inovasi Nasional (BRIN)" data-penerbit="BRIN Press" data-tahun="2024" data-isbn="978-602-496-221-9" data-kategori="Karya Tulis &amp; Majalah" data-rak="Rak F-01 (Karya Ilmiah/Jurnal)" data-stok="10" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_pedoman_kir.pdf" data-deskripsi="Panduan metodologi penelitian ilmiah bagi siswa SMA/MA mulai dari perumusan masalah, tinjauan pustaka, hingga presentasi.">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #831843 0%, #be185d 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Karya Tulis </span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani">Buletin Pelajar Muslim: Inovasi...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani">
-                    Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Redaksi OSIM MAN 4 Banjar</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_buletin_pelajar.pdf" data-judul="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="28" data-judul="Buletin Pelajar Muslim: Inovasi &amp; Prestasi Generasi Qur'ani" data-penulis="Redaksi OSIM MAN 4 Banjar" data-penerbit="OSIM Publishing" data-tahun="2026" data-isbn="ISSN-2987-1234" data-kategori="Karya Tulis &amp; Majalah" data-rak="Rak F-02 (Majalah/Buletin)" data-stok="18" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_buletin_pelajar.pdf" data-deskripsi="Buletin berkala madrasah menyajikan liputan kegiatan ekstrakurikuler, karya sastra siswa, cerpen, dan tips belajar efektif.">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                          <div class="bg-white rounded-2xl border-2 border-amber-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 flex flex-col justify-between group">
-                <div>
-                  <div class="bg-amber-50/60 rounded-xl p-3 text-center relative mb-3 overflow-hidden">
-                    <span class="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded shadow-sm">
-                      <i class="fa-solid fa-file-pdf"></i> E-Book
-                    </span>
-                    
-    <div class="book-cover-placeholder book-cover-3d-card" style="background: linear-gradient(135deg, #831843 0%, #be185d 100%); width: 112px; height: 158px;">
-        <div class="d-flex justify-content-between align-items-start">
-            <span class="cover-badge">Karya Tulis </span>
-            <i class="fa fa-bookmark cover-icon" style="color: #fbbf24;"></i>
-        </div>
-        <div class="cover-title" title="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026">Jurnal Ilmiah Madrasah: Riset S...</div>
-        <div class="d-flex align-items-center justify-content-between" style="font-size: 8px; opacity: 0.9;">
-            <span><i class="fa fa-book mr-1"></i> E-Perpus</span>
-            <span style="color: #fde047; font-weight: bold;">MAN 4</span>
-        </div>
-    </div>                  </div>
-
-                  <h3 class="font-bold text-sm text-slate-900 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug" title="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026">
-                    Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026                  </h3>
-                  
-                  <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                    <i class="fa-solid fa-user-pen text-slate-400 text-[10px]"></i>
-                    <span class="truncate">Tim Literasi &amp; Riset MAN 4 Banjar</span>
-                  </div>
-
-                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1 text-amber-700 font-semibold"><i class="fa-solid fa-desktop"></i> E-Reader Anti-Copy</span>
-                    <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Bebas Baca</span>
-                  </div>
-                </div>
-
-                <div class="pt-3 mt-3 border-t border-slate-100 space-y-1.5">
-                  <button type="button" class="btn-open-reader w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition" data-file="assets/upload/buku/ebook_jurnal_madrasah_2026.pdf" data-judul="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    <span>Baca E-Book Sekarang</span>
-                  </button>
-
-                  <button type="button" class="btn-detail-buku w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-2 rounded-lg text-xs transition" data-id="27" data-judul="Jurnal Ilmiah Madrasah: Riset Sains &amp; Humaniora Edisi 2026" data-penulis="Tim Literasi &amp; Riset MAN 4 Banjar" data-penerbit="Madrasah Press" data-tahun="2026" data-isbn="978-602-555-101-2" data-kategori="Karya Tulis &amp; Majalah" data-rak="Rak F-01 (Karya Ilmiah/Jurnal)" data-stok="15" data-cover="assets/database.png" data-ebook="assets/upload/buku/ebook_jurnal_madrasah_2026.pdf" data-deskripsi="Kompilasi artikel hasil penelitian karya ilmiah remaja (KIR) siswa madrasah di bidang robotika, biologi terapan, dan sosiologi.">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Detail Lengkap
-                  </button>
-                </div>
-              </div>
-                      </div>
-        </div>
-
-      
     </div>
   </main>
 
@@ -2294,13 +1284,13 @@
         <!-- Foto / Ilustrasi Kiri -->
         <div class="lg:col-span-5 relative">
           <div class="rounded-3xl overflow-hidden shadow-xl border-4 border-emerald-500/20 bg-kemenag-900 relative">
-            <img src="/madrasah-theme/perpustakaan/photo-1544717305-2782549b5136" alt="Pustakawan Madrasah" class="w-full h-80 sm:h-96 object-cover">
+            <img src="{{ ($contentBlocks['copy.blade_perpustakaan']['src_344'] ?? '/madrasah-theme/perpustakaan/photo-1544717305-2782549b5136') }}" alt="{{ ($contentBlocks['copy.blade_perpustakaan']['alt_345'] ?? 'Pustakawan Madrasah') }}" class="w-full h-80 sm:h-96 object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-kemenag-950 via-kemenag-950/20 to-transparent"></div>
             
             <div class="absolute bottom-4 left-4 right-4 bg-kemenag-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-emerald-500/40 text-white">
-              <span class="text-[10px] text-accent-yellow font-extrabold uppercase tracking-wider block">Pustakawan &amp; Pengelola</span>
-              <h4 class="font-extrabold text-sm">MADRASAH ALIYAH NEGERI 4 BANJAR</h4>
-              <p class="text-[11px] text-emerald-200 mt-0.5">Khazanah Sumber Belajar, Riset &amp; Pengayaan Siswa</p>
+              <span class="text-[10px] text-accent-yellow font-extrabold uppercase tracking-wider block">{{ ($contentBlocks['copy.blade_perpustakaan']['text_106'] ?? 'Pustakawan & Pengelola') }}</span>
+              <h4 class="font-extrabold text-sm">{{ $school['name'] ?? 'Perpustakaan Sekolah' }}</h4>
+              <p class="text-[11px] text-emerald-200 mt-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_107'] ?? 'Khazanah Sumber Belajar, Riset & Pengayaan Siswa') }}</p>
             </div>
           </div>
         </div>
@@ -2308,37 +1298,37 @@
         <!-- Teks Sambutan & Tata Tertib Kanan -->
         <div class="lg:col-span-7 space-y-4">
           <span class="text-xs font-extrabold text-kemenag-700 tracking-wider uppercase flex items-center gap-1.5">
-            <i class="fa-solid fa-graduation-cap"></i> Budaya Literasi Madrasah
+            <i class="fa-solid fa-graduation-cap"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_108'] ?? 'Budaya Literasi Madrasah') }}
           </span>
           <h2 class="text-2xl sm:text-3xl font-extrabold font-sans text-slate-900 tracking-tight">
-            Membangun Generasi Emas Melalui Kegemaran Membaca
+            {{ ($contentBlocks['copy.blade_perpustakaan']['text_109'] ?? 'Membangun Generasi Emas Melalui Kegemaran Membaca') }}
           </h2>
           <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-            Perpustakaan MADRASAH ALIYAH NEGERI 4 BANJAR bertransformasi menjadi pusat pembelajaran yang adaptif, menyediakan ribuan koleksi cetak maupun e-book digital yang dapat diakses secara mandiri oleh seluruh peserta didik dan tenaga kependidikan.
+            Perpustakaan {{ $school['name'] ?? 'Perpustakaan Sekolah' }} bertransformasi menjadi pusat pembelajaran yang adaptif, menyediakan ribuan koleksi cetak maupun e-book digital yang dapat diakses secara mandiri oleh seluruh peserta didik dan tenaga kependidikan.
           </p>
 
           <!-- 3 Poin Tata Tertib & Layanan -->
           <div class="grid sm:grid-cols-2 gap-3 pt-2">
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
               <div class="font-bold text-xs text-slate-900 flex items-center gap-2 mb-1">
-                <i class="fa-solid fa-circle-check text-kemenag-600"></i> Ketentuan Peminjaman
+                <i class="fa-solid fa-circle-check text-kemenag-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_110'] ?? 'Ketentuan Peminjaman') }}
               </div>
-              <p class="text-[11px] text-slate-500 leading-relaxed">Maksimal pinjam 3 buku selama 7 hari kalender, dapat diperpanjang online melalui portal siswa.</p>
+              <p class="text-[11px] text-slate-500 leading-relaxed">{{ ($contentBlocks['copy.blade_perpustakaan']['text_111'] ?? 'Maksimal pinjam 3 buku selama 7 hari kalender, dapat diperpanjang online melalui portal siswa.') }}</p>
             </div>
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
               <div class="font-bold text-xs text-slate-900 flex items-center gap-2 mb-1">
-                <i class="fa-solid fa-shield-halved text-amber-600"></i> Hak Cipta E-Book
+                <i class="fa-solid fa-shield-halved text-amber-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_112'] ?? 'Hak Cipta E-Book') }}
               </div>
-              <p class="text-[11px] text-slate-500 leading-relaxed">Modul dan karya ilmiah dilindungi sistem pembaca digital aman anti-copy dan anti-download.</p>
+              <p class="text-[11px] text-slate-500 leading-relaxed">{{ ($contentBlocks['copy.blade_perpustakaan']['text_113'] ?? 'Modul dan karya ilmiah dilindungi sistem pembaca digital aman anti-copy dan anti-download.') }}</p>
             </div>
           </div>
 
           <div class="pt-2 flex flex-wrap items-center gap-3">
             <button type="button" onclick="$('#modalBukuTamu').modal('show')" class="px-5 py-2.5 rounded-xl bg-kemenag-700 hover:bg-kemenag-800 text-white font-bold text-xs transition flex items-center gap-2 shadow-sm">
-              <i class="fa-solid fa-qrcode text-accent-yellow"></i> Presensi Tamu Hari Ini
+              <i class="fa-solid fa-qrcode text-accent-yellow"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_114'] ?? 'Presensi Tamu Hari Ini') }}
             </button>
-            <a href="/perpustakaan?ebook=1" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-2 border border-slate-200">
-              <i class="fa-solid fa-book-open"></i> Jelajah Modul Digital
+            <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-2 border border-slate-200">
+              <i class="fa-solid fa-book-open"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_115'] ?? 'Jelajah Modul Digital') }}
             </a>
           </div>
         </div>
@@ -2351,13 +1341,13 @@
   <section class="bg-gradient-to-r from-kemenag-950 via-kemenag-900 to-kemenag-950 text-white py-10 border-t border-b border-emerald-900">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="space-y-1 text-center md:text-left">
-        <span class="text-accent-yellow text-xs font-extrabold uppercase tracking-wider block">Gerakan Literasi Madrasah (GLM)</span>
-        <h3 class="text-xl sm:text-2xl font-extrabold font-sans text-white">"Iqra' — Membaca untuk Berakhlak, Berkarya, dan Memimpin"</h3>
-        <p class="text-xs text-emerald-200">Perpustakaan Digital Terakreditasi MAN 4 Banjar siap mendampingi perjalanan akademik Anda.</p>
+        <span class="text-accent-yellow text-xs font-extrabold uppercase tracking-wider block">{{ ($contentBlocks['copy.blade_perpustakaan']['text_116'] ?? 'Gerakan Literasi Madrasah (GLM)') }}</span>
+        <h3 class="text-xl sm:text-2xl font-extrabold font-sans text-white">{{ ($contentBlocks['copy.blade_perpustakaan']['text_117'] ?? '"Iqra\' — Membaca untuk Berakhlak, Berkarya, dan Memimpin"') }}</h3>
+        <p class="text-xs text-emerald-200">{{ ($contentBlocks['copy.blade_perpustakaan']['text_118'] ?? 'Perpustakaan Digital Terakreditasi MAN 4 Banjar siap mendampingi perjalanan akademik Anda.') }}</p>
       </div>
       <div class="shrink-0 flex items-center gap-3">
-        <a href="/perpustakaan?ebook=1" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-xs sm:text-sm flex items-center gap-2">
-          <i class="fa-solid fa-book"></i> Baca E-Book Hari Ini
+        <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-xs sm:text-sm flex items-center gap-2">
+          <i class="fa-solid fa-book"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_119'] ?? 'Baca E-Book Hari Ini') }}
         </a>
       </div>
     </div>
@@ -2370,19 +1360,19 @@
       <!-- Brand & Kontak -->
       <div class="lg:col-span-4 space-y-3">
         <div class="flex items-center gap-3">
-          <img src="/madrasah-theme/perpustakaan/logo239.png" alt="Logo MADRASAH ALIYAH NEGERI 4 BANJAR" class="w-10 h-10 object-contain">
+          <img src="{{ ($school['logo_url'] ?? $contentBlocks['copy.blade_perpustakaan']['src_319'] ?? '/madrasah-theme/images/logo-kemenag.png') }}" alt="Logo {{ $school['name'] ?? 'Perpustakaan Sekolah' }}" class="w-10 h-10 object-contain">
           <div>
-            <h4 class="font-bold text-white text-sm">MADRASAH ALIYAH NEGERI 4 BANJAR</h4>
-            <span class="text-[11px] text-emerald-400 font-semibold block">E-Perpustakaan Digital Terpadu</span>
+            <h4 class="font-bold text-white text-sm">{{ $school['name'] ?? 'Perpustakaan Sekolah' }}</h4>
+            <span class="text-[11px] text-emerald-400 font-semibold block">{{ ($contentBlocks['copy.blade_perpustakaan']['text_120'] ?? 'E-Perpustakaan Digital Terpadu') }}</span>
           </div>
         </div>
         <p class="text-slate-400 text-xs leading-relaxed">
-          Pusat sumber belajar digital, katalog buku OPAC, dan layanan literasi terpadu madrasah mandiri berprestasi &amp; unggul riset Kabupaten Banjar.
+          {{ ($contentBlocks['copy.blade_perpustakaan']['text_121'] ?? 'Pusat sumber belajar digital, katalog buku OPAC, dan layanan literasi terpadu madrasah mandiri berprestasi & unggul riset Kabupaten Banjar.') }}
         </p>
         <div class="space-y-1.5 pt-1 text-slate-400">
           <div class="flex items-start gap-2">
             <i class="fa-solid fa-location-dot text-accent-yellow mt-0.5"></i>
-            <span>Jln. Pendidikan No. 1  Martapura</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_122'] ?? 'Jln. Pendidikan No. 1  Martapura') }}</span>
           </div>
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-phone text-accent-yellow"></i>
@@ -2397,48 +1387,48 @@
 
       <!-- Tautan Layanan -->
       <div class="lg:col-span-3 space-y-3">
-        <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">Layanan Pustaka</h4>
+        <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">{{ ($contentBlocks['copy.blade_perpustakaan']['text_123'] ?? 'Layanan Pustaka') }}</h4>
         <ul class="space-y-2">
-          <li><a href="/perpustakaan" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Katalog Buku (OPAC)</a></li>
-          <li><a href="/perpustakaan?ebook=1" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Koleksi E-Book Digital</a></li>
-          <li><a href="javascript:void(0)" onclick="$('#modalBukuTamu').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Presensi Tamu (Scan QR)</a></li>
-          <li><a href="javascript:void(0)" onclick="$('#modalCekBebas').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Cek Bebas Pustaka Online</a></li>
-          <li><a href="javascript:void(0)" onclick="$('#modalUsulanBuku').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Usulan Pengadaan Buku</a></li>
-          <li><a href="javascript:void(0)" onclick="$('#modalStatistikKunjungan').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Grafik Statistik Kunjungan</a></li>
+          <li><a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_124'] ?? 'Katalog Buku (OPAC)') }}</a></li>
+          <li><a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_034'] ?? 'Koleksi E-Book Digital') }}</a></li>
+          <li><a href="javascript:void(0)" onclick="$('#modalBukuTamu').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_125'] ?? 'Presensi Tamu (Scan QR)') }}</a></li>
+          <li><a href="javascript:void(0)" onclick="$('#modalCekBebas').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_027'] ?? 'Cek Bebas Pustaka Online') }}</a></li>
+          <li><a href="javascript:void(0)" onclick="$('#modalUsulanBuku').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_035'] ?? 'Usulan Pengadaan Buku') }}</a></li>
+          <li><a href="javascript:void(0)" onclick="$('#modalStatistikKunjungan').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_029'] ?? 'Grafik Statistik Kunjungan') }}</a></li>
         </ul>
       </div>
 
       <!-- Tautan Akses Siswa & Madrasah -->
       <div class="lg:col-span-2 space-y-3">
-        <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">Akses Siswa</h4>
+        <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">{{ ($contentBlocks['copy.blade_perpustakaan']['text_126'] ?? 'Akses Siswa') }}</h4>
         <ul class="space-y-2">
-                      <li><a href="javascript:void(0)" onclick="$('#modalLoginSiswa').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Masuk Siswa</a></li>
-            <li><a href="/login?portal=siswa" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Portal Siswa</a></li>
-                    <li><a href="/layanan/ptsp" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Layanan PTSP</a></li>
-          <li><a href="/lacak" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Lacak Berkas</a></li>
-          <li><a href="/" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> Beranda Utama</a></li>
+                      <li><a href="javascript:void(0)" onclick="$('#modalLoginSiswa').modal('show')" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_127'] ?? 'Masuk Siswa') }}</a></li>
+            <li><a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_331'] ?? '/login?portal=siswa') }}" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_033'] ?? 'Portal Siswa') }}</a></li>
+                    <li><a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_346'] ?? '/layanan/ptsp') }}" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_128'] ?? 'Layanan PTSP') }}</a></li>
+          <li><a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_330'] ?? '/lacak') }}" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_129'] ?? 'Lacak Berkas') }}</a></li>
+          <li><a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_316'] ?? '/') }}" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-emerald-500"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_008'] ?? 'Beranda Utama') }}</a></li>
         </ul>
       </div>
 
       <!-- Jam Layanan & Akreditasi -->
       <div class="lg:col-span-3 space-y-3">
-        <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">Jam Layanan</h4>
+        <h4 class="font-bold text-white text-sm uppercase tracking-wider border-b border-slate-800 pb-2">{{ ($contentBlocks['copy.blade_perpustakaan']['text_130'] ?? 'Jam Layanan') }}</h4>
         <div class="bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 space-y-2">
           <div class="flex items-center justify-between text-xs pb-2 border-b border-slate-700">
-            <span class="text-slate-400 font-semibold">Status Hari Ini:</span>
-            <span class="font-extrabold text-amber-400">TUTUP</span>
+            <span class="text-slate-400 font-semibold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_131'] ?? 'Status Hari Ini:') }}</span>
+            <span class="font-extrabold text-amber-400">{{ ($contentBlocks['copy.blade_perpustakaan']['text_132'] ?? 'TUTUP') }}</span>
           </div>
           <div class="flex items-center justify-between text-xs text-slate-300">
-            <span>Senin – Kamis</span>
-            <span class="font-bold text-white">07.30 – 15.00 WITA</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_133'] ?? 'Senin – Kamis') }}</span>
+            <span class="font-bold text-white">{{ ($contentBlocks['copy.blade_perpustakaan']['text_134'] ?? '07.30 – 15.00 WITA') }}</span>
           </div>
           <div class="flex items-center justify-between text-xs text-slate-300">
-            <span>Jum'at</span>
-            <span class="font-bold text-white">07.30 – 11.30 WITA</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_135'] ?? 'Jum\'at') }}</span>
+            <span class="font-bold text-white">{{ ($contentBlocks['copy.blade_perpustakaan']['text_136'] ?? '07.30 – 11.30 WITA') }}</span>
           </div>
           <div class="flex items-center justify-between text-xs text-slate-300">
-            <span>Sabtu – Minggu</span>
-            <span class="font-bold text-rose-400">Libur</span>
+            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_137'] ?? 'Sabtu – Minggu') }}</span>
+            <span class="font-bold text-rose-400">{{ ($contentBlocks['copy.blade_perpustakaan']['text_138'] ?? 'Libur') }}</span>
           </div>
         </div>
       </div>
@@ -2448,10 +1438,10 @@
     <!-- Bottom Copyright -->
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-[11px]">
       <div>
-        © 2026 <b>E-Perpustakaan MADRASAH ALIYAH NEGERI 4 BANJAR</b>. Seluruh hak cipta dilindungi.
+        © {{ now($school['timezone'] ?? config('app.timezone'))->year }} <b>E-Perpustakaan {{ $school['name'] ?? 'Perpustakaan Sekolah' }}</b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_139'] ?? '. Seluruh hak cipta dilindungi.') }}
       </div>
       <div>
-        Kementerian Agama Republik Indonesia • Gerakan Literasi Madrasah (GLM)
+        {{ ($contentBlocks['copy.blade_perpustakaan']['text_140'] ?? 'Kementerian Agama Republik Indonesia • Gerakan Literasi Madrasah (GLM)') }}
       </div>
     </div>
   </footer>
@@ -2463,17 +1453,17 @@
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl relative">
       <div class="flex items-center gap-2 border-b border-slate-200 pb-3">
         <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
-        <input type="text" id="globalSearchInput" placeholder="Ketik judul buku, pengarang, atau topik..." class="w-full text-xs sm:text-sm outline-none" onkeydown="if(event.key === 'Enter'){ window.location.href='perpustakaan?q='+encodeURIComponent(this.value); }">
+        <input type="text" id="globalSearchInput" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_347'] ?? 'Ketik judul buku, pengarang, atau topik...') }}" class="w-full text-xs sm:text-sm outline-none" onkeydown="if(event.key === 'Enter'){ window.location.href='perpustakaan?q='+encodeURIComponent(this.value); }">
         <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="pt-3 text-xs text-slate-500 space-y-1">
-        <span class="block font-bold text-slate-700">Pintasan Cepat:</span>
+        <span class="block font-bold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_141'] ?? 'Pintasan Cepat:') }}</span>
         <div class="flex flex-wrap gap-1.5 pt-1">
-          <a href="/perpustakaan" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Semua Katalog</a>
-          <a href="/perpustakaan?ebook=1" class="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold">E-Book Digital</a>
-          <a href="/perpustakaan?q=Kurikulum+Merdeka" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Kurikulum Merdeka</a>
-          <a href="/perpustakaan?q=Agama" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">Pendidikan Agama</a>
-          <a href="javascript:void(0)" onclick="closeSearchModal(); $('#modalBukuTamu').modal('show');" class="px-2 py-1 rounded bg-emerald-50 text-kemenag-800 font-bold">Buku Tamu QR</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_318'] ?? '/perpustakaan') }}" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">{{ ($contentBlocks['copy.blade_perpustakaan']['text_142'] ?? 'Semua Katalog') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_326'] ?? '/perpustakaan?ebook=1') }}" class="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_022'] ?? 'E-Book Digital') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_327'] ?? '/perpustakaan?q=Kurikulum+Merdeka') }}" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">{{ ($contentBlocks['copy.blade_perpustakaan']['text_023'] ?? 'Kurikulum Merdeka') }}</a>
+          <a href="{{ ($contentBlocks['copy.blade_perpustakaan']['href_328'] ?? '/perpustakaan?q=Agama') }}" class="px-2 py-1 rounded bg-slate-100 hover:bg-emerald-100 hover:text-kemenag-800">{{ ($contentBlocks['copy.blade_perpustakaan']['text_143'] ?? 'Pendidikan Agama') }}</a>
+          <a href="javascript:void(0)" onclick="closeSearchModal(); $('#modalBukuTamu').modal('show');" class="px-2 py-1 rounded bg-emerald-50 text-kemenag-800 font-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_144'] ?? 'Buku Tamu QR') }}</a>
         </div>
       </div>
     </div>
@@ -2490,39 +1480,39 @@
           <i class="fa-solid fa-mosque"></i>
         </div>
         <div>
-          <h3 class="font-extrabold text-slate-900 text-base">Jadwal Sholat Hari Ini</h3>
-          <span class="text-xs text-slate-500 font-medium">Martapura, Kab. Banjar • WITA</span>
+          <h3 class="font-extrabold text-slate-900 text-base">{{ ($contentBlocks['copy.blade_perpustakaan']['text_145'] ?? 'Jadwal Sholat Hari Ini') }}</h3>
+          <span class="text-xs text-slate-500 font-medium">{{ ($contentBlocks['copy.blade_perpustakaan']['text_146'] ?? 'Martapura, Kab. Banjar • WITA') }}</span>
         </div>
       </div>
       <div class="py-4 space-y-2 text-xs">
         <div id="prayer-subuh" class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border-2 border-emerald-500 font-bold text-kemenag-800">
-          <span class="font-semibold text-slate-700">Subuh</span>
-          <span class="font-bold text-slate-900">05:04 WITA</span>
+          <span class="font-semibold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_147'] ?? 'Subuh') }}</span>
+          <span class="font-bold text-slate-900">{{ ($contentBlocks['copy.blade_perpustakaan']['text_148'] ?? '05:04 WITA') }}</span>
         </div>
         <div id="prayer-terbit" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-          <span class="font-semibold text-slate-700">Terbit</span>
-          <span class="font-bold text-slate-900">06:14 WITA</span>
+          <span class="font-semibold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_149'] ?? 'Terbit') }}</span>
+          <span class="font-bold text-slate-900">{{ ($contentBlocks['copy.blade_perpustakaan']['text_150'] ?? '06:14 WITA') }}</span>
         </div>
         <div id="prayer-dzuhur" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-          <span class="font-semibold text-slate-700">Dzuhur</span>
-          <span class="font-bold text-slate-900">12:28 WITA</span>
+          <span class="font-semibold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_151'] ?? 'Dzuhur') }}</span>
+          <span class="font-bold text-slate-900">{{ ($contentBlocks['copy.blade_perpustakaan']['text_152'] ?? '12:28 WITA') }}</span>
         </div>
         <div id="prayer-ashar" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-          <span class="font-semibold text-slate-700">Ashar</span>
-          <span class="font-bold text-slate-900">15:37 WITA</span>
+          <span class="font-semibold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_153'] ?? 'Ashar') }}</span>
+          <span class="font-bold text-slate-900">{{ ($contentBlocks['copy.blade_perpustakaan']['text_154'] ?? '15:37 WITA') }}</span>
         </div>
         <div id="prayer-maghrib" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-          <span class="font-semibold text-slate-700">Maghrib</span>
-          <span class="font-bold text-slate-900">18:31 WITA</span>
+          <span class="font-semibold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_155'] ?? 'Maghrib') }}</span>
+          <span class="font-bold text-slate-900">{{ ($contentBlocks['copy.blade_perpustakaan']['text_156'] ?? '18:31 WITA') }}</span>
         </div>
         <div id="prayer-isya" class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-          <span class="font-semibold text-slate-700">Isya</span>
-          <span class="font-bold text-slate-900">19:39 WITA</span>
+          <span class="font-semibold text-slate-700">{{ ($contentBlocks['copy.blade_perpustakaan']['text_157'] ?? 'Isya') }}</span>
+          <span class="font-bold text-slate-900">{{ ($contentBlocks['copy.blade_perpustakaan']['text_158'] ?? '19:39 WITA') }}</span>
         </div>
       </div>
       <div class="pt-2">
         <button onclick="closePrayerModal()" class="w-full bg-kemenag-700 text-white font-bold py-2.5 rounded-xl text-xs hover:bg-kemenag-800 transition">
-          Tutup
+          {{ ($contentBlocks['copy.blade_perpustakaan']['text_159'] ?? 'Tutup') }}
         </button>
       </div>
     </div>
@@ -2536,7 +1526,7 @@
   <!-- 4. Toast Notification -->
   <div id="toastNotification" class="fixed top-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 -translate-y-20 opacity-0 pointer-events-none">
     <i class="fa-solid fa-circle-check text-accent-yellow text-sm"></i>
-    <span id="toastMessage">Operasi berhasil dilakukan!</span>
+    <span id="toastMessage">{{ ($contentBlocks['copy.blade_perpustakaan']['text_160'] ?? 'Operasi berhasil dilakukan!') }}</span>
   </div>
 
     <!-- MODAL 1: PRESENSI BUKU TAMU TERPADU (SISWA/QR, GURU, TAMU LUAR) -->
@@ -2558,14 +1548,14 @@
                             <div>
                                 <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/20 text-emerald-100 border border-white/25 mb-1">
                                     <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                                    Presensi Digital Perpustakaan
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_161'] ?? 'Presensi Digital Perpustakaan') }}
                                 </div>
                                 <h4 class="font-extrabold text-white text-[17px] sm:text-[18px] leading-tight mb-0 tracking-tight">
-                                    Buku Tamu Pengunjung
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_162'] ?? 'Buku Tamu Pengunjung') }}
                                 </h4>
                             </div>
                         </div>
-                        <button type="button" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition text-xl leading-none flex-shrink-0" data-dismiss="modal" title="Tutup">
+                        <button type="button" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition text-xl leading-none flex-shrink-0" data-dismiss="modal" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_348'] ?? 'Tutup') }}">
                             ×
                         </button>
                     </div>
@@ -2575,27 +1565,27 @@
                 <div class="bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-slate-50 border-b border-emerald-100/90 px-4 sm:px-6 py-2.5">
                     <div class="flex items-center justify-between text-xs text-slate-600 mb-1.5 font-medium">
                         <span class="flex items-center gap-1.5 font-bold text-emerald-900">
-                            <i class="fa fa-signal text-emerald-600"></i> Statistik Kunjungan Hari Ini:
+                            <i class="fa fa-signal text-emerald-600"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_163'] ?? 'Statistik Kunjungan Hari Ini:') }}
                         </span>
                         <span class="text-[11px] text-slate-500 font-semibold">
-                            19 Nov 2026                        </span>
+                            {{ now($school['timezone'] ?? config('app.timezone'))->locale('id')->translatedFormat('j M Y') }}                        </span>
                     </div>
                     <div class="grid grid-cols-4 gap-1.5">
                         <div class="bg-white/95 rounded-xl px-2 py-1.5 text-center border border-emerald-100 shadow-2xs">
-                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Total</div>
-                            <div class="text-sm sm:text-base font-extrabold text-emerald-800 leading-tight" id="stat-tamu-total">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{{ ($contentBlocks['copy.blade_perpustakaan']['text_165'] ?? 'Total') }}</div>
+                            <div class="text-sm sm:text-base font-extrabold text-emerald-800 leading-tight" id="stat-tamu-total">{{ $stats['visits_today'] ?? 0 }}</div>
                         </div>
                         <div class="bg-white/95 rounded-xl px-2 py-1.5 text-center border border-emerald-100 shadow-2xs">
-                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Siswa</div>
-                            <div class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight" id="stat-tamu-siswa">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{{ ($contentBlocks['copy.blade_perpustakaan']['text_166'] ?? 'Siswa') }}</div>
+                            <div class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight" id="stat-tamu-siswa">{{ $stats['student_visits_today'] ?? 0 }}</div>
                         </div>
                         <div class="bg-white/95 rounded-xl px-2 py-1.5 text-center border border-emerald-100 shadow-2xs">
-                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Guru/PTK</div>
-                            <div class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight" id="stat-tamu-guru">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{{ ($contentBlocks['copy.blade_perpustakaan']['text_167'] ?? 'Guru/PTK') }}</div>
+                            <div class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight" id="stat-tamu-guru">{{ $stats['teacher_visits_today'] ?? 0 }}</div>
                         </div>
                         <div class="bg-white/95 rounded-xl px-2 py-1.5 text-center border border-emerald-100 shadow-2xs">
-                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Tamu</div>
-                            <div class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight" id="stat-tamu-luar">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{{ ($contentBlocks['copy.blade_perpustakaan']['text_168'] ?? 'Tamu') }}</div>
+                            <div class="text-sm sm:text-base font-extrabold text-slate-800 leading-tight" id="stat-tamu-luar">{{ $stats['guest_visits_today'] ?? 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -2607,8 +1597,8 @@
                             <i class="fa fa-book text-sm"></i>
                         </div>
                         <div class="text-xs text-amber-900 leading-relaxed">
-                            <strong class="font-bold text-amber-950 block text-[13px] mb-0.5">Presensi Pengunjung Diperlukan</strong>
-                            Silakan isi buku tamu di bawah ini terlebih dahulu untuk membuka <b>E-Book</b>. Cukup isi 1 kali untuk membuka akses seluruh e-book selama sesi kunjungan Anda.
+                            <strong class="font-bold text-amber-950 block text-[13px] mb-0.5">{{ ($contentBlocks['copy.blade_perpustakaan']['text_169'] ?? 'Presensi Pengunjung Diperlukan') }}</strong>
+                            {{ ($contentBlocks['copy.blade_perpustakaan']['text_170'] ?? 'Silakan isi buku tamu di bawah ini terlebih dahulu untuk membuka') }} <b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_171'] ?? 'E-Book') }}</b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_172'] ?? '. Cukup isi 1 kali untuk membuka akses seluruh e-book selama sesi kunjungan Anda.') }}
                         </div>
                     </div>
                 </div>
@@ -2617,13 +1607,13 @@
                 <div class="px-5 sm:px-6 pt-3.5 pb-2 bg-slate-50 border-b border-slate-100">
                     <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-200/70 rounded-2xl shadow-inner">
                         <button type="button" onclick="switchTabBukuTamu('siswa')" class="tab-tamu-btn py-2 px-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 bg-emerald-700 text-white shadow-sm" id="pill-siswa-tab" data-tab="#tab-tamu-siswa">
-                            <i class="fa fa-graduation-cap"></i> <span>Siswa</span>
+                            <i class="fa fa-graduation-cap"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_166'] ?? 'Siswa') }}</span>
                         </button>
                         <button type="button" onclick="switchTabBukuTamu('guru')" class="tab-tamu-btn py-2 px-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-emerald-700 hover:bg-white/60 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5" id="pill-guru-tab" data-tab="#tab-tamu-guru">
-                            <i class="fa fa-chalkboard-teacher"></i> <span>Guru / Staf</span>
+                            <i class="fa fa-chalkboard-teacher"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_173'] ?? 'Guru / Staf') }}</span>
                         </button>
                         <button type="button" onclick="switchTabBukuTamu('luar')" class="tab-tamu-btn py-2 px-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-emerald-700 hover:bg-white/60 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5" id="pill-luar-tab" data-tab="#tab-tamu-luar">
-                            <i class="fa fa-building"></i> <span>Tamu Luar</span>
+                            <i class="fa fa-building"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_174'] ?? 'Tamu Luar') }}</span>
                         </button>
                     </div>
                 </div>
@@ -2639,11 +1629,11 @@
                                 <div>
                                     <div class="flex items-center justify-between mb-1.5">
                                         <label class="font-bold text-slate-800 text-xs sm:text-sm mb-0 flex items-center gap-1.5">
-                                            <span>NISN / Nomor Induk Siswa</span>
+                                            <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_175'] ?? 'NISN / Nomor Induk Siswa') }}</span>
                                             <span class="text-rose-500">*</span>
                                         </label>
                                         <button type="button" id="btn-toggle-camera" class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition shadow-2xs">
-                                            <i class="fa fa-camera text-xs"></i> <span id="camera-btn-text">Scan Kamera QR</span>
+                                            <i class="fa fa-camera text-xs"></i> <span id="camera-btn-text">{{ ($contentBlocks['copy.blade_perpustakaan']['text_176'] ?? 'Scan Kamera QR') }}</span>
                                         </button>
                                     </div>
 
@@ -2651,7 +1641,7 @@
                                     <div id="qr-reader-container" style="display: none;" class="mb-3 p-3 bg-slate-900 rounded-2xl text-center border-2 border-dashed border-emerald-500/50 shadow-inner">
                                         <div id="qr-reader" class="rounded-xl overflow-hidden w-full min-h-[200px]"></div>
                                         <p class="text-emerald-400 text-xs mt-2 mb-0 font-medium">
-                                            <i class="fa fa-qrcode mr-1"></i> Arahkan QR code kartu pelajar / barcode ke kamera
+                                            <i class="fa fa-qrcode mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_177'] ?? 'Arahkan QR code kartu pelajar / barcode ke kamera') }}
                                         </p>
                                     </div>
 
@@ -2660,32 +1650,32 @@
                                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-id-card-o text-base"></i>
                                         </div>
-                                        <input type="text" name="nisn_or_nis" id="input-nisn-tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Ketik NISN atau tempel barcode scanner..." required="" autofocus="" value="">
+                                        <input type="text" name="nisn_or_nis" id="input-nisn-tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_349'] ?? 'Ketik NISN atau tempel barcode scanner...') }}" required="" autofocus="" value="">
                                     </div>
                                     <p class="text-slate-400 text-[11px] mt-1.5 mb-0">
-                                        Mendukung input manual NISN, scan kamera HP/laptop, atau scanner USB barcode.
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_178'] ?? 'Mendukung input manual NISN, scan kamera HP/laptop, atau scanner USB barcode.') }}
                                     </p>
                                 </div>
 
                                 <!-- KEPERLUAN KUNJUNGAN: INTERACTIVE PILL CHIPS -->
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        Pilih Keperluan Kunjungan:
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_179'] ?? 'Pilih Keperluan Kunjungan:') }}
                                     </label>
                                     
                                     <!-- CHIP OPTIONS -->
                                     <div class="grid grid-cols-2 sm:grid-cols-2 gap-2 mb-2">
                                         <button type="button" onclick="selectKeperluanChip('siswa', 'Membaca Buku / Bahan Pustaka', this)" class="chip-keperluan-siswa px-3 py-2 text-xs font-semibold rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-800 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-book text-emerald-600"></i> <span>Membaca Buku</span>
+                                            <i class="fa fa-book text-emerald-600"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_180'] ?? 'Membaca Buku') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('siswa', 'Meminjam / Mengembalikan Buku', this)" class="chip-keperluan-siswa px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-exchange text-slate-400"></i> <span>Pinjam / Kembali</span>
+                                            <i class="fa fa-exchange text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_181'] ?? 'Pinjam / Kembali') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('siswa', 'Belajar Kelompok / Diskusi', this)" class="chip-keperluan-siswa px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-users text-slate-400"></i> <span>Belajar Bersama</span>
+                                            <i class="fa fa-users text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_182'] ?? 'Belajar Bersama') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('siswa', 'Mengerjakan Tugas / Riset', this)" class="chip-keperluan-siswa px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-pencil-square-o text-slate-400"></i> <span>Tugas &amp; Riset</span>
+                                            <i class="fa fa-pencil-square-o text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_183'] ?? 'Tugas & Riset') }}</span>
                                         </button>
                                     </div>
 
@@ -2695,28 +1685,28 @@
                                             <i class="fa fa-compass text-base"></i>
                                         </div>
                                         <select name="keperluan" id="select-keperluan-siswa" class="w-full pl-10 pr-9 py-2 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 appearance-none select-keperluan cursor-pointer" data-target="#wrap-lainnya-siswa">
-                                            <option value="Membaca Buku / Bahan Pustaka">Membaca Buku / Bahan Pustaka</option>
-                                            <option value="Meminjam / Mengembalikan Buku">Meminjam / Mengembalikan Buku</option>
-                                            <option value="Belajar Kelompok / Diskusi">Belajar Kelompok / Diskusi</option>
-                                            <option value="Mengerjakan Tugas / Riset">Mengerjakan Tugas / Riset</option>
-                                            <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                                            <option value="Membaca Buku / Bahan Pustaka">{{ ($contentBlocks['copy.blade_perpustakaan']['text_184'] ?? 'Membaca Buku / Bahan Pustaka') }}</option>
+                                            <option value="Meminjam / Mengembalikan Buku">{{ ($contentBlocks['copy.blade_perpustakaan']['text_185'] ?? 'Meminjam / Mengembalikan Buku') }}</option>
+                                            <option value="Belajar Kelompok / Diskusi">{{ ($contentBlocks['copy.blade_perpustakaan']['text_186'] ?? 'Belajar Kelompok / Diskusi') }}</option>
+                                            <option value="Mengerjakan Tugas / Riset">{{ ($contentBlocks['copy.blade_perpustakaan']['text_187'] ?? 'Mengerjakan Tugas / Riset') }}</option>
+                                            <option value="Lainnya">{{ ($contentBlocks['copy.blade_perpustakaan']['text_188'] ?? 'Lainnya (Ketik Manual)...') }}</option>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-chevron-down text-xs"></i>
                                         </div>
                                     </div>
                                     <div class="mt-2.5 wrap-keperluan-lainnya" id="wrap-lainnya-siswa" style="display: none;">
-                                        <textarea name="keperluan_lainnya" rows="2" class="w-full px-3.5 py-2 bg-white border border-emerald-400 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Tuliskan tujuan/keperluan kunjungan Anda secara lengkap di sini..."></textarea>
+                                        <textarea name="keperluan_lainnya" rows="2" class="w-full px-3.5 py-2 bg-white border border-emerald-400 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_350'] ?? 'Tuliskan tujuan/keperluan kunjungan Anda secara lengkap di sini...') }}"></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="modal-footer bg-slate-50 px-5 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
                                 <button type="button" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition" data-dismiss="modal">
-                                    Batal
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_189'] ?? 'Batal') }}
                                 </button>
                                 <button type="submit" id="btn-submit-tamu-siswa" class="px-5 py-2.5 text-xs sm:text-sm font-bold text-white rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 active:scale-95 hover:brightness-110" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
-                                    <i class="fa fa-check-circle"></i> Simpan Kehadiran Siswa
+                                    <i class="fa fa-check-circle"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_190'] ?? 'Simpan Kehadiran Siswa') }}
                                 </button>
                             </div>
                         </form>
@@ -2731,40 +1721,40 @@
                             <div class="p-5 sm:p-6 space-y-4">
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        Nama Guru / PTK <span class="text-rose-500">*</span>
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_191'] ?? 'Nama Guru / PTK') }} <span class="text-rose-500">*</span>
                                     </label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-user-circle-o text-base"></i>
                                         </div>
-                                        <input type="text" name="nama_guru" list="list-guru-buku-tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Ketik nama lengkap Bapak/Ibu guru..." required="">
+                                        <input type="text" name="nama_guru" list="list-guru-buku-tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_351'] ?? 'Ketik nama lengkap Bapak/Ibu guru...') }}" required="">
                                     </div>
                                     <datalist id="list-guru-buku-tamu">
                                                                             </datalist>
                                     <p class="text-slate-400 text-[11px] mt-1.5 mb-0">
-                                        Ketik beberapa huruf nama Anda untuk memilih dari daftar GTK madrasah.
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_192'] ?? 'Ketik beberapa huruf nama Anda untuk memilih dari daftar GTK madrasah.') }}
                                     </p>
                                 </div>
 
                                 <!-- KEPERLUAN KUNJUNGAN: INTERACTIVE PILL CHIPS GURU -->
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        Pilih Keperluan Kunjungan:
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_179'] ?? 'Pilih Keperluan Kunjungan:') }}
                                     </label>
                                     
                                     <!-- CHIP OPTIONS -->
                                     <div class="grid grid-cols-2 gap-2 mb-2">
                                         <button type="button" onclick="selectKeperluanChip('guru', 'Mencari Bahan Ajar / Silabus', this)" class="chip-keperluan-guru px-3 py-2 text-xs font-semibold rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-800 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-graduation-cap text-emerald-600"></i> <span>Bahan Ajar / Silabus</span>
+                                            <i class="fa fa-graduation-cap text-emerald-600"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_193'] ?? 'Bahan Ajar / Silabus') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('guru', 'Membaca Referensi &amp; Buku', this)" class="chip-keperluan-guru px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-bookmark text-slate-400"></i> <span>Referensi &amp; Kitab</span>
+                                            <i class="fa fa-bookmark text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_194'] ?? 'Referensi & Kitab') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('guru', 'Meminjam Buku Paket / Koleksi', this)" class="chip-keperluan-guru px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-cubes text-slate-400"></i> <span>Pinjam Buku Paket</span>
+                                            <i class="fa fa-cubes text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_195'] ?? 'Pinjam Buku Paket') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('guru', 'Mendampingi Siswa Belajar', this)" class="chip-keperluan-guru px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-child text-slate-400"></i> <span>Dampingi Siswa</span>
+                                            <i class="fa fa-child text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_196'] ?? 'Dampingi Siswa') }}</span>
                                         </button>
                                     </div>
 
@@ -2774,28 +1764,28 @@
                                             <i class="fa fa-briefcase text-base"></i>
                                         </div>
                                         <select name="keperluan" id="select-keperluan-guru" class="w-full pl-10 pr-9 py-2 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 appearance-none select-keperluan cursor-pointer" data-target="#wrap-lainnya-guru">
-                                            <option value="Mencari Bahan Ajar / Silabus">Mencari Bahan Ajar / Silabus</option>
-                                            <option value="Membaca Referensi &amp; Buku">Membaca Referensi &amp; Buku</option>
-                                            <option value="Meminjam Buku Paket / Koleksi">Meminjam Buku Paket / Koleksi</option>
-                                            <option value="Mendampingi Siswa Belajar">Mendampingi Siswa Belajar</option>
-                                            <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                                            <option value="Mencari Bahan Ajar / Silabus">{{ ($contentBlocks['copy.blade_perpustakaan']['text_197'] ?? 'Mencari Bahan Ajar / Silabus') }}</option>
+                                            <option value="Membaca Referensi &amp; Buku">{{ ($contentBlocks['copy.blade_perpustakaan']['text_198'] ?? 'Membaca Referensi & Buku') }}</option>
+                                            <option value="Meminjam Buku Paket / Koleksi">{{ ($contentBlocks['copy.blade_perpustakaan']['text_199'] ?? 'Meminjam Buku Paket / Koleksi') }}</option>
+                                            <option value="Mendampingi Siswa Belajar">{{ ($contentBlocks['copy.blade_perpustakaan']['text_200'] ?? 'Mendampingi Siswa Belajar') }}</option>
+                                            <option value="Lainnya">{{ ($contentBlocks['copy.blade_perpustakaan']['text_188'] ?? 'Lainnya (Ketik Manual)...') }}</option>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-chevron-down text-xs"></i>
                                         </div>
                                     </div>
                                     <div class="mt-2.5 wrap-keperluan-lainnya" id="wrap-lainnya-guru" style="display: none;">
-                                        <textarea name="keperluan_lainnya" rows="2" class="w-full px-3.5 py-2 bg-white border border-emerald-400 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Tuliskan tujuan/keperluan kunjungan Bapak/Ibu di sini..."></textarea>
+                                        <textarea name="keperluan_lainnya" rows="2" class="w-full px-3.5 py-2 bg-white border border-emerald-400 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_352'] ?? 'Tuliskan tujuan/keperluan kunjungan Bapak/Ibu di sini...') }}"></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="modal-footer bg-slate-50 px-5 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
                                 <button type="button" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition" data-dismiss="modal">
-                                    Batal
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_189'] ?? 'Batal') }}
                                 </button>
                                 <button type="submit" id="btn-submit-tamu-guru" class="px-5 py-2.5 text-xs sm:text-sm font-bold text-white rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 active:scale-95 hover:brightness-110" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
-                                    <i class="fa fa-check-circle"></i> Simpan Kehadiran Guru
+                                    <i class="fa fa-check-circle"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_201'] ?? 'Simpan Kehadiran Guru') }}
                                 </button>
                             </div>
                         </form>
@@ -2810,58 +1800,58 @@
                             <div class="p-5 sm:p-6 space-y-3.5">
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        Nama Lengkap Tamu <span class="text-rose-500">*</span>
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_202'] ?? 'Nama Lengkap Tamu') }} <span class="text-rose-500">*</span>
                                     </label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-user text-base"></i>
                                         </div>
-                                        <input type="text" name="nama_tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Contoh: Drs. H. Suryadi, M.Pd" required="">
+                                        <input type="text" name="nama_tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_353'] ?? 'Contoh: Drs. H. Suryadi, M.Pd') }}" required="">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        Asal Instansi / Lembaga / Sekolah <span class="text-rose-500">*</span>
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_203'] ?? 'Asal Instansi / Lembaga / Sekolah') }} <span class="text-rose-500">*</span>
                                     </label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-building-o text-base"></i>
                                         </div>
-                                        <input type="text" name="instansi_asal" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Contoh: Balai Pustaka / Kemenag / UIN" required="">
+                                        <input type="text" name="instansi_asal" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_354'] ?? 'Contoh: Balai Pustaka / Kemenag / UIN') }}" required="">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        No. Handphone / WhatsApp <span class="text-slate-400 font-normal text-xs">(Opsional)</span>
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_204'] ?? 'No. Handphone / WhatsApp') }} <span class="text-slate-400 font-normal text-xs">{{ ($contentBlocks['copy.blade_perpustakaan']['text_205'] ?? '(Opsional)') }}</span>
                                     </label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-600">
                                             <i class="fa fa-whatsapp text-base"></i>
                                         </div>
-                                        <input type="text" name="kontak_tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Contoh: 08123456789">
+                                        <input type="text" name="kontak_tamu" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_355'] ?? 'Contoh: 08123456789') }}">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 block">
-                                        Pilih Keperluan Kunjungan:
+                                        {{ ($contentBlocks['copy.blade_perpustakaan']['text_179'] ?? 'Pilih Keperluan Kunjungan:') }}
                                     </label>
                                     
                                     <!-- CHIP OPTIONS TAMU -->
                                     <div class="grid grid-cols-2 gap-2 mb-2">
                                         <button type="button" onclick="selectKeperluanChip('luar', 'Studi Banding / Observasi', this)" class="chip-keperluan-luar px-3 py-2 text-xs font-semibold rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-800 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-university text-emerald-600"></i> <span>Studi Banding</span>
+                                            <i class="fa fa-university text-emerald-600"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_206'] ?? 'Studi Banding') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('luar', 'Kunjungan Dinas / Pengawas', this)" class="chip-keperluan-luar px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-clipboard text-slate-400"></i> <span>Kunjungan Dinas</span>
+                                            <i class="fa fa-clipboard text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_207'] ?? 'Kunjungan Dinas') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('luar', 'Penelitian / Riset Perpustakaan', this)" class="chip-keperluan-luar px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-flask text-slate-400"></i> <span>Penelitian / Riset</span>
+                                            <i class="fa fa-flask text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_208'] ?? 'Penelitian / Riset') }}</span>
                                         </button>
                                         <button type="button" onclick="selectKeperluanChip('luar', 'Kunjungan Kerjasama', this)" class="chip-keperluan-luar px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-left transition flex items-center gap-1.5">
-                                            <i class="fa fa-handshake-o text-slate-400"></i> <span>Kerjasama</span>
+                                            <i class="fa fa-handshake-o text-slate-400"></i> <span>{{ ($contentBlocks['copy.blade_perpustakaan']['text_209'] ?? 'Kerjasama') }}</span>
                                         </button>
                                     </div>
 
@@ -2870,28 +1860,28 @@
                                             <i class="fa fa-file-text-o text-base"></i>
                                         </div>
                                         <select name="keperluan" id="select-keperluan-luar" class="w-full pl-10 pr-9 py-2 bg-slate-50 focus:bg-white border border-slate-300 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20 appearance-none select-keperluan cursor-pointer" data-target="#wrap-lainnya-luar">
-                                            <option value="Studi Banding / Observasi">Studi Banding / Observasi</option>
-                                            <option value="Kunjungan Dinas / Pengawas">Kunjungan Dinas / Pengawas</option>
-                                            <option value="Penelitian / Riset Perpustakaan">Penelitian / Riset Perpustakaan</option>
-                                            <option value="Kunjungan Kerjasama">Kunjungan Kerjasama</option>
-                                            <option value="Lainnya">Lainnya (Ketik Manual)...</option>
+                                            <option value="Studi Banding / Observasi">{{ ($contentBlocks['copy.blade_perpustakaan']['text_210'] ?? 'Studi Banding / Observasi') }}</option>
+                                            <option value="Kunjungan Dinas / Pengawas">{{ ($contentBlocks['copy.blade_perpustakaan']['text_211'] ?? 'Kunjungan Dinas / Pengawas') }}</option>
+                                            <option value="Penelitian / Riset Perpustakaan">{{ ($contentBlocks['copy.blade_perpustakaan']['text_212'] ?? 'Penelitian / Riset Perpustakaan') }}</option>
+                                            <option value="Kunjungan Kerjasama">{{ ($contentBlocks['copy.blade_perpustakaan']['text_213'] ?? 'Kunjungan Kerjasama') }}</option>
+                                            <option value="Lainnya">{{ ($contentBlocks['copy.blade_perpustakaan']['text_188'] ?? 'Lainnya (Ketik Manual)...') }}</option>
                                         </select>
                                         <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
                                             <i class="fa fa-chevron-down text-xs"></i>
                                         </div>
                                     </div>
                                     <div class="mt-2.5 wrap-keperluan-lainnya" id="wrap-lainnya-luar" style="display: none;">
-                                        <textarea name="keperluan_lainnya" rows="2" class="w-full px-3.5 py-2 bg-white border border-emerald-400 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="Tuliskan tujuan/keperluan kunjungan tamu di sini..."></textarea>
+                                        <textarea name="keperluan_lainnya" rows="2" class="w-full px-3.5 py-2 bg-white border border-emerald-400 focus:border-emerald-600 rounded-xl text-xs sm:text-sm text-slate-800 transition outline-none shadow-sm focus:ring-2 focus:ring-emerald-500/20" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_356'] ?? 'Tuliskan tujuan/keperluan kunjungan tamu di sini...') }}"></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="modal-footer bg-slate-50 px-5 sm:px-6 py-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
                                 <button type="button" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition" data-dismiss="modal">
-                                    Batal
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_189'] ?? 'Batal') }}
                                 </button>
                                 <button type="submit" id="btn-submit-tamu-luar" class="px-5 py-2.5 text-xs sm:text-sm font-bold text-white rounded-xl shadow-md transition-all duration-200 flex items-center gap-1.5 active:scale-95 hover:brightness-110" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
-                                    <i class="fa fa-check-circle"></i> Simpan Buku Tamu
+                                    <i class="fa fa-check-circle"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_214'] ?? 'Simpan Buku Tamu') }}
                                 </button>
                             </div>
                         </form>
@@ -2907,27 +1897,27 @@
             <div class="modal-content modal-content-pro">
                 <div class="modal-header modal-custom-header">
                     <h5 class="modal-title font-weight-bold mb-0" style="font-size: 16px;">
-                        <i class="fa fa-lock mr-2"></i> Masuk Akun Siswa E-Perpus
+                        <i class="fa fa-lock mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_215'] ?? 'Masuk Akun Siswa E-Perpus') }}
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">×</button>
                 </div>
                 <form id="form-login-siswa">
                     <div class="modal-body p-4">
-                        <p class="text-muted small mb-3">Login untuk memesan buku secara online dan memantau masa peminjaman Anda.</p>
+                        <p class="text-muted small mb-3">{{ ($contentBlocks['copy.blade_perpustakaan']['text_216'] ?? 'Login untuk memesan buku secara online dan memantau masa peminjaman Anda.') }}</p>
                         <div class="form-group">
-                            <label class="font-weight-bold text-dark small mb-1">Username / NISN / NIS</label>
-                            <input type="text" name="username" class="form-control" placeholder="Masukkan NISN / NIS Anda" required="" style="border-radius: 8px;">
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_217'] ?? 'Username / NISN / NIS') }}</label>
+                            <input type="text" name="username" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_357'] ?? 'Masukkan NISN / NIS Anda') }}" required="" style="border-radius: 8px;">
                         </div>
                         <div class="form-group mb-0">
-                            <label class="font-weight-bold text-dark small mb-1">Password</label>
-                            <input type="password" name="password" class="form-control" placeholder="Masukkan password siswa" required="" style="border-radius: 8px;">
-                            <small class="text-muted">Gunakan password akun akademik atau NISN Anda.</small>
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_218'] ?? 'Password') }}</label>
+                            <input type="password" name="password" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_358'] ?? 'Masukkan password siswa') }}" required="" style="border-radius: 8px;">
+                            <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_219'] ?? 'Gunakan password akun akademik Anda.') }}</small>
                         </div>
                     </div>
                     <div class="modal-footer bg-light px-4 py-3 border-0">
-                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_189'] ?? 'Batal') }}</button>
                         <button type="submit" id="btn-submit-login" class="btn btn-primary btn-sm font-weight-bold px-4 shadow-sm" style="border-radius: 8px; background: #00796b; border: none;">
-                            <i class="fa fa-sign-in mr-1"></i> Masuk Sekarang
+                            <i class="fa fa-sign-in mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_220'] ?? 'Masuk Sekarang') }}
                         </button>
                     </div>
                 </form>
@@ -2944,17 +1934,17 @@
                 <div class="px-5 sm:px-6 pt-4 pb-2 flex items-center justify-between gap-2.5">
                     <div class="flex items-center flex-wrap gap-2 sm:gap-2.5">
                         <span id="detail-kategori-badge" class="font-extrabold uppercase px-2.5 py-1 rounded-full text-emerald-800 bg-emerald-100 text-[10.5px] tracking-wider">
-                            KEISLAMAN &amp; KITAB
+                            {{ ($contentBlocks['copy.blade_perpustakaan']['text_221'] ?? 'KEISLAMAN & KITAB') }}
                         </span>
                         <span class="text-slate-400 font-medium text-[11.5px]">
-                            ISBN: <span id="detail-isbn-text" class="text-slate-600 font-mono font-semibold">978-979-245-812-1</span>
+                            {{ ($contentBlocks['copy.blade_perpustakaan']['text_222'] ?? 'ISBN:') }} <span id="detail-isbn-text" class="text-slate-600 font-mono font-semibold">978-979-245-812-1</span>
                         </span>
                     </div>
                     <div class="flex items-center gap-1 ml-auto">
-                        <button type="button" id="btn-detail-bookmark" onclick="toggleBookmarkBuku(this)" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-emerald-700 transition" title="Simpan ke Favorit">
+                        <button type="button" id="btn-detail-bookmark" onclick="toggleBookmarkBuku(this)" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-emerald-700 transition" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_359'] ?? 'Simpan ke Favorit') }}">
                             <i class="fa fa-bookmark-o text-sm"></i>
                         </button>
-                        <button type="button" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition text-xl leading-none" data-dismiss="modal" title="Tutup Modal">
+                        <button type="button" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition text-xl leading-none" data-dismiss="modal" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_360'] ?? 'Tutup Modal') }}">
                             ×
                         </button>
                     </div>
@@ -2968,10 +1958,10 @@
                         <div class="detail-buku-left-col" style="width: 140px; min-width: 140px; flex-shrink: 0;">
                             <!-- COVER WRAPPER -->
                             <div class="detail-cover-box position-relative w-100 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-slate-50 d-flex align-items-center justify-content-center" style="height: 198px; max-height: 198px;">
-                                <img id="detail-cover" src="/madrasah-theme/perpustakaan/database.png" alt="Cover Buku" class="w-100 h-100" style="object-fit: contain; padding: 14px; transition: all 0.2s;">
+                                <img id="detail-cover" src="{{ ($contentBlocks['copy.blade_perpustakaan']['src_361'] ?? '/madrasah-theme/perpustakaan/database.png') }}" alt="{{ ($contentBlocks['copy.blade_perpustakaan']['alt_362'] ?? 'Cover Buku') }}" class="w-100 h-100" style="object-fit: contain; padding: 14px; transition: all 0.2s;">
                                 <div id="detail-ebook-badge" class="position-absolute" style="top: 7px; left: 7px; z-index: 5;">
                                     <span class="bg-emerald-700 text-white font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm d-inline-flex align-items-center" style="font-size: 8.5px;">
-                                        <i class="fa fa-file-text-o mr-1"></i> E-BOOK RESMI
+                                        <i class="fa fa-file-text-o mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_223'] ?? 'E-BOOK RESMI') }}
                                     </span>
                                 </div>
                             </div>
@@ -2981,13 +1971,13 @@
                         <div class="detail-buku-right-col d-flex flex-column" style="flex: 1; min-width: 0;">
                             <div>
                                 <h3 id="detail-judul" class="font-weight-bold text-slate-900 mb-1.5 tracking-tight" style="font-size: 17px; line-height: 1.35;">
-                                    Ringkasan Ihya' Ulumuddin
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_224'] ?? 'Ringkasan Ihya\' Ulumuddin') }}
                                 </h3>
                                 <div class="text-slate-500 mb-0.5" style="font-size: 11.5px;">
-                                    Penulis: <strong id="detail-penulis" class="text-slate-800 font-weight-bold">Hujjatul Islam Imam Al-Ghazali</strong>
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_225'] ?? 'Penulis:') }} <strong id="detail-penulis" class="text-slate-800 font-weight-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_226'] ?? 'Hujjatul Islam Imam Al-Ghazali') }}</strong>
                                 </div>
                                 <div class="text-slate-500 mb-2.5" style="font-size: 11.5px;">
-                                    Penerbit: <span id="detail-penerbit" class="text-slate-700 font-weight-bold">Marja Publisher (2022)</span>
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_227'] ?? 'Penerbit:') }} <span id="detail-penerbit" class="text-slate-700 font-weight-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_228'] ?? 'Marja Publisher (2022)') }}</span>
                                 </div>
 
                                 <!-- STATS ROW: RATING, HALAMAN, READ COUNT, STOCK -->
@@ -2996,32 +1986,32 @@
                                         <i class="fa fa-star text-warning mr-1"></i> <span id="detail-rating">5 / 5.0</span>
                                     </span>
                                     <span class="text-slate-500">
-                                        <strong id="detail-halaman" class="text-slate-800">612</strong> Hal
+                                        <strong id="detail-halaman" class="text-slate-800">612</strong> {{ ($contentBlocks['copy.blade_perpustakaan']['text_229'] ?? 'Hal') }}
                                     </span>
                                     <span class="text-slate-500">
-                                        <strong id="detail-dibaca" class="text-slate-800">1420</strong>x Dibaca
+                                        <strong id="detail-dibaca" class="text-slate-800">1420</strong>{{ ($contentBlocks['copy.blade_perpustakaan']['text_230'] ?? 'x Dibaca') }}
                                     </span>
                                     <span id="detail-stok-badge" class="d-inline-flex align-items-center font-weight-bold text-emerald-700 px-2 py-0.5 rounded-pill" style="background: #ecfdf5; font-size: 10.5px;">
-                                        <i class="fa fa-check-circle text-emerald-600 mr-1"></i> <span id="detail-stok-text">Tersedia 9 dari 16 eks</span>
+                                        <i class="fa fa-check-circle text-emerald-600 mr-1"></i> <span id="detail-stok-text">{{ ($contentBlocks['copy.blade_perpustakaan']['text_231'] ?? 'Tersedia 9 dari 16 eks') }}</span>
                                     </span>
                                 </div>
 
                                 <!-- SINOPSIS & DESKRIPSI BUKU -->
                                 <div class="text-uppercase text-slate-400 font-weight-bold mb-1" style="font-size: 9.5px; letter-spacing: 0.6px;">
-                                    SINOPSIS &amp; DESKRIPSI BUKU
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_232'] ?? 'SINOPSIS & DESKRIPSI BUKU') }}
                                 </div>
                                 <p id="detail-deskripsi" class="text-slate-600 mb-2.5" style="font-size: 11.5px; line-height: 1.55; max-height: 80px; overflow-y: auto;">
-                                    Intisari dari karya agung Imam Al-Ghazali mengenai penyucian jiwa (tazkiyatun nafs), adab menuntut ilmu, rahasia ibadah shalat dan puasa, serta pengendalian nafsu.
+                                    {{ ($contentBlocks['copy.blade_perpustakaan']['text_233'] ?? 'Intisari dari karya agung Imam Al-Ghazali mengenai penyucian jiwa (tazkiyatun nafs), adab menuntut ilmu, rahasia ibadah shalat dan puasa, serta pengendalian nafsu.') }}
                                 </p>
                             </div>
 
                             <!-- CTA ACTION BUTTONS (TETAP DI TEMPATNYA SETELAH SINOPSIS) -->
                             <div class="d-flex align-items-center pt-0.5 mb-2.5" style="gap: 10px;">
                                 <button type="button" id="btn-detail-baca-ebook" class="btn text-white font-weight-bold flex-fill py-1.5 px-3 d-inline-flex align-items-center justify-content-center shadow-sm" style="background: #047857; border-radius: 10px; font-size: 11.5px; border: none; height: 38px; white-space: nowrap;">
-                                    <i class="fa fa-book mr-1.5"></i> Buka Ruang Baca E-Book
+                                    <i class="fa fa-book mr-1.5"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_234'] ?? 'Buka Ruang Baca E-Book') }}
                                 </button>
                                 <button type="button" id="btn-detail-booking" class="btn text-white font-weight-bold flex-fill py-1.5 px-3 d-inline-flex align-items-center justify-content-center shadow-sm" style="background: #ea580c; border-radius: 10px; font-size: 11.5px; border: none; height: 38px; white-space: nowrap;">
-                                    <i class="fa fa-calendar-check-o mr-1.5"></i> Booking Pinjam Buku Fisik
+                                    <i class="fa fa-calendar-check-o mr-1.5"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_235'] ?? 'Booking Pinjam Buku Fisik') }}
                                 </button>
                             </div>
 
@@ -3033,15 +2023,15 @@
                                         <span class="d-inline-flex align-items-center justify-content-center mr-1.5 rounded-circle flex-shrink-0" style="width: 18px; height: 18px; background: #dcfce7; color: #15803d; font-size: 10px;">
                                             <i class="fa fa-map-marker"></i>
                                         </span>
-                                        <span class="text-slate-500 mr-1">Lokasi Rak:</span>
-                                        <strong class="text-emerald-800 font-weight-bold truncate" id="detail-lokasi-rak">Rak 03-A (Tasawuf &amp; Akhlak)</strong>
+                                        <span class="text-slate-500 mr-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_236'] ?? 'Lokasi Rak:') }}</span>
+                                        <strong class="text-emerald-800 font-weight-bold truncate" id="detail-lokasi-rak">{{ ($contentBlocks['copy.blade_perpustakaan']['text_237'] ?? 'Rak 03-A (Tasawuf & Akhlak)') }}</strong>
                                     </div>
                                     <div class="d-flex align-items-center flex-shrink-0" style="gap: 6px;">
                                         <span id="detail-kode-panggil" class="font-weight-bold text-slate-700 font-mono tracking-wider px-1.5 py-0.5 rounded bg-white border border-slate-200" style="font-size: 10px;">
-                                            2X5.1 GHA r
+                                            {{ ($contentBlocks['copy.blade_perpustakaan']['text_238'] ?? '2X5.1 GHA r') }}
                                         </span>
-                                        <button type="button" onclick="salinKodePanggil()" class="btn btn-link p-0 text-emerald-700 hover:text-emerald-900 font-weight-bold text-decoration-none d-inline-flex align-items-center" style="font-size: 10.5px;" title="Salin Kode Panggil">
-                                            <i class="fa fa-clone mr-1"></i> Salin
+                                        <button type="button" onclick="salinKodePanggil()" class="btn btn-link p-0 text-emerald-700 hover:text-emerald-900 font-weight-bold text-decoration-none d-inline-flex align-items-center" style="font-size: 10.5px;" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_363'] ?? 'Salin Kode Panggil') }}">
+                                            <i class="fa fa-clone mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_239'] ?? 'Salin') }}
                                         </button>
                                     </div>
                                 </div>
@@ -3050,23 +2040,23 @@
                                 <div class="detail-spec-grid" style="font-size: 11px;">
                                     <div class="d-flex align-items-center text-slate-600 truncate">
                                         <span class="mr-1.5 flex-shrink-0">📅</span>
-                                        <span class="text-slate-500 mr-1">Tahun Terbit:</span>
+                                        <span class="text-slate-500 mr-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_240'] ?? 'Tahun Terbit:') }}</span>
                                         <strong id="detail-spec-tahun" class="text-slate-800 font-weight-bold">2024</strong>
                                     </div>
                                     <div class="d-flex align-items-center text-slate-600 truncate">
                                         <span class="mr-1.5 flex-shrink-0">🌐</span>
-                                        <span class="text-slate-500 mr-1">Bahasa:</span>
-                                        <strong id="detail-spec-bahasa" class="text-slate-800 font-weight-bold">Indonesia</strong>
+                                        <span class="text-slate-500 mr-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_241'] ?? 'Bahasa:') }}</span>
+                                        <strong id="detail-spec-bahasa" class="text-slate-800 font-weight-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_242'] ?? 'Indonesia') }}</strong>
                                     </div>
                                     <div class="d-flex align-items-center text-slate-600 truncate">
                                         <span class="mr-1.5 flex-shrink-0">🏷️</span>
-                                        <span class="text-slate-500 mr-1">Kode Buku:</span>
-                                        <strong id="detail-spec-kode" class="text-slate-800 font-mono font-weight-bold" style="font-size: 10.5px;">BK-2026-013</strong>
+                                        <span class="text-slate-500 mr-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_243'] ?? 'Kode Buku:') }}</span>
+                                        <strong id="detail-spec-kode" class="text-slate-800 font-mono font-weight-bold" style="font-size: 10.5px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_244'] ?? 'BK-2026-013') }}</strong>
                                     </div>
                                     <div class="d-flex align-items-center text-slate-600 truncate">
                                         <span class="mr-1.5 flex-shrink-0">📦</span>
-                                        <span class="text-slate-500 mr-1">Format:</span>
-                                        <strong id="detail-spec-format" class="text-slate-800 font-weight-bold">Buku Fisik &amp; PDF Digital</strong>
+                                        <span class="text-slate-500 mr-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_245'] ?? 'Format:') }}</span>
+                                        <strong id="detail-spec-format" class="text-slate-800 font-weight-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_246'] ?? 'Buku Fisik & PDF Digital') }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -3078,10 +2068,10 @@
                     <div class="mt-3 p-2.5 sm:p-3 rounded-xl" style="background: #f8fafc; border: 1px solid #e2e8f0;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <div class="d-flex align-items-center text-slate-700 font-weight-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
-                                <i class="fa fa-info-circle text-emerald-600 mr-1.5" style="font-size: 12px;"></i> KETENTUAN &amp; ALUR LAYANAN PUSTAKA
+                                <i class="fa fa-info-circle text-emerald-600 mr-1.5" style="font-size: 12px;"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_247'] ?? 'KETENTUAN & ALUR LAYANAN PUSTAKA') }}
                             </div>
                             <span class="text-slate-400 font-medium" style="font-size: 9.5px;">
-                                <i class="fa fa-clock-o mr-1"></i> Jam Layanan Sekolah
+                                <i class="fa fa-clock-o mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_248'] ?? 'Jam Layanan Sekolah') }}
                             </span>
                         </div>
                         <div class="detail-ketentuan-grid">
@@ -3090,8 +2080,8 @@
                                     <i class="fa fa-calendar"></i>
                                 </span>
                                 <div style="min-width: 0;">
-                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">Masa Pinjam 7 Hari</div>
-                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">Pinjam buku fisik maksimal 7 hari, dapat diperpanjang 1x</div>
+                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_249'] ?? 'Masa Pinjam 7 Hari') }}</div>
+                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_250'] ?? 'Pinjam buku fisik maksimal 7 hari, dapat diperpanjang 1x') }}</div>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start" style="gap: 8px;">
@@ -3099,8 +2089,8 @@
                                     <i class="fa fa-book"></i>
                                 </span>
                                 <div style="min-width: 0;">
-                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">Batas Maksimal 2 Buku</div>
-                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">Setiap siswa dapat meminjam hingga 2 judul buku aktif</div>
+                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_251'] ?? 'Batas Maksimal 2 Buku') }}</div>
+                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_252'] ?? 'Setiap siswa dapat meminjam hingga 2 judul buku aktif') }}</div>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start" style="gap: 8px;">
@@ -3108,8 +2098,8 @@
                                     <i class="fa fa-id-card-o"></i>
                                 </span>
                                 <div style="min-width: 0;">
-                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">Ambil di Meja Sirkulasi</div>
-                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">Konfirmasi booking dengan menunjukkan Kartu Pelajar / NISN</div>
+                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_253'] ?? 'Ambil di Meja Sirkulasi') }}</div>
+                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_254'] ?? 'Konfirmasi booking dengan menunjukkan Kartu Pelajar / NISN') }}</div>
                                 </div>
                             </div>
                             <div class="d-flex align-items-start" style="gap: 8px;">
@@ -3117,8 +2107,8 @@
                                     <i class="fa fa-laptop"></i>
                                 </span>
                                 <div style="min-width: 0;">
-                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">E-Book Akses Online</div>
-                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">Koleksi digital dapat langsung dibaca kapan pun tanpa antre</div>
+                                    <div class="font-weight-bold text-slate-800" style="font-size: 11px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_255'] ?? 'E-Book Akses Online') }}</div>
+                                    <div class="text-slate-500" style="font-size: 10px; line-height: 1.3;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_256'] ?? 'Koleksi digital dapat langsung dibaca kapan pun tanpa antre') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -3135,7 +2125,7 @@
             <div class="modal-content modal-content-pro">
                 <div class="modal-header modal-custom-header">
                     <h5 class="modal-title font-weight-bold mb-0" style="font-size: 16px;">
-                        <i class="fa fa-bookmark mr-2"></i> Konfirmasi Booking Peminjaman Buku
+                        <i class="fa fa-bookmark mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_257'] ?? 'Konfirmasi Booking Peminjaman Buku') }}
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">×</button>
                 </div>
@@ -3143,23 +2133,23 @@
                     <input type="hidden" name="id_buku" id="booking_id_buku">
                     <div class="modal-body p-4">
                         <div class="p-3 mb-3" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px;">
-                            <small class="text-muted text-uppercase font-weight-bold" style="font-size: 10px;">Judul Buku yang Dipesan:</small>
+                            <small class="text-muted text-uppercase font-weight-bold" style="font-size: 10px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_258'] ?? 'Judul Buku yang Dipesan:') }}</small>
                             <div class="font-weight-bold text-success" id="booking_judul_display" style="font-size: 15px;"></div>
                         </div>
 
                         <div class="form-group">
-                            <label class="font-weight-bold text-dark small mb-1">Catatan Tambahan (Opsional)</label>
-                            <textarea name="catatan" class="form-control" rows="2" placeholder="Contoh: Keperluan tugas mandiri, akan diambil istirahat pertama" style="border-radius: 8px; font-size: 13px;"></textarea>
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_259'] ?? 'Catatan Tambahan (Opsional)') }}</label>
+                            <textarea name="catatan" class="form-control" rows="2" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_364'] ?? 'Contoh: Keperluan tugas mandiri, akan diambil istirahat pertama') }}" style="border-radius: 8px; font-size: 13px;"></textarea>
                         </div>
 
                         <div class="alert alert-warning py-2 px-3 small border-0 mb-0" style="border-radius: 8px;">
-                            <i class="fa fa-info-circle mr-1"></i> Setelah menekan tombol <b>Konfirmasi Booking</b>, Anda akan mendapatkan kode booking peminjaman untuk ditunjukkan ke petugas perpustakaan saat pengambilan buku fisik.
+                            <i class="fa fa-info-circle mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_260'] ?? 'Setelah menekan tombol') }} <b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_261'] ?? 'Konfirmasi Booking') }}</b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_262'] ?? ', Anda akan mendapatkan kode booking peminjaman untuk ditunjukkan ke petugas perpustakaan saat pengambilan buku fisik.') }}
                         </div>
                     </div>
                     <div class="modal-footer bg-light px-4 py-3 border-0">
-                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_189'] ?? 'Batal') }}</button>
                         <button type="submit" id="btn-submit-booking" class="btn btn-success btn-sm font-weight-bold px-4 shadow-sm" style="border-radius: 8px; background: #00796b; border: none;">
-                            <i class="fa fa-check-circle mr-1"></i> Konfirmasi Booking
+                            <i class="fa fa-check-circle mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_261'] ?? 'Konfirmasi Booking') }}
                         </button>
                     </div>
                 </form>
@@ -3173,26 +2163,26 @@
             <div class="modal-content modal-content-pro">
                 <div class="modal-header modal-custom-header">
                     <h5 class="modal-title font-weight-bold mb-0" style="font-size: 16px;">
-                        <i class="fa fa-certificate mr-2"></i> Cek Bebas Perpustakaan Siswa
+                        <i class="fa fa-certificate mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_263'] ?? 'Cek Bebas Perpustakaan Siswa') }}
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">×</button>
                 </div>
                 <form id="form-cek-bebas">
                     <div class="modal-body p-4">
-                        <p class="text-muted small mb-3">Masukkan <b>NISN</b> atau <b>NIS</b> untuk mengecek status tanggungan pinjaman buku dan mencetak Surat Keterangan Bebas Perpustakaan secara mandiri.</p>
+                        <p class="text-muted small mb-3">{{ ($contentBlocks['copy.blade_perpustakaan']['text_264'] ?? 'Masukkan') }} <b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_265'] ?? 'NISN') }}</b> {{ ($contentBlocks['copy.blade_perpustakaan']['text_266'] ?? 'atau') }} <b>{{ ($contentBlocks['copy.blade_perpustakaan']['text_267'] ?? 'NIS') }}</b> {{ ($contentBlocks['copy.blade_perpustakaan']['text_268'] ?? 'untuk mengecek status tanggungan pinjaman buku dan mencetak Surat Keterangan Bebas Perpustakaan secara mandiri.') }}</p>
                         <div class="form-group mb-2">
-                            <label class="font-weight-bold text-dark small mb-1">NISN / Nomor Induk Siswa <span class="text-danger">*</span></label>
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_175'] ?? 'NISN / Nomor Induk Siswa') }} <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text bg-white"><i class="fa fa-id-card text-muted"></i></span>
                                 </div>
-                                <input type="text" name="nisn_or_nis" id="input-nisn-bebas" class="form-control" placeholder="Contoh: 0114079139" required="" style="border-radius: 0 8px 8px 0;" value="">
+                                <input type="text" name="nisn_or_nis" id="input-nisn-bebas" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_365'] ?? 'Contoh: 0114079139') }}" required="" style="border-radius: 0 8px 8px 0;" value="">
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end mb-3">
                             <button type="submit" id="btn-submit-cek-bebas" class="btn btn-primary btn-sm font-weight-bold px-4 shadow-sm" style="border-radius: 8px; background: #00796b; border: none;">
-                                <i class="fa fa-search mr-1"></i> Cek Status Sekarang
+                                <i class="fa fa-search mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_269'] ?? 'Cek Status Sekarang') }}
                             </button>
                         </div>
 
@@ -3200,7 +2190,7 @@
                         <div id="hasil-cek-bebas" style="display: none;"></div>
                     </div>
                     <div class="modal-footer bg-light px-4 py-3 border-0">
-                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">Tutup</button>
+                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_159'] ?? 'Tutup') }}</button>
                     </div>
                 </form>
             </div>
@@ -3213,55 +2203,55 @@
             <div class="modal-content modal-content-pro">
                 <div class="modal-header modal-custom-header">
                     <h5 class="modal-title font-weight-bold mb-0" style="font-size: 16px;">
-                        <i class="fa fa-lightbulb-o mr-2 text-warning"></i> Usulan Pengadaan Buku Baru
+                        <i class="fa fa-lightbulb-o mr-2 text-warning"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_270'] ?? 'Usulan Pengadaan Buku Baru') }}
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">×</button>
                 </div>
                 <form id="form-usulan-buku">
                     <div class="modal-body p-4">
-                        <p class="text-muted small mb-3">Tidak menemukan buku yang Anda cari? Tuliskan usulan judul buku agar Tim Perpustakaan dapat menyediakannya.</p>
+                        <p class="text-muted small mb-3">{{ ($contentBlocks['copy.blade_perpustakaan']['text_271'] ?? 'Tidak menemukan buku yang Anda cari? Tuliskan usulan judul buku agar Tim Perpustakaan dapat menyediakannya.') }}</p>
                         
                         <div class="row">
                             <div class="col-md-7 mb-2">
-                                <label class="font-weight-bold text-dark small mb-1">Nama Pengusul <span class="text-danger">*</span></label>
-                                <input type="text" name="nama_pengusul" class="form-control" placeholder="Nama lengkap Anda" required="" style="border-radius: 8px;" value="">
+                                <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_272'] ?? 'Nama Pengusul') }} <span class="text-danger">*</span></label>
+                                <input type="text" name="nama_pengusul" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_366'] ?? 'Nama lengkap Anda') }}" required="" style="border-radius: 8px;" value="">
                             </div>
                             <div class="col-md-5 mb-2">
-                                <label class="font-weight-bold text-dark small mb-1">Kelas / Instansi</label>
-                                <input type="text" name="kelas_asal" class="form-control" placeholder="Misal: XI IPA 1" style="border-radius: 8px;" value="">
+                                <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_273'] ?? 'Kelas / Instansi') }}</label>
+                                <input type="text" name="kelas_asal" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_367'] ?? 'Misal: XI IPA 1') }}" style="border-radius: 8px;" value="">
                             </div>
                         </div>
 
                         <div class="form-group mb-2">
-                            <label class="font-weight-bold text-dark small mb-1">No. WhatsApp / Kontak (Opsional)</label>
-                            <input type="text" name="kontak" class="form-control" placeholder="Contoh: 08123456789 (Untuk info saat buku tersedia)" style="border-radius: 8px;">
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_274'] ?? 'No. WhatsApp / Kontak (Opsional)') }}</label>
+                            <input type="text" name="kontak" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_368'] ?? 'Contoh: 08123456789 (Untuk info saat buku tersedia)') }}" style="border-radius: 8px;">
                         </div>
 
                         <div class="form-group mb-2">
-                            <label class="font-weight-bold text-dark small mb-1">Judul Buku yang Diusulkan <span class="text-danger">*</span></label>
-                            <input type="text" name="judul_buku" class="form-control" placeholder="Contoh: Fisika Kuantum untuk Pemula / Laskar Pelangi" required="" style="border-radius: 8px;">
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_275'] ?? 'Judul Buku yang Diusulkan') }} <span class="text-danger">*</span></label>
+                            <input type="text" name="judul_buku" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_369'] ?? 'Contoh: Fisika Kuantum untuk Pemula / Laskar Pelangi') }}" required="" style="border-radius: 8px;">
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-2">
-                                <label class="font-weight-bold text-dark small mb-1">Pengarang / Penulis</label>
-                                <input type="text" name="penulis" class="form-control" placeholder="Nama pengarang buku" style="border-radius: 8px;">
+                                <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_276'] ?? 'Pengarang / Penulis') }}</label>
+                                <input type="text" name="penulis" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_370'] ?? 'Nama pengarang buku') }}" style="border-radius: 8px;">
                             </div>
                             <div class="col-md-6 mb-2">
-                                <label class="font-weight-bold text-dark small mb-1">Penerbit (Opsional)</label>
-                                <input type="text" name="penerbit" class="form-control" placeholder="Nama penerbit" style="border-radius: 8px;">
+                                <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_277'] ?? 'Penerbit (Opsional)') }}</label>
+                                <input type="text" name="penerbit" class="form-control" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_371'] ?? 'Nama penerbit') }}" style="border-radius: 8px;">
                             </div>
                         </div>
 
                         <div class="form-group mb-0">
-                            <label class="font-weight-bold text-dark small mb-1">Alasan / Kepentingan Rekomendasi</label>
-                            <textarea name="alasan" class="form-control" rows="2" placeholder="Contoh: Sangat dibutuhkan untuk bahan riset karya ilmiah remaja dan modul tambahan..." style="border-radius: 8px; font-size: 13px; resize: vertical;"></textarea>
+                            <label class="font-weight-bold text-dark small mb-1">{{ ($contentBlocks['copy.blade_perpustakaan']['text_278'] ?? 'Alasan / Kepentingan Rekomendasi') }}</label>
+                            <textarea name="alasan" class="form-control" rows="2" placeholder="{{ ($contentBlocks['copy.blade_perpustakaan']['placeholder_372'] ?? 'Contoh: Sangat dibutuhkan untuk bahan riset karya ilmiah remaja dan modul tambahan...') }}" style="border-radius: 8px; font-size: 13px; resize: vertical;"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer bg-light px-4 py-3 border-0">
-                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                        <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-3" data-dismiss="modal" style="border-radius: 8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_189'] ?? 'Batal') }}</button>
                         <button type="submit" id="btn-submit-usulan" class="btn btn-warning btn-sm font-weight-bold px-4 shadow-sm text-dark" style="border-radius: 8px; background: #f59e0b; border: none;">
-                            <i class="fa fa-paper-plane mr-1"></i> Kirim Usulan Buku
+                            <i class="fa fa-paper-plane mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_279'] ?? 'Kirim Usulan Buku') }}
                         </button>
                     </div>
                 </form>
@@ -3278,12 +2268,12 @@
                 <div class="chrome-pdf-toolbar">
                     <div class="d-flex align-items-center text-truncate mr-2" style="max-width: 40%; flex-shrink: 1;">
                         <!-- Toggle Sidebar Button (Hamburger Icon like Chrome) -->
-                        <button type="button" class="chrome-pdf-btn mr-1" id="pdf-toggle-sidebar" title="Sembunyikan / Tampilkan Thumbnail Halaman">
+                        <button type="button" class="chrome-pdf-btn mr-1" id="pdf-toggle-sidebar" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_373'] ?? 'Sembunyikan / Tampilkan Thumbnail Halaman') }}">
                             <i class="fa fa-bars"></i>
                         </button>
                         <div class="text-truncate">
-                            <div class="font-weight-bold text-truncate text-white" id="ebook-modal-title" style="font-size: 13px;" title="">Baca E-Book Digital</div>
-                            <div class="text-muted text-truncate d-none d-sm-block" style="font-size: 9.5px;"><i class="fa fa-lock text-warning mr-1"></i> Mode Baca Aman • Hanya Online (Anti-Unduh &amp; Cetak)</div>
+                            <div class="font-weight-bold text-truncate text-white" id="ebook-modal-title" style="font-size: 13px;" title="">{{ ($contentBlocks['copy.blade_perpustakaan']['text_280'] ?? 'Baca E-Book Digital') }}</div>
+                            <div class="text-muted text-truncate d-none d-sm-block" style="font-size: 9.5px;"><i class="fa fa-lock text-warning mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_281'] ?? 'Mode Baca Aman • Hanya Online (Anti-Unduh & Cetak)') }}</div>
                         </div>
                     </div>
 
@@ -3291,50 +2281,50 @@
                     <div class="d-flex align-items-center flex-nowrap justify-content-end" style="flex-shrink: 0;">
                         <!-- Navigation / Page Indicator (2 / 70) -->
                         <div class="chrome-page-box mr-1">
-                            <input type="number" id="pdf-page-input" value="1" min="1" max="1" class="chrome-page-input" title="Ketik nomor halaman &amp; tekan Enter">
+                            <input type="number" id="pdf-page-input" value="1" min="1" max="1" class="chrome-page-input" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_374'] ?? 'Ketik nomor halaman & tekan Enter') }}">
                             <span style="color: #9aa0a6;">/<span id="pdf-total-pages">1</span></span>
                         </div>
 
                         <!-- Zoom Controls -->
                         <div class="d-inline-flex align-items-center mr-1">
-                            <button type="button" class="chrome-pdf-btn" id="pdf-zoom-out" title="Perkecil (-)">
+                            <button type="button" class="chrome-pdf-btn" id="pdf-zoom-out" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_375'] ?? 'Perkecil (-)') }}">
                                 <i class="fa fa-minus"></i>
                             </button>
                             <span id="pdf-zoom-level" class="d-none d-md-inline" style="font-size: 11px; color: #e8eaed; font-weight: 600; min-width: 38px; text-align: center;">100%</span>
-                            <button type="button" class="chrome-pdf-btn" id="pdf-zoom-in" title="Perbesar (+)">
+                            <button type="button" class="chrome-pdf-btn" id="pdf-zoom-in" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_376'] ?? 'Perbesar (+)') }}">
                                 <i class="fa fa-plus"></i>
                             </button>
-                            <button type="button" class="chrome-pdf-btn" id="pdf-zoom-fit" title="Sesuaikan Lebar Layar">
+                            <button type="button" class="chrome-pdf-btn" id="pdf-zoom-fit" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_377'] ?? 'Sesuaikan Lebar Layar') }}">
                                 <i class="fa fa-arrows-h"></i>
                             </button>
                         </div>
 
                         <!-- Rotate Button (sembunyikan di HP sangat kecil agar tidak sempit) -->
-                        <button type="button" class="chrome-pdf-btn mr-1 d-none d-sm-inline-flex" id="pdf-rotate-page" title="Putar Halaman (Rotasi 90°)">
+                        <button type="button" class="chrome-pdf-btn mr-1 d-none d-sm-inline-flex" id="pdf-rotate-page" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_378'] ?? 'Putar Halaman (Rotasi 90°)') }}">
                             <i class="fa fa-repeat"></i>
                         </button>
 
                         <!-- Theme Reading Modes -->
                         <div class="d-none d-md-inline-flex align-items-center mr-2">
-                            <button type="button" class="chrome-pdf-btn btn-theme-reader active" data-theme="default" title="Tema Terang">
+                            <button type="button" class="chrome-pdf-btn btn-theme-reader active" data-theme="default" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_379'] ?? 'Tema Terang') }}">
                                 <i class="fa fa-sun-o text-warning"></i>
                             </button>
-                            <button type="button" class="chrome-pdf-btn btn-theme-reader" data-theme="sepia" title="Tema Sepia">
+                            <button type="button" class="chrome-pdf-btn btn-theme-reader" data-theme="sepia" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_380'] ?? 'Tema Sepia') }}">
                                 <i class="fa fa-bookmark" style="color: #f59e0b;"></i>
                             </button>
-                            <button type="button" class="chrome-pdf-btn btn-theme-reader" data-theme="dark" title="Tema Gelap">
+                            <button type="button" class="chrome-pdf-btn btn-theme-reader" data-theme="dark" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_381'] ?? 'Tema Gelap') }}">
                                 <i class="fa fa-moon-o text-info"></i>
                             </button>
                         </div>
 
                         <!-- Fullscreen Button -->
-                        <button type="button" class="chrome-pdf-btn mr-1 d-none d-sm-inline-flex" id="pdf-fullscreen" title="Layar Penuh (F11)">
+                        <button type="button" class="chrome-pdf-btn mr-1 d-none d-sm-inline-flex" id="pdf-fullscreen" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_382'] ?? 'Layar Penuh (F11)') }}">
                             <i class="fa fa-expand"></i>
                         </button>
 
                         <!-- Close Button -->
                         <button type="button" class="btn btn-danger btn-sm font-weight-bold px-3 py-1" data-dismiss="modal" style="border-radius: 6px; font-size: 12px;">
-                            <i class="fa fa-times mr-1"></i> Tutup
+                            <i class="fa fa-times mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_159'] ?? 'Tutup') }}
                         </button>
                     </div>
                 </div>
@@ -3352,8 +2342,8 @@
                         <!-- Loading Spinner -->
                         <div id="pdf-loading-spinner" class="text-center text-white py-5 my-auto">
                             <i class="fa fa-spinner fa-spin fa-3x mb-3 text-warning"></i>
-                            <h6 class="font-weight-bold">Memuat Dokumen E-Book...</h6>
-                            <small class="text-muted">Menyiapkan tampilan pembaca Chrome aman (Anti-Unduh/Cetak)</small>
+                            <h6 class="font-weight-bold">{{ ($contentBlocks['copy.blade_perpustakaan']['text_282'] ?? 'Memuat Dokumen E-Book...') }}</h6>
+                            <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_283'] ?? 'Menyiapkan tampilan pembaca Chrome aman (Anti-Unduh/Cetak)') }}</small>
                         </div>
 
                         <!-- Pages dynamically stacked here -->
@@ -3363,8 +2353,8 @@
 
                 <!-- BOTTOM STATUS BAR -->
                 <div class="py-1 px-3 bg-dark text-muted d-flex justify-content-between align-items-center border-top border-secondary" style="font-size: 11px; user-select: none;">
-                    <span><i class="fa fa-shield text-success mr-1"></i> Dokumen resmi perpustakaan • Fitur copy, print &amp; unduh dinonaktifkan</span>
-                    <span class="d-none d-md-inline"><i class="fa fa-mouse-pointer text-warning mr-1"></i> Klik thumbnail di samping kiri untuk loncat halaman • Scroll bebas ke bawah</span>
+                    <span><i class="fa fa-shield text-success mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_284'] ?? 'Dokumen resmi perpustakaan • Fitur copy, print & unduh dinonaktifkan') }}</span>
+                    <span class="d-none d-md-inline"><i class="fa fa-mouse-pointer text-warning mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_285'] ?? 'Klik thumbnail di samping kiri untuk loncat halaman • Scroll bebas ke bawah') }}</span>
                 </div>
             </div>
         </div>
@@ -3380,18 +2370,18 @@
                             <i class="fa fa-line-chart text-white"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title font-weight-bold mb-0 text-white" style="font-size: 17px;">Statistik &amp; Analisis Kunjungan Perpustakaan</h5>
-                            <small class="text-white-50">Visualisasi data presensi literasi dan aktivitas pemustaka secara real-time</small>
+                            <h5 class="modal-title font-weight-bold mb-0 text-white" style="font-size: 17px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_286'] ?? 'Statistik & Analisis Kunjungan Perpustakaan') }}</h5>
+                            <small class="text-white-50">{{ ($contentBlocks['copy.blade_perpustakaan']['text_287'] ?? 'Visualisasi data presensi literasi dan aktivitas pemustaka secara real-time') }}</small>
                         </div>
                     </div>
                     <div class="d-flex align-items-center">
                         <span class="badge badge-success px-3 py-1 mr-3 font-weight-bold d-none d-sm-inline-block" style="border-radius: 20px; font-size: 11px;">
-                            <i class="fa fa-circle text-white mr-1" style="font-size: 8px;"></i> Live Data
+                            <i class="fa fa-circle text-white mr-1" style="font-size: 8px;"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_288'] ?? 'Live Data') }}
                         </span>
-                        <button type="button" class="btn btn-sm btn-outline-light font-weight-bold px-2 py-1 mr-2" onclick="loadStatistikKunjungan()" title="Muat Ulang Data">
-                            <i class="fa fa-refresh"></i> Refresh
+                        <button type="button" class="btn btn-sm btn-outline-light font-weight-bold px-2 py-1 mr-2" onclick="loadStatistikKunjungan()" title="{{ ($contentBlocks['copy.blade_perpustakaan']['title_383'] ?? 'Muat Ulang Data') }}">
+                            <i class="fa fa-refresh"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_289'] ?? 'Refresh') }}
                         </button>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="{{ ($contentBlocks['copy.blade_perpustakaan']['aria_label_384'] ?? 'Close') }}" style="opacity: 0.9;">
                             <span aria-hidden="true">×</span>
                         </button>
                     </div>
@@ -3400,8 +2390,8 @@
                     <!-- Loading Indicator -->
                     <div id="stat-loading" class="text-center py-5">
                         <i class="fa fa-spinner fa-spin fa-3x text-primary mb-3"></i>
-                        <h6 class="font-weight-bold text-dark">Mengolah Statistik Kunjungan...</h6>
-                        <small class="text-muted">Mengambil data agregasi kunjungan dari server perpustakaan</small>
+                        <h6 class="font-weight-bold text-dark">{{ ($contentBlocks['copy.blade_perpustakaan']['text_290'] ?? 'Mengolah Statistik Kunjungan...') }}</h6>
+                        <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_291'] ?? 'Mengambil data agregasi kunjungan dari server perpustakaan') }}</small>
                     </div>
 
                     <!-- Content Container -->
@@ -3415,10 +2405,10 @@
                                     <div class="stat-bg-circle-2"></div>
                                     <div class="card-body p-3 d-flex align-items-center justify-content-between position-relative" style="z-index: 2;">
                                         <div>
-                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">Hari Ini</span>
+                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_292'] ?? 'Hari Ini') }}</span>
                                             <h3 class="font-weight-bold text-white mb-2 mt-1" id="stat-kpi-today" style="font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.12);">0</h3>
                                             <div class="stat-badge-translucent">
-                                                <i class="fa fa-circle text-warning mr-1" style="font-size: 8px;"></i> Real-time
+                                                <i class="fa fa-circle text-warning mr-1" style="font-size: 8px;"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_293'] ?? 'Real-time') }}
                                             </div>
                                         </div>
                                         <div class="stat-icon-glow">
@@ -3435,10 +2425,10 @@
                                     <div class="stat-bg-circle-2"></div>
                                     <div class="card-body p-3 d-flex align-items-center justify-content-between position-relative" style="z-index: 2;">
                                         <div>
-                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">7 Hari Terakhir</span>
+                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_294'] ?? '7 Hari Terakhir') }}</span>
                                             <h3 class="font-weight-bold text-white mb-2 mt-1" id="stat-kpi-week" style="font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.12);">0</h3>
                                             <div class="stat-badge-translucent">
-                                                <i class="fa fa-calendar-check-o mr-1"></i> 1 Minggu
+                                                <i class="fa fa-calendar-check-o mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_295'] ?? '1 Minggu') }}
                                             </div>
                                         </div>
                                         <div class="stat-icon-glow">
@@ -3455,10 +2445,10 @@
                                     <div class="stat-bg-circle-2"></div>
                                     <div class="card-body p-3 d-flex align-items-center justify-content-between position-relative" style="z-index: 2;">
                                         <div>
-                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">Bulan Ini</span>
+                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_296'] ?? 'Bulan Ini') }}</span>
                                             <h3 class="font-weight-bold text-white mb-2 mt-1" id="stat-kpi-month" style="font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.12);">0</h3>
                                             <div class="stat-badge-translucent">
-                                                <i class="fa fa-calendar-o mr-1"></i> Bulan November                                            </div>
+                                                <i class="fa fa-calendar-o mr-1"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_297'] ?? 'Bulan November') }}                                            </div>
                                         </div>
                                         <div class="stat-icon-glow">
                                             <i class="fa fa-pie-chart"></i>
@@ -3474,10 +2464,10 @@
                                     <div class="stat-bg-circle-2"></div>
                                     <div class="card-body p-3 d-flex align-items-center justify-content-between position-relative" style="z-index: 2;">
                                         <div>
-                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">Total Kunjungan</span>
+                                            <span class="text-white-50 font-weight-bold text-uppercase d-block" style="font-size: 11px; letter-spacing: 0.8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_298'] ?? 'Total Kunjungan') }}</span>
                                             <h3 class="font-weight-bold text-white mb-2 mt-1" id="stat-kpi-all" style="font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.12);">0</h3>
                                             <div class="stat-badge-translucent">
-                                                <i class="fa fa-bolt mr-1"></i> <span id="stat-kpi-avg">0</span> / hari
+                                                <i class="fa fa-bolt mr-1"></i> <span id="stat-kpi-avg">0</span> {{ ($contentBlocks['copy.blade_perpustakaan']['text_299'] ?? '/ hari') }}
                                             </div>
                                         </div>
                                         <div class="stat-icon-glow">
@@ -3494,9 +2484,9 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                                     <div class="card-header bg-white border-0 pt-3 px-3 pb-0 d-flex justify-content-between align-items-center">
                                         <h6 class="font-weight-bold text-dark mb-0">
-                                            <i class="fa fa-area-chart text-success mr-2"></i> Tren Kunjungan Harian (30 Hari Terakhir)
+                                            <i class="fa fa-area-chart text-success mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_300'] ?? 'Tren Kunjungan Harian (30 Hari Terakhir)') }}
                                         </h6>
-                                        <small class="text-muted">Jumlah Presensi per Tanggal</small>
+                                        <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_301'] ?? 'Jumlah Presensi per Tanggal') }}</small>
                                     </div>
                                     <div class="card-body p-3">
                                         <div style="position: relative; height: 260px;">
@@ -3509,9 +2499,9 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                                     <div class="card-header bg-white border-0 pt-3 px-3 pb-0">
                                         <h6 class="font-weight-bold text-dark mb-0">
-                                            <i class="fa fa-pie-chart text-primary mr-2"></i> Kategori Pengunjung
+                                            <i class="fa fa-pie-chart text-primary mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_302'] ?? 'Kategori Pengunjung') }}
                                         </h6>
-                                        <small class="text-muted">Proporsi Tipe Pemustaka</small>
+                                        <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_303'] ?? 'Proporsi Tipe Pemustaka') }}</small>
                                     </div>
                                     <div class="card-body p-3 d-flex align-items-center justify-content-center">
                                         <div style="position: relative; width: 100%; height: 260px;">
@@ -3528,9 +2518,9 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                                     <div class="card-header bg-white border-0 pt-3 px-3 pb-0">
                                         <h6 class="font-weight-bold text-dark mb-0">
-                                            <i class="fa fa-graduation-cap text-info mr-2"></i> Kunjungan Berdasarkan Kelas / Jenjang
+                                            <i class="fa fa-graduation-cap text-info mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_304'] ?? 'Kunjungan Berdasarkan Kelas / Jenjang') }}
                                         </h6>
-                                        <small class="text-muted">Tingkat Keaktifan Literasi per Rombel</small>
+                                        <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_305'] ?? 'Tingkat Keaktifan Literasi per Rombel') }}</small>
                                     </div>
                                     <div class="card-body p-3">
                                         <div style="position: relative; height: 260px;">
@@ -3543,9 +2533,9 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                                     <div class="card-header bg-white border-0 pt-3 px-3 pb-0">
                                         <h6 class="font-weight-bold text-dark mb-0">
-                                            <i class="fa fa-bookmark text-warning mr-2"></i> Keperluan / Alasan Kunjungan
+                                            <i class="fa fa-bookmark text-warning mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_306'] ?? 'Keperluan / Alasan Kunjungan') }}
                                         </h6>
-                                        <small class="text-muted">Aktivitas Utama Siswa di Perpustakaan</small>
+                                        <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_307'] ?? 'Aktivitas Utama Siswa di Perpustakaan') }}</small>
                                     </div>
                                     <div class="card-body p-3">
                                         <div style="position: relative; height: 260px;">
@@ -3562,9 +2552,9 @@
                                 <div class="card border-0 shadow-sm h-100" style="border-radius: 14px;">
                                     <div class="card-header bg-white border-0 pt-3 px-3 pb-0">
                                         <h6 class="font-weight-bold text-dark mb-0">
-                                            <i class="fa fa-clock-o text-danger mr-2"></i> Analisis Jam Sibuk Kunjungan (Peak Hours)
+                                            <i class="fa fa-clock-o text-danger mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_308'] ?? 'Analisis Jam Sibuk Kunjungan (Peak Hours)') }}
                                         </h6>
-                                        <small class="text-muted">Distribusi waktu kunjungan (07.00 - 16.00)</small>
+                                        <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_309'] ?? 'Distribusi waktu kunjungan (07.00 - 16.00)') }}</small>
                                     </div>
                                     <div class="card-body p-3">
                                         <div style="position: relative; height: 240px;">
@@ -3578,11 +2568,11 @@
                                     <div class="card-header bg-white border-0 pt-3 px-3 pb-0 d-flex justify-content-between align-items-center">
                                         <div>
                                             <h6 class="font-weight-bold text-dark mb-0">
-                                                <i class="fa fa-trophy text-warning mr-2"></i> Top 5 Pengunjung Teraktif
+                                                <i class="fa fa-trophy text-warning mr-2"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_310'] ?? 'Top 5 Pengunjung Teraktif') }}
                                             </h6>
-                                            <small class="text-muted">Bulan November 2026</small>
+                                            <small class="text-muted">{{ ($contentBlocks['copy.blade_perpustakaan']['text_311'] ?? 'Bulan November 2026') }}</small>
                                         </div>
-                                        <span class="badge badge-warning text-dark font-weight-bold" style="border-radius: 6px;">⭐ Terajin</span>
+                                        <span class="badge badge-warning text-dark font-weight-bold" style="border-radius: 6px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_312'] ?? '⭐ Terajin') }}</span>
                                     </div>
                                     <div class="card-body p-3">
                                         <div id="stat-top-visitors-list" class="list-group list-group-flush">
@@ -3595,8 +2585,8 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-white border-0 px-4 py-3 d-flex justify-content-between align-items-center">
-                    <small class="text-muted"><i class="fa fa-info-circle"></i> Data statistik terhubung langsung dengan sistem e-presensi perpustakaan.</small>
-                    <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-4" data-dismiss="modal" style="border-radius: 8px;">Tutup</button>
+                    <small class="text-muted"><i class="fa fa-info-circle"></i> {{ ($contentBlocks['copy.blade_perpustakaan']['text_313'] ?? 'Data statistik terhubung langsung dengan sistem e-presensi perpustakaan.') }}</small>
+                    <button type="button" class="btn btn-secondary btn-sm font-weight-bold px-4" data-dismiss="modal" style="border-radius: 8px;">{{ ($contentBlocks['copy.blade_perpustakaan']['text_159'] ?? 'Tutup') }}</button>
                 </div>
             </div>
         </div>
@@ -3613,7 +2603,7 @@
     <script src="/madrasah-theme/perpustakaan/pdf.min.js"></script>
 
     <script>
-    var isUserLoggedIn = false;
+    var isUserLoggedIn =  @json($memberLoggedIn) ;
     var isGuestbookVerified = false;
     var pendingEbook = null;
 
@@ -4174,10 +3164,10 @@
                 $('#btn-detail-bookmark i').removeClass('fa-bookmark').addClass('fa-bookmark-o').css('color', '');
 
                 // 2. Cover & Badge
-                if (res.cover_url && res.cover_url !== 'assets/database.png') {
+                if (res.cover_url && res.cover_url !== '/madrasah-theme/perpustakaan/database.png') {
                     $('#detail-cover').attr('src', res.cover_url).css({'object-fit': 'cover', 'padding': '0'});
                 } else {
-                    $('#detail-cover').attr('src', 'assets/database.png').css({'object-fit': 'contain', 'padding': '14px'});
+                    $('#detail-cover').attr('src', '/madrasah-theme/perpustakaan/database.png').css({'object-fit': 'contain', 'padding': '14px'});
                 }
                 if (res.ebook_url) {
                     $('#detail-ebook-badge').html('<span class="bg-emerald-700 text-white font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm d-inline-flex align-items-center" style="font-size: 8px;"><i class="fa fa-file-text-o mr-1"></i> E-BOOK RESMI</span>');
@@ -4289,6 +3279,8 @@
         var id = $(this).data('id');
         lihatDetailBuku(id);
     });
+
+    $(document).on('click', '.btn-book-reserve', function() { bookingBuku($(this).data('id'), $(this).data('judul')); });
 
     // Submit Usulan Buku Baru
     $('#form-usulan-buku').submit(function(e) {
@@ -4616,6 +3608,7 @@
                 $btn.prop('disabled', false).html('<i class="fa fa-sign-in mr-1"></i> Masuk Sekarang');
                 if (res.status === 'success') {
                     isUserLoggedIn = true;
+                    if (res.csrf_token) $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': res.csrf_token } });
                     isGuestbookVerified = true;
                     sessionStorage.setItem('perpus_guestbook_verified', 'true');
                     $('#modalLoginSiswa').modal('hide');
@@ -4746,7 +3739,7 @@
     // 7. LOGOUT SISWA
     function logoutSiswa() {
         sessionStorage.removeItem('perpus_guestbook_verified');
-        $.getJSON('/perpustakaan/aksi?pg=logout_siswa', function(res) {
+        $.post('/perpustakaan/aksi?pg=logout_siswa', {}, function(res) {
             iziToast.info({ title: 'Keluar', message: res.message, position: 'topRight' });
             setTimeout(function() {
                 location.reload();
@@ -5208,4 +4201,3 @@
 .glasp-md.glasp-md pre, .glasp-md.glasp-md code { direction: ltr; unicode-bidi: isolate; text-align: start; }
 .glasp-md.glasp-md img { max-width: 100%; border-radius: 2px; }
 </style></div></template></div></body><div class="glasp-extension" data-glasp-print="hide" dir="ltr" id="glasp-web-summary-button" style="text-align: start; display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>
-@endverbatim

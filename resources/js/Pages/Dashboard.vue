@@ -278,6 +278,26 @@ const metricItems = computed(() => {
         { label: 'Ujian selesai', value: roleMetrics.value.completed_exams, note: 'sudah dikumpulkan', icon: metricIcons.examsDone },
         { label: 'Nilai tercatat', value: roleMetrics.value.recorded_scores, note: 'periode aktif', icon: metricIcons.scores },
     ];
+    const operationalDefinitions: Record<string, { label: string; note: string; icon: string; href?: string }> = {
+        assigned_complaints_open: { label: 'Antrean pengaduan', note: 'sesuai penugasan dan antrean triase', icon: metricIcons.shield, href: '/satgas/aduan' },
+        pending_official_decisions: { label: 'Keputusan dokumen', note: 'menunggu pemeriksaan pejabat', icon: metricIcons.reports, href: '/administrasi/ptsp' },
+        committee_assignments: { label: 'Penugasan panitia', note: 'penugasan yang masih berlaku', icon: metricIcons.users },
+        admission_applicants_pending: { label: 'Antrean SPMB', note: 'berkas dan seleksi perlu tindak lanjut', icon: metricIcons.tasks, href: '/spmb' },
+        library_reservations: { label: 'Reservasi buku', note: 'menunggu penyerahan pustakawan', icon: metricIcons.tasks, href: '/perpustakaan/kelola' },
+        ptsp_open: { label: 'Antrean PTSP', note: 'menunggu tindak lanjut', icon: metricIcons.tasks, href: '/administrasi/ptsp' },
+        external_letters_open: { label: 'Surat dinas masuk', note: 'belum selesai diproses', icon: metricIcons.reports },
+        active_guests: { label: 'Tamu di sekolah', note: 'belum tercatat pulang', icon: metricIcons.users },
+        approved_permits_today: { label: 'Izin berlaku', note: 'pada hari ini', icon: metricIcons.calendar },
+        open_bk_cases: { label: 'Kasus BK aktif', note: 'menunggu tindak lanjut', icon: metricIcons.shield },
+        library_collections: { label: 'Koleksi aktif', note: 'dalam katalog sekolah', icon: metricIcons.modules },
+        active_loans: { label: 'Pinjaman aktif', note: 'belum dikembalikan', icon: metricIcons.tasks, href: '/perpustakaan/kelola' },
+        pending_procurements: { label: 'Usulan pengadaan', note: 'menunggu keputusan', icon: metricIcons.reports },
+        my_tickets: { label: 'Permohonan saya', note: 'sesuai kepemilikan akun', icon: metricIcons.reports },
+    };
+    const operationalItems = Object.entries(roleMetrics.value)
+        .filter(([key]) => key in operationalDefinitions)
+        .map(([key, value]) => ({ ...operationalDefinitions[key], value }));
+    if (operationalItems.length) return operationalItems;
     return [
         { label: 'Periode aktif', value: activePeriod.value, note: 'konteks kerja saat ini', icon: metricIcons.calendar },
         { label: 'Modul tersedia', value: props.stats?.modules_ready, note: 'siap digunakan', icon: metricIcons.modules },
@@ -409,6 +429,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                     </div>
                     <strong>{{ metric.value ?? '—' }}</strong>
                     <small>{{ metric.note }}</small>
+                    <Link v-if="'href' in metric && metric.href" :href="String(metric.href)" class="metric-action">Buka antrean →</Link>
                 </article>
             </section>
 
@@ -536,6 +557,7 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
                     </div>
                     <strong>{{ metric.value ?? '—' }}</strong>
                     <small>{{ metric.note }}</small>
+                    <Link v-if="'href' in metric && metric.href" :href="String(metric.href)" class="metric-action">Buka antrean →</Link>
                 </article>
             </section>
 
@@ -1192,6 +1214,14 @@ const principalAttendanceDataSummary = computed(() => principalTrend.value.filte
 @media (max-width: 1080px) { .student-shortcuts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .is-student-dashboard .student-overview-card { min-height: 0; } }
 @media (max-width: 560px) { .is-student-dashboard .intro-row { align-items: flex-start; flex-direction: column; } .is-student-dashboard .student-overview, .student-shortcuts { margin-top: 1.5rem; } .is-student-dashboard .student-overview-card { padding: 1.1rem; } .student-shortcuts-grid { grid-template-columns: 1fr; } }
+</style>
+
+<style scoped>
+.attendance-chart-card, .principal-chart-panel, .principal-grade-panel { border-radius: var(--admin-radius, 8px); box-shadow: none; }
+.chart-line, .chart-point circle { stroke: var(--primary); }
+.chart-area { fill: color-mix(in srgb, var(--primary) 12%, transparent); }
+.chart-legend i, .principal-grade-track > span { background: var(--primary); }
+.chart-grid text, .chart-point text { fill: var(--ink-soft); }
 </style>
 
 <style scoped src="../../css/dashboard-workspace.css"></style>

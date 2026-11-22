@@ -34,7 +34,7 @@ class ComplaintController extends Controller
         return Inertia::render('Public/Services/Complaint', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'categories' => collect(ComplaintReportService::CATEGORIES)
@@ -99,7 +99,7 @@ class ComplaintController extends Controller
         return Inertia::render('Public/Services/ComplaintTransparency', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'transparency' => $this->complaintService->publicTransparencySummary($schoolId),
@@ -117,6 +117,7 @@ class ComplaintController extends Controller
 
         $reports = ComplaintReport::query()
             ->where('school_id', $schoolId)
+            ->when(! $user->hasRole('admin'), fn ($q) => $q->where(fn ($scope) => $scope->whereNull('assigned_to_user_id')->orWhere('assigned_to_user_id', $user->id)))
             ->when($status !== '', fn ($q) => $q->where('status', $status))
             ->when($category !== '', fn ($q) => $q->where('category', $category))
             ->latest('id')
@@ -197,9 +198,8 @@ class ComplaintController extends Controller
     public function downloadEvidence(Request $request, ComplaintReport $report, int $documentId): BinaryFileResponse
     {
         $user = $request->user();
-        $this->complaintService->assertTaskForceActor($user);
+        $this->complaintService->assertReportAccess($user, $report);
         $schoolId = (int) $user->school_id;
-        abort_unless((int) $report->school_id === $schoolId, 404);
 
         $allowedIds = array_merge(
             array_map('intval', $report->evidence_document_ids ?? []),

@@ -3,6 +3,7 @@ import type { SharedProps } from '@/types';
 
 export interface PublicThemeTokens {
     primary?: string | null;
+    use_identity_color?: boolean;
     accent?: string | null;
     surface?: string | null;
     ink?: string | null;
@@ -10,7 +11,7 @@ export interface PublicThemeTokens {
 }
 
 export const publicThemeStyle = (theme?: PublicThemeTokens) => {
-    if (usePage<SharedProps>().props.publicPortalTheme === 'madrasah') {
+    if (usePage<SharedProps>().props.publicPortalTheme === 'madrasah' && !theme?.use_identity_color) {
         theme = { primary: '#047857', accent: '#b45309', surface: '#f8fafc', ink: '#0f172a', muted: '#475569' };
     }
 

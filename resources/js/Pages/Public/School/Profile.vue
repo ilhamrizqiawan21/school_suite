@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -65,55 +67,56 @@ const missionPoints = computed(() => (props.school.mission || (preview.value ? s
     .filter(Boolean));
 const initial = computed(() => props.school.name.trim().charAt(0).toUpperCase() || 'S');
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
     <Head :title="school.name" />
-    <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
+    <a class="skip-link" :href="publicText('copy.vue_school_profile', 'href_020', '#main-content')">{{ publicText("copy.vue_school_profile", "text_001", "Lewati ke konten utama") }}</a>
     <main id="main-content" class="public-site school-profile" :style="themeStyle">
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
         <PublicHeader :school="school" active="profile" />
 
         <section class="madrasah-profile-hero hero" aria-labelledby="hero-title">
             <div class="hero-copy">
-                <p class="kicker">{{ school.level || 'Sekolah' }} · Profil resmi</p>
-                <h1 id="hero-title">{{ school.name }}<span class="hero-title-accent">ruang untuk tumbuh bersama.</span></h1>
+                <p class="kicker">{{ school.level || 'Sekolah' }} {{ publicText("copy.vue_school_profile", "text_9001", "· Profil resmi") }}</p>
+                <h1 id="hero-title">{{ school.name }}<span class="hero-title-accent">{{ publicText("copy.vue_school_profile", "text_002", "ruang untuk tumbuh bersama.") }}</span></h1>
                 <p class="lead">{{ school.about || 'Selamat datang di ruang informasi resmi sekolah kami.' }}</p>
-                <div class="hero-actions"><AppButton variant="primary" as="a" href="#tentang" class="primary-button">Kenali sekolah kami</AppButton><Link href="/galeri" class="quiet-link">Lihat galeri sekolah</Link></div>
+                <div class="hero-actions"><AppButton variant="primary" as="a" :href="publicText('copy.vue_school_profile', 'href_021', '#tentang')" class="primary-button">{{ publicText("copy.vue_school_profile", "text_003", "Kenali sekolah kami") }}</AppButton><Link href="/galeri" class="quiet-link">{{ publicText("copy.vue_school_profile", "text_004", "Lihat galeri sekolah") }}</Link></div>
             </div>
-            <div class="hero-visual" aria-label="Identitas sekolah">
+            <div class="hero-visual" :aria-label="publicText('copy.vue_school_profile', 'aria_label_022', 'Identitas sekolah')">
                 <div class="hero-empty-visual"><div class="orbit orbit-one" /><div class="orbit orbit-two" /><div class="hero-emblem"><img v-if="school.logo_url" :src="school.logo_url" :alt="'Logo ' + school.name" /><span v-else>{{ initial }}</span></div></div>
-                <div class="hero-note"><span>{{ school.school_status || 'Ruang belajar bersama' }}</span><strong>Belajar. Berkarya. Berbagi.</strong><small>Portofolio resmi {{ school.name }}</small></div>
+                <div class="hero-note"><span>{{ school.school_status || 'Ruang belajar bersama' }}</span><strong>{{ publicText("copy.vue_school_profile", "text_005", "Belajar. Berkarya. Berbagi.") }}</strong><small>{{ publicText("copy.vue_school_profile", "text_9002", "Portofolio resmi") }} {{ school.name }}</small></div>
             </div>
         </section>
 
-        <section class="fact-strip" aria-label="Informasi singkat sekolah">
-            <div v-if="school.level"><span>Jenjang</span><strong>{{ school.level }}</strong></div>
-            <div v-if="school.school_status"><span>Status</span><strong>{{ school.school_status }}</strong></div>
-            <div v-if="school.accreditation"><span>Akreditasi</span><strong>{{ school.accreditation }}</strong></div>
-            <div v-if="school.principal_name"><span>Kepala sekolah</span><strong>{{ school.principal_name }}</strong></div>
+        <section class="fact-strip" :aria-label="publicText('copy.vue_school_profile', 'aria_label_023', 'Informasi singkat sekolah')">
+            <div v-if="school.level"><span>{{ publicText("copy.vue_school_profile", "text_006", "Jenjang") }}</span><strong>{{ school.level }}</strong></div>
+            <div v-if="school.school_status"><span>{{ publicText("copy.vue_school_profile", "text_007", "Status") }}</span><strong>{{ school.school_status }}</strong></div>
+            <div v-if="school.accreditation"><span>{{ publicText("copy.vue_school_profile", "text_008", "Akreditasi") }}</span><strong>{{ school.accreditation }}</strong></div>
+            <div v-if="school.principal_name"><span>{{ publicText("copy.vue_school_profile", "text_009", "Kepala sekolah") }}</span><strong>{{ school.principal_name }}</strong></div>
         </section>
 
         <section id="tentang" class="content-section two-column">
-            <div><p class="kicker">Tentang sekolah</p><h2>Karakter yang dibangun setiap hari.</h2></div>
+            <div><p class="kicker">{{ publicText("copy.vue_school_profile", "text_010", "Tentang sekolah") }}</p><h2>{{ publicText("copy.vue_school_profile", "text_011", "Karakter yang dibangun setiap hari.") }}</h2></div>
             <div class="about-copy"><p>{{ school.about || 'Profil sekolah sedang disiapkan.' }}</p><p v-if="school.legal_name" class="muted">{{ school.legal_name }}</p></div>
         </section>
 
         <section v-if="principalMessage" id="sambutan" class="message-section">
             <div class="quote-mark" aria-hidden="true">“</div>
-            <div><p class="kicker">Sambutan kepala sekolah</p><blockquote>{{ principalMessage }}</blockquote><cite>{{ school.principal_message ? (school.principal_name || 'Kepala Sekolah') : 'Contoh sambutan' }}</cite></div>
+            <div><p class="kicker">{{ publicText("copy.vue_school_profile", "text_012", "Sambutan kepala sekolah") }}</p><blockquote>{{ principalMessage }}</blockquote><cite>{{ school.principal_message ? (school.principal_name || 'Kepala Sekolah') : 'Contoh sambutan' }}</cite></div>
         </section>
 
         <section v-if="vision || missionPoints.length" id="arah" class="content-section two-column">
-            <div><p class="kicker">Arah pendidikan</p><h2>Visi dan Misi</h2><p v-if="preview && (!school.vision || !school.mission)">Contoh konten profil</p></div>
+            <div><p class="kicker">{{ publicText("copy.vue_school_profile", "text_013", "Arah pendidikan") }}</p><h2>{{ publicText("copy.vue_school_profile", "text_014", "Visi dan Misi") }}</h2><p v-if="preview && (!school.vision || !school.mission)">{{ publicText("copy.vue_school_profile", "text_015", "Contoh konten profil") }}</p></div>
             <div class="direction-grid">
-                <article v-if="vision"><span>Visi</span><p>{{ vision }}</p></article>
-                <article v-if="missionPoints.length"><span>Misi</span><ul><li v-for="mission in missionPoints" :key="mission">{{ mission }}</li></ul></article>
+                <article v-if="vision"><span>{{ publicText("copy.vue_school_profile", "text_016", "Visi") }}</span><p>{{ vision }}</p></article>
+                <article v-if="missionPoints.length"><span>{{ publicText("copy.vue_school_profile", "text_017", "Misi") }}</span><ul><li v-for="mission in missionPoints" :key="mission">{{ mission }}</li></ul></article>
             </div>
         </section>
 
         <footer id="kontak" class="contact-footer">
-            <div><p class="kicker">Hubungi sekolah</p><h2>Mari terhubung.</h2></div>
+            <div><p class="kicker">{{ publicText("copy.vue_school_profile", "text_018", "Hubungi sekolah") }}</p><h2>{{ publicText("copy.vue_school_profile", "text_019", "Mari terhubung.") }}</h2></div>
             <div class="contact-list"><p v-if="school.address">{{ school.address }}</p><a v-if="school.phone" :href="'tel:' + school.phone">{{ school.phone }}</a><a v-if="school.email" :href="'mailto:' + school.email">{{ school.email }}</a><a v-if="school.website" :href="school.website" target="_blank" rel="noreferrer">{{ school.website }}</a></div>
         </footer>
     </main>

@@ -65,6 +65,10 @@ class CommunicationController extends Controller
             ->orderBy('starts_at')
             ->get();
 
+        $unreadNotificationCount = UserNotification::query()
+            ->where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->count();
         $notifications = UserNotification::query()
             ->where('user_id', $user->id)
             ->latest()
@@ -82,6 +86,7 @@ class CommunicationController extends Controller
             'announcements' => $announcements,
             'events' => $events,
             'notifications' => $notifications,
+            'unread_count' => $unreadNotificationCount,
             'classes' => $classes,
             'active_tab' => $request->query('tab', 'announcements'),
             'can_manage' => $user->hasRole(self::MANAGER_ROLES),

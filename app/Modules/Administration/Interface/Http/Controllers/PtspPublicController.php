@@ -430,7 +430,7 @@ class PtspPublicController extends Controller
     {
         return [
             'name' => $school['name'],
-            'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+            'logo_url' => $school['logo_url'] ?? null,
             'theme' => $school['theme'] ?? [],
         ];
     }

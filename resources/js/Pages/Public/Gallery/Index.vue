@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
@@ -22,6 +24,7 @@ const props = defineProps<{
     albums: GalleryAlbum[];
 }>();
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -30,9 +33,9 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ school.name.slice(0, 1) }}</span></div>
         <PublicHeader :school="school" active="gallery" />
 
-        <section class="gallery-intro"><p class="kicker">Portofolio sekolah</p><h1>Ruang untuk momen yang berarti.</h1><p>Lihat kegiatan, ruang belajar, dan cerita kecil yang membentuk keseharian {{ school.name }}.</p></section>
+        <section class="gallery-intro"><p class="kicker">{{ publicText("copy.vue_gallery_index", "text_001", "Portofolio sekolah") }}</p><h1>{{ publicText("copy.vue_gallery_index", "text_002", "Ruang untuk momen yang berarti.") }}</h1><p>{{ publicText("copy.vue_gallery_index", "text_9001", "Lihat kegiatan, ruang belajar, dan cerita kecil yang membentuk keseharian") }} {{ school.name }}.</p></section>
 
-        <section class="album-grid" aria-label="Galeri foto sekolah">
+        <section class="album-grid" :aria-label="publicText('copy.vue_gallery_index', 'aria_label_007', 'Galeri foto sekolah')">
             <article v-for="album in albums" :key="album.id" class="album-card">
                 <div class="album-images">
                     <img v-if="album.photos[0]" class="album-photo album-photo-feature" :src="album.photos[0].url" :alt="album.photos[0].name || album.title" />
@@ -42,15 +45,15 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                     </div>
                 </div>
                 <div class="album-copy">
-                    <div class="album-meta"><span>Album foto</span><small>{{ album.photos.length }} foto</small></div>
+                    <div class="album-meta"><span>{{ publicText("copy.vue_gallery_index", "text_003", "Album foto") }}</span><small>{{ album.photos.length }} {{ publicText("copy.vue_gallery_index", "text_9002", "foto") }}</small></div>
                     <h2>{{ album.title }}</h2>
                     <p v-if="album.caption">{{ album.caption }}</p>
                 </div>
             </article>
-            <div v-if="!albums.length" class="empty-gallery"><strong>Galeri sedang disiapkan.</strong><p>Foto kegiatan dan suasana sekolah akan tampil di sini.</p></div>
+            <div v-if="!albums.length" class="empty-gallery"><strong>{{ publicText("copy.vue_gallery_index", "text_004", "Galeri sedang disiapkan.") }}</strong><p>{{ publicText("copy.vue_gallery_index", "text_005", "Foto kegiatan dan suasana sekolah akan tampil di sini.") }}</p></div>
         </section>
 
-        <footer><Link href="/" class="back-link">← Kembali ke beranda</Link></footer>
+        <footer><Link href="/" class="back-link">{{ publicText("copy.vue_gallery_index", "text_006", "← Kembali ke beranda") }}</Link></footer>
     </main>
 </template>
 

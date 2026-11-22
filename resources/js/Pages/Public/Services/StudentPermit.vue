@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { useForm, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
+const publicText = usePublicContentText();
 
 interface StudentOption {
     student_id: number;
@@ -68,14 +71,14 @@ const homeroomContact = ref<{ name: string; whatsapp_url: string | null } | null
 const permitKind = ref('sick');
 const otherKind = ref('');
 const permitKinds = [
-    { value: 'sick', type: 'sick', label: 'Sakit (Disarankan melampirkan Surat Dokter / Keterangan Faskes)' },
-    { value: 'personal', type: 'personal', label: 'Izin Kepentingan Keluarga / Urusan Penting' },
-    { value: 'bereavement', type: 'personal', label: 'Kedukaan / Musibah Keluarga' },
-    { value: 'medical', type: 'sick', label: 'Pemeriksaan Medis / Rawat Jalan / Kontrol Dokter' },
-    { value: 'event', type: 'event', label: 'Dispensasi (Tugas Sekolah / Lomba / Kegiatan Organisasi)' },
-    { value: 'religious', type: 'event', label: 'Kegiatn Keagamaan' },
-    { value: 'special', type: 'other', label: 'Keperluan Khusus (Tes Masuk PTN / Administrasi Resmi)' },
-    { value: 'other', type: 'other', label: 'Lainnya (Isi Keterangan)' },
+    { value: 'sick', type: 'sick', label: publicText("copy.vue_services_studentpermit", "text_12001", "Sakit (Disarankan melampirkan Surat Dokter / Keterangan Faskes)") },
+    { value: 'personal', type: 'personal', label: publicText("copy.vue_services_studentpermit", "text_12002", "Izin Kepentingan Keluarga / Urusan Penting") },
+    { value: 'bereavement', type: 'personal', label: publicText("copy.vue_services_studentpermit", "text_12003", "Kedukaan / Musibah Keluarga") },
+    { value: 'medical', type: 'sick', label: publicText("copy.vue_services_studentpermit", "text_12004", "Pemeriksaan Medis / Rawat Jalan / Kontrol Dokter") },
+    { value: 'event', type: 'event', label: publicText("copy.vue_services_studentpermit", "text_12005", "Dispensasi (Tugas Sekolah / Lomba / Kegiatan Organisasi)") },
+    { value: 'religious', type: 'event', label: publicText("copy.vue_services_studentpermit", "text_12006", "Kegiatn Keagamaan") },
+    { value: 'special', type: 'other', label: publicText("copy.vue_services_studentpermit", "text_12007", "Keperluan Khusus (Tes Masuk PTN / Administrasi Resmi)") },
+    { value: 'other', type: 'other', label: publicText("copy.vue_services_studentpermit", "text_12008", "Lainnya (Isi Keterangan)") },
 ];
 async function permitRequest(path: string, payload: Record<string, string>) {
     const response = await fetch(`/layanan/izin-siswa/${path}`, {
@@ -277,60 +280,60 @@ const submitRevision = () => {
     <main class="public-portal-page" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <header class="portal-hero">
+        <header v-if="contentBlocks?.['student_permit.hero']?.visible !== false" class="portal-hero">
             <div class="permit-hero-inner">
                 <div>
-                    <p class="permit-badge">{{ contentBlocks?.['student_permit.hero']?.badge || 'Layanan Resmi Perizinan Siswa' }}</p>
-                    <h1>{{ contentBlocks?.['student_permit.hero']?.title || 'Surat Izin Siswa Online' }}</h1>
-                    <div class="permit-school-row"><strong class="permit-school">{{ school.name }}</strong><span class="permit-year">{{ contentBlocks?.['student_permit.hero']?.academic_year_label || 'TA 2026/2027' }}</span></div>
-                    <p>{{ contentBlocks?.['student_permit.hero']?.description || 'Layanan permohonan izin tidak masuk sekolah (Sakit / Kepentingan Keluarga) resmi yang diajukan oleh Orang Tua / Wali Siswa secara online, cepat, dan disertai tanda tangan digital sah.' }}</p>
-                    <div class="permit-hero-tags"><span>1 Menit Selesai</span><span>TTD Digital Sah</span><span>Terkirim ke Wali Kelas</span><span>Ber-QR Code</span></div>
+                    <p class="permit-badge">{{ contentBlocks?.['student_permit.hero']?.badge ?? 'Layanan Resmi Perizinan Siswa' }}</p>
+                    <h1>{{ contentBlocks?.['student_permit.hero']?.title ?? 'Surat Izin Siswa Online' }}</h1>
+                    <div class="permit-school-row"><strong class="permit-school">{{ school.name }}</strong><span class="permit-year">{{ contentBlocks?.['student_permit.hero']?.academic_year_label ?? 'TA 2026/2027' }}</span></div>
+                    <p>{{ contentBlocks?.['student_permit.hero']?.description ?? 'Layanan permohonan izin tidak masuk sekolah (Sakit / Kepentingan Keluarga) resmi yang diajukan oleh Orang Tua / Wali Siswa secara online, cepat, dan disertai tanda tangan digital sah.' }}</p>
+                    <div class="permit-hero-tags"><span>{{ publicText("copy.vue_services_studentpermit", "text_001", "1 Menit Selesai") }}</span><span>{{ publicText("copy.vue_services_studentpermit", "text_002", "TTD Digital Sah") }}</span><span>{{ publicText("copy.vue_services_studentpermit", "text_003", "Terkirim ke Wali Kelas") }}</span><span>{{ publicText("copy.vue_services_studentpermit", "text_004", "Ber-QR Code") }}</span></div>
                 </div>
                 <aside class="permit-steps">
-                    <div class="permit-steps-heading"><strong>Alur 3 Langkah Singkat:</strong><span>24 Jam Aktif</span></div>
+                    <div class="permit-steps-heading"><strong>{{ publicText("copy.vue_services_studentpermit", "text_005", "Alur 3 Langkah Singkat:") }}</strong><span>{{ publicText("copy.vue_services_studentpermit", "text_006", "24 Jam Aktif") }}</span></div>
                     <ol>
-                        <li><b>1</b><span><strong>Cek Siswa:</strong> Ketik 10 digit NISN atau Nama Siswa</span></li>
-                        <li><b>2</b><span><strong>Pilih Izin:</strong> Sakit, Izin Keluarga, atau Dispensasi</span></li>
-                        <li><b>3</b><span><strong>Goreskan TTD:</strong> Tanda tangan di layar HP &amp; Kirim</span></li>
+                        <li><b>1</b><span><strong>{{ publicText("copy.vue_services_studentpermit", "text_007", "Cek Siswa:") }}</strong> {{ publicText("copy.vue_services_studentpermit", "text_008", "Ketik 10 digit NISN atau Nama Siswa") }}</span></li>
+                        <li><b>2</b><span><strong>{{ publicText("copy.vue_services_studentpermit", "text_009", "Pilih Izin:") }}</strong> {{ publicText("copy.vue_services_studentpermit", "text_010", "Sakit, Izin Keluarga, atau Dispensasi") }}</span></li>
+                        <li><b>3</b><span><strong>{{ publicText("copy.vue_services_studentpermit", "text_011", "Goreskan TTD:") }}</strong> {{ publicText("copy.vue_services_studentpermit", "text_012", "Tanda tangan di layar HP & Kirim") }}</span></li>
                     </ol>
-                    <p class="permit-steps-footer">Otomatis terhubung ke Wali Kelas &amp; Guru Piket.</p>
+                    <p class="permit-steps-footer">{{ publicText("copy.vue_services_studentpermit", "text_013", "Otomatis terhubung ke Wali Kelas & Guru Piket.") }}</p>
                 </aside>
             </div>
         </header>
 
         <section class="portal-container">
-            <nav class="permit-tabs" aria-label="Bagian surat izin siswa">
-                <button type="button" :aria-pressed="activeTab === 'form'" @click="activeTab = 'form'"><span class="tab-desktop">Formulir Pengajuan</span><span class="tab-mobile">Formulir</span></button>
-                <button type="button" :aria-pressed="activeTab === 'status'" @click="activeTab = 'status'"><span class="tab-desktop">Cek Status Pengajuan</span><span class="tab-mobile">Cek Status</span></button>
-                <button type="button" :aria-pressed="activeTab === 'rules'" @click="activeTab = 'rules'"><span class="tab-desktop">Alur &amp; Ketentuan</span><span class="tab-mobile">Ketentuan</span></button>
+            <nav class="permit-tabs" :aria-label="publicText('copy.vue_services_studentpermit', 'aria_label_113', 'Bagian surat izin siswa')">
+                <button type="button" :aria-pressed="activeTab === 'form'" @click="activeTab = 'form'"><span class="tab-desktop">{{ publicText("copy.vue_services_studentpermit", "text_014", "Formulir Pengajuan") }}</span><span class="tab-mobile">{{ publicText("copy.vue_services_studentpermit", "text_015", "Formulir") }}</span></button>
+                <button type="button" :aria-pressed="activeTab === 'status'" @click="activeTab = 'status'"><span class="tab-desktop">{{ publicText("copy.vue_services_studentpermit", "text_016", "Cek Status Pengajuan") }}</span><span class="tab-mobile">{{ publicText("copy.vue_services_studentpermit", "text_017", "Cek Status") }}</span></button>
+                <button type="button" :aria-pressed="activeTab === 'rules'" @click="activeTab = 'rules'"><span class="tab-desktop">{{ publicText("copy.vue_services_studentpermit", "text_018", "Alur & Ketentuan") }}</span><span class="tab-mobile">{{ publicText("copy.vue_services_studentpermit", "text_019", "Ketentuan") }}</span></button>
             </nav>
             <div v-if="flashMessage" class="alert-banner alert-banner--success" role="status">{{ flashMessage }}</div>
 
             <div v-if="issuedReceipt" class="alert-banner alert-banner--pin" role="status">
-                <strong>Pengajuan Izin Tercatat: {{ issuedReceipt.ticket_code }}</strong>
-                <span>PIN Verifikasi Lacak: <strong>{{ issuedReceipt.verification_secret }}</strong></span>
-                <a :href="`/layanan/izin-siswa/${issuedReceipt.id}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--secondary ui-button--sm">Cetak Bukti PDF</a>
+                <strong>{{ publicText("copy.vue_services_studentpermit", "text_9001", "Pengajuan Izin Tercatat:") }} {{ issuedReceipt.ticket_code }}</strong>
+                <span>{{ publicText("copy.vue_services_studentpermit", "text_020", "PIN Verifikasi Lacak:") }} <strong>{{ issuedReceipt.verification_secret }}</strong></span>
+                <a :href="`/layanan/izin-siswa/${issuedReceipt.id}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--secondary ui-button--sm">{{ publicText("copy.vue_services_studentpermit", "text_021", "Cetak Bukti PDF") }}</a>
             </div>
 
-            <section v-show="activeTab === 'form'" class="portal-card permit-application" aria-label="Formulir Pengajuan Izin">
+            <section v-show="activeTab === 'form'" class="portal-card permit-application" :aria-label="publicText('copy.vue_services_studentpermit', 'aria_label_114', 'Formulir Pengajuan Izin')">
                 <aside class="permit-notice">
-                    <strong>Ketentuan Pengajuan Izin Siswa Online:</strong>
+                    <strong>{{ publicText("copy.vue_services_studentpermit", "text_022", "Ketentuan Pengajuan Izin Siswa Online:") }}</strong>
                     <ul>
-                        <li>Pengajuan izin cukup dikirim <b>1 (satu) kali</b> untuk setiap periode izin yang diajukan.</li>
-                        <li>Setelah berhasil mengirim, pantau status persetujuan di menu <b>Cek Status Pengajuan</b>. Anda tidak perlu mengirim ulang.</li>
-                        <li>Jika ada koreksi tanggal atau alasan mendesak, silakan konfirmasi langsung ke Wali Kelas.</li>
+                        <li>{{ publicText("copy.vue_services_studentpermit", "text_023", "Pengajuan izin cukup dikirim") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_024", "1 (satu) kali") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_025", "untuk setiap periode izin yang diajukan.") }}</li>
+                        <li>{{ publicText("copy.vue_services_studentpermit", "text_026", "Setelah berhasil mengirim, pantau status persetujuan di menu") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_016", "Cek Status Pengajuan") }}</b>{{ publicText("copy.vue_services_studentpermit", "text_027", ". Anda tidak perlu mengirim ulang.") }}</li>
+                        <li>{{ publicText("copy.vue_services_studentpermit", "text_028", "Jika ada koreksi tanggal atau alasan mendesak, silakan konfirmasi langsung ke Wali Kelas.") }}</li>
                     </ul>
                 </aside>
                 <form class="form-grid" @submit.prevent="submitPermit">
-                    <h2 class="permit-section-title full-span">1. Identifikasi &amp; Data Siswa</h2>
+                    <h2 class="permit-section-title full-span">{{ publicText("copy.vue_services_studentpermit", "text_029", "1. Identifikasi & Data Siswa") }}</h2>
                     <div class="permit-lookup full-span">
-                        <label for="izin-student-query">Cari Siswa <span class="text-red-600">*</span></label>
+                        <label for="izin-student-query">{{ publicText("copy.vue_services_studentpermit", "text_030", "Cari Siswa") }} <span class="text-red-600">*</span></label>
                         <div>
                             <div class="permit-lookup-controls">
-                                <input id="izin-student-query" v-model="studentQuery" type="search" required placeholder="Masukkan 10 digit NISN atau Nama Lengkap Siswa..." @keydown.enter.prevent="selectStudent" />
+                                <input id="izin-student-query" v-model="studentQuery" type="search" required :placeholder="publicText('copy.vue_services_studentpermit', 'placeholder_115', 'Masukkan 10 digit NISN atau Nama Lengkap Siswa...')" @keydown.enter.prevent="selectStudent" />
                                 <button type="button" :disabled="lookupBusy" @click="selectStudent">{{ lookupBusy ? 'Mencari...' : 'Cek Siswa' }}</button>
                             </div>
-                            <small>Ketikkan <b>10 digit NISN</b> atau <b>Nama Lengkap Siswa</b> (huruf besar/kecil bebas) lalu klik <b>Cek Siswa</b>.</small>
+                            <small>{{ publicText("copy.vue_services_studentpermit", "text_031", "Ketikkan") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_032", "10 digit NISN") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_033", "atau") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_034", "Nama Lengkap Siswa") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_035", "(huruf besar/kecil bebas) lalu klik") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_036", "Cek Siswa") }}</b>.</small>
                             <p v-if="studentLookupMessage" role="status" class="muted">{{ studentLookupMessage }}</p>
                             <p v-if="form.errors.student_id || form.errors.student_query" role="alert" class="text-red-600">{{ form.errors.student_id || form.errors.student_query }}</p>
                         </div>
@@ -338,154 +341,154 @@ const submitRevision = () => {
 
                     <div v-if="selectedStudent" class="permit-student-info full-span" role="status">
                         <strong>{{ selectedStudent.name }}</strong>
-                        <div>NISN: {{ selectedStudent.nisn || '-' }} <span>Kelas: {{ selectedStudent.class_group_name || '-' }}</span></div>
+                        <div>{{ publicText("copy.vue_services_studentpermit", "text_9002", "NISN:") }} {{ selectedStudent.nisn || '-' }} <span>{{ publicText("copy.vue_services_studentpermit", "text_9003", "Kelas:") }} {{ selectedStudent.class_group_name || '-' }}</span></div>
                         <aside v-if="activePermits.length" class="permit-active-warning">
-                            <strong>Perhatian: Siswa Memiliki Permohonan Izin Terdaftar</strong>
-                            <p>Ananda sudah memiliki permohonan izin dalam proses / disetujui. Mohon tidak mengirim formulir ulang untuk tanggal yang sama:</p>
-                            <div class="permit-table-scroll"><table><thead><tr><th>No. Registrasi</th><th>Kategori</th><th>Periode</th><th>Status</th></tr></thead><tbody><tr v-for="permit in activePermits" :key="permit.ticket_code || permit.start_date"><td>{{ permit.ticket_code }}</td><td>{{ permit.type_label }}</td><td>{{ permit.start_date }} s.d. {{ permit.end_date }}</td><td>{{ permit.status_label }}</td></tr></tbody></table></div>
-                            <small>Untuk perubahan izin, silakan konfirmasi langsung ke Wali Kelas.</small>
-                            <button type="button" @click="activeTab = 'status'; statusQuery = studentQuery; lookupStatus()">Buka Menu Lacak Status</button>
+                            <strong>{{ publicText("copy.vue_services_studentpermit", "text_037", "Perhatian: Siswa Memiliki Permohonan Izin Terdaftar") }}</strong>
+                            <p>{{ publicText("copy.vue_services_studentpermit", "text_038", "Ananda sudah memiliki permohonan izin dalam proses / disetujui. Mohon tidak mengirim formulir ulang untuk tanggal yang sama:") }}</p>
+                            <div class="permit-table-scroll"><table><thead><tr><th>{{ publicText("copy.vue_services_studentpermit", "text_039", "No. Registrasi") }}</th><th>{{ publicText("copy.vue_services_studentpermit", "text_040", "Kategori") }}</th><th>{{ publicText("copy.vue_services_studentpermit", "text_041", "Periode") }}</th><th>{{ publicText("copy.vue_services_studentpermit", "text_042", "Status") }}</th></tr></thead><tbody><tr v-for="permit in activePermits" :key="permit.ticket_code || permit.start_date"><td>{{ permit.ticket_code }}</td><td>{{ permit.type_label }}</td><td>{{ permit.start_date }} {{ publicText("copy.vue_services_studentpermit", "text_9004", "s.d.") }} {{ permit.end_date }}</td><td>{{ permit.status_label }}</td></tr></tbody></table></div>
+                            <small>{{ publicText("copy.vue_services_studentpermit", "text_043", "Untuk perubahan izin, silakan konfirmasi langsung ke Wali Kelas.") }}</small>
+                            <button type="button" @click="activeTab = 'status'; statusQuery = studentQuery; lookupStatus()">{{ publicText("copy.vue_services_studentpermit", "text_044", "Buka Menu Lacak Status") }}</button>
                         </aside>
                     </div>
 
-                    <h2 class="permit-section-title full-span">2. Rincian Permohonan Izin</h2>
-                    <FormField class="full-span" id="izin-type" label="Jenis Izin" required :error="form.errors.type" v-slot="{ inputId, describedBy, invalid }">
+                    <h2 class="permit-section-title full-span">{{ publicText("copy.vue_services_studentpermit", "text_045", "2. Rincian Permohonan Izin") }}</h2>
+                    <FormField class="full-span" id="izin-type" :label="publicText('copy.vue_services_studentpermit', 'label_10001', 'Jenis Izin')" required :error="form.errors.type" v-slot="{ inputId, describedBy, invalid }">
                         <select :id="inputId" v-model="permitKind" :aria-describedby="describedBy" :aria-invalid="invalid">
                             <option v-for="kind in permitKinds" :key="kind.value" :value="kind.value">{{ kind.label }}</option>
                         </select>
                     </FormField>
-                    <FormField v-if="permitKind === 'other'" id="izin-other-kind" class="full-span" label="Jenis Izin Lainnya" required hint="Mohon tuliskan jenis izin secara singkat, lalu lengkapi alasan detailnya pada kotak Alasan di bawah." :error="form.errors.title">
-                        <input id="izin-other-kind" v-model="otherKind" required placeholder="Sebutkan jenis izin / keperluan Anda (misal: Mengurus Paspor, Khitanan, dll)" />
+                    <FormField v-if="permitKind === 'other'" id="izin-other-kind" class="full-span" :label="publicText('copy.vue_services_studentpermit', 'label_10002', 'Jenis Izin Lainnya')" required :hint="publicText('copy.vue_services_studentpermit', 'hint_10003', 'Mohon tuliskan jenis izin secara singkat, lalu lengkapi alasan detailnya pada kotak Alasan di bawah.')" :error="form.errors.title">
+                        <input id="izin-other-kind" v-model="otherKind" required :placeholder="publicText('copy.vue_services_studentpermit', 'placeholder_116', 'Sebutkan jenis izin / keperluan Anda (misal: Mengurus Paspor, Khitanan, dll)')" />
                     </FormField>
 
-                    <div class="permit-date-row full-span"><label>Rentang Tanggal <span class="text-red-600">*</span></label><div class="permit-dates">
-                    <FormField id="izin-start" label="Mulai Tanggal (Tgl-Bln-Thn):" :error="form.errors.start_date" v-slot="{ inputId, describedBy, invalid }">
+                    <div class="permit-date-row full-span"><label>{{ publicText("copy.vue_services_studentpermit", "text_046", "Rentang Tanggal") }} <span class="text-red-600">*</span></label><div class="permit-dates">
+                    <FormField id="izin-start" :label="publicText('copy.vue_services_studentpermit', 'label_10004', 'Mulai Tanggal (Tgl-Bln-Thn):')" :error="form.errors.start_date" v-slot="{ inputId, describedBy, invalid }">
                         <div class="permit-date-input"><span aria-hidden="true">{{ form.start_date.split('-').reverse().join('-') }}</span><input :id="inputId" v-model="form.start_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" @click="($event.target as HTMLInputElement).showPicker?.()" /></div>
                     </FormField>
 
-                    <FormField id="izin-end" label="Sampai Tanggal (Tgl-Bln-Thn):" :error="form.errors.end_date" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="izin-end" :label="publicText('copy.vue_services_studentpermit', 'label_10005', 'Sampai Tanggal (Tgl-Bln-Thn):')" :error="form.errors.end_date" v-slot="{ inputId, describedBy, invalid }">
                         <div class="permit-date-input"><span aria-hidden="true">{{ form.end_date.split('-').reverse().join('-') }}</span><input :id="inputId" v-model="form.end_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" @click="($event.target as HTMLInputElement).showPicker?.()" /></div>
                     </FormField>
                     <span class="permit-duration">{{ durationDays > 0 ? `${durationDays} Hari` : 'Tanggal Salah' }}</span>
                     </div></div>
 
-                    <p v-if="datesConflict" class="permit-conflict full-span" role="alert"><b>Tanggal Sudah Memiliki Izin:</b> Tanggal yang Anda pilih bentrok dengan pengajuan izin yang sudah terdaftar untuk siswa ini. Tombol kirim dinonaktifkan untuk mencegah duplikasi.</p>
-                    <div v-if="requiresToken" class="permit-date-row full-span"><label class="text-red-600">Izin Lewat Batas Waktu</label><div class="permit-token-box">
-                        <h3>Batas Pengajuan Mandiri Ditutup (Pukul 08:00 s/d 22:00 WITA)</h3>
-                        <strong class="permit-token-badge">Perlu Token Wali Kelas (Sekali Pakai)</strong>
-                        <p>Sesuai tata tertib madrasah, pengajuan izin hari ini ditutup pukul <b>08:00 WITA</b> dan akan dibuka kembali pukul <b>22:00 WITA</b>. Jika perlu mengirimkan surat izin pada jam aktif sekolah ini, orang tua wajib konfirmasi ke <b>Wali Kelas / Guru Piket</b> untuk mendapatkan <b>Kode Token Dispensasi (Sekali Pakai)</b>. Kode token otomatis hangus setelah dikirimkan dan tidak dapat digunakan untuk siswa lain.</p>
-                        <button type="button" class="permit-contact-teacher" @click="contactHomeroom">Hubungi Wali Kelas via WhatsApp untuk Minta Token</button>
-                        <small>Klik tombol "Cek Siswa" di atas agar terhubung langsung ke nomor WhatsApp Wali Kelas siswa.</small>
-                        <FormField id="izin-token" label="Masukkan Kode Token Dispensasi:" required :error="form.errors.one_time_token">
-                            <div class="permit-lookup-controls"><input id="izin-token" v-model="form.one_time_token" type="text" placeholder="Contoh: 6 Digit Kode Token" /><button type="button" :disabled="tokenBusy || !selectedStudent" @click="verifyToken">Buka Kunci</button></div>
+                    <p v-if="datesConflict" class="permit-conflict full-span" role="alert"><b>{{ publicText("copy.vue_services_studentpermit", "text_047", "Tanggal Sudah Memiliki Izin:") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_048", "Tanggal yang Anda pilih bentrok dengan pengajuan izin yang sudah terdaftar untuk siswa ini. Tombol kirim dinonaktifkan untuk mencegah duplikasi.") }}</p>
+                    <div v-if="requiresToken" class="permit-date-row full-span"><label class="text-red-600">{{ publicText("copy.vue_services_studentpermit", "text_049", "Izin Lewat Batas Waktu") }}</label><div class="permit-token-box">
+                        <h3>{{ publicText("copy.vue_services_studentpermit", "text_050", "Batas Pengajuan Mandiri Ditutup (Pukul 08:00 s/d 22:00 WITA)") }}</h3>
+                        <strong class="permit-token-badge">{{ publicText("copy.vue_services_studentpermit", "text_051", "Perlu Token Wali Kelas (Sekali Pakai)") }}</strong>
+                        <p>{{ publicText("copy.vue_services_studentpermit", "text_052", "Sesuai tata tertib madrasah, pengajuan izin hari ini ditutup pukul") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_053", "08:00 WITA") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_054", "dan akan dibuka kembali pukul") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_055", "22:00 WITA") }}</b>{{ publicText("copy.vue_services_studentpermit", "text_056", ". Jika perlu mengirimkan surat izin pada jam aktif sekolah ini, orang tua wajib konfirmasi ke") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_057", "Wali Kelas / Guru Piket") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_058", "untuk mendapatkan") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_059", "Kode Token Dispensasi (Sekali Pakai)") }}</b>{{ publicText("copy.vue_services_studentpermit", "text_060", ". Kode token otomatis hangus setelah dikirimkan dan tidak dapat digunakan untuk siswa lain.") }}</p>
+                        <button type="button" class="permit-contact-teacher" @click="contactHomeroom">{{ publicText("copy.vue_services_studentpermit", "text_061", "Hubungi Wali Kelas via WhatsApp untuk Minta Token") }}</button>
+                        <small>{{ publicText("copy.vue_services_studentpermit", "text_062", "Klik tombol \"Cek Siswa\" di atas agar terhubung langsung ke nomor WhatsApp Wali Kelas siswa.") }}</small>
+                        <FormField id="izin-token" :label="publicText('copy.vue_services_studentpermit', 'label_10006', 'Masukkan Kode Token Dispensasi:')" required :error="form.errors.one_time_token">
+                            <div class="permit-lookup-controls"><input id="izin-token" v-model="form.one_time_token" type="text" :placeholder="publicText('copy.vue_services_studentpermit', 'placeholder_117', 'Contoh: 6 Digit Kode Token')" /><button type="button" :disabled="tokenBusy || !selectedStudent" @click="verifyToken">{{ publicText("copy.vue_services_studentpermit", "text_063", "Buka Kunci") }}</button></div>
                         </FormField>
                         <small role="status">{{ tokenMessage || 'Token bersifat Sekali Pakai dan otomatis hangus setelah permohonan berhasil dikirimkan.' }}</small>
                     </div></div>
 
 
                     <div class="full-span">
-                        <FormField id="izin-reason" class="full-span" label="Alasan / Keterangan" required :error="form.errors.reason" v-slot="{ inputId, describedBy, invalid }">
+                        <FormField id="izin-reason" class="full-span" :label="publicText('copy.vue_services_studentpermit', 'label_10007', 'Alasan / Keterangan')" required :error="form.errors.reason" v-slot="{ inputId, describedBy, invalid }">
                             <textarea :id="inputId" v-model="form.reason" rows="3" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                         </FormField>
                     </div>
 
-                    <h2 class="permit-section-title full-span">3. Data Orang Tua / Pemohon Izin</h2>
-                    <FormField class="full-span" id="izin-contact-name" label="Nama Orang Tua / Wali" required :error="form.errors.contact_name">
-                        <input id="izin-contact-name" v-model="form.contact_name" type="text" required placeholder="Nama lengkap orang tua / wali yang bertanggung jawab" />
+                    <h2 class="permit-section-title full-span">{{ publicText("copy.vue_services_studentpermit", "text_064", "3. Data Orang Tua / Pemohon Izin") }}</h2>
+                    <FormField class="full-span" id="izin-contact-name" :label="publicText('copy.vue_services_studentpermit', 'label_10008', 'Nama Orang Tua / Wali')" required :error="form.errors.contact_name">
+                        <input id="izin-contact-name" v-model="form.contact_name" type="text" required :placeholder="publicText('copy.vue_services_studentpermit', 'placeholder_118', 'Nama lengkap orang tua / wali yang bertanggung jawab')" />
                     </FormField>
-                    <FormField class="full-span" id="izin-relationship" label="Hubungan dengan Siswa" required :error="form.errors.contact_relationship">
+                    <FormField class="full-span" id="izin-relationship" :label="publicText('copy.vue_services_studentpermit', 'label_10009', 'Hubungan dengan Siswa')" required :error="form.errors.contact_relationship">
                         <select id="izin-relationship" v-model="form.contact_relationship">
-                            <option value="father">Ayah (Orang Tua)</option>
-                            <option value="mother">Ibu (Orang Tua)</option>
-                            <option value="guardian">Wali Siswa</option>
-                            <option value="parent">Orang Tua</option>
-                            <option value="family">Keluarga Dekat</option>
+                            <option value="father">{{ publicText("copy.vue_services_studentpermit", "text_065", "Ayah (Orang Tua)") }}</option>
+                            <option value="mother">{{ publicText("copy.vue_services_studentpermit", "text_066", "Ibu (Orang Tua)") }}</option>
+                            <option value="guardian">{{ publicText("copy.vue_services_studentpermit", "text_067", "Wali Siswa") }}</option>
+                            <option value="parent">{{ publicText("copy.vue_services_studentpermit", "text_068", "Orang Tua") }}</option>
+                            <option value="family">{{ publicText("copy.vue_services_studentpermit", "text_069", "Keluarga Dekat") }}</option>
                         </select>
                     </FormField>
-                    <FormField class="full-span" id="izin-contact-phone" label="Nomor WhatsApp Aktif" required :error="form.errors.contact_phone" hint="Notifikasi verifikasi atau konfirmasi dari pihak sekolah akan dikirimkan ke nomor ini.">
-                        <input id="izin-contact-phone" v-model="form.contact_phone" type="tel" required placeholder="Contoh: 081234567890" />
+                    <FormField class="full-span" id="izin-contact-phone" :label="publicText('copy.vue_services_studentpermit', 'label_10010', 'Nomor WhatsApp Aktif')" required :error="form.errors.contact_phone" :hint="publicText('copy.vue_services_studentpermit', 'hint_10011', 'Notifikasi verifikasi atau konfirmasi dari pihak sekolah akan dikirimkan ke nomor ini.')">
+                        <input id="izin-contact-phone" v-model="form.contact_phone" type="tel" required :placeholder="publicText('copy.vue_services_studentpermit', 'placeholder_119', 'Contoh: 081234567890')" />
                     </FormField>
 
-                    <h2 class="permit-section-title full-span">4. Unggah Bukti (Surat Dokter / Surat Keterangan)</h2>
-                    <FormField class="full-span" id="izin-attachment" :label="requiresEvidence ? 'Foto / File Bukti — Wajib Surat Dokter (≥ 3 Hari)' : 'Foto / File Bukti (Opsional jika < 3 hari)'" :required="requiresEvidence" hint="Format yang didukung: JPG, PNG, JPEG, PDF. Foto dari kamera HP akan otomatis dikompres agar cepat diunggah." :error="form.errors.attachment" v-slot="{ inputId, describedBy, invalid }">
-                        <div v-if="requiresEvidence" class="permit-evidence-warning"><strong>Wajib Melampirkan Surat Keterangan Dokter!</strong><p>Pengajuan izin sakit selama {{ durationDays }} hari atau lebih wajib melampirkan foto/file Surat Keterangan Sakit resmi dari Dokter / Puskesmas / Faskes.</p></div>
+                    <h2 class="permit-section-title full-span">{{ publicText("copy.vue_services_studentpermit", "text_070", "4. Unggah Bukti (Surat Dokter / Surat Keterangan)") }}</h2>
+                    <FormField class="full-span" id="izin-attachment" :label="requiresEvidence ? 'Foto / File Bukti — Wajib Surat Dokter (≥ 3 Hari)' : 'Foto / File Bukti (Opsional jika < 3 hari)'" :required="requiresEvidence" :hint="publicText('copy.vue_services_studentpermit', 'hint_10012', 'Format yang didukung: JPG, PNG, JPEG, PDF. Foto dari kamera HP akan otomatis dikompres agar cepat diunggah.')" :error="form.errors.attachment" v-slot="{ inputId, describedBy, invalid }">
+                        <div v-if="requiresEvidence" class="permit-evidence-warning"><strong>{{ publicText("copy.vue_services_studentpermit", "text_071", "Wajib Melampirkan Surat Keterangan Dokter!") }}</strong><p>{{ publicText("copy.vue_services_studentpermit", "text_9005", "Pengajuan izin sakit selama") }} {{ durationDays }} {{ publicText("copy.vue_services_studentpermit", "text_9006", "hari atau lebih wajib melampirkan foto/file Surat Keterangan Sakit resmi dari Dokter / Puskesmas / Faskes.") }}</p></div>
                         <input :id="inputId" ref="attachmentInput" type="file" accept=".pdf,.jpg,.jpeg,.png" :aria-describedby="describedBy" :aria-invalid="invalid" @change="pickAttachment" />
-                        <div v-if="form.attachment" class="permit-preview"><img v-if="attachmentPreview" :src="attachmentPreview" alt="Pratinjau bukti izin" /><p v-else>{{ form.attachment.name }}</p><button type="button" @click="clearAttachment">Batalkan / Ganti Foto</button></div>
+                        <div v-if="form.attachment" class="permit-preview"><img v-if="attachmentPreview" :src="attachmentPreview" :alt="publicText('copy.vue_services_studentpermit', 'alt_120', 'Pratinjau bukti izin')" /><p v-else>{{ form.attachment.name }}</p><button type="button" @click="clearAttachment">{{ publicText("copy.vue_services_studentpermit", "text_072", "Batalkan / Ganti Foto") }}</button></div>
                     </FormField>
 
-                    <h2 class="permit-section-title full-span">5. Tanda Tangan Digital Orang Tua / Wali Siswa</h2>
-                    <FormField class="full-span" id="izin-signature" label="Tanda Tangan" required :error="form.errors.signature_data">
-                        <p class="signature-instruction">Goreskan tanda tangan Anda pada kotak di bawah ini menggunakan jari (layar sentuh HP) atau kursor mouse.</p>
+                    <h2 class="permit-section-title full-span">{{ publicText("copy.vue_services_studentpermit", "text_073", "5. Tanda Tangan Digital Orang Tua / Wali Siswa") }}</h2>
+                    <FormField class="full-span" id="izin-signature" :label="publicText('copy.vue_services_studentpermit', 'label_10013', 'Tanda Tangan')" required :error="form.errors.signature_data">
+                        <p class="signature-instruction">{{ publicText("copy.vue_services_studentpermit", "text_074", "Goreskan tanda tangan Anda pada kotak di bawah ini menggunakan jari (layar sentuh HP) atau kursor mouse.") }}</p>
                         <div class="signature-pad">
-                            <canvas id="izin-signature" ref="signatureCanvas" width="600" height="180" aria-label="Kanvas tanda tangan orang tua atau wali" @pointerdown="startSignature" @pointermove="moveSignature" @pointerup="finishSignature" @pointercancel="finishSignature" />
-                            <span v-if="!form.signature_data" aria-hidden="true">Goreskan tanda tangan digital di sini</span>
+                            <canvas id="izin-signature" ref="signatureCanvas" width="600" height="180" :aria-label="publicText('copy.vue_services_studentpermit', 'aria_label_121', 'Kanvas tanda tangan orang tua atau wali')" @pointerdown="startSignature" @pointermove="moveSignature" @pointerup="finishSignature" @pointercancel="finishSignature" />
+                            <span v-if="!form.signature_data" aria-hidden="true">{{ publicText("copy.vue_services_studentpermit", "text_075", "Goreskan tanda tangan digital di sini") }}</span>
                         </div>
-                        <div class="signature-toolbar"><small>Tanda tangan ini sah sebagai bukti persetujuan resmi orang tua/wali siswa</small><button type="button" class="signature-clear" @click="clearSignature">Hapus / Ulangi TTD</button></div>
+                        <div class="signature-toolbar"><small>{{ publicText("copy.vue_services_studentpermit", "text_076", "Tanda tangan ini sah sebagai bukti persetujuan resmi orang tua/wali siswa") }}</small><button type="button" class="signature-clear" @click="clearSignature">{{ publicText("copy.vue_services_studentpermit", "text_077", "Hapus / Ulangi TTD") }}</button></div>
                     </FormField>
 
                     <div class="full-span permit-submit">
                         <button type="submit" :disabled="form.processing || datesConflict || (requiresToken && !tokenVerified)">
-                            Kirim Permohonan Izin
+                            {{ publicText("copy.vue_services_studentpermit", "text_078", "Kirim Permohonan Izin") }}
                         </button>
                     </div>
                 </form>
             </section>
 
             <section v-if="activeTab === 'rules'" class="portal-card permit-secondary-card permit-rules">
-                <h2>Alur &amp; Tata Cara Pengajuan Izin</h2>
-                <article class="permit-rule-step"><span>1</span><div><h3>1. Masukkan NISN Siswa</h3><p>Orang tua memasukkan NISN siswa pada formulir untuk memuat nama, kelas, dan identitas siswa secara valid.</p></div></article>
-                <article class="permit-rule-step"><span>2</span><div><h3>2. Lengkapi Data &amp; Unggah Bukti</h3><p>Pilih jenis izin (Sakit/Izin), tentukan tanggal tidak masuk, tuliskan alasan, dan unggah foto surat keterangan dokter (jika sakit) atau surat izin.</p></div></article>
-                <article class="permit-rule-step"><span>3</span><div><h3>3. Pengajuan Diterima Sekolah</h3><p>Setelah formulir dikirim, sistem akan menerbitkan <b>Nomor Registrasi Pengajuan</b> resmi.</p></div></article>
-                <article class="permit-rule-step"><span>4</span><div><h3>4. Verifikasi Guru / Wali Kelas</h3><p>Wali kelas atau pihak sekolah akan memeriksa permohonan. Orang tua dapat mengecek status secara berkala di tab Cek Status serta mencetak Bukti Izin Digital.</p></div></article>
-                <aside class="permit-cutoff-rules"><h3>Ketentuan Batas Jam Pengajuan Izin (Cut-Off Time):</h3><ul>
-                    <li><b>Waktu Bebas Mandiri:</b> Pengajuan izin mandiri dibuka bebas mulai pukul <b>22:00 Malam s/d 08:00 Pagi WITA</b> tanpa memerlukan kode token apa pun.</li>
-                    <li><b>Waktu Terkunci Jam Sekolah (Pukul 08:00 s/d 22:00 WITA):</b> Formulir izin terkunci selama jam sekolah untuk mencegah manipulasi kehadiran. Pengajuan di jam ini wajib konfirmasi ke Wali Kelas / Guru Piket untuk mendapatkan <b>Kode Token Dispensasi (Sekali Pakai)</b>. Begitu surat izin terkirim, token otomatis hangus dan tidak dapat dipakai untuk siswa lain.</li>
-                    <li><b>Izin Hari Esok / Terencana:</b> Bebas diajukan kapan saja 24 jam tanpa memerlukan kode token, asalkan tanggal mulai izin adalah hari esok atau mendatang.</li>
+                <h2>{{ publicText("copy.vue_services_studentpermit", "text_079", "Alur & Tata Cara Pengajuan Izin") }}</h2>
+                <article class="permit-rule-step"><span>1</span><div><h3>{{ publicText("copy.vue_services_studentpermit", "text_080", "1. Masukkan NISN Siswa") }}</h3><p>{{ publicText("copy.vue_services_studentpermit", "text_081", "Orang tua memasukkan NISN siswa pada formulir untuk memuat nama, kelas, dan identitas siswa secara valid.") }}</p></div></article>
+                <article class="permit-rule-step"><span>2</span><div><h3>{{ publicText("copy.vue_services_studentpermit", "text_082", "2. Lengkapi Data & Unggah Bukti") }}</h3><p>{{ publicText("copy.vue_services_studentpermit", "text_083", "Pilih jenis izin (Sakit/Izin), tentukan tanggal tidak masuk, tuliskan alasan, dan unggah foto surat keterangan dokter (jika sakit) atau surat izin.") }}</p></div></article>
+                <article class="permit-rule-step"><span>3</span><div><h3>{{ publicText("copy.vue_services_studentpermit", "text_084", "3. Pengajuan Diterima Sekolah") }}</h3><p>{{ publicText("copy.vue_services_studentpermit", "text_085", "Setelah formulir dikirim, sistem akan menerbitkan") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_086", "Nomor Registrasi Pengajuan") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_087", "resmi.") }}</p></div></article>
+                <article class="permit-rule-step"><span>4</span><div><h3>{{ publicText("copy.vue_services_studentpermit", "text_088", "4. Verifikasi Guru / Wali Kelas") }}</h3><p>{{ publicText("copy.vue_services_studentpermit", "text_089", "Wali kelas atau pihak sekolah akan memeriksa permohonan. Orang tua dapat mengecek status secara berkala di tab Cek Status serta mencetak Bukti Izin Digital.") }}</p></div></article>
+                <aside class="permit-cutoff-rules"><h3>{{ publicText("copy.vue_services_studentpermit", "text_090", "Ketentuan Batas Jam Pengajuan Izin (Cut-Off Time):") }}</h3><ul>
+                    <li><b>{{ publicText("copy.vue_services_studentpermit", "text_091", "Waktu Bebas Mandiri:") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_092", "Pengajuan izin mandiri dibuka bebas mulai pukul") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_093", "22:00 Malam s/d 08:00 Pagi WITA") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_094", "tanpa memerlukan kode token apa pun.") }}</li>
+                    <li><b>{{ publicText("copy.vue_services_studentpermit", "text_095", "Waktu Terkunci Jam Sekolah (Pukul 08:00 s/d 22:00 WITA):") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_096", "Formulir izin terkunci selama jam sekolah untuk mencegah manipulasi kehadiran. Pengajuan di jam ini wajib konfirmasi ke Wali Kelas / Guru Piket untuk mendapatkan") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_059", "Kode Token Dispensasi (Sekali Pakai)") }}</b>{{ publicText("copy.vue_services_studentpermit", "text_097", ". Begitu surat izin terkirim, token otomatis hangus dan tidak dapat dipakai untuk siswa lain.") }}</li>
+                    <li><b>{{ publicText("copy.vue_services_studentpermit", "text_098", "Izin Hari Esok / Terencana:") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_099", "Bebas diajukan kapan saja 24 jam tanpa memerlukan kode token, asalkan tanggal mulai izin adalah hari esok atau mendatang.") }}</li>
                 </ul></aside>
             </section>
 
             <section v-if="activeTab === 'status'" class="portal-card permit-secondary-card permit-status">
-                <div class="permit-status-heading"><span aria-hidden="true">⌕</span><div><h2>Cek Status Permohonan Izin</h2><p>Lacak progres dan status verifikasi permohonan izin siswa oleh wali kelas/guru secara realtime.</p></div></div>
+                <div class="permit-status-heading"><span aria-hidden="true">⌕</span><div><h2>{{ publicText("copy.vue_services_studentpermit", "text_100", "Cek Status Permohonan Izin") }}</h2><p>{{ publicText("copy.vue_services_studentpermit", "text_101", "Lacak progres dan status verifikasi permohonan izin siswa oleh wali kelas/guru secara realtime.") }}</p></div></div>
                 <hr />
-                <form @submit.prevent="lookupStatus"><label for="permit-status-query">Masukkan NISN Siswa, No. Pengajuan, atau Nama Siswa:</label><div class="permit-status-controls"><input id="permit-status-query" v-model="statusQuery" required placeholder="Contoh: 0071234567 atau IZN-20260820-0001" /><button type="submit" :disabled="statusBusy">{{ statusBusy ? 'Mencari...' : 'Cari Data' }}</button></div><small>Masukkan <b>10 digit NISN</b>, <b>Nomor Registrasi</b> (misal: <code>IZN-20260820-0001</code>), atau <b>Nama Lengkap Siswa</b>.</small></form>
+                <form @submit.prevent="lookupStatus"><label for="permit-status-query">{{ publicText("copy.vue_services_studentpermit", "text_102", "Masukkan NISN Siswa, No. Pengajuan, atau Nama Siswa:") }}</label><div class="permit-status-controls"><input id="permit-status-query" v-model="statusQuery" required :placeholder="publicText('copy.vue_services_studentpermit', 'placeholder_122', 'Contoh: 0071234567 atau IZN-20260820-0001')" /><button type="submit" :disabled="statusBusy">{{ statusBusy ? 'Mencari...' : 'Cari Data' }}</button></div><small>{{ publicText("copy.vue_services_studentpermit", "text_103", "Masukkan") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_032", "10 digit NISN") }}</b>, <b>{{ publicText("copy.vue_services_studentpermit", "text_104", "Nomor Registrasi") }}</b> {{ publicText("copy.vue_services_studentpermit", "text_105", "(misal:") }} <code>{{ publicText("copy.vue_services_studentpermit", "text_106", "IZN-20260820-0001") }}</code>{{ publicText("copy.vue_services_studentpermit", "text_107", "), atau") }} <b>{{ publicText("copy.vue_services_studentpermit", "text_034", "Nama Lengkap Siswa") }}</b>.</small></form>
                 <p v-if="statusMessage" role="status">{{ statusMessage }}</p>
-                <div v-if="statusResults.length" class="permit-table-scroll"><table><thead><tr><th>No. Registrasi</th><th>Kategori</th><th>Periode</th><th>Status</th></tr></thead><tbody><tr v-for="permit in statusResults" :key="permit.ticket_code || permit.start_date"><td>{{ permit.ticket_code }}</td><td>{{ permit.type_label }}</td><td>{{ permit.start_date }} s.d. {{ permit.end_date }}</td><td>{{ permit.status_label }}</td></tr></tbody></table></div>
+                <div v-if="statusResults.length" class="permit-table-scroll"><table><thead><tr><th>{{ publicText("copy.vue_services_studentpermit", "text_039", "No. Registrasi") }}</th><th>{{ publicText("copy.vue_services_studentpermit", "text_040", "Kategori") }}</th><th>{{ publicText("copy.vue_services_studentpermit", "text_041", "Periode") }}</th><th>{{ publicText("copy.vue_services_studentpermit", "text_042", "Status") }}</th></tr></thead><tbody><tr v-for="permit in statusResults" :key="permit.ticket_code || permit.start_date"><td>{{ permit.ticket_code }}</td><td>{{ permit.type_label }}</td><td>{{ permit.start_date }} {{ publicText("copy.vue_services_studentpermit", "text_9004", "s.d.") }} {{ permit.end_date }}</td><td>{{ permit.status_label }}</td></tr></tbody></table></div>
             </section>
 
             <section v-if="activeTab === 'status' && revisingPermit" class="portal-card">
-                <h2>Perbaiki Permohonan Izin — {{ revisingPermit.title }}</h2>
-                <p v-if="revisingPermit.decision_note" class="warning-callout">Catatan Wali Kelas: {{ revisingPermit.decision_note }}</p>
+                <h2>{{ publicText("copy.vue_services_studentpermit", "text_9007", "Perbaiki Permohonan Izin —") }} {{ revisingPermit.title }}</h2>
+                <p v-if="revisingPermit.decision_note" class="warning-callout">{{ publicText("copy.vue_services_studentpermit", "text_9008", "Catatan Wali Kelas:") }} {{ revisingPermit.decision_note }}</p>
                 <form class="form-grid" @submit.prevent="submitRevision">
-                    <FormField id="rev-start" label="Tanggal Mulai" required v-slot="{ inputId }">
+                    <FormField id="rev-start" :label="publicText('copy.vue_services_studentpermit', 'label_10014', 'Tanggal Mulai')" required v-slot="{ inputId }">
                         <input :id="inputId" v-model="revisionForm.start_date" type="date" required />
                     </FormField>
-                    <FormField id="rev-end" label="Tanggal Selesai" required v-slot="{ inputId }">
+                    <FormField id="rev-end" :label="publicText('copy.vue_services_studentpermit', 'label_10015', 'Tanggal Selesai')" required v-slot="{ inputId }">
                         <input :id="inputId" v-model="revisionForm.end_date" type="date" required />
                     </FormField>
                     <div class="full-span">
-                        <FormField id="rev-title" label="Perihal Izin" required v-slot="{ inputId }">
+                        <FormField id="rev-title" :label="publicText('copy.vue_services_studentpermit', 'label_10016', 'Perihal Izin')" required v-slot="{ inputId }">
                             <input :id="inputId" v-model="revisionForm.title" type="text" required />
                         </FormField>
                     </div>
                     <div class="full-span">
-                        <FormField id="rev-reason" label="Alasan Rinci" required v-slot="{ inputId }">
+                        <FormField id="rev-reason" :label="publicText('copy.vue_services_studentpermit', 'label_10017', 'Alasan Rinci')" required v-slot="{ inputId }">
                             <textarea :id="inputId" v-model="revisionForm.reason" rows="3" required />
                         </FormField>
                     </div>
                     <div class="full-span">
-                        <FormField id="rev-att" label="Unggah Ulang Lampiran (Opsional)" v-slot="{ inputId }">
+                        <FormField id="rev-att" :label="publicText('copy.vue_services_studentpermit', 'label_10018', 'Unggah Ulang Lampiran (Opsional)')" v-slot="{ inputId }">
                             <input :id="inputId" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" @change="revisionForm.attachment = ($event.target as HTMLInputElement).files?.[0] ?? null" />
                         </FormField>
                     </div>
                     <div class="full-span action-row">
-                        <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="revisionForm.processing">Kirim Ulang Perbaikan</button>
-                        <button type="button" class="ui-button ui-button--secondary ui-button--md" @click="revisingPermit = null">Batal</button>
+                        <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="revisionForm.processing">{{ publicText("copy.vue_services_studentpermit", "text_108", "Kirim Ulang Perbaikan") }}</button>
+                        <button type="button" class="ui-button ui-button--secondary ui-button--md" @click="revisingPermit = null">{{ publicText("copy.vue_services_studentpermit", "text_109", "Batal") }}</button>
                     </div>
                 </form>
             </section>
 
             <section v-if="activeTab === 'status' && myPermits.length" class="portal-card">
-                <h2>Riwayat Permohonan Izin</h2>
+                <h2>{{ publicText("copy.vue_services_studentpermit", "text_110", "Riwayat Permohonan Izin") }}</h2>
                 <div class="permit-list">
                     <article v-for="row in myPermits" :key="row.id" class="permit-item">
                         <div>
@@ -493,12 +496,12 @@ const submitRevision = () => {
                                 <strong>{{ row.title }}</strong>
                                 <StatusBadge :status="row.status" :label="row.status_label" size="sm" />
                             </div>
-                            <p class="muted">{{ row.student_name }} ({{ row.class_name }}) · {{ row.start_date }} s.d. {{ row.end_date }}</p>
-                            <p v-if="row.decision_note" class="muted">Catatan: {{ row.decision_note }}</p>
+                            <p class="muted">{{ row.student_name }} ({{ row.class_name }}) · {{ row.start_date }} {{ publicText("copy.vue_services_studentpermit", "text_9004", "s.d.") }} {{ row.end_date }}</p>
+                            <p v-if="row.decision_note" class="muted">{{ publicText("copy.vue_services_studentpermit", "text_9009", "Catatan:") }} {{ row.decision_note }}</p>
                         </div>
                         <div class="action-row">
-                            <a :href="`/layanan/izin-siswa/${row.id}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--secondary ui-button--sm">Bukti PDF</a>
-                            <button v-if="row.status === 'needs_revision'" type="button" class="ui-button ui-button--primary ui-button--sm" @click="openRevision(row)">Perbaiki</button>
+                            <a :href="`/layanan/izin-siswa/${row.id}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--secondary ui-button--sm">{{ publicText("copy.vue_services_studentpermit", "text_111", "Bukti PDF") }}</a>
+                            <button v-if="row.status === 'needs_revision'" type="button" class="ui-button ui-button--primary ui-button--sm" @click="openRevision(row)">{{ publicText("copy.vue_services_studentpermit", "text_112", "Perbaiki") }}</button>
                         </div>
                     </article>
                 </div>

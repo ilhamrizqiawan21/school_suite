@@ -57,7 +57,7 @@ class LegalizationController extends Controller
             'school' => [
                 'name' => $school['name'],
                 'address' => $school['address'] ?? null,
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'myRequests' => $myRequests,
@@ -129,7 +129,7 @@ class LegalizationController extends Controller
         return Inertia::render('Public/Services/PowerOfAttorney', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'legalizationCode' => trim((string) $request->query('kode', '')),

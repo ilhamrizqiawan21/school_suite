@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useUnsavedDialog } from '@/composables/useUnsavedDialog';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref } from 'vue';
@@ -46,6 +48,8 @@ const cancelPhoto = () => {
     if (avatarInput.value) avatarInput.value.value = '';
     clearPreview();
 };
+const showEditor = ref(false);
+const { discardOpen, requestClose, discard } = useUnsavedDialog(form, () => { cancelPhoto(); form.reset(); form.clearErrors(); showEditor.value = false; });
 const submit = () => form.post('/profil', {
     forceFormData: true, preserveScroll: true,
     onSuccess: () => { cancelPhoto(); form.defaults(); },
@@ -66,6 +70,9 @@ const submit = () => form.post('/profil', {
                 <Link href="/ganti-password" class="secondary-button ui-button ui-button--secondary ui-button--md">Ganti kata sandi</Link>
             </header>
 
+            <section class="panel profile-overview"><div><h2>{{ profile.name }}</h2><p>{{ profile.email }}</p><p>{{ profile.phone || 'Nomor kontak belum diisi' }}</p></div><AppButton variant="primary" type="button" @click="showEditor = true">Ubah profil saya</AppButton></section>
+            <Teleport to="body"><div v-if="showEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-editor-title" @click.self="requestClose" @keydown.esc.prevent="requestClose">
+            <div class="admin-form-dialog"><header class="admin-form-header"><h2 id="profile-editor-title">Informasi akun dan foto profil</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup profil saya" title="Tutup profil saya" :disabled="form.processing" @click="requestClose" /></header>
             <section class="panel profile-panel">
                 <aside class="profile-identity">
                     <div class="avatar-preview">
@@ -123,7 +130,7 @@ const submit = () => form.post('/profil', {
 
                         <label>
                             <span>Nomor kontak</span>
-                            <input v-model="form.phone" maxlength="30" type="tel" autocomplete="tel" placeholder="Contoh: 0812 3456 7890" />
+                            <input v-model="form.phone" maxlength="30" type="tel" autocomplete="tel" placeholder="0812 3456 7890" />
                             <em v-if="form.errors.phone">{{ form.errors.phone }}</em>
                         </label>
                     </div>
@@ -136,11 +143,15 @@ const submit = () => form.post('/profil', {
                     </div>
                 </form>
             </section>
+            </div>
+            </div></Teleport>
+            <ConfirmDialog :open="discardOpen" title="Buang perubahan profil?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discard" @cancel="discardOpen = false" />
         </div>
     </AppLayout>
 </template>
 
 <style scoped>
+.profile-overview { padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 .profile-page {
     display: grid;
     gap: 1.5rem;

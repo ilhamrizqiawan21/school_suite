@@ -50,6 +50,14 @@ class ComplaintReportService
         }
     }
 
+    public function assertReportAccess(User $actor, ComplaintReport $report): void
+    {
+        $this->assertTaskForceActor($actor);
+        abort_unless((int) $report->school_id === (int) $actor->school_id, 404);
+        abort_unless($actor->hasRole(RoleEnum::ADMIN->value) || $report->assigned_to_user_id === null
+            || (int) $report->assigned_to_user_id === (int) $actor->id, 403);
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @param  list<UploadedFile>  $evidenceFiles
@@ -217,10 +225,27 @@ class ComplaintReportService
             /** @var ComplaintReport $locked */
             $locked = ComplaintReport::query()->where('school_id', $schoolId)->whereKey($report->id)->lockForUpdate()->firstOrFail();
 
+            $this->assertReportAccess($actor, $locked);
+            if (in_array($newStatus, ['needs_revision', 'rejected'], true) && trim((string) ($data['task_force_reply'] ?? '')) === '') {
+                throw ValidationException::withMessages(['task_force_reply' => 'Alasan revisi atau penolakan wajib diisi.']);
+            }
+            if (! empty($data['assigned_to_user_id'])) {
+                $validAssignee = User::query()->whereKey((int) $data['assigned_to_user_id'])->where('school_id', $schoolId)
+                    ->where('is_active', true)->whereHas('role', fn ($q) => $q->whereIn('name', ['admin', 'counselor', 'task_force']))->exists();
+                if (! $validAssignee) {
+                    throw ValidationException::withMessages(['assigned_to_user_id' => 'Petugas penanganan tidak valid pada sekolah ini.']);
+                }
+            }
             $resIds = is_array($locked->resolution_document_ids) ? $locked->resolution_document_ids : [];
             $ticket = $locked->service_ticket_id
                 ? $this->ticketService->getTicketSnapshotById($schoolId, (int) $locked->service_ticket_id)
                 : null;
+
+            if ($ticket !== null && $newStatus !== $ticket['public_status']
+                && ! ServiceWorkflowMap::canTransition((string) $ticket['public_status'], $newStatus)
+                && ! ($ticket['public_status'] === ServiceWorkflowMap::STATUS_SUBMITTED && $newStatus === ServiceWorkflowMap::STATUS_COMPLETED)) {
+                throw ValidationException::withMessages(['status' => 'Status aduan sudah berubah. Muat ulang sebelum melanjutkan.']);
+            }
 
             foreach ($resolutionFiles as $file) {
                 if (! $file instanceof UploadedFile) {

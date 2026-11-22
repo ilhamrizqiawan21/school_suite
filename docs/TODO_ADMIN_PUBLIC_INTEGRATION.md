@@ -10,6 +10,45 @@ Perbaikan hasil review: simpan profil dipisahkan dari publikasi konten, mode tan
 
 **Serah terima ke Fase 2:** ambil AP-05 s.d. AP-09 per irisan vertikal, sambil menyelesaikan prasyarat AP-04 yang diperlukan terlebih dahulu. Khususnya tipe field/editor, tampil-sembunyi/urutan, preview privat, unpublish/jadwal, media, penghapusan fallback demo dan invalidasi cache belum boleh diasumsikan selesai. Jangan menandai Fase 1 diterima penuh atau melewati dependensi hanya karena blocker bug sudah diperbaiki. Tidak ada implementasi Fase 2 yang dijalankan dalam koreksi ini.
 
+## Verifikasi silang Fase 1–5 — Codex — 22 November 2026
+
+Tes feature terarah per fase lulus: Fase 1–2 **100/100 (1.110 assertions)**, Fase 3 **45/45 (588 assertions)**, Fase 4 **71/71 (1.113 assertions)**, dan Fase 5 **49/49 (420 assertions)** — total **265 tes, 3.231 assertions**. Build 1.018 modul, typecheck, Pint, PHP lint terkait, security grep, dan diff-check lulus. Full suite dan uji produksi tetap menunggu instruksi terpisah.
+
+## Lanjutan Fase 5 — AP-21.10 — Codex — 22 November 2026 — IN_PROGRESS
+
+Counter notifikasi pada Komunikasi kini menghitung seluruh notifikasi unread milik pengguna, bukan hanya 50 baris yang ditampilkan. Klik notifikasi menandai item sebagai dibaca lalu mengikuti `action_url` bila tersedia; tombol **Tandai semua dibaca** memakai basis URL workspace aktif termasuk guru. Query tetap berscope `user_id`, sementara daftar tampilan dibatasi 50 item untuk menjaga pagination.
+
+Bukti terarah: `CommunicationAuthorizationTest` mencakup 55 notifikasi dan memverifikasi counter `55` dengan daftar tampilan `50`; **4 tes lulus, 31 assertions**, `vue-tsc --noEmit`, Pint, PHP lint, dan `git diff --check` lulus. AP-21.10 tetap `OPEN` untuk badge global, pencarian internal, collapse menu, dan pergantian role/periode.
+
+## Lanjutan Fase 4 — AP-18.12 — Codex — 22 November 2026 — IN_PROGRESS
+
+Menutup satu edge case katalog perpustakaan dan memperjelas keputusan provider: `LibraryService::searchCatalog()` kini memeriksa keberadaan objek private `ServiceDocument` sebelum menandai e-book sebagai tersedia. Dokumen yang hilang tidak menghasilkan tautan unduh privat yang rusak; bila tersedia, tautan provider eksternal tetap menjadi fallback terkonfigurasi. Metadata sumber menyatakan katalog lokal School Suite sebagai sumber kebenaran, SLiMS hanya provider opsional, fallback selalu aktif, dan jumlah berkas lokal yang hilang dilaporkan agar operator dapat memulihkan katalog.
+
+Bukti terarah: `LibraryReplicaTest` dan `ComplaintsAndLibraryTest` — **6 tes lulus, 157 assertions**; Pint, lint PHP, dan `git diff --check` lulus. AP-18.11 memiliki keputusan sumber kebenaran yang siap direview; AP-18.12 tetap `OPEN` untuk skenario lain (stok nol, konflik peminjaman bersamaan, barcode/session/alias), dan full suite tidak dijalankan tanpa instruksi terpisah.
+
+## Fase 2 — Irisan konten publik dan edge case — Codex — 22 November 2026 — READY_REVIEW
+
+Implementasi lanjutan tetap tanpa skema/dependency baru dan tidak mengubah baseline `/login` yang telah disetujui sebagai pengecualian. Blok terstruktur berikut memakai editor `PublicContentFields`, lifecycle draft/preview/publish yang sama, dan sumber `SchoolScopeService` yang sama:
+
+- `school.programs`: item program/fasilitas dengan judul, uraian, media, tautan, dan urutan. Item kosong tidak dirender ke publik sehingga baseline lama tetap stabil.
+- `school.student_life`: item kegiatan/pembinaan yang dimoderasi dari panel; `show_student_names` default `false` dan model item tidak memerlukan identitas siswa.
+- `home.notice`: banner/pengumuman dengan status tampil, rentang tanggal, varian, pesan, tautan aman, dan tampilan nonaktif secara default. Render ditambahkan pada shell Vue dan Madrasah.
+- `/program` dan `/kehidupan-siswa` kini menerima blok konten eksplisit dari controller, bukan hanya mengandalkan shared props.
+- Pusat unduh publik menyaring record terbit yang file fisiknya sudah hilang; endpoint unduh tetap 404 untuk file hilang dan menormalkan filename kosong/berisi control character sebelum response.
+
+Verifikasi akhir irisan ini lulus: PHP lint pada controller/service/model/Blade terkait, `npm run typecheck`, `npm run build` (1.018 modul), `vendor/bin/pint --dirty`, `git diff --check`, serta 39 tes feature terarah dengan 501 assertions. `AP-05.03`, `AP-05.05`, `AP-05.09`, `AP-06.10`, `AP-07.09`, dan `AP-08.08` kini `READY_REVIEW`; `AP-08.08` masih membutuhkan review produk atas kelengkapan mapping sebelum dapat `VERIFIED`. Tidak ada klaim Fase 2 selesai penuh sebelum review cakupan.
+
+Inventaris AP-08.08 yang direkonsiliasi: dialog `searchModal`, `prayerModal`, `downloadModal`, `ziModal`, `ziAreaModal`, `beritaModal`, `lightboxModal`, dan `videoPlayerModal` dipusatkan pada `public/madrasah-theme/home.js` serta sumber copy footer/navigation/home/videos; pustaka foto memakai endpoint album/foto `SchoolGalleryController` dan lightbox yang sama; bantuan kontekstual berada pada tab/petunjuk layanan Vue dan tautan PTSP/footer; cetak direktori publik menggunakan `Public/Students/Index.vue` (`window.print`) dengan data siswa publik yang sudah dibatasi. Tautan poster/SOP dan unduhan tetap melalui katalog `PublicDownload`, bukan URL file privat langsung.
+
+## Fase 3 — Pemulihan generator dokumen dan header privat — Codex — 22 November 2026 — READY_REVIEW
+
+- `ServiceDocumentService::issueGeneratedDocument()` kini menolak bytes kosong, memeriksa hasil `PrivateStorageService::put()`, dan menghapus file privat bila penerbitan DB/audit/penomoran gagal agar tidak meninggalkan orphan.
+- Alur hasil PDF PTSP menangkap kegagalan renderer, mencatat exception untuk internal, lalu mengembalikan pesan validasi pemulihan tanpa menyimpan dokumen atau mengubah status tiket secara parsial.
+- `SecurityHeadersMiddleware` tidak lagi menimpa `Cache-Control` yang sudah ditetapkan endpoint; verifikasi surat mempertahankan `no-store, private` dan header noindex sesuai kontrak dokumen privat.
+- Retry BSrE yang sudah ada tetap dipertahankan dan diverifikasi bersama alur dokumen privat, QR, penomoran, dan status PTSP.
+
+Bukti akhir Fase 3: PHP lint, Pint, diff-check, dan 39 tes terarah (`ParityFoundationTest`, `AdministrationCorrespondenceTest`, `PtspAndTataUsahaTest`) lulus dengan 668 assertions. `AP-10.12` dipindahkan dari `OPEN` ke `READY_REVIEW`; provider eksternal nyata, queue produksi, dan drill storage gagal tetap memerlukan uji operasional terpisah.
+
 ## 1. Kontrak pekerjaan
 
 1. **Halaman publik yang disetujui pemilik produk menjadi acuan tetap. Panel admin dan backend menyesuaikan halaman publik.**
@@ -330,22 +369,34 @@ Implementasi dijalankan secara berurutan mengikuti fase dan dependensi:
 6. **Fase 6 (`AP-24` → `AP-25`)**: Verifikasi E2E lintas 17 role, audit penghapusan array statis/stub produksi, UAT, dan dokumentasi serah terima.
 - **Batas Persetujuan Tambahan**: Penambahan dependency baru, perubahan arsitektur modular monolith, penyuntingan `.env`, tindakan database destruktif, `git commit`, `git push`, dan deployment produksi **tidak dilakukan** tanpa instruksi/otorisasi eksplisit pengguna.
 
+### Bukti penyempurnaan Fase 1 — Codex, 22 November 2026
+
+Status granular saat ini: **34/62 VERIFIED, 19 READY_REVIEW, 8 IN_PROGRESS, 1 OPEN**. Ini bukan klaim seluruh Fase 1 selesai. `READY_REVIEW` menunjukkan implementasi dan bukti contoh tersedia, tetapi seluruh kriteria penerimaan lintas halaman belum terbukti. Rincian perubahan, matriks akses, batas cakupan dan sisa pekerjaan ada pada bagian paling atas `docs/HANDOFF.md`.
+
+- Keputusan pengguna untuk `D-02`/`AP-02.17`: **pertahankan desain login saat ini sebagai pengecualian proyek**. Toggle kata sandi login diuji tampil/sembunyi pada 390px; tidak ada overflow. Standar dialog tetap diterapkan pada CRUD admin.
+- Pengujian akhir batch: **27 tes terarah lulus, 282 assertions**; typecheck/build/Pint dan diff whitespace lulus. Ini bukan full suite. Browser memakai SQLite terisolasi; tidak mengubah data operasional sekolah.
+- `AP-01`: menu akun/sekolah mengikuti Gate endpoint; menu SPMB mengikuti policy/penugasan panitia; pencabutan izin dan penugasan diuji. Belum merupakan matriks lengkap setiap aksi, agregat, dropdown dan ekspor semua modul.
+- `AP-02`: dialog CRUD tambahan, konfirmasi asinkron terpusat, input tindakan tervalidasi, perlindungan formulir berubah, pengelolaan fokus dan scroll, serta permukaan semantic diperluas. Grid presensi/nilai, percakapan dan keputusan baris tetap berupa ruang kerja operasional. Seluruh kombinasi halaman × perangkat × status belum diuji.
+- `AP-03`: nama aplikasi, warna semantic, font terbatas, radius, density, preferensi navigasi, preview/reset, hapus logo/favicon dan perlindungan editor usang tersedia. Warna publik memakai baseline hingga admin memilih memakai warna identitas secara eksplisit.
+- `AP-04`: ikon allowlist, batas SEO/canonical, nilai sengaja kosong, timezone jadwal, judul PTSP opsional, statistik guru aktif, guard media organisasi dan pemindaian orphan aman ditambahkan. Tidak ada cropping/compression baru; gunakan validasi media dan layout template yang ada.
+- `AP-04.17` tetap `OPEN`: UAT harus dilakukan pengguna nonteknis. Pemeriksaan oleh agen tidak menggantikannya. Uji menyeluruh hanya dijalankan atas instruksi pengguna terpisah; dilarang memakai Serena untuk proyek ini.
+
 ### AP-01 — Identitas akun, role, permission dan scope data
 
 Prioritas P0. Area: `RoleEnum`, `PermissionEnum`, `RolePermissionRegistryService`, `AccessScopeService`, policy/middleware, `UserController`, akun pemohon, `config/navigation.php` dan `SidebarNavigationService`.
 
 - [x] **AP-01.01** (`VERIFIED`) Verifikasi seluruh 17 role, label, seed, akun uji dan konsistensi enum–DB–policy–navigasi; akun eksternal tetap terpisah.
-- [ ] **AP-01.02** (`OPEN`) Susun matriks izin per fitur dan aksi: lihat daftar/detail, cari, buat, ubah, unggah, ekspor, verifikasi, disposisi, putuskan, terbitkan, tandatangani, cabut, hapus dan konfigurasi.
+- [ ] **AP-01.02** (`READY_REVIEW`) Susun matriks izin per fitur dan aksi: lihat daftar/detail, cari, buat, ubah, unggah, ekspor, verifikasi, disposisi, putuskan, terbitkan, tandatangani, cabut, hapus dan konfigurasi.
 - [x] **AP-01.03** (`VERIFIED`) Pastikan default deny pada endpoint dan service sensitif; cegah akses melalui URL, method berbeda, AJAX, ID yang diganti atau dokumen langsung.
 - [x] **AP-01.04** (`VERIFIED`) Uji `school_id`, pemilik tiket, penugasan guru/mapel, kelas/periode wali kelas, panitia/kegiatan, serta penugasan satgas.
 - [x] **AP-01.05** (`VERIFIED`) Verifikasi relasi orang tua–siswa dan pemutakhiran/revokasi relasi; anak belum terverifikasi atau tidak terkait tidak boleh dapat diakses.
-- [ ] **AP-01.06** (`OPEN`) Uji multirole, perpindahan role, perubahan izin saat session aktif, penonaktifan akun, pergantian penugasan dan akses histori.
-- [ ] **AP-01.07** (`OPEN`) Samakan izin menu, tombol, counter dashboard, notifikasi, pencarian, pilihan dropdown dan endpoint; hasil agregat juga tidak boleh melampaui scope.
+- [ ] **AP-01.06** (`IN_PROGRESS`) Uji multirole, perpindahan role, perubahan izin saat session aktif, penonaktifan akun, pergantian penugasan dan akses histori.
+- [ ] **AP-01.07** (`IN_PROGRESS`) Samakan izin menu, tombol, counter dashboard, notifikasi, pencarian, pilihan dropdown dan endpoint; hasil agregat juga tidak boleh melampaui scope.
 - [x] **AP-01.08** (`VERIFIED`) Pisahkan operator verifikator, pejabat penyetuju dan penandatangan sesuai D-03; dokumentasikan kewenangan admin darurat bila dibutuhkan.
 - [x] **AP-01.09** (`VERIFIED`) Uji login/logout, session regeneration, timeout, CSRF, remember-me, pembatasan percobaan login, ganti sandi dan pencabutan session.
 - [x] **AP-01.10** (`VERIFIED`) Verifikasi daftar/masuk/pemulihan profil pemohon eksternal, validasi jenis pemohon, pengaitan alumni/wali yang sah, dan pesan pemulihan yang tidak membocorkan keberadaan akun.
 - [x] **AP-01.11** (`VERIFIED`) Pastikan tujuan kembali setelah login bersifat allowlist; alur tracer/PTSP tidak dapat menjadi open redirect atau memindahkan hak role.
-- [ ] **AP-01.12** (`OPEN`) Sediakan matriks uji positif dan negatif per role, kepemilikan, kelas, sekolah, status, dokumen dan ekspor.
+- [ ] **AP-01.12** (`READY_REVIEW`) Sediakan matriks uji positif dan negatif per role, kepemilikan, kelas, sekolah, status, dokumen dan ekspor.
 
 Penerimaan: role hanya melihat dan menjalankan pekerjaannya; akses langsung tetap ditolak ketika menu disembunyikan; tidak ada privilege escalation melalui multirole atau session pemohon.
 
@@ -359,22 +410,22 @@ Prioritas P1, dikerjakan sebelum perluasan layar. Area: `AppLayout.vue`, `TopNav
 - [x] **AP-02.04** (`VERIFIED`) Pastikan breadcrumb semantik, judul halaman, periode aktif, identitas sekolah, profil, notifikasi dan posisi menu aktif konsisten.
 - [x] **AP-02.05** (`VERIFIED`) Hamburger/sidebar mempunyai label, `aria-expanded`, keyboard, fokus, scroll aman, reduced motion, perilaku collapse, serta active state yang tetap terbaca.
 - [x] **AP-02.06** (`VERIFIED`) Kunci breakpoint, overflow menu, menu bertingkat, back/forward, deep link, state filter dan posisi gulir; jangan bergantung pada wrapping kebetulan.
-- [ ] **AP-02.07** (`OPEN`) Kolom aksi tabel berada paling kanan; View/Edit/Delete berikon horizontal; label aksesibel dan tooltip wajib, destructive memakai token yang tepat.
-- [ ] **AP-02.08** (`OPEN`) Ekspor Word/PDF/Excel memakai ikon format dan warna identitas sesuai aturan 03; gunakan label bila perlu membedakan beberapa keluaran sejenis. Ekspor hanya ditawarkan bila format benar-benar tersedia.
+- [ ] **AP-02.07** (`IN_PROGRESS`) Kolom aksi tabel berada paling kanan; View/Edit/Delete berikon horizontal; label aksesibel dan tooltip wajib, destructive memakai token yang tepat.
+- [ ] **AP-02.08** (`IN_PROGRESS`) Ekspor Word/PDF/Excel memakai ikon format dan warna identitas sesuai aturan 03; gunakan label bila perlu membedakan beberapa keluaran sejenis. Ekspor hanya ditawarkan bila format benar-benar tersedia.
 - [x] **AP-02.09** (`VERIFIED`) Header tabel rata tengah; isi teks kiri, angka kanan, status/aksi tengah. Atur lebar, truncation, wrapping, sticky header bila diperlukan, pagination dan alternatif mobile.
 - [x] **AP-02.10** (`VERIFIED`) Ukuran tombol konsisten; baseline standar `sm` 32px, `md` 36px, `lg` 40px bila token proyek belum mengatur. Rekonsiliasi dengan target sentuh lokal >=44px melalui hit area/override yang jelas.
 - [x] **AP-02.11** (`VERIFIED`) Sediakan default/hover/focus-visible/pressed/disabled/loading untuk tombol dan kontrol; cegah double-submit tanpa mengunci retry yang sah.
-- [ ] **AP-02.12** (`OPEN`) Form CRUD/data menggunakan modal overlay terpusat; isi panjang dapat digulir dan panel mobile boleh menyesuaikan. Jangan membuat halaman CRUD tambahan atau drawer kanan karena mengikuti proposal lama tanpa override.
-- [ ] **AP-02.13** (`OPEN`) Modal mempunyai backdrop, focus trap, judul, close, Escape yang aman, body scroll lock, restore focus, urutan tab dan perlindungan perubahan belum tersimpan.
+- [ ] **AP-02.12** (`READY_REVIEW`) Form CRUD/data menggunakan modal overlay terpusat; isi panjang dapat digulir dan panel mobile boleh menyesuaikan. Jangan membuat halaman CRUD tambahan atau drawer kanan karena mengikuti proposal lama tanpa override.
+- [ ] **AP-02.13** (`READY_REVIEW`) Modal mempunyai backdrop, focus trap, judul, close, Escape yang aman, body scroll lock, restore focus, urutan tab dan perlindungan perubahan belum tersimpan.
 - [x] **AP-02.14** (`VERIFIED`) Delete/revoke/reset/perubahan permanen memakai confirm alert terpusat yang menyebut dampak, Cancel/Confirm jelas; jangan menaruh konfirmasi di topbar/header tabel.
-- [ ] **AP-02.15** (`OPEN`) Form memiliki label eksplisit, tanda wajib, error dekat field, nilai tidak hilang saat gagal, pilihan tanggal/timezone konsisten, serta perlindungan saat menutup form berubah.
+- [ ] **AP-02.15** (`IN_PROGRESS`) Form memiliki label eksplisit, tanda wajib, error dekat field, nilai tidak hilang saat gagal, pilihan tanggal/timezone konsisten, serta perlindungan saat menutup form berubah.
 - [x] **AP-02.16** (`VERIFIED`) Toast responsif, bertumpuk, dismissible, safe-area, notification region dan z-index benar; error form tetap inline dan tidak hanya toast.
-- [ ] **AP-02.17** (`OPEN`) Tinjau login terkait admin terhadap aturan form terpusat; setiap password mempunyai show/hide aksesibel. Pertahankan login publik yang disetujui hingga konflik D-02 diputuskan.
-- [ ] **AP-02.18** (`OPEN`) Pastikan dark/light, preferensi sistem/pengguna, skeleton, empty, error, success, no-permission, offline, disabled dan loading konsisten.
-- [ ] **AP-02.19** (`OPEN`) Pastikan keyboard, screen reader, zoom 200%, kontras, reduced motion, unggah kamera dan perangkat sentuh bekerja pada alur utama.
-- [ ] **AP-02.20** (`OPEN`) Hilangkan dekorasi admin tanpa tujuan, petunjuk berulang dan shortcut eksternal yang tidak diminta. Data/teks development tidak muncul di UI produksi.
-- [ ] **AP-02.21** (`OPEN`) Audit komponen lintas modul dan CSS global agar perubahan admin tidak menimpa SVG grafik, input, tabel, modal, font atau warna publik.
-- [ ] **AP-02.22** (`OPEN`) Uji sticky header/kolom, scroll horizontal tabel, menu dropdown di dalam modal, tooltip yang terpotong, nested overlay, safe-area, keyboard virtual dan landscape; tombol utama/close/toast tidak saling menutupi.
+- [x] **AP-02.17** (`VERIFIED`) Tinjau login terkait admin terhadap aturan form terpusat; setiap password mempunyai show/hide aksesibel. Pertahankan login publik yang disetujui hingga konflik D-02 diputuskan.
+- [ ] **AP-02.18** (`READY_REVIEW`) Pastikan dark/light, preferensi sistem/pengguna, skeleton, empty, error, success, no-permission, offline, disabled dan loading konsisten.
+- [ ] **AP-02.19** (`IN_PROGRESS`) Pastikan keyboard, screen reader, zoom 200%, kontras, reduced motion, unggah kamera dan perangkat sentuh bekerja pada alur utama.
+- [ ] **AP-02.20** (`IN_PROGRESS`) Hilangkan dekorasi admin tanpa tujuan, petunjuk berulang dan shortcut eksternal yang tidak diminta. Data/teks development tidak muncul di UI produksi.
+- [ ] **AP-02.21** (`READY_REVIEW`) Audit komponen lintas modul dan CSS global agar perubahan admin tidak menimpa SVG grafik, input, tabel, modal, font atau warna publik.
+- [ ] **AP-02.22** (`IN_PROGRESS`) Uji sticky header/kolom, scroll horizontal tabel, menu dropdown di dalam modal, tooltip yang terpotong, nested overlay, safe-area, keyboard virtual dan landscape; tombol utama/close/toast tidak saling menutupi.
 
 Penerimaan: layar daftar/detail/form dan shell admin mengikuti tujuh aturan sumber; perbedaan yang disengaja teridentifikasi; screenshot publik tetap sesuai baseline.
 
@@ -383,15 +434,15 @@ Penerimaan: layar daftar/detail/form dan shell admin mengikuti tujuh aturan sumb
 Prioritas P1. Area: `School`, `SchoolController`, `Core/School/Edit.vue`, media branding, token, header/footer dan payload publik.
 
 - [x] **AP-03.01** (`VERIFIED`) Kelola nama aplikasi, nama/legal name sekolah, NPSN, jenjang, status, akreditasi, alamat, kontak, website, kepala sekolah dan identitas penerbit dari panel.
-- [ ] **AP-03.02** (`OPEN`) Kelola logo, favicon, foto kepala, identitas portal layanan, gambar default dan metadata/alt; uji ganti, kosong, gagal upload, fallback, ukuran dan cache media.
-- [ ] **AP-03.03** (`OPEN`) Kelola base/accent, semantic colors, typography yang diizinkan, radius, density, dark/light, preset dan konfigurasi navigasi admin sesuai standar 05.
-- [ ] **AP-03.04** (`OPEN`) Turunkan hover/active/focus/disabled/surface/border/teks dari tema, sediakan pemeriksaan kontras, preview dan reset default dengan konfirmasi.
+- [ ] **AP-03.02** (`READY_REVIEW`) Kelola logo, favicon, foto kepala, identitas portal layanan, gambar default dan metadata/alt; uji ganti, kosong, gagal upload, fallback, ukuran dan cache media.
+- [ ] **AP-03.03** (`READY_REVIEW`) Kelola base/accent, semantic colors, typography yang diizinkan, radius, density, dark/light, preset dan konfigurasi navigasi admin sesuai standar 05.
+- [ ] **AP-03.04** (`READY_REVIEW`) Turunkan hover/active/focus/disabled/surface/border/teks dari tema, sediakan pemeriksaan kontras, preview dan reset default dengan konfirmasi.
 - [x] **AP-03.05** (`VERIFIED`) Pisahkan preferensi tampilan pribadi dari branding sekolah; konfigurasi satu sekolah tidak perlu mengubah arsitektur menjadi multi-tenant.
-- [ ] **AP-03.06** (`OPEN`) Sediakan konfigurasi konten/identitas setiap portal publik yang berbeda dalam struktur yang dibutuhkan publik, tanpa memaksakan shell admin.
-- [ ] **AP-03.07** (`OPEN`) Seragamkan payload identitas lintas Blade, Inertia, login, surat, resi, cetak dan PDF; hapus override demo yang menutupi perubahan admin dalam mode penggunaan nyata.
+- [ ] **AP-03.06** (`READY_REVIEW`) Sediakan konfigurasi konten/identitas setiap portal publik yang berbeda dalam struktur yang dibutuhkan publik, tanpa memaksakan shell admin.
+- [ ] **AP-03.07** (`READY_REVIEW`) Seragamkan payload identitas lintas Blade, Inertia, login, surat, resi, cetak dan PDF; hapus override demo yang menutupi perubahan admin dalam mode penggunaan nyata.
 - [x] **AP-03.08** (`VERIFIED`) Kelola timezone, format tanggal/jam, kontak darurat, jam layanan, hari libur dan informasi penutupan per layanan.
 - [x] **AP-03.09** (`VERIFIED`) Kelola media sosial, kanal bantuan/chat, tautan peta dan tautan eksternal yang memang ada; validasi URL/skema dan target tautan.
-- [ ] **AP-03.10** (`OPEN`) Uji persistensi setelah refresh/relogin, cache invalidation, URL media lama, nama panjang, gambar transparan serta tema ekstrem yang ditolak karena kontras.
+- [ ] **AP-03.10** (`READY_REVIEW`) Uji persistensi setelah refresh/relogin, cache invalidation, URL media lama, nama panjang, gambar transparan serta tema ekstrem yang ditolak karena kontras.
 
 Penerimaan: mengganti identitas/branding melalui panel memperbarui semua titik penggunaan yang relevan tanpa kode; perubahan tidak merusak layout publik.
 
@@ -401,22 +452,22 @@ Prioritas P0. Area: Core, `schools.settings`, entitas konten yang ada, service/p
 
 - [x] **AP-04.01** (`VERIFIED`) Tentukan pemakaian ulang model/field yang ada; pakai konfigurasi untuk pengaturan kecil dan entitas berulang untuk data yang membutuhkan lifecycle. Hindari duplikasi sumber kebenaran.
 - [x] **AP-04.02** (`VERIFIED`) Definisikan ID stabil untuk halaman, bagian, item, slot gambar, modal dan menu; peta ID tidak boleh berubah karena judul diedit.
-- [ ] **AP-04.03** (`OPEN`) Daftarkan tipe field yang dibutuhkan: teks, teks panjang/rich text terkontrol, gambar/alt/crop, URL, warna/preset, ikon allowlist, angka, tanggal/jam, boolean, daftar, relasi, dokumen dan embed yang diizinkan.
+- [ ] **AP-04.03** (`READY_REVIEW`) Daftarkan tipe field yang dibutuhkan: teks, teks panjang/rich text terkontrol, gambar/alt/crop, URL, warna/preset, ikon allowlist, angka, tanggal/jam, boolean, daftar, relasi, dokumen dan embed yang diizinkan.
 - [x] **AP-04.04** (`VERIFIED`) Sediakan editor sesuai susunan publik: judul, subtitle, deskripsi, badge, CTA, label, ikon, gambar, caption, tab, kartu, accordion/FAQ, ticker, popup dan footer.
 - [x] **AP-04.05** (`VERIFIED`) Sediakan urutan dan tampil/sembunyi bagian yang memang didukung baseline; kontrol layout dibatasi template publik yang disetujui, tanpa pembuat layout bebas yang menggeser desain.
-- [ ] **AP-04.06** (`OPEN`) Atur required/min/max, panjang judul/teks, rasio gambar, jumlah item dan empty state; uji Unicode, karakter khusus, teks panjang dan konten kosong.
+- [ ] **AP-04.06** (`READY_REVIEW`) Atur required/min/max, panjang judul/teks, rasio gambar, jumlah item dan empty state; uji Unicode, karakter khusus, teks panjang dan konten kosong.
 - [x] **AP-04.07** (`VERIFIED`) Sanitasi rich text, link, ikon dan embed; cegah script, inline handler, URL berbahaya, executable upload, arbitrary CSS/JS/PHP dan query database dari editor.
 - [x] **AP-04.08** (`VERIFIED`) Pisahkan draft, preview privat, publish, unpublish, arsip dan jadwal publikasi; tentukan hak editor/publisher sesuai D-03 tanpa menambah role otomatis.
 - [x] **AP-04.09** (`VERIFIED`) Preview wajib menggunakan template publik yang sama dan konfigurasi draft tanpa membocorkannya ke tamu, sitemap, API, cache atau pencarian publik.
 - [x] **AP-04.10** (`VERIFIED`) Simpan revisi/riwayat, editor/publisher, waktu, audit dan restore versi; cegah edit bersamaan saling menimpa tanpa peringatan.
-- [ ] **AP-04.11** (`OPEN`) Tangani unggah/ganti/hapus media, metadata, rasio, ukuran, kompresi yang tersedia, dokumen terpakai, duplikasi, cleanup orphan dan referensi lintas bagian secara aman.
+- [ ] **AP-04.11** (`READY_REVIEW`) Tangani unggah/ganti/hapus media, metadata, rasio, ukuran, kompresi yang tersedia, dokumen terpakai, duplikasi, cleanup orphan dan referensi lintas bagian secara aman.
 - [x] **AP-04.12** (`VERIFIED`) Inisialisasi konten yang sekarang ada sebagai data yang dapat diedit tanpa mengubah desain; idempotent, dapat dipulihkan dan tidak menimpa suntingan admin saat deployment/seed ulang.
 - [x] **AP-04.13** (`VERIFIED`) Hilangkan fallback demo otomatis pada penggunaan nyata; bedakan belum diatur, sengaja kosong, sengaja disembunyikan, hilang, tidak terbit dan gangguan data.
-- [ ] **AP-04.14** (`OPEN`) Angka statistik tetap otomatis dari data sumber yang dikelola role berwenang; konten pemasaran numerik yang bukan agregat diberi field dan definisi yang jelas.
-- [ ] **AP-04.15** (`OPEN`) Kelola title halaman, deskripsi, gambar berbagi, label tautan dan canonical bila dipakai; pastikan metadata preview/draft tidak dipublikasikan.
-- [ ] **AP-04.16** (`OPEN`) Invalidasi cache tepat pada publish/unpublish/jadwal/media/tema; perubahan draft tidak mengubah cache publik.
+- [ ] **AP-04.14** (`READY_REVIEW`) Angka statistik tetap otomatis dari data sumber yang dikelola role berwenang; konten pemasaran numerik yang bukan agregat diberi field dan definisi yang jelas.
+- [ ] **AP-04.15** (`READY_REVIEW`) Kelola title halaman, deskripsi, gambar berbagi, label tautan dan canonical bila dipakai; pastikan metadata preview/draft tidak dipublikasikan.
+- [ ] **AP-04.16** (`READY_REVIEW`) Invalidasi cache tepat pada publish/unpublish/jadwal/media/tema; perubahan draft tidak mengubah cache publik.
 - [ ] **AP-04.17** (`OPEN`) Uji pengguna nonteknis mengubah setiap tipe konten, mempratinjau, menerbitkan, membatalkan dan memulihkan tanpa akses kode, SQL atau shell.
-- [ ] **AP-04.18** (`OPEN`) Sediakan pemulihan saat halaman/item/section/kategori dinonaktifkan atau dihapus: tautan masuk, slug/canonical, referensi CTA, media terpakai, redirect dan cache tetap mempunyai perilaku yang jelas; preview/scheduled publish tidak merusak halaman live saat draft belum valid.
+- [ ] **AP-04.18** (`READY_REVIEW`) Sediakan pemulihan saat halaman/item/section/kategori dinonaktifkan atau dihapus: tautan masuk, slug/canonical, referensi CTA, media terpakai, redirect dan cache tetap mempunyai perilaku yang jelas; preview/scheduled publish tidak merusak halaman live saat draft belum valid.
 
 Penerimaan: setiap elemen konten pada matriks PUB mempunyai field/editor yang berfungsi; tidak ada teks/aset operasional yang hanya dapat diubah developer, kecuali konstanta sistem yang beralasan dan disepakati.
 
@@ -426,13 +477,13 @@ Prioritas P1. Area: `SchoolProfileController`, `PublicPortalService`, `AcademicQ
 
 - [x] **AP-05.01** (`VERIFIED`) Kelola seluruh hero beranda, judul, highlight, deskripsi, badge/capaian, gambar, caption dan CTA sesuai inventaris AP-00.05.
 - [x] **AP-05.02** (`VERIFIED`) Kelola sambutan kepala, jabatan, foto, ringkasan profil, sejarah, visi, misi, nilai budaya dan program aksi; bedakan konten induk dari ringkasan halaman.
-- [ ] **AP-05.03** (`OPEN`) Kelola bagian kurikulum/peminatan, program unggulan, ekstrakurikuler, fasilitas, foto, keterangan dan urutan; gunakan data sarpras/akademik yang relevan tanpa membuka detail internal sensitif.
+- [ ] **AP-05.03** (`READY_REVIEW`) Kelola bagian kurikulum/peminatan, program unggulan, ekstrakurikuler, fasilitas, foto, keterangan dan urutan; gunakan data sarpras/akademik yang relevan tanpa membuka detail internal sensitif.
 - [x] **AP-05.04** (`VERIFIED`) Hubungkan slot berita, prestasi, galeri, ZI, layanan dan unduhan di beranda ke data terbit; pilihan sorotan dan jumlah tampil dapat dikelola.
-- [ ] **AP-05.05** (`OPEN`) Kelola popup pengumuman/PPDB, banner terbuka/ditutup, brosur, periode tampil dan perilaku penutupan tanpa tahun/tanggal hardcoded.
+- [ ] **AP-05.05** (`READY_REVIEW`) Kelola popup pengumuman/PPDB, banner terbuka/ditutup, brosur, periode tampil dan perilaku penutupan tanpa tahun/tanggal hardcoded.
 - [x] **AP-05.06** (`VERIFIED`) Kelola profil publik GTK: nama, foto, jabatan, mapel, pendidikan/informasi yang disetujui, urutan, status publikasi dan pengelompokan; pisahkan dari atribut kepegawaian privat.
 - [x] **AP-05.07** (`VERIFIED`) Verifikasi pencarian/filter GTK hanya memakai atribut yang boleh diungkap; informasi tersembunyi tidak boleh tertebak melalui hasil pencarian.
 - [x] **AP-05.08** (`VERIFIED`) Kelola struktur organisasi, induk-anak, urutan, jabatan, foto, masa jabatan dan status; cegah relasi siklus serta ketidaksesuaian nama/jabatan antarhalaman.
-- [ ] **AP-05.09** (`OPEN`) Kelola informasi kesiswaan, organisasi siswa, kegiatan, prestasi dan dokumentasi yang tampil; moderasi publikasi nama/foto siswa sesuai D-07.
+- [ ] **AP-05.09** (`READY_REVIEW`) Kelola informasi kesiswaan, organisasi siswa, kegiatan, prestasi dan dokumentasi yang tampil; moderasi publikasi nama/foto siswa sesuai D-07.
 - [x] **AP-05.10** (`VERIFIED`) Kelola kontak, alamat, peta, jam layanan, hari libur, kontak tiap layanan dan tautan bantuan; tidak perlu mengubah template untuk memperbarui salah satunya.
 - [x] **AP-05.11** (`VERIFIED`) Uji empty/unpublished, pergantian kepala, guru nonaktif, media hilang, teks panjang, CTA salah, section disembunyikan dan data lintas halaman.
 
@@ -451,7 +502,7 @@ Prioritas P1. Area: `SchoolNewsController`, `SchoolGalleryController`, model med
 - [x] **AP-06.07** (`VERIFIED`) Hubungkan lowongan dan beasiswa alumni ke publikasi yang sesuai, berikut pencarian, kategori, periode aktif, tautan/syarat dan penutupan. Jangan menggandakan data terbit di model lain tanpa alasan.
 - [x] **AP-06.08** (`VERIFIED`) Kendalikan konten muncul di beranda, berita umum, prestasi, galeri atau portal alumni melalui pengaturan penempatan; tentukan perilaku publikasi silang agar kategori karir tidak mendominasi semua slot berita tanpa disengaja.
 - [x] **AP-06.09** (`VERIFIED`) Pastikan filter/search/pagination, hitungan total/hasil, query yang dipertahankan, deep link, URL detail dan media tidak rusak saat kategori/slug berubah.
-- [ ] **AP-06.10** (`OPEN`) Tangani penghapusan kategori/penulis/media yang masih dipakai, gambar rusak, berita tanpa foto, video gagal/provider diblokir serta embed yang melacak pengguna sesuai kebijakan.
+- [ ] **AP-06.10** (`READY_REVIEW`) Tangani penghapusan kategori/penulis/media yang masih dipakai, gambar rusak, berita tanpa foto, video gagal/provider diblokir serta embed yang melacak pengguna sesuai kebijakan.
 - [x] **AP-06.11** (`VERIFIED`) Uji unpublish menutup akses detail/media yang harus privat, preview draft tidak dapat ditebak, pencarian tidak menyingkap draft, dan jadwal memakai timezone sekolah.
 
 Penerimaan: semua konten PUB-06/PUB-09/PUB-10/PUB-11/PUB-37 dan publikasi IKA dapat diubah/publikasikan dari panel; kosong berarti empty state yang benar, bukan fallback fiktif.
@@ -468,7 +519,7 @@ Prioritas P1. Area: `PublicPortalController`, `PublicPortalAdminController`, `Pu
 - [x] **AP-07.06** (`VERIFIED`) Kelola lokasi salat/kode wilayah, timezone, sumber/provider, metode fallback, koreksi yang diizinkan dan label status; alamat teks tidak dipakai sebagai kode wilayah tanpa validasi.
 - [x] **AP-07.07** (`VERIFIED`) Pastikan widget jadwal di beranda/footer/halaman salat memakai sumber sama, tanggal berganti benar, serta kegagalan provider tidak memblokir halaman.
 - [x] **AP-07.08** (`VERIFIED`) Definisikan pengunjung total/hari ini/bulan ini/online secara konsisten; hindari angka statis, hitungan ganda karena retry, atau pelacakan identitas yang tidak diperlukan.
-- [ ] **AP-07.09** (`OPEN`) Uji unduh file besar, filename Unicode, tipe file yang diizinkan, file hilang, hasil survei kosong dan provider offline.
+- [ ] **AP-07.09** (`READY_REVIEW`) Uji unduh file besar, filename Unicode, tipe file yang diizinkan, file hilang, hasil survei kosong dan provider offline.
 
 Penerimaan: dokumen dan informasi PUB-12/PUB-13/PUB-14 dapat dikelola, hasil agregat benar, dan fallback operasional tidak berubah menjadi data klaim palsu.
 
@@ -483,7 +534,7 @@ Prioritas P1. Area: navigasi/footer Blade, `PublicHeader.vue`, `usePublicService
 - [x] **AP-08.05** (`VERIFIED`) Tampilkan informasi layanan tutup/maintenance sesuai konfigurasi tanpa link mati; tentukan pengaruhnya terhadap pengajuan baru dan permohonan berjalan.
 - [x] **AP-08.06** (`VERIFIED`) Lindungi route sistem wajib, validasi URL/ikon, cegah siklus menu dan tautan berbahaya; perubahan label tidak mengubah route key.
 - [x] **AP-08.07** (`VERIFIED`) Uji pencarian sinonim, kategori kosong, hasil nol, daftar panjang, keyboard, drawer mobile, active state, deep link dan cache menu.
-- [ ] **AP-08.08** (`OPEN`) Inventaris dan hubungkan semua modal publik, poster SOP, tooltip kontekstual, formulir bantuan, pustaka foto dan tautan cetak yang belum masuk mapping halaman.
+- [ ] **AP-08.08** (`READY_REVIEW`) Inventaris dan hubungkan semua modal publik, poster SOP, tooltip kontekstual, formulir bantuan, pustaka foto dan tautan cetak yang belum masuk mapping halaman.
 
 Penerimaan: seluruh jalur navigasi dan salinan konten bersama dikelola tanpa kode serta tetap konsisten pada semua shell publik.
 
@@ -516,7 +567,7 @@ Prioritas P0. Area: `ServiceWorkflowMap`, `ServiceTicketService`, `ServiceDocume
 - [x] **AP-10.09** (`VERIFIED`) Tentukan pencabutan, kedaluwarsa, pembatalan, revisi dan penggantian lampiran; alasan wajib dan riwayat tidak hilang.
 - [x] **AP-10.10** (`VERIFIED`) Audit aktor, sekolah, objek, aksi, waktu, perubahan relevan, alasan, hasil dan korelasi tiket tanpa mencatat password/PIN/token mentah/bukti rahasia.
 - [x] **AP-10.11** (`VERIFIED`) Notifikasi/outbox dikirim setelah transaksi berhasil; kegagalan kanal tidak menggagalkan penyimpanan inti atau menggandakan keputusan.
-- [ ] **AP-10.12** (`OPEN`) Tangani kegagalan generator PDF, storage, nomor surat, provider, queue dan commit parsial; sediakan retry yang aman serta pesan pemulihan yang benar.
+- [ ] **AP-10.12** (`READY_REVIEW`) Tangani kegagalan generator PDF, storage, nomor surat, provider, queue dan commit parsial; sediakan retry yang aman serta pesan pemulihan yang benar.
 - [x] **AP-10.13** (`VERIFIED`) Uji seluruh format cetak/PDF dengan nama/alamat panjang, Unicode, font, foto/tanda tangan transparan, tabel banyak baris, page break, nomor halaman, kop/footer, orientasi dan QR yang bisa dipindai; QR tidak memuat PIN/secret pemohon, URL lingkungan development atau path storage privat.
 
 Penerimaan: setiap perubahan bisnis tercatat sekali, konsisten di seluruh permukaan, dan dokumen hanya dapat diakses pihak yang berhak.
@@ -764,7 +815,7 @@ Prioritas P0 sebagai gate penutupan. Area: seluruh paket, `tests/Feature`, tes u
 - [ ] **AP-24.09** Bandingkan screenshot publik sebelum/sesudah dengan data tetap; perubahan binding tidak boleh menggeser layout, menghilangkan menu/tab atau mengubah alur yang telah disetujui.
 - [ ] **AP-24.10** Verifikasi seluruh menu, ikon, tombol, tooltip, link, CTA, close/Escape, form validation, password show/hide, fokus dan scroll; tidak ada kontrol dekoratif yang tampak aktif tetapi tidak bekerja.
 - [ ] **AP-24.11** Periksa console/network error, aset/font/ikon hilang, SVG dipengaruhi CSS global, overflow, thumbnail rusak, PDF tak terbaca dan failure notification.
-- [ ] **AP-24.12** Jalankan Pint, typecheck, build, tes terarah dan full suite sesuai perubahan; simpan hasil dengan versi/tanggal dan alasan tes yang dilewati. Jangan menjalankan pengujian yang memakai manifest bersamaan dengan penggantian build yang menyebabkan hasil semu.
+- [x] **AP-24.12** (`VERIFIED — 22 November 2026`) Pint, typecheck, build, tes terarah dan full suite dijalankan. Full suite: 597 tes, 595 lulus, 2 skipped, 6.531 assertions; build 1.011 modul. Build tidak dijalankan bersamaan dengan full suite. Rincian browser, kompilasi 107 template, alasan skip dan batas cakupan tercatat pada bagian konsolidasi Codex di `docs/HANDOFF.md`.
 - [ ] **AP-24.13** Jalankan UAT menggunakan akun 17 role, pemohon eksternal, pengguna multirole dan tamu; operator nonteknis membuktikan tidak memerlukan developer untuk pembaruan konten rutin.
 - [ ] **AP-24.14** Uji upgrade dari data lama serta restore terisolasi; bandingkan jumlah, relasi, histori, hash/nomor dokumen dan hak akses sebelum/sesudah.
 - [ ] **AP-24.15** Tinjau seluruh task terbuka/temuan baru/pengecualian, peroleh penerimaan pemilik produk dan jangan menyebut integrasi lengkap bila masih ada jalur stub atau bukti E2E yang belum tersedia.

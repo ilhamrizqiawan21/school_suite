@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -78,23 +80,24 @@ const submitAdd = () => {
     });
 };
 
-const deleteNote = (id: number) => {
-    if (confirm('Hapus catatan observasi ini?')) {
+const deleteNote = async (id: number) => {
+    if (await requestConfirmation('Hapus catatan observasi ini?')) {
         router.delete(`/wali-kelas/catatan/${id}`);
     }
 };
+const requestObservationClose = useConfirmedDialogClose(form, () => { showAddModal.value = false; form.reset(); form.clearErrors(); });
 </script>
 
 <template>
     <AppLayout title="Catatan Observasi Siswa">
-        <Head title="Catatan Observasi — School Suite" />
+        <Head title="Catatan Observasi" />
 
         <div class="space-y-6 observations-page">
             <!-- Header bar -->
             <div class="observations-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Catatan Observasi & Perkembangan Siswa</h1>
-                    <p class="text-sm text-slate-600 mt-1">
+                    <h1 class="text-2xl font-bold tracking-tight text-[var(--ink)]">Catatan Observasi & Perkembangan Siswa</h1>
+                    <p class="text-sm text-[var(--ink-soft)] mt-1">
                         Dokumentasi perkembangan karakter, bimbingan, dan rekam catatan berkas rapor.
                     </p>
                 </div>
@@ -117,7 +120,7 @@ const deleteNote = (id: number) => {
                     <select
                         v-model="selectedClass"
                         @change="applyFilters"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500"
+                        class="w-full px-3 py-2 text-sm border border-[var(--line)] rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500"
                     >
                         <option value="">Semua Rombel</option>
                         <option v-for="c in classes" :key="c.id" :value="String(c.id)">
@@ -129,7 +132,7 @@ const deleteNote = (id: number) => {
                     <select
                         v-model="selectedStudent"
                         @change="applyFilters"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500"
+                        class="w-full px-3 py-2 text-sm border border-[var(--line)] rounded-lg bg-[var(--surface)] focus:ring-2 focus:ring-indigo-500"
                     >
                         <option value="">Pilih Siswa Tertentu (Semua Siswa)</option>
                         <option v-for="s in students" :key="s.id" :value="String(s.id)">
@@ -146,7 +149,7 @@ const deleteNote = (id: number) => {
                     :key="note.id"
                     class="observation-note bg-[var(--surface)] rounded-xl border border-[var(--line)] p-5 shadow-xs space-y-3"
                 >
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--line)] pb-3">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span
                                 :class="{
@@ -172,33 +175,33 @@ const deleteNote = (id: number) => {
                             </span>
                         </div>
 
-                        <div class="flex items-center gap-3 text-meta text-slate-600">
-                            <span>Oleh: <strong class="text-slate-600">{{ note.author.name }}</strong></span>
+                        <div class="flex items-center gap-3 text-meta text-[var(--ink-soft)]">
+                            <span>Oleh: <strong class="text-[var(--ink-soft)]">{{ note.author.name }}</strong></span>
                             <RowActionButton action="delete" label="Hapus" :aria-label="`Hapus catatan ${note.title}`" @click="deleteNote(note.id)" />
                         </div>
                     </div>
 
-                    <h3 class="font-bold text-slate-900 text-base">{{ note.title }}</h3>
-                    <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{ note.content }}</p>
+                    <h3 class="font-bold text-[var(--ink)] text-base">{{ note.title }}</h3>
+                    <p class="text-sm text-[var(--ink-soft)] leading-relaxed whitespace-pre-line">{{ note.content }}</p>
                 </div>
 
-                <div v-if="notes.length === 0" class="bg-[var(--surface)] rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-600">
+                <div v-if="notes.length === 0" class="bg-[var(--surface)] rounded-xl border border-dashed border-[var(--line)] p-12 text-center text-[var(--ink-soft)]">
                     Belum ada catatan observasi untuk filter ini. Klik "Tambah Catatan" untuk memulai.
                 </div>
             </div>
         </div>
 
         <!-- Modal Tambah Catatan -->
-        <div v-if="showAddModal" class="observation-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div v-if="showAddModal" @click.self="requestObservationClose" @keydown.esc.stop.prevent="requestObservationClose" class="observation-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="observation-dialog bg-[var(--surface)] rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4" role="dialog" aria-modal="true" aria-labelledby="observation-modal-title">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 id="observation-modal-title" class="text-lg font-bold text-slate-900">Tambah Catatan Observasi</h3>
-                    <button type="button" @click="showAddModal = false" class="text-slate-600 hover:text-slate-600">✕</button>
+                    <h3 id="observation-modal-title" class="text-lg font-bold text-[var(--ink)]">Tambah Catatan Observasi</h3>
+                    <button type="button" aria-label="Tutup catatan observasi" title="Tutup catatan observasi" @click="requestObservationClose" class="text-[var(--ink-soft)] hover:text-[var(--ink-soft)]">✕</button>
                 </div>
 
                 <form @submit.prevent="submitAdd" class="space-y-3">
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Peserta Didik *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peserta Didik *</label>
                         <select v-model="form.student_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Pilih siswa...</option>
                             <option v-for="s in students" :key="s.id" :value="String(s.id)">{{ s.name }} (NIS: {{ s.nis }})</option>
@@ -207,7 +210,7 @@ const deleteNote = (id: number) => {
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Kategori *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kategori *</label>
                             <select v-model="form.category" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="general">Catatan Umum</option>
                                 <option value="academic">Akademik</option>
@@ -216,7 +219,7 @@ const deleteNote = (id: number) => {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tingkat Akses *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tingkat Akses *</label>
                             <select v-model="form.access_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="internal">Internal (Dewan Guru)</option>
                                 <option value="public">Publik (Tercetak di Rapor / Wali Murid)</option>
@@ -226,17 +229,17 @@ const deleteNote = (id: number) => {
                     </div>
 
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Judul Catatan *</label>
-                        <input v-model="form.title" type="text" required placeholder="contoh: Pembinaan Kedisiplinan Seragam" class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Judul Catatan *</label>
+                        <input v-model="form.title" type="text" required placeholder="Pembinaan Kedisiplinan Seragam" class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
 
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Isi Observasi / Catatan *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Isi Observasi / Catatan *</label>
                         <textarea v-model="form.content" rows="4" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
 
                     <div class="flex justify-end gap-2 pt-3 border-t">
-                        <AppButton variant="secondary" type="button" @click="showAddModal = false" >
+                        <AppButton variant="secondary" type="button" @click="requestObservationClose" >
                             Batal
                         </AppButton>
                         <AppButton variant="primary" :loading="form.processing" type="submit" :disabled="form.processing" >

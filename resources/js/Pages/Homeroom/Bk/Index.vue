@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import AppButton from '@/components/AppButton.vue';
 import OperationsScanner from '@/components/OperationsScanner.vue';
 import FormField from '@/components/FormField.vue';
@@ -6,7 +7,7 @@ import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface BkCaseItem {
     id: number;
@@ -168,6 +169,10 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     return 'neutral';
 };
 
+
+const showBkCaseEditor = ref(false);
+const requestBkCaseEditorClose = useConfirmedDialogClose(caseForm, () => { showBkCaseEditor.value = false; caseForm.reset(); caseForm.clearErrors(); });
+watch(() => caseForm.wasSuccessful, (success) => { if (success) caseForm.defaults(); });
 </script>
 
 <template>
@@ -190,19 +195,19 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         Area tertutup khusus Guru BK dan Admin Sekolah. Eviden dan catatan kasus diaudit dan terisolasi dari daftar wali kelas biasa.
                     </p>
                 </div>
-                <a
+                <AppButton icon="excel" as="a"
                     :href="exportUrl"
-                    class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    class="inline-flex items-center rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[var(--surface-subtle)]"
                 >
                     Ekspor CSV BK
-                </a>
+                </AppButton>
             </header>
 
-            <form @submit.prevent="submitCase" class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+            <AppButton variant="primary" type="button" @click="showBkCaseEditor = true">Catat kasus BK</AppButton>
+<Teleport to="body"><div v-if="showBkCaseEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Catat kasus BK" @click.self="requestBkCaseEditorClose" @keydown.esc.stop.prevent="requestBkCaseEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Catat kasus BK</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup catat kasus bk" title="Tutup formulir" :disabled="caseForm.processing" @click="requestBkCaseEditorClose" /></header>
+<form @submit.prevent="submitCase" class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h2 class="text-base font-semibold text-slate-900">
-                        {{ editingCase ? `Perbarui Kasus #${editingCase.id}` : 'Catat Kasus Disiplin / Konseling Baru' }}
-                    </h2>
+
                 </div>
 
                 <div v-if="!editingCase" class="operations-scan-panel">
@@ -217,7 +222,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                     v-model="studentLookup"
                                     type="text"
                                     placeholder="Ketik nama/NIS atau scan token QR kartu siswa"
-                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                    class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                                     @keydown.enter.prevent="searchStudentByCodeOrName()"
                                 />
                                 <AppButton type="button" variant="secondary" :disabled="studentLookupLoading" @click="searchStudentByCodeOrName()">
@@ -227,7 +232,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         </FormField>
                     </div>
                     <FormField id="bk-student-id" label="Siswa Terpilih" :error="caseForm.errors.student_id" required>
-                        <select id="bk-student-id" v-model="caseForm.student_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="bk-student-id" v-model="caseForm.student_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-for="student in studentOptions" :key="student.student_id" :value="student.student_id">
                                 {{ student.name }} ({{ student.nis }}){{ student.class_group_name ? ` — ${student.class_group_name}` : '' }}
                             </option>
@@ -237,16 +242,16 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div class="grid gap-3 md:grid-cols-4">
                     <FormField id="bk-incident-date" label="Tanggal Kejadian" :error="caseForm.errors.incident_date" required>
-                        <input id="bk-incident-date" v-model="caseForm.incident_date" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="bk-incident-date" v-model="caseForm.incident_date" type="date" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="bk-incident-time" label="Waktu Kejadian" :error="caseForm.errors.incident_time">
-                        <input id="bk-incident-time" v-model="caseForm.incident_time" type="time" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="bk-incident-time" v-model="caseForm.incident_time" type="time" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="bk-location" label="Lokasi Kejadian" :error="caseForm.errors.location">
-                        <input id="bk-location" v-model="caseForm.location" type="text" placeholder="Contoh: Halaman Belakang" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="bk-location" v-model="caseForm.location" type="text" placeholder="Halaman Belakang" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="bk-category" label="Kategori Pelanggaran" :error="caseForm.errors.category" required>
-                        <select id="bk-category" v-model="caseForm.category" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="bk-category" v-model="caseForm.category" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
                         </select>
                     </FormField>
@@ -255,14 +260,14 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 <div class="grid gap-3 md:grid-cols-4">
                     <div class="md:col-span-2">
                         <FormField id="bk-title" label="Judul / Ringkasan Kasus" :error="caseForm.errors.title" required>
-                            <input id="bk-title" v-model="caseForm.title" type="text" placeholder="Ringkasan pelanggaran atau temuan" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <input id="bk-title" v-model="caseForm.title" type="text" placeholder="Ringkasan pelanggaran atau temuan" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                         </FormField>
                     </div>
                     <FormField id="bk-penalty-points" label="Poin Pelanggaran" :error="caseForm.errors.penalty_points">
-                        <input id="bk-penalty-points" v-model.number="caseForm.penalty_points" type="number" min="0" max="200" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="bk-penalty-points" v-model.number="caseForm.penalty_points" type="number" min="0" max="200" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="bk-status" label="Status Penanganan" :error="caseForm.errors.status">
-                        <select id="bk-status" v-model="caseForm.status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="bk-status" v-model="caseForm.status" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option value="reported">Dilaporkan</option>
                             <option value="investigating">Dalam Penyelidikan</option>
                             <option value="resolved">Selesai / Dibina</option>
@@ -272,10 +277,10 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div class="grid gap-3 md:grid-cols-2">
                     <FormField id="bk-description" label="Kronologi / Uraian Kasus" :error="caseForm.errors.description" required>
-                        <textarea id="bk-description" v-model="caseForm.description" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <textarea id="bk-description" v-model="caseForm.description" rows="3" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="bk-follow-up" label="Tindak Lanjut & Pembinaan" :error="caseForm.errors.follow_up_action">
-                        <textarea id="bk-follow-up" v-model="caseForm.follow_up_action" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <textarea id="bk-follow-up" v-model="caseForm.follow_up_action" rows="3" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                 </div>
 
@@ -292,23 +297,24 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                     </AppButton>
                 </div>
             </form>
+</div></div></Teleport>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+            <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h2 class="text-base font-semibold text-slate-900">Daftar Kasus BK</h2>
+                    <h2 class="text-base font-semibold text-[var(--ink)]">Daftar Kasus BK</h2>
                     <div class="flex flex-wrap gap-2">
                         <input
                             v-model="searchFilter"
                             type="text"
                             placeholder="Cari nama/NIS/judul"
-                            class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                             @keydown.enter.prevent="applyFilters"
                         />
-                        <select v-model="categoryFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilters">
+                        <select v-model="categoryFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilters">
                             <option value="">Semua Kategori</option>
                             <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
                         </select>
-                        <select v-model="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilters">
+                        <select v-model="statusFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilters">
                             <option value="">Semua Status</option>
                             <option value="reported">Dilaporkan</option>
                             <option value="investigating">Dalam Penyelidikan</option>
@@ -327,7 +333,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2.5 text-center">Siswa</th>
                                 <th class="px-3 py-2.5 text-center">Kategori & Kasus</th>
@@ -340,20 +346,20 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="item in cases" :key="item.id" class="hover:bg-slate-50/70">
                                 <td class="px-3 py-3">
-                                    <p class="font-medium text-slate-900">{{ item.student_name }}</p>
-                                    <p class="text-xs text-slate-500">{{ item.student_nis }} • {{ item.class_name }}</p>
+                                    <p class="font-medium text-[var(--ink)]">{{ item.student_name }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">{{ item.student_nis }} • {{ item.class_name }}</p>
                                 </td>
                                 <td class="px-3 py-3">
-                                    <p class="text-xs font-semibold uppercase text-slate-500">{{ categoryLabel(item.category) }}</p>
-                                    <p class="font-medium text-slate-900">{{ item.title }}</p>
-                                    <p class="text-xs text-slate-600 line-clamp-2">{{ item.description }}</p>
+                                    <p class="text-xs font-semibold uppercase text-[var(--ink-faint)]">{{ categoryLabel(item.category) }}</p>
+                                    <p class="font-medium text-[var(--ink)]">{{ item.title }}</p>
+                                    <p class="text-xs text-[var(--ink-soft)] line-clamp-2">{{ item.description }}</p>
                                 </td>
-                                <td class="px-3 py-3 text-xs text-slate-600">
+                                <td class="px-3 py-3 text-xs text-[var(--ink-soft)]">
                                     <p>{{ item.incident_date }} {{ item.incident_time || '' }}</p>
                                     <p v-if="item.location">{{ item.location }}</p>
                                 </td>
                                 <td class="px-3 py-3 text-xs">
-                                    <p class="font-semibold text-slate-800">{{ item.penalty_points }} poin</p>
+                                    <p class="font-semibold text-[var(--ink)]">{{ item.penalty_points }} poin</p>
                                     <div v-if="item.evidence_document_ids.length" class="mt-1 flex flex-wrap gap-1.5">
                                         <a
                                             v-for="(docId, idx) in item.evidence_document_ids"
@@ -373,7 +379,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                 <td class="px-3 py-3 text-right">
                                     <button
                                         type="button"
-                                        class="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                        class="rounded-md border border-[var(--line)] px-2.5 py-1 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--surface-subtle)]"
                                         @click="startEdit(item)"
                                     >
                                         Perbarui

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -50,6 +52,7 @@ const submitCancel = () => {
         },
     });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -61,15 +64,15 @@ const submitCancel = () => {
             <div v-if="flashMessage" class="alert-banner alert-banner--success" role="status">{{ flashMessage }}</div>
 
             <div v-if="issuedSecret" class="alert-banner alert-banner--pin" role="status">
-                <strong>Simpan Kode Verifikasi Anda:</strong>
+                <strong>{{ publicText("copy.vue_services_ptspreceipt", "text_001", "Simpan Kode Verifikasi Anda:") }}</strong>
                 <span class="pin-code">{{ issuedSecret }}</span>
-                <small>Gunakan kode ini bersama nomor tiket untuk melacak berkas di menu Lacak Berkas.</small>
+                <small>{{ publicText("copy.vue_services_ptspreceipt", "text_002", "Gunakan kode ini bersama nomor tiket untuk melacak berkas di menu Lacak Berkas.") }}</small>
             </div>
 
             <section class="portal-card">
                 <header class="receipt-head">
                     <div>
-                        <p class="eyebrow">Resi Pengajuan PTSP</p>
+                        <p class="eyebrow">{{ publicText("copy.vue_services_ptspreceipt", "text_003", "Resi Pengajuan PTSP") }}</p>
                         <h1>{{ ptspRequest.ticket_code }}</h1>
                         <p class="muted">{{ ptspRequest.service_snapshot.name }} ({{ ptspRequest.service_snapshot.code }})</p>
                     </div>
@@ -78,63 +81,63 @@ const submitCancel = () => {
 
                 <p v-if="ptspRequest.public_summary" class="summary-callout">{{ ptspRequest.public_summary }}</p>
                 <p v-if="ptspRequest.revision_note && canRevise" class="warning-callout">
-                    Catatan Perbaikan Petugas: {{ ptspRequest.revision_note }}
+                    {{ publicText("copy.vue_services_ptspreceipt", "text_9001", "Catatan Perbaikan Petugas:") }} {{ ptspRequest.revision_note }}
                 </p>
                 <p v-if="ptspRequest.rejection_reason && ptspRequest.status === 'rejected'" class="danger-callout">
-                    Alasan Penolakan: {{ ptspRequest.rejection_reason }}
+                    {{ publicText("copy.vue_services_ptspreceipt", "text_9002", "Alasan Penolakan:") }} {{ ptspRequest.rejection_reason }}
                 </p>
 
                 <dl class="meta-grid">
-                    <div><dt>Pemohon</dt><dd>{{ ptspRequest.applicant_name }}</dd></div>
-                    <div><dt>Instansi / Asal</dt><dd>{{ ptspRequest.applicant_organization || '-' }}</dd></div>
-                    <div><dt>Estimasi</dt><dd>{{ ptspRequest.service_snapshot.estimated_duration || '-' }}</dd></div>
-                    <div><dt>Waktu Ajuan</dt><dd>{{ formatDate(ptspRequest.submitted_at) }}</dd></div>
-                    <div class="full"><dt>Keperluan</dt><dd>{{ ptspRequest.purpose }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_ptspreceipt", "text_004", "Pemohon") }}</dt><dd>{{ ptspRequest.applicant_name }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_ptspreceipt", "text_005", "Instansi / Asal") }}</dt><dd>{{ ptspRequest.applicant_organization || '-' }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_ptspreceipt", "text_006", "Estimasi") }}</dt><dd>{{ ptspRequest.service_snapshot.estimated_duration || '-' }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_ptspreceipt", "text_007", "Waktu Ajuan") }}</dt><dd>{{ formatDate(ptspRequest.submitted_at) }}</dd></div>
+                    <div class="full"><dt>{{ publicText("copy.vue_services_ptspreceipt", "text_008", "Keperluan") }}</dt><dd>{{ ptspRequest.purpose }}</dd></div>
                     <div v-if="ptspRequest.physical_pickup_name" class="full">
-                        <dt>Pengambilan Fisik</dt>
-                        <dd>Diambil oleh {{ ptspRequest.physical_pickup_name }} pada {{ formatDate(ptspRequest.physical_pickup_at) }}</dd>
+                        <dt>{{ publicText("copy.vue_services_ptspreceipt", "text_009", "Pengambilan Fisik") }}</dt>
+                        <dd>{{ publicText("copy.vue_services_ptspreceipt", "text_9003", "Diambil oleh") }} {{ ptspRequest.physical_pickup_name }} {{ publicText("copy.vue_services_ptspreceipt", "text_9004", "pada") }} {{ formatDate(ptspRequest.physical_pickup_at) }}</dd>
                     </div>
                 </dl>
 
                 <div class="action-row">
                     <a :href="`/layanan/ptsp/resi/${ptspRequest.ticket_code}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--primary ui-button--md">
-                        Unduh / Cetak Resi PDF
+                        {{ publicText("copy.vue_services_ptspreceipt", "text_010", "Unduh / Cetak Resi PDF") }}
                     </a>
                     <Link v-if="canRevise" :href="`/layanan/ptsp/${ptspRequest.ticket_code}/perbaiki`" class="ui-button ui-button--secondary ui-button--md">
-                        Perbaiki Berkas Sekarang
+                        {{ publicText("copy.vue_services_ptspreceipt", "text_011", "Perbaiki Berkas Sekarang") }}
                     </Link>
                     <button v-if="canCancel" type="button" class="ui-button ui-button--secondary ui-button--md" @click="showCancelForm = !showCancelForm">
                         {{ showCancelForm ? 'Tutup Pembatalan' : 'Batalkan Permohonan' }}
                     </button>
-                    <Link href="/layanan/ptsp" class="ui-button ui-button--secondary ui-button--md">Kembali ke PTSP</Link>
+                    <Link href="/layanan/ptsp" class="ui-button ui-button--secondary ui-button--md">{{ publicText("copy.vue_services_ptspreceipt", "text_012", "Kembali ke PTSP") }}</Link>
                 </div>
 
                 <form v-if="canCancel && showCancelForm" class="cancel-form" @submit.prevent="submitCancel">
-                    <label for="cancel-reason" class="cancel-label">Alasan Pembatalan Permohonan</label>
-                    <textarea id="cancel-reason" v-model="cancelForm.reason" rows="2" placeholder="Tuliskan alasan pembatalan (opsional)..." />
+                    <label for="cancel-reason" class="cancel-label">{{ publicText("copy.vue_services_ptspreceipt", "text_013", "Alasan Pembatalan Permohonan") }}</label>
+                    <textarea id="cancel-reason" v-model="cancelForm.reason" rows="2" :placeholder="publicText('copy.vue_services_ptspreceipt', 'placeholder_018', 'Tuliskan alasan pembatalan (opsional)...')" />
                     <div class="action-row">
                         <button type="submit" class="ui-button ui-button--danger ui-button--sm" :disabled="cancelForm.processing">
-                            Konfirmasi Batalkan Permohonan
+                            {{ publicText("copy.vue_services_ptspreceipt", "text_014", "Konfirmasi Batalkan Permohonan") }}
                         </button>
                     </div>
                 </form>
             </section>
 
             <section v-if="ptspRequest.documents.length" class="portal-card">
-                <h2>Lampiran &amp; Hasil Dokumen</h2>
+                <h2>{{ publicText("copy.vue_services_ptspreceipt", "text_015", "Lampiran & Hasil Dokumen") }}</h2>
                 <ul class="doc-list">
                     <li v-for="doc in ptspRequest.documents" :key="doc.id" class="doc-row">
                         <div>
                             <strong>{{ doc.original_name }}</strong>
                             <small class="muted"> · {{ doc.document_kind === 'letter' ? 'Hasil Terbit' : 'Lampiran Pemohon' }} <span v-if="doc.document_number">({{ doc.document_number }})</span></small>
                         </div>
-                        <a :href="`/layanan/ptsp/${ptspRequest.ticket_code}/dokumen/${doc.id}`" class="ui-button ui-button--secondary ui-button--sm">Unduh</a>
+                        <a :href="`/layanan/ptsp/${ptspRequest.ticket_code}/dokumen/${doc.id}`" class="ui-button ui-button--secondary ui-button--sm">{{ publicText("copy.vue_services_ptspreceipt", "text_016", "Unduh") }}</a>
                     </li>
                 </ul>
             </section>
 
             <section class="portal-card">
-                <h2>Riwayat Status</h2>
+                <h2>{{ publicText("copy.vue_services_ptspreceipt", "text_017", "Riwayat Status") }}</h2>
                 <ol class="timeline">
                     <li v-for="step in ptspRequest.transitions" :key="step.id">
                         <StatusBadge :status="step.public_status" size="sm" />

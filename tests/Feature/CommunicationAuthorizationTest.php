@@ -9,10 +9,12 @@ use App\Modules\Academic\Infrastructure\Models\AcademicYear;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
 use App\Modules\Administration\Infrastructure\Models\AcademicCalendarEvent;
 use App\Modules\Administration\Infrastructure\Models\Announcement;
+use App\Modules\Administration\Infrastructure\Models\UserNotification;
 use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CommunicationAuthorizationTest extends TestCase
@@ -150,5 +152,26 @@ class CommunicationAuthorizationTest extends TestCase
         $this->actingAs($this->users['operator'])->delete('/komunikasi/kalender/'.$event->id)->assertRedirect();
         $this->assertDatabaseMissing('announcements', ['id' => $announcement->id]);
         $this->assertDatabaseMissing('academic_calendar_events', ['id' => $event->id]);
+    }
+
+    public function test_notification_counter_covers_unread_items_beyond_the_visible_page(): void
+    {
+        foreach (range(1, 55) as $index) {
+            UserNotification::query()->create([
+                'user_id' => $this->users['admin']->id,
+                'title' => 'Notifikasi '.$index,
+                'body' => 'Isi notifikasi',
+                'action_url' => '/dashboard?notification='.$index,
+            ]);
+        }
+
+        $this->actingAs($this->users['admin'])
+            ->get('/komunikasi?tab=notifications')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('unread_count', 55)
+                ->has('notifications', 50)
+                ->where('notifications.0.action_url', fn ($url) => is_string($url) && str_starts_with($url, '/dashboard?notification='))
+            );
     }
 }

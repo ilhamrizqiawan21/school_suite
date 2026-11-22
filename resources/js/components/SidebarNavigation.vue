@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-const props = withDefaults(defineProps<{ mode?: 'sidebar' | 'topbar' }>(), { mode: 'sidebar' });
+const props = withDefaults(defineProps<{ mode?: 'sidebar' | 'topbar'; collapsed?: boolean }>(), { mode: 'sidebar', collapsed: false });
 
 interface NavItem {
     name: string;
@@ -200,6 +200,7 @@ const sections: NavSection[] = [
                     { name: 'Zona Integritas & IKM', href: '/pengaturan/zona-integritas', key: 'integrity-zone', activePrefix: '/pengaturan/zona-integritas', icon: 'M12 3l8 3v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3zm-3 9 2 2 4-4' },
                 ],
             },
+            { name: 'Editor Halaman Publik', href: '/pengaturan/portal-publik', key: 'public-site-editor', activePrefix: '/pengaturan/portal-publik', icon: 'M4 5h16v14H4zM8 9h8M8 13h5M8 17h3' },
             { name: 'Integrasi & Kanal', href: '/pengaturan/integrasi', key: 'integration-settings', activePrefix: '/pengaturan/integrasi', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },
         ],
     },
@@ -368,7 +369,7 @@ const onAccordionAfterLeave = (el: Element) => {
 };
 const isExpanded = (key: string, active = false) => Object.hasOwn(expandedGroups.value, key)
     ? expandedGroups.value[key] === true
-    : props.mode === 'topbar' ? false : active;
+    : props.mode === 'topbar' ? false : active || (page.props as any).school?.admin_theme?.navigation_default === 'expanded';
 const isSectionActive = (section: NavSection) => section.items.some((item) =>
     isItemActive(item) || item.children?.some((child) => isItemActive(child)),
 );
@@ -506,6 +507,16 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
             <span>{{ homeItem.name }}</span>
         </Link>
 
+        <template v-if="collapsed">
+            <template v-for="section in visibleSections" :key="section.title">
+                <template v-for="item in section.items" :key="item.key">
+                    <Link v-for="entry in (item.children?.length ? item.children : [item])" :key="entry.key" :href="entry.href" class="nav-item" :class="{ 'is-active': isItemActive(entry) }" :aria-label="displayName(entry)" :title="displayName(entry)" :aria-current="isItemActive(entry) ? 'page' : undefined">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" :d="entry.icon" /></svg>
+                    </Link>
+                </template>
+            </template>
+        </template>
+        <template v-else>
         <template v-for="section in visibleSections" :key="section.title">
             <section class="nav-section">
                 <button
@@ -598,6 +609,7 @@ watch([currentUrl, activeSectionKey, visibleSections], () => {
                 </div>
                 </Transition>
             </section>
+        </template>
         </template>
     </nav>
 </template>

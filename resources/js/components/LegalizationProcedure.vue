@@ -6,7 +6,7 @@ const props = withDefaults(
         schoolName?: string;
     }>(),
     {
-        schoolName: 'Madrasah Contoh Nusantara',
+        schoolName: 'Sekolah',
     },
 );
 

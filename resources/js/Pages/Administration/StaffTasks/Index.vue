@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
@@ -33,7 +35,8 @@ const showForm = ref(false);
 const editingId = ref<number | null>(null);
 const form = useForm({ title: '', description: '', category: '', priority: 'normal', due_at: '', assignee_id: '', status: 'assigned', attachment: null as File | null });
 
-const openCreate = () => { editingId.value = null; form.reset(); form.priority = 'normal'; form.status = 'assigned'; form.clearErrors(); showForm.value = true; void focusForm(); };
+const initialTask = JSON.parse(JSON.stringify(form.data()));
+const openCreate = () => { editingId.value = null; form.defaults(initialTask); form.reset(); form.priority = 'normal'; form.status = 'assigned'; form.clearErrors(); showForm.value = true; void focusForm(); };
 const openEdit = (task: StaffTask) => {
     editingId.value = task.id;
     form.attachment = null;
@@ -45,6 +48,7 @@ const openEdit = (task: StaffTask) => {
     form.assignee_id = task.assignee?.id ? String(task.assignee.id) : '';
     form.status = task.status;
     form.clearErrors();
+    form.defaults();
     showForm.value = true;
     void focusForm();
 };
@@ -63,8 +67,8 @@ const updateProgress = (task: StaffTask, event: Event) => {
     delete progressErrors[task.id];
     router.patch(`/administrasi/tugas/${task.id}/progres`, { progress: value, status }, { preserveScroll: true, onError: (errors) => { progressErrors[task.id] = errors.progress ?? errors.status ?? 'Progres gagal disimpan.'; (event.target as HTMLInputElement).value = String(task.progress); }, onFinish: () => { savingProgress[task.id] = false; } });
 };
-const remove = (task: StaffTask) => {
-    if (window.confirm(`Hapus tugas “${task.title}”? Riwayat tugas juga akan dihapus.`)) {
+const remove = async (task: StaffTask) => {
+    if (await requestConfirmation(`Hapus tugas “${task.title}”? Riwayat tugas juga akan dihapus.`)) {
         router.delete(`/administrasi/tugas/${task.id}`, { preserveScroll: true });
     }
 };
@@ -102,6 +106,7 @@ watchPostEffect(() => {
 });
 onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
 
+const requestTaskClose = useConfirmedDialogClose(form, () => { showForm.value = false; form.reset(); form.clearErrors(); });
 </script>
 
 <template>
@@ -139,20 +144,20 @@ onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
                     icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
             </section>
-            <div v-if="showForm && can_manage" role="dialog" aria-modal="true" aria-labelledby="staff-task-modal-title" class="modal-backdrop" @click.self="showForm = false" @keydown.esc="showForm = false">
+            <div v-if="showForm && can_manage" role="dialog" aria-modal="true" aria-labelledby="staff-task-modal-title" class="modal-backdrop" @click.self="requestTaskClose" @keydown.esc="requestTaskClose">
                 <section id="staff-task-form" class="modal-card task-form-panel">
-                    <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2 id="staff-task-modal-title">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir tugas" @click="showForm = false">×</AppButton></div>
+                    <div class="task-panel-heading"><div><p class="eyebrow">{{ editingId ? 'Perbarui pekerjaan' : 'Pekerjaan baru' }}</p><h2 id="staff-task-modal-title">{{ editingId ? 'Ubah tugas' : 'Tugas baru' }}</h2><p>Isi informasi inti agar penanggung jawab memahami hasil yang diharapkan.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir tugas" @click="requestTaskClose">×</AppButton></div>
                 <ul v-if="Object.keys(form.errors).length" class="task-error-list rounded-lg p-3 text-sm" role="alert"><li v-for="(error, field) in form.errors" :key="field">{{ error }}</li></ul>
                 <form class="task-form-grid" @submit.prevent="save">
                     <label class="field md:col-span-2">Judul<input v-model="form.title" required maxlength="180" /><small v-if="form.errors.title">{{ form.errors.title }}</small></label>
                     <label class="field md:col-span-2">Uraian<textarea v-model="form.description" rows="3" maxlength="5000" /></label>
-                    <label class="field">Kategori<input v-model="form.category" maxlength="60" placeholder="Contoh: administrasi" /></label>
+                    <label class="field">Kategori<input v-model="form.category" maxlength="60" placeholder="administrasi" /></label>
                     <label class="field">Prioritas<select v-model="form.priority"><option value="low">Rendah</option><option value="normal">Normal</option><option value="high">Tinggi</option><option value="urgent">Mendesak</option></select></label>
                     <label class="field">Penanggung jawab<select v-model="form.assignee_id"><option value="">Belum ditentukan</option><option v-for="person in assignees" :key="person.id" :value="String(person.id)">{{ person.name }}</option></select><small v-if="form.errors.assignee_id">{{ form.errors.assignee_id }}</small></label>
                     <label class="field">Tenggat<input v-model="form.due_at" type="datetime-local" /></label>
                     <label class="field md:col-span-2">Lampiran<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" @change="selectAttachment" /><small v-if="form.errors.attachment">{{ form.errors.attachment }}</small><small>Maksimal 10 MB; file hanya dapat diunduh oleh admin/operator atau penanggung jawab.</small></label>
                     <label v-if="editingId" class="field">Status<select v-model="form.status"><option value="assigned">Ditugaskan</option><option value="in_progress">Berjalan</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></label>
-                    <div class="task-form-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="showForm = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</AppButton></div>
+                    <div class="task-form-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestTaskClose">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">Simpan tugas</AppButton></div>
                 </form>
                 </section>
             </div>

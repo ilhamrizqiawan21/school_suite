@@ -718,7 +718,7 @@ onBeforeUnmount(() => {
                 </div>
             </footer>
 
-            <div v-if="qrModalOpen" class="kiosk-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" @click.self="qrModalOpen = false">
+            <div v-if="qrModalOpen" class="kiosk-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" @click.self="qrModalOpen = false" @keydown.esc.stop.prevent="qrModalOpen = false">
                 <div class="modal-box">
                     <h3 id="qr-modal-title"><i class="fa-solid fa-camera" aria-hidden="true"></i> Scan QR Code Kartu</h3>
                     <p>Arahkan QR Code kartu pelajar ke depan kamera atau ketik kode kartu secara manual.</p>
@@ -735,7 +735,7 @@ onBeforeUnmount(() => {
                 </div>
             </div>
 
-            <div v-if="gateModalOpen" class="kiosk-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="gate-modal-title" @click.self="gateModalOpen = false">
+            <div v-if="gateModalOpen" class="kiosk-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="gate-modal-title" @click.self="gateModalOpen = false" @keydown.esc.stop.prevent="gateModalOpen = false">
                 <div class="modal-box">
                     <h3 id="gate-modal-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Pengaturan Pos / Gate</h3>
                     <p>Masukkan nama Pos atau Gate untuk perangkat kios presensi ini.</p>
@@ -743,7 +743,7 @@ onBeforeUnmount(() => {
                         <select v-if="devices.length" v-model="selectedDeviceId" aria-label="Pilih perangkat kios">
                             <option v-for="d in devices" :key="d.id" :value="d.id">{{ d.name }} {{ d.location ? `(${d.location})` : '' }}</option>
                         </select>
-                        <input v-model="gateDraft" type="text" placeholder="Contoh: Gate Utama" aria-label="Nama Gate" />
+                        <input v-model="gateDraft" type="text" placeholder="Gate Utama" aria-label="Nama Gate" />
                         <div class="gate-actions">
                             <button type="button" class="btn-kiosk" @click="gateModalOpen = false">Batal</button>
                             <button type="submit" class="btn-kiosk btn-kiosk-primary">Simpan Gate</button>

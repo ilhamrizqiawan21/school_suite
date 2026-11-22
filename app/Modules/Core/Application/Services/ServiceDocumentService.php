@@ -16,6 +16,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Private file upload validation, official document numbering/versioning,
@@ -282,16 +283,30 @@ class ServiceDocumentService
      */
     public function issueGeneratedDocument(int $schoolId, string $bytes, array $payload, ?User $actor = null): ServiceDocument
     {
+        if ($bytes === '') {
+            throw new InvalidArgumentException('Isi dokumen hasil tidak boleh kosong.');
+        }
+
         $safeKind = preg_replace('/[^a-z0-9_-]/i', '_', $payload['document_kind']) ?: 'document';
         $storagePath = sprintf('schools/%d/services/%s/%s.pdf', $schoolId, $safeKind, Str::uuid()->toString());
-        $this->storage->put($storagePath, $bytes);
 
-        return $this->issueOfficialDocument($schoolId, [
-            ...$payload,
-            'storage_path' => $storagePath,
-            'size_bytes' => strlen($bytes),
-            'sha256' => hash('sha256', $bytes),
-        ], $actor);
+        try {
+            if (! $this->storage->put($storagePath, $bytes)) {
+                throw new InvalidArgumentException('Dokumen hasil gagal disimpan. Silakan coba lagi.');
+            }
+
+            return $this->issueOfficialDocument($schoolId, [
+                ...$payload,
+                'storage_path' => $storagePath,
+                'size_bytes' => strlen($bytes),
+                'sha256' => hash('sha256', $bytes),
+            ], $actor);
+        } catch (Throwable $exception) {
+            // A failed DB/audit/numbering step must not leave an inaccessible private PDF behind.
+            $this->storage->delete($storagePath);
+
+            throw $exception;
+        }
     }
 
     /**
@@ -445,6 +460,30 @@ class ServiceDocumentService
             'original_name' => $document->original_name,
             'mime_type' => $document->mime_type,
         ];
+    }
+
+    /**
+     * Return only document IDs whose private storage object still exists.
+     *
+     * @param  list<int>  $documentIds
+     * @return list<int>
+     */
+    public function storedDocumentIds(int $schoolId, array $documentIds): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $documentIds), static fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+
+        return ServiceDocument::query()
+            ->where('school_id', $schoolId)
+            ->whereIn('id', $ids)
+            ->get(['id', 'storage_path'])
+            ->filter(fn (ServiceDocument $document): bool => $this->storage->exists($document->storage_path))
+            ->pluck('id')
+            ->map(static fn ($id): int => (int) $id)
+            ->values()
+            ->all();
     }
 
     /**

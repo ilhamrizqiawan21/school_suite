@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestActionInput, requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -38,13 +39,13 @@ const refresh = () => {
 };
 const postAction = (url: string, data: any = {}) => router.post(url, data, { preserveScroll: true, onSuccess: refresh });
 const unlock = (student: SnapshotStudent) => student.attempt_id && postAction(`/ujian/attempt/${student.attempt_id}/buka-kunci`);
-const extend = (student: SnapshotStudent) => {
+const extend = async (student: SnapshotStudent) => {
     if (! student.attempt_id) return;
-    const minutes = window.prompt('Tambahkan berapa menit?', '10');
+    const minutes = await requestActionInput('Tambahkan berapa menit?', { initialValue: '10', required: true, type: 'number', integer: true, min: 1, max: 120 });
     if (minutes && Number(minutes) > 0) postAction(`/ujian/attempt/${student.attempt_id}/tambah-waktu`, { minutes: Number(minutes) });
 };
-const forceFinish = (student: SnapshotStudent) => {
-    if (student.attempt_id && window.confirm(`Paksa sesi ${student.name} selesai? Jawaban yang sudah tersimpan akan dinilai.`)) postAction(`/ujian/attempt/${student.attempt_id}/paksa-selesai`);
+const forceFinish = async (student: SnapshotStudent) => {
+    if (student.attempt_id && await requestConfirmation(`Paksa sesi ${student.name} selesai? Jawaban yang sudah tersimpan akan dinilai.`)) postAction(`/ujian/attempt/${student.attempt_id}/paksa-selesai`);
 };
 onMounted(() => { poller = window.setInterval(refresh, 15000); });
 onBeforeUnmount(() => { if (poller) window.clearInterval(poller); });

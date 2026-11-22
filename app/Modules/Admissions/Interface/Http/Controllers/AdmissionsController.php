@@ -652,11 +652,11 @@ class AdmissionsController extends Controller
         Gate::authorize('manageCommittee', AdmissionApplicant::class);
         $validated = $request->validate(['user_id' => ['required', 'integer']]);
         $schoolId = (int) $request->user()->school_id;
-        $teacherUser = User::query()->whereKey($validated['user_id'])->where('school_id', $schoolId)->where('is_active', true)->whereHas('role', fn ($query) => $query->where('name', 'teacher'))->firstOrFail();
-        abort_unless($this->teacherDirectory->isActiveTeacherUser($schoolId, (int) $teacherUser->id), 404);
+        $teacherUser = User::query()->whereKey($validated['user_id'])->where('school_id', $schoolId)->where('is_active', true)->whereHas('role', fn ($query) => $query->whereIn('name', ['teacher', 'committee']))->firstOrFail();
+        abort_unless($teacherUser->hasRole('committee') || $this->teacherDirectory->isActiveTeacherUser($schoolId, (int) $teacherUser->id), 404);
         DB::table('admission_committee_members')->updateOrInsert(['school_id' => $schoolId, 'user_id' => $teacherUser->id], ['assigned_by' => $request->user()->id, 'created_at' => now(), 'updated_at' => now()]);
 
-        return back()->with('message', 'Guru ditugaskan sebagai panitia SPMB.');
+        return back()->with('message', 'Petugas ditugaskan sebagai panitia SPMB.');
     }
 
     public function removeCommitteeMember(Request $request, User $member): RedirectResponse
@@ -679,6 +679,11 @@ class AdmissionsController extends Controller
         $applicants = AdmissionApplicant::query()->where('school_id', $schoolId)->when($selectedPeriodId, fn ($query) => $query->where('period_id', $selectedPeriodId))->with(['track', 'period', 'documents.requirement', 'scores.criterion', 'selectionResult', 'reRegistration'])->latest()->get();
         $committee = DB::table('admission_committee_members')->join('users', 'users.id', '=', 'admission_committee_members.user_id')->where('admission_committee_members.school_id', $schoolId)->orderBy('users.name')->get(['users.id', 'users.name', 'users.email', 'admission_committee_members.created_at as assigned_at']);
         $teachers = $user->hasRole(['admin', 'operator']) ? $this->teacherDirectory->activeTeacherUsersForSchool($schoolId, $committee->pluck('id')->map(fn ($id) => (int) $id)->all()) : collect();
+
+        if ($user->hasRole(['admin', 'operator'])) {
+            $teachers = $teachers->concat(User::query()->where('school_id', $schoolId)->where('is_active', true)
+                ->whereHas('role', fn ($q) => $q->where('name', 'committee'))->whereNotIn('id', $committee->pluck('id'))->get(['id', 'name', 'email']));
+        }
 
         return Inertia::render('Admissions/Index', [
             'section' => $section,

@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 interface PermitItem {
     id: number;
@@ -82,6 +83,10 @@ const submitCorrection = () => {
         onSuccess: () => { selectedPermit.value = null; },
     });
 };
+
+const showPermitTokenEditor = ref(false);
+const requestPermitTokenEditorClose = useConfirmedDialogClose(tokenForm, () => { showPermitTokenEditor.value = false; tokenForm.reset(); tokenForm.clearErrors(); });
+watch(() => tokenForm.wasSuccessful, (success) => { if (success) tokenForm.defaults(); });
 </script>
 
 <template>
@@ -103,7 +108,9 @@ const submitCorrection = () => {
 
             <section class="panel-card">
                 <h2>Terbitkan Token Izin Sekali Pakai</h2>
-                <form class="inline-form" @submit.prevent="issueToken">
+                <AppButton variant="primary" type="button" @click="showPermitTokenEditor = true">Terbitkan token dispensasi</AppButton>
+<Teleport to="body"><div v-if="showPermitTokenEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Terbitkan token dispensasi" @click.self="requestPermitTokenEditorClose" @keydown.esc.stop.prevent="requestPermitTokenEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Terbitkan token dispensasi</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup terbitkan token dispensasi" title="Tutup formulir" :disabled="tokenForm.processing" @click="requestPermitTokenEditorClose" /></header>
+<form class="inline-form" @submit.prevent="issueToken">
                     <select v-model="tokenForm.student_id" required aria-label="Pilih siswa penerima token">
                         <option v-for="s in students" :key="s.student_id" :value="s.student_id">
                             {{ s.name }} ({{ s.nis }}) — {{ s.class_group_name || '-' }}
@@ -112,6 +119,7 @@ const submitCorrection = () => {
                     <input v-model="tokenForm.expires_in_hours" type="number" min="1" max="168" aria-label="Masa berlaku jam" />
                     <AppButton type="submit" :disabled="tokenForm.processing">Terbitkan Token</AppButton>
                 </form>
+</div></div></Teleport>
             </section>
 
             <section class="panel-card">

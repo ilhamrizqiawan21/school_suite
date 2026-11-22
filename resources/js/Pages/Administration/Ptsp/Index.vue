@@ -347,7 +347,7 @@ const catalogCounts = computed(() => ({
                                 <td><StatusBadge :status="svc.is_active ? 'active' : 'inactive'" :label="svc.is_active ? 'Aktif' : 'Tutup'" size="sm" /></td>
                                 <td>
                                     <div class="row-actions">
-                                        <AppButton size="sm" variant="secondary" v-if="canProcess" @click="openEditCatalog(svc)">Ubah</AppButton>
+                                        <AppButton size="sm" icon="edit" variant="secondary" v-if="canProcess" @click="openEditCatalog(svc)">Ubah</AppButton>
                                         <AppButton size="sm" variant="secondary" v-if="canProcess" @click="toggleServiceActive(svc)">
                                             {{ svc.is_active ? 'Tutup' : 'Aktifkan' }}
                                         </AppButton>
@@ -418,7 +418,7 @@ const catalogCounts = computed(() => ({
 
                             <template v-else-if="actionMode === 'disposition'">
                                 <FormField id="act-disp-to" label="Disposisi Kepada (Unit / Pegawai)" required :error="actionForm.errors.disposition_to" v-slot="{ inputId }">
-                                    <input :id="inputId" v-model="actionForm.disposition_to" type="text" required placeholder="Contoh: Wakamad Kesiswaan / Staf TU" />
+                                    <input :id="inputId" v-model="actionForm.disposition_to" type="text" required placeholder="Wakamad Kesiswaan / Staf TU" />
                                 </FormField>
                                 <FormField id="act-disp-note" label="Catatan Disposisi" :error="actionForm.errors.disposition_note" v-slot="{ inputId }">
                                     <textarea :id="inputId" v-model="actionForm.disposition_note" rows="2" />

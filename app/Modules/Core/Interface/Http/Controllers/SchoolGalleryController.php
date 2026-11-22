@@ -89,33 +89,26 @@ class SchoolGalleryController extends Controller
     public function update(Request $request, int $album): RedirectResponse
     {
         $this->authorizeManager($request);
-        $item = SchoolGalleryAlbum::query()
-            ->with('photos')
-            ->where('school_id', $request->user()->school_id)
-            ->findOrFail($album);
         $validated = $this->validated($request, false);
         $photos = $validated['photos'] ?? [];
         unset($validated['photos']);
-
-        $oldPaths = $item->photos->pluck('path')->all();
-        DB::transaction(function () use ($item, $validated, $photos, $request): void {
+        DB::transaction(function () use ($request, $album, $validated, $photos): void {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $item = SchoolGalleryAlbum::query()->with('photos')->where('school_id', $request->user()->school_id)->lockForUpdate()->findOrFail($album);
+            if ($photos !== [] || ($item->is_published && ! $validated['is_published'])) {
+                $this->assertPhotosNotReferenced($item, $photos !== []);
+            }
             $item->update($validated);
             if ($photos !== []) {
+                $oldPaths = $item->photos->pluck('path')->all();
                 $item->photos()->delete();
-                $this->storePhotos($item, $photos, (int) $request->user()->school_id);
+                $this->storePhotos($item, $photos, (int) $item->school_id);
+                DB::afterCommit(static fn () => Storage::disk('local')->delete($oldPaths));
             }
+            $this->auditLogger->log('core.school_gallery.updated', 'SchoolGalleryAlbum', (string) $item->id, [
+                'title' => $item->title, 'photo_count' => $item->photos()->count(), 'is_published' => $item->is_published,
+            ], actor: $request->user(), schoolId: (int) $item->school_id);
         });
-        if ($photos !== []) {
-            foreach ($oldPaths as $path) {
-                Storage::disk('local')->delete($path);
-            }
-        }
-
-        $this->auditLogger->log('core.school_gallery.updated', 'SchoolGalleryAlbum', (string) $item->id, [
-            'title' => $item->title,
-            'photo_count' => $photos === [] ? $item->photos()->count() : count($photos),
-            'is_published' => $item->is_published,
-        ], actor: $request->user(), schoolId: (int) $item->school_id);
 
         return redirect()->route('core.gallery.index')->with('message', 'Grup foto galeri berhasil diperbarui.');
     }
@@ -123,19 +116,17 @@ class SchoolGalleryController extends Controller
     public function destroy(Request $request, int $album): RedirectResponse
     {
         $this->authorizeManager($request);
-        $item = SchoolGalleryAlbum::query()
-            ->with('photos')
-            ->where('school_id', $request->user()->school_id)
-            ->findOrFail($album);
-        foreach ($item->photos as $photo) {
-            Storage::disk('local')->delete($photo->path);
-        }
-        $item->delete();
-
-        $this->auditLogger->log('core.school_gallery.deleted', 'SchoolGalleryAlbum', (string) $album, [
-            'title' => $item->title,
-            'photo_count' => $item->photos->count(),
-        ], actor: $request->user(), schoolId: (int) $request->user()->school_id);
+        DB::transaction(function () use ($request, $album): void {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $item = SchoolGalleryAlbum::query()->with('photos')->where('school_id', $request->user()->school_id)->findOrFail($album);
+            $this->assertPhotosNotReferenced($item);
+            $paths = $item->photos->pluck('path')->all();
+            $this->auditLogger->log('core.school_gallery.deleted', 'SchoolGalleryAlbum', (string) $album, [
+                'title' => $item->title, 'photo_count' => count($paths),
+            ], actor: $request->user(), schoolId: (int) $item->school_id);
+            $item->delete();
+            DB::afterCommit(static fn () => Storage::disk('local')->delete($paths));
+        });
 
         return redirect()->route('core.gallery.index')->with('message', 'Grup foto galeri berhasil dihapus.');
     }
@@ -168,7 +159,7 @@ class SchoolGalleryController extends Controller
         return Inertia::render('Public/Gallery/Index', [
             'school' => [
                 'name' => $school->name,
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'logo_url' => $school->publicBrandingUrl('logo'),
                 'theme' => $school->publicTheme(),
             ],
             'albums' => $albums,
@@ -197,137 +188,146 @@ class SchoolGalleryController extends Controller
 
     public function storeVideo(Request $request): RedirectResponse
     {
-        $this->authorizeManager($request);
-        $school = School::query()->findOrFail($request->user()->school_id);
-        $validated = $this->validatedVideo($request);
+        return DB::transaction(function () use ($request): RedirectResponse {
+            $this->authorizeManager($request);
+            $school = School::query()->lockForUpdate()->findOrFail($request->user()->school_id);
+            $validated = $this->validatedVideo($request);
 
-        $videos = $this->portalService->publicVideosForSchool($school, false);
-        $id = Str::slug($validated['title']) ?: 'video';
-        $existingIds = array_column($videos, 'id');
-        $candidate = $id;
-        $suffix = 2;
-        while (in_array($candidate, $existingIds, true)) {
-            $candidate = $id.'-'.$suffix++;
-        }
-
-        if ($validated['is_featured']) {
-            foreach ($videos as &$v) {
-                $v['is_featured'] = false;
+            $videos = $this->portalService->publicVideosForSchool($school, false);
+            $id = Str::slug($validated['title']) ?: 'video';
+            $existingIds = array_column($videos, 'id');
+            $candidate = $id;
+            $suffix = 2;
+            while (in_array($candidate, $existingIds, true)) {
+                $candidate = $id.'-'.$suffix++;
             }
-            unset($v);
-        }
 
-        $categoryLabels = [
-            'Profil' => 'Profil Madrasah',
-            'Kegiatan' => 'Kegiatan Santri & Siswa',
-            'Prestasi' => 'Prestasi & Riset Sains',
-            'Keagamaan' => 'Halaqah & Keagamaan',
-        ];
+            if ($validated['is_featured']) {
+                foreach ($videos as &$v) {
+                    $v['is_featured'] = false;
+                }
+                unset($v);
+            }
 
-        $newVideo = [
-            'id' => $candidate,
-            'title' => trim($validated['title']),
-            'category' => $validated['category'],
-            'category_label' => $categoryLabels[$validated['category']] ?? $validated['category'],
-            'date' => trim((string) ($validated['date'] ?? now()->format('d M Y'))),
-            'description' => trim((string) ($validated['description'] ?? '')),
-            'poster' => trim($validated['poster']),
-            'src' => trim($validated['src']),
-            'is_featured' => (bool) $validated['is_featured'],
-            'is_published' => (bool) $validated['is_published'],
-            'is_demo' => false,
-            'sort_order' => count($videos) + 1,
-        ];
-        $videos[] = $newVideo;
+            $categoryLabels = [
+                'Profil' => 'Profil Madrasah',
+                'Kegiatan' => 'Kegiatan Santri & Siswa',
+                'Prestasi' => 'Prestasi & Riset Sains',
+                'Keagamaan' => 'Halaqah & Keagamaan',
+            ];
 
-        $settings = is_array($school->settings) ? $school->settings : [];
-        $settings['public_videos'] = array_values($videos);
-        $school->update(['settings' => $settings]);
+            $newVideo = [
+                'id' => $candidate,
+                'title' => trim($validated['title']),
+                'category' => $validated['category'],
+                'category_label' => $categoryLabels[$validated['category']] ?? $validated['category'],
+                'date' => trim((string) ($validated['date'] ?? now()->format('d M Y'))),
+                'description' => trim((string) ($validated['description'] ?? '')),
+                'poster' => trim($validated['poster']),
+                'src' => trim($validated['src']),
+                'is_featured' => (bool) $validated['is_featured'],
+                'is_published' => (bool) $validated['is_published'],
+                'is_demo' => false,
+                'sort_order' => count($videos) + 1,
+            ];
+            $videos[] = $newVideo;
 
-        $this->auditLogger->log('core.school_video.created', 'SchoolVideo', $candidate, [
-            'title' => $newVideo['title'],
-            'category' => $newVideo['category'],
-            'is_published' => $newVideo['is_published'],
-        ], actor: $request->user(), schoolId: (int) $school->id);
+            $settings = is_array($school->settings) ? $school->settings : [];
+            $settings['public_videos'] = array_values($videos);
+            $school->update(['settings' => $settings]);
 
-        return redirect()->route('core.gallery.index')->with('message', 'Video galeri berhasil ditambahkan.');
+            $this->auditLogger->log('core.school_video.created', 'SchoolVideo', $candidate, [
+                'title' => $newVideo['title'],
+                'category' => $newVideo['category'],
+                'is_published' => $newVideo['is_published'],
+            ], actor: $request->user(), schoolId: (int) $school->id);
+
+            return redirect()->route('core.gallery.index')->with('message', 'Video galeri berhasil ditambahkan.');
+
+        });
     }
 
     public function updateVideo(Request $request, string $videoId): RedirectResponse
     {
-        $this->authorizeManager($request);
-        $school = School::query()->findOrFail($request->user()->school_id);
-        $validated = $this->validatedVideo($request);
+        return DB::transaction(function () use ($request, $videoId): RedirectResponse {
+            $this->authorizeManager($request);
+            $school = School::query()->lockForUpdate()->findOrFail($request->user()->school_id);
+            $validated = $this->validatedVideo($request);
 
-        $videos = $this->portalService->publicVideosForSchool($school, false);
-        $foundIndex = null;
-        foreach ($videos as $index => $item) {
-            if (($item['id'] ?? '') === $videoId) {
-                $foundIndex = $index;
-                break;
+            $videos = $this->portalService->publicVideosForSchool($school, false);
+            $foundIndex = null;
+            foreach ($videos as $index => $item) {
+                if (($item['id'] ?? '') === $videoId) {
+                    $foundIndex = $index;
+                    break;
+                }
             }
-        }
-        abort_if($foundIndex === null, 404);
+            abort_if($foundIndex === null, 404);
 
-        if ($validated['is_featured']) {
-            foreach ($videos as &$v) {
-                $v['is_featured'] = false;
+            if ($validated['is_featured']) {
+                foreach ($videos as &$v) {
+                    $v['is_featured'] = false;
+                }
+                unset($v);
             }
-            unset($v);
-        }
 
-        $categoryLabels = [
-            'Profil' => 'Profil Madrasah',
-            'Kegiatan' => 'Kegiatan Santri & Siswa',
-            'Prestasi' => 'Prestasi & Riset Sains',
-            'Keagamaan' => 'Halaqah & Keagamaan',
-        ];
+            $categoryLabels = [
+                'Profil' => 'Profil Madrasah',
+                'Kegiatan' => 'Kegiatan Santri & Siswa',
+                'Prestasi' => 'Prestasi & Riset Sains',
+                'Keagamaan' => 'Halaqah & Keagamaan',
+            ];
 
-        $videos[$foundIndex] = [
-            ...$videos[$foundIndex],
-            'title' => trim($validated['title']),
-            'category' => $validated['category'],
-            'category_label' => $categoryLabels[$validated['category']] ?? $validated['category'],
-            'date' => trim((string) ($validated['date'] ?? $videos[$foundIndex]['date'] ?? now()->format('d M Y'))),
-            'description' => trim((string) ($validated['description'] ?? '')),
-            'poster' => trim($validated['poster']),
-            'src' => trim($validated['src']),
-            'is_featured' => (bool) $validated['is_featured'],
-            'is_published' => (bool) $validated['is_published'],
-            'is_demo' => false,
-        ];
+            $videos[$foundIndex] = [
+                ...$videos[$foundIndex],
+                'title' => trim($validated['title']),
+                'category' => $validated['category'],
+                'category_label' => $categoryLabels[$validated['category']] ?? $validated['category'],
+                'date' => trim((string) ($validated['date'] ?? $videos[$foundIndex]['date'] ?? now()->format('d M Y'))),
+                'description' => trim((string) ($validated['description'] ?? '')),
+                'poster' => trim($validated['poster']),
+                'src' => trim($validated['src']),
+                'is_featured' => (bool) $validated['is_featured'],
+                'is_published' => (bool) $validated['is_published'],
+                'is_demo' => false,
+            ];
 
-        $settings = is_array($school->settings) ? $school->settings : [];
-        $settings['public_videos'] = array_values($videos);
-        $school->update(['settings' => $settings]);
+            $settings = is_array($school->settings) ? $school->settings : [];
+            $settings['public_videos'] = array_values($videos);
+            $school->update(['settings' => $settings]);
 
-        $this->auditLogger->log('core.school_video.updated', 'SchoolVideo', $videoId, [
-            'title' => $videos[$foundIndex]['title'],
-            'is_published' => $videos[$foundIndex]['is_published'],
-        ], actor: $request->user(), schoolId: (int) $school->id);
+            $this->auditLogger->log('core.school_video.updated', 'SchoolVideo', $videoId, [
+                'title' => $videos[$foundIndex]['title'],
+                'is_published' => $videos[$foundIndex]['is_published'],
+            ], actor: $request->user(), schoolId: (int) $school->id);
 
-        return redirect()->route('core.gallery.index')->with('message', 'Video galeri berhasil diperbarui.');
+            return redirect()->route('core.gallery.index')->with('message', 'Video galeri berhasil diperbarui.');
+
+        });
     }
 
     public function destroyVideo(Request $request, string $videoId): RedirectResponse
     {
-        $this->authorizeManager($request);
-        $school = School::query()->findOrFail($request->user()->school_id);
-        $videos = $this->portalService->publicVideosForSchool($school, false);
+        return DB::transaction(function () use ($request, $videoId): RedirectResponse {
+            $this->authorizeManager($request);
+            $school = School::query()->lockForUpdate()->findOrFail($request->user()->school_id);
+            $videos = $this->portalService->publicVideosForSchool($school, false);
 
-        $remaining = array_values(array_filter(
-            $videos,
-            static fn (array $item): bool => ($item['id'] ?? '') !== $videoId,
-        ));
-        abort_if(count($remaining) === count($videos), 404);
+            $remaining = array_values(array_filter(
+                $videos,
+                static fn (array $item): bool => ($item['id'] ?? '') !== $videoId,
+            ));
+            abort_if(count($remaining) === count($videos), 404);
 
-        $settings = is_array($school->settings) ? $school->settings : [];
-        $settings['public_videos'] = $remaining;
-        $school->update(['settings' => $settings]);
+            $settings = is_array($school->settings) ? $school->settings : [];
+            $settings['public_videos'] = $remaining;
+            $school->update(['settings' => $settings]);
 
-        $this->auditLogger->log('core.school_video.deleted', 'SchoolVideo', $videoId, [], actor: $request->user(), schoolId: (int) $school->id);
+            $this->auditLogger->log('core.school_video.deleted', 'SchoolVideo', $videoId, [], actor: $request->user(), schoolId: (int) $school->id);
 
-        return redirect()->route('core.gallery.index')->with('message', 'Video galeri berhasil dihapus.');
+            return redirect()->route('core.gallery.index')->with('message', 'Video galeri berhasil dihapus.');
+
+        });
     }
 
     /** @return array<string, mixed> */
@@ -371,7 +371,7 @@ class SchoolGalleryController extends Controller
                 ->where('is_published', true))
             ->findOrFail($photo);
 
-        return $this->imageResponse($item, ['Cache-Control' => 'public, max-age=3600']);
+        return $this->imageResponse($item, ['Cache-Control' => 'public, no-cache, must-revalidate']);
     }
 
     public function adminPhoto(Request $request, int $photo): StreamedResponse
@@ -409,16 +409,32 @@ class SchoolGalleryController extends Controller
         return $validated;
     }
 
-    /** @param list<UploadedFile> $photos */
     private function storePhotos(SchoolGalleryAlbum $album, array $photos, int $schoolId): void
     {
         foreach ($photos as $index => $photo) {
-            $album->photos()->create([
-                'school_id' => $schoolId,
-                'path' => $photo->store('school-gallery/'.$schoolId.'/'.$album->id, 'local'),
-                'original_name' => $photo->getClientOriginalName(),
-                'sort_order' => $index,
-            ]);
+            $path = $photo->store('school-gallery/'.$schoolId.'/'.$album->id, 'local');
+            if (! is_string($path) || $path === '') {
+                throw ValidationException::withMessages(['photos' => 'Foto gagal disimpan. Coba unggah kembali.']);
+            }
+            DB::afterRollBack(static fn () => Storage::disk('local')->delete($path));
+            $album->photos()->create(['school_id' => $schoolId, 'path' => $path,
+                'original_name' => $photo->getClientOriginalName(), 'sort_order' => $index]);
+        }
+    }
+
+    private function assertPhotosNotReferenced(SchoolGalleryAlbum $album, bool $includeHistory = true): void
+    {
+        $school = School::query()->whereKey($album->school_id)->lockForUpdate()->firstOrFail();
+        $registry = $school->publicContentRegistry();
+        if (! $includeHistory) {
+            unset($registry['revisions']);
+        }
+        $content = json_encode($registry, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        foreach ($album->photos as $photo) {
+            $path = (string) parse_url(route('core.gallery.photo', $photo->id), PHP_URL_PATH);
+            if (preg_match('~'.preg_quote($path, '~').'(?=[?\x23"]|$)~', $content)) {
+                throw ValidationException::withMessages(['photos' => 'Foto masih dipakai oleh konten, draf, jadwal, atau riwayat publikasi. Ganti rujukannya sebelum menghapus atau mengganti foto.']);
+            }
         }
     }
 

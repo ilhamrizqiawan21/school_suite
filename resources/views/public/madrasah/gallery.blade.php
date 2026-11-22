@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+  $schoolName = ($profile['name'] ?? null) ?: 'Sekolah';
   $selectedCategory = trim((string) request()->query('kategori', ''));
 
   $dummyGallery = [
@@ -41,10 +41,10 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
       <div class="max-w-3xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-3 border border-emerald-400/30">
-          <i class="fa-solid fa-camera"></i> Dokumentasi &amp; Memori
+          <i class="fa-solid fa-camera"></i> {{ ($contentBlocks['copy.blade_gallery']['text_001'] ?? 'Dokumentasi & Memori') }}
         </div>
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3">
-          Galeri &amp; Kegiatan Madrasah
+          {{ ($contentBlocks['copy.blade_gallery']['text_002'] ?? 'Galeri & Kegiatan Madrasah') }}
         </h1>
         <p class="text-sm sm:text-base text-emerald-100 leading-relaxed">
           Kilas balik visual momen pembelajaran, halaqah religius, upacara kemerdekaan, pembinaan riset sains, dan kreasi santri {{ $schoolName }}.
@@ -57,7 +57,7 @@
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-4 border-b border-slate-200">
       <div class="madrasah-catalog-filters">
-        <a href="/galeri" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+        <a href="{{ ($contentBlocks['copy.blade_gallery']['href_006'] ?? '/galeri') }}" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedCategory === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
           Semua Album Foto ({{ count($items) }})
         </a>
         @foreach ($categories as $cat)
@@ -67,7 +67,7 @@
         @endforeach
       </div>
       <div class="text-xs text-slate-500">
-        Total <b>{{ count($items) }}</b> dokumentasi foto
+        {{ ($contentBlocks['copy.blade_gallery']['text_003'] ?? 'Total') }} <b>{{ count($items) }}</b> {{ ($contentBlocks['copy.blade_gallery']['text_004'] ?? 'dokumentasi foto') }}
       </div>
     </div>
 
@@ -92,7 +92,7 @@
         </button>
       @empty
         <div class="col-span-full rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Belum ada dokumentasi foto pada kategori yang dipilih.
+          {{ ($contentBlocks['copy.blade_gallery']['text_005'] ?? 'Belum ada dokumentasi foto pada kategori yang dipilih.') }}
         </div>
       @endforelse
     </div>

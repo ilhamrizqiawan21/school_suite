@@ -8,6 +8,18 @@ let opener = null;
 
 let openMenu = null;
 
+const homeNotice = document.querySelector('[data-home-notice]');
+if (homeNotice) {
+    const noticeKey = `school_home_notice_${homeNotice.dataset.noticeKey || 'current'}`;
+    try {
+        if (localStorage.getItem(noticeKey) === 'dismissed') homeNotice.hidden = true;
+    } catch (_) {}
+    homeNotice.querySelector('[data-dismiss-home-notice]')?.addEventListener('click', () => {
+        homeNotice.hidden = true;
+        try { localStorage.setItem(noticeKey, 'dismissed'); } catch (_) {}
+    });
+}
+
 function closeMenu(returnFocus = false) {
     if (!openMenu) return;
     byId(openMenu.dataset.portalMenu).hidden = true;

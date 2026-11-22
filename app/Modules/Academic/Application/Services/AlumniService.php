@@ -16,6 +16,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -209,16 +210,21 @@ class AlumniService
     /** @return array{total: int, studying: int, working: int, entrepreneur: int} */
     public function publicSummary(int $schoolId): array
     {
-        $counts = AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')
-            ->where('opt_in_directory', true)->selectRaw('current_status, COUNT(*) as total')->groupBy('current_status')->pluck('total', 'current_status');
+        $counts = $this->publicProfilesQuery($schoolId)->selectRaw('current_status, COUNT(*) as total')->groupBy('current_status')->pluck('total', 'current_status');
 
         return ['total' => (int) $counts->sum(), 'studying' => (int) $counts->get('studying', 0),
             'working' => (int) $counts->get('working', 0), 'entrepreneur' => (int) $counts->get('entrepreneur', 0)];
     }
 
+    private function publicProfilesQuery(int $schoolId): Builder
+    {
+        return AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')->where('opt_in_directory', true)
+            ->when(! app()->environment(['local', 'testing']), fn ($q) => $q->where(fn ($email) => $email->whereNull('email')->orWhere('email', 'not like', 'alumni-demo-%@example.test')));
+    }
+
     public function publicStatistics(int $schoolId): array
     {
-        $base = AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')->where('opt_in_directory', true);
+        $base = $this->publicProfilesQuery($schoolId);
         $statuses = (clone $base)->selectRaw('current_status, COUNT(*) as total')->groupBy('current_status')->orderBy('current_status')->get();
         $campuses = (clone $base)->where('current_status', 'studying')->where('opt_in_career', true)
             ->whereNotNull('institution_or_company')->where('institution_or_company', '!=', '')
@@ -244,10 +250,7 @@ class AlumniService
         $year = isset($filters['graduation_year']) && (int) $filters['graduation_year'] > 0 ? (int) $filters['graduation_year'] : null;
         $status = trim((string) ($filters['current_status'] ?? ''));
 
-        $rows = AlumniProfile::query()
-            ->where('school_id', $schoolId)
-            ->where('moderation_status', 'approved')
-            ->where('opt_in_directory', true)
+        $rows = $this->publicProfilesQuery($schoolId)
             ->when(array_key_exists('ids', $filters), fn ($q) => $q->whereIn('id', $filters['ids']))
             ->when($year !== null, fn ($q) => $q->where('graduation_year', $year))
             ->when($status !== '' && array_key_exists($status, self::STATUS_LABELS), fn ($q) => $q->where('current_status', $status))
@@ -284,7 +287,7 @@ class AlumniService
 
     public function publicHomeDirectory(int $schoolId, array $filters): array
     {
-        $base = AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')->where('opt_in_directory', true);
+        $base = $this->publicProfilesQuery($schoolId);
         $years = (clone $base)->selectRaw('graduation_year, COUNT(*) as total')->groupBy('graduation_year')->orderByDesc('graduation_year')->get()->toArray();
         $majors = (clone $base)->whereNotNull('major_or_class')->where('major_or_class', '!=', '')->distinct()->orderBy('major_or_class')->pluck('major_or_class')->all();
         $query = clone $base;
@@ -322,10 +325,7 @@ class AlumniService
             return null;
         }
 
-        $match = AlumniProfile::query()
-            ->where('school_id', $schoolId)
-            ->where('moderation_status', 'approved')
-            ->where('opt_in_directory', true)
+        $match = $this->publicProfilesQuery($schoolId)
             ->where(function ($q) use ($clean): void {
                 $q->where('full_name', 'like', "%{$clean}%")
                     ->orWhere('ekta_number', $clean);

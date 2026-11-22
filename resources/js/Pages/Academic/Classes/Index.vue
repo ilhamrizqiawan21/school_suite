@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
@@ -81,8 +82,8 @@ const openEdit = (cls: ClassGroup) => {
     classForm.capacity = cls.capacity;
     showAddClassModal.value = true;
 };
-const deleteClass = (cls: ClassGroup) => {
-    if (!window.confirm(`Hapus rombel ${cls.name}? Rombel dengan wali kelas, penugasan, atau riwayat akademik tidak dapat dihapus.`)) return;
+const deleteClass = async (cls: ClassGroup) => {
+    if (!await requestConfirmation(`Hapus rombel ${cls.name}? Rombel dengan wali kelas, penugasan, atau riwayat akademik tidak dapat dihapus.`)) return;
     router.delete(`/akademik/kelas/${cls.id}`, { preserveScroll: true });
 };
 
@@ -128,7 +129,7 @@ const submitAssignHomeroom = () => {
 
 <template>
     <AppLayout title="Rombongan Belajar & Penugasan Wali Kelas">
-        <Head title="Rombongan Belajar — School Suite" />
+        <Head title="Rombongan Belajar" />
 
         <div class="view class-page space-y-5">
             <div class="page-heading compact-heading">
@@ -259,31 +260,31 @@ const submitAssignHomeroom = () => {
         <div v-if="can_manage && showAddClassModal" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="class-form-title" class="class-overlay">
             <div class="class-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 id="class-form-title" class="text-lg font-bold text-slate-900">{{ editingId ? 'Ubah Rombongan Belajar' : 'Tambah Rombongan Belajar' }}</h3>
+                    <h3 id="class-form-title" class="text-lg font-bold text-[var(--ink)]">{{ editingId ? 'Ubah Rombongan Belajar' : 'Tambah Rombongan Belajar' }}</h3>
                     <AppButton variant="ghost" type="button" @click="showAddClassModal = false" class="class-close" aria-label="Tutup formulir rombel">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitAddClass" class="space-y-3">
                     <div>
-                        <label for="class-grade" class="block text-meta font-semibold text-slate-700 mb-1">Tingkat kelas *</label>
+                        <label for="class-grade" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tingkat kelas *</label>
                         <select id="class-grade" v-model="classForm.grade_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option v-for="level in 12" :key="level" :value="level">Kelas {{ level }}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label for="class-name" class="block text-meta font-semibold text-slate-700 mb-1">Nama rombel *</label>
-                        <input id="class-name" v-model="classForm.name" type="text" placeholder="contoh: 7A, 8B, X MIPA 1" required class="w-full px-3 py-2 text-sm border rounded-lg" />
+                        <label for="class-name" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama rombel *</label>
+                        <input id="class-name" v-model="classForm.name" type="text" placeholder="7A, 8B, X MIPA 1" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         <div v-if="classForm.errors.name" class="text-meta text-red-600 mt-1">{{ classForm.errors.name }}</div>
                     </div>
 
                     <div>
-                        <label for="class-capacity" class="block text-meta font-semibold text-slate-700 mb-1">Kapasitas maksimal siswa</label>
+                        <label for="class-capacity" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kapasitas maksimal siswa</label>
                         <input id="class-capacity" v-model="classForm.capacity" type="number" min="1" max="60" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
 
                     <div v-if="!editingId">
-                        <label for="class-homeroom" class="block text-meta font-semibold text-slate-700 mb-1">Wali kelas (opsional)</label>
+                        <label for="class-homeroom" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Wali kelas (opsional)</label>
                         <select id="class-homeroom" v-model="classForm.homeroom_teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">(Belum ditetapkan)</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>
@@ -292,7 +293,7 @@ const submitAssignHomeroom = () => {
                     </div>
 
                     <ul v-if="Object.keys(classForm.errors).length" role="alert" class="text-sm text-red-700"><li v-for="(error, field) in classForm.errors" :key="field">{{ error }}</li></ul>
-                    <p v-if="editingId" class="text-meta text-slate-600">Tahun ajaran tetap. Tingkat kelas dengan siswa atau penugasan tidak dapat diubah.</p>
+                    <p v-if="editingId" class="text-meta text-[var(--ink-soft)]">Tahun ajaran tetap. Tingkat kelas dengan siswa atau penugasan tidak dapat diubah.</p>
                     <div class="flex justify-end gap-2 pt-3 border-t">
                         <AppButton variant="secondary" type="button" @click="showAddClassModal = false" >
                             Batal
@@ -309,13 +310,13 @@ const submitAssignHomeroom = () => {
         <div v-if="can_manage && showAssignHomeroomModal && selectedClassForHomeroom" ref="overlayRoot" role="dialog" aria-modal="true" aria-labelledby="homeroom-form-title" class="class-overlay">
             <div class="class-drawer space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 id="homeroom-form-title" class="text-lg font-bold text-slate-900">Tetapkan Wali Kelas {{ selectedClassForHomeroom.name }}</h3>
+                    <h3 id="homeroom-form-title" class="text-lg font-bold text-[var(--ink)]">Tetapkan Wali Kelas {{ selectedClassForHomeroom.name }}</h3>
                     <AppButton variant="ghost" type="button" @click="showAssignHomeroomModal = false" class="class-close" aria-label="Tutup formulir wali kelas">✕</AppButton>
                 </div>
 
                 <form @submit.prevent="submitAssignHomeroom" class="space-y-4">
                     <div>
-                        <label for="class-homeroom-teacher" class="block text-meta font-semibold text-slate-700 mb-1">Pilih guru sebagai wali kelas</label>
+                        <label for="class-homeroom-teacher" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Pilih guru sebagai wali kelas</label>
                         <select id="class-homeroom-teacher" v-model="homeroomForm.teacher_id" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Tanpa wali kelas / lepaskan penetapan</option>
                             <option v-for="t in teachers" :key="t.id" :value="String(t.id)">{{ t.name }} ({{ t.nip || 'Non-NIP' }})</option>

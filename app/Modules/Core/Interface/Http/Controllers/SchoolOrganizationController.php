@@ -12,9 +12,11 @@ use App\Shared\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -42,7 +44,7 @@ class SchoolOrganizationController extends Controller
         return Inertia::render('Public/Organization/Index', [
             'school' => [
                 'name' => $school->name,
-                'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+                'logo_url' => $school->publicBrandingUrl('logo'),
                 'theme' => $school->publicTheme(),
             ],
             'organization' => $this->presentMembers((int) $school->id, false),
@@ -52,71 +54,88 @@ class SchoolOrganizationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->authorizeManager($request);
-        $schoolId = (int) $request->user()->school_id;
-        $validated = $this->validated($request, $schoolId);
-        $photo = $validated['photo'] ?? null;
-        unset($validated['photo']);
-        $member = SchoolOrganizationMember::create([
-            ...$validated,
-            'school_id' => $schoolId,
-        ]);
-        if ($photo instanceof UploadedFile) {
-            $member->update(['photo_path' => $this->storePhoto($photo, $schoolId, (int) $member->id)]);
-        }
 
-        $this->auditLogger->log('core.school_organization.created', 'SchoolOrganizationMember', (string) $member->id, [
-            'name' => $member->name,
-            'position' => $member->position,
-        ], actor: $request->user(), schoolId: $schoolId);
+        return DB::transaction(function () use ($request): RedirectResponse {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $schoolId = (int) $request->user()->school_id;
+            $validated = $this->validated($request, $schoolId);
+            $photo = $validated['photo'] ?? null;
+            unset($validated['photo']);
+            $member = SchoolOrganizationMember::create([
+                ...$validated,
+                'school_id' => $schoolId,
+            ]);
+            if ($photo instanceof UploadedFile) {
+                $member->update(['photo_path' => $this->storePhoto($photo, $schoolId, (int) $member->id)]);
+            }
 
-        return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil ditambahkan.');
+            $this->auditLogger->log('core.school_organization.created', 'SchoolOrganizationMember', (string) $member->id, [
+                'name' => $member->name,
+                'position' => $member->position,
+            ], actor: $request->user(), schoolId: $schoolId);
+
+            return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil ditambahkan.');
+        });
     }
 
     public function update(Request $request, int $member): RedirectResponse
     {
         $this->authorizeManager($request);
-        $schoolId = (int) $request->user()->school_id;
-        $item = SchoolOrganizationMember::query()->where('school_id', $schoolId)->findOrFail($member);
-        $validated = $this->validated($request, $schoolId);
-        $photo = $validated['photo'] ?? null;
-        unset($validated['photo']);
 
-        if (($validated['parent_id'] ?? null) === $item->id || $this->isDescendant((int) ($validated['parent_id'] ?? 0), $item)) {
-            return back()->withErrors(['parent_id' => 'Atasan tidak boleh berada di bawah anggota ini.']);
-        }
+        return DB::transaction(function () use ($request, $member): RedirectResponse {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $schoolId = (int) $request->user()->school_id;
+            $item = SchoolOrganizationMember::query()->where('school_id', $schoolId)->findOrFail($member);
+            $validated = $this->validated($request, $schoolId);
+            $photo = $validated['photo'] ?? null;
+            unset($validated['photo']);
 
-        $oldPhotoPath = $item->photo_path;
-        $item->update($validated);
-        if ($photo instanceof UploadedFile) {
-            $item->update(['photo_path' => $this->storePhoto($photo, $schoolId, (int) $item->id)]);
-            if ($oldPhotoPath) {
-                Storage::disk('local')->delete($oldPhotoPath);
+            if (($validated['parent_id'] ?? null) === $item->id || $this->isDescendant((int) ($validated['parent_id'] ?? 0), $item)) {
+                return back()->withErrors(['parent_id' => 'Atasan tidak boleh berada di bawah anggota ini.']);
             }
-        }
-        $this->auditLogger->log('core.school_organization.updated', 'SchoolOrganizationMember', (string) $item->id, [
-            'name' => $item->name,
-            'position' => $item->position,
-        ], actor: $request->user(), schoolId: $schoolId);
 
-        return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil diperbarui.');
+            if ($photo instanceof UploadedFile || ($item->is_published && ! $validated['is_published'])) {
+                $this->assertPhotoNotReferenced($item, $photo instanceof UploadedFile);
+            }
+            $oldPhotoPath = $item->photo_path;
+            $item->update($validated);
+            if ($photo instanceof UploadedFile) {
+                $item->update(['photo_path' => $this->storePhoto($photo, $schoolId, (int) $item->id)]);
+                if ($oldPhotoPath) {
+                    DB::afterCommit(static fn () => Storage::disk('local')->delete($oldPhotoPath));
+                }
+            }
+            $this->auditLogger->log('core.school_organization.updated', 'SchoolOrganizationMember', (string) $item->id, [
+                'name' => $item->name,
+                'position' => $item->position,
+            ], actor: $request->user(), schoolId: $schoolId);
+
+            return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil diperbarui.');
+        });
     }
 
     public function destroy(Request $request, int $member): RedirectResponse
     {
         $this->authorizeManager($request);
-        $schoolId = (int) $request->user()->school_id;
-        $item = SchoolOrganizationMember::query()->where('school_id', $schoolId)->findOrFail($member);
-        if ($item->photo_path) {
-            Storage::disk('local')->delete($item->photo_path);
-        }
-        $item->delete();
 
-        $this->auditLogger->log('core.school_organization.deleted', 'SchoolOrganizationMember', (string) $member, [
-            'name' => $item->name,
-            'position' => $item->position,
-        ], actor: $request->user(), schoolId: $schoolId);
+        return DB::transaction(function () use ($request, $member): RedirectResponse {
+            School::query()->whereKey($request->user()->school_id)->lockForUpdate()->firstOrFail();
+            $schoolId = (int) $request->user()->school_id;
+            $item = SchoolOrganizationMember::query()->where('school_id', $schoolId)->findOrFail($member);
+            $this->assertPhotoNotReferenced($item);
+            if ($item->photo_path) {
+                $oldPath = $item->photo_path;
+                DB::afterCommit(static fn () => Storage::disk('local')->delete($oldPath));
+            }
+            $item->delete();
 
-        return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil dihapus.');
+            $this->auditLogger->log('core.school_organization.deleted', 'SchoolOrganizationMember', (string) $member, [
+                'name' => $item->name,
+                'position' => $item->position,
+            ], actor: $request->user(), schoolId: $schoolId);
+
+            return redirect()->route('core.organization.index')->with('message', 'Anggota struktur organisasi berhasil dihapus.');
+        });
     }
 
     public function photo(int $member): StreamedResponse
@@ -127,7 +146,7 @@ class SchoolOrganizationController extends Controller
             ->where('is_published', true)
             ->findOrFail($member);
 
-        return $this->imageResponse($item, ['Cache-Control' => 'public, max-age=3600']);
+        return $this->imageResponse($item, ['Cache-Control' => 'public, no-cache, must-revalidate']);
     }
 
     public function adminPhoto(Request $request, int $member): StreamedResponse
@@ -191,9 +210,28 @@ class SchoolOrganizationController extends Controller
         }, $this->tree->rowsForSchool($schoolId, ! $admin));
     }
 
+    private function assertPhotoNotReferenced(SchoolOrganizationMember $member, bool $includeHistory = true): void
+    {
+        $school = School::query()->findOrFail($member->school_id);
+        $registry = $school->publicContentRegistry();
+        if (! $includeHistory) {
+            unset($registry['revisions']);
+        }
+        $path = (string) parse_url(route('core.organization.photo', $member->id), PHP_URL_PATH);
+        if (preg_match('~'.preg_quote($path, '~').'(?=[?\x23"]|$)~', json_encode($registry, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR))) {
+            throw ValidationException::withMessages(['photo' => 'Foto masih dipakai oleh konten, draf, jadwal, atau riwayat publikasi. Ganti rujukannya sebelum menghapus atau mengganti foto.']);
+        }
+    }
+
     private function storePhoto(UploadedFile $photo, int $schoolId, int $memberId): string
     {
-        return $photo->store('school-organization/'.$schoolId.'/'.$memberId, 'local');
+        $path = $photo->store('school-organization/'.$schoolId.'/'.$memberId, 'local');
+        if (! is_string($path) || $path === '') {
+            throw ValidationException::withMessages(['photo' => 'Foto gagal disimpan. Foto lama tetap dipertahankan.']);
+        }
+        DB::afterRollBack(static fn () => Storage::disk('local')->delete($path));
+
+        return $path;
     }
 
     /** @param array<string, string> $headers */

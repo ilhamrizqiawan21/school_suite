@@ -12,10 +12,12 @@ use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use App\Shared\Audit\AuditLogger;
 use App\Shared\Files\PrivateStorageService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
@@ -32,6 +34,35 @@ class PublicPortalService
         'sop' => 'SOP Layanan',
         'dokumen_resmi' => 'Dokumen Resmi',
     ];
+
+    /** @return list<array<string, mixed>> */
+    public function publishedAchievements(int $schoolId, int $limit = 24): array
+    {
+        return SchoolNews::query()
+            ->with('photos')
+            ->where('school_id', $schoolId)
+            ->where('status', 'published')
+            ->where('is_archived', false)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->whereIn('category', ['prestasi', 'agenda'])
+            ->latest('published_at')
+            ->limit($limit)
+            ->get(['id', 'title', 'slug', 'category', 'excerpt', 'published_at'])
+            ->map(static fn (SchoolNews $item): array => [
+                'id' => $item->id,
+                'title' => $item->title,
+                'slug' => $item->slug,
+                'category' => $item->category,
+                'excerpt' => $item->excerpt,
+                'published_at' => $item->published_at?->toIso8601String(),
+                'photo_url' => $item->photos->first()
+                    ? route('core.news.photo', [$item->slug, $item->photos->first()->id])
+                    : null,
+            ])
+            ->values()
+            ->all();
+    }
 
     /** @return array{careers: array, scholarships: array} */
     public function alumniOpportunities(int $schoolId): array
@@ -71,23 +102,20 @@ class PublicPortalService
                 'address', 'phone', 'email', 'principal_name', 'website', 'timezone',
                 'about', 'principal_message', 'vision', 'mission',
             ]),
-            'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
-            'favicon_url' => $school->favicon_path ? route('branding.school', [$school, 'favicon']) : null,
+            'logo_url' => $school->publicBrandingUrl('logo'),
+            'favicon_url' => $school->publicBrandingUrl('favicon'),
             'service_hours' => data_get($school->settings, 'service_hours', 'Senin – Jumat, 07.30 – 15.00'),
             'holiday_notice' => data_get($school->settings, 'holiday_notice'),
             'emergency_contact' => data_get($school->settings, 'emergency_contact'),
             'map_url' => data_get($school->settings, 'map_url'),
             'whatsapp_url' => data_get($school->settings, 'whatsapp_url'),
             'social_links' => data_get($school->settings, 'social_links', []),
+            'theme' => $school->publicTheme(),
         ];
-
-        if (app()->isLocal() && (string) $school->npsn === '20109988' && config('public_portal.theme') !== 'madrasah' && ! request()->is('alumni*')) {
-            $profile = ['name' => 'Madrasah Contoh Nusantara'];
-        }
 
         $isDraftPreview = $this->isDraftPreviewRequested(request(), $school);
         $contentRegistry = $school->publicContentRegistry();
-        $contentBlocks = $isDraftPreview ? $contentRegistry['draft'] : $contentRegistry['published'];
+        $contentBlocks = $this->schoolScope->publicContentForRequest($school, $isDraftPreview);
 
         return [
             'profile' => $profile,
@@ -269,6 +297,7 @@ class PublicPortalService
             })
             ->orderByDesc('updated_at')
             ->get()
+            ->filter(fn (PublicDownload $item): bool => $this->storage->exists($item->file_path))
             ->map(static fn (PublicDownload $item): array => [
                 'id' => $item->id,
                 'category' => $item->category,
@@ -343,7 +372,9 @@ class PublicPortalService
             ->where('is_approved', true);
 
         $total = (int) (clone $approvedQuery)->count();
-        $average = $total > 0 ? round((float) (clone $approvedQuery)->avg('rating'), 2) : 0.0;
+        $snapshotSum = (float) (clone $approvedQuery)->whereNotNull('instrument_snapshot->score')->sum('instrument_snapshot->score');
+        $legacySum = (float) (clone $approvedQuery)->whereNull('instrument_snapshot->score')->sum('rating');
+        $average = $total > 0 ? round(($snapshotSum + $legacySum) / $total, 2) : 0.0;
 
         $feedback = (clone $approvedQuery)
             ->latest('created_at')
@@ -368,25 +399,60 @@ class PublicPortalService
         ];
     }
 
-    /**
-     * @param  array{respondent_name?: ?string, respondent_role: string, service_name: string, rating: int, comment?: ?string}  $data
-     */
     public function submitIkmSurvey(int $schoolId, array $data, ?string $ipAddress = null): PublicIkmSurvey
     {
-        return PublicIkmSurvey::query()->create([
-            'school_id' => $schoolId,
-            'respondent_name' => isset($data['respondent_name']) && trim((string) $data['respondent_name']) !== ''
-                ? trim((string) $data['respondent_name'])
-                : null,
-            'respondent_role' => $data['respondent_role'],
-            'service_name' => trim($data['service_name']),
-            'rating' => max(1, min(5, (int) $data['rating'])),
-            'comment' => isset($data['comment']) && trim((string) $data['comment']) !== ''
-                ? trim((string) $data['comment'])
-                : null,
-            'is_approved' => false,
-            'submitted_ip_hash' => $ipAddress ? hash('sha256', $schoolId.'|'.$ipAddress) : null,
-        ]);
+        return DB::transaction(function () use ($schoolId, $data, $ipAddress): PublicIkmSurvey {
+            $school = School::query()->whereKey($schoolId)->lockForUpdate()->firstOrFail();
+            $requestKey = trim((string) ($data['submission_key'] ?? ''));
+            $ipHash = $ipAddress ? hash('sha256', $schoolId.'|'.$ipAddress) : null;
+            if ($requestKey !== '') {
+                $existing = PublicIkmSurvey::query()->where('school_id', $schoolId)
+                    ->where('submitted_ip_hash', $ipHash)->where('instrument_snapshot->request_key', $requestKey)->first();
+                if ($existing !== null) {
+                    return $existing;
+                }
+            }
+            $config = $this->integrityZoneConfig($school);
+            if (! $config['is_open']) {
+                throw ValidationException::withMessages(['service' => 'Periode survei belum dibuka atau sudah ditutup.']);
+            }
+            $version = (string) ($data['instrument_version'] ?? '');
+            $legacy = $version === '' && hash_equals($this->ikmInstrument(new School)['instrument_version'], $config['instrument_version']);
+            if (! $legacy && ! hash_equals($config['instrument_version'], $version)) {
+                throw ValidationException::withMessages(['instrument_version' => 'Instrumen survei berubah. Muat ulang halaman sebelum mengirim penilaian.']);
+            }
+            $answers = $data['answers'] ?? ($legacy ? ['overall' => $data['rating'] ?? null] : []);
+            $ids = array_column($config['questions'], 'id');
+            if (! is_array($answers) || array_diff(array_keys($answers), $ids) !== []) {
+                throw ValidationException::withMessages(['answers' => 'Unsur penilaian tidak sesuai dengan instrumen survei.']);
+            }
+            $sum = 0;
+            $weight = 0;
+            foreach ($config['questions'] as $question) {
+                $answer = $answers[$question['id']] ?? null;
+                if (filter_var($answer, FILTER_VALIDATE_INT) === false || (int) $answer < 1 || (int) $answer > 5) {
+                    throw ValidationException::withMessages(['answers.'.$question['id'] => 'Pilih penilaian 1–5 untuk setiap unsur.']);
+                }
+                $factor = $config['calculation_mode'] === 'simple_mean' ? 1 : $question['weight'];
+                $sum += (int) $answer * $factor;
+                $weight += $factor;
+                $answers[$question['id']] = (int) $answer;
+            }
+            $score = round($sum / $weight, 2);
+            $snapshot = ['version' => $config['instrument_version'], 'questions' => $config['questions'],
+                'answer_labels' => $config['answer_labels'], 'period' => $config['period'],
+                'calculation_mode' => $config['calculation_mode'], 'answers' => $answers, 'score' => $score, 'request_key' => $requestKey ?: null];
+
+            return PublicIkmSurvey::query()->create([
+                'school_id' => $schoolId,
+                'respondent_name' => trim((string) ($data['respondent_name'] ?? '')) ?: null,
+                'respondent_role' => $data['respondent_role'], 'service_name' => trim($data['service_name']),
+                'rating' => (int) round($score), 'instrument_snapshot' => $snapshot,
+                'comment' => trim((string) ($data['comment'] ?? '')) ?: null,
+                'is_approved' => false,
+                'submitted_ip_hash' => $ipAddress ? hash('sha256', $schoolId.'|'.$ipAddress) : null,
+            ]);
+        });
     }
 
     public function approveIkmSurvey(int $surveyId, int $schoolId, bool $approved, ?User $actor = null): PublicIkmSurvey
@@ -512,7 +578,7 @@ class PublicPortalService
      */
     public static function defaultPublicVideos(?School $school = null): array
     {
-        $schoolName = $school?->name ?: 'Madrasah Contoh Nusantara';
+        $schoolName = $school?->name ?: 'Sekolah';
 
         return [
             [
@@ -613,7 +679,7 @@ class PublicPortalService
         $hasCustomVideos = array_key_exists('public_videos', $settings) && is_array($settings['public_videos']);
         $rawVideos = $hasCustomVideos
             ? $settings['public_videos']
-            : self::defaultPublicVideos($school);
+            : (app()->environment(['local', 'testing']) ? self::defaultPublicVideos($school) : []);
 
         $categoryLabels = [
             'Profil' => 'Profil Madrasah',
@@ -706,7 +772,27 @@ class PublicPortalService
                 : 'sop',
             'areas' => $areas !== [] ? $areas : $defaultAreas,
             'service_options' => $services !== [] ? $services : $defaultServices,
+            'config_revision' => hash('sha256', json_encode($configured, JSON_THROW_ON_ERROR)),
+            ...$this->ikmInstrument($school),
         ];
+    }
+
+    public function ikmInstrument(School $school): array
+    {
+        $configured = data_get($school->settings, 'integrity_zone', []);
+        $questions = $configured['questions'] ?? [['id' => 'overall', 'label' => 'Penilaian (1–5)', 'weight' => 1]];
+        $questions = array_map(static fn (array $q): array => ['id' => (string) $q['id'],
+            'label' => (string) $q['label'], 'weight' => (float) $q['weight']], $questions);
+        $labels = $configured['answer_labels'] ?? [5 => '5 — Sangat Baik', 4 => '4 — Baik', 3 => '3 — Cukup', 2 => '2 — Kurang', 1 => '1 — Sangat Kurang'];
+        ksort($labels);
+        $period = $configured['period'] ?? ['id' => 'all_time', 'label' => 'Seluruh periode', 'starts_at' => null, 'ends_at' => null];
+        $instrument = ['questions' => $questions, 'answer_labels' => $labels, 'period' => $period,
+            'calculation_mode' => $configured['calculation_mode'] ?? 'weighted_mean'];
+        $instrument['instrument_version'] = hash('sha256', json_encode($instrument, JSON_THROW_ON_ERROR));
+        $instrument['is_open'] = (empty($period['starts_at']) || now()->greaterThanOrEqualTo(CarbonImmutable::parse($period['starts_at'])))
+            && (empty($period['ends_at']) || now()->lessThanOrEqualTo(CarbonImmutable::parse($period['ends_at'])));
+
+        return $instrument;
     }
 
     /**

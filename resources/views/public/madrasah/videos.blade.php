@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+  $schoolName = ($profile['name'] ?? null) ?: 'Sekolah';
   $q = trim((string) request()->query('q', ''));
   $selectedCategory = trim((string) request()->query('kategori', ''));
 
@@ -104,10 +104,10 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
       <div class="max-w-3xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-wider mb-3 border border-red-500/30">
-          <i class="fa-solid fa-video text-red-400" aria-hidden="true"></i> Kanal Multimedia &amp; Video Resmi
+          <i class="fa-solid fa-video text-red-400" aria-hidden="true"></i> {{ ($contentBlocks['copy.blade_videos']['text_001'] ?? 'Kanal Multimedia & Video Resmi') }}
         </div>
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3">
-          Galeri Video &amp; Dokumentasi
+          {{ ($contentBlocks['copy.blade_videos']['text_002'] ?? 'Galeri Video & Dokumentasi') }}
         </h1>
         <p class="text-sm sm:text-base text-slate-300 leading-relaxed mb-6">
           Saksikan tayangan profil madrasah, liputan kegiatan santri, karya riset sains, kejuaraan, serta pembelajaran digital {{ $schoolName }}.
@@ -124,14 +124,14 @@
               type="search"
               name="q"
               value="{{ $q }}"
-              aria-label="Cari judul video atau topik kegiatan"
-              placeholder="Cari judul video atau topik kegiatan..."
+              aria-label="{{ ($contentBlocks['copy.blade_videos']['aria_label_015'] ?? 'Cari judul video atau topik kegiatan') }}"
+              placeholder="{{ ($contentBlocks['copy.blade_videos']['placeholder_016'] ?? 'Cari judul video atau topik kegiatan...') }}"
               class="w-full pl-11 pr-4 py-3 rounded-2xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 shadow-lg text-sm"
             >
           </div>
           <button type="submit" class="px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl transition shadow-lg flex items-center justify-center gap-2 text-sm">
             <i class="fa-solid fa-play text-xs" aria-hidden="true"></i>
-            <span>Cari Video</span>
+            <span>{{ ($contentBlocks['copy.blade_videos']['text_003'] ?? 'Cari Video') }}</span>
           </button>
         </form>
       </div>
@@ -143,7 +143,7 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-3">
       <div class="madrasah-catalog-filters text-xs font-bold">
         <span class="text-slate-500 font-semibold mr-1 flex items-center gap-1">
-          <i class="fa-solid fa-filter" aria-hidden="true"></i> Kategori:
+          <i class="fa-solid fa-filter" aria-hidden="true"></i> {{ ($contentBlocks['copy.blade_videos']['text_004'] ?? 'Kategori:') }}
         </span>
         <a
           href="/galeri/video{{ $q !== '' ? '?q=' . urlencode($q) : '' }}"
@@ -189,7 +189,7 @@
           <div>
             <div class="flex flex-wrap items-center gap-2 mb-3">
               <span class="px-3 py-1 bg-rose-600 text-white font-extrabold text-[10px] rounded-full uppercase tracking-wider">
-                <i class="fa-solid fa-star mr-1" aria-hidden="true"></i> Video Contoh
+                <i class="fa-solid fa-star mr-1" aria-hidden="true"></i> {{ ($contentBlocks['copy.blade_videos']['text_005'] ?? 'Video Contoh') }}
               </span>
               <span class="px-3 py-1 bg-white/10 text-emerald-200 font-bold text-[10px] rounded-full uppercase">
                 {{ $featured['category_label'] }}
@@ -214,7 +214,7 @@
               aria-haspopup="dialog"
               class="text-amber-300 hover:text-amber-200 font-bold flex items-center gap-1.5"
             >
-              <span>Putar di Layar Penuh</span> <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
+              <span>{{ ($contentBlocks['copy.blade_videos']['text_006'] ?? 'Putar di Layar Penuh') }}</span> <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -227,14 +227,14 @@
       <div>
         <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
           <i class="fa-solid fa-film text-kemenag-600" aria-hidden="true"></i>
-          <span>Koleksi Video &amp; Dokumentasi</span>
+          <span>{{ ($contentBlocks['copy.blade_videos']['text_007'] ?? 'Koleksi Video & Dokumentasi') }}</span>
         </h2>
         <p class="text-xs sm:text-sm text-slate-500 mt-1">
           Menampilkan {{ count($filteredVideos) }} dari total {{ count($allVideos) }} video dokumentasi madrasah.
         </p>
       </div>
       @if ($q !== '' || $selectedCategory !== '')
-        <a href="/galeri/video" class="text-xs font-bold text-kemenag-700 hover:underline">Reset Filter Video</a>
+        <a href="{{ ($contentBlocks['copy.blade_videos']['href_017'] ?? '/galeri/video') }}" class="text-xs font-bold text-kemenag-700 hover:underline">{{ ($contentBlocks['copy.blade_videos']['text_008'] ?? 'Reset Filter Video') }}</a>
       @endif
     </div>
 
@@ -280,13 +280,13 @@
               aria-haspopup="dialog"
               class="font-extrabold text-kemenag-700 hover:text-kemenag-800 flex items-center gap-1"
             >
-              <span>Putar Video</span> <i class="fa-solid fa-circle-play text-rose-600" aria-hidden="true"></i>
+              <span>{{ ($contentBlocks['copy.blade_videos']['text_009'] ?? 'Putar Video') }}</span> <i class="fa-solid fa-circle-play text-rose-600" aria-hidden="true"></i>
             </button>
           </div>
         </article>
       @empty
         <div class="col-span-full rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Tidak ditemukan video dokumentasi yang sesuai dengan kata kunci pencarian Anda.
+          {{ ($contentBlocks['copy.blade_videos']['text_010'] ?? 'Tidak ditemukan video dokumentasi yang sesuai dengan kata kunci pencarian Anda.') }}
         </div>
       @endforelse
     </div>
@@ -298,40 +298,40 @@
           <i class="fa-solid fa-photo-film" aria-hidden="true"></i>
         </div>
         <div>
-          <h3 class="text-lg sm:text-xl font-extrabold">Jelajahi Dokumentasi &amp; Publikasi Resmi Madrasah</h3>
+          <h3 class="text-lg sm:text-xl font-extrabold">{{ ($contentBlocks['copy.blade_videos']['text_011'] ?? 'Jelajahi Dokumentasi & Publikasi Resmi Madrasah') }}</h3>
           <p class="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
             Dapatkan pembaruan liputan kegiatan, galeri foto kegiatan, warta berita, dan rekam jejak prestasi siswa {{ $schoolName }}.
           </p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3 shrink-0">
-        <a href="/galeri" class="px-5 py-3 bg-white hover:bg-slate-100 text-kemenag-800 font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-2">
+        <a href="{{ ($contentBlocks['copy.blade_videos']['href_018'] ?? '/galeri') }}" class="px-5 py-3 bg-white hover:bg-slate-100 text-kemenag-800 font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-2">
           <i class="fa-solid fa-images" aria-hidden="true"></i>
-          <span>Galeri Foto</span>
+          <span>{{ ($contentBlocks['copy.blade_videos']['text_012'] ?? 'Galeri Foto') }}</span>
         </a>
-        <a href="/berita" class="px-5 py-3 bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-2">
+        <a href="{{ ($contentBlocks['copy.blade_videos']['href_019'] ?? '/berita') }}" class="px-5 py-3 bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-2">
           <i class="fa-solid fa-newspaper" aria-hidden="true"></i>
-          <span>Warta Madrasah</span>
+          <span>{{ ($contentBlocks['copy.blade_videos']['text_013'] ?? 'Warta Madrasah') }}</span>
         </a>
       </div>
     </div>
   </main>
 
   <!-- MODAL PEMUTAR VIDEO LOKAL -->
-  <div id="videoPlayerModal" role="dialog" aria-modal="true" aria-label="Pemutar video" tabindex="-1" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+  <div id="videoPlayerModal" role="dialog" aria-modal="true" aria-label="{{ ($contentBlocks['copy.blade_videos']['aria_label_020'] ?? 'Pemutar video') }}" tabindex="-1" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4">
     <div class="relative w-full max-w-4xl bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-700">
       <div class="px-6 py-4 bg-slate-900 border-b border-slate-700 flex items-center justify-between gap-3">
         <div class="flex items-center gap-2 min-w-0">
           <i class="fa-solid fa-circle-play text-accent-yellow text-lg" aria-hidden="true"></i>
-          <h3 id="videoModalTitle" class="text-white font-extrabold text-sm sm:text-base truncate">Pemutar Video</h3>
+          <h3 id="videoModalTitle" class="text-white font-extrabold text-sm sm:text-base truncate">{{ ($contentBlocks['copy.blade_videos']['text_014'] ?? 'Pemutar Video') }}</h3>
         </div>
-        <button type="button" data-close-dialog aria-label="Tutup dialog" class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 hover:bg-white flex items-center justify-center transition">
+        <button type="button" data-close-dialog aria-label="{{ ($contentBlocks['copy.blade_videos']['aria_label_021'] ?? 'Tutup dialog') }}" class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 hover:bg-white flex items-center justify-center transition">
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </div>
       <div class="bg-black">
         <video id="videoModalPlayer" class="madrasah-video-thumbnail" controls playsinline preload="none">
-          <source id="videoModalSource" src="/madrasah-theme/images/videos/tur-kampus.webm" type="video/webm">
+          <source id="videoModalSource" src="{{ ($contentBlocks['copy.blade_videos']['src_022'] ?? '/madrasah-theme/images/videos/tur-kampus.webm') }}" type="video/webm">
         </video>
       </div>
     </div>

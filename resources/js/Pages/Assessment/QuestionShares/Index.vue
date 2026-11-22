@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { computed, ref } from 'vue';
@@ -72,9 +73,9 @@ function submit() {
     });
 }
 
-function decide(id: number, status: 'accept' | 'reject') {
+async function decide(id: number, status: 'accept' | 'reject') {
     const action = status === 'accept' ? 'menerima' : 'menolak';
-    if (!window.confirm(`Yakin ingin ${action} permintaan berbagi ini?`)) return;
+    if (!await requestConfirmation(`Yakin ingin ${action} permintaan berbagi ini?`)) return;
 
     router.post(`/penilaian/berbagi-soal/${id}/${status}`, { decision_note: decision.decision_note }, {
         preserveScroll: true,
@@ -82,8 +83,8 @@ function decide(id: number, status: 'accept' | 'reject') {
     });
 }
 
-function revoke(id: number) {
-    if (!window.confirm('Cabut akses berbagi ini? Penerima akan langsung kehilangan akses ke sumber.')) return;
+async function revoke(id: number) {
+    if (!await requestConfirmation('Cabut akses berbagi ini? Penerima akan langsung kehilangan akses ke sumber.')) return;
 
     router.post(`/penilaian/berbagi-soal/${id}/cabut`, {}, { preserveScroll: true });
 }
@@ -180,7 +181,7 @@ function shareName(share: any) {
                         <select v-model="form.permission"><option value="view">Lihat isi sumber</option><option value="copy">Salin menjadi milik penerima</option><option value="edit">Ubah sumber (pemilik tetap)</option></select>
                     </label>
                     <label class="sharing-field sharing-field-wide">Catatan untuk penerima
-                        <textarea v-model="form.request_note" maxlength="2000" rows="2" placeholder="Contoh: gunakan untuk ulangan harian kelas VII-A" />
+                        <textarea v-model="form.request_note" maxlength="2000" rows="2" placeholder="gunakan untuk ulangan harian kelas VII-A" />
                     </label>
                 </div>
                 <div class="sharing-form-footer"><p>Permintaan baru aktif setelah penerima menyetujui.</p><AppButton variant="secondary" type="button" class="secondary-button" @click="showForm = false">Batal</AppButton><AppButton variant="primary" type="submit" :disabled="form.processing || !availableResources.length" class="btn btn-primary">Kirim permintaan</AppButton></div>

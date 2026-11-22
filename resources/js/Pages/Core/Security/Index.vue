@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -89,6 +90,7 @@ watchPostEffect(() => {
 });
 onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
 
+const requestBlockClose = useConfirmedDialogClose(form, () => { show.value = false; form.reset(); form.clearErrors(); });
 </script>
 
 <template>
@@ -110,7 +112,7 @@ onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
                 <nav v-if="pages" class="pagination" aria-label="Halaman riwayat"><span>{{ pages.total }} catatan · halaman {{ pages.current }} / {{ pages.last }}</span><div class="actions"><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!pages.previous" @click="go(pages.previous)">Sebelumnya</AppButton><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!pages.next" @click="go(pages.next)">Berikutnya</AppButton></div></nav>
             </section>
         </main>
-        <div v-if="show && can_manage" class="modal-backdrop" @click.self="!form.processing && (show = false)" @keydown.esc="!form.processing && (show = false)"><form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="block-title" @submit.prevent="block"><h2 id="block-title">Blokir alamat IP</h2><p>Pastikan alamat yang dimasukkan benar. Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.</p><label>Alamat IP<input v-model="form.ip_address" required maxlength="45" placeholder="Contoh: 203.0.113.10" /><small v-if="form.errors.ip_address">{{ form.errors.ip_address }}</small></label><label>Alasan<textarea v-model="form.reason" required maxlength="500" rows="3" /><small v-if="form.errors.reason">{{ form.errors.reason }}</small></label><label>Berlaku sampai (opsional)<input v-model="form.expires_at" type="datetime-local" /><small v-if="form.errors.expires_at">{{ form.errors.expires_at }}</small></label><p>Kosongkan masa berlaku untuk blokir tanpa batas waktu.</p><div class="actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="show = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan blokir' }}</AppButton></div></form></div>
+        <div v-if="show && can_manage" class="modal-backdrop" @click.self="requestBlockClose" @keydown.esc="requestBlockClose"><form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="block-title" @submit.prevent="block"><div class="admin-form-header"><h2 id="block-title">Blokir alamat IP</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup formulir blokir IP" title="Tutup formulir blokir IP" :disabled="form.processing" @click="requestBlockClose" /></div><p>Pastikan alamat yang dimasukkan benar. Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.</p><label>Alamat IP<input v-model="form.ip_address" required maxlength="45" placeholder="203.0.113.10" /><small v-if="form.errors.ip_address">{{ form.errors.ip_address }}</small></label><label>Alasan<textarea v-model="form.reason" required maxlength="500" rows="3" /><small v-if="form.errors.reason">{{ form.errors.reason }}</small></label><label>Berlaku sampai (opsional)<input v-model="form.expires_at" type="datetime-local" /><small v-if="form.errors.expires_at">{{ form.errors.expires_at }}</small></label><p>Kosongkan masa berlaku untuk blokir tanpa batas waktu.</p><div class="actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="requestBlockClose">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan blokir' }}</AppButton></div></form></div>
         <ConfirmDialog
             :open="confirmAction !== null"
             :title="confirmAction?.title ?? ''"

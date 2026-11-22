@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
 import MutationProcedure from '@/components/MutationProcedure.vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 
 interface MutationItem {
@@ -93,6 +95,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     if (status === 'rejected' || status === 'cancelled') return 'danger';
     return 'info';
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -101,16 +104,16 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
     <div class="mutasi-page" data-madrasah-service="mutation" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <section class="mutasi-hero-banner">
+        <section v-if="contentBlocks?.['mutation.hero']?.visible !== false" class="mutasi-hero-banner">
             <div class="mutasi-container mutasi-hero-inner">
                 <div class="mutasi-hero-pill">
                     <i class="fa-solid fa-right-left" aria-hidden="true"></i>
-                    <span>{{ contentBlocks?.['mutation.hero']?.badge || 'Layanan Mutasi Siswa Online' }}</span>
+                    <span>{{ contentBlocks?.['mutation.hero']?.badge ?? 'Layanan Mutasi Siswa Online' }}</span>
                 </div>
                 <h1>{{ school.name.toUpperCase() }}</h1>
-                <h4>{{ contentBlocks?.['mutation.hero']?.academic_year_label || 'Tahun Pelajaran 2026/2027' }}</h4>
+                <h4>{{ contentBlocks?.['mutation.hero']?.academic_year_label ?? 'Tahun Pelajaran 2026/2027' }}</h4>
                 <p>
-                    {{ contentBlocks?.['mutation.hero']?.description || 'Informasi alur prosedur & formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.' }}
+                    {{ contentBlocks?.['mutation.hero']?.description ?? 'Informasi alur prosedur & formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.' }}
                 </p>
                 <div class="mutasi-hero-badge-wrap">
                     <span class="mutasi-badge-status" :class="periodAvailable ? 'is-open' : 'is-closed'">
@@ -122,18 +125,18 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
         </section>
 
         <div class="mutasi-container mutasi-tabs-wrap">
-            <nav class="mutasi-tabs" aria-label="Navigasi layanan">
+            <nav class="mutasi-tabs" :aria-label="publicText('copy.vue_services_mutation', 'aria_label_023', 'Navigasi layanan')">
                 <button type="button" class="btn-mutasi-tab" :class="{ active: activeTab === 'alur' }" @click="activeTab = 'alur'">
                     <i class="fa-solid fa-sitemap" aria-hidden="true"></i>
-                    <span>Alur &amp; Persyaratan Mutasi</span>
+                    <span>{{ publicText("copy.vue_services_mutation", "text_001", "Alur & Persyaratan Mutasi") }}</span>
                 </button>
                 <button type="button" class="btn-mutasi-tab" :class="{ active: activeTab === 'form' }" @click="activeTab = 'form'">
                     <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                    <span>Formulir Permohonan Mutasi</span>
+                    <span>{{ publicText("copy.vue_services_mutation", "text_002", "Formulir Permohonan Mutasi") }}</span>
                 </button>
                 <Link href="/lacak?category=mutasi" class="btn-mutasi-tab">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <span>Cek Status Pengajuan</span>
+                    <span>{{ publicText("copy.vue_services_mutation", "text_003", "Cek Status Pengajuan") }}</span>
                 </Link>
             </nav>
         </div>
@@ -148,12 +151,12 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 v-show="activeTab === 'form'"
                 class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 mb-6"
             >
-                Periode/semester aktif belum tersedia sehingga pengajuan mutasi sementara ditutup.
+                {{ publicText("copy.vue_services_mutation", "text_004", "Periode/semester aktif belum tersedia sehingga pengajuan mutasi sementara ditutup.") }}
             </div>
 
             <div v-if="issuedReceipt" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950 space-y-1 mb-6">
-                <p class="font-bold">Permohonan Mutasi Terkirim!</p>
-                <p>Kode Mutasi: <strong class="font-mono">{{ issuedReceipt.mutation_code }}</strong> | Tiket Lacak: <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> | PIN: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
+                <p class="font-bold">{{ publicText("copy.vue_services_mutation", "text_005", "Permohonan Mutasi Terkirim!") }}</p>
+                <p>{{ publicText("copy.vue_services_mutation", "text_006", "Kode Mutasi:") }} <strong class="font-mono">{{ issuedReceipt.mutation_code }}</strong> {{ publicText("copy.vue_services_mutation", "text_007", "| Tiket Lacak:") }} <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong> {{ publicText("copy.vue_services_mutation", "text_008", "| PIN:") }} <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
             </div>
 
             <form
@@ -164,74 +167,74 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 class="card-custom mutasi-form-card space-y-5"
             >
                 <div class="form-section-header">
-                    <i class="fa-solid fa-sliders mr-2" aria-hidden="true"></i>1. Pilihan Jenis Mutasi
+                    <i class="fa-solid fa-sliders mr-2" aria-hidden="true"></i>{{ publicText("copy.vue_services_mutation", "text_009", "1. Pilihan Jenis Mutasi") }}
                 </div>
                 <fieldset class="service-choice-group">
-                    <legend class="sr-only">Jenis Mutasi</legend>
+                    <legend class="sr-only">{{ publicText("copy.vue_services_mutation", "text_010", "Jenis Mutasi") }}</legend>
                     <div class="service-tiles">
                         <label class="service-choice">
                             <input v-model="form.direction" name="mutation-direction" type="radio" value="incoming" />
-                            <span><strong>Mutasi Masuk</strong><small>Pindah dari sekolah asal</small></span>
+                            <span><strong>{{ publicText("copy.vue_services_mutation", "text_011", "Mutasi Masuk") }}</strong><small>{{ publicText("copy.vue_services_mutation", "text_012", "Pindah dari sekolah asal") }}</small></span>
                         </label>
                         <label class="service-choice">
                             <input v-model="form.direction" name="mutation-direction" type="radio" value="outgoing" />
-                            <span><strong>Mutasi Keluar</strong><small>Pindah ke sekolah tujuan</small></span>
+                            <span><strong>{{ publicText("copy.vue_services_mutation", "text_013", "Mutasi Keluar") }}</strong><small>{{ publicText("copy.vue_services_mutation", "text_014", "Pindah ke sekolah tujuan") }}</small></span>
                         </label>
                     </div>
                     <p v-if="form.errors.direction" class="text-sm text-rose-700" role="alert">{{ form.errors.direction }}</p>
                 </fieldset>
 
                 <div class="form-section-header">
-                    <i class="fa-solid fa-user-graduate mr-2" aria-hidden="true"></i>2. Data Siswa &amp; Sekolah
+                    <i class="fa-solid fa-user-graduate mr-2" aria-hidden="true"></i>{{ publicText("copy.vue_services_mutation", "text_015", "2. Data Siswa & Sekolah") }}
                 </div>
                 <div v-if="form.direction === 'outgoing'" class="grid gap-3 md:grid-cols-2">
-                    <FormField id="mts-student-id" label="Pilih Siswa Aktif" :error="form.errors.student_id" required>
+                    <FormField id="mts-student-id" :label="publicText('copy.vue_services_mutation', 'label_10001', 'Pilih Siswa Aktif')" :error="form.errors.student_id" required>
                         <select id="mts-student-id" v-model="form.student_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
                             <option v-for="s in students" :key="s.student_id" :value="s.student_id">
                                 {{ s.name }} ({{ s.nis }}) {{ s.class_group_name ? `— ${s.class_group_name}` : '' }}
                             </option>
                         </select>
                     </FormField>
-                    <FormField id="mts-dest-school" label="Sekolah Tujuan" :error="form.errors.destination_school" required>
+                    <FormField id="mts-dest-school" :label="publicText('copy.vue_services_mutation', 'label_10002', 'Sekolah Tujuan')" :error="form.errors.destination_school" required>
                         <input id="mts-dest-school" v-model="form.destination_school" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
                 </div>
 
                 <div v-else class="grid gap-3 md:grid-cols-2">
-                    <FormField id="mts-student-name" label="Nama Calon Siswa Pindahan" :error="form.errors.student_name" required>
+                    <FormField id="mts-student-name" :label="publicText('copy.vue_services_mutation', 'label_10003', 'Nama Calon Siswa Pindahan')" :error="form.errors.student_name" required>
                         <input id="mts-student-name" v-model="form.student_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
-                    <FormField id="mts-origin-school" label="Sekolah Asal" :error="form.errors.origin_school" required>
+                    <FormField id="mts-origin-school" :label="publicText('copy.vue_services_mutation', 'label_10004', 'Sekolah Asal')" :error="form.errors.origin_school" required>
                         <input id="mts-origin-school" v-model="form.origin_school" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
-                    <FormField id="mts-nisn" label="NISN">
+                    <FormField id="mts-nisn" :label="publicText('copy.vue_services_mutation', 'label_10005', 'NISN')">
                         <input id="mts-nisn" v-model="form.nisn" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
-                    <FormField id="mts-target-class" label="Kelas Tujuan (Opsional)">
+                    <FormField id="mts-target-class" :label="publicText('copy.vue_services_mutation', 'label_10006', 'Kelas Tujuan (Opsional)')">
                         <select id="mts-target-class" v-model="form.target_class_group_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                            <option value="">Ditentukan TU saat persetujuan</option>
+                            <option value="">{{ publicText("copy.vue_services_mutation", "text_016", "Ditentukan TU saat persetujuan") }}</option>
                             <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
                         </select>
                     </FormField>
                 </div>
 
                 <div class="form-section-header">
-                    <i class="fa-solid fa-file-signature mr-2" aria-hidden="true"></i>3. Kontak Pemohon &amp; Berkas Persyaratan
+                    <i class="fa-solid fa-file-signature mr-2" aria-hidden="true"></i>{{ publicText("copy.vue_services_mutation", "text_017", "3. Kontak Pemohon & Berkas Persyaratan") }}
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
-                    <FormField id="mts-applicant-name" label="Nama Pemohon / Wali">
+                    <FormField id="mts-applicant-name" :label="publicText('copy.vue_services_mutation', 'label_10007', 'Nama Pemohon / Wali')">
                         <input id="mts-applicant-name" v-model="form.applicant_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
-                    <FormField id="mts-applicant-phone" label="No. Telepon / WA">
+                    <FormField id="mts-applicant-phone" :label="publicText('copy.vue_services_mutation', 'label_10008', 'No. Telepon / WA')">
                         <input id="mts-applicant-phone" v-model="form.applicant_phone" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
                 </div>
 
-                <FormField id="mts-reason" label="Alasan &amp; Keterangan Mutasi" :error="form.errors.reason" required>
+                <FormField id="mts-reason" :label="publicText('copy.vue_services_mutation', 'label_10009', 'Alasan & Keterangan Mutasi')" :error="form.errors.reason" required>
                     <textarea id="mts-reason" v-model="form.reason" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 </FormField>
 
-                <FormField id="mts-attachments" label="Lampiran Syarat (Surat Pindah / Rapor / Pernyataan Wali)">
+                <FormField id="mts-attachments" :label="publicText('copy.vue_services_mutation', 'label_10010', 'Lampiran Syarat (Surat Pindah / Rapor / Pernyataan Wali)')">
                     <input id="mts-attachments" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" class="text-sm" @change="pickFiles" />
                 </FormField>
 
@@ -242,7 +245,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
             <div v-if="myMutations.length" class="card-custom mutasi-form-card space-y-4 mt-6">
                 <div class="form-section-header">
-                    <i class="fa-solid fa-clock-rotate-left mr-2" aria-hidden="true"></i>Riwayat Pengajuan Mutasi Anda
+                    <i class="fa-solid fa-clock-rotate-left mr-2" aria-hidden="true"></i>{{ publicText("copy.vue_services_mutation", "text_018", "Riwayat Pengajuan Mutasi Anda") }}
                 </div>
                 <div v-for="m in myMutations" :key="m.id" class="rounded-xl border border-slate-200 p-4 text-sm space-y-2">
                     <div class="flex flex-wrap items-center justify-between gap-2">
@@ -250,8 +253,8 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                         <StatusBadge :status="m.status" :tone="statusTone(m.status)" size="sm" />
                     </div>
                     <p class="text-xs text-slate-600">{{ m.reason }}</p>
-                    <p v-if="m.revision_note" class="text-xs text-amber-800">Catatan Perbaikan: {{ m.revision_note }}</p>
-                    <p v-if="m.decision_note" class="text-xs text-slate-700">Catatan Keputusan: {{ m.decision_note }}</p>
+                    <p v-if="m.revision_note" class="text-xs text-amber-800">{{ publicText("copy.vue_services_mutation", "text_9001", "Catatan Perbaikan:") }} {{ m.revision_note }}</p>
+                    <p v-if="m.decision_note" class="text-xs text-slate-700">{{ publicText("copy.vue_services_mutation", "text_9002", "Catatan Keputusan:") }} {{ m.decision_note }}</p>
                     <div class="flex flex-wrap gap-2">
                         <a
                             v-if="m.has_official_letter"
@@ -260,7 +263,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             rel="noopener noreferrer"
                             class="rounded-md bg-emerald-700 px-3 py-1 text-xs font-semibold text-white"
                         >
-                            Unduh Surat Mutasi (PDF)
+                            {{ publicText("copy.vue_services_mutation", "text_019", "Unduh Surat Mutasi (PDF)") }}
                         </a>
                         <button
                             v-if="m.status === 'needs_revision'"
@@ -268,7 +271,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                             class="rounded-md border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-800"
                             @click="startRevision(m)"
                         >
-                            Perbaiki Berkas
+                            {{ publicText("copy.vue_services_mutation", "text_020", "Perbaiki Berkas") }}
                         </button>
                     </div>
                 </div>
@@ -276,17 +279,17 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
             <form v-if="revisingItem" @submit.prevent="submitRevision" class="card-custom mutasi-form-card border border-amber-300 space-y-3 mt-6">
                 <div class="form-section-header">
-                    <i class="fa-solid fa-pen-clip mr-2" aria-hidden="true"></i>Perbaikan Permohonan {{ revisingItem.mutation_code }}
+                    <i class="fa-solid fa-pen-clip mr-2" aria-hidden="true"></i>{{ publicText("copy.vue_services_mutation", "text_9003", "Perbaikan Permohonan") }} {{ revisingItem.mutation_code }}
                 </div>
-                <FormField id="mts-rev-school" label="Nama Sekolah Asal / Tujuan">
+                <FormField id="mts-rev-school" :label="publicText('copy.vue_services_mutation', 'label_10011', 'Nama Sekolah Asal / Tujuan')">
                     <input id="mts-rev-school" v-model="revisionForm.school_name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 </FormField>
-                <FormField id="mts-rev-reason" label="Alasan Mutasi Terbaru" required>
+                <FormField id="mts-rev-reason" :label="publicText('copy.vue_services_mutation', 'label_10012', 'Alasan Mutasi Terbaru')" required>
                     <textarea id="mts-rev-reason" v-model="revisionForm.reason" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                 </FormField>
                 <div class="flex gap-2">
-                    <AppButton type="submit" :disabled="revisionForm.processing">Kirim Perbaikan</AppButton>
-                    <AppButton type="button" variant="secondary" @click="revisingItem = null">Batal</AppButton>
+                    <AppButton type="submit" :disabled="revisionForm.processing">{{ publicText("copy.vue_services_mutation", "text_021", "Kirim Perbaikan") }}</AppButton>
+                    <AppButton type="button" variant="secondary" @click="revisingItem = null">{{ publicText("copy.vue_services_mutation", "text_022", "Batal") }}</AppButton>
                 </div>
             </form>
         </main>

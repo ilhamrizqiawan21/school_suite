@@ -612,6 +612,26 @@ class ParityFoundationTest extends TestCase
                 ->has('stats.role_metrics.active_loans'));
     }
 
+    public function test_generated_document_rejects_empty_bytes_before_any_storage_or_document_row(): void
+    {
+        $docService = app(ServiceDocumentService::class);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Isi dokumen hasil tidak boleh kosong.');
+
+        try {
+            $docService->issueGeneratedDocument($this->schoolA->id, '', [
+                'document_kind' => 'letter',
+                'number_prefix' => 'PTSP',
+                'template_key' => 'ptsp_result',
+                'original_name' => 'hasil.pdf',
+            ]);
+        } finally {
+            $this->assertDatabaseCount('service_documents', 0);
+            Storage::disk('local')->assertDirectoryEmpty('schools/'.$this->schoolA->id.'/services');
+        }
+    }
+
     private function makeUser(School $school, RoleEnum $role, string $email): User
     {
         return User::query()->create([

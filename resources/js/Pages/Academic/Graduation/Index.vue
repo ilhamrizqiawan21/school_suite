@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 interface GraduationRecordItem {
     id: number;
@@ -58,7 +59,7 @@ const studentForm = useForm({
     batch_id: props.batches[0]?.id ?? ('' as string | number),
     student_id: props.students[0]?.student_id ?? ('' as string | number),
     decision: 'graduated',
-    average_score: 85,
+    average_score: null as number | null,
 });
 
 const publishForm = useForm({
@@ -107,6 +108,14 @@ const submitCollected = () => {
         onSuccess: () => { activeRecordModal.value = null; },
     });
 };
+
+const showBatchEditor = ref(false);
+const requestBatchEditorClose = useConfirmedDialogClose(batchForm, () => { showBatchEditor.value = false; batchForm.reset(); batchForm.clearErrors(); });
+watch(() => batchForm.wasSuccessful, (success) => { if (success) batchForm.defaults(); });
+
+const showGraduationStudentEditor = ref(false);
+const requestGraduationStudentEditorClose = useConfirmedDialogClose(studentForm, () => { showGraduationStudentEditor.value = false; studentForm.reset(); studentForm.clearErrors(); });
+watch(() => studentForm.wasSuccessful, (success) => { if (success) studentForm.defaults(); });
 </script>
 
 <template>
@@ -115,8 +124,8 @@ const submitCollected = () => {
 
         <div class="space-y-6">
             <div>
-                <h1 class="text-xl font-bold text-slate-900">Pengelolaan Kelulusan &amp; SKL</h1>
-                <p class="text-sm text-slate-600">Siapkan daftar lulusan, atur jadwal rilis pengumuman, sahkan pejabat penandatangan, terbitkan ulang SKL, dan catat pengambilan asli.</p>
+                <h1 class="text-xl font-bold text-[var(--ink)]">Pengelolaan Kelulusan &amp; SKL</h1>
+                <p class="text-sm text-[var(--ink-soft)]">Siapkan daftar lulusan, atur jadwal rilis pengumuman, sahkan pejabat penandatangan, terbitkan ulang SKL, dan catat pengambilan asli.</p>
             </div>
 
             <div v-if="issuedPin" class="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950">
@@ -124,61 +133,67 @@ const submitCollected = () => {
             </div>
 
             <div class="grid gap-6 lg:grid-cols-2">
-                <form v-if="canManageRecords" @submit.prevent="createBatch" class="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
-                    <h2 class="text-base font-semibold text-slate-900">Buat Batch Kelulusan</h2>
+                <AppButton v-if="canManageRecords" variant="primary" type="button" @click="showBatchEditor = true">Tambah penetapan kelulusan</AppButton>
+<Teleport to="body"><div v-if="showBatchEditor && (canManageRecords)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tambah penetapan kelulusan" @click.self="requestBatchEditorClose" @keydown.esc.stop.prevent="requestBatchEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tambah penetapan kelulusan</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tambah penetapan kelulusan" title="Tutup formulir" :disabled="batchForm.processing" @click="requestBatchEditorClose" /></header>
+<form v-if="canManageRecords" @submit.prevent="createBatch" class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-3">
+
                     <FormField id="grad-year" label="Tahun Ajaran" required>
-                        <select id="grad-year" v-model="batchForm.academic_year_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="grad-year" v-model="batchForm.academic_year_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-for="y in years" :key="y.id" :value="y.id">{{ y.name }}</option>
                         </select>
                     </FormField>
                     <FormField id="grad-title" label="Judul Batch" required>
-                        <input id="grad-title" v-model="batchForm.title" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="grad-title" v-model="batchForm.title" type="text" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="grad-release-at" label="Jadwal Rilis Publik (Opsional)">
-                        <input id="grad-release-at" v-model="batchForm.release_at" type="datetime-local" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="grad-release-at" v-model="batchForm.release_at" type="datetime-local" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <AppButton type="submit" :disabled="batchForm.processing">Simpan Batch</AppButton>
                 </form>
+</div></div></Teleport>
 
-                <form v-if="canManageRecords && batches.length" @submit.prevent="addStudent" class="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
-                    <h2 class="text-base font-semibold text-slate-900">Tambah / Perbarui Siswa di Batch</h2>
+                <AppButton v-if="canManageRecords && batches.length" variant="primary" type="button" @click="showGraduationStudentEditor = true">Tambah keputusan siswa</AppButton>
+<Teleport to="body"><div v-if="showGraduationStudentEditor && (canManageRecords && batches.length)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tambah keputusan siswa" @click.self="requestGraduationStudentEditorClose" @keydown.esc.stop.prevent="requestGraduationStudentEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tambah keputusan siswa</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tambah keputusan siswa" title="Tutup formulir" :disabled="studentForm.processing" @click="requestGraduationStudentEditorClose" /></header>
+<form v-if="canManageRecords && batches.length" @submit.prevent="addStudent" class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-3">
+
                     <FormField id="grad-rec-batch" label="Pilih Batch" required>
-                        <select id="grad-rec-batch" v-model="studentForm.batch_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="grad-rec-batch" v-model="studentForm.batch_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-for="b in batches" :key="b.id" :value="b.id">{{ b.title }}</option>
                         </select>
                     </FormField>
                     <FormField id="grad-rec-student" label="Siswa" required>
-                        <select id="grad-rec-student" v-model="studentForm.student_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="grad-rec-student" v-model="studentForm.student_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-for="s in students" :key="s.student_id" :value="s.student_id">{{ s.name }} ({{ s.nis }})</option>
                         </select>
                     </FormField>
                     <div class="grid gap-3 grid-cols-2">
                         <FormField id="grad-rec-decision" label="Status">
-                            <select id="grad-rec-decision" v-model="studentForm.decision" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <select id="grad-rec-decision" v-model="studentForm.decision" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                                 <option value="graduated">Lulus</option>
                                 <option value="not_graduated">Tidak Lulus</option>
                             </select>
                         </FormField>
                         <FormField id="grad-rec-score" label="Rata-Rata Nilai">
-                            <input id="grad-rec-score" v-model.number="studentForm.average_score" type="number" step="0.01" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <input id="grad-rec-score" v-model.number="studentForm.average_score" type="number" step="0.01" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                         </FormField>
                     </div>
                     <AppButton type="submit" :disabled="studentForm.processing">Simpan Data Siswa</AppButton>
                 </form>
+</div></div></Teleport>
             </div>
 
             <StateFeedback v-if="batches.length === 0" state="empty" title="Belum ada batch kelulusan" description="Buat batch kelulusan terlebih dahulu untuk menyiapkan SKL." />
 
-            <div v-for="batch in batches" :key="batch.id" class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+            <div v-for="batch in batches" :key="batch.id" class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h3 class="text-base font-bold text-slate-900">{{ batch.title }}</h3>
-                        <p class="text-xs text-slate-600">Rilis: {{ batch.release_at || 'Langsung saat disahkan' }} · Pengesah: {{ batch.signatory_name || '-' }}</p>
+                        <h3 class="text-base font-bold text-[var(--ink)]">{{ batch.title }}</h3>
+                        <p class="text-xs text-[var(--ink-soft)]">Rilis: {{ batch.release_at || 'Langsung saat disahkan' }} · Pengesah: {{ batch.signatory_name || '-' }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <StatusBadge :status="batch.is_released_now ? 'Rilis Publik' : (batch.is_published ? 'Terjadwal' : 'Draf')" :tone="batch.is_released_now ? 'success' : 'warning'" size="sm" />
                         <form v-if="canPublish" @submit.prevent="publish(batch.id)" class="flex items-center gap-2">
-                            <input v-model="publishForm.signatory_name" type="text" placeholder="Nama Penandatangan" class="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs" required />
+                            <input v-model="publishForm.signatory_name" type="text" placeholder="Nama Penandatangan" class="rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-xs" required />
                             <AppButton type="submit" :disabled="publishForm.processing">Sahkan &amp; Terbitkan</AppButton>
                         </form>
                     </div>
@@ -186,7 +201,7 @@ const submitCollected = () => {
 
                 <div v-if="batch.records.length" class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2">Siswa</th>
                                 <th class="px-3 py-2">No. SKL &amp; Token</th>
@@ -199,19 +214,19 @@ const submitCollected = () => {
                             <tr v-for="rec in batch.records" :key="rec.id">
                                 <td class="px-3 py-2.5">
                                     <p class="font-medium">{{ rec.student_name }}</p>
-                                    <p class="text-xs text-slate-500">{{ rec.student_nis }} / {{ rec.student_nisn || '-' }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">{{ rec.student_nis }} / {{ rec.student_nisn || '-' }}</p>
                                 </td>
                                 <td class="px-3 py-2.5 font-mono text-xs">
                                     <p>{{ rec.skl_number }}</p>
-                                    <p v-if="rec.skl_verification_token" class="text-slate-500">{{ rec.skl_verification_token }}</p>
+                                    <p v-if="rec.skl_verification_token" class="text-[var(--ink-faint)]">{{ rec.skl_verification_token }}</p>
                                 </td>
                                 <td class="px-3 py-2.5 text-right">{{ rec.average_score ?? '-' }}</td>
                                 <td class="px-3 py-2.5 text-xs">
                                     <span v-if="rec.original_collected_at">{{ rec.original_collected_by }} ({{ rec.original_collected_at }})</span>
-                                    <span v-else class="text-slate-400">Belum diambil</span>
+                                    <span v-else class="text-[var(--ink-faint)]">Belum diambil</span>
                                 </td>
                                 <td class="px-3 py-2.5 text-center space-x-2">
-                                    <a v-if="rec.skl_verification_token" :href="`/layanan/kelulusan/${rec.id}/skl.pdf`" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-700 underline">SKL PDF</a>
+                                    <AppButton icon="pdf" as="a" v-if="rec.skl_verification_token" :href="`/layanan/kelulusan/${rec.id}/skl.pdf`" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-700 underline">SKL PDF</AppButton>
                                     <button type="button" class="text-xs font-semibold text-amber-700" v-if="canPublish" @click="openRecordModal(rec, 'reissue')">Terbitkan Ulang</button>
                                     <button v-if="canManageRecords && !rec.original_collected_at" type="button" class="text-xs font-semibold text-emerald-700" @click="openRecordModal(rec, 'collect')">Catat Ambil</button>
                                 </td>
@@ -223,13 +238,13 @@ const submitCollected = () => {
         </div>
 
         <div v-if="activeRecordModal" role="dialog" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" @click.self="activeRecordModal = null" @keydown.esc="activeRecordModal = null">
-            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
-                <h3 class="text-base font-semibold text-slate-900">
+            <div class="w-full max-w-md rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-4">
+                <h3 class="text-base font-semibold text-[var(--ink)]">
                     {{ activeRecordModal.mode === 'reissue' ? `Terbitkan Ulang SKL — ${activeRecordModal.student_name}` : `Catat Pengambilan Asli — ${activeRecordModal.student_name}` }}
                 </h3>
                 <form v-if="activeRecordModal.mode === 'reissue'" class="space-y-3" @submit.prevent="submitReissue">
                     <FormField id="grad-reissue-reason" label="Alasan Penerbitan Ulang SKL" :error="reissueForm.errors.reason" required>
-                        <textarea id="grad-reissue-reason" v-model="reissueForm.reason" rows="3" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <textarea id="grad-reissue-reason" v-model="reissueForm.reason" rows="3" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <div class="flex justify-end gap-2">
                         <AppButton type="button" variant="secondary" @click="activeRecordModal = null">Tutup</AppButton>
@@ -238,10 +253,10 @@ const submitCollected = () => {
                 </form>
                 <form v-else class="space-y-3" @submit.prevent="submitCollected">
                     <FormField id="grad-collect-by" label="Nama Pengambil Dokumen Asli" :error="collectedForm.errors.collected_by" required>
-                        <input id="grad-collect-by" v-model="collectedForm.collected_by" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="grad-collect-by" v-model="collectedForm.collected_by" type="text" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="grad-collect-rel" label="Hubungan Pengambil" :error="collectedForm.errors.relation">
-                        <input id="grad-collect-rel" v-model="collectedForm.relation" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="grad-collect-rel" v-model="collectedForm.relation" type="text" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <div class="flex justify-end gap-2">
                         <AppButton type="button" variant="secondary" @click="activeRecordModal = null">Tutup</AppButton>

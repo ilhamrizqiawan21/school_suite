@@ -175,4 +175,62 @@ class PublicContentLifecycleTest extends TestCase
             ->assertOk()
             ->assertSee('Semua Video (0)');
     }
+
+    public function test_scheduled_publication_is_private_until_due_and_runs_once(): void
+    {
+        $this->freezeTime();
+        $this->save(['public_content_mode' => 'schedule', 'public_content_publish_at' => now()->addHour()->toIso8601String(),
+            'public_content_blocks' => ['home.hero' => ['headline_prefix' => 'Publikasi Terjadwal Riset Lintang']]])
+            ->assertSessionHasNoErrors();
+        $this->get('/')->assertDontSee('Publikasi Terjadwal Riset Lintang');
+        $this->artisan('school:publish-public-content')->assertSuccessful();
+        $this->get('/')->assertDontSee('Publikasi Terjadwal Riset Lintang');
+        $this->travel(61)->minutes();
+        $this->artisan('school:publish-public-content')->assertSuccessful();
+        $this->get('/')->assertSee('Publikasi Terjadwal Riset Lintang');
+        $registry = $this->school->fresh()->publicContentRegistry();
+        $this->assertNull($registry['scheduled']);
+        $this->assertSame('scheduled_publish', $registry['revisions'][1]['action']);
+        $this->artisan('school:publish-public-content')->assertSuccessful();
+        $this->assertSame($registry['revision'], $this->school->fresh()->publicContentRegistry()['revision']);
+    }
+
+    public function test_scheduled_snapshot_does_not_publish_later_draft_and_can_be_cancelled(): void
+    {
+        $this->freezeTime();
+        $this->save(['public_content_mode' => 'schedule', 'public_content_publish_at' => now()->addHour()->toIso8601String(),
+            'public_content_blocks' => ['home.hero' => ['headline_prefix' => 'Snapshot Disetujui']]])->assertSessionHasNoErrors();
+        $this->save(['public_content_mode' => 'draft', 'public_content_blocks' => ['home.hero' => ['headline_prefix' => 'Draf Rahasia Berikutnya']]])
+            ->assertSessionHasNoErrors();
+        $this->travel(61)->minutes();
+        $this->artisan('school:publish-public-content')->assertSuccessful();
+        $this->get('/')->assertSee('Snapshot Disetujui')->assertDontSee('Draf Rahasia Berikutnya');
+        $this->assertSame('Draf Rahasia Berikutnya', $this->school->fresh()->publicContentRegistry()['draft']['home.hero']['headline_prefix']);
+        $this->save(['public_content_mode' => 'schedule', 'public_content_publish_at' => now()->addHour()->toIso8601String()])->assertSessionHasNoErrors();
+        $this->save(['public_content_mode' => 'cancel_schedule'])->assertSessionHasNoErrors();
+        $this->assertNull($this->school->fresh()->publicContentRegistry()['scheduled']);
+    }
+
+    public function test_unpublish_and_archive_preserve_drafts_and_can_restore_a_published_version(): void
+    {
+        $this->save(['public_content_mode' => 'publish', 'public_content_blocks' => ['home.hero' => ['headline_prefix' => 'Konten Arsip Riset Lintang']]])
+            ->assertSessionHasNoErrors();
+        $this->get('/')->assertSee('Konten Arsip Riset Lintang');
+        $this->save(['public_content_mode' => 'unpublish'])->assertSessionHasNoErrors();
+        $this->get('/')->assertDontSee('Konten Arsip Riset Lintang');
+        $this->assertSame('Konten Arsip Riset Lintang', $this->school->fresh()->publicContentRegistry()['draft']['home.hero']['headline_prefix']);
+        $this->save(['public_content_mode' => 'archive'])->assertSessionHasNoErrors();
+        $this->assertSame('archive', $this->school->fresh()->publicContentRegistry()['status']);
+        $this->save(['public_content_mode' => 'restore', 'public_content_restore_version' => 1])->assertSessionHasNoErrors();
+        $this->get('/')->assertSee('Konten Arsip Riset Lintang');
+    }
+
+    public function test_invalid_schedule_does_not_change_profile_or_live_content(): void
+    {
+        $before = $this->school->fresh()->publicContentRegistry();
+        $this->save(['public_content_mode' => 'schedule', 'public_content_publish_at' => now()->subMinute()->toIso8601String(), 'phone' => '021000001'])
+            ->assertSessionHasErrors('public_content_publish_at');
+        $this->assertSame($before, $this->school->fresh()->publicContentRegistry());
+        $this->assertNull($this->school->fresh()->phone);
+    }
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import { usePage } from '@inertiajs/vue3';
 const validationPage = usePage();
 import AppButton from '@/components/AppButton.vue';
@@ -408,6 +409,8 @@ function openEditApplicantModal(applicant: Applicant) {
     editApplicantForm.previous_school = applicant.previous_school ?? '';
     editApplicantForm.status = applicant.status;
     editApplicantForm.notes = applicant.notes ?? '';
+    editApplicantForm.defaults();
+    editApplicantForm.clearErrors();
 }
 function closeEditApplicantModal() {
     editingApplicant.value = null;
@@ -499,6 +502,28 @@ function removeMember(member: CommitteeMember) {
         },
     };
 }
+const requestApplicantEditClose = useConfirmedDialogClose(editApplicantForm, closeEditApplicantModal);
+const requestPeriodClose = useConfirmedDialogClose(periodForm, () => { showPeriodForm.value = false; periodForm.reset(); periodForm.clearErrors(); });
+
+const showApplicantEditor = ref(false);
+const requestApplicantEditorClose = useConfirmedDialogClose(applicantForm, () => { showApplicantEditor.value = false; applicantForm.reset(); applicantForm.clearErrors(); });
+watch(() => applicantForm.wasSuccessful, (success) => { if (success) applicantForm.defaults(); });
+
+const showTrackEditor = ref(false);
+const requestTrackEditorClose = useConfirmedDialogClose(trackForm, () => { showTrackEditor.value = false; trackForm.reset(); trackForm.clearErrors(); });
+watch(() => trackForm.wasSuccessful, (success) => { if (success) trackForm.defaults(); });
+
+const showRequirementEditor = ref(false);
+const requestRequirementEditorClose = useConfirmedDialogClose(requirementForm, () => { showRequirementEditor.value = false; requirementForm.reset(); requirementForm.clearErrors(); });
+watch(() => requirementForm.wasSuccessful, (success) => { if (success) requirementForm.defaults(); });
+
+const showCriterionEditor = ref(false);
+const requestCriterionEditorClose = useConfirmedDialogClose(criterionForm, () => { showCriterionEditor.value = false; criterionForm.reset(); criterionForm.clearErrors(); });
+watch(() => criterionForm.wasSuccessful, (success) => { if (success) criterionForm.defaults(); });
+
+const showCommitteeEditor = ref(false);
+const requestCommitteeEditorClose = useConfirmedDialogClose(committeeForm, () => { showCommitteeEditor.value = false; committeeForm.reset(); committeeForm.clearErrors(); });
+watch(() => committeeForm.wasSuccessful, (success) => { if (success) committeeForm.defaults(); });
 </script>
 
 <template>
@@ -702,7 +727,9 @@ function removeMember(member: CommitteeMember) {
                     </AppButton>
                 </div>
 
-                <form v-if="can_manage_applicants && showApplicantForm" id="applicant-create-form" class="panel admissions-panel admissions-form applicant-create-form" @submit.prevent="addApplicant">
+                <AppButton v-if="can_manage_applicants && showApplicantForm" variant="primary" type="button" @click="showApplicantEditor = true">Tambah pendaftar</AppButton>
+<Teleport to="body"><div v-if="showApplicantEditor && (can_manage_applicants && showApplicantForm)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tambah pendaftar" @click.self="requestApplicantEditorClose" @keydown.esc.stop.prevent="requestApplicantEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tambah pendaftar</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tambah pendaftar" title="Tutup formulir" :disabled="applicantForm.processing" @click="requestApplicantEditorClose" /></header>
+<form v-if="can_manage_applicants && showApplicantForm" id="applicant-create-form" class="panel admissions-panel admissions-form applicant-create-form" @submit.prevent="addApplicant">
                     <div class="form-section-intro">
                         <span class="section-overline">Data baru</span>
                         <h3>Tambah pendaftar</h3>
@@ -720,6 +747,7 @@ function removeMember(member: CommitteeMember) {
                     <label class="admissions-form-wide">Catatan<textarea v-model="applicantForm.notes" rows="2" /></label>
                     <div class="admissions-form-actions admissions-form-wide"><AppButton variant="primary" class="primary-button" type="submit">Simpan pendaftar</AppButton></div>
                 </form>
+</div></div></Teleport>
 
                 <!-- SUB-TAB 2A: DAFTAR PENDAFTAR TERPADU -->
                 <section v-if="activeIntakeTab === 'all'" class="panel admissions-panel applicants-panel">
@@ -1210,15 +1238,18 @@ function removeMember(member: CommitteeMember) {
                         </AppButton>
                     </div>
 
-                    <form v-if="showTrackForm && can_manage_committee && selected_period_id" class="settings-grouped-form" @submit.prevent="addTrack">
+                    <AppButton v-if="showTrackForm && can_manage_committee && selected_period_id" variant="primary" type="button" @click="showTrackEditor = true">Tambah jalur penerimaan</AppButton>
+<Teleport to="body"><div v-if="showTrackEditor && (showTrackForm && can_manage_committee && selected_period_id)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tambah jalur penerimaan" @click.self="requestTrackEditorClose" @keydown.esc.stop.prevent="requestTrackEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tambah jalur penerimaan</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tambah jalur penerimaan" title="Tutup formulir" :disabled="trackForm.processing" @click="requestTrackEditorClose" /></header>
+<form v-if="showTrackForm && can_manage_committee && selected_period_id" class="settings-grouped-form" @submit.prevent="addTrack">
                         <h3 class="settings-group-title">Tambah Jalur Baru</h3>
                         <div class="admissions-form">
                             <label>Jalur<select v-model="trackForm.code"><option value="">Pilih jalur</option><option value="DOMISILI">Domisili</option><option value="AFIRMASI">Afirmasi</option><option value="PRESTASI">Prestasi</option><option value="MUTASI">Mutasi</option></select></label>
-                            <label>Nama jalur<input v-model="trackForm.name" required placeholder="Contoh: Jalur Prestasi" /></label>
+                            <label>Nama jalur<input v-model="trackForm.name" required placeholder="Jalur Prestasi" /></label>
                             <label>Kuota<input v-model.number="trackForm.quota" type="number" min="1" required /></label>
                         </div>
                         <div class="admissions-form-actions"><AppButton variant="primary" icon="plus" class="primary-button" type="submit">Simpan jalur</AppButton></div>
                     </form>
+</div></div></Teleport>
 
                     <div v-if="tracks.length" class="settings-tracks-split">
                         <aside class="settings-track-list" aria-label="Daftar jalur pendaftaran">
@@ -1250,11 +1281,14 @@ function removeMember(member: CommitteeMember) {
                                     <span v-for="req in selectedTrack.requirements" :key="`req-${req.id}`" class="meta-chip">{{ req.code }} · {{ req.label }}</span>
                                 </div>
                                 <p v-else class="settings-empty-note">Belum ada syarat berkas untuk jalur ini.</p>
-                                <form v-if="can_manage_committee" class="admissions-form compact-form settings-inline-add" @submit.prevent="addRequirement">
+                                <AppButton v-if="can_manage_committee" variant="primary" type="button" @click="showRequirementEditor = true">Tambah persyaratan</AppButton>
+<Teleport to="body"><div v-if="showRequirementEditor && (can_manage_committee)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tambah persyaratan" @click.self="requestRequirementEditorClose" @keydown.esc.stop.prevent="requestRequirementEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tambah persyaratan</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tambah persyaratan" title="Tutup formulir" :disabled="requirementForm.processing" @click="requestRequirementEditorClose" /></header>
+<form v-if="can_manage_committee" class="admissions-form compact-form settings-inline-add" @submit.prevent="addRequirement">
                                     <label>Kode berkas<input v-model="requirementForm.code" required placeholder="KK" /></label>
                                     <label>Nama berkas<input v-model="requirementForm.label" required placeholder="Kartu Keluarga" /></label>
                                     <AppButton variant="secondary" icon="plus" class="secondary-button" type="submit">Tambah berkas</AppButton>
                                 </form>
+</div></div></Teleport>
                             </div>
 
                             <div class="settings-detail-block">
@@ -1263,12 +1297,15 @@ function removeMember(member: CommitteeMember) {
                                     <span v-for="crit in selectedTrack.criteria" :key="`crit-${crit.id}`" class="meta-chip is-criterion">{{ crit.code }} · {{ crit.label }} (bobot {{ crit.weight }})</span>
                                 </div>
                                 <p v-else class="settings-empty-note">Belum ada kriteria penilaian untuk jalur ini.</p>
-                                <form v-if="can_manage_committee" class="admissions-form compact-form settings-inline-add" @submit.prevent="addCriterion">
+                                <AppButton v-if="can_manage_committee" variant="primary" type="button" @click="showCriterionEditor = true">Tambah kriteria seleksi</AppButton>
+<Teleport to="body"><div v-if="showCriterionEditor && (can_manage_committee)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tambah kriteria seleksi" @click.self="requestCriterionEditorClose" @keydown.esc.stop.prevent="requestCriterionEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tambah kriteria seleksi</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tambah kriteria seleksi" title="Tutup formulir" :disabled="criterionForm.processing" @click="requestCriterionEditorClose" /></header>
+<form v-if="can_manage_committee" class="admissions-form compact-form settings-inline-add" @submit.prevent="addCriterion">
                                     <label>Kode kriteria<input v-model="criterionForm.code" required placeholder="NILAI" /></label>
                                     <label>Nama kriteria<input v-model="criterionForm.label" required placeholder="Nilai seleksi" /></label>
                                     <label>Bobot<input v-model.number="criterionForm.weight" type="number" min="0.01" step="0.01" /></label>
                                     <AppButton variant="secondary" icon="plus" class="secondary-button" type="submit">Tambah kriteria</AppButton>
                                 </form>
+</div></div></Teleport>
                             </div>
                         </div>
                     </div>
@@ -1280,10 +1317,13 @@ function removeMember(member: CommitteeMember) {
                     <section class="panel admissions-panel committee-panel">
                         <div class="table-title committee-heading"><div><span class="section-overline">Penugasan tim</span><h2>Panitia & jadwal</h2><p>Atur guru yang bertugas memverifikasi berkas dan menilai pendaftar pada periode ini.</p></div><span class="committee-count"><strong>{{ committee.length }}</strong> guru ditugaskan</span></div>
                         <div class="committee-management">
-                            <form v-if="can_manage_committee" class="admissions-assign-form" @submit.prevent="assignTeacher">
+                            <AppButton v-if="can_manage_committee" variant="primary" type="button" @click="showCommitteeEditor = true">Tugaskan panitia</AppButton>
+<Teleport to="body"><div v-if="showCommitteeEditor && (can_manage_committee)" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Tugaskan panitia" @click.self="requestCommitteeEditorClose" @keydown.esc.stop.prevent="requestCommitteeEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Tugaskan panitia</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup tugaskan panitia" title="Tutup formulir" :disabled="committeeForm.processing" @click="requestCommitteeEditorClose" /></header>
+<form v-if="can_manage_committee" class="admissions-assign-form" @submit.prevent="assignTeacher">
                                 <label for="committee-teacher">Tambah anggota panitia<select id="committee-teacher" v-model="committeeForm.user_id" required><option value="">Pilih guru</option><option v-for="teacher in available_teachers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</option></select></label>
                                 <AppButton variant="primary" class="primary-button" type="submit">Tugaskan guru</AppButton>
                             </form>
+</div></div></Teleport>
                             <div class="committee-guidance"><span class="guidance-mark" aria-hidden="true">✓</span><div><strong>Peran panitia</strong><p>Anggota yang ditugaskan dapat membantu proses verifikasi dan penilaian pendaftar.</p></div></div>
                         </div>
                         <div class="committee-list-heading"><div><h3>Panitia aktif</h3><p>Daftar guru yang saat ini menerima penugasan.</p></div><span>{{ committee.length }} anggota</span></div>
@@ -1299,7 +1339,7 @@ function removeMember(member: CommitteeMember) {
             </template>
 
             <!-- 360° APPLICANT SLIDE-OVER DRAWER -->
-            <div v-if="selectedApplicant" class="applicant-drawer-overlay" role="dialog" aria-modal="true" :aria-label="`Detail pendaftar ${selectedApplicant.name}`" @click.self="closeApplicantDrawer">
+            <div v-if="selectedApplicant" class="applicant-drawer-overlay" role="dialog" aria-modal="true" :aria-label="`Detail pendaftar ${selectedApplicant.name}`" @click.self="closeApplicantDrawer" @keydown.esc.stop.prevent="closeApplicantDrawer">
                 <aside class="applicant-drawer">
                     <header class="applicant-drawer-header">
                         <div>
@@ -1420,7 +1460,7 @@ function removeMember(member: CommitteeMember) {
             </div>
 
             <!-- EDIT APPLICANT MODAL -->
-            <div v-if="editingApplicant" class="applicant-modal-overlay" role="dialog" aria-modal="true" :aria-label="`Edit data pendaftar ${editingApplicant.name}`" @click.self="closeEditApplicantModal">
+            <div v-if="editingApplicant" class="applicant-modal-overlay" role="dialog" aria-modal="true" :aria-label="`Edit data pendaftar ${editingApplicant.name}`" @click.self="requestApplicantEditClose" @keydown.esc.stop.prevent="requestApplicantEditClose">
                 <section class="applicant-modal panel admissions-panel">
                     <header class="applicant-modal-header">
                         <div>
@@ -1428,7 +1468,7 @@ function removeMember(member: CommitteeMember) {
                             <h2>Edit Data Pendaftar</h2>
                             <p>Perbarui identitas calon siswa, jalur pendaftaran, atau status verifikasi.</p>
                         </div>
-                        <AppButton variant="ghost" icon-only icon="close" type="button" class="secondary-button btn-compact" aria-label="Tutup form edit" @click="closeEditApplicantModal">Tutup ×</AppButton>
+                        <AppButton variant="ghost" icon-only icon="close" type="button" class="secondary-button btn-compact" aria-label="Tutup form edit" @click="requestApplicantEditClose">Tutup ×</AppButton>
                     </header>
                     <form class="admissions-form applicant-edit-form" @submit.prevent="submitEditApplicant">
                         <label>Periode<select v-model="editApplicantForm.period_id" required @change="changeEditApplicantPeriod"><option value="">Pilih periode</option><option v-for="period in periods" :key="period.id" :value="String(period.id)">{{ period.name }}</option></select></label>
@@ -1443,7 +1483,7 @@ function removeMember(member: CommitteeMember) {
                         <label class="admissions-form-wide">Asal sekolah<input v-model="editApplicantForm.previous_school" /></label>
                         <label class="admissions-form-wide">Catatan verifikasi<textarea v-model="editApplicantForm.notes" rows="2" /></label>
                         <div class="admissions-form-actions admissions-form-wide">
-                            <AppButton variant="secondary" type="button" class="secondary-button" @click="closeEditApplicantModal">Batal</AppButton>
+                            <AppButton variant="secondary" type="button" class="secondary-button" @click="requestApplicantEditClose">Batal</AppButton>
                             <AppButton variant="primary" :loading="editApplicantForm.processing" type="submit" class="primary-button" :disabled="editApplicantForm.processing">Simpan perubahan</AppButton>
                         </div>
                     </form>
@@ -1451,14 +1491,14 @@ function removeMember(member: CommitteeMember) {
             </div>
 
             <!-- ADD PERIOD MODAL -->
-            <div v-if="showPeriodForm && can_manage_committee" class="applicant-modal-overlay" role="dialog" aria-modal="true" aria-label="Tambah periode dan juknis" @click.self="showPeriodForm = false">
+            <div v-if="showPeriodForm && can_manage_committee" class="applicant-modal-overlay" role="dialog" aria-modal="true" aria-label="Tambah periode dan juknis" @click.self="requestPeriodClose" @keydown.esc.stop.prevent="requestPeriodClose">
                 <section class="applicant-modal panel admissions-panel">
                     <header class="applicant-modal-header">
                         <div>
                             <h2 class="settings-panel-title">Tambah Periode &amp; Juknis</h2>
                             <p class="settings-panel-subtitle">Atur identitas periode, jadwal tahapan, dan unggah dokumen juknis.</p>
                         </div>
-                        <AppButton variant="ghost" icon-only icon="close" type="button" class="secondary-button btn-compact" aria-label="Tutup form periode" @click="showPeriodForm = false">Tutup ×</AppButton>
+                        <AppButton variant="ghost" icon-only icon="close" type="button" class="secondary-button btn-compact" aria-label="Tutup form periode" @click="requestPeriodClose">Tutup ×</AppButton>
                     </header>
                     <form class="settings-grouped-form" @submit.prevent="addPeriod">
                         <div v-if="Object.keys(periodForm.errors).length" class="period-form-errors" role="alert">
@@ -1506,7 +1546,7 @@ function removeMember(member: CommitteeMember) {
                             </div>
                         </div>
                         <div class="admissions-form-actions">
-                            <AppButton variant="secondary" type="button" class="secondary-button" @click="showPeriodForm = false">Batal</AppButton>
+                            <AppButton variant="secondary" type="button" class="secondary-button" @click="requestPeriodClose">Batal</AppButton>
                             <AppButton variant="primary" icon="plus" :loading="periodForm.processing" class="primary-button" type="submit" :disabled="periodForm.processing">Simpan periode</AppButton>
                         </div>
                     </form>
@@ -1522,12 +1562,12 @@ function removeMember(member: CommitteeMember) {
             @click.self="confirmDialog = null"
             @keydown.esc="confirmDialog = null"
         >
-            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 class="text-base font-bold text-slate-900">{{ confirmDialog.title }}</h3>
-                    <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="confirmDialog = null">Tutup</button>
+            <div class="w-full max-w-md rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[var(--line)] pb-3">
+                    <h3 class="text-base font-bold text-[var(--ink)]">{{ confirmDialog.title }}</h3>
+                    <button type="button" class="text-sm text-[var(--ink-faint)] hover:text-[var(--ink-soft)]" @click="confirmDialog = null">Tutup</button>
                 </div>
-                <p class="text-sm text-slate-700">{{ confirmDialog.message }}</p>
+                <p class="text-sm text-[var(--ink-soft)]">{{ confirmDialog.message }}</p>
                 <div class="flex justify-end gap-2 pt-2">
                     <AppButton variant="secondary" type="button" class="secondary-button" @click="confirmDialog = null">Batal</AppButton>
                     <AppButton variant="primary" type="button" class="primary-button" @click="confirmDialog.onConfirm">Ya, Lanjutkan</AppButton>
@@ -1535,7 +1575,7 @@ function removeMember(member: CommitteeMember) {
             </div>
         </div>
     </AppLayout>
-    <div v-if="Object.keys(validationPage.props.errors || {}).length" role="alert" class="fixed bottom-4 right-4 z-[100] max-w-sm rounded-lg border border-red-300 bg-white p-4 text-red-800">
+    <div v-if="Object.keys(validationPage.props.errors || {}).length" role="alert" class="fixed bottom-4 right-4 z-[100] max-w-sm rounded-lg border border-red-300 bg-[var(--surface)] p-4 text-red-800">
         <strong>Periksa data yang diisi</strong>
         <ul><li v-for="(error, field) in validationPage.props.errors" :key="field">{{ error }}</li></ul>
     </div>

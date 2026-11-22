@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
@@ -18,6 +19,7 @@ const props = defineProps<{
     active: 'programs' | 'student-life' | 'contact';
 }>();
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -32,7 +34,7 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         <slot />
         <footer class="section-footer">
             <span>{{ school.name }}</span>
-            <span>Informasi resmi sekolah</span>
+            <span>{{ publicText("copy.vue_publicsectionlayout", "text_001", "Informasi resmi sekolah") }}</span>
         </footer>
     </main>
 </template>

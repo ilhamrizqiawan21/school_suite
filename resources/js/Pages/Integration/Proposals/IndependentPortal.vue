@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { ref, watch } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AppCard from '@/components/AppCard.vue';
@@ -150,6 +151,8 @@ const openLpj = (item: ProposalItem) => {
     lpjForm.lpj_realization_amount = item.lpj_realization_amount ?? item.total_requested_amount;
     lpjForm.lpj_summary = item.lpj_summary ?? '';
     lpjForm.proof_file = null;
+    lpjForm.clearErrors();
+    lpjForm.defaults();
 };
 
 const submitLpj = () => {
@@ -162,6 +165,11 @@ const submitLpj = () => {
         },
     });
 };
+
+const showIndependentProposalEditor = ref(false);
+const requestIndependentProposalEditorClose = useConfirmedDialogClose(form, () => { showIndependentProposalEditor.value = false; form.reset(); form.clearErrors(); });
+watch(() => form.wasSuccessful, (success) => { if (success) form.defaults(); });
+const requestLpjClose = useConfirmedDialogClose(lpjForm, () => { selectedLpjProposalId.value = null; lpjForm.reset(); lpjForm.clearErrors(); });
 </script>
 
 <template>
@@ -171,8 +179,8 @@ const submitLpj = () => {
         <div class="space-y-6">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Portal Proposal & LPJ Mandiri</h1>
-                    <p class="mt-1 text-sm text-slate-600">
+                    <h1 class="text-xl font-bold text-[var(--ink)]">Portal Proposal & LPJ Mandiri</h1>
+                    <p class="mt-1 text-sm text-[var(--ink-soft)]">
                         Pengajuan kegiatan mandiri siswa, OSIS/MPK, atau organisasi dengan editor RAB dinamis, susunan panitia, dan pelaporan bukti LPJ.
                     </p>
                 </div>
@@ -195,56 +203,56 @@ const submitLpj = () => {
             </div>
 
             <AppCard>
-                <form class="space-y-4 p-5" @submit.prevent="submitProposal">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                        <h2 class="text-base font-semibold text-slate-900">
-                            {{ editingProposalId ? 'Perbaiki Revisi Proposal Mandiri' : 'Formulir Proposal Kegiatan Mandiri' }}
-                        </h2>
+                <AppButton variant="primary" type="button" @click="showIndependentProposalEditor = true">Isi proposal mandiri</AppButton>
+<Teleport to="body"><div v-if="showIndependentProposalEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Isi proposal mandiri" @click.self="requestIndependentProposalEditorClose" @keydown.esc.stop.prevent="requestIndependentProposalEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Isi proposal mandiri</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup isi proposal mandiri" title="Tutup formulir" :disabled="form.processing" @click="requestIndependentProposalEditorClose" /></header>
+<form class="space-y-4 p-5" @submit.prevent="submitProposal">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] pb-3">
+
                         <AppButton v-if="editingProposalId" variant="ghost" size="sm" @click="editingProposalId = null">Batal Revisi</AppButton>
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <FormField id="ind-title" label="Judul Kegiatan" required :error="form.errors.title">
-                            <input id="ind-title" v-model="form.title" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <input id="ind-title" v-model="form.title" type="text" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                         </FormField>
 
                         <FormField id="ind-type" label="Kategori Kegiatan" required :error="form.errors.activity_type">
-                            <select id="ind-type" v-model="form.activity_type" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <select id="ind-type" v-model="form.activity_type" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                                 <option v-for="(label, key) in activityTypes" :key="key" :value="key">{{ label }}</option>
                             </select>
                         </FormField>
 
                         <FormField id="ind-org" label="Nama Pemohon / Organisasi" required :error="form.errors.organizer_name">
-                            <input id="ind-org" v-model="form.organizer_name" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <input id="ind-org" v-model="form.organizer_name" type="text" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                         </FormField>
 
                         <FormField id="ind-unit" label="Ekstrakurikuler / Unit Pendamping" :error="form.errors.organizer_unit">
-                            <input id="ind-unit" v-model="form.organizer_unit" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <input id="ind-unit" v-model="form.organizer_unit" type="text" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                         </FormField>
 
                         <FormField id="ind-start" label="Tanggal Mulai" required :error="form.errors.start_date">
-                            <input id="ind-start" v-model="form.start_date" type="date" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <input id="ind-start" v-model="form.start_date" type="date" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                         </FormField>
 
                         <FormField id="ind-end" label="Tanggal Selesai" :error="form.errors.end_date">
-                            <input id="ind-end" v-model="form.end_date" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <input id="ind-end" v-model="form.end_date" type="date" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                         </FormField>
                     </div>
 
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-slate-800">Susunan Panitia Pelaksana</span>
+                            <span class="text-sm font-semibold text-[var(--ink)]">Susunan Panitia Pelaksana</span>
                             <AppButton variant="ghost" size="sm" @click="addCommittee">+ Tambah Panitia</AppButton>
                         </div>
                         <div v-for="(member, idx) in form.committee_members" :key="idx" class="grid gap-2 md:grid-cols-5">
-                            <input v-model="member.role" type="text" placeholder="Jabatan (mis. Ketua)" class="md:col-span-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
-                            <input v-model="member.name" type="text" placeholder="Nama lengkap / kelas" class="md:col-span-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+                            <input v-model="member.role" type="text" placeholder="Jabatan (mis. Ketua)" class="md:col-span-2 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">
+                            <input v-model="member.name" type="text" placeholder="Nama lengkap / kelas" class="md:col-span-2 rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm">
                             <AppButton v-if="form.committee_members.length > 1" variant="danger" size="sm" @click="removeCommittee(idx)">Hapus</AppButton>
                         </div>
                     </div>
 
                     <FormField id="ind-purpose" label="Tujuan & Latar Belakang Kegiatan" required :error="form.errors.purpose">
-                        <textarea id="ind-purpose" v-model="form.purpose" rows="3" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <textarea id="ind-purpose" v-model="form.purpose" rows="3" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
 
                     <ProposalBudgetEditor v-model="form.budget_items" />
@@ -255,7 +263,7 @@ const submitLpj = () => {
                             id="ind-file"
                             type="file"
                             accept=".pdf,.jpg,.jpeg,.png"
-                            class="block w-full text-sm text-slate-600"
+                            class="block w-full text-sm text-[var(--ink-soft)]"
                             @change="form.attachment = ($event.target as HTMLInputElement).files?.[0] ?? null"
                         >
                     </FormField>
@@ -266,11 +274,12 @@ const submitLpj = () => {
                         </AppButton>
                     </div>
                 </form>
+</div></div></Teleport>
             </AppCard>
 
             <AppCard>
                 <div class="p-5 space-y-4">
-                    <h2 class="text-base font-semibold text-slate-900">Pelacakan Proposal & Realisasi LPJ</h2>
+                    <h2 class="text-base font-semibold text-[var(--ink)]">Pelacakan Proposal & Realisasi LPJ</h2>
 
                     <StateFeedback
                         v-if="proposals.length === 0"
@@ -283,16 +292,16 @@ const submitLpj = () => {
                         <div
                             v-for="item in proposals"
                             :key="item.id"
-                            class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3"
+                            class="rounded-xl border border-[var(--line)] bg-slate-50/70 p-4 space-y-3"
                         >
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-mono text-xs font-semibold text-slate-500">{{ item.proposal_code }}</span>
+                                        <span class="font-mono text-xs font-semibold text-[var(--ink-faint)]">{{ item.proposal_code }}</span>
                                         <StatusBadge :status="item.status" :label="`${item.status_label} (v${item.revision_number})`" :tone="toneForStatus(item.status)" />
                                     </div>
-                                    <h3 class="mt-1 text-base font-semibold text-slate-900">{{ item.title }}</h3>
-                                    <p class="text-xs text-slate-600">
+                                    <h3 class="mt-1 text-base font-semibold text-[var(--ink)]">{{ item.title }}</h3>
+                                    <p class="text-xs text-[var(--ink-soft)]">
                                         {{ item.organizer_name }} · {{ item.start_date }} · RAB Diajukan: {{ formatCurrency(item.total_requested_amount) }}
                                         <template v-if="item.lpj_realization_amount !== null && item.lpj_realization_amount !== undefined">
                                             · Realisasi LPJ: <strong>{{ formatCurrency(item.lpj_realization_amount) }}</strong>
@@ -315,40 +324,40 @@ const submitLpj = () => {
                                     v-for="(docId, idx) in item.lpj_document_ids"
                                     :key="docId"
                                     :href="`/proposal/${item.id}/dokumen/${docId}`"
-                                    class="rounded bg-white px-2 py-0.5 border border-emerald-200 font-medium hover:underline"
+                                    class="rounded bg-[var(--surface)] px-2 py-0.5 border border-emerald-200 font-medium hover:underline"
                                 >
                                     Bukti #{{ idx + 1 }}
                                 </a>
                             </div>
 
-                            <form
+                            <Teleport to="body"><div v-if="selectedLpjProposalId === item.id" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Unggah realisasi LPJ" @click.self="requestLpjClose" @keydown.esc.stop.prevent="requestLpjClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Unggah realisasi LPJ</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup unggah realisasi lpj" :disabled="lpjForm.processing" @click="requestLpjClose" /></header><form
                                 v-if="selectedLpjProposalId === item.id"
-                                class="mt-2 rounded-lg border border-emerald-200 bg-white p-4 space-y-3"
+                                class="mt-2 rounded-lg border border-emerald-200 bg-[var(--surface)] p-4 space-y-3"
                                 @submit.prevent="submitLpj"
                             >
-                                <h4 class="text-sm font-semibold text-slate-900">Pelaporan Bukti Realisasi LPJ</h4>
+                                <h4 class="text-sm font-semibold text-[var(--ink)]">Pelaporan Bukti Realisasi LPJ</h4>
                                 <div class="grid gap-3 md:grid-cols-2">
                                     <FormField id="ind-lpj-amount" label="Nominal Realisasi (Rp)" required :error="lpjForm.errors.lpj_realization_amount">
-                                        <input id="ind-lpj-amount" v-model.number="lpjForm.lpj_realization_amount" type="number" min="0" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input id="ind-lpj-amount" v-model.number="lpjForm.lpj_realization_amount" type="number" min="0" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                                     </FormField>
                                     <FormField id="ind-lpj-proof" label="Bukti Kuitansi / LPJ (PDF/JPG/PNG)" required :error="lpjForm.errors.proof_file">
                                         <input
                                             id="ind-lpj-proof"
                                             type="file"
                                             accept=".pdf,.jpg,.jpeg,.png"
-                                            class="block w-full text-sm text-slate-600"
+                                            class="block w-full text-sm text-[var(--ink-soft)]"
                                             @change="lpjForm.proof_file = ($event.target as HTMLInputElement).files?.[0] ?? null"
                                         >
                                     </FormField>
                                 </div>
                                 <FormField id="ind-lpj-summary" label="Ringkasan Pelaksanaan & Realisasi" required :error="lpjForm.errors.lpj_summary">
-                                    <textarea id="ind-lpj-summary" v-model="lpjForm.lpj_summary" rows="2" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                                    <textarea id="ind-lpj-summary" v-model="lpjForm.lpj_summary" rows="2" required class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                                 </FormField>
                                 <div class="flex justify-end gap-2">
-                                    <AppButton variant="ghost" size="sm" @click="selectedLpjProposalId = null">Batal</AppButton>
+                                    <AppButton variant="ghost" size="sm" @click="requestLpjClose">Batal</AppButton>
                                     <AppButton type="submit" variant="primary" size="sm" :loading="lpjForm.processing">Kirim LPJ</AppButton>
                                 </div>
-                            </form>
+                            </form></div></div></Teleport>
                         </div>
                     </div>
                 </div>

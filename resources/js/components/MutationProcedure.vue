@@ -6,12 +6,12 @@ const props = withDefaults(
         schoolName?: string;
     }>(),
     {
-        schoolName: 'Madrasah Contoh Nusantara',
+        schoolName: 'Sekolah',
     },
 );
 
 const direction = ref<'incoming' | 'outgoing'>('incoming');
-const displaySchoolName = computed(() => (props.schoolName || 'Madrasah Contoh Nusantara').toUpperCase());
+const displaySchoolName = computed(() => (props.schoolName || 'Sekolah').toUpperCase());
 </script>
 <template>
 <section class="reference-mutasi">

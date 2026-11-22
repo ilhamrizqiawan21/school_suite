@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref, watch } from 'vue';
 
 interface Requirement {
@@ -173,6 +175,7 @@ const statusAnnouncement = computed(() => registrationOpen.value
         ? 'Periode ' + currentPeriod.value.academic_year + ' sedang berada pada tahap ' + statusLabel(currentPeriod.value.status).toLowerCase() + '.'
         : 'Saat ini sekolah belum membuka periode penerimaan siswa baru.');
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -193,91 +196,91 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                     <span>{{ currentPeriod.name }}</span>
                     <span>{{ currentPeriod.level || school.level || 'Jenjang sekolah' }}</span>
                 </div>
-                <AppButton variant="primary" as="a" v-if="hasContact" class="primary-button" href="#kontak">Hubungi panitia</AppButton>
+                <AppButton variant="primary" as="a" v-if="hasContact" class="primary-button" :href="publicText('copy.vue_admissions_index', 'href_058', '#kontak')">{{ publicText("copy.vue_admissions_index", "text_001", "Hubungi panitia") }}</AppButton>
             </div>
-            <aside class="status-panel" aria-label="Status penerimaan siswa baru">
-                <span>Status SPMB</span>
+            <aside class="status-panel" :aria-label="publicText('copy.vue_admissions_index', 'aria_label_059', 'Status penerimaan siswa baru')">
+                <span>{{ publicText("copy.vue_admissions_index", "text_002", "Status SPMB") }}</span>
                 <strong>{{ registrationOpen ? 'Dibuka' : 'Belum dibuka' }}</strong>
                 <small>{{ currentPeriod ? 'Tahun ajaran ' + currentPeriod.academic_year : 'Belum ada periode aktif' }}</small>
             </aside>
             <div class="school-building-art" aria-hidden="true">
-                <img src="/images/school-building-hero.png" alt="" />
+                <img :src="publicText('copy.vue_admissions_index', 'src_060', '/images/school-building-hero.png')" alt="" />
             </div>
         </section>
 
         <section id="periode" class="content-section" aria-labelledby="period-title">
             <div class="section-heading">
-                <div><p class="eyebrow">Informasi SPMB</p><h2 id="period-title">Periode dan jalur penerimaan.</h2></div>
-                <p v-if="periods.length">{{ periods.length }} periode tersedia.</p>
-                <p v-else>Belum ada periode aktif.</p>
+                <div><p class="eyebrow">{{ publicText("copy.vue_admissions_index", "text_003", "Informasi SPMB") }}</p><h2 id="period-title">{{ publicText("copy.vue_admissions_index", "text_004", "Periode dan jalur penerimaan.") }}</h2></div>
+                <p v-if="periods.length">{{ periods.length }} {{ publicText("copy.vue_admissions_index", "text_9001", "periode tersedia.") }}</p>
+                <p v-else>{{ publicText("copy.vue_admissions_index", "text_005", "Belum ada periode aktif.") }}</p>
             </div>
 
             <div v-if="periods.length" class="period-grid">
                 <article v-for="period in periods" :key="period.id" class="period-card">
                     <div class="period-card-head">
-                        <div><span class="period-status" :class="statusTone(period.status)">{{ statusLabel(period.status) }}</span><h3>{{ period.name }}</h3><p>{{ period.level || school.level || 'Jenjang sekolah' }} · Tahun ajaran {{ period.academic_year }}</p></div>
-                        <strong>{{ totalQuota(period) }}<small>kuota</small></strong>
+                        <div><span class="period-status" :class="statusTone(period.status)">{{ statusLabel(period.status) }}</span><h3>{{ period.name }}</h3><p>{{ period.level || school.level || 'Jenjang sekolah' }} {{ publicText("copy.vue_admissions_index", "text_9002", "· Tahun ajaran") }} {{ period.academic_year }}</p></div>
+                        <strong>{{ totalQuota(period) }}<small>{{ publicText("copy.vue_admissions_index", "text_006", "kuota") }}</small></strong>
                     </div>
                     <div class="date-grid">
-                        <div><span>Pendaftaran</span><b>{{ formatDate(period.registration_start) }} — {{ formatDate(period.registration_end) }}</b></div>
-                        <div><span>Verifikasi</span><b>{{ formatDate(period.verification_start) }} — {{ formatDate(period.verification_end) }}</b></div>
-                        <div><span>Pengumuman</span><b>{{ formatDate(period.announcement_at) }}</b></div>
-                        <div><span>Daftar ulang</span><b>{{ formatDate(period.re_registration_start) }} — {{ formatDate(period.re_registration_end) }}</b></div>
+                        <div><span>{{ publicText("copy.vue_admissions_index", "text_007", "Pendaftaran") }}</span><b>{{ formatDate(period.registration_start) }} — {{ formatDate(period.registration_end) }}</b></div>
+                        <div><span>{{ publicText("copy.vue_admissions_index", "text_008", "Verifikasi") }}</span><b>{{ formatDate(period.verification_start) }} — {{ formatDate(period.verification_end) }}</b></div>
+                        <div><span>{{ publicText("copy.vue_admissions_index", "text_009", "Pengumuman") }}</span><b>{{ formatDate(period.announcement_at) }}</b></div>
+                        <div><span>{{ publicText("copy.vue_admissions_index", "text_010", "Daftar ulang") }}</span><b>{{ formatDate(period.re_registration_start) }} — {{ formatDate(period.re_registration_end) }}</b></div>
                     </div>
-                    <div class="track-summary"><span v-for="track in period.tracks" :key="track.id">{{ track.name }} · {{ track.quota }} kuota</span></div>
+                    <div class="track-summary"><span v-for="track in period.tracks" :key="track.id">{{ track.name }} · {{ track.quota }} {{ publicText("copy.vue_admissions_index", "text_006", "kuota") }}</span></div>
                 </article>
             </div>
-            <div v-else class="empty-state"><strong>Penerimaan siswa baru belum dibuka.</strong><p>Jadwal, jalur, dan kuota akan ditampilkan setelah sekolah menerbitkan periode penerimaan.</p></div>
+            <div v-else class="empty-state"><strong>{{ publicText("copy.vue_admissions_index", "text_011", "Penerimaan siswa baru belum dibuka.") }}</strong><p>{{ publicText("copy.vue_admissions_index", "text_012", "Jadwal, jalur, dan kuota akan ditampilkan setelah sekolah menerbitkan periode penerimaan.") }}</p></div>
         </section>
 
         <section id="portal-kandidat" class="content-section" aria-labelledby="portal-kandidat-title">
             <div class="section-heading">
                 <div>
-                    <p class="eyebrow">Layanan Kandidat SPMB</p>
-                    <h2 id="portal-kandidat-title">Pendaftaran &amp; Cek Hasil Kandidat.</h2>
+                    <p class="eyebrow">{{ publicText("copy.vue_admissions_index", "text_013", "Layanan Kandidat SPMB") }}</p>
+                    <h2 id="portal-kandidat-title">{{ publicText("copy.vue_admissions_index", "text_014", "Pendaftaran & Cek Hasil Kandidat.") }}</h2>
                 </div>
                 <div class="flex gap-2">
                     <AppButton type="button" :variant="activePortalTab === 'register' ? 'primary' : 'secondary'" @click="activePortalTab = 'register'">
-                        Formulir Daftar
+                        {{ publicText("copy.vue_admissions_index", "text_015", "Formulir Daftar") }}
                     </AppButton>
                     <AppButton type="button" :variant="activePortalTab === 'lookup' ? 'primary' : 'secondary'" @click="activePortalTab = 'lookup'">
-                        Cek Status / Hasil
+                        {{ publicText("copy.vue_admissions_index", "text_016", "Cek Status / Hasil") }}
                     </AppButton>
                 </div>
             </div>
 
             <div v-if="issuedReceipt" class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950 space-y-2">
-                <p class="font-bold">Bukti Pendaftaran PPDB Diterbitkan!</p>
-                <p>Nomor Pendaftaran: <strong class="font-mono">{{ issuedReceipt.registration_no }}</strong> | PIN Verifikasi: <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
-                <p v-if="issuedReceipt.ticket_code">Kode Pelacakan (/lacak): <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong></p>
+                <p class="font-bold">{{ publicText("copy.vue_admissions_index", "text_017", "Bukti Pendaftaran PPDB Diterbitkan!") }}</p>
+                <p>{{ publicText("copy.vue_admissions_index", "text_018", "Nomor Pendaftaran:") }} <strong class="font-mono">{{ issuedReceipt.registration_no }}</strong> {{ publicText("copy.vue_admissions_index", "text_019", "| PIN Verifikasi:") }} <strong class="font-mono">{{ issuedReceipt.verification_secret }}</strong></p>
+                <p v-if="issuedReceipt.ticket_code">{{ publicText("copy.vue_admissions_index", "text_020", "Kode Pelacakan (/lacak):") }} <strong class="font-mono">{{ issuedReceipt.ticket_code }}</strong></p>
                 <a
                     :href="`/ppdb/bukti/${issuedReceipt.id}/pdf`"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="inline-block rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white"
                 >
-                    Unduh Bukti Pendaftaran (PDF)
+                    {{ publicText("copy.vue_admissions_index", "text_021", "Unduh Bukti Pendaftaran (PDF)") }}
                 </a>
             </div>
 
             <div v-if="activePortalTab === 'register'" class="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
                 <p v-if="!registrationOpen" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                    Saat ini belum ada periode dengan status pendaftaran dibuka. Pengajuan sebelum jadwal resmi akan ditolak oleh sistem.
+                    {{ publicText("copy.vue_admissions_index", "text_022", "Saat ini belum ada periode dengan status pendaftaran dibuka. Pengajuan sebelum jadwal resmi akan ditolak oleh sistem.") }}
                 </p>
 
                 <form v-if="periods.length" @submit.prevent="submitRegistration" class="space-y-4">
                     <div class="grid gap-3 md:grid-cols-2">
                         <div>
-                            <label for="ppdb-period" class="block text-xs font-semibold uppercase text-slate-600">Periode SPMB *</label>
+                            <label for="ppdb-period" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_023", "Periode SPMB *") }}</label>
                             <select id="ppdb-period" v-model="registerForm.period_id" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
                                 <option v-for="p in periods" :key="p.id" :value="p.id">{{ p.name }} ({{ statusLabel(p.status) }})</option>
                             </select>
                             <p v-if="registerForm.errors.period_id" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.period_id }}</p>
                         </div>
                         <div>
-                            <label for="ppdb-track" class="block text-xs font-semibold uppercase text-slate-600">Jalur Pendaftaran *</label>
+                            <label for="ppdb-track" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_024", "Jalur Pendaftaran *") }}</label>
                             <select id="ppdb-track" v-model="registerForm.track_id" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                                <option v-for="t in (selectedPeriod?.tracks ?? [])" :key="t.id" :value="t.id">{{ t.name }} (Kuota: {{ t.quota }})</option>
+                                <option v-for="t in (selectedPeriod?.tracks ?? [])" :key="t.id" :value="t.id">{{ t.name }} {{ publicText("copy.vue_admissions_index", "text_9003", "(Kuota:") }} {{ t.quota }})</option>
                             </select>
                             <p v-if="registerForm.errors.track_id" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.track_id }}</p>
                         </div>
@@ -285,56 +288,56 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 
                     <div class="grid gap-3 md:grid-cols-3">
                         <div>
-                            <label for="ppdb-name" class="block text-xs font-semibold uppercase text-slate-600">Nama Lengkap Calon Siswa *</label>
+                            <label for="ppdb-name" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_025", "Nama Lengkap Calon Siswa *") }}</label>
                             <input id="ppdb-name" v-model="registerForm.name" type="text" required class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                             <p v-if="registerForm.errors.name" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.name }}</p>
                         </div>
                         <div>
-                            <label for="ppdb-nisn" class="block text-xs font-semibold uppercase text-slate-600">NISN</label>
+                            <label for="ppdb-nisn" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_026", "NISN") }}</label>
                             <input id="ppdb-nisn" v-model="registerForm.nisn" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                             <p v-if="registerForm.errors.nisn" class="mt-1 text-xs text-rose-600">{{ registerForm.errors.nisn }}</p>
                         </div>
                         <div>
-                            <label for="ppdb-gender" class="block text-xs font-semibold uppercase text-slate-600">Jenis Kelamin *</label>
+                            <label for="ppdb-gender" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_027", "Jenis Kelamin *") }}</label>
                             <select id="ppdb-gender" v-model="registerForm.gender" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                                <option value="L">Laki-laki</option>
-                                <option value="P">Perempuan</option>
+                                <option value="L">{{ publicText("copy.vue_admissions_index", "text_028", "Laki-laki") }}</option>
+                                <option value="P">{{ publicText("copy.vue_admissions_index", "text_029", "Perempuan") }}</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="grid gap-3 md:grid-cols-3">
                         <div>
-                            <label for="ppdb-birth-place" class="block text-xs font-semibold uppercase text-slate-600">Tempat Lahir</label>
+                            <label for="ppdb-birth-place" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_030", "Tempat Lahir") }}</label>
                             <input id="ppdb-birth-place" v-model="registerForm.birth_place" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                         <div>
-                            <label for="ppdb-birth-date" class="block text-xs font-semibold uppercase text-slate-600">Tanggal Lahir</label>
+                            <label for="ppdb-birth-date" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_031", "Tanggal Lahir") }}</label>
                             <input id="ppdb-birth-date" v-model="registerForm.birth_date" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                         <div>
-                            <label for="ppdb-prev-school" class="block text-xs font-semibold uppercase text-slate-600">Sekolah Asal</label>
+                            <label for="ppdb-prev-school" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_032", "Sekolah Asal") }}</label>
                             <input id="ppdb-prev-school" v-model="registerForm.previous_school" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                     </div>
 
                     <div class="grid gap-3 md:grid-cols-3">
                         <div>
-                            <label for="ppdb-parent" class="block text-xs font-semibold uppercase text-slate-600">Nama Orang Tua / Wali</label>
+                            <label for="ppdb-parent" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_033", "Nama Orang Tua / Wali") }}</label>
                             <input id="ppdb-parent" v-model="registerForm.parent_name" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                         <div>
-                            <label for="ppdb-phone" class="block text-xs font-semibold uppercase text-slate-600">No. Telepon / WA</label>
+                            <label for="ppdb-phone" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_034", "No. Telepon / WA") }}</label>
                             <input id="ppdb-phone" v-model="registerForm.parent_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                         <div>
-                            <label for="ppdb-address" class="block text-xs font-semibold uppercase text-slate-600">Alamat Domisili</label>
+                            <label for="ppdb-address" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_035", "Alamat Domisili") }}</label>
                             <input id="ppdb-address" v-model="registerForm.address" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                     </div>
 
                     <div v-if="selectedTrack?.requirements?.length" class="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-xs font-bold uppercase text-slate-600">Unggah Persyaratan Jalur</p>
+                        <p class="text-xs font-bold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_036", "Unggah Persyaratan Jalur") }}</p>
                         <div v-for="req in selectedTrack.requirements" :key="req.id ?? req.label" class="flex flex-wrap items-center justify-between gap-2 text-sm">
                             <span>{{ req.label }} <strong v-if="req.is_required" class="text-rose-600">*</strong></span>
                             <input
@@ -356,14 +359,14 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
             <div v-else class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
                 <form @submit.prevent="submitLookup" class="grid gap-3 md:grid-cols-3 items-end">
                     <div>
-                        <label for="ppdb-lookup-reg" class="block text-xs font-semibold uppercase text-slate-600">Nomor Pendaftaran</label>
-                        <input id="ppdb-lookup-reg" v-model="lookupForm.registration_no" type="text" placeholder="SPMB-2026-..." class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm uppercase" />
+                        <label for="ppdb-lookup-reg" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_037", "Nomor Pendaftaran") }}</label>
+                        <input id="ppdb-lookup-reg" v-model="lookupForm.registration_no" type="text" :placeholder="publicText('copy.vue_admissions_index', 'placeholder_061', 'SPMB-2026-...')" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm uppercase" />
                     </div>
                     <div>
-                        <label for="ppdb-lookup-pin" class="block text-xs font-semibold uppercase text-slate-600">PIN Verifikasi (6 Digit)</label>
+                        <label for="ppdb-lookup-pin" class="block text-xs font-semibold uppercase text-slate-600">{{ publicText("copy.vue_admissions_index", "text_038", "PIN Verifikasi (6 Digit)") }}</label>
                         <input id="ppdb-lookup-pin" v-model="lookupForm.pin" type="password" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm" />
                     </div>
-                    <AppButton type="submit" :disabled="lookupForm.processing">Periksa Status &amp; Hasil</AppButton>
+                    <AppButton type="submit" :disabled="lookupForm.processing">{{ publicText("copy.vue_admissions_index", "text_039", "Periksa Status & Hasil") }}</AppButton>
                 </form>
 
                 <div v-if="lookupResult && !lookupResult.authorized" class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
@@ -382,55 +385,55 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                             rel="noopener noreferrer"
                             class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
                         >
-                            Unduh Bukti (PDF)
+                            {{ publicText("copy.vue_admissions_index", "text_040", "Unduh Bukti (PDF)") }}
                         </a>
                     </div>
 
-                    <p>Status Saat Ini: <strong class="uppercase">{{ lookupResult.applicant.status }}</strong></p>
+                    <p>{{ publicText("copy.vue_admissions_index", "text_041", "Status Saat Ini:") }} <strong class="uppercase">{{ lookupResult.applicant.status }}</strong></p>
 
                     <div v-if="!lookupResult.applicant.is_result_released" class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
-                        Hasil seleksi belum dibuka sebelum jadwal pengumuman resmi ({{ lookupResult.applicant.announcement_at || 'menunggu penetapan panitia' }}).
+                        {{ publicText("copy.vue_admissions_index", "text_9004", "Hasil seleksi belum dibuka sebelum jadwal pengumuman resmi (") }}{{ lookupResult.applicant.announcement_at || 'menunggu penetapan panitia' }}).
                     </div>
                     <div v-else class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-950">
-                        Keputusan Seleksi: <strong class="uppercase">{{ lookupResult.applicant.selection_decision || 'Dalam Peninjauan' }}</strong>
-                        <span v-if="lookupResult.applicant.selection_rank"> (Peringkat #{{ lookupResult.applicant.selection_rank }})</span>
+                        {{ publicText("copy.vue_admissions_index", "text_042", "Keputusan Seleksi:") }} <strong class="uppercase">{{ lookupResult.applicant.selection_decision || 'Dalam Peninjauan' }}</strong>
+                        <span v-if="lookupResult.applicant.selection_rank"> {{ publicText("copy.vue_admissions_index", "text_9005", "(Peringkat #") }}{{ lookupResult.applicant.selection_rank }})</span>
                     </div>
 
                     <form v-if="lookupResult.applicant.status === 'needs_revision'" @submit.prevent="submitRevision" class="rounded-lg border border-amber-300 bg-white p-4 space-y-3">
-                        <p class="font-semibold text-amber-900">Perlu Perbaikan Data/Berkas: {{ lookupResult.applicant.revision_notes }}</p>
+                        <p class="font-semibold text-amber-900">{{ publicText("copy.vue_admissions_index", "text_9006", "Perlu Perbaikan Data/Berkas:") }} {{ lookupResult.applicant.revision_notes }}</p>
                         <div class="grid gap-3 md:grid-cols-2">
-                            <input v-model="revisionForm.name" type="text" placeholder="Nama lengkap" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-                            <input v-model="revisionForm.previous_school" type="text" placeholder="Sekolah asal" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <input v-model="revisionForm.name" type="text" :placeholder="publicText('copy.vue_admissions_index', 'placeholder_062', 'Nama lengkap')" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                            <input v-model="revisionForm.previous_school" type="text" :placeholder="publicText('copy.vue_admissions_index', 'placeholder_063', 'Sekolah asal')" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </div>
                         <div v-for="req in lookupResult.applicant.requirements" :key="req.id" class="flex items-center justify-between gap-2 text-xs">
                             <span>{{ req.label }}</span>
                             <input type="file" accept=".pdf,.jpg,.jpeg,.png" @change="onRevisionDocPick(req.id, $event)" />
                         </div>
-                        <AppButton type="submit" :disabled="revisionForm.processing">Kirim Perbaikan Berkas</AppButton>
+                        <AppButton type="submit" :disabled="revisionForm.processing">{{ publicText("copy.vue_admissions_index", "text_043", "Kirim Perbaikan Berkas") }}</AppButton>
                     </form>
 
                     <form v-if="lookupResult.applicant.can_re_register && !lookupResult.applicant.re_registration_submitted" @submit.prevent="submitReRegistration" class="rounded-lg border border-emerald-300 bg-white p-4 space-y-3">
-                        <p class="font-semibold text-emerald-900">Selamat! Anda dinyatakan DITERIMA. Ajukan konfirmasi daftar ulang:</p>
-                        <input v-model="reRegisterForm.notes" type="text" placeholder="Catatan daftar ulang (opsional)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-                        <AppButton type="submit" :disabled="reRegisterForm.processing">Konfirmasi Daftar Ulang</AppButton>
+                        <p class="font-semibold text-emerald-900">{{ publicText("copy.vue_admissions_index", "text_044", "Selamat! Anda dinyatakan DITERIMA. Ajukan konfirmasi daftar ulang:") }}</p>
+                        <input v-model="reRegisterForm.notes" type="text" :placeholder="publicText('copy.vue_admissions_index', 'placeholder_064', 'Catatan daftar ulang (opsional)')" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <AppButton type="submit" :disabled="reRegisterForm.processing">{{ publicText("copy.vue_admissions_index", "text_045", "Konfirmasi Daftar Ulang") }}</AppButton>
                     </form>
                 </div>
             </div>
         </section>
 
         <section id="alur" class="content-section admissions-flow" aria-labelledby="flow-title">
-            <div class="section-heading"><div><p class="eyebrow">Tahapan pendaftaran</p><h2 id="flow-title">Ikuti proses penerimaan siswa baru.</h2></div></div>
+            <div class="section-heading"><div><p class="eyebrow">{{ publicText("copy.vue_admissions_index", "text_046", "Tahapan pendaftaran") }}</p><h2 id="flow-title">{{ publicText("copy.vue_admissions_index", "text_047", "Ikuti proses penerimaan siswa baru.") }}</h2></div></div>
             <div class="flow-grid">
-                <article><span>01</span><h3>Siapkan berkas</h3><p>Periksa dokumen yang diminta sesuai jalur pendaftaran.</p></article>
-                <article><span>02</span><h3>Daftarkan diri</h3><p>Ikuti arahan panitia sekolah selama periode pendaftaran.</p></article>
-                <article><span>03</span><h3>Verifikasi & seleksi</h3><p>Berkas dan kriteria diperiksa sesuai juknis yang berlaku.</p></article>
-                <article><span>04</span><h3>Pengumuman & daftar ulang</h3></article>
+                <article><span>01</span><h3>{{ publicText("copy.vue_admissions_index", "text_048", "Siapkan berkas") }}</h3><p>{{ publicText("copy.vue_admissions_index", "text_049", "Periksa dokumen yang diminta sesuai jalur pendaftaran.") }}</p></article>
+                <article><span>02</span><h3>{{ publicText("copy.vue_admissions_index", "text_050", "Daftarkan diri") }}</h3><p>{{ publicText("copy.vue_admissions_index", "text_051", "Ikuti arahan panitia sekolah selama periode pendaftaran.") }}</p></article>
+                <article><span>03</span><h3>{{ publicText("copy.vue_admissions_index", "text_052", "Verifikasi & seleksi") }}</h3><p>{{ publicText("copy.vue_admissions_index", "text_053", "Berkas dan kriteria diperiksa sesuai juknis yang berlaku.") }}</p></article>
+                <article><span>04</span><h3>{{ publicText("copy.vue_admissions_index", "text_054", "Pengumuman & daftar ulang") }}</h3></article>
             </div>
         </section>
 
         <footer id="kontak" class="public-footer">
-            <div><p class="eyebrow">Kontak SPMB</p><h2>Hubungi panitia penerimaan.</h2></div>
-            <div class="contact-list"><p v-if="school.address">{{ school.address }}</p><a v-if="school.phone" :href="`tel:${school.phone}`">{{ school.phone }}</a><a v-if="school.email" :href="`mailto:${school.email}`">{{ school.email }}</a><p v-if="!hasContact">Hubungi sekretariat sekolah untuk informasi pendaftaran.</p></div>
+            <div><p class="eyebrow">{{ publicText("copy.vue_admissions_index", "text_055", "Kontak SPMB") }}</p><h2>{{ publicText("copy.vue_admissions_index", "text_056", "Hubungi panitia penerimaan.") }}</h2></div>
+            <div class="contact-list"><p v-if="school.address">{{ school.address }}</p><a v-if="school.phone" :href="`tel:${school.phone}`">{{ school.phone }}</a><a v-if="school.email" :href="`mailto:${school.email}`">{{ school.email }}</a><p v-if="!hasContact">{{ publicText("copy.vue_admissions_index", "text_057", "Hubungi sekretariat sekolah untuk informasi pendaftaran.") }}</p></div>
         </footer>
     </main>
 </template>

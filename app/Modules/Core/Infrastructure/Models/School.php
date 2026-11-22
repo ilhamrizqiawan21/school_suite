@@ -13,8 +13,6 @@ class School extends Model
 {
     use HasFactory;
 
-    private const PUBLIC_THEME_COLORS = ['#3157a4', '#277450', '#7255ae', '#b87818', '#b64a42'];
-
     /** @var array<string, array{label: string, description: string, primary: string, accent: string, surface: string, ink: string, muted: string}> */
     private const PUBLIC_THEME_PRESETS = [
         'editorial' => [
@@ -113,6 +111,15 @@ class School extends Model
     }
 
     /** @return array<string, mixed> */
+    public function adminTheme(): array
+    {
+        return array_replace([
+            'primary' => '#3157a4', 'accent' => '#7255ae', 'success' => '#277450',
+            'warning' => '#80500d', 'danger' => '#a82f43',
+            'font' => 'system', 'radius' => 8, 'density' => 'comfortable', 'navigation_default' => 'active',
+        ], is_array(data_get($this->settings, 'admin_theme')) ? $this->settings['admin_theme'] : []);
+    }
+
     public function publicTheme(): array
     {
         $settings = $this->settings ?? [];
@@ -127,7 +134,7 @@ class School extends Model
         // The school's identity color is the source of truth for the public
         // primary and accent colors, even when a public visual preset is selected.
         // Presets still supply the supporting surface, ink, and muted tones.
-        if (in_array($legacyPrimary, self::PUBLIC_THEME_COLORS, true)) {
+        if (is_string($legacyPrimary) && preg_match('/^#[0-9a-fA-F]{6}$/', $legacyPrimary) === 1) {
             $theme['primary'] = $legacyPrimary;
         }
 
@@ -140,6 +147,7 @@ class School extends Model
 
         return [
             'preset' => $preset,
+            'use_identity_color' => (bool) data_get($publicTheme, 'use_identity_color', false),
             'primary' => $theme['primary'],
             'accent' => $theme['accent'],
             'surface' => $theme['surface'],
@@ -162,32 +170,73 @@ class School extends Model
         ];
     }
 
-    /**
-     * Return canonical public content blocks with draft/published separation,
-     * stable section IDs, and revision history (AP-04.01..AP-04.18).
-     *
-     * @return array{
-     *     published: array<string, array<string, mixed>>,
-     *     draft: array<string, array<string, mixed>>,
-     *     revisions: list<array<string, mixed>>
-     * }
-     */
+    public function publicBrandingUrl(string $kind): ?string
+    {
+        if (! in_array($kind, ['logo', 'favicon'], true)) {
+            throw new \InvalidArgumentException('Unsupported branding asset.');
+        }
+        $path = $kind === 'logo' ? $this->logo_path : $this->favicon_path;
+
+        return $path ? route('branding.school', [$this, $kind, 'v' => substr(hash('sha256', $path), 0, 12)]) : null;
+    }
+
     public function publicContentRegistry(): array
     {
-        $settings = is_array($this->settings) ? $this->settings : [];
-        $content = is_array($settings['public_content'] ?? null) ? $settings['public_content'] : [];
+        $content = data_get($this->settings, 'public_content', []);
+        $content = is_array($content) ? $content : [];
         $defaults = self::defaultPublicContentBlocks($this);
+        $published = $defaults;
+        foreach (is_array($content['published'] ?? null) ? $content['published'] : [] as $id => $fields) {
+            if (isset($defaults[$id]) && is_array($fields)) {
+                $published[$id] = array_replace($defaults[$id], $fields);
+            }
+        }
+        $draft = $published;
+        foreach (is_array($content['draft'] ?? null) ? $content['draft'] : [] as $id => $fields) {
+            if (isset($defaults[$id]) && is_array($fields)) {
+                $draft[$id] = array_replace($published[$id], $fields);
+            }
+        }
 
-        $published = array_replace_recursive($defaults, is_array($content['published'] ?? null) ? $content['published'] : []);
-        $draft = array_replace_recursive($published, is_array($content['draft'] ?? null) ? $content['draft'] : []);
-        $revisions = is_array($content['revisions'] ?? null) ? array_values($content['revisions']) : [];
+        if (! app()->environment(['local', 'testing'])) {
+            $published['shell.options']['hide_demo_fallbacks'] = true;
+            $draft['shell.options']['hide_demo_fallbacks'] = true;
+        }
 
         return [
-            'published' => $published,
-            'draft' => $draft,
+            'published' => $published, 'draft' => $draft,
             'revision' => (int) ($content['revision'] ?? 0),
-            'revisions' => $revisions,
+            'revisions' => is_array($content['revisions'] ?? null) ? array_values($content['revisions']) : [],
+            'scheduled' => is_array($content['scheduled'] ?? null) ? $content['scheduled'] : null,
+            'status' => (string) ($content['status'] ?? 'published'),
         ];
+    }
+
+    public function publishedPublicContentBlocks(): array
+    {
+        return array_map(
+            static fn (array $block): array => ($block['visible'] ?? true) === false
+                ? ['id' => $block['id'], 'visible' => false] : $block,
+            $this->publicContentRegistry()['published'],
+        );
+    }
+
+    public function compactPublicContentBlocks(array $blocks): array
+    {
+        $defaults = self::defaultPublicContentBlocks($this);
+        foreach ($blocks as $id => $fields) {
+            if (! str_starts_with($id, 'copy.')) {
+                continue;
+            }
+            $changes = array_filter($fields, fn ($value, $field) => $field !== 'id' && $value !== ($defaults[$id][$field] ?? null), ARRAY_FILTER_USE_BOTH);
+            if ($changes === []) {
+                unset($blocks[$id]);
+            } else {
+                $blocks[$id] = ['id' => $id, ...$changes];
+            }
+        }
+
+        return $blocks;
     }
 
     /**
@@ -198,9 +247,9 @@ class School extends Model
     public static function defaultPublicContentBlocks(?self $school = null): array
     {
         $schoolName = $school?->name ?: 'Madrasah';
-        $accreditation = $school?->accreditation ?: 'A';
+        $accreditation = $school?->accreditation ?: 'belum diisi';
 
-        return [
+        $blocks = [
             'home.hero' => [
                 'id' => 'home.hero',
                 'visible' => true,
@@ -218,6 +267,11 @@ class School extends Model
                 'cta_ptsp_label' => 'PTSP Online',
                 'cta_lapor_label' => 'Siap Lapor',
                 'cta_lacak_label' => 'Lacak Berkas',
+                'cta_ppdb_icon' => 'fa-solid fa-graduation-cap',
+                'cta_ptsp_icon' => 'fa-solid fa-stamp',
+                'cta_lapor_icon' => 'fa-solid fa-shield-heart',
+                'cta_lacak_icon' => 'fa-solid fa-magnifying-glass',
+                'integrity_commitment' => '100%',
             ],
             'home.welcome' => [
                 'id' => 'home.welcome',
@@ -245,12 +299,40 @@ class School extends Model
                 'title' => 'Layanan Terpadu Satu Pintu (PTSP)',
                 'subtitle' => 'Permudah pengurusan administrasi siswa, alumni, dan orang tua secara daring tanpa antre.',
             ],
+            'home.notice' => [
+                'id' => 'home.notice',
+                'visible' => false,
+                'eyebrow' => 'Pengumuman sekolah',
+                'title' => 'Informasi terbaru untuk warga sekolah',
+                'message' => 'Gunakan bagian ini untuk menyampaikan pengumuman publik yang singkat dan terjadwal.',
+                'variant' => 'info',
+                'link_label' => '',
+                'link_url' => '',
+                'dismissible' => true,
+                'starts_at' => '',
+                'ends_at' => '',
+            ],
             'home.programs' => [
                 'id' => 'home.programs',
                 'visible' => true,
                 'eyebrow' => 'Pilihan Konsentrasi Belajar',
                 'title' => 'Peminatan & Kurikulum Merdeka',
                 'subtitle' => 'Memberikan ruang eksplorasi bakat, minat, dan proyek penguatan profil pelajar rahmatan lil \'alamin.',
+            ],
+            'school.programs' => [
+                'id' => 'school.programs',
+                'visible' => true,
+                'title' => 'Program dan fasilitas pilihan',
+                'subtitle' => 'Informasi program, ruang belajar, dan kegiatan yang diterbitkan sekolah.',
+                'items' => [['id' => 'program-item-1', 'title' => '', 'description' => '', 'image_url' => '', 'link' => '']],
+            ],
+            'school.student_life' => [
+                'id' => 'school.student_life',
+                'visible' => true,
+                'title' => 'Kegiatan dan pembinaan siswa',
+                'subtitle' => 'Informasi kesiswaan yang telah disetujui untuk dipublikasikan.',
+                'show_student_names' => false,
+                'items' => [['id' => 'student-life-item-1', 'title' => '', 'description' => '', 'image_url' => '', 'link' => '']],
             ],
             'home.facilities' => [
                 'id' => 'home.facilities',
@@ -261,12 +343,14 @@ class School extends Model
             'home.news' => [
                 'id' => 'home.news',
                 'visible' => true,
+                'empty_message' => 'Belum ada konten yang diterbitkan.',
                 'eyebrow' => 'Kabar Madrasah',
                 'title' => 'Warta & Agenda Terkini',
             ],
             'home.achievements' => [
                 'id' => 'home.achievements',
                 'visible' => true,
+                'empty_message' => 'Belum ada prestasi yang diterbitkan.',
                 'eyebrow' => 'Tradisi Juara Siswa Banua',
                 'title' => 'Prestasi Gemilang Siswa',
                 'subtitle' => 'Capaian membanggakan siswa dalam bidang sains riset, seni kaligrafi, tilawah Al-Qur\'an, olahraga, dan keagamaan.',
@@ -305,7 +389,7 @@ class School extends Model
             'shell.options' => [
                 'id' => 'shell.options',
                 'visible' => true,
-                'hide_demo_fallbacks' => false,
+                'hide_demo_fallbacks' => ! app()->environment(['local', 'testing']),
                 'ptsp_ticker_text' => 'Kini pengurusan permohonan surat keterangan aktif, legalisir, mutasi siswa, dan rekomendasi beasiswa dapat diajukan secara online melalui portal PTSP.',
             ],
             'shell.footer' => [
@@ -318,6 +402,7 @@ class School extends Model
                 'id' => 'ptsp.hero',
                 'visible' => true,
                 'label' => 'PTSP Digital & Layanan Akademik',
+                'use_custom_title' => false,
                 'title' => sprintf('Pelayanan Terpadu Satu Pintu %s', $schoolName),
                 'subtitle' => 'Pengajuan surat keterangan, rekomendasi, serta layanan administrasi masyarakat & wali siswa secara terpadu.',
                 'about_title' => 'Sekilas Tentang PTSP',
@@ -419,6 +504,8 @@ class School extends Model
                 'placeholder' => 'Contoh: PTSP-2026..., IZN-2026..., MUT-2026..., LEG-2026..., ADU-2026...',
             ],
         ];
+
+        return array_replace($blocks, config('public_content.blocks', []));
     }
 
     /**

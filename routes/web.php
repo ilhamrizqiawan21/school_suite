@@ -269,8 +269,8 @@ Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard
                 ->whereDate('end_date', '>=', now()->toDateString())
                 ->count();
         }
-        if ($user->hasRole('bk')) {
-            $roleMetrics['open_bk_cases'] = DB::table('bk_discipline_cases')
+        if ($user->hasRole('counselor')) {
+            $roleMetrics['open_bk_cases'] = DB::table('student_incidents')
                 ->where('school_id', $schoolId)
                 ->whereIn('status', ['reported', 'investigating'])
                 ->count();
@@ -284,6 +284,7 @@ Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard
                 ->where('school_id', $schoolId)
                 ->where('status', 'borrowed')
                 ->count();
+            $roleMetrics['library_reservations'] = DB::table('library_loans')->where('school_id', $schoolId)->where('status', 'reserved')->count();
             $roleMetrics['pending_procurements'] = DB::table('library_procurement_requests')
                 ->where('school_id', $schoolId)
                 ->where('status', 'submitted')
@@ -294,6 +295,23 @@ Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard
                 ->where('school_id', $schoolId)
                 ->where('applicant_user_id', $user->id)
                 ->count();
+        }
+        if ($user->hasRole('task_force')) {
+            $roleMetrics['assigned_complaints_open'] = DB::table('complaint_reports')->where('school_id', $schoolId)
+                ->where(fn ($q) => $q->whereNull('assigned_to_user_id')->orWhere('assigned_to_user_id', $user->id))
+                ->whereIn('status', ['submitted', 'in_review', 'needs_revision'])->count();
+        }
+        if ($user->hasRole('signatory')) {
+            $roleMetrics['pending_official_decisions'] = DB::table('service_tickets')->where('school_id', $schoolId)
+                ->whereIn('service_type', ['ptsp', 'mutasi', 'legalisir'])->where('public_status', 'in_review')->count();
+        }
+        if ($user->hasRole('committee')) {
+            $assigned = DB::table('admission_committee_members')->where('school_id', $schoolId)->where('user_id', $user->id)->exists();
+            $roleMetrics['committee_assignments'] = $assigned ? 1 : 0;
+            if ($assigned) {
+                $roleMetrics['admission_applicants_pending'] = DB::table('admission_applicants')->where('school_id', $schoolId)
+                    ->whereIn('status', ['registered', 'needs_revision', 'selection_review'])->count();
+            }
         }
         $stats['role_metrics'] = $roleMetrics;
     }

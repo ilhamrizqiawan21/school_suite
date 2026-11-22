@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref, watch } from 'vue';
 
 interface ClassSummary {
@@ -73,6 +75,7 @@ const visibleClasses = computed(() => {
         .filter((classGroup) => classGroup.name.toLocaleLowerCase('id').includes(query));
 });
 
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -85,36 +88,36 @@ const visibleClasses = computed(() => {
             <div class="students-container students-hero-inner">
                 <div class="students-hero-pill">
                     <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
-                    <span>Direktori Resmi Sekolah</span>
+                    <span>{{ publicText("copy.vue_students_index", "text_001", "Direktori Resmi Sekolah") }}</span>
                 </div>
-                <h1>Database Siswa Aktif</h1>
+                <h1>{{ publicText("copy.vue_students_index", "text_002", "Database Siswa Aktif") }}</h1>
                 <p>
-                    Rekapitulasi peserta didik aktif Tahun Ajaran {{ summary.academic_year }} — {{ school.name }}
+                    {{ publicText("copy.vue_students_index", "text_9001", "Rekapitulasi peserta didik aktif Tahun Ajaran") }} {{ summary.academic_year }} — {{ school.name }}
                 </p>
             </div>
         </section>
 
         <main class="students-container students-main">
-            <section class="students-stats-grid" aria-label="Ringkasan statistik peserta didik">
-                <div><strong>{{ summary.active_students_count }}</strong><span>Total Siswa Aktif</span></div>
-                <div><strong>{{ summary.male_students_count }}</strong><span>Laki-laki</span></div>
-                <div><strong>{{ summary.female_students_count }}</strong><span>Perempuan</span></div>
-                <div><strong>{{ summary.active_classes_count }}</strong><span>Rombel / Kelas</span></div>
+            <section class="students-stats-grid" :aria-label="publicText('copy.vue_students_index', 'aria_label_026', 'Ringkasan statistik peserta didik')">
+                <div><strong>{{ summary.active_students_count }}</strong><span>{{ publicText("copy.vue_students_index", "text_003", "Total Siswa Aktif") }}</span></div>
+                <div><strong>{{ summary.male_students_count }}</strong><span>{{ publicText("copy.vue_students_index", "text_004", "Laki-laki") }}</span></div>
+                <div><strong>{{ summary.female_students_count }}</strong><span>{{ publicText("copy.vue_students_index", "text_005", "Perempuan") }}</span></div>
+                <div><strong>{{ summary.active_classes_count }}</strong><span>{{ publicText("copy.vue_students_index", "text_006", "Rombel / Kelas") }}</span></div>
             </section>
 
             <section class="card-custom students-card mb-6" aria-labelledby="rekap-rombel-heading">
                 <div class="students-filters">
-                    <FormField v-if="showDemoDirectory" id="student-class-filter" label="Filter Berdasarkan Kelas / Rombel">
+                    <FormField v-if="showDemoDirectory" id="student-class-filter" :label="publicText('copy.vue_students_index', 'label_10001', 'Filter Berdasarkan Kelas / Rombel')">
                         <select id="student-class-filter" v-model="demoClass" class="w-full rounded-xl border border-slate-300 px-3 py-3">
-                            <option value="">Tampilkan Semua Kelas</option>
+                            <option value="">{{ publicText("copy.vue_students_index", "text_007", "Tampilkan Semua Kelas") }}</option>
                             <option v-for="className in demoClasses" :key="className">{{ className }}</option>
                         </select>
                     </FormField>
-                    <FormField v-else id="student-grade-filter" label="Filter Berdasarkan Tingkat">
+                    <FormField v-else id="student-grade-filter" :label="publicText('copy.vue_students_index', 'label_10002', 'Filter Berdasarkan Tingkat')">
                         <select id="student-grade-filter" v-model="selectedGrade" class="w-full rounded-lg border border-slate-300 px-3 py-2">
-                            <option :value="null">Semua tingkat</option>
+                            <option :value="null">{{ publicText("copy.vue_students_index", "text_008", "Semua tingkat") }}</option>
                             <option v-for="level in summary.grade_levels" :key="level.grade_level" :value="level.grade_level">
-                                Tingkat {{ level.grade_level }}
+                                {{ publicText("copy.vue_students_index", "text_024", "Tingkat") }} {{ level.grade_level }}
                             </option>
                         </select>
                     </FormField>
@@ -122,22 +125,22 @@ const visibleClasses = computed(() => {
                         <input id="student-class-search" v-model="classQuery" type="search" :placeholder="showDemoDirectory ? 'Ketik nama siswa…' : 'Ketik nama kelas…'" class="w-full rounded-xl border border-slate-300 px-3 py-3" />
                     </FormField>
                     <div class="students-filter-actions">
-                        <button type="button" @click="selectedGrade = null; demoClass = ''; classQuery = ''">Reset</button>
-                        <Link href="/login?portal=siswa">Login Siswa</Link>
+                        <button type="button" @click="selectedGrade = null; demoClass = ''; classQuery = ''">{{ publicText("copy.vue_students_index", "text_009", "Reset") }}</button>
+                        <Link href="/login?portal=siswa">{{ publicText("copy.vue_students_index", "text_010", "Login Siswa") }}</Link>
                     </div>
                 </div>
             </section>
 
             <section v-if="showDemoDirectory" class="card-custom students-card mb-6" aria-labelledby="demo-directory-heading">
-                <h2 id="demo-directory-heading" class="students-table-title"><i class="fa-solid fa-address-book text-blue-600 mr-2" aria-hidden="true"></i>Daftar Seluruh Siswa Aktif</h2>
-                <p class="mb-3 text-xs text-slate-600">Pratinjau lokal dengan data siswa sintetis.</p>
+                <h2 id="demo-directory-heading" class="students-table-title"><i class="fa-solid fa-address-book text-blue-600 mr-2" aria-hidden="true"></i>{{ publicText("copy.vue_students_index", "text_011", "Daftar Seluruh Siswa Aktif") }}</h2>
+                <p class="mb-3 text-xs text-slate-600">{{ publicText("copy.vue_students_index", "text_012", "Pratinjau lokal dengan data siswa sintetis.") }}</p>
                 <div class="mb-7 flex flex-wrap items-center justify-between gap-3">
-                    <button type="button" class="rounded-full border border-blue-500 px-4 py-2 text-xs font-bold text-blue-700" @click="printDirectory">Cetak</button>
-                    <label class="text-xs">Tampil
+                    <button type="button" class="rounded-full border border-blue-500 px-4 py-2 text-xs font-bold text-blue-700" @click="printDirectory">{{ publicText("copy.vue_students_index", "text_013", "Cetak") }}</button>
+                    <label class="text-xs">{{ publicText("copy.vue_students_index", "text_014", "Tampil") }}
                         <select v-model.number="pageSize" class="rounded border border-slate-300 px-1 py-0.5">
                             <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
                         </select>
-                        data
+                        {{ publicText("copy.vue_students_index", "text_015", "data") }}
                     </label>
                 </div>
                 <div class="overflow-x-auto">
@@ -149,36 +152,36 @@ const visibleClasses = computed(() => {
                                 <td><span class="demo-student-avatar">{{ student.initials }}</span></td>
                                 <th scope="row">{{ student.name }}</th>
                                 <td><span class="demo-student-gender">{{ student.gender }}</span></td>
-                                <td>Martapura · 16 thn</td>
-                                <td>DEMO***</td>
-                                <td>DEMO****</td>
+                                <td>{{ publicText("copy.vue_students_index", "text_016", "Martapura · 16 thn") }}</td>
+                                <td>{{ publicText("copy.vue_students_index", "text_017", "DEMO***") }}</td>
+                                <td>{{ publicText("copy.vue_students_index", "text_018", "DEMO****") }}</td>
                                 <td><span class="demo-student-class">{{ student.className }}</span></td>
                             </tr>
-                            <tr v-if="!visibleDemoStudents.length"><td colspan="8">Tidak ada siswa demo yang cocok.</td></tr>
+                            <tr v-if="!visibleDemoStudents.length"><td colspan="8">{{ publicText("copy.vue_students_index", "text_019", "Tidak ada siswa demo yang cocok.") }}</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
-                    <p>Menampilkan {{ pageStudents.length ? pageOffset + 1 : 0 }} s/d {{ pageOffset + pageStudents.length }} dari {{ visibleDemoStudents.length }} siswa</p>
-                    <nav class="flex" aria-label="Halaman daftar siswa">
-                        <button type="button" class="border border-slate-200 px-3 py-2 disabled:opacity-50" :disabled="directoryPage === 1" aria-label="Halaman sebelumnya" @click="directoryPage--">‹</button>
+                    <p>{{ publicText("copy.vue_students_index", "text_9002", "Menampilkan") }} {{ pageStudents.length ? pageOffset + 1 : 0 }} {{ publicText("copy.vue_students_index", "text_9003", "s/d") }} {{ pageOffset + pageStudents.length }} {{ publicText("copy.vue_students_index", "text_9004", "dari") }} {{ visibleDemoStudents.length }} {{ publicText("copy.vue_students_index", "text_9005", "siswa") }}</p>
+                    <nav class="flex" :aria-label="publicText('copy.vue_students_index', 'aria_label_027', 'Halaman daftar siswa')">
+                        <button type="button" class="border border-slate-200 px-3 py-2 disabled:opacity-50" :disabled="directoryPage === 1" :aria-label="publicText('copy.vue_students_index', 'aria_label_028', 'Halaman sebelumnya')" @click="directoryPage--">‹</button>
                         <button v-for="number in pageCount" :key="number" type="button" class="border border-slate-200 px-3 py-2" :class="{ 'bg-blue-600 text-white': directoryPage === number }" :aria-current="directoryPage === number ? 'page' : undefined" @click="directoryPage = number">{{ number }}</button>
-                        <button type="button" class="border border-slate-200 px-3 py-2 disabled:opacity-50" :disabled="directoryPage === pageCount" aria-label="Halaman berikutnya" @click="directoryPage++">›</button>
+                        <button type="button" class="border border-slate-200 px-3 py-2 disabled:opacity-50" :disabled="directoryPage === pageCount" :aria-label="publicText('copy.vue_students_index', 'aria_label_029', 'Halaman berikutnya')" @click="directoryPage++">›</button>
                     </nav>
                 </div>
             </section>
 
             <section v-else class="card-custom students-card mb-6" aria-labelledby="rekap-rombel-heading">
-                <h2 id="rekap-rombel-heading" class="students-table-title">Daftar Rombongan Belajar Aktif</h2>
-                <p class="mb-5 text-xs text-slate-600">Rekap jumlah siswa aktif per rombongan belajar.</p>
+                <h2 id="rekap-rombel-heading" class="students-table-title">{{ publicText("copy.vue_students_index", "text_020", "Daftar Rombongan Belajar Aktif") }}</h2>
+                <p class="mb-5 text-xs text-slate-600">{{ publicText("copy.vue_students_index", "text_021", "Rekap jumlah siswa aktif per rombongan belajar.") }}</p>
                 <div class="overflow-x-auto">
                     <table v-if="visibleClasses.length" class="w-full border-collapse text-sm">
                         <thead class="bg-slate-100 text-slate-700">
                             <tr>
-                                <th scope="col" class="px-3 py-3 text-left">No.</th>
-                                <th scope="col" class="px-3 py-3 text-left">Kelas</th>
-                                <th scope="col" class="px-3 py-3 text-left">Tingkat</th>
-                                <th scope="col" class="px-3 py-3 text-right">Siswa Aktif</th>
+                                <th scope="col" class="px-3 py-3 text-left">{{ publicText("copy.vue_students_index", "text_022", "No.") }}</th>
+                                <th scope="col" class="px-3 py-3 text-left">{{ publicText("copy.vue_students_index", "text_023", "Kelas") }}</th>
+                                <th scope="col" class="px-3 py-3 text-left">{{ publicText("copy.vue_students_index", "text_024", "Tingkat") }}</th>
+                                <th scope="col" class="px-3 py-3 text-right">{{ publicText("copy.vue_students_index", "text_025", "Siswa Aktif") }}</th>
                             </tr>
                         </thead>
                         <tbody>

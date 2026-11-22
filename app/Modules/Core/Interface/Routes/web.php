@@ -85,6 +85,7 @@ Route::middleware('auth')->group(function (): void {
 
         // School profile management
         Route::get('/sekolah', [SchoolController::class, 'edit'])->name('school.edit');
+        Route::get('/portal-publik', [SchoolController::class, 'publicEditor'])->middleware('role:admin,operator')->name('school.public-editor');
         Route::put('/sekolah', [SchoolController::class, 'update'])->name('school.update');
         Route::post('/sekolah', [SchoolController::class, 'update'])->middleware('throttle:uploads')->name('school.upload');
 
@@ -122,6 +123,7 @@ Route::middleware('auth')->group(function (): void {
 
         Route::get('/zona-integritas', [PublicPortalAdminController::class, 'integrityIndex'])->middleware('role:admin,operator')->name('integrity.index');
         Route::put('/zona-integritas/konten', [PublicPortalAdminController::class, 'updateIntegrityContent'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('integrity.content.update');
+        Route::get('/zona-integritas/ekspor', [PublicPortalAdminController::class, 'exportIkm'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('ikm.export');
         Route::post('/zona-integritas/{survey}/moderasi', [PublicPortalAdminController::class, 'moderateIkm'])->whereNumber('survey')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('ikm.moderate');
         Route::delete('/zona-integritas/{survey}', [PublicPortalAdminController::class, 'destroyIkm'])->whereNumber('survey')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('ikm.destroy');
 

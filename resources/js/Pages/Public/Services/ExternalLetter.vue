@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link, router, useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -61,6 +63,7 @@ const submitQuickTrack = () => {
         category: 'surat_eksternal',
     });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -68,51 +71,51 @@ const submitQuickTrack = () => {
     <main class="public-site public-portal-page" data-madrasah-service="external-letter" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <header class="surat-hero-mesh parity-letter-hero">
+        <header v-if="contentBlocks?.['external_letter.hero']?.visible !== false" class="surat-hero-mesh parity-letter-hero">
             <div class="hero-dot-grid" aria-hidden="true" />
             <div class="hero-inner">
                 <div class="parity-letter-copy">
                     <p class="surat-service-label">
                         <span class="pulse-dot" aria-hidden="true" />
-                        <span>KANAL DINAS RESMI TERVERIFIKASI</span>
+                        <span>{{ publicText("copy.vue_services_externalletter", "text_001", "KANAL DINAS RESMI TERVERIFIKASI") }}</span>
                         <span aria-hidden="true">•</span>
-                        <span class="label-sub">Persuratan Eksternal</span>
+                        <span class="label-sub">{{ publicText("copy.vue_services_externalletter", "text_002", "Persuratan Eksternal") }}</span>
                     </p>
                     <h1>
-                        {{ contentBlocks?.['external_letter.hero']?.title || 'Penerimaan & Agenda Digital' }}
-                        <span class="hero-title-highlight">{{ contentBlocks?.['external_letter.hero']?.highlight || 'Surat Kedinasan Eksternal' }}</span>
+                        {{ contentBlocks?.['external_letter.hero']?.title ?? 'Penerimaan & Agenda Digital' }}
+                        <span class="hero-title-highlight">{{ contentBlocks?.['external_letter.hero']?.highlight ?? 'Surat Kedinasan Eksternal' }}</span>
                     </h1>
                     <p class="hero-lead">
-                        {{ contentBlocks?.['external_letter.hero']?.lead || `Fasilitas resmi bagi instansi pemerintah, lembaga pendidikan, dan organisasi mitra untuk mengirimkan surat dinas secara langsung ke meja Tata Usaha ${school.name}. Teragendakan otomatis, aman, dan dapat dilacak secara real-time.` }}
+                        {{ contentBlocks?.['external_letter.hero']?.lead ?? `Fasilitas resmi bagi instansi pemerintah, lembaga pendidikan, dan organisasi mitra untuk mengirimkan surat dinas secara langsung ke meja Tata Usaha ${school.name}. Teragendakan otomatis, aman, dan dapat dilacak secara real-time.` }}
                     </p>
 
-                    <div class="workflow-steps" aria-label="Alur layanan surat dinas">
+                    <div class="workflow-steps" :aria-label="publicText('copy.vue_services_externalletter', 'aria_label_038', 'Alur layanan surat dinas')">
                         <div class="workflow-step">
-                            <span class="workflow-step-label">Tahap 1</span>
-                            <p><i class="fa-solid fa-file-pdf step-icon--amber" aria-hidden="true"></i> Unggah Scan PDF</p>
+                            <span class="workflow-step-label">{{ publicText("copy.vue_services_externalletter", "text_003", "Tahap 1") }}</span>
+                            <p><i class="fa-solid fa-file-pdf step-icon--amber" aria-hidden="true"></i> {{ publicText("copy.vue_services_externalletter", "text_004", "Unggah Scan PDF") }}</p>
                         </div>
                         <div class="workflow-step">
-                            <span class="workflow-step-label">Tahap 2</span>
-                            <p><i class="fa-solid fa-qrcode step-icon--emerald" aria-hidden="true"></i> Resi &amp; QR Tiket</p>
+                            <span class="workflow-step-label">{{ publicText("copy.vue_services_externalletter", "text_005", "Tahap 2") }}</span>
+                            <p><i class="fa-solid fa-qrcode step-icon--emerald" aria-hidden="true"></i> {{ publicText("copy.vue_services_externalletter", "text_006", "Resi & QR Tiket") }}</p>
                         </div>
                         <div class="workflow-step">
-                            <span class="workflow-step-label">Tahap 3</span>
-                            <p><i class="fa-solid fa-stamp step-icon--blue" aria-hidden="true"></i> Disposisi Pimpinan</p>
+                            <span class="workflow-step-label">{{ publicText("copy.vue_services_externalletter", "text_007", "Tahap 3") }}</span>
+                            <p><i class="fa-solid fa-stamp step-icon--blue" aria-hidden="true"></i> {{ publicText("copy.vue_services_externalletter", "text_008", "Disposisi Pimpinan") }}</p>
                         </div>
                         <div class="workflow-step">
-                            <span class="workflow-step-label">Tahap 4</span>
-                            <p><i class="fa-solid fa-magnifying-glass-chart step-icon--emerald" aria-hidden="true"></i> Lacak Real-Time</p>
+                            <span class="workflow-step-label">{{ publicText("copy.vue_services_externalletter", "text_009", "Tahap 4") }}</span>
+                            <p><i class="fa-solid fa-magnifying-glass-chart step-icon--emerald" aria-hidden="true"></i> {{ publicText("copy.vue_services_externalletter", "text_010", "Lacak Real-Time") }}</p>
                         </div>
                     </div>
 
                     <div class="hero-links">
-                        <a href="#external-letter-form-title" class="hero-btn hero-btn--primary">
+                        <a :href="publicText('copy.vue_services_externalletter', 'href_039', '#external-letter-form-title')" class="hero-btn hero-btn--primary">
                             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                            <span>Buat Pengiriman Surat Baru</span>
+                            <span>{{ publicText("copy.vue_services_externalletter", "text_011", "Buat Pengiriman Surat Baru") }}</span>
                         </a>
                         <Link href="/lacak?category=surat_eksternal" class="hero-btn hero-btn--secondary">
                             <i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i>
-                            <span>Lacak Status Surat (Tracking)</span>
+                            <span>{{ publicText("copy.vue_services_externalletter", "text_012", "Lacak Status Surat (Tracking)") }}</span>
                         </Link>
                     </div>
                 </div>
@@ -122,31 +125,31 @@ const submitQuickTrack = () => {
                         <div class="sidebar-card-head">
                             <div class="sidebar-card-title-wrap">
                                 <i class="fa-solid fa-shield-halved sidebar-shield-icon" aria-hidden="true"></i>
-                                <h2 class="sidebar-title">Standar Layanan Administrasi</h2>
+                                <h2 class="sidebar-title">{{ publicText("copy.vue_services_externalletter", "text_013", "Standar Layanan Administrasi") }}</h2>
                             </div>
-                            <span class="sidebar-badge">ISO 9001 Terpadu</span>
+                            <span class="sidebar-badge">{{ publicText("copy.vue_services_externalletter", "text_014", "ISO 9001 Terpadu") }}</span>
                         </div>
 
                         <ul class="sidebar-list">
                             <li>
                                 <span class="sidebar-icon sidebar-icon--emerald"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
                                 <div>
-                                    <strong>Pencatatan Agenda Otomatis</strong>
-                                    <span>Setiap surat resmi langsung memperoleh nomor agenda Tata Usaha &amp; resi digital.</span>
+                                    <strong>{{ publicText("copy.vue_services_externalletter", "text_015", "Pencatatan Agenda Otomatis") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_externalletter", "text_016", "Setiap surat resmi langsung memperoleh nomor agenda Tata Usaha & resi digital.") }}</span>
                                 </div>
                             </li>
                             <li>
                                 <span class="sidebar-icon sidebar-icon--amber"><i class="fa-solid fa-fingerprint" aria-hidden="true"></i></span>
                                 <div>
-                                    <strong>Otoritas Tanda Terima Digital</strong>
-                                    <span>Pengirim memperoleh Tanda Terima Elektronik resmi dengan Kode Tiket &amp; PIN pelacakan.</span>
+                                    <strong>{{ publicText("copy.vue_services_externalletter", "text_017", "Otoritas Tanda Terima Digital") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_externalletter", "text_018", "Pengirim memperoleh Tanda Terima Elektronik resmi dengan Kode Tiket & PIN pelacakan.") }}</span>
                                 </div>
                             </li>
                             <li>
                                 <span class="sidebar-icon sidebar-icon--blue"><i class="fa-solid fa-book-bookmark" aria-hidden="true"></i></span>
                                 <div>
-                                    <strong>Tanpa Biaya (Rp 0,-)</strong>
-                                    <span>Seluruh layanan penerimaan surat dinas bebas biaya dan diproses oleh Tata Usaha.</span>
+                                    <strong>{{ publicText("copy.vue_services_externalletter", "text_019", "Tanpa Biaya (Rp 0,-)") }}</strong>
+                                    <span>{{ publicText("copy.vue_services_externalletter", "text_020", "Seluruh layanan penerimaan surat dinas bebas biaya dan diproses oleh Tata Usaha.") }}</span>
                                 </div>
                             </li>
                         </ul>
@@ -154,16 +157,16 @@ const submitQuickTrack = () => {
                         <form class="quick-track-box" @submit.prevent="submitQuickTrack">
                             <label for="quick-track-input" class="quick-track-label">
                                 <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-                                <span>Cek Cepat Status Surat:</span>
+                                <span>{{ publicText("copy.vue_services_externalletter", "text_021", "Cek Cepat Status Surat:") }}</span>
                             </label>
                             <div class="quick-track-row">
                                 <input
                                     id="quick-track-input"
                                     v-model="quickTrackCode"
                                     type="text"
-                                    placeholder="Ketik Kode Tiket (SRT-...)..."
+                                    :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_040', 'Ketik Kode Tiket (SRT-...)...')"
                                 />
-                                <button type="submit" aria-label="Lacak surat">
+                                <button type="submit" :aria-label="publicText('copy.vue_services_externalletter', 'aria_label_041', 'Lacak surat')">
                                     <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                                 </button>
                             </div>
@@ -171,8 +174,8 @@ const submitQuickTrack = () => {
                         </form>
 
                         <div class="sidebar-footer-row">
-                            <span>Butuh bantuan langsung?</span>
-                            <Link href="/kontak" class="sidebar-contact-link">Hubungi Tata Usaha →</Link>
+                            <span>{{ publicText("copy.vue_services_externalletter", "text_022", "Butuh bantuan langsung?") }}</span>
+                            <Link href="/kontak" class="sidebar-contact-link">{{ publicText("copy.vue_services_externalletter", "text_023", "Hubungi Tata Usaha →") }}</Link>
                         </div>
                     </article>
                 </aside>
@@ -188,30 +191,30 @@ const submitQuickTrack = () => {
                                 <i class="fa-solid fa-landmark-dome" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h2 id="external-letter-form-title" class="service-form-title">1. Lembaga Pengirim</h2>
-                                <p class="bento-subtitle">Data instansi asal &amp; narahubung resmi</p>
+                                <h2 id="external-letter-form-title" class="service-form-title">{{ publicText("copy.vue_services_externalletter", "text_024", "1. Lembaga Pengirim") }}</h2>
+                                <p class="bento-subtitle">{{ publicText("copy.vue_services_externalletter", "text_025", "Data instansi asal & narahubung resmi") }}</p>
                             </div>
                         </div>
 
                         <div class="agency-fields">
-                            <FormField id="ext-agency" label="Nama Instansi / Lembaga Pengirim" required :error="form.errors.agency_name" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.agency_name" type="text" required placeholder="Contoh: Dinas Pendidikan / Kementerian Agama" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="ext-agency" :label="publicText('copy.vue_services_externalletter', 'label_10001', 'Nama Instansi / Lembaga Pengirim')" required :error="form.errors.agency_name" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.agency_name" type="text" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_042', 'Contoh: Dinas Pendidikan / Kementerian Agama')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="ext-contact-person" label="Nama Narahubung" required :error="form.errors.contact_person" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.contact_person" type="text" required placeholder="Nama lengkap narahubung / PIC" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="ext-contact-person" :label="publicText('copy.vue_services_externalletter', 'label_10002', 'Nama Narahubung')" required :error="form.errors.contact_person" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.contact_person" type="text" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_043', 'Nama lengkap narahubung / PIC')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="ext-contact-pos" label="Jabatan Narahubung" required :error="form.errors.contact_position" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.contact_position" type="text" required placeholder="Contoh: Kasubbag Tata Usaha / Staf" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="ext-contact-pos" :label="publicText('copy.vue_services_externalletter', 'label_10003', 'Jabatan Narahubung')" required :error="form.errors.contact_position" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.contact_position" type="text" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_044', 'Contoh: Kasubbag Tata Usaha / Staf')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="ext-contact-phone" label="Nomor Telepon / WhatsApp Narahubung" required :error="form.errors.contact_phone" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.contact_phone" type="text" required placeholder="08xxxxxxxxxx" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="ext-contact-phone" :label="publicText('copy.vue_services_externalletter', 'label_10004', 'Nomor Telepon / WhatsApp Narahubung')" required :error="form.errors.contact_phone" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.contact_phone" type="text" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_045', '08xxxxxxxxxx')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="ext-contact-email" label="Email Narahubung (Opsional)" :error="form.errors.contact_email" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.contact_email" type="email" placeholder="persuratan@instansi.go.id" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="ext-contact-email" :label="publicText('copy.vue_services_externalletter', 'label_10005', 'Email Narahubung (Opsional)')" :error="form.errors.contact_email" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.contact_email" type="email" :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_10006', 'persuratan@instansi.go.id')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
                         </div>
                     </section>
@@ -222,45 +225,45 @@ const submitQuickTrack = () => {
                                 <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i>
                             </div>
                             <div>
-                                <h2 id="external-letter-spec-title" class="service-form-title">2. Spesifikasi Surat Dinas</h2>
-                                <p class="bento-subtitle">Nomor, perihal, dan derajat kepentingan surat</p>
+                                <h2 id="external-letter-spec-title" class="service-form-title">{{ publicText("copy.vue_services_externalletter", "text_026", "2. Spesifikasi Surat Dinas") }}</h2>
+                                <p class="bento-subtitle">{{ publicText("copy.vue_services_externalletter", "text_027", "Nomor, perihal, dan derajat kepentingan surat") }}</p>
                             </div>
                         </div>
 
                         <div class="form-grid">
                             <div class="full-span">
-                                <FormField id="ext-letter-number" label="Nomor Surat Dinas" required :error="form.errors.letter_number" v-slot="{ inputId, describedBy, invalid }">
-                                    <input :id="inputId" v-model="form.letter_number" type="text" required placeholder="Contoh: 421/104/DISDIK/2026" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                                <FormField id="ext-letter-number" :label="publicText('copy.vue_services_externalletter', 'label_10007', 'Nomor Surat Dinas')" required :error="form.errors.letter_number" v-slot="{ inputId, describedBy, invalid }">
+                                    <input :id="inputId" v-model="form.letter_number" type="text" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_046', 'Contoh: 421/104/DISDIK/2026')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                                 </FormField>
                             </div>
 
-                            <FormField id="ext-letter-date" label="Tanggal Surat" required :error="form.errors.letter_date" v-slot="{ inputId, describedBy, invalid }">
+                            <FormField id="ext-letter-date" :label="publicText('copy.vue_services_externalletter', 'label_10008', 'Tanggal Surat')" required :error="form.errors.letter_date" v-slot="{ inputId, describedBy, invalid }">
                                 <input :id="inputId" v-model="form.letter_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="ext-urgency" label="Sifat / Urgensi Surat" required :error="form.errors.urgency" v-slot="{ inputId, describedBy, invalid }">
+                            <FormField id="ext-urgency" :label="publicText('copy.vue_services_externalletter', 'label_10009', 'Sifat / Urgensi Surat')" required :error="form.errors.urgency" v-slot="{ inputId, describedBy, invalid }">
                                 <select :id="inputId" v-model="form.urgency" :aria-describedby="describedBy" :aria-invalid="invalid">
                                     <option v-for="opt in urgencyOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
                                 </select>
                             </FormField>
 
-                            <FormField id="ext-classification" label="Klasifikasi Surat" :error="form.errors.classification" v-slot="{ inputId, describedBy, invalid }">
+                            <FormField id="ext-classification" :label="publicText('copy.vue_services_externalletter', 'label_10010', 'Klasifikasi Surat')" :error="form.errors.classification" v-slot="{ inputId, describedBy, invalid }">
                                 <input :id="inputId" v-model="form.classification" type="text" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="ext-secret" label="PIN Verifikasi Tanda Terima (Opsional)" hint="Kosongkan untuk PIN otomatis 6 digit." :error="form.errors.verification_secret" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.verification_secret" type="text" minlength="4" maxlength="24" placeholder="4–24 karakter" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="ext-secret" :label="publicText('copy.vue_services_externalletter', 'label_10011', 'PIN Verifikasi Tanda Terima (Opsional)')" :hint="publicText('copy.vue_services_externalletter', 'hint_10012', 'Kosongkan untuk PIN otomatis 6 digit.')" :error="form.errors.verification_secret" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.verification_secret" type="text" minlength="4" maxlength="24" :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_047', '4–24 karakter')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
                             <div class="full-span">
-                                <FormField id="ext-subject" label="Perihal Surat" required :error="form.errors.subject" v-slot="{ inputId, describedBy, invalid }">
-                                    <input :id="inputId" v-model="form.subject" type="text" required placeholder="Contoh: Undangan Rapat Koordinasi / Permohonan Narasumber" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                                <FormField id="ext-subject" :label="publicText('copy.vue_services_externalletter', 'label_10013', 'Perihal Surat')" required :error="form.errors.subject" v-slot="{ inputId, describedBy, invalid }">
+                                    <input :id="inputId" v-model="form.subject" type="text" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_048', 'Contoh: Undangan Rapat Koordinasi / Permohonan Narasumber')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                                 </FormField>
                             </div>
 
                             <div class="full-span">
-                                <FormField id="ext-summary" label="Ringkasan Isi Surat" required :error="form.errors.summary" v-slot="{ inputId, describedBy, invalid }">
-                                    <textarea :id="inputId" v-model="form.summary" rows="3" required placeholder="Tuliskan intisari isi surat atau jadwal pelaksanaan kegiatan..." :aria-describedby="describedBy" :aria-invalid="invalid" />
+                                <FormField id="ext-summary" :label="publicText('copy.vue_services_externalletter', 'label_10014', 'Ringkasan Isi Surat')" required :error="form.errors.summary" v-slot="{ inputId, describedBy, invalid }">
+                                    <textarea :id="inputId" v-model="form.summary" rows="3" required :placeholder="publicText('copy.vue_services_externalletter', 'placeholder_049', 'Tuliskan intisari isi surat atau jadwal pelaksanaan kegiatan...')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                                 </FormField>
                             </div>
                         </div>
@@ -273,12 +276,12 @@ const submitQuickTrack = () => {
                                     <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
                                 </div>
                                 <div>
-                                    <h2 id="external-letter-files-title" class="service-form-title">3. Berkas Dokumen Resmi</h2>
-                                    <p class="bento-subtitle">Unggah file pindaian resmi (Scan) bertanda tangan &amp; stempel sah</p>
+                                    <h2 id="external-letter-files-title" class="service-form-title">{{ publicText("copy.vue_services_externalletter", "text_028", "3. Berkas Dokumen Resmi") }}</h2>
+                                    <p class="bento-subtitle">{{ publicText("copy.vue_services_externalletter", "text_029", "Unggah file pindaian resmi (Scan) bertanda tangan & stempel sah") }}</p>
                                 </div>
                             </div>
                             <span class="security-pill">
-                                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Enkripsi Data Aman
+                                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{ publicText("copy.vue_services_externalletter", "text_030", "Enkripsi Data Aman") }}
                             </span>
                         </div>
 
@@ -287,12 +290,12 @@ const submitQuickTrack = () => {
                                 <div class="dropzone-icon dropzone-icon--pdf">
                                     <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
                                 </div>
-                                <FormField id="ext-primary-pdf" class="dropzone-field dropzone-field--primary" label="Unggah Berkas Surat Utama (PDF)" hint="Wajib PDF pindaian resmi bertanda tangan & stempel basah (Maks. 5 MB)" required :error="form.errors.primary_pdf" v-slot="{ inputId, describedBy, invalid }">
+                                <FormField id="ext-primary-pdf" class="dropzone-field dropzone-field--primary" :label="publicText('copy.vue_services_externalletter', 'label_10015', 'Unggah Berkas Surat Utama (PDF)')" :hint="publicText('copy.vue_services_externalletter', 'hint_10016', 'Wajib PDF pindaian resmi bertanda tangan & stempel basah (Maks. 5 MB)')" required :error="form.errors.primary_pdf" v-slot="{ inputId, describedBy, invalid }">
                                     <input :id="inputId" type="file" accept=".pdf" required :aria-describedby="describedBy" :aria-invalid="invalid" @change="onPrimaryPdfChange" />
                                 </FormField>
                                 <p v-if="form.primary_pdf" class="file-preview-pill file-preview-pill--emerald">
                                     <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                                    <span>Terpilih: {{ form.primary_pdf.name }}</span>
+                                    <span>{{ publicText("copy.vue_services_externalletter", "text_9001", "Terpilih:") }} {{ form.primary_pdf.name }}</span>
                                 </p>
                             </div>
 
@@ -300,12 +303,12 @@ const submitQuickTrack = () => {
                                 <div class="dropzone-icon dropzone-icon--attach">
                                     <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                 </div>
-                                <FormField id="ext-supporting" class="dropzone-field dropzone-field--secondary" label="Lampiran Pendukung (Opsional)" hint="Berkas pelengkap maks. 5 berkas (PDF, JPG, PNG, WEBP)" :error="form.errors.supporting_files" v-slot="{ inputId, describedBy, invalid }">
+                                <FormField id="ext-supporting" class="dropzone-field dropzone-field--secondary" :label="publicText('copy.vue_services_externalletter', 'label_10017', 'Lampiran Pendukung (Opsional)')" :hint="publicText('copy.vue_services_externalletter', 'hint_10018', 'Berkas pelengkap maks. 5 berkas (PDF, JPG, PNG, WEBP)')" :error="form.errors.supporting_files" v-slot="{ inputId, describedBy, invalid }">
                                     <input :id="inputId" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" :aria-describedby="describedBy" :aria-invalid="invalid" @change="onSupportingChange" />
                                 </FormField>
                                 <p v-if="form.supporting_files.length > 0" class="file-preview-pill">
                                     <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
-                                    <span>Terpilih ({{ form.supporting_files.length }}): {{ form.supporting_files.map((f) => f.name).join(', ') }}</span>
+                                    <span>{{ publicText("copy.vue_services_externalletter", "text_9002", "Terpilih (") }}{{ form.supporting_files.length }}): {{ form.supporting_files.map((f) => f.name).join(', ') }}</span>
                                 </p>
                             </div>
                         </div>
@@ -313,7 +316,7 @@ const submitQuickTrack = () => {
                         <div class="statement-box">
                             <label class="checkbox-label">
                                 <input v-model="form.statement_accepted" type="checkbox" />
-                                <span><strong>Pernyataan Keabsahan:</strong> Saya menyatakan surat dinas beserta lampiran yang dikirimkan resmi dan sah dari instansi pengirim, serta bersedia dikonfirmasi oleh Tata Usaha {{ school.name }}.</span>
+                                <span><strong>{{ publicText("copy.vue_services_externalletter", "text_031", "Pernyataan Keabsahan:") }}</strong> {{ publicText("copy.vue_services_externalletter", "text_9003", "Saya menyatakan surat dinas beserta lampiran yang dikirimkan resmi dan sah dari instansi pengirim, serta bersedia dikonfirmasi oleh Tata Usaha") }} {{ school.name }}.</span>
                             </label>
                             <p v-if="form.errors.statement_accepted" class="field-error" role="alert">{{ form.errors.statement_accepted }}</p>
                         </div>
@@ -321,11 +324,11 @@ const submitQuickTrack = () => {
                         <div class="submit-footer-row">
                             <p class="submit-note">
                                 <i class="fa-solid fa-certificate" aria-hidden="true"></i>
-                                <span>Resi digital bertanda terima resmi terbit seketika setelah surat dikirim.</span>
+                                <span>{{ publicText("copy.vue_services_externalletter", "text_032", "Resi digital bertanda terima resmi terbit seketika setelah surat dikirim.") }}</span>
                             </p>
                             <button type="submit" class="submit-btn-gradient" :disabled="form.processing">
                                 <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                                <span>Kirim Surat &amp; Terbitkan Tanda Terima</span>
+                                <span>{{ publicText("copy.vue_services_externalletter", "text_033", "Kirim Surat & Terbitkan Tanda Terima") }}</span>
                             </button>
                         </div>
                     </section>
@@ -338,14 +341,14 @@ const submitQuickTrack = () => {
                 <div class="surat-footer-brand">
                     <img v-if="school.logo_url" :src="school.logo_url" :alt="school.name" class="surat-footer-logo" />
                     <div>
-                        <p class="surat-footer-title">© 2026 Tata Usaha {{ school.name }}</p>
-                        <p class="surat-footer-sub">Sistem Informasi Akademik &amp; Persuratan Terintegrasi</p>
+                        <p class="surat-footer-title">{{ publicText("copy.vue_services_externalletter", "text_9004", "© 2026 Tata Usaha") }} {{ school.name }}</p>
+                        <p class="surat-footer-sub">{{ publicText("copy.vue_services_externalletter", "text_034", "Sistem Informasi Akademik & Persuratan Terintegrasi") }}</p>
                     </div>
                 </div>
-                <nav class="surat-footer-links" aria-label="Tautan cepat persuratan">
-                    <Link href="/">Beranda</Link>
-                    <Link href="/layanan/ptsp">Layanan PTSP</Link>
-                    <Link href="/login" class="surat-footer-login">Login Pegawai</Link>
+                <nav class="surat-footer-links" :aria-label="publicText('copy.vue_services_externalletter', 'aria_label_050', 'Tautan cepat persuratan')">
+                    <Link href="/">{{ publicText("copy.vue_services_externalletter", "text_035", "Beranda") }}</Link>
+                    <Link href="/layanan/ptsp">{{ publicText("copy.vue_services_externalletter", "text_036", "Layanan PTSP") }}</Link>
+                    <Link href="/login" class="surat-footer-login">{{ publicText("copy.vue_services_externalletter", "text_037", "Login Pegawai") }}</Link>
                 </nav>
             </div>
         </footer>

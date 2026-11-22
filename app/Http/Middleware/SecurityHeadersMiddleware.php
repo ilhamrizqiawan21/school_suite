@@ -62,6 +62,14 @@ class SecurityHeadersMiddleware
             $response->headers->set($key, $value);
         }
 
+        $contentType = (string) $response->headers->get('Content-Type');
+        if ((str_contains($contentType, 'text/html') || $response->headers->has('X-Inertia'))
+            && ! $response->headers->has('Cache-Control')) {
+            $response->headers->set('Cache-Control', $request->user() || $request->boolean('preview_draft')
+                ? 'private, no-store, no-cache, must-revalidate'
+                : 'no-cache, must-revalidate');
+        }
+
         return $response;
     }
 }

@@ -902,20 +902,25 @@ class PtspWorkflowService
                 $writer = new Writer(new ImageRenderer(new RendererStyle(180, 2), new SvgImageBackEnd));
                 $qrVerify = base64_encode($writer->writeString($verifyUrl));
 
-                $pdf = Pdf::loadView('administration.ptsp-result', [
-                    'school' => $schoolSnapshot,
-                    'request' => $locked,
-                    'ticket' => $ticket,
-                    'result_summary' => trim((string) ($data['result_summary'] ?? 'Permohonan layanan PTSP telah disetujui dan diterbitkan.')),
-                    'signatory_name' => trim((string) ($data['signatory_name'] ?? $actor->name)),
-                    'signatory_title' => trim((string) ($data['signatory_title'] ?? 'Kepala Tata Usaha / Petugas PTSP')),
-                    'issued_date' => $this->schoolScope->localNow($schoolId)->locale('id')->translatedFormat('d F Y'),
-                    'verification_token' => $verificationToken,
-                    'verify_url' => $verifyUrl,
-                    'qr_verify' => $qrVerify,
-                ])->setPaper('a4');
+                try {
+                    $pdfBytes = Pdf::loadView('administration.ptsp-result', [
+                        'school' => $schoolSnapshot,
+                        'request' => $locked,
+                        'ticket' => $ticket,
+                        'result_summary' => trim((string) ($data['result_summary'] ?? 'Permohonan layanan PTSP telah disetujui dan diterbitkan.')),
+                        'signatory_name' => trim((string) ($data['signatory_name'] ?? $actor->name)),
+                        'signatory_title' => trim((string) ($data['signatory_title'] ?? 'Kepala Tata Usaha / Petugas PTSP')),
+                        'issued_date' => $this->schoolScope->localNow($schoolId)->locale('id')->translatedFormat('d F Y'),
+                        'verification_token' => $verificationToken,
+                        'verify_url' => $verifyUrl,
+                        'qr_verify' => $qrVerify,
+                    ])->setPaper('a4')->output();
+                } catch (\Throwable $exception) {
+                    report($exception);
+                    throw ValidationException::withMessages(['result_file' => 'PDF hasil layanan gagal dibuat. Tidak ada dokumen atau perubahan status yang disimpan; coba lagi.']);
+                }
 
-                $doc = $this->documentService->issueGeneratedDocument($schoolId, $pdf->output(), [
+                $doc = $this->documentService->issueGeneratedDocument($schoolId, $pdfBytes, [
                     'document_kind' => 'letter',
                     'number_prefix' => 'PTSP',
                     'template_key' => 'ptsp_standard_result',

@@ -44,7 +44,7 @@ class AlumniController extends Controller
         return Inertia::render('Public/Alumni/Home', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'summary' => $this->alumniService->publicSummary((int) $school['id']),
@@ -92,7 +92,7 @@ class AlumniController extends Controller
         return Inertia::render('Public/Alumni/Portal', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'authenticatedAlumni' => $isAlumniUser || $isExtAlumni,
@@ -198,7 +198,7 @@ class AlumniController extends Controller
         return Inertia::render('Public/Alumni/Directory', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
             'alumni' => $this->alumniService->publicDirectory($schoolId, $filters),

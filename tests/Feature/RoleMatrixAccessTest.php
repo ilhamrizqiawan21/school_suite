@@ -152,7 +152,7 @@ class RoleMatrixAccessTest extends TestCase
                 && ! $keys->contains('learning-resources')
                 && ! $keys->contains('learning-materials')
                 && ! $keys->contains('scores')
-                && ! $keys->contains('security'))
+                && $keys->contains('security'))
         );
     }
 
@@ -197,6 +197,18 @@ class RoleMatrixAccessTest extends TestCase
 
         $this->get('/pengaturan/pengguna')->assertStatus(200);
         $this->get('/pengaturan/sekolah')->assertStatus(200);
+    }
+
+    public function test_revoked_core_permissions_remove_navigation_and_deny_direct_access_in_the_same_session(): void
+    {
+        $operator = $this->usersByRole[RoleEnum::OPERATOR->value];
+        $this->actingAs($operator)->get('/profil')->assertInertia(fn ($page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('users') && $keys->contains('school')));
+        $operator->role->permissions()->detach();
+        $this->get('/profil')->assertInertia(fn ($page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => ! $keys->contains('users') && ! $keys->contains('school')));
+        $this->get('/pengaturan/pengguna')->assertForbidden();
+        $this->get('/pengaturan/sekolah')->assertForbidden();
     }
 
     public function test_operator_can_update_school_profile_content(): void

@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckBlockedIp;
 use App\Http\Middleware\EnsureActiveUser;
+use App\Http\Middleware\EnsurePublicServiceAvailable;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequirePasswordChange;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             CheckBlockedIp::class,
             EnsureActiveUser::class,
+            EnsurePublicServiceAvailable::class,
             RequirePasswordChange::class,
             HandleInertiaRequests::class,
             SecurityHeadersMiddleware::class,

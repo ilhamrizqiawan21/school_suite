@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import AppButton from '@/components/AppButton.vue';
+import { requestActionInput } from '@/composables/useActionConfirmation';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -40,13 +42,14 @@ const send = () => {
     });
 };
 
-const moderate = (id: number) => {
-    const reason = prompt('Alasan moderasi');
+const moderate = async (id: number) => {
+    const reason = await requestActionInput('Alasan moderasi', { required: true, maxLength: 500 });
 
     if (reason) {
         router.post(`${communicationBase}/chat/pesan/${id}/moderasi`, { reason }, { preserveScroll: true });
     }
 };
+const requestRoomClose = useConfirmedDialogClose(roomForm, () => { showRoom.value = false; roomForm.reset(); roomForm.clearErrors(); });
 </script>
 
 <template>
@@ -147,7 +150,7 @@ const moderate = (id: number) => {
                 </section>
             </div>
 
-            <div v-if="showRoom" class="modal-backdrop" @click.self="showRoom = false">
+            <div v-if="showRoom" class="modal-backdrop" @click.self="requestRoomClose" @keydown.esc.stop.prevent="requestRoomClose">
                 <form
                     class="modal-card room-modal"
                     @submit.prevent="roomForm.post(`${communicationBase}/chat/ruang`, { onSuccess: () => (showRoom = false) })"
@@ -157,7 +160,7 @@ const moderate = (id: number) => {
                             <p class="eyebrow">Ruang baru</p>
                             <h2>Buat ruang chat</h2>
                         </div>
-                        <AppButton variant="ghost" icon-only icon="close" class="close-button" type="button" aria-label="Tutup" @click="showRoom = false">×</AppButton>
+                        <AppButton variant="ghost" icon-only icon="close" class="close-button" type="button" aria-label="Tutup" @click="requestRoomClose">×</AppButton>
                     </div>
 
                     <label>
@@ -171,11 +174,11 @@ const moderate = (id: number) => {
 
                     <label>
                         Nama ruang
-                        <input v-model="roomForm.name" required placeholder="Contoh: Diskusi Matematika VII-A" />
+                        <input v-model="roomForm.name" required placeholder="Diskusi Matematika VII-A" />
                     </label>
 
                     <div class="modal-actions">
-                        <AppButton variant="secondary" class="btn btn-secondary" type="button" @click="showRoom = false">Batal</AppButton>
+                        <AppButton variant="secondary" class="btn btn-secondary" type="button" @click="requestRoomClose">Batal</AppButton>
                         <AppButton variant="primary" :loading="roomForm.processing" class="btn btn-primary" type="submit" :disabled="roomForm.processing">
                             {{ roomForm.processing ? 'Menyimpan…' : 'Buat ruang' }}
                         </AppButton>

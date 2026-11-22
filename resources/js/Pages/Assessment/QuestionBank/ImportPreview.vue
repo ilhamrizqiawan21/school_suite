@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -22,8 +23,8 @@ const pageCount = computed(() => Math.max(1, Math.ceil(visibleRows.value.length 
 const pagedRows = computed(() => visibleRows.value.slice((page.value - 1) * pageSize, page.value * pageSize));
 function toggleErrors(value: boolean) { onlyErrors.value = value; page.value = 1; }
 
-function confirmImport() {
-    if (props.invalid_count && !window.confirm('Lewati baris bermasalah dan impor hanya baris valid?')) return;
+async function confirmImport() {
+    if (props.invalid_count && !await requestConfirmation('Lewati baris bermasalah dan impor hanya baris valid?')) return;
     router.post(`/penilaian/bank-soal/import/${props.token}/confirm`, { valid_only: validOnly.value, skip_duplicates: skipDuplicates.value }, { onStart: () => processing.value = true, onFinish: () => processing.value = false });
 }
 </script>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
+import { computed, onMounted, ref } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
 
@@ -70,110 +72,138 @@ const heroVariant = computed(() => props.school.theme?.hero_variant || 'collage'
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(new Date(value))
     : '';
+const publicText = usePublicContentText();
+const page = usePage<{ contentBlocks?: Record<string, any>; publicContentBlocks?: Record<string, any> }>();
+const notice = computed(() => page.props.contentBlocks?.['home.notice'] ?? page.props.publicContentBlocks?.['home.notice']);
+const noticeDismissed = ref(false);
+const noticeKey = computed(() => `school_home_notice_${[notice.value?.title, notice.value?.message, notice.value?.starts_at, notice.value?.ends_at].join('|')}`);
+const dismissNotice = () => {
+    noticeDismissed.value = true;
+    try { window.localStorage.setItem(noticeKey.value, 'dismissed'); } catch (_) {}
+};
+const noticeVisible = computed(() => {
+    if (!notice.value || notice.value.visible === false || noticeDismissed.value) return false;
+    const today = new Date();
+    const startsAt = notice.value.starts_at ? new Date(`${notice.value.starts_at}T00:00:00`) : null;
+    const endsAt = notice.value.ends_at ? new Date(`${notice.value.ends_at}T23:59:59`) : null;
+    return (!startsAt || today >= startsAt) && (!endsAt || today <= endsAt);
+});
+const noticeLink = computed(() => {
+    const value = typeof notice.value?.link_url === 'string' ? notice.value.link_url.trim() : '';
+    return value.startsWith('/') || value.startsWith('https://') ? value : '';
+});
+onMounted(() => {
+    try { noticeDismissed.value = window.localStorage.getItem(noticeKey.value) === 'dismissed'; } catch (_) {}
+});
 </script>
 
 <template>
     <Head :title="school.name" />
-    <a class="skip-link" href="#main-content">Lewati ke konten utama</a>
+    <a class="skip-link" :href="publicText('copy.vue_school_home', 'href_066', '#main-content')">{{ publicText("copy.vue_school_home", "text_001", "Lewati ke konten utama") }}</a>
     <main id="main-content" class="public-site public-home" :style="themeStyle">
         <div class="identity-watermark" aria-hidden="true"><img v-if="school.logo_url" :src="school.logo_url" alt="" /><span v-else>{{ initial }}</span></div>
         <PublicHeader :school="school" active="home" />
 
+        <aside v-if="noticeVisible" class="home-notice" :data-variant="notice.variant || 'info'" aria-labelledby="home-notice-title">
+            <div><p class="eyebrow">{{ notice.eyebrow || 'Pengumuman sekolah' }}</p><h2 id="home-notice-title">{{ notice.title }}</h2><p>{{ notice.message }}</p></div>
+            <div class="home-notice-actions"><a v-if="noticeLink && notice.link_label" :href="noticeLink" class="text-link">{{ notice.link_label }} ↗</a><button v-if="notice.dismissible !== false" type="button" class="home-notice-dismiss" aria-label="Tutup pengumuman" @click="dismissNotice">×</button></div>
+        </aside>
+
         <section class="home-hero" :class="'hero-variant-' + heroVariant" aria-labelledby="home-title">
             <div class="hero-copy">
-                <p class="eyebrow">{{ school.level || 'Sekolah' }} · Situs resmi</p>
+                <p class="eyebrow">{{ school.level || 'Sekolah' }} {{ publicText("copy.vue_school_home", "text_9001", "· Situs resmi") }}</p>
                 <h1 id="home-title">{{ heroTitle }} <span>{{ heroAccent }}</span></h1>
                 <p class="hero-lead">{{ school.about || 'Selamat datang di ruang informasi resmi sekolah kami.' }}</p>
                 <div class="hero-actions">
                     <Link href="/ppdb" class="primary-button ui-button ui-button--primary ui-button--md">{{ heroPrimaryLabel }}</Link>
                     <Link href="/profil-sekolah" class="secondary-button ui-button ui-button--secondary ui-button--md">{{ heroSecondaryLabel }}</Link>
-                    <Link href="/login" class="text-link">Portal Siswa &amp; Guru ↗</Link>
+                    <Link href="/login" class="text-link">{{ publicText("copy.vue_school_home", "text_002", "Portal Siswa & Guru ↗") }}</Link>
                 </div>
                 <div class="trust-line">
                     <span v-if="school.school_status">{{ school.school_status }}</span>
-                    <span v-if="school.accreditation">Akreditasi {{ school.accreditation }}</span>
+                    <span v-if="school.accreditation">{{ publicText("copy.vue_school_home", "text_9002", "Akreditasi") }} {{ school.accreditation }}</span>
                     <span v-if="school.level">{{ school.level }}</span>
                 </div>
             </div>
 
-            <div class="hero-visual" aria-label="Portofolio sekolah">
+            <div class="hero-visual" :aria-label="publicText('copy.vue_school_home', 'aria_label_067', 'Portofolio sekolah')">
                 <div v-if="galleryPreview.length" class="hero-photo-grid">
                     <img class="hero-photo hero-photo-1" :src="galleryPreview[0].url" :alt="galleryPreview[0].title || galleryPreview[0].caption || ('Kegiatan ' + school.name)" />
                     <img v-if="galleryPreview[1]" class="hero-photo hero-photo-2" :src="galleryPreview[1].url" :alt="galleryPreview[1].title || galleryPreview[1].caption || ('Suasana ' + school.name)" />
                 </div>
-                <div v-else class="hero-placeholder"><span>{{ initial }}</span><small>Portofolio sekolah</small></div>
-                <div class="hero-caption"><small>{{ school.school_status || 'Ruang belajar bersama' }}</small><strong>Belajar. Berkarya. Berbagi.</strong></div>
+                <div v-else class="hero-placeholder"><span>{{ initial }}</span><small>{{ publicText("copy.vue_school_home", "text_003", "Portofolio sekolah") }}</small></div>
+                <div class="hero-caption"><small>{{ school.school_status || 'Ruang belajar bersama' }}</small><strong>{{ publicText("copy.vue_school_home", "text_004", "Belajar. Berkarya. Berbagi.") }}</strong></div>
             </div>
         </section>
 
-        <section v-if="shortcuts?.length" class="audience-pathways" aria-label="Pintasan layanan utama">
+        <section v-if="shortcuts?.length" class="audience-pathways" :aria-label="publicText('copy.vue_school_home', 'aria_label_068', 'Pintasan layanan utama')">
             <Link v-for="item in shortcuts" :key="item.key" :href="item.href" class="pathway-card">
-                <span class="pathway-tag">Layanan Utama</span>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_005", "Layanan Utama") }}</span>
                 <strong>{{ item.label }}</strong>
                 <small>{{ item.description }}</small>
             </Link>
         </section>
 
-        <section v-if="prayerSchedule || visitStats" class="audience-pathways" aria-label="Informasi harian dan direktori">
+        <section v-if="prayerSchedule || visitStats" class="audience-pathways" :aria-label="publicText('copy.vue_school_home', 'aria_label_069', 'Informasi harian dan direktori')">
             <Link v-if="prayerSchedule" href="/jadwal-salat" class="pathway-card">
-                <span class="pathway-tag">Jadwal Salat ({{ prayerSchedule.timezone }})</span>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_9003", "Jadwal Salat (") }}{{ prayerSchedule.timezone }})</span>
                 <strong>{{ prayerSchedule.next_prayer.name }} · {{ prayerSchedule.next_prayer.time }}</strong>
-                <small v-if="visitStats">Kunjungan portal hari ini: {{ visitStats.today }} · Total: {{ visitStats.total }}</small>
+                <small v-if="visitStats">{{ publicText("copy.vue_school_home", "text_9004", "Kunjungan portal hari ini:") }} {{ visitStats.today }} {{ publicText("copy.vue_school_home", "text_9005", "· Total:") }} {{ visitStats.total }}</small>
             </Link>
             <Link href="/direktori-gtk" class="pathway-card">
-                <span class="pathway-tag">Direktori</span>
-                <strong>Direktori GTK</strong>
-                <small>Lihat daftar guru dan tenaga kependidikan aktif.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_006", "Direktori") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_007", "Direktori GTK") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_008", "Lihat daftar guru dan tenaga kependidikan aktif.") }}</small>
             </Link>
             <Link href="/pusat-unduh" class="pathway-card">
-                <span class="pathway-tag">Dokumen</span>
-                <strong>Pusat Unduh</strong>
-                <small>Formulir resmi, kalender akademik, dan SOP.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_009", "Dokumen") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_010", "Pusat Unduh") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_011", "Formulir resmi, kalender akademik, dan SOP.") }}</small>
             </Link>
             <Link href="/zona-integritas" class="pathway-card">
-                <span class="pathway-tag">Mutu Layanan</span>
-                <strong>Zona Integritas &amp; IKM</strong>
-                <small>Maklumat pelayanan dan penilaian kepuasan masyarakat.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_012", "Mutu Layanan") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_013", "Zona Integritas & IKM") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_014", "Maklumat pelayanan dan penilaian kepuasan masyarakat.") }}</small>
             </Link>
         </section>
 
-        <section class="audience-pathways" aria-label="Jalur cepat pengunjung">
+        <section class="audience-pathways" :aria-label="publicText('copy.vue_school_home', 'aria_label_070', 'Jalur cepat pengunjung')">
             <Link href="/ppdb" class="pathway-card">
-                <span class="pathway-tag">Calon Siswa &amp; Orang Tua</span>
-                <strong>Informasi &amp; Pendaftaran SPMB</strong>
-                <small>Lihat jalur masuk, syarat, dan jadwal pendaftaran.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_015", "Calon Siswa & Orang Tua") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_016", "Informasi & Pendaftaran SPMB") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_017", "Lihat jalur masuk, syarat, dan jadwal pendaftaran.") }}</small>
             </Link>
             <Link href="/program" class="pathway-card">
-                <span class="pathway-tag">Akademik &amp; Minat</span>
-                <strong>Program Unggulan</strong>
-                <small>Kurikulum, ekstrakurikuler, dan pembinaan prestasi.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_018", "Akademik & Minat") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_019", "Program Unggulan") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_020", "Kurikulum, ekstrakurikuler, dan pembinaan prestasi.") }}</small>
             </Link>
             <Link href="/kehidupan-siswa" class="pathway-card">
-                <span class="pathway-tag">Lingkungan Belajar</span>
-                <strong>Kehidupan Siswa</strong>
-                <small>Kegiatan harian, karya, dan budaya sekolah.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_021", "Lingkungan Belajar") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_022", "Kehidupan Siswa") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_023", "Kegiatan harian, karya, dan budaya sekolah.") }}</small>
             </Link>
             <Link href="/login" class="pathway-card pathway-portal">
-                <span class="pathway-tag">Warga Sekolah</span>
-                <strong>Masuk Portal Akademik</strong>
-                <small>Akses materi, tugas, jadwal, rapor, dan layanan guru/siswa.</small>
+                <span class="pathway-tag">{{ publicText("copy.vue_school_home", "text_024", "Warga Sekolah") }}</span>
+                <strong>{{ publicText("copy.vue_school_home", "text_025", "Masuk Portal Akademik") }}</strong>
+                <small>{{ publicText("copy.vue_school_home", "text_026", "Akses materi, tugas, jadwal, rapor, dan layanan guru/siswa.") }}</small>
             </Link>
         </section>
 
         <section class="home-pillars" aria-labelledby="pillars-title">
             <div class="section-heading">
-                <h2 id="pillars-title">Pendidikan yang utuh, untuk setiap langkah.</h2>
-                <p>Akademik yang kuat bertemu karakter, kreativitas, dan kepedulian terhadap sesama.</p>
+                <h2 id="pillars-title">{{ publicText("copy.vue_school_home", "text_027", "Pendidikan yang utuh, untuk setiap langkah.") }}</h2>
+                <p>{{ publicText("copy.vue_school_home", "text_028", "Akademik yang kuat bertemu karakter, kreativitas, dan kepedulian terhadap sesama.") }}</p>
             </div>
             <div class="home-pillar-grid">
-                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5.5C9.5 3.7 6.8 3.3 3 4v14c3.8-.7 6.5-.3 9 1.5 2.5-1.8 5.2-2.2 9-1.5V4c-3.8-.7-6.5-.3-9 1.5ZM12 5.5v14" /></svg><h3>Belajar dengan rasa ingin tahu</h3><p>Pembelajaran aktif yang menghubungkan pengetahuan dengan kehidupan sehari-hari.</p></article>
-                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-2a5.5 5.5 0 0 1 11 0v2M16 5.3a3 3 0 0 1 0 5.4M17 14a5.5 5.5 0 0 1 3.5 5.1V20" /></svg><h3>Tumbuh dalam komunitas</h3><p>Pendampingan yang menghargai keunikan dan perkembangan setiap siswa.</p></article>
-                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m4 12 5 5L20 5" /></svg><h3>Berkarya dengan percaya diri</h3><p>Ruang untuk olahraga, seni, sains, dan ide yang memberi dampak.</p></article>
+                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5.5C9.5 3.7 6.8 3.3 3 4v14c3.8-.7 6.5-.3 9 1.5 2.5-1.8 5.2-2.2 9-1.5V4c-3.8-.7-6.5-.3-9 1.5ZM12 5.5v14" /></svg><h3>{{ publicText("copy.vue_school_home", "text_029", "Belajar dengan rasa ingin tahu") }}</h3><p>{{ publicText("copy.vue_school_home", "text_030", "Pembelajaran aktif yang menghubungkan pengetahuan dengan kehidupan sehari-hari.") }}</p></article>
+                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3.5 20v-2a5.5 5.5 0 0 1 11 0v2M16 5.3a3 3 0 0 1 0 5.4M17 14a5.5 5.5 0 0 1 3.5 5.1V20" /></svg><h3>{{ publicText("copy.vue_school_home", "text_031", "Tumbuh dalam komunitas") }}</h3><p>{{ publicText("copy.vue_school_home", "text_032", "Pendampingan yang menghargai keunikan dan perkembangan setiap siswa.") }}</p></article>
+                <article><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m4 12 5 5L20 5" /></svg><h3>{{ publicText("copy.vue_school_home", "text_033", "Berkarya dengan percaya diri") }}</h3><p>{{ publicText("copy.vue_school_home", "text_034", "Ruang untuk olahraga, seni, sains, dan ide yang memberi dampak.") }}</p></article>
             </div>
         </section>
 
         <section v-if="school.theme?.sections?.gallery !== false && galleryPreview.length" class="home-life" aria-labelledby="life-title">
-            <div class="section-heading"><div><h2 id="life-title">Hari-hari yang penuh penemuan.</h2><p>Kehidupan di sekolah</p></div><Link href="/galeri" class="text-link">Lihat galeri</Link></div>
+            <div class="section-heading"><div><h2 id="life-title">{{ publicText("copy.vue_school_home", "text_035", "Hari-hari yang penuh penemuan.") }}</h2><p>{{ publicText("copy.vue_school_home", "text_036", "Kehidupan di sekolah") }}</p></div><Link href="/galeri" class="text-link">{{ publicText("copy.vue_school_home", "text_037", "Lihat galeri") }}</Link></div>
             <div class="home-life-grid">
                 <Link v-for="photo in lifePhotos.slice(0, 3)" :key="photo.id" href="/galeri"><img :src="photo.url" :alt="photo.title || photo.caption || 'Kegiatan sekolah'" /><span>{{ photo.title || photo.caption || 'Kegiatan sekolah' }}</span></Link>
             </div>
@@ -181,52 +211,52 @@ const formatDate = (value?: string | null) => value
 
         <section v-if="school.theme?.sections?.explore !== false" class="explore-section" aria-labelledby="explore-title">
             <div class="section-heading">
-                <div><p class="eyebrow">Jelajahi sekolah</p><h2 id="explore-title">Informasi yang Anda cari, berada di tempatnya.</h2></div>
-                <p>Pilih halaman yang ingin Anda kunjungi.</p>
+                <div><p class="eyebrow">{{ publicText("copy.vue_school_home", "text_038", "Jelajahi sekolah") }}</p><h2 id="explore-title">{{ publicText("copy.vue_school_home", "text_039", "Informasi yang Anda cari, berada di tempatnya.") }}</h2></div>
+                <p>{{ publicText("copy.vue_school_home", "text_040", "Pilih halaman yang ingin Anda kunjungi.") }}</p>
             </div>
             <div class="explore-grid">
-                <Link href="/profil-sekolah" class="explore-item"><strong>Profil sekolah</strong><span>Tentang, sambutan, visi, dan misi.</span><b aria-hidden="true">↗</b></Link>
-                <Link href="/struktur-organisasi" class="explore-item"><strong>Struktur organisasi</strong><span>Kenali pengelola dan tim sekolah.</span><b aria-hidden="true">↗</b></Link>
-                <Link href="/berita" class="explore-item"><strong>Berita & kegiatan</strong><span>Kabar terbaru dari komunitas sekolah.</span><b aria-hidden="true">↗</b></Link>
-                <Link href="/galeri" class="explore-item"><strong>Galeri sekolah</strong><span>Momen, karya, dan suasana belajar.</span><b aria-hidden="true">↗</b></Link>
+                <Link href="/profil-sekolah" class="explore-item"><strong>{{ publicText("copy.vue_school_home", "text_041", "Profil sekolah") }}</strong><span>{{ publicText("copy.vue_school_home", "text_042", "Tentang, sambutan, visi, dan misi.") }}</span><b aria-hidden="true">↗</b></Link>
+                <Link href="/struktur-organisasi" class="explore-item"><strong>{{ publicText("copy.vue_school_home", "text_043", "Struktur organisasi") }}</strong><span>{{ publicText("copy.vue_school_home", "text_044", "Kenali pengelola dan tim sekolah.") }}</span><b aria-hidden="true">↗</b></Link>
+                <Link href="/berita" class="explore-item"><strong>{{ publicText("copy.vue_school_home", "text_045", "Berita & kegiatan") }}</strong><span>{{ publicText("copy.vue_school_home", "text_046", "Kabar terbaru dari komunitas sekolah.") }}</span><b aria-hidden="true">↗</b></Link>
+                <Link href="/galeri" class="explore-item"><strong>{{ publicText("copy.vue_school_home", "text_047", "Galeri sekolah") }}</strong><span>{{ publicText("copy.vue_school_home", "text_048", "Momen, karya, dan suasana belajar.") }}</span><b aria-hidden="true">↗</b></Link>
             </div>
         </section>
 
         <section v-if="school.theme?.sections?.news !== false" class="content-section" aria-labelledby="news-title">
             <div class="section-heading">
-                <div><p class="eyebrow">Kabar terbaru</p><h2 id="news-title">Cerita yang sedang berlangsung.</h2></div>
-                <Link href="/berita" class="text-link">Lihat semua berita</Link>
+                <div><p class="eyebrow">{{ publicText("copy.vue_school_home", "text_049", "Kabar terbaru") }}</p><h2 id="news-title">{{ publicText("copy.vue_school_home", "text_050", "Cerita yang sedang berlangsung.") }}</h2></div>
+                <Link href="/berita" class="text-link">{{ publicText("copy.vue_school_home", "text_051", "Lihat semua berita") }}</Link>
             </div>
             <div v-if="news.length" class="news-grid">
                 <Link v-for="item in news" :key="item.id" :href="'/berita/' + item.slug" class="news-card">
                     <div class="news-image"><img v-if="item.photos[0]" :src="item.photos[0].url" :alt="item.title" /><span v-else>{{ initial }}</span></div>
-                    <div class="news-body"><small>{{ formatDate(item.published_at) }}</small><h3>{{ item.title }}</h3><p>{{ item.excerpt || 'Baca informasi lengkap dari sekolah.' }}</p><span class="read-link">Baca berita ↗</span></div>
+                    <div class="news-body"><small>{{ formatDate(item.published_at) }}</small><h3>{{ item.title }}</h3><p>{{ item.excerpt || 'Baca informasi lengkap dari sekolah.' }}</p><span class="read-link">{{ publicText("copy.vue_school_home", "text_052", "Baca berita ↗") }}</span></div>
                 </Link>
             </div>
-            <p v-else class="empty-state">Berita sekolah akan tampil di halaman ini.</p>
+            <p v-else class="empty-state">{{ publicText("copy.vue_school_home", "text_053", "Berita sekolah akan tampil di halaman ini.") }}</p>
         </section>
 
-        <section class="home-admissions" aria-labelledby="admissions-title"><div><h2 id="admissions-title">Langkah awal masa depan dimulai di sini.</h2><p>Pelajari jalur, persyaratan, dan jadwal pendaftaran peserta didik baru.</p></div><Link href="/ppdb" aria-label="Lihat informasi SPMB">Lihat SPMB <span aria-hidden="true">→</span></Link></section>
+        <section class="home-admissions" aria-labelledby="admissions-title"><div><h2 id="admissions-title">{{ publicText("copy.vue_school_home", "text_054", "Langkah awal masa depan dimulai di sini.") }}</h2><p>{{ publicText("copy.vue_school_home", "text_055", "Pelajari jalur, persyaratan, dan jadwal pendaftaran peserta didik baru.") }}</p></div><Link href="/ppdb" :aria-label="publicText('copy.vue_school_home', 'aria_label_10001', 'Lihat informasi SPMB')">{{ publicText("copy.vue_school_home", "text_056", "Lihat SPMB") }} <span aria-hidden="true">→</span></Link></section>
 
         <footer class="public-footer">
             <div class="footer-brand">
-                <p class="eyebrow">Hubungi sekolah</p>
+                <p class="eyebrow">{{ publicText("copy.vue_school_home", "text_057", "Hubungi sekolah") }}</p>
                 <h2>{{ school.name }}</h2>
                 <p class="footer-desc">{{ school.about || 'Ruang belajar yang aman, kolaboratif, dan berorientasi pada masa depan siswa.' }}</p>
             </div>
             <div class="footer-links">
-                <p class="footer-heading">Tautan cepat</p>
-                <nav aria-label="Navigasi footer">
-                    <Link href="/profil-sekolah">Profil Sekolah</Link>
-                    <Link href="/program">Program</Link>
-                    <Link href="/ppdb">SPMB</Link>
-                    <Link href="/berita">Berita</Link>
-                    <Link href="/galeri">Galeri</Link>
-                    <Link href="/login">Portal Login</Link>
+                <p class="footer-heading">{{ publicText("copy.vue_school_home", "text_058", "Tautan cepat") }}</p>
+                <nav :aria-label="publicText('copy.vue_school_home', 'aria_label_071', 'Navigasi footer')">
+                    <Link href="/profil-sekolah">{{ publicText("copy.vue_school_home", "text_059", "Profil Sekolah") }}</Link>
+                    <Link href="/program">{{ publicText("copy.vue_school_home", "text_060", "Program") }}</Link>
+                    <Link href="/ppdb">{{ publicText("copy.vue_school_home", "text_061", "SPMB") }}</Link>
+                    <Link href="/berita">{{ publicText("copy.vue_school_home", "text_062", "Berita") }}</Link>
+                    <Link href="/galeri">{{ publicText("copy.vue_school_home", "text_063", "Galeri") }}</Link>
+                    <Link href="/login">{{ publicText("copy.vue_school_home", "text_064", "Portal Login") }}</Link>
                 </nav>
             </div>
             <div class="contact-list">
-                <p class="footer-heading">Kontak resmi</p>
+                <p class="footer-heading">{{ publicText("copy.vue_school_home", "text_065", "Kontak resmi") }}</p>
                 <p v-if="school.address">{{ school.address }}</p>
                 <a v-if="school.phone" :href="'tel:' + school.phone">{{ school.phone }}</a>
                 <a v-if="school.email" :href="'mailto:' + school.email">{{ school.email }}</a>
@@ -245,6 +275,7 @@ const formatDate = (value?: string | null) => value
 .public-site { --ink: var(--public-ink, #173044); --muted: var(--public-muted, #526673); --paper: var(--public-surface, #f5f8fb); --deep: var(--public-primary, #3157a4); --gold: var(--public-accent, #8a661f); --line: #dde5ef; min-height: 100vh; color: var(--ink); background: #f4f7fb; font-family: var(--font-ui); }
 .public-home > section,
 .public-home > .public-footer { width: min(1180px, calc(100% - 3rem)); box-sizing: border-box; margin-inline: auto; }
+.home-notice { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; width: min(1180px, calc(100% - 3rem)); box-sizing: border-box; margin: 1.25rem auto 0; padding: 1rem 1.25rem; color: var(--ink); background: color-mix(in srgb, var(--public-surface, #f5f8fb) 86%, var(--public-primary, #3157a4)); border: 1px solid color-mix(in srgb, var(--public-primary, #3157a4) 30%, transparent); border-radius: .8rem; }.home-notice h2 { margin: .25rem 0 .35rem; font-family: var(--font-ui); font-size: 1.25rem; font-weight: var(--weight-semibold); }.home-notice p:not(.eyebrow) { margin: 0; color: var(--muted); line-height: 1.55; }.home-notice[data-variant='warning'] { background: #fff7e8; border-color: #d8ad63; }.home-notice[data-variant='success'] { background: #edf8f0; border-color: #8fc49b; }.home-notice-actions { display: flex; align-items: center; gap: .75rem; }.home-notice-dismiss { width: 2rem; height: 2rem; color: var(--muted); background: transparent; border: 0; border-radius: .4rem; font-size: 1.25rem; cursor: pointer; }.home-notice-dismiss:hover, .home-notice-dismiss:focus-visible { background: rgba(23,48,68,.08); color: var(--ink); }
 
 .skip-link { position: fixed; top: -4rem; left: 1rem; z-index: 10; padding: .7rem 1rem; color: var(--paper); background: var(--deep); border-radius: .4rem; font-size: var(--type-meta); font-weight: var(--weight-bold); text-decoration: none; }
 .skip-link:focus { top: 1rem; }

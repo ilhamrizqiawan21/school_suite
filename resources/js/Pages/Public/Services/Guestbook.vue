@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { useForm, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -149,6 +151,7 @@ const submit = () => {
         },
     });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -156,75 +159,75 @@ const submit = () => {
     <main class="public-site public-portal-page" data-madrasah-service="guestbook" :style="themeStyle">
         <PublicHeader :school="school" />
         <div class="parity-latar-bottom" aria-hidden="true">
-            <img src="/madrasah-theme/images/guestbook/login-backg1.png" alt="" />
+            <img :src="publicText('copy.vue_services_guestbook', 'src_018', '/madrasah-theme/images/guestbook/login-backg1.png')" alt="" />
         </div>
 
         <section class="portal-container guestbook-layout">
-            <header class="portal-hero madrasah-service-hero guestbook-welcome">
-                <p class="madrasah-service-label"><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{ contentBlocks?.['guestbook.hero']?.label || 'Resepsionis & Penerimaan Tamu' }}</p>
-                <h2 class="parity-guest-greeting">{{ contentBlocks?.['guestbook.hero']?.greeting || 'Selamat datang' }}</h2>
-                <h1>BUKU TAMU</h1>
+            <header v-if="contentBlocks?.['guestbook.hero']?.visible !== false" class="portal-hero madrasah-service-hero guestbook-welcome">
+                <p class="madrasah-service-label"><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{ contentBlocks?.['guestbook.hero']?.label ?? 'Resepsionis & Penerimaan Tamu' }}</p>
+                <h2 class="parity-guest-greeting">{{ contentBlocks?.['guestbook.hero']?.greeting ?? 'Selamat datang' }}</h2>
+                <h1>{{ publicText("copy.vue_services_guestbook", "text_001", "BUKU TAMU") }}</h1>
                 <h3 class="guestbook-school"><b>{{ school.name.toUpperCase() }}</b></h3>
                 <div class="parity-guest-emblem" aria-hidden="true">
-                    <img src="/madrasah-theme/images/guestbook/LOGO2.png" alt="Electronic Guestbook" />
+                    <img :src="publicText('copy.vue_services_guestbook', 'src_019', '/madrasah-theme/images/guestbook/LOGO2.png')" :alt="publicText('copy.vue_services_guestbook', 'alt_020', 'Electronic Guestbook')" />
                 </div>
-                <p>{{ contentBlocks?.['guestbook.hero']?.description || 'Silakan isi data kunjungan Anda untuk dicatat oleh resepsionis. Data pengunjung bersifat privat dan hanya dapat dilihat oleh petugas berwenang.' }}</p>
+                <p>{{ contentBlocks?.['guestbook.hero']?.description ?? 'Silakan isi data kunjungan Anda untuk dicatat oleh resepsionis. Data pengunjung bersifat privat dan hanya dapat dilihat oleh petugas berwenang.' }}</p>
                 <ul class="guestbook-highlights">
-                    <li><i class="fa-solid fa-clock" aria-hidden="true"></i> Jam Resepsionis: {{ contentBlocks?.['guestbook.hero']?.reception_hours || school.service_hours || 'Senin–Jumat, 07.30–15.00' }}</li>
-                    <li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Data kunjungan terjaga kerahasiaannya</li>
-                    <li><i class="fa-solid fa-ticket" aria-hidden="true"></i> Dapatkan bukti registrasi kunjungan instan</li>
+                    <li><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ publicText("copy.vue_services_guestbook", "text_9001", "Jam Resepsionis:") }} {{ contentBlocks?.['guestbook.hero']?.reception_hours ?? school.service_hours ?? 'Senin–Jumat, 07.30–15.00' }}</li>
+                    <li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{ publicText("copy.vue_services_guestbook", "text_002", "Data kunjungan terjaga kerahasiaannya") }}</li>
+                    <li><i class="fa-solid fa-ticket" aria-hidden="true"></i> {{ publicText("copy.vue_services_guestbook", "text_003", "Dapatkan bukti registrasi kunjungan instan") }}</li>
                 </ul>
             </header>
 
             <div v-if="flashMessage" class="alert-banner" role="status">{{ flashMessage }}</div>
 
             <section v-if="confirmationSlip" class="slip-card" role="status">
-                <strong>Bukti Registrasi Tamu</strong>
+                <strong>{{ publicText("copy.vue_services_guestbook", "text_004", "Bukti Registrasi Tamu") }}</strong>
                 <div class="slip-code">{{ confirmationSlip.visit_code }}</div>
-                <p>Pengunjung: <strong>{{ confirmationSlip.visitor_name }}</strong> · Tujuan: <strong>{{ confirmationSlip.host_name }}</strong></p>
+                <p>{{ publicText("copy.vue_services_guestbook", "text_005", "Pengunjung:") }} <strong>{{ confirmationSlip.visitor_name }}</strong> {{ publicText("copy.vue_services_guestbook", "text_006", "· Tujuan:") }} <strong>{{ confirmationSlip.host_name }}</strong></p>
             </section>
 
             <section class="portal-card guestbook-register" aria-labelledby="guestbook-register-title">
                 <div class="parity-heading-register">
-                    <h2 id="guestbook-register-title" class="service-form-title parity-register-badge">REGISTER TAMU</h2>
+                    <h2 id="guestbook-register-title" class="service-form-title parity-register-badge">{{ publicText("copy.vue_services_guestbook", "text_007", "REGISTER TAMU") }}</h2>
                 </div>
                 <div class="parity-form-register-inner">
                     <div class="parity-guestbook-split">
                         <form class="form-grid" @submit.prevent="submit">
-                            <FormField id="guest-name" label="Nama Pengunjung" required :error="form.errors.visitor_name" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.visitor_name" type="text" placeholder="Nama" required :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="guest-name" :label="publicText('copy.vue_services_guestbook', 'label_10001', 'Nama Pengunjung')" required :error="form.errors.visitor_name" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.visitor_name" type="text" :placeholder="publicText('copy.vue_services_guestbook', 'placeholder_021', 'Nama')" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="guest-phone" label="Nomor HP / Kontak" required :error="form.errors.visitor_phone" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.visitor_phone" type="text" placeholder="No Telpon" required :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="guest-phone" :label="publicText('copy.vue_services_guestbook', 'label_10002', 'Nomor HP / Kontak')" required :error="form.errors.visitor_phone" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.visitor_phone" type="text" :placeholder="publicText('copy.vue_services_guestbook', 'placeholder_022', 'No Telpon')" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="guest-org" label="Instansi / Asal / Hubungan" :error="form.errors.visitor_organization" v-slot="{ inputId, describedBy, invalid }">
-                                <input :id="inputId" v-model="form.visitor_organization" type="text" placeholder="Asal Instansi" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                            <FormField id="guest-org" :label="publicText('copy.vue_services_guestbook', 'label_10003', 'Instansi / Asal / Hubungan')" :error="form.errors.visitor_organization" v-slot="{ inputId, describedBy, invalid }">
+                                <input :id="inputId" v-model="form.visitor_organization" type="text" :placeholder="publicText('copy.vue_services_guestbook', 'placeholder_023', 'Asal Instansi')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                             </FormField>
 
-                            <FormField id="guest-category" label="Kategori Tamu" required :error="form.errors.category" v-slot="{ inputId, describedBy, invalid }">
+                            <FormField id="guest-category" :label="publicText('copy.vue_services_guestbook', 'label_10004', 'Kategori Tamu')" required :error="form.errors.category" v-slot="{ inputId, describedBy, invalid }">
                                 <select :id="inputId" v-model="form.category" :aria-describedby="describedBy" :aria-invalid="invalid">
                                     <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
                                 </select>
                             </FormField>
 
                             <div class="full-span">
-                                <FormField id="guest-notes" label="Alamat / Catatan Tambahan" :error="form.errors.notes" v-slot="{ inputId, describedBy, invalid }">
-                                    <input :id="inputId" v-model="form.notes" type="text" placeholder="Alamat / Catatan (Opsional)" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                                <FormField id="guest-notes" :label="publicText('copy.vue_services_guestbook', 'label_10005', 'Alamat / Catatan Tambahan')" :error="form.errors.notes" v-slot="{ inputId, describedBy, invalid }">
+                                    <input :id="inputId" v-model="form.notes" type="text" :placeholder="publicText('copy.vue_services_guestbook', 'placeholder_024', 'Alamat / Catatan (Opsional)')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                                 </FormField>
                             </div>
 
                             <div class="full-span parity-isian-row">
                                 <div class="parity-isian-label">
-                                    <label for="guest-host-select">Bertemu</label>
+                                    <label for="guest-host-select">{{ publicText("copy.vue_services_guestbook", "text_008", "Bertemu") }}</label>
                                 </div>
                                 <div class="parity-isian-field">
-                                    <FormField id="guest-host-select" label="Pegawai / Guru Tujuan" :error="form.errors.host_teacher_id" v-slot="{ inputId, describedBy, invalid }">
+                                    <FormField id="guest-host-select" :label="publicText('copy.vue_services_guestbook', 'label_10006', 'Pegawai / Guru Tujuan')" :error="form.errors.host_teacher_id" v-slot="{ inputId, describedBy, invalid }">
                                         <select :id="inputId" v-model="selectedHostOption" :aria-describedby="describedBy" :aria-invalid="invalid" @change="onHostSelectChange">
-                                            <option value="">-- Pilih Pejabat / Pegawai yang Dituju --</option>
+                                            <option value="">{{ publicText("copy.vue_services_guestbook", "text_009", "-- Pilih Pejabat / Pegawai yang Dituju --") }}</option>
                                             <option v-for="h in hosts" :key="h.id" :value="h.id">{{ h.name }}</option>
-                                            <option value="lainnya">-- Lainnya / Input Manual --</option>
+                                            <option value="lainnya">{{ publicText("copy.vue_services_guestbook", "text_010", "-- Lainnya / Input Manual --") }}</option>
                                         </select>
                                     </FormField>
                                 </div>
@@ -232,56 +235,56 @@ const submit = () => {
 
                             <div v-if="selectedHostOption === 'lainnya'" class="full-span parity-isian-row parity-isian-row--manual">
                                 <div class="parity-isian-label parity-isian-label--manual">
-                                    <label for="guest-host-manual">Nama Pegawai</label>
+                                    <label for="guest-host-manual">{{ publicText("copy.vue_services_guestbook", "text_011", "Nama Pegawai") }}</label>
                                 </div>
                                 <div class="parity-isian-field">
-                                    <FormField id="guest-host-manual" label="Nama Tujuan Lain / Unit" :error="form.errors.host_name" v-slot="{ inputId, describedBy, invalid }">
-                                        <input :id="inputId" v-model="form.host_name" type="text" placeholder="Ketik Nama Pegawai / Tujuan" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                                    <FormField id="guest-host-manual" :label="publicText('copy.vue_services_guestbook', 'label_10007', 'Nama Tujuan Lain / Unit')" :error="form.errors.host_name" v-slot="{ inputId, describedBy, invalid }">
+                                        <input :id="inputId" v-model="form.host_name" type="text" :placeholder="publicText('copy.vue_services_guestbook', 'placeholder_025', 'Ketik Nama Pegawai / Tujuan')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                                     </FormField>
                                 </div>
                             </div>
 
                             <div class="full-span parity-isian-row">
                                 <div class="parity-isian-label">
-                                    <label for="guest-purpose">Keperluan</label>
+                                    <label for="guest-purpose">{{ publicText("copy.vue_services_guestbook", "text_012", "Keperluan") }}</label>
                                 </div>
                                 <div class="parity-isian-field">
-                                    <FormField id="guest-purpose" label="Keperluan Kunjungan" required :error="form.errors.purpose" v-slot="{ inputId, describedBy, invalid }">
-                                        <input :id="inputId" v-model="form.purpose" type="text" placeholder="Ketik Keperluan Anda" required :aria-describedby="describedBy" :aria-invalid="invalid" />
+                                    <FormField id="guest-purpose" :label="publicText('copy.vue_services_guestbook', 'label_10008', 'Keperluan Kunjungan')" required :error="form.errors.purpose" v-slot="{ inputId, describedBy, invalid }">
+                                        <input :id="inputId" v-model="form.purpose" type="text" :placeholder="publicText('copy.vue_services_guestbook', 'placeholder_026', 'Ketik Keperluan Anda')" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                                     </FormField>
                                 </div>
                             </div>
 
                             <div class="full-span parity-submit-row">
                                 <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="form.processing">
-                                    Register
+                                    {{ publicText("copy.vue_services_guestbook", "text_013", "Register") }}
                                 </button>
                             </div>
                         </form>
 
                         <aside class="parity-guest-photo" aria-labelledby="guest-photo-title">
                             <div class="parity-ambil-badge">
-                                <h2 id="guest-photo-title">Ambil Foto</h2>
+                                <h2 id="guest-photo-title">{{ publicText("copy.vue_services_guestbook", "text_014", "Ambil Foto") }}</h2>
                             </div>
-                            <video v-if="cameraActive" ref="camera" class="parity-photo-video" muted playsinline aria-label="Pratinjau kamera foto kunjungan" />
+                            <video v-if="cameraActive" ref="camera" class="parity-photo-video" muted playsinline :aria-label="publicText('copy.vue_services_guestbook', 'aria_label_027', 'Pratinjau kamera foto kunjungan')" />
                             <div v-else class="parity-photo-frame">
-                                <img v-if="photoPreview" :src="photoPreview" alt="Foto kunjungan yang dipilih" />
+                                <img v-if="photoPreview" :src="photoPreview" :alt="publicText('copy.vue_services_guestbook', 'alt_028', 'Foto kunjungan yang dipilih')" />
                                 <div v-else class="parity-photo-placeholder">
                                     <i class="fa-solid fa-camera" aria-hidden="true"></i>
                                 </div>
                             </div>
                             <div class="parity-camera-actions">
-                                <button v-if="cameraActive" type="button" class="parity-ambilfoto-btn" title="Ambil Foto" aria-label="Ambil Foto" @click="capturePhoto">
+                                <button v-if="cameraActive" type="button" class="parity-ambilfoto-btn" :title="publicText('copy.vue_services_guestbook', 'title_029', 'Ambil Foto')" :aria-label="publicText('copy.vue_services_guestbook', 'aria_label_030', 'Ambil Foto')" @click="capturePhoto">
                                     <i class="fa-solid fa-camera" aria-hidden="true"></i>
                                 </button>
                                 <button v-else type="button" class="parity-ambilfoto-btn" :disabled="cameraBusy" :title="cameraBusy ? 'Membuka Kamera...' : 'Buka Kamera'" :aria-label="cameraBusy ? 'Membuka Kamera...' : 'Buka Kamera'" @click="startCamera">
                                     <i class="fa-solid fa-camera" aria-hidden="true"></i>
                                 </button>
-                                <button v-if="cameraActive" type="button" class="parity-camera-secondary" @click="stopCamera">Batal</button>
-                                <label for="guest-photo-file" class="parity-photo-file">Pilih foto JPEG
+                                <button v-if="cameraActive" type="button" class="parity-camera-secondary" @click="stopCamera">{{ publicText("copy.vue_services_guestbook", "text_015", "Batal") }}</button>
+                                <label for="guest-photo-file" class="parity-photo-file">{{ publicText("copy.vue_services_guestbook", "text_016", "Pilih foto JPEG") }}
                                     <input id="guest-photo-file" type="file" accept="image/jpeg" @change="choosePhoto" />
                                 </label>
-                                <button v-if="photoPreview" type="button" class="parity-camera-secondary" @click="clearPhoto">Hapus Foto</button>
+                                <button v-if="photoPreview" type="button" class="parity-camera-secondary" @click="clearPhoto">{{ publicText("copy.vue_services_guestbook", "text_017", "Hapus Foto") }}</button>
                             </div>
                             <p v-if="cameraError || form.errors.photo" class="parity-camera-error" role="alert">{{ cameraError || form.errors.photo }}</p>
                         </aside>

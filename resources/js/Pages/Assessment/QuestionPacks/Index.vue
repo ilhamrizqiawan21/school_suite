@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -190,13 +192,14 @@ function submit() {
     }
 }
 
-function action(path: string, confirmation: string) {
-    if (window.confirm(confirmation)) router.post(path, {}, { preserveScroll: true });
+async function action(path: string, confirmation: string) {
+    if (await requestConfirmation(confirmation)) router.post(path, {}, { preserveScroll: true });
 }
 
 function typeLabel(type: string) {
     return ({ multiple_choice: 'Pilihan ganda', essay: 'Esai', true_false: 'Benar / salah', matching: 'Menjodohkan' } as Record<string, string>)[type] ?? type;
 }
+const requestFormClose = useConfirmedDialogClose(form, closeForm);
 </script>
 
 <template>
@@ -275,11 +278,11 @@ function typeLabel(type: string) {
             </nav>
         </div>
 
-        <div v-if="showForm" class="modal-backdrop" @click.self="closeForm">
+        <div v-if="showForm" class="modal-backdrop" @click.self="requestFormClose" @keydown.esc.stop.prevent="requestFormClose">
             <form class="modal-card pack-form" @submit.prevent="submit">
-                <div class="form-heading"><div><p class="eyebrow">{{ editing ? 'Ubah metadata dan item' : 'Paket baru' }}</p><h2>{{ editing ? 'Ubah paket soal' : 'Buat paket soal' }}</h2></div><AppButton variant="ghost" icon-only icon="close" type="button" class="close-button" aria-label="Tutup" @click="closeForm">×</AppButton></div>
+                <div class="form-heading"><div><p class="eyebrow">{{ editing ? 'Ubah metadata dan item' : 'Paket baru' }}</p><h2>{{ editing ? 'Ubah paket soal' : 'Buat paket soal' }}</h2></div><AppButton variant="ghost" icon-only icon="close" type="button" class="close-button" aria-label="Tutup" @click="requestFormClose">×</AppButton></div>
                 <div class="form-grid">
-                    <label>Nama paket<input v-model="form.name" required maxlength="180" placeholder="Contoh: Sumatif Aljabar Kelas VII" /></label>
+                    <label>Nama paket<input v-model="form.name" required maxlength="180" placeholder="Sumatif Aljabar Kelas VII" /></label>
                     <label>Jenjang<select v-model="form.jenjang" required><option value="">Pilih jenjang</option><option value="SD">SD</option><option value="SMP">SMP</option><option value="SMA">SMA</option></select></label>
                     <label>Kurikulum<select v-model="form.curriculum" required><option value="merdeka">Merdeka</option><option value="kbc">KBC</option><option value="both">Merdeka & KBC</option></select></label>
                     <label>Durasi (menit, opsional)<input v-model.number="form.duration_minutes" type="number" min="1" max="480" placeholder="Tidak dibatasi" /></label>
@@ -318,7 +321,7 @@ function typeLabel(type: string) {
                 </section>
 
                 <p v-if="packError || form.hasErrors" class="form-error">{{ packError || Object.values(form.errors)[0] }}</p>
-                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="closeForm">Batal</AppButton><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !form.items.length || incompatibleItems.length > 0">{{ form.processing ? 'Menyimpan…' : 'Simpan paket' }}</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestFormClose">Batal</AppButton><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !form.items.length || incompatibleItems.length > 0">{{ form.processing ? 'Menyimpan…' : 'Simpan paket' }}</AppButton></div>
             </form>
         </div>
     </AppLayout>

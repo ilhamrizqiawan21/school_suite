@@ -521,6 +521,11 @@ class AcademicQueryService
      *
      * @return list<array{id: int, name: string, position: string, employment_status: ?string}>
      */
+    public function countPublicDirectoryTeachers(int $schoolId): int
+    {
+        return Teacher::query()->where('school_id', $schoolId)->where('is_active', true)->count();
+    }
+
     public function getPublicDirectoryTeachers(int $schoolId, ?string $search = null, ?string $position = null): array
     {
         $cleanSearch = trim((string) $search);
@@ -644,6 +649,28 @@ class AcademicQueryService
                 ->orWhereRaw('LOWER(name) = ?', [mb_strtolower($query)]))
             ->limit(2)
             ->pluck('id');
+
+        return $ids->count() === 1 ? (int) $ids->first() : null;
+    }
+
+    public function resolveActiveStudentIdByNumber(int $schoolId, string $identifier): ?int
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '') {
+            return null;
+        }
+        $ids = Student::query()->where('school_id', $schoolId)->where('status', 'active')
+            ->where(fn ($query) => $query->where('nis', $identifier)->orWhere('nisn', $identifier))
+            ->limit(2)->pluck('id');
+
+        return $ids->count() === 1 ? (int) $ids->first() : null;
+    }
+
+    public function resolveActiveStudentUserId(int $schoolId, string $identifier): ?int
+    {
+        $ids = Student::query()->where('school_id', $schoolId)->where('status', 'active')
+            ->where(fn ($q) => $q->where('nis', $identifier)->orWhere('nisn', $identifier))
+            ->whereNotNull('user_id')->limit(2)->pluck('user_id');
 
         return $ids->count() === 1 ? (int) $ids->first() : null;
     }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -94,9 +95,9 @@ function finishSubmitWhenReady() {
         router.post(`/ujian/attempt/${props.attempt.id}/kirim`, {}, { onSuccess: () => { try { window.localStorage.removeItem(localKey); window.localStorage.removeItem(reviewKey); } catch { /* noop */ } }, onFinish: () => { isSubmitting.value = false; submitted.value = false; } });
     }
 }
-function submitExam(force = false) {
+async function submitExam(force = false) {
     if (submitted.value || isSubmitting.value || props.attempt.status !== 'in_progress') return;
-    if (! force && ! window.confirm(`Kirim jawaban sekarang? ${props.questions.length - answeredCount.value} soal pilihan belum dijawab.`)) return;
+    if (! force && ! await requestConfirmation(`Kirim jawaban sekarang? ${props.questions.length - answeredCount.value} soal pilihan belum dijawab.`)) return;
     if (! isOnline.value) { setSaveState(activeQuestion.value?.id ?? 0, 'error'); return; }
     submitted.value = true;
     pendingSubmit.value = true;

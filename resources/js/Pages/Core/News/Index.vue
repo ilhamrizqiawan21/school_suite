@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useUnsavedDialog } from '@/composables/useUnsavedDialog';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -8,7 +9,7 @@ import AppLayout from '../../../layouts/AppLayout.vue';
 interface Photo { id: number; name?: string | null; caption?: string | null; url: string }
 interface NewsItem { id: number; title: string; slug: string; category?: string; excerpt?: string | null; body?: string; status: 'draft' | 'published'; is_archived?: boolean; published_at?: string | null; author_name?: string | null; photos: Photo[] }
 
-const props = defineProps<{ news: NewsItem[]; can_manage: boolean }>();
+const props = defineProps<{ news: NewsItem[]; can_manage: boolean; schoolTimezone?: string }>();
 const page = usePage<{ flash?: { message?: string } }>();
 const maxPhotoBytes = 2 * 1024 * 1024;
 const showForm = ref(false);
@@ -50,14 +51,17 @@ const clearPhotoPreviews = () => {
     photoPreviews.value.forEach((url) => URL.revokeObjectURL(url));
     photoPreviews.value = [];
 };
+const initialForm = JSON.parse(JSON.stringify(form.data()));
 const reset = () => {
     showForm.value = false;
     editingId.value = null;
     localPhotoError.value = '';
     clearPhotoPreviews();
+    form.defaults(structuredClone(initialForm));
     form.reset();
     form.clearErrors();
 };
+const { discardOpen, requestClose, discard } = useUnsavedDialog(form, reset);
 const openCreate = () => {
     reset();
     showForm.value = true;
@@ -70,12 +74,16 @@ const edit = (item: NewsItem) => {
     form.body = item.body ?? '';
     form.status = item.status;
     form.is_archived = Boolean(item.is_archived);
-    form.published_at = item.published_at ? new Date(item.published_at).toISOString().slice(0, 16) : '';
+    if (item.published_at) {
+        const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: props.schoolTimezone || 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(item.published_at)).map((part) => [part.type, part.value]));
+        form.published_at = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+    } else form.published_at = '';
     clearPhotoPreviews();
     form.photos = [];
     form.photo_captions = [];
     localPhotoError.value = '';
     form.clearErrors();
+    form.defaults();
     showForm.value = true;
 };
 const selectPhotos = (event: Event) => {
@@ -155,19 +163,19 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
             <section class="hero-card"><div><p class="eyebrow">Website sekolah</p><h1>Berita sekolah</h1><p>Tulis informasi kegiatan dan pencapaian sekolah untuk ditampilkan pada halaman publik.</p></div><AppButton variant="primary" v-if="can_manage" type="button" class="primary-button" @click="openCreate">+ Buat berita</AppButton></section>
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
 
-            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="news-modal-title" class="modal-backdrop" @click.self="reset" @keydown.esc="reset">
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="news-modal-title" class="modal-backdrop" @click.self="requestClose" @keydown.esc="requestClose">
                 <form class="modal-card news-editor" @submit.prevent="save">
-                    <div class="section-heading"><div><p class="eyebrow">{{ editing ? 'Edit berita' : 'Berita baru' }}</p><h2 id="news-modal-title">{{ editing ? editing.title : 'Buat berita sekolah' }}</h2><p>Berita dapat disimpan sebagai draf atau langsung diterbitkan.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir berita" @click="reset">×</AppButton></div>
-                <label><span>Judul berita <small class="char-count">{{ form.title.length }}/180</small></span><input v-model="form.title" required maxlength="180" placeholder="Contoh: Siswa meraih juara lomba sains" /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
+                    <div class="section-heading"><div><p class="eyebrow">{{ editing ? 'Edit berita' : 'Berita baru' }}</p><h2 id="news-modal-title">{{ editing ? editing.title : 'Buat berita sekolah' }}</h2><p>Berita dapat disimpan sebagai draf atau langsung diterbitkan.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir berita" @click="requestClose">×</AppButton></div>
+                <label><span>Judul berita <small class="char-count">{{ form.title.length }}/180</small></span><input v-model="form.title" required maxlength="180" placeholder="Siswa meraih juara lomba sains" /><em v-if="form.errors.title">{{ form.errors.title }}</em></label>
                 <label><span>Ringkasan <small class="char-count">{{ form.excerpt.length }}/500</small></span><textarea v-model="form.excerpt" rows="2" maxlength="500" placeholder="Ringkasan singkat yang tampil di kartu berita."></textarea><em v-if="form.errors.excerpt">{{ form.errors.excerpt }}</em></label>
                 <label><span>Isi berita <small class="char-count">{{ form.body.length }}/20.000</small></span><textarea v-model="form.body" required rows="8" maxlength="20000" placeholder="Tuliskan isi berita secara lengkap."></textarea><em v-if="form.errors.body">{{ form.errors.body }}</em></label>
                 <div class="form-grid"><label>Status <select v-model="form.status"><option value="draft">Draf</option><option value="published">Terbitkan</option></select><em v-if="form.errors.status">{{ form.errors.status }}</em></label><label v-if="form.status === 'published'">Waktu terbit <input v-model="form.published_at" type="datetime-local" /><em v-if="form.errors.published_at">{{ form.errors.published_at }}</em></label></div>
                 <div class="photo-field"><span class="field-label">Foto berita</span><span class="photo-picker"><input id="news-photos" class="sr-only-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple @change="selectPhotos" /><label class="photo-picker-button" for="news-photos">Pilih foto</label><span class="photo-picker-name">{{ form.photos.length ? `${form.photos.length} foto dipilih` : 'Belum ada foto dipilih' }}</span></span><small>Pilih sampai {{ Math.max(0, 5 - (editing?.photos.length ?? 0)) }} foto baru; maksimal 5 foto total per berita dan 2 MB per foto.</small><em v-if="photoError" role="alert">{{ photoError }}</em><em v-if="form.errors.photo_captions" role="alert">{{ form.errors.photo_captions }}</em></div>
                 <div v-if="form.photos.length" class="selected-photos"><span class="field-label">Foto baru dan keterangannya</span><div class="photo-grid"><figure v-for="(photo, index) in form.photos" :key="`${photo.name}-${index}`"><img :src="photoPreviews[index]" :alt="photo.name" /><figcaption><strong>{{ photo.name }}</strong><input v-model="form.photo_captions[index]" maxlength="255" placeholder="Keterangan foto (opsional)" /><AppButton variant="danger" size="sm" type="button" class="text-button danger" @click="removeSelectedPhoto(index)">Batalkan</AppButton></figcaption></figure></div></div>
-                <label class="photo-field">Kategori publikasi<select v-model="form.category"><option value="berita">Berita Sekolah</option><option value="prestasi">Prestasi & Kejuaraan Siswa</option><option value="agenda">Agenda Madrasah</option><option value="karir-alumni">Bursa Karir Alumni</option><option value="beasiswa-alumni">Beasiswa Alumni</option><option v-if="!['berita', 'prestasi', 'agenda', 'karir-alumni', 'beasiswa-alumni'].includes(form.category)" :value="form.category">{{ form.category }}</option></select><small v-if="form.category === 'prestasi'">Untuk prestasi, isi Ringkasan dengan format: <code>Peringkat | Tingkat | Nama Peraih</code> (contoh: <code>Medali Emas | Nasional | Tim Riset</code>).</small><small v-if="form.errors.category">{{ form.errors.category }}</small></label>
+                <label class="photo-field">Kategori publikasi<select v-model="form.category"><option value="berita">Berita Sekolah</option><option value="prestasi">Prestasi & Kejuaraan Siswa</option><option value="agenda">Agenda Madrasah</option><option value="karir-alumni">Bursa Karir Alumni</option><option value="beasiswa-alumni">Beasiswa Alumni</option><option v-if="!['berita', 'prestasi', 'agenda', 'karir-alumni', 'beasiswa-alumni'].includes(form.category)" :value="form.category">{{ form.category }}</option></select><small v-if="form.category === 'prestasi'">Untuk prestasi, isi Ringkasan dengan format: <code>Peringkat | Tingkat | Nama Peraih</code> (<code>Medali Emas | Nasional | Tim Riset</code>).</small><small v-if="form.errors.category">{{ form.errors.category }}</small></label>
                 <label class="flex items-center gap-2 text-xs font-semibold"><input v-model="form.is_archived" type="checkbox" /> Arsipkan publikasi (sembunyikan dari daftar publik tanpa menghapus)</label>
                 <div v-if="editing?.photos.length" class="existing-photos"><span class="field-label">Foto tersimpan</span><div class="photo-grid"><figure v-for="photo in editing.photos" :key="photo.id"><img :src="photo.url" :alt="photo.caption || photo.name || 'Foto berita'" /><figcaption><strong>{{ photo.name || 'Foto berita' }}</strong><small v-if="photo.caption">{{ photo.caption }}</small><AppButton variant="danger" size="sm" icon="delete" type="button" @click="removePhoto(photo)">Hapus</AppButton></figcaption></figure></div></div>
-                <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</AppButton><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !form.title || !form.body">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan berita' }}</AppButton></div>
+                <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="requestClose">Batal</AppButton><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !form.title || !form.body">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan berita' }}</AppButton></div>
                 </form>
             </div>
 
@@ -193,6 +201,7 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                 @cancel="pendingDeletePhoto = null"
             />
         </main>
+        <ConfirmDialog :open="discardOpen" title="Buang perubahan?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discard" @cancel="discardOpen = false" />
     </AppLayout>
 </template>
 

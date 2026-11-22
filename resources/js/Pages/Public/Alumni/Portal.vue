@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 
 interface AlumniProfileItem {
@@ -91,6 +93,7 @@ const submit = () => {
     if (!props.authenticatedAlumni) return;
     form.post('/layanan/tracer-alumni', { forceFormData: true, preserveScroll: true });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -100,37 +103,37 @@ const submit = () => {
         <PublicHeader :school="school" />
 
         <section class="alumni-hero">
-            <p class="alumni-hero-badge">Pusat Database Alumni &amp; Tracer Study</p>
+            <p class="alumni-hero-badge">{{ publicText("copy.vue_alumni_portal", "text_001", "Pusat Database Alumni & Tracer Study") }}</p>
             <h1>{{ school.name }}</h1>
-            <p class="alumni-hero-description">Penelusuran Data Kelulusan, Studi Lanjut, Karir &amp; Pendataan Mandiri Siswa Alumni</p>
+            <p class="alumni-hero-description">{{ publicText("copy.vue_alumni_portal", "text_002", "Penelusuran Data Kelulusan, Studi Lanjut, Karir & Pendataan Mandiri Siswa Alumni") }}</p>
         </section>
         <main id="tracer-alumni" class="alumni-container">
-            <section class="alumni-ika"><div><span>Website Resmi IKA Alumni</span><h2>Ingin Akses Komunitas &amp; KTA Digital Alumni?</h2><p>Kunjungi website Ikatan Keluarga Alumni untuk direktori, jejaring, dan informasi komunitas.</p></div><a href="/alumni">Buka Web Alumni (IKA) →</a></section>
+            <section class="alumni-ika"><div><span>{{ publicText("copy.vue_alumni_portal", "text_003", "Website Resmi IKA Alumni") }}</span><h2>{{ publicText("copy.vue_alumni_portal", "text_004", "Ingin Akses Komunitas & KTA Digital Alumni?") }}</h2><p>{{ publicText("copy.vue_alumni_portal", "text_005", "Kunjungi website Ikatan Keluarga Alumni untuk direktori, jejaring, dan informasi komunitas.") }}</p></div><a :href="publicText('copy.vue_alumni_portal', 'href_029', '/alumni')">{{ publicText("copy.vue_alumni_portal", "text_006", "Buka Web Alumni (IKA) →") }}</a></section>
             <section id="tracer-form" class="alumni-panel">
                 <p v-if="flashMessage" role="status" class="rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ flashMessage }}</p>
                 <header class="alumni-form-heading">
                     <div>
-                        <h2><i class="fa-solid fa-id-card text-blue-600" aria-hidden="true"></i> Formulir Pendaftaran &amp; Pembaruan Status Alumni</h2>
-                        <p>Alumni angkatan lama maupun baru dapat mendaftarkan diri secara mandiri dan memperbarui aktivitas terkini.</p>
+                        <h2><i class="fa-solid fa-id-card text-blue-600" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_007", "Formulir Pendaftaran & Pembaruan Status Alumni") }}</h2>
+                        <p>{{ publicText("copy.vue_alumni_portal", "text_008", "Alumni angkatan lama maupun baru dapat mendaftarkan diri secara mandiri dan memperbarui aktivitas terkini.") }}</p>
                     </div>
-                    <span class="alumni-integration"><i class="fa-solid fa-shield text-green-600" aria-hidden="true"></i> Terintegrasi Database Madrasah</span>
+                    <span class="alumni-integration"><i class="fa-solid fa-shield text-green-600" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_009", "Terintegrasi Database Madrasah") }}</span>
                 </header>
                 <form action="/alumni/direktori" method="get" class="alumni-lookup">
                     <span class="alumni-lookup-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
                     <div>
-                        <label for="alumni-directory-search">Sudah pernah terdaftar? Cari di Direktori Alumni:</label>
+                        <label for="alumni-directory-search">{{ publicText("copy.vue_alumni_portal", "text_010", "Sudah pernah terdaftar? Cari di Direktori Alumni:") }}</label>
                         <div class="alumni-lookup-controls">
-                            <input id="alumni-directory-search" name="search" type="search" placeholder="Ketik Nama Lengkap Anda…" />
-                            <button type="submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Cari Data</button>
+                            <input id="alumni-directory-search" name="search" type="search" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_030', 'Ketik Nama Lengkap Anda…')" />
+                            <button type="submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_011", "Cari Data") }}</button>
                         </div>
                     </div>
                 </form>
-                <div id="alumni-kta" class="ika-kta-info"><h3>KTA Digital Alumni</h3><p>Kartu alumni tersedia setelah data Anda diverifikasi dan disetujui oleh pengelola.</p></div>
+                <div id="alumni-kta" class="ika-kta-info"><h3>{{ publicText("copy.vue_alumni_portal", "text_012", "KTA Digital Alumni") }}</h3><p>{{ publicText("copy.vue_alumni_portal", "text_013", "Kartu alumni tersedia setelah data Anda diverifikasi dan disetujui oleh pengelola.") }}</p></div>
                 <div v-if="profile" class="rounded-2xl border border-slate-200 bg-white p-5 flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <p class="text-sm font-semibold text-slate-900">Status Moderasi Direktori &amp; E-KTA</p>
+                        <p class="text-sm font-semibold text-slate-900">{{ publicText("copy.vue_alumni_portal", "text_014", "Status Moderasi Direktori & E-KTA") }}</p>
                         <p class="text-xs text-slate-600">
-                            E-KTA: <strong class="font-mono">{{ profile.ekta_number || 'Menunggu persetujuan moderasi' }}</strong>
+                            {{ publicText("copy.vue_alumni_portal", "text_015", "E-KTA:") }} <strong class="font-mono">{{ profile.ekta_number || 'Menunggu persetujuan moderasi' }}</strong>
                         </p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -142,99 +145,99 @@ const submit = () => {
                             rel="noopener noreferrer"
                             class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white"
                         >
-                            Unduh E-KTA (PDF)
+                            {{ publicText("copy.vue_alumni_portal", "text_016", "Unduh E-KTA (PDF)") }}
                         </a>
                     </div>
                 </div>
 
                 <form @submit.prevent="submit">
                     <fieldset :disabled="!authenticatedAlumni" class="space-y-4">
-                    <legend class="alumni-legend"><i class="fa-solid fa-circle-user text-blue-600" aria-hidden="true"></i> 1. Identitas Alumni</legend>
+                    <legend class="alumni-legend"><i class="fa-solid fa-circle-user text-blue-600" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_017", "1. Identitas Alumni") }}</legend>
                     <div class="alumni-fields">
-                        <FormField id="al-nisn" label="NISN / Nomor Induk" :error="form.errors.nisn" hint="Jika belum memiliki NISN atau lupa nomornya, silakan dikosongkan.">
-                            <input id="al-nisn" v-model="form.nisn" type="text" inputmode="numeric" placeholder="Contoh: 0051234567" />
+                        <FormField id="al-nisn" :label="publicText('copy.vue_alumni_portal', 'label_10001', 'NISN / Nomor Induk')" :error="form.errors.nisn" :hint="publicText('copy.vue_alumni_portal', 'hint_10002', 'Jika belum memiliki NISN atau lupa nomornya, silakan dikosongkan.')">
+                            <input id="al-nisn" v-model="form.nisn" type="text" inputmode="numeric" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_031', 'Contoh: 0051234567')" />
                         </FormField>
-                        <FormField id="al-name" label="Nama Lengkap Siswa / Alumni" :error="form.errors.full_name" required>
-                            <input id="al-name" v-model="form.full_name" type="text" placeholder="Nama lengkap sesuai ijazah" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <FormField id="al-name" :label="publicText('copy.vue_alumni_portal', 'label_10003', 'Nama Lengkap Siswa / Alumni')" :error="form.errors.full_name" required>
+                            <input id="al-name" v-model="form.full_name" type="text" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_032', 'Nama lengkap sesuai ijazah')" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                         </FormField>
-                        <FormField id="al-year" label="Tahun Kelulusan" :error="form.errors.graduation_year" required>
+                        <FormField id="al-year" :label="publicText('copy.vue_alumni_portal', 'label_10004', 'Tahun Kelulusan')" :error="form.errors.graduation_year" required>
                             <select id="al-year" v-model="form.graduation_year" required>
-                                <option value="">-- Pilih Tahun Lulus --</option>
-                                <option v-for="year in graduationYears" :key="year" :value="year">Lulusan {{ year }}</option>
+                                <option value="">{{ publicText("copy.vue_alumni_portal", "text_018", "-- Pilih Tahun Lulus --") }}</option>
+                                <option v-for="year in graduationYears" :key="year" :value="year">{{ publicText("copy.vue_alumni_portal", "text_9001", "Lulusan") }} {{ year }}</option>
                             </select>
                         </FormField>
-                        <FormField id="al-major" label="Jurusan / Peminatan">
-                            <input id="al-major" v-model="form.major_or_class" type="text" placeholder="Contoh: MIPA / IPS / Keagamaan" />
+                        <FormField id="al-major" :label="publicText('copy.vue_alumni_portal', 'label_10005', 'Jurusan / Peminatan')">
+                            <input id="al-major" v-model="form.major_or_class" type="text" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_033', 'Contoh: MIPA / IPS / Keagamaan')" />
                         </FormField>
-                        <FormField id="al-phone" label="Nomor WhatsApp Aktif" :error="form.errors.phone">
-                            <input id="al-phone" v-model="form.phone" type="tel" placeholder="Contoh: 081234567890" />
+                        <FormField id="al-phone" :label="publicText('copy.vue_alumni_portal', 'label_10006', 'Nomor WhatsApp Aktif')" :error="form.errors.phone">
+                            <input id="al-phone" v-model="form.phone" type="tel" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_034', 'Contoh: 081234567890')" />
                         </FormField>
-                        <FormField id="al-email" label="Alamat Email" :error="form.errors.email">
-                            <input id="al-email" v-model="form.email" type="email" placeholder="email@gmail.com" />
+                        <FormField id="al-email" :label="publicText('copy.vue_alumni_portal', 'label_10007', 'Alamat Email')" :error="form.errors.email">
+                            <input id="al-email" v-model="form.email" type="email" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_10008', 'email@gmail.com')" />
                         </FormField>
-                        <FormField id="al-diploma" label="Nomor Seri Ijazah" :error="form.errors.diploma_serial">
-                            <input id="al-diploma" v-model="form.diploma_serial" type="text" maxlength="100" placeholder="Contoh: DN-01/MA/2026/001234" />
+                        <FormField id="al-diploma" :label="publicText('copy.vue_alumni_portal', 'label_10009', 'Nomor Seri Ijazah')" :error="form.errors.diploma_serial">
+                            <input id="al-diploma" v-model="form.diploma_serial" type="text" maxlength="100" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_035', 'Contoh: DN-01/MA/2026/001234')" />
                         </FormField>
-                        <FormField id="al-proof" label="Scan Ijazah / SKL Asli" :error="form.errors.proof_file" hint="PDF / JPG / PNG / WebP, maks. 5 MB">
+                        <FormField id="al-proof" :label="publicText('copy.vue_alumni_portal', 'label_10010', 'Scan Ijazah / SKL Asli')" :error="form.errors.proof_file" :hint="publicText('copy.vue_alumni_portal', 'hint_10011', 'PDF / JPG / PNG / WebP, maks. 5 MB')">
                             <input id="al-proof" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" @change="pickProof" />
                         </FormField>
                     </div>
 
-                    <h3 class="alumni-legend"><i class="fa-solid fa-briefcase text-green-600" aria-hidden="true"></i> 2. Aktivitas &amp; Status Terkini</h3>
+                    <h3 class="alumni-legend"><i class="fa-solid fa-briefcase text-green-600" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_019", "2. Aktivitas & Status Terkini") }}</h3>
                     <div class="alumni-fields">
-                        <FormField id="al-status" label="Status Saat Ini" :error="form.errors.current_status" required>
+                        <FormField id="al-status" :label="publicText('copy.vue_alumni_portal', 'label_10012', 'Status Saat Ini')" :error="form.errors.current_status" required>
                             <select id="al-status" v-model="form.current_status" required>
-                                <option value="">-- Pilih Status --</option>
+                                <option value="">{{ publicText("copy.vue_alumni_portal", "text_020", "-- Pilih Status --") }}</option>
                                 <option v-for="s in statusOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
                             </select>
                         </FormField>
-                        <FormField id="al-inst" label="Nama Perusahaan / Kampus / Nama Usaha">
-                            <input id="al-inst" v-model="form.institution_or_company" type="text" placeholder="Contoh: Universitas Lambung Mangkurat / PT. Telkom" />
+                        <FormField id="al-inst" :label="publicText('copy.vue_alumni_portal', 'label_10013', 'Nama Perusahaan / Kampus / Nama Usaha')">
+                            <input id="al-inst" v-model="form.institution_or_company" type="text" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_036', 'Contoh: Universitas Lambung Mangkurat / PT. Telkom')" />
                         </FormField>
-                        <FormField id="al-pos" label="Jabatan / Posisi / Program Studi">
-                            <input id="al-pos" v-model="form.position_or_program" type="text" placeholder="Contoh: Staff IT / S1 Teknik Informatika" />
+                        <FormField id="al-pos" :label="publicText('copy.vue_alumni_portal', 'label_10014', 'Jabatan / Posisi / Program Studi')">
+                            <input id="al-pos" v-model="form.position_or_program" type="text" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_037', 'Contoh: Staff IT / S1 Teknik Informatika')" />
                         </FormField>
-                        <FormField id="al-location" label="Kota / Lokasi Tempat Bekerja atau Kuliah" :error="form.errors.activity_location">
-                            <input id="al-location" v-model="form.activity_location" type="text" maxlength="150" placeholder="Contoh: Banjarmasin / Jakarta Selatan" />
-                        </FormField>
-                    </div>
-
-                    <h3 class="alumni-legend"><i class="fa-solid fa-share-nodes text-cyan-600" aria-hidden="true"></i> 3. Kontak Tambahan &amp; Media Sosial</h3>
-                    <div class="alumni-fields">
-                        <FormField class="alumni-field-wide" id="al-residence" label="Kota Domisili / Tempat Tinggal Sekarang" :error="form.errors.residence_city">
-                            <input id="al-residence" v-model="form.residence_city" type="text" maxlength="150" placeholder="Contoh: Banjarmasin, Kalimantan Selatan" />
-                        </FormField>
-                        <FormField id="al-linkedin" label="Profil LinkedIn" :error="form.errors.linkedin_url">
-                            <input id="al-linkedin" v-model="form.linkedin_url" type="url" maxlength="255" placeholder="https://linkedin.com/in/username" />
-                        </FormField>
-                        <FormField id="al-instagram" label="Akun Instagram" :error="form.errors.instagram_handle">
-                            <input id="al-instagram" v-model="form.instagram_handle" type="text" maxlength="50" placeholder="@username" />
+                        <FormField id="al-location" :label="publicText('copy.vue_alumni_portal', 'label_10015', 'Kota / Lokasi Tempat Bekerja atau Kuliah')" :error="form.errors.activity_location">
+                            <input id="al-location" v-model="form.activity_location" type="text" maxlength="150" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_038', 'Contoh: Banjarmasin / Jakarta Selatan')" />
                         </FormField>
                     </div>
 
-                    <h3 class="alumni-legend"><i class="fa-solid fa-camera text-amber-500" aria-hidden="true"></i> 4. Foto Profil &amp; Testimoni Almamater</h3>
+                    <h3 class="alumni-legend"><i class="fa-solid fa-share-nodes text-cyan-600" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_021", "3. Kontak Tambahan & Media Sosial") }}</h3>
                     <div class="alumni-fields">
-                    <FormField id="al-photo" label="Foto Profil Alumni" :error="form.errors.photo_file" :hint="profile?.photo_document_id ? 'Foto profil tersimpan.' : 'JPG / PNG / WebP, maks. 5 MB'">
+                        <FormField class="alumni-field-wide" id="al-residence" :label="publicText('copy.vue_alumni_portal', 'label_10016', 'Kota Domisili / Tempat Tinggal Sekarang')" :error="form.errors.residence_city">
+                            <input id="al-residence" v-model="form.residence_city" type="text" maxlength="150" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_039', 'Contoh: Banjarmasin, Kalimantan Selatan')" />
+                        </FormField>
+                        <FormField id="al-linkedin" :label="publicText('copy.vue_alumni_portal', 'label_10017', 'Profil LinkedIn')" :error="form.errors.linkedin_url">
+                            <input id="al-linkedin" v-model="form.linkedin_url" type="url" maxlength="255" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_040', 'https://linkedin.com/in/username')" />
+                        </FormField>
+                        <FormField id="al-instagram" :label="publicText('copy.vue_alumni_portal', 'label_10018', 'Akun Instagram')" :error="form.errors.instagram_handle">
+                            <input id="al-instagram" v-model="form.instagram_handle" type="text" maxlength="50" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_10019', '@username')" />
+                        </FormField>
+                    </div>
+
+                    <h3 class="alumni-legend"><i class="fa-solid fa-camera text-amber-500" aria-hidden="true"></i> {{ publicText("copy.vue_alumni_portal", "text_022", "4. Foto Profil & Testimoni Almamater") }}</h3>
+                    <div class="alumni-fields">
+                    <FormField id="al-photo" :label="publicText('copy.vue_alumni_portal', 'label_10020', 'Foto Profil Alumni')" :error="form.errors.photo_file" :hint="profile?.photo_document_id ? 'Foto profil tersimpan.' : 'JPG / PNG / WebP, maks. 5 MB'">
                         <input id="al-photo" type="file" accept="image/jpeg,image/png,image/webp" @change="pickPhoto" />
                     </FormField>
-                    <FormField id="al-testimonial" label="Testimoni untuk Almamater">
-                        <textarea id="al-testimonial" v-model="form.testimonial" rows="3" placeholder="Tuliskan pengalaman atau pesan motivasi bagi adik kelas…" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+                    <FormField id="al-testimonial" :label="publicText('copy.vue_alumni_portal', 'label_10021', 'Testimoni untuk Almamater')">
+                        <textarea id="al-testimonial" v-model="form.testimonial" rows="3" :placeholder="publicText('copy.vue_alumni_portal', 'placeholder_041', 'Tuliskan pengalaman atau pesan motivasi bagi adik kelas…')" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
                     </div>
 
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-sm">
-                        <p class="font-semibold text-slate-800">Preferensi Privasi &amp; Persetujuan Publikasi Direktori</p>
-                        <label class="flex items-center gap-2"><input v-model="form.opt_in_directory" type="checkbox" /> Tampilkan profil saya di Direktori Alumni (setelah moderasi admin)</label>
-                        <label class="flex items-center gap-2"><input v-model="form.opt_in_career" type="checkbox" /> Tampilkan informasi instansi/karier/beasiswa</label>
-                        <label class="flex items-center gap-2"><input v-model="form.opt_in_testimonial" type="checkbox" /> Tampilkan testimoni saya</label>
-                        <label class="flex items-center gap-2"><input v-model="form.opt_in_contact" type="checkbox" /> Izinkan publikasi email/kontak profesional</label>
+                        <p class="font-semibold text-slate-800">{{ publicText("copy.vue_alumni_portal", "text_023", "Preferensi Privasi & Persetujuan Publikasi Direktori") }}</p>
+                        <label class="flex items-center gap-2"><input v-model="form.opt_in_directory" type="checkbox" /> {{ publicText("copy.vue_alumni_portal", "text_024", "Tampilkan profil saya di Direktori Alumni (setelah moderasi admin)") }}</label>
+                        <label class="flex items-center gap-2"><input v-model="form.opt_in_career" type="checkbox" /> {{ publicText("copy.vue_alumni_portal", "text_025", "Tampilkan informasi instansi/karier/beasiswa") }}</label>
+                        <label class="flex items-center gap-2"><input v-model="form.opt_in_testimonial" type="checkbox" /> {{ publicText("copy.vue_alumni_portal", "text_026", "Tampilkan testimoni saya") }}</label>
+                        <label class="flex items-center gap-2"><input v-model="form.opt_in_contact" type="checkbox" /> {{ publicText("copy.vue_alumni_portal", "text_027", "Izinkan publikasi email/kontak profesional") }}</label>
                     </div>
 
                     <AppButton v-if="authenticatedAlumni" type="submit" :disabled="form.processing">
                         {{ form.processing ? 'Menyimpan...' : 'Simpan Profil Alumni' }}
                     </AppButton>
                     </fieldset>
-                    <a v-if="!authenticatedAlumni" href="/layanan/ptsp/akun?return_to=/layanan/tracer-alumni" class="mt-5 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Masuk sebagai Alumni untuk mengisi formulir</a>
+                    <a v-if="!authenticatedAlumni" :href="publicText('copy.vue_alumni_portal', 'href_042', '/layanan/ptsp/akun?return_to=/layanan/tracer-alumni')" class="mt-5 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">{{ publicText("copy.vue_alumni_portal", "text_028", "Masuk sebagai Alumni untuk mengisi formulir") }}</a>
                 </form>
             </section>
 

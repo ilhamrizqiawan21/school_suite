@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link, usePage } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -29,6 +31,7 @@ const props = defineProps<{
 const page = usePage();
 const flashMessage = computed(() => (page.props.flash as { message?: string } | undefined)?.message);
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -40,16 +43,16 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
             <div v-if="flashMessage" class="alert-banner alert-banner--success" role="status">{{ flashMessage }}</div>
 
             <div v-if="issuedSecret" class="alert-banner alert-banner--pin" role="status">
-                <strong>Simpan Kode Verifikasi Pelacakan:</strong>
+                <strong>{{ publicText("copy.vue_services_externalletterreceipt", "text_001", "Simpan Kode Verifikasi Pelacakan:") }}</strong>
                 <span class="pin-code">{{ issuedSecret }}</span>
             </div>
 
             <section class="portal-card">
                 <header class="head-row">
                     <div>
-                        <p class="eyebrow">Tanda Terima Surat Dinas Eksternal</p>
+                        <p class="eyebrow">{{ publicText("copy.vue_services_externalletterreceipt", "text_002", "Tanda Terima Surat Dinas Eksternal") }}</p>
                         <h1>{{ receipt.ticket.ticket_code }}</h1>
-                        <p class="muted">Nomor Agenda TU: <strong>{{ receipt.record.agenda_number }}</strong></p>
+                        <p class="muted">{{ publicText("copy.vue_services_externalletterreceipt", "text_003", "Nomor Agenda TU:") }} <strong>{{ receipt.record.agenda_number }}</strong></p>
                     </div>
                     <StatusBadge :status="receipt.ticket.public_status" />
                 </header>
@@ -57,21 +60,21 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
                 <p class="summary-callout">{{ receipt.ticket.public_summary }}</p>
 
                 <dl class="meta-grid">
-                    <div><dt>Instansi Pengirim</dt><dd>{{ receipt.record.agency_name }}</dd></div>
-                    <div><dt>Narahubung</dt><dd>{{ receipt.record.contact_person }} ({{ receipt.record.contact_position }})</dd></div>
-                    <div><dt>Nomor Surat Asal</dt><dd>{{ receipt.record.letter_number }}</dd></div>
-                    <div><dt>Tanggal Terima</dt><dd>{{ receipt.record.received_at || '-' }}</dd></div>
-                    <div class="full"><dt>Perihal</dt><dd>{{ receipt.record.subject }}</dd></div>
-                    <div class="full"><dt>Ringkasan</dt><dd>{{ receipt.record.summary }}</dd></div>
-                    <div v-if="receipt.record.disposition" class="full"><dt>Disposisi TU</dt><dd>{{ receipt.record.disposition }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_004", "Instansi Pengirim") }}</dt><dd>{{ receipt.record.agency_name }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_005", "Narahubung") }}</dt><dd>{{ receipt.record.contact_person }} ({{ receipt.record.contact_position }})</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_006", "Nomor Surat Asal") }}</dt><dd>{{ receipt.record.letter_number }}</dd></div>
+                    <div><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_007", "Tanggal Terima") }}</dt><dd>{{ receipt.record.received_at || '-' }}</dd></div>
+                    <div class="full"><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_008", "Perihal") }}</dt><dd>{{ receipt.record.subject }}</dd></div>
+                    <div class="full"><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_009", "Ringkasan") }}</dt><dd>{{ receipt.record.summary }}</dd></div>
+                    <div v-if="receipt.record.disposition" class="full"><dt>{{ publicText("copy.vue_services_externalletterreceipt", "text_010", "Disposisi TU") }}</dt><dd>{{ receipt.record.disposition }}</dd></div>
                 </dl>
 
                 <div class="action-row">
                     <a :href="`/layanan/surat-dinas/tanda-terima/${receipt.ticket.ticket_code}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--primary ui-button--md">
-                        Unduh / Cetak Tanda Terima PDF
+                        {{ publicText("copy.vue_services_externalletterreceipt", "text_011", "Unduh / Cetak Tanda Terima PDF") }}
                     </a>
                     <Link :href="`/lacak?code=${receipt.ticket.ticket_code}&category=surat_eksternal`" class="ui-button ui-button--secondary ui-button--md">
-                        Lacak Status Disposisi
+                        {{ publicText("copy.vue_services_externalletterreceipt", "text_012", "Lacak Status Disposisi") }}
                     </Link>
                 </div>
             </section>

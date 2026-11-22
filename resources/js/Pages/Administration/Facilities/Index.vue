@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -90,8 +91,8 @@ function editAsset(asset: Asset) {
     showAssetModal.value = true;
 }
 
-function cancelEdit() {
-    if (assetForm.isDirty && !window.confirm('Batalkan perubahan data aset yang belum disimpan?')) return;
+async function cancelEdit() {
+    if (assetForm.isDirty && !await requestConfirmation('Batalkan perubahan data aset yang belum disimpan?')) return;
     showAssetModal.value = false;
     editingAssetId.value = null;
     assetForm.defaults(blankAsset());
@@ -125,8 +126,8 @@ function borrowAsset() {
     });
 }
 
-function returnAsset(loan: Loan) {
-    if (returning.value !== null || !window.confirm(`Catat pengembalian ${loan.asset?.name || 'aset'} dari ${loan.borrower_name}?`)) return;
+async function returnAsset(loan: Loan) {
+    if (returning.value !== null || !await requestConfirmation(`Catat pengembalian ${loan.asset?.name || 'aset'} dari ${loan.borrower_name}?`)) return;
     const fields = returnForms.value[loan.id] ?? { return_condition: 'good', notes: '' };
     returning.value = loan.id;
     router.post(`/administrasi/sarpras/peminjaman/${loan.id}/kembali`, fields, {

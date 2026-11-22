@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import StateFeedback from '@/components/StateFeedback.vue';
+import { useUnsavedDialog } from '@/composables/useUnsavedDialog';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
@@ -61,6 +63,11 @@ const resetFilters = () => {
     search.value = ''; selectedRole.value = ''; selectedStatus.value = ''; applyFilters();
 };
 const showCreate = ref(false);
+const detailUser = ref<UserItem | null>(null);
+const openDetail = (user: UserItem) => { detailUser.value = user; };
+watch(() => props.users.data, (users) => {
+    if (detailUser.value) detailUser.value = users.find((user) => user.id === detailUser.value?.id) ?? null;
+});
 const isEditModalOpen = ref(false);
 const activeOverlay = computed(() => showCreate.value || isEditModalOpen.value);
 const overlayRoot = ref<HTMLElement | null>(null);
@@ -77,10 +84,10 @@ watch(activeOverlay, async (open) => {
     }
 });
 const handleOverlayKeydown = (event: KeyboardEvent) => {
-    if (!activeOverlay.value) return;
+    if (!activeOverlay.value || event.defaultPrevented || document.querySelector('[role="alertdialog"]')) return;
     if (event.key === 'Escape') {
-        if (isEditModalOpen.value) isEditModalOpen.value = false;
-        else showCreate.value = false;
+        if (isEditModalOpen.value) requestEditClose();
+        else requestCreateClose();
     }
     if (event.key !== 'Tab' || !overlayRoot.value) return;
     const focusable = Array.from(overlayRoot.value.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]'));
@@ -108,6 +115,7 @@ const createForm = useForm({
     role_id: '' as number | '',
     is_active: true,
 });
+const { discardOpen: discardCreateOpen, requestClose: requestCreateClose, discard: discardCreate } = useUnsavedDialog(createForm, () => { showCreate.value = false; createForm.reset(); createForm.clearErrors(); });
 const createErrors = computed(() => Object.entries(createForm.errors));
 
 const submitCreate = () => {
@@ -130,6 +138,7 @@ const editForm = useForm({
     role_id: null as number | null,
     is_active: true,
 });
+const { discardOpen: discardEditOpen, requestClose: requestEditClose, discard: discardEdit } = useUnsavedDialog(editForm, () => { isEditModalOpen.value = false; editForm.reset(); editForm.clearErrors(); });
 const editErrors = computed(() => Object.entries(editForm.errors));
 
 const openEditModal = (user: UserItem) => {
@@ -142,6 +151,7 @@ const openEditModal = (user: UserItem) => {
     editForm.password = '';
     editForm.role_id = user.role?.id ?? null;
     editForm.is_active = user.is_active;
+    editForm.defaults();
     isEditModalOpen.value = true;
 };
 
@@ -189,10 +199,15 @@ const confirmDeleteUser = () => {
     <AppLayout title="Manajemen Pengguna">
         <div class="view user-page space-y-6">
             <Head title="Manajemen Pengguna" />
+            <section v-if="detailUser" class="user-detail space-y-5">
+                <div class="page-heading"><h1>Detail Pengguna: {{ detailUser.name }}</h1><div class="flex flex-wrap gap-2"><AppButton variant="secondary" @click="detailUser = null">← Kembali</AppButton><AppButton v-if="detailUser.can_update" icon="edit" @click="openEditModal(detailUser)">Edit data</AppButton></div></div>
+                <section class="panel user-detail-panel"><h2>Informasi akun & peran</h2><dl class="user-detail-grid"><div><dt>Nama lengkap</dt><dd>{{ detailUser.name }}</dd></div><div><dt>Peran</dt><dd>{{ detailUser.role?.label ?? 'Tanpa peran' }}</dd></div><div><dt>Status</dt><dd>{{ detailUser.is_active ? 'Aktif' : 'Nonaktif' }}</dd></div><div><dt>Email</dt><dd>{{ detailUser.email }}</dd></div><div><dt>Username</dt><dd>{{ detailUser.username || '—' }}</dd></div><div><dt>Nomor telepon</dt><dd>{{ detailUser.phone || '—' }}</dd></div></dl></section>
+            </section>
+            <template v-if="!detailUser">
             <!-- Header section -->
             <div class="page-heading compact-heading">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Manajemen Akun Pengguna</h1>
+                    <h1 class="text-2xl font-bold text-[var(--ink)] tracking-tight">Manajemen Akun Pengguna</h1>
 
                 </div>
                 <AppButton variant="primary" icon="plus" v-if="can_create" type="button" class="primary-button" @click="showCreate = true">Tambah pengguna</AppButton>
@@ -207,9 +222,9 @@ const confirmDeleteUser = () => {
                 <div class="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-3"><AppButton variant="primary" type="submit" class="primary-button">Terapkan filter</AppButton><AppButton variant="secondary" type="button" class="secondary-button" @click="resetFilters">Reset</AppButton></div>
             </form>
 
-            <section v-if="can_create && showCreate" ref="overlayRoot" class="user-overlay" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+            <section v-if="can_create && showCreate" ref="overlayRoot" class="user-overlay" role="dialog" aria-modal="true" aria-labelledby="create-user-title" @click.self="requestCreateClose" @keydown.esc.stop.prevent="requestCreateClose">
               <div class="user-drawer">
-                <div class="user-drawer-header mb-4"><div><p class="text-meta font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 id="create-user-title" class="text-base font-bold text-slate-900">Pengguna baru</h2></div><AppButton variant="ghost" type="button" class="user-close" aria-label="Tutup formulir pengguna baru" @click="showCreate = false">×</AppButton></div>
+                <div class="user-drawer-header mb-4"><div><p class="text-meta font-bold uppercase tracking-[.12em] text-indigo-600">Tambah data</p><h2 id="create-user-title" class="text-base font-bold text-[var(--ink)]">Pengguna baru</h2></div><AppButton variant="ghost" type="button" class="user-close" aria-label="Tutup formulir pengguna baru" @click="requestCreateClose">×</AppButton></div>
                 <form class="grid gap-3 sm:grid-cols-2 items-end" @submit.prevent="submitCreate">
                     <div v-if="createErrors.length" class="sm:col-span-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-meta text-rose-700" role="alert" aria-live="polite">
                         <p class="font-semibold">Pengguna belum tersimpan. Periksa kembali:</p>
@@ -217,46 +232,46 @@ const confirmDeleteUser = () => {
                             <li v-for="([field, message]) in createErrors" :key="field">{{ message }}</li>
                         </ul>
                     </div>
-                    <label class="text-meta font-semibold text-slate-700">Nama lengkap<input v-model="createForm.name" required :aria-invalid="!!createForm.errors.name" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.name" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.name }}</span></label>
-                    <label class="text-meta font-semibold text-slate-700">Email<input v-model="createForm.email" type="email" required :aria-invalid="!!createForm.errors.email" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.email" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.email }}</span></label>
-                    <label class="text-meta font-semibold text-slate-700">Username<input v-model="createForm.username" :aria-invalid="!!createForm.errors.username" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.username" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.username }}</span></label>
-                    <label class="text-meta font-semibold text-slate-700">Peran<select v-model="createForm.role_id" required :aria-invalid="!!createForm.errors.role_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm"><option disabled value="">Pilih peran</option><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select><span v-if="createForm.errors.role_id" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.role_id }}</span></label>
-                    <label class="text-meta font-semibold text-slate-700">Kata sandi
+                    <label class="text-meta font-semibold text-[var(--ink-soft)]">Nama lengkap<input v-model="createForm.name" required :aria-invalid="!!createForm.errors.name" class="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.name" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.name }}</span></label>
+                    <label class="text-meta font-semibold text-[var(--ink-soft)]">Email<input v-model="createForm.email" type="email" required :aria-invalid="!!createForm.errors.email" class="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.email" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.email }}</span></label>
+                    <label class="text-meta font-semibold text-[var(--ink-soft)]">Username<input v-model="createForm.username" :aria-invalid="!!createForm.errors.username" class="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.username" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.username }}</span></label>
+                    <label class="text-meta font-semibold text-[var(--ink-soft)]">Peran<select v-model="createForm.role_id" required :aria-invalid="!!createForm.errors.role_id" class="mt-1 w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm"><option disabled value="">Pilih peran</option><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select><span v-if="createForm.errors.role_id" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.role_id }}</span></label>
+                    <label class="text-meta font-semibold text-[var(--ink-soft)]">Kata sandi
                         <span class="relative mt-1 flex items-center">
-                            <input v-model="createForm.password" :type="showCreatePassword ? 'text' : 'password'" minlength="8" required :aria-invalid="!!createForm.errors.password" class="w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 pr-16 text-sm" />
-                            <button type="button" class="absolute right-2 rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100" :aria-label="showCreatePassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'" :aria-pressed="showCreatePassword" @click="showCreatePassword = !showCreatePassword">{{ showCreatePassword ? 'Tutup' : 'Lihat' }}</button>
+                            <input v-model="createForm.password" :type="showCreatePassword ? 'text' : 'password'" minlength="8" required :aria-invalid="!!createForm.errors.password" class="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 pr-16 text-sm" />
+                            <button type="button" class="absolute right-2 rounded px-2 py-1 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--surface-strong)]" :aria-label="showCreatePassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'" :aria-pressed="showCreatePassword" @click="showCreatePassword = !showCreatePassword">{{ showCreatePassword ? 'Tutup' : 'Lihat' }}</button>
                         </span>
                         <span v-if="createForm.errors.password" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.password }}</span>
                     </label>
-                    <p class="text-meta leading-5 text-slate-600 sm:col-span-full">Pengguna wajib mengganti kata sandi awal saat masuk. Akun guru dan siswa juga dapat dibuat melalui menu Data Guru atau Data Siswa.</p>
-                    <div class="user-drawer-footer flex flex-wrap justify-end gap-2 sm:col-span-full"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="createForm.processing" @click="showCreate = false">Batal</AppButton><AppButton variant="primary" :loading="createForm.processing" type="submit" :disabled="createForm.processing" class="primary-button">{{ createForm.processing ? 'Menyimpan…' : 'Simpan pengguna' }}</AppButton></div>
+                    <p class="text-meta leading-5 text-[var(--ink-soft)] sm:col-span-full">Pengguna wajib mengganti kata sandi awal saat masuk. Akun guru dan siswa juga dapat dibuat melalui menu Data Guru atau Data Siswa.</p>
+                    <div class="user-drawer-footer flex flex-wrap justify-end gap-2 sm:col-span-full"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="createForm.processing" @click="requestCreateClose">Batal</AppButton><AppButton variant="primary" :loading="createForm.processing" type="submit" :disabled="createForm.processing" class="primary-button">{{ createForm.processing ? 'Menyimpan…' : 'Simpan pengguna' }}</AppButton></div>
                 </form>
               </div>
             </section>
 
             <!-- Users Table -->
             <div class="panel user-table-panel overflow-hidden">
-                <p class="px-4 py-3 text-meta text-slate-600">Geser tabel ke samping pada layar kecil untuk melihat semua kolom dan tindakan.</p>
+                <p class="px-4 py-3 text-meta text-[var(--ink-soft)]">Geser tabel ke samping pada layar kecil untuk melihat semua kolom dan tindakan.</p>
                 <div class="overflow-x-auto table-scroll" tabindex="0" role="region" aria-label="Daftar pengguna">
                     <table class="app-table min-w-[680px] w-full text-left border-collapse text-meta">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+                            <tr class="bg-[var(--surface-subtle)] border-b border-[var(--line)] text-[var(--ink-soft)] font-semibold uppercase tracking-wider">
                                 <th scope="col" class="py-3 px-4">Nama Lengkap</th>
                                 <th scope="col" class="py-3 px-4">Akun</th>
                                 <th scope="col" class="py-3 px-4 text-center">Peran</th>
                                 <th scope="col" class="py-3 px-4 text-center">Status</th>
-                                <th scope="col" v-if="can_update || can_delete" class="py-3 px-4 text-center">Aksi</th>
+                                <th scope="col" class="py-3 px-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tbody class="divide-y divide-slate-100 text-[var(--ink-soft)]">
                             <tr v-for="u in users.data" :key="u.id" class="hover:bg-slate-50/80 transition-colors">
-                                <td class="py-3 px-4 font-semibold text-slate-900">
+                                <td class="py-3 px-4 font-semibold text-[var(--ink)]">
                                     {{ u.name }}<span v-if="u.id === current_user_id" class="ml-2 text-meta font-normal text-blue-700">Anda</span>
-                                    <span v-if="u.phone" class="block text-meta font-normal text-slate-600">{{ u.phone }}</span>
+                                    <span v-if="u.phone" class="block text-meta font-normal text-[var(--ink-soft)]">{{ u.phone }}</span>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <div class="font-medium text-slate-800">{{ u.email }}</div>
-                                    <div v-if="u.username" class="text-meta text-slate-600">@{{ u.username }}</div>
+                                    <div class="font-medium text-[var(--ink)]">{{ u.email }}</div>
+                                    <div v-if="u.username" class="text-meta text-[var(--ink-soft)]">@{{ u.username }}</div>
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     <span class="inline-flex px-2 py-0.5 rounded-md font-medium text-meta bg-indigo-50 text-indigo-700 border border-indigo-100">
@@ -274,14 +289,15 @@ const confirmDeleteUser = () => {
                                         {{ u.is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td v-if="can_update || can_delete" class="py-3 px-4 text-center space-x-2">
+                                <td class="py-3 px-4 text-center space-x-2">
+                                    <RowActionButton action="view" label="Lihat detail" :aria-label="`Lihat detail ${u.name}`" @click="openDetail(u)" />
                                     <RowActionButton v-if="u.can_update" action="edit" label="Ubah" @click="openEditModal(u)" />
                                     <RowActionButton v-if="u.can_delete" :disabled="deletingId !== null" action="delete" label="Hapus" @click="deleteUser(u)" />
                                 </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
-                                <td :colspan="can_update || can_delete ? 5 : 4" class="py-8 text-center text-slate-600">
-                                    Tidak ada data pengguna yang cocok.
+                                <td colspan="5" class="py-8 text-center text-[var(--ink-soft)]">
+                                    <StateFeedback state="empty" :title="users.total ? 'Pengguna tidak ditemukan' : 'Belum ada pengguna'" description="Ubah filter pencarian atau tambahkan akun sesuai kewenangan Anda." />
                                 </td>
                             </tr>
                         </tbody>
@@ -289,16 +305,17 @@ const confirmDeleteUser = () => {
                 </div>
             </div>
 
-            <nav v-if="users.total" class="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600" aria-label="Halaman pengguna">
+            <nav v-if="users.total" class="flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--ink-soft)]" aria-label="Halaman pengguna">
                 <p>{{ users.from }}–{{ users.to }} dari {{ users.total }} pengguna · Halaman {{ users.current_page }} / {{ users.last_page }}</p>
                 <div class="flex gap-2"><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!users.prev_page_url" @click="changePage(users.prev_page_url)">Sebelumnya</AppButton><AppButton variant="secondary" type="button" class="secondary-button" :disabled="!users.next_page_url" @click="changePage(users.next_page_url)">Berikutnya</AppButton></div>
             </nav>
+            </template>
             <!-- Edit Modal -->
-            <div v-if="isEditModalOpen" ref="overlayRoot" class="user-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+            <div v-if="isEditModalOpen" ref="overlayRoot" class="user-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-user-title" @click.self="requestEditClose" @keydown.esc.stop.prevent="requestEditClose">
                 <div class="user-drawer space-y-4">
-                    <div class="user-drawer-header flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 id="edit-user-title" class="text-sm font-bold text-slate-900">Ubah Data Pengguna</h2>
-                        <AppButton variant="ghost" type="button" @click="isEditModalOpen = false" class="user-close" aria-label="Tutup formulir ubah pengguna">×</AppButton>
+                    <div class="user-drawer-header flex items-center justify-between border-b border-[var(--line)] pb-3">
+                        <h2 id="edit-user-title" class="text-sm font-bold text-[var(--ink)]">Ubah Data Pengguna</h2>
+                        <AppButton variant="ghost" type="button" @click="requestEditClose" class="user-close" aria-label="Tutup formulir ubah pengguna">×</AppButton>
                     </div>
 
                     <form @submit.prevent="submitEdit" class="space-y-3">
@@ -309,38 +326,38 @@ const confirmDeleteUser = () => {
                             </ul>
                         </div>
                         <div>
-                            <label for="edit-user-name" class="block text-meta font-semibold text-slate-700 mb-1">Nama Lengkap</label>
-                            <input id="edit-user-name" v-model="editForm.name" type="text" required :aria-invalid="!!editForm.errors.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-meta" />
+                            <label for="edit-user-name" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama Lengkap</label>
+                            <input id="edit-user-name" v-model="editForm.name" type="text" required :aria-invalid="!!editForm.errors.name" class="w-full px-3 py-2 rounded-lg border border-[var(--line)] text-meta" />
                             <p v-if="editForm.errors.name" class="text-meta text-rose-600 mt-0.5">{{ editForm.errors.name }}</p>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label for="edit-user-email" class="block text-meta font-semibold text-slate-700 mb-1">Email</label>
-                                <input id="edit-user-email" v-model="editForm.email" type="email" required :aria-invalid="!!editForm.errors.email" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-meta" />
+                                <label for="edit-user-email" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Email</label>
+                                <input id="edit-user-email" v-model="editForm.email" type="email" required :aria-invalid="!!editForm.errors.email" class="w-full px-3 py-2 rounded-lg border border-[var(--line)] text-meta" />
                                 <p v-if="editForm.errors.email" class="text-meta text-rose-600 mt-0.5">{{ editForm.errors.email }}</p>
                             </div>
                             <div>
-                                <label class="block text-meta font-semibold text-slate-700 mb-1">Peran Akses</label>
-                                <select v-if="can_manage_roles && editingUser?.id !== current_user_id" v-model="editForm.role_id" aria-label="Peran Akses" :aria-invalid="!!editForm.errors.role_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-meta">
+                                <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peran Akses</label>
+                                <select v-if="can_manage_roles && editingUser?.id !== current_user_id" v-model="editForm.role_id" aria-label="Peran Akses" :aria-invalid="!!editForm.errors.role_id" class="w-full px-3 py-2 rounded-lg border border-[var(--line)] text-meta">
                                     <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option>
                                 </select>
-                                <p v-else class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-meta text-slate-600">{{ editingUser?.role?.label ?? 'Tanpa Peran' }}</p>
+                                <p v-else class="rounded-lg border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-2 text-meta text-[var(--ink-soft)]">{{ editingUser?.role?.label ?? 'Tanpa Peran' }}</p>
                                 <p v-if="editForm.errors.role_id" class="text-meta text-rose-600 mt-0.5">{{ editForm.errors.role_id }}</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div v-if="editingUser?.id !== current_user_id">
-                                <label for="edit-user-password" class="block text-meta font-semibold text-slate-700 mb-1">Kata Sandi Baru (Kosongkan bila tidak diganti)</label>
+                                <label for="edit-user-password" class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kata Sandi Baru (Kosongkan bila tidak diganti)</label>
                                 <div class="relative flex items-center">
-                                    <input id="edit-user-password" v-model="editForm.password" :type="showEditPassword ? 'text' : 'password'" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 pr-16 rounded-lg border border-slate-300 text-meta" />
-                                    <button type="button" class="absolute right-2 rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100" :aria-label="showEditPassword ? 'Sembunyikan kata sandi baru' : 'Tampilkan kata sandi baru'" :aria-pressed="showEditPassword" @click="showEditPassword = !showEditPassword">{{ showEditPassword ? 'Tutup' : 'Lihat' }}</button>
+                                    <input id="edit-user-password" v-model="editForm.password" :type="showEditPassword ? 'text' : 'password'" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 pr-16 rounded-lg border border-[var(--line)] text-meta" />
+                                    <button type="button" class="absolute right-2 rounded px-2 py-1 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--surface-strong)]" :aria-label="showEditPassword ? 'Sembunyikan kata sandi baru' : 'Tampilkan kata sandi baru'" :aria-pressed="showEditPassword" @click="showEditPassword = !showEditPassword">{{ showEditPassword ? 'Tutup' : 'Lihat' }}</button>
                                 </div>
                                 <p v-if="editForm.errors.password" class="text-meta text-rose-600 mt-0.5">{{ editForm.errors.password }}</p>
                             </div>
-                            <p v-else class="text-meta leading-5 text-slate-600">Untuk mengganti kata sandi Anda, buka menu Ganti Kata Sandi.</p>
+                            <p v-else class="text-meta leading-5 text-[var(--ink-soft)]">Untuk mengganti kata sandi Anda, buka menu Ganti Kata Sandi.</p>
                             <div class="flex items-center pt-5">
-                                <label class="flex items-center gap-2 cursor-pointer text-meta font-semibold text-slate-700">
-                                    <input v-model="editForm.is_active" :disabled="editingUser?.id === current_user_id" type="checkbox" class="rounded border-slate-300 text-indigo-600" />
+                                <label class="flex items-center gap-2 cursor-pointer text-meta font-semibold text-[var(--ink-soft)]">
+                                    <input v-model="editForm.is_active" :disabled="editingUser?.id === current_user_id" type="checkbox" class="rounded border-[var(--line)] text-indigo-600" />
                                     <span>Akun Aktif</span>
                                 </label>
                             </div>
@@ -349,9 +366,9 @@ const confirmDeleteUser = () => {
                             <label class="user-field">Username<input v-model="editForm.username" maxlength="50" /><small v-if="editForm.errors.username" class="text-rose-700">{{ editForm.errors.username }}</small></label>
                             <label class="user-field">Nomor telepon<input v-model="editForm.phone" type="tel" maxlength="30" /><small v-if="editForm.errors.phone" class="text-rose-700">{{ editForm.errors.phone }}</small></label>
                         </div>
-                        <p class="text-meta leading-5 text-slate-600">Reset kata sandi mewajibkan pengguna menggantinya saat masuk berikutnya. Nonaktifkan akun untuk mencabut akses tanpa menghapus riwayat.</p>
+                        <p class="text-meta leading-5 text-[var(--ink-soft)]">Reset kata sandi mewajibkan pengguna menggantinya saat masuk berikutnya. Nonaktifkan akun untuk mencabut akses tanpa menghapus riwayat.</p>
                         <div class="user-drawer-footer pt-2 flex justify-end gap-2">
-                            <AppButton variant="secondary" type="button" @click="isEditModalOpen = false" >Batal</AppButton>
+                            <AppButton variant="secondary" type="button" @click="requestEditClose" >Batal</AppButton>
                             <AppButton variant="primary" :loading="editForm.processing" type="submit" :disabled="editForm.processing" class="primary-button">Perbarui</AppButton>
                         </div>
                     </form>
@@ -369,12 +386,23 @@ const confirmDeleteUser = () => {
                 @cancel="pendingDeleteUser = null"
             />
         </div>
+        <ConfirmDialog :open="discardCreateOpen" title="Buang pengguna baru?" message="Data yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discardCreate" @cancel="discardCreateOpen = false" />
+        <ConfirmDialog :open="discardEditOpen" title="Buang perubahan pengguna?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discardEdit" @cancel="discardEditOpen = false" />
     </AppLayout>
 </template>
 
 <style scoped>
 .user-page .page-heading h1 { color: var(--ink); font-size: var(--type-3xl); font-weight: var(--weight-bold); }
 .user-page .page-heading p { color: var(--ink-soft); }
+.user-detail-panel { min-height: 320px; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.user-detail-panel h2 { margin-bottom: 20px; font-size: 18px; }
+.user-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.user-detail-grid dt { color: var(--ink-soft); font-size: 12px; margin-bottom: 6px; }
+.user-detail-grid dd { color: var(--ink); overflow-wrap: anywhere; }
+.user-page :is(.user-table-panel, form.panel, .user-drawer) { border-radius: 8px; }
+.user-table-panel th { text-align: center; }
+.user-drawer input:not([type=checkbox]), .user-drawer select, .user-field :is(input, select) { min-height: 36px; border-radius: 6px; }
+@media (max-width: 600px) { .user-detail-grid { grid-template-columns: 1fr; } }
 .user-page > form.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
 .user-table-panel > p { color: var(--ink-soft); }
 .user-table-panel thead tr { color: var(--ink-soft); background: var(--surface-subtle); border-color: var(--line); }
@@ -400,4 +428,9 @@ const confirmDeleteUser = () => {
 .page-heading > div { min-width: 0; }
 button:disabled { cursor: not-allowed; opacity: .5; }
 @media (max-width: 600px) { .user-overlay { padding: .75rem; } .user-drawer { max-height: 92dvh; border-radius: 16px; } }
+.user-page .user-drawer { border-radius: 8px; }
+.user-page > .page-heading { padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+.user-page .page-heading h1 { font-size: 24px; line-height: 1.35; }
+.user-page > form.panel { border-radius: 8px; }
+.user-page .user-field :is(input, select) { min-height: 36px; border-radius: 6px; }
 </style>

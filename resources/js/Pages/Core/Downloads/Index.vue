@@ -29,6 +29,7 @@ const props = defineProps<{
 
 const page = usePage<{ flash?: { message?: string } }>();
 const showModal = ref(false);
+const discardChanges = ref(false);
 const editing = ref<DownloadItem | null>(null);
 const pendingDelete = ref<DownloadItem | null>(null);
 const deleting = ref(false);
@@ -55,11 +56,19 @@ const filteredDownloads = computed(() => {
     });
 });
 
+const initialForm = JSON.parse(JSON.stringify(form.data()));
 const resetForm = () => {
     showModal.value = false;
     editing.value = null;
+    form.defaults(structuredClone(initialForm));
     form.reset();
     form.clearErrors();
+};
+
+const requestClose = () => {
+    if (form.processing) return;
+    if (form.isDirty) { discardChanges.value = true; return; }
+    resetForm();
 };
 
 const openCreate = () => {
@@ -75,6 +84,7 @@ const openEdit = (doc: DownloadItem) => {
     form.version = doc.version;
     form.is_published = doc.is_published;
     form.file = null;
+    form.defaults();
     form.clearErrors();
     showModal.value = true;
 };
@@ -155,8 +165,8 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
                             <tr v-for="doc in filteredDownloads" :key="doc.id">
                                 <td>
                                     <strong>{{ doc.title }}</strong>
-                                    <small class="block text-xs text-slate-500">{{ doc.original_name }}</small>
-                                    <p v-if="doc.description" class="text-xs text-slate-600 mt-0.5">{{ doc.description }}</p>
+                                    <small class="block text-xs text-[var(--ink-faint)]">{{ doc.original_name }}</small>
+                                    <p v-if="doc.description" class="text-xs text-[var(--ink-soft)] mt-0.5">{{ doc.description }}</p>
                                 </td>
                                 <td class="text-center">{{ doc.category_label }}</td>
                                 <td class="text-center">v{{ doc.version }} · {{ formatSize(doc.size_bytes) }}</td>
@@ -210,20 +220,20 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
                 </div>
             </section>
 
-            <div v-if="showModal" role="dialog" aria-modal="true" aria-labelledby="download-modal-title" class="modal-backdrop" @click.self="resetForm" @keydown.esc="resetForm">
+            <div v-if="showModal" role="dialog" aria-modal="true" aria-labelledby="download-modal-title" class="modal-backdrop" @click.self="requestClose" @keydown.esc="requestClose">
                 <form class="modal-card" @submit.prevent="save">
                     <div class="modal-head">
                         <div>
                             <p class="eyebrow">{{ editing ? 'Edit dokumen' : 'Dokumen baru' }}</p>
                             <h2 id="download-modal-title">{{ editing ? editing.title : 'Unggah dokumen pusat unduh' }}</h2>
                         </div>
-                        <AppButton variant="ghost" type="button" aria-label="Tutup modal" @click="resetForm">×</AppButton>
+                        <AppButton variant="ghost" type="button" aria-label="Tutup modal" @click="requestClose">×</AppButton>
                     </div>
 
                     <div class="form-grid">
                         <label class="wide">
                             <span>Judul dokumen *</span>
-                            <input v-model="form.title" maxlength="180" required placeholder="Contoh: Kalender Akademik 2026/2027" />
+                            <input v-model="form.title" maxlength="180" required placeholder="Kalender Akademik 2026/2027" />
                             <em v-if="form.errors.title">{{ form.errors.title }}</em>
                         </label>
                         <label>
@@ -256,13 +266,15 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
                     </div>
 
                     <div class="modal-actions">
-                        <AppButton variant="secondary" type="button" :disabled="form.processing" @click="resetForm">Batal</AppButton>
+                        <AppButton variant="secondary" type="button" :disabled="form.processing" @click="requestClose">Batal</AppButton>
                         <AppButton variant="primary" type="submit" :loading="form.processing" :disabled="form.processing">
                             {{ editing ? 'Simpan perubahan' : 'Unggah dokumen' }}
                         </AppButton>
                     </div>
                 </form>
             </div>
+
+            <ConfirmDialog :open="discardChanges" title="Buang perubahan dokumen?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discardChanges = false; resetForm()" @cancel="discardChanges = false" />
 
             <ConfirmDialog
                 :open="pendingDelete !== null"
@@ -304,4 +316,10 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
 .form-grid input:not([type=checkbox]), .form-grid select, .form-grid textarea { min-height: 42px; padding: .6rem .75rem; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; }
 .checkbox-row { display: flex !important; align-items: center; gap: .55rem; }
 .notice.success { padding: .85rem 1rem; border-radius: 10px; background: var(--green-soft); color: var(--green); border: 1px solid var(--line); }
+
+.downloads-admin-page { width: 100%; min-width: 0; }
+.downloads-panel, .hero-card > *, .toolbar > *, .form-grid label { min-width: 0; max-width: 100%; }
+.hero-card { overflow-wrap: anywhere; }
+.form-grid input:not([type=checkbox]), .form-grid select, .form-grid textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: minmax(0, 1fr); } .modal-head, .modal-actions { flex-wrap: wrap; } }
 </style>

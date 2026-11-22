@@ -180,14 +180,14 @@ const submitDispensation = () => {
 
 <template>
     <AppLayout title="Kedisiplinan & Prestasi Siswa">
-        <Head title="Kedisiplinan & Prestasi — School Suite" />
+        <Head title="Kedisiplinan & Prestasi" />
 
         <div class="space-y-6 discipline-page">
             <!-- Header bar -->
             <div class="discipline-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kedisiplinan, Prestasi, & Dispensasi Siswa</h1>
-                    <p class="text-sm text-slate-600 mt-1">
+                    <h1 class="text-2xl font-bold tracking-tight text-[var(--ink)]">Kedisiplinan, Prestasi, & Dispensasi Siswa</h1>
+                    <p class="text-sm text-[var(--ink-soft)] mt-1">
                         Pencatatan insiden tata tertib, rekam prestasi kejuaraan, surat dispensasi/izin, dan tindak lanjut pendampingan siswa.
                     </p>
                 </div>
@@ -229,7 +229,7 @@ const submitDispensation = () => {
             </div>
 
             <!-- Tab Headers & Filter -->
-            <div class="discipline-tabs flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200">
+            <div class="discipline-tabs flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--line)]">
                 <div class="flex gap-4">
                     <AppButton variant="secondary"
                         type="button"
@@ -269,7 +269,7 @@ const submitDispensation = () => {
                     <select
                         v-model="selectedClass"
                         @change="applyFilters"
-                        class="px-3 py-1.5 text-meta border border-slate-300 rounded-lg bg-[var(--surface)]"
+                        class="px-3 py-1.5 text-meta border border-[var(--line)] rounded-lg bg-[var(--surface)]"
                     >
                         <option value="">Semua Rombel</option>
                         <option v-for="c in classes" :key="c.id" :value="String(c.id)">Kelas {{ c.name }}</option>
@@ -280,7 +280,7 @@ const submitDispensation = () => {
             <!-- Content Tab 1: Insiden & Pelanggaran -->
             <div v-if="activeTab === 'incidents'" class="bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
                 <table class="app-table w-full text-left text-sm border-collapse">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-meta font-semibold text-slate-600">
+                    <thead class="bg-[var(--surface-subtle)] border-b border-[var(--line)] text-meta font-semibold text-[var(--ink-soft)]">
                         <tr>
                             <th scope="col" class="px-4 py-3">Tanggal</th>
                             <th scope="col" class="px-4 py-3">Nama Siswa</th>
@@ -292,24 +292,24 @@ const submitDispensation = () => {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <tr v-if="incidents.data.length === 0">
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-600">Belum ada rekam catatan insiden/pelanggaran.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-[var(--ink-soft)]">Belum ada rekam catatan insiden/pelanggaran.</td>
                         </tr>
                         <tr v-for="inc in incidents.data" :key="inc.id" class="hover:bg-slate-50/50">
-                            <td class="px-4 py-3 font-mono text-meta text-slate-600">{{ inc.incident_date }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-900">
+                            <td class="px-4 py-3 font-mono text-meta text-[var(--ink-soft)]">{{ inc.incident_date }}</td>
+                            <td class="px-4 py-3 font-medium text-[var(--ink)]">
                                 {{ students.find(s => s.id === inc.student_id)?.name || 'Siswa #' + inc.student_id }}
                             </td>
                             <td class="px-4 py-3">
-                                <div class="font-bold text-slate-800">{{ inc.title }}</div>
-                                <div class="text-meta text-slate-600 line-clamp-1">{{ inc.description }}</div>
+                                <div class="font-bold text-[var(--ink)]">{{ inc.title }}</div>
+                                <div class="text-meta text-[var(--ink-soft)] line-clamp-1">{{ inc.description }}</div>
                             </td>
-                            <td class="px-4 py-3 text-meta text-slate-600">{{ inc.category }}</td>
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)]">{{ inc.category }}</td>
                             <td class="px-4 py-3 text-center">
                                 <span class="px-2 py-0.5 text-meta font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full">
                                     +{{ inc.penalty_points }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-meta text-slate-600">{{ inc.follow_up_action || '—' }}</td>
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)]">{{ inc.follow_up_action || '—' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -318,7 +318,7 @@ const submitDispensation = () => {
             <!-- Content Tab 2: Prestasi Siswa -->
             <div v-if="activeTab === 'achievements'" class="bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
                 <table class="app-table w-full text-left text-sm border-collapse">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-meta font-semibold text-slate-600">
+                    <thead class="bg-[var(--surface-subtle)] border-b border-[var(--line)] text-meta font-semibold text-[var(--ink-soft)]">
                         <tr>
                             <th scope="col" class="px-4 py-3">Tanggal</th>
                             <th scope="col" class="px-4 py-3">Nama Siswa</th>
@@ -330,16 +330,16 @@ const submitDispensation = () => {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <tr v-if="achievements.data.length === 0">
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-600">Belum ada rekam prestasi siswa tercatat.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-[var(--ink-soft)]">Belum ada rekam prestasi siswa tercatat.</td>
                         </tr>
                         <tr v-for="ach in achievements.data" :key="ach.id" class="hover:bg-slate-50/50">
-                            <td class="px-4 py-3 font-mono text-meta text-slate-600">{{ ach.event_date }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-900">
+                            <td class="px-4 py-3 font-mono text-meta text-[var(--ink-soft)]">{{ ach.event_date }}</td>
+                            <td class="px-4 py-3 font-medium text-[var(--ink)]">
                                 {{ students.find(s => s.id === ach.student_id)?.name || 'Siswa #' + ach.student_id }}
                             </td>
-                            <td class="px-4 py-3 font-bold text-slate-800">{{ ach.title }}</td>
-                            <td class="px-4 py-3 text-meta capitalize text-slate-600">{{ ach.achievement_type }}</td>
-                            <td class="px-4 py-3 text-meta capitalize text-slate-600">{{ ach.level }}</td>
+                            <td class="px-4 py-3 font-bold text-[var(--ink)]">{{ ach.title }}</td>
+                            <td class="px-4 py-3 text-meta capitalize text-[var(--ink-soft)]">{{ ach.achievement_type }}</td>
+                            <td class="px-4 py-3 text-meta capitalize text-[var(--ink-soft)]">{{ ach.level }}</td>
                             <td class="px-4 py-3">
                                 <span class="px-2 py-0.5 text-meta font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
                                     {{ ach.rank }}
@@ -353,7 +353,7 @@ const submitDispensation = () => {
             <!-- Content Tab 3: Tindak Lanjut & Konseling -->
             <div v-if="activeTab === 'assistances'" class="bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
                 <table class="app-table w-full text-left text-sm border-collapse">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-meta font-semibold text-slate-600">
+                    <thead class="bg-[var(--surface-subtle)] border-b border-[var(--line)] text-meta font-semibold text-[var(--ink-soft)]">
                         <tr>
                             <th scope="col" class="px-4 py-3">Tanggal</th>
                             <th scope="col" class="px-4 py-3">Nama Siswa</th>
@@ -365,17 +365,17 @@ const submitDispensation = () => {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <tr v-if="assistances.data.length === 0">
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-600">Belum ada catatan tindak lanjut / konseling.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-[var(--ink-soft)]">Belum ada catatan tindak lanjut / konseling.</td>
                         </tr>
                         <tr v-for="ast in assistances.data" :key="ast.id" class="hover:bg-slate-50/50">
-                            <td class="px-4 py-3 font-mono text-meta text-slate-600">{{ ast.date }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-900">
+                            <td class="px-4 py-3 font-mono text-meta text-[var(--ink-soft)]">{{ ast.date }}</td>
+                            <td class="px-4 py-3 font-medium text-[var(--ink)]">
                                 {{ students.find(s => s.id === ast.student_id)?.name || 'Siswa #' + ast.student_id }}
                             </td>
                             <td class="px-4 py-3 text-meta font-semibold capitalize text-indigo-700">{{ ast.type.replace('_', ' ') }}</td>
-                            <td class="px-4 py-3 text-meta text-slate-700 max-w-xs">{{ ast.summary }}</td>
-                            <td class="px-4 py-3 text-meta text-slate-600">{{ ast.agreed_solution || '—' }}</td>
-                            <td class="px-4 py-3 text-meta text-slate-600">{{ ast.facilitator?.name || 'Petugas' }}</td>
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)] max-w-xs">{{ ast.summary }}</td>
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)]">{{ ast.agreed_solution || '—' }}</td>
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)]">{{ ast.facilitator?.name || 'Petugas' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -384,7 +384,7 @@ const submitDispensation = () => {
             <!-- Content Tab 4: Dispensasi & Surat Izin -->
             <div v-if="activeTab === 'dispensations'" class="bg-[var(--surface)] rounded-xl border border-[var(--line)] shadow-xs overflow-x-auto" tabindex="0" role="region" aria-label="Data kedisiplinan">
                 <table class="app-table w-full text-left text-sm border-collapse">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-meta font-semibold text-slate-600">
+                    <thead class="bg-[var(--surface-subtle)] border-b border-[var(--line)] text-meta font-semibold text-[var(--ink-soft)]">
                         <tr>
                             <th scope="col" class="px-4 py-3">Periode Tanggal</th>
                             <th scope="col" class="px-4 py-3">Nama Siswa</th>
@@ -396,13 +396,13 @@ const submitDispensation = () => {
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <tr v-if="!dispensations || dispensations.data.length === 0">
-                            <td colspan="6" class="px-4 py-8 text-center text-slate-600">Belum ada data surat dispensasi / izin tercatat.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-[var(--ink-soft)]">Belum ada data surat dispensasi / izin tercatat.</td>
                         </tr>
                         <tr v-for="dsp in (dispensations?.data || [])" :key="dsp.id" class="hover:bg-slate-50/50">
-                            <td class="px-4 py-3 font-mono text-meta text-slate-600">
+                            <td class="px-4 py-3 font-mono text-meta text-[var(--ink-soft)]">
                                 {{ dsp.start_date }} <span v-if="dsp.start_date !== dsp.end_date">s/d {{ dsp.end_date }}</span>
                             </td>
-                            <td class="px-4 py-3 font-medium text-slate-900">
+                            <td class="px-4 py-3 font-medium text-[var(--ink)]">
                                 {{ students.find(s => s.id === dsp.student_id)?.name || 'Siswa #' + dsp.student_id }}
                             </td>
                             <td class="px-4 py-3">
@@ -411,16 +411,16 @@ const submitDispensation = () => {
                                     {{ dsp.type === 'sick' ? 'Surat Sakit' : (dsp.type === 'event' ? 'Dispensasi Lomba' : dsp.type) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-meta text-slate-700 max-w-xs">
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)] max-w-xs">
                                 <div class="font-bold">{{ dsp.title }}</div>
-                                <div class="text-slate-600">{{ dsp.reason }}</div>
+                                <div class="text-[var(--ink-soft)]">{{ dsp.reason }}</div>
                             </td>
                             <td class="px-4 py-3 text-meta">
                                 <span class="px-2 py-0.5 text-meta font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                     {{ dsp.status }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-meta text-slate-600">{{ dsp.submitted_by_user?.name || 'Wali Kelas' }}</td>
+                            <td class="px-4 py-3 text-meta text-[var(--ink-soft)]">{{ dsp.submitted_by_user?.name || 'Wali Kelas' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -431,12 +431,12 @@ const submitDispensation = () => {
         <div v-if="showIncidentModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="discipline-dialog bg-[var(--surface)] rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Catat Insiden Pelanggaran Tata Tertib</h3>
-                    <button type="button" @click="showIncidentModal = false" class="text-slate-600">✕</button>
+                    <h3 class="text-lg font-bold text-[var(--ink)]">Catat Insiden Pelanggaran Tata Tertib</h3>
+                    <button type="button" @click="showIncidentModal = false" class="text-[var(--ink-soft)]">✕</button>
                 </div>
                 <form @submit.prevent="submitIncident" class="space-y-3">
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Peserta Didik *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peserta Didik *</label>
                         <select v-model="incidentForm.student_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Pilih siswa...</option>
                             <option v-for="s in students" :key="s.id" :value="String(s.id)">{{ s.name }} (NIS: {{ s.nis }})</option>
@@ -444,29 +444,29 @@ const submitDispensation = () => {
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tanggal *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tanggal *</label>
                             <input v-model="incidentForm.incident_date" type="date" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Kategori *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kategori *</label>
                             <input v-model="incidentForm.category" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Judul Insiden *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Judul Insiden *</label>
                         <input v-model="incidentForm.title" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Deskripsi Kejadian *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Deskripsi Kejadian *</label>
                         <textarea v-model="incidentForm.description" rows="3" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Poin Pelanggaran</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Poin Pelanggaran</label>
                             <input v-model="incidentForm.penalty_points" type="number" min="0" max="100" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tindak Lanjut Langsung</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tindak Lanjut Langsung</label>
                             <input v-model="incidentForm.follow_up_action" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
@@ -482,24 +482,24 @@ const submitDispensation = () => {
         <div v-if="showAchievementModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="discipline-dialog bg-[var(--surface)] rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Catat Prestasi & Capaian Siswa</h3>
-                    <button type="button" @click="showAchievementModal = false" class="text-slate-600">✕</button>
+                    <h3 class="text-lg font-bold text-[var(--ink)]">Catat Prestasi & Capaian Siswa</h3>
+                    <button type="button" @click="showAchievementModal = false" class="text-[var(--ink-soft)]">✕</button>
                 </div>
                 <form @submit.prevent="submitAchievement" class="space-y-3">
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Peserta Didik *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peserta Didik *</label>
                         <select v-model="achievementForm.student_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Pilih siswa...</option>
                             <option v-for="s in students" :key="s.id" :value="String(s.id)">{{ s.name }} (NIS: {{ s.nis }})</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Nama Prestasi / Kejuaraan *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Nama Prestasi / Kejuaraan *</label>
                         <input v-model="achievementForm.title" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Bidang *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Bidang *</label>
                             <select v-model="achievementForm.achievement_type" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="academic">Akademik</option>
                                 <option value="sports">Olahraga</option>
@@ -509,7 +509,7 @@ const submitDispensation = () => {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tingkat *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tingkat *</label>
                             <select v-model="achievementForm.level" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="school">Sekolah</option>
                                 <option value="district">Kecamatan</option>
@@ -520,17 +520,17 @@ const submitDispensation = () => {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Peringkat *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peringkat *</label>
                             <input v-model="achievementForm.rank" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tanggal Event *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tanggal Event *</label>
                             <input v-model="achievementForm.event_date" type="date" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Penyelenggara</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Penyelenggara</label>
                             <input v-model="achievementForm.organizer" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
@@ -546,12 +546,12 @@ const submitDispensation = () => {
         <div v-if="showAssistanceModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="discipline-dialog bg-[var(--surface)] rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Catat Tindak Lanjut & Konseling</h3>
-                    <button type="button" @click="showAssistanceModal = false" class="text-slate-600">✕</button>
+                    <h3 class="text-lg font-bold text-[var(--ink)]">Catat Tindak Lanjut & Konseling</h3>
+                    <button type="button" @click="showAssistanceModal = false" class="text-[var(--ink-soft)]">✕</button>
                 </div>
                 <form @submit.prevent="submitAssistance" class="space-y-3">
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Peserta Didik *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peserta Didik *</label>
                         <select v-model="assistanceForm.student_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Pilih siswa...</option>
                             <option v-for="s in students" :key="s.id" :value="String(s.id)">{{ s.name }} (NIS: {{ s.nis }})</option>
@@ -559,7 +559,7 @@ const submitDispensation = () => {
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Bentuk Layanan *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Bentuk Layanan *</label>
                             <select v-model="assistanceForm.type" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="counseling">Konseling Individu</option>
                                 <option value="home_visit">Kunjungan Rumah (Home Visit)</option>
@@ -568,7 +568,7 @@ const submitDispensation = () => {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tingkat Akses</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tingkat Akses</label>
                             <select v-model="assistanceForm.access_level" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="confidential">🔒 Rahasia (Wali/BK Saja)</option>
                                 <option value="internal">Internal Dewan Guru</option>
@@ -576,11 +576,11 @@ const submitDispensation = () => {
                         </div>
                     </div>
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Ringkasan Pembahasan *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Ringkasan Pembahasan *</label>
                         <textarea v-model="assistanceForm.summary" rows="3" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Kesepakatan Solusi / Tindak Lanjut</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Kesepakatan Solusi / Tindak Lanjut</label>
                         <input v-model="assistanceForm.agreed_solution" type="text" class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
                     <div class="flex justify-end gap-2 pt-3 border-t">
@@ -595,12 +595,12 @@ const submitDispensation = () => {
         <div v-if="showDispensationModal" class="discipline-modal fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
             <div class="discipline-dialog bg-[var(--surface)] rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b pb-3">
-                    <h3 class="text-lg font-bold text-slate-900">Catat Surat Dispensasi / Izin Siswa</h3>
-                    <button type="button" @click="showDispensationModal = false" class="text-slate-600">✕</button>
+                    <h3 class="text-lg font-bold text-[var(--ink)]">Catat Surat Dispensasi / Izin Siswa</h3>
+                    <button type="button" @click="showDispensationModal = false" class="text-[var(--ink-soft)]">✕</button>
                 </div>
                 <form @submit.prevent="submitDispensation" class="space-y-3">
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Peserta Didik *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Peserta Didik *</label>
                         <select v-model="dispensationForm.student_id" required class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                             <option value="">Pilih siswa...</option>
                             <option v-for="s in students" :key="s.id" :value="String(s.id)">{{ s.name }} (NIS: {{ s.nis }})</option>
@@ -608,17 +608,17 @@ const submitDispensation = () => {
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tanggal Mulai *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tanggal Mulai *</label>
                             <input v-model="dispensationForm.start_date" type="date" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Tanggal Selesai *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Tanggal Selesai *</label>
                             <input v-model="dispensationForm.end_date" type="date" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Jenis Dispensasi *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Jenis Dispensasi *</label>
                             <select v-model="dispensationForm.type" class="w-full px-3 py-2 text-sm border rounded-lg bg-[var(--surface)]">
                                 <option value="sick">Surat Keterangan Dokter / Sakit</option>
                                 <option value="event">Dispensasi Mengikuti Lomba / Kegiatan</option>
@@ -627,12 +627,12 @@ const submitDispensation = () => {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-meta font-semibold text-slate-700 mb-1">Keterangan / Keperluan *</label>
+                            <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Keterangan / Keperluan *</label>
                             <input v-model="dispensationForm.title" type="text" placeholder="misal: Demam Berdarah / O2SN" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                         </div>
                     </div>
                     <div>
-                        <label class="block text-meta font-semibold text-slate-700 mb-1">Alasan Lengkap *</label>
+                        <label class="block text-meta font-semibold text-[var(--ink-soft)] mb-1">Alasan Lengkap *</label>
                         <textarea v-model="dispensationForm.reason" rows="2" required class="w-full px-3 py-2 text-sm border rounded-lg" />
                     </div>
                     <div class="flex justify-end gap-2 pt-3 border-t">

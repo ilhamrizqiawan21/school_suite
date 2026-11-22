@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Modules\Academic\Infrastructure\Models\Teacher;
 use App\Modules\Admissions\Infrastructure\Models\AdmissionApplicant;
+use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use Database\Seeders\PilotSchoolSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -75,6 +76,27 @@ class AdmissionsControllersTest extends TestCase
             'status' => 'documents_verified',
             'notes' => 'Berkas sudah diperiksa.',
         ]);
+    }
+
+    public function test_dedicated_committee_role_requires_assignment_and_loses_access_after_revocation(): void
+    {
+        $role = Role::query()->firstOrCreate(
+            ['name' => 'committee'], ['label' => 'Panitia Penerimaan', 'is_system' => true],
+        );
+        $member = User::query()->create(['school_id' => $this->admin->school_id, 'role_id' => $role->id,
+            'name' => 'Petugas Verifikasi Penerimaan', 'email' => 'committee@example.test',
+            'password' => 'test-password', 'is_active' => true, 'must_change_password' => false]);
+        $this->actingAs($member)->get(route('admissions.index'))->assertForbidden();
+        $this->actingAs($this->admin)->post(route('admissions.committee.assign'), ['user_id' => $member->id])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($member)->get(route('admissions.index'))->assertOk();
+        $this->get('/profil')->assertInertia(fn ($page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => $keys->contains('admissions')));
+        $this->actingAs($this->admin)->delete(route('admissions.committee.remove', $member))->assertRedirect();
+        $this->actingAs($member)->get(route('admissions.index'))->assertForbidden();
+        $this->get('/profil')->assertInertia(fn ($page) => $page
+            ->where('navigation.visible_keys', fn ($keys) => ! $keys->contains('admissions')));
+        $this->post(route('admissions.applicants.store'), ['name' => 'Pendaftar setelah pencabutan', 'gender' => 'P'])->assertForbidden();
     }
 
     public function test_unassigned_teacher_cannot_open_spmb_or_add_applicant(): void

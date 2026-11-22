@@ -37,12 +37,9 @@ class AdmissionsPolicy
 
     public function isCommitteeMember(User $actor): bool
     {
-        return $actor->school_id !== null
-            && $actor->hasRole('teacher')
-            && DB::table('admission_committee_members')
-                ->where('school_id', $actor->school_id)
-                ->where('user_id', $actor->id)
-                ->exists()
-            && $this->teacherDirectory->isActiveTeacherUser((int) $actor->school_id, (int) $actor->id);
+        return $actor->is_active && $actor->school_id !== null
+            && $actor->hasRole(['teacher', 'committee'])
+            && DB::table('admission_committee_members')->where('school_id', $actor->school_id)->where('user_id', $actor->id)->exists()
+            && ($actor->hasRole('committee') || $this->teacherDirectory->isActiveTeacherUser((int) $actor->school_id, (int) $actor->id));
     }
 }

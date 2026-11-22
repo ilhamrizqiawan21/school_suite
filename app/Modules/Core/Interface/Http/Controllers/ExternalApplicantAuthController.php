@@ -205,7 +205,7 @@ class ExternalApplicantAuthController extends Controller
 
         return [
             'name' => $school->name,
-            'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+            'logo_url' => $school->publicBrandingUrl('logo'),
             'theme' => $snapshot['theme'] ?? $school->publicTheme(),
         ];
     }

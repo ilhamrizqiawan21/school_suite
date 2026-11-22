@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useUnsavedDialog } from '@/composables/useUnsavedDialog';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import { computed, onBeforeUnmount, ref } from 'vue';
@@ -47,14 +48,17 @@ const selectPhoto = (event: Event) => {
     uploadPreview.value = form.photo ? URL.createObjectURL(form.photo) : '';
 };
 const parentName = (parentId?: number | null) => props.members.find((member) => member.id === parentId)?.name ?? 'Pimpinan utama';
+const initialForm = JSON.parse(JSON.stringify(form.data()));
 const reset = () => {
     showForm.value = false;
     editing.value = null;
     clearUploadPreview();
+    form.defaults(structuredClone(initialForm));
     form.reset();
     form.photo = null;
     form.clearErrors();
 };
+const { discardOpen, requestClose, discard } = useUnsavedDialog(form, reset);
 const openCreate = () => {
     reset();
     showForm.value = true;
@@ -69,14 +73,15 @@ const edit = (member: OrganizationMember) => {
     form.is_published = member.is_published;
     form.photo = null;
     clearUploadPreview();
+    form.defaults();
     showForm.value = true;
 };
 const submit = () => {
     const options = { preserveScroll: true, onSuccess: reset };
     if (editing.value) {
-        form.put('/pengaturan/struktur-organisasi/' + editing.value.id, { ...options, forceFormData: true });
+        form.transform((data) => ({ ...data, _method: 'put' })).post('/pengaturan/struktur-organisasi/' + editing.value.id, { ...options, forceFormData: true });
     } else {
-        form.post('/pengaturan/struktur-organisasi', { ...options, forceFormData: true });
+        form.transform((data) => data).post('/pengaturan/struktur-organisasi', { ...options, forceFormData: true });
     }
 };
 const pendingDeleteMember = ref<OrganizationMember | null>(null);
@@ -108,18 +113,18 @@ const confirmRemoveMember = () => {
             <div v-if="page.props.flash?.message" class="notice success" role="status">{{ page.props.flash.message }}</div>
             <div v-if="Object.keys(form.errors).length" class="notice error" role="alert">Periksa isian struktur organisasi yang ditandai.</div>
 
-            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="org-modal-title" class="modal-backdrop" @click.self="reset" @keydown.esc="reset">
+            <div v-if="showForm" role="dialog" aria-modal="true" aria-labelledby="org-modal-title" class="modal-backdrop" @click.self="requestClose" @keydown.esc="requestClose">
                 <section class="modal-card editor-panel">
-                    <div class="section-heading"><div><h2 id="org-modal-title">{{ editing ? 'Ubah anggota organisasi' : 'Tambah anggota organisasi' }}</h2><p>Pilih atasan. Kosongkan untuk pimpinan utama.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir organisasi" @click="reset">×</AppButton></div>
+                    <div class="section-heading"><div><h2 id="org-modal-title">{{ editing ? 'Ubah anggota organisasi' : 'Tambah anggota organisasi' }}</h2><p>Pilih atasan. Kosongkan untuk pimpinan utama.</p></div><AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir organisasi" @click="requestClose">×</AppButton></div>
                     <form class="organization-form" @submit.prevent="submit">
-                        <label><span>Nama personel *</span><input v-model="form.name" maxlength="150" required placeholder="Contoh: Drs. Budi Santoso" /><em v-if="form.errors.name">{{ form.errors.name }}</em></label>
-                        <label><span>Jabatan *</span><input v-model="form.position" maxlength="120" required placeholder="Contoh: Kepala Sekolah" /><em v-if="form.errors.position">{{ form.errors.position }}</em></label>
-                        <label><span>Bidang / unit kerja</span><input v-model="form.department" maxlength="120" placeholder="Contoh: Pimpinan atau Kurikulum" /><em v-if="form.errors.department">{{ form.errors.department }}</em></label>
+                        <label><span>Nama personel *</span><input v-model="form.name" maxlength="150" required placeholder="Drs. Budi Santoso" /><em v-if="form.errors.name">{{ form.errors.name }}</em></label>
+                        <label><span>Jabatan *</span><input v-model="form.position" maxlength="120" required placeholder="Kepala Sekolah" /><em v-if="form.errors.position">{{ form.errors.position }}</em></label>
+                        <label><span>Bidang / unit kerja</span><input v-model="form.department" maxlength="120" placeholder="Pimpinan atau Kurikulum" /><em v-if="form.errors.department">{{ form.errors.department }}</em></label>
                         <label class="photo-field"><span>Foto personel</span><div class="file-picker"><input type="file" accept="image/jpeg,image/png,image/webp" @change="selectPhoto" /><span class="file-picker-button">Pilih foto</span><span class="file-picker-name">{{ form.photo?.name || (editing?.photo_url ? 'Foto saat ini tersimpan' : 'Belum ada foto dipilih') }}</span></div><div v-if="photoPreview" class="photo-preview"><img :src="photoPreview" alt="Pratinjau foto personel" /></div><small>JPG, PNG, atau WebP; maksimal 2 MB. Foto baru akan mengganti foto sebelumnya setelah disimpan.</small><em v-if="form.errors.photo">{{ form.errors.photo }}</em></label>
                         <label><span>Atasan langsung</span><select v-model="form.parent_id"><option :value="null">Pimpinan utama</option><option v-for="member in parentOptions" :key="member.id" :value="member.id">{{ member.name }} — {{ member.position }}</option></select><em v-if="form.errors.parent_id">{{ form.errors.parent_id }}</em></label>
                         <label><span>Urutan tampil</span><input v-model.number="form.sort_order" type="number" min="0" max="999" /><em v-if="form.errors.sort_order">{{ form.errors.sort_order }}</em></label>
                         <label class="publish-choice"><input v-model="form.is_published" type="checkbox" /><span><strong>Tampilkan di profil publik</strong><small>Matikan untuk menyimpan data internal tanpa menampilkannya kepada pengunjung.</small></span></label>
-                        <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambah ke struktur' }}</AppButton></div>
+                        <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="requestClose">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Tambah ke struktur' }}</AppButton></div>
                     </form>
                 </section>
             </div>
@@ -147,6 +152,7 @@ const confirmRemoveMember = () => {
                 @cancel="pendingDeleteMember = null"
             />
         </main>
+        <ConfirmDialog :open="discardOpen" title="Buang perubahan?" message="Perubahan yang belum disimpan akan hilang." confirm-label="Buang perubahan" @confirm="discard" @cancel="discardOpen = false" />
     </AppLayout>
 </template>
 

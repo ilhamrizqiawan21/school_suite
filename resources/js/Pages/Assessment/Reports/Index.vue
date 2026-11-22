@@ -623,11 +623,11 @@ const singlePdfUrl = (reportId: number, scope: PdfScope = 'full') => {
                         <div class="supplement-grid">
                             <label>
                                 <span>Tempat pembagian rapor</span>
-                                <input v-model="supplementForm.report_place" type="text" placeholder="Contoh: Yogyakarta" />
+                                <input v-model="supplementForm.report_place" type="text" placeholder="Yogyakarta" />
                             </label>
                             <label>
                                 <span>Tanggal pembagian rapor</span>
-                                <input v-model="supplementForm.report_date" type="text" placeholder="Contoh: 20 Desember 2026" />
+                                <input v-model="supplementForm.report_date" type="text" placeholder="20 Desember 2026" />
                             </label>
                         </div>
 
@@ -638,7 +638,7 @@ const singlePdfUrl = (reportId: number, scope: PdfScope = 'full') => {
 
                         <label v-if="reportMode === 'sas'" class="supplement-field">
                             <span>Keputusan kenaikan kelas / kelulusan (opsional, khusus akhir semester genap)</span>
-                            <input v-model="supplementForm.promotion_decision" type="text" placeholder="Contoh: Naik ke kelas VIII / Lulus" />
+                            <input v-model="supplementForm.promotion_decision" type="text" placeholder="Naik ke kelas VIII / Lulus" />
                         </label>
 
                         <div v-if="activeReportGrades(activeSupplementReport).length" class="supplement-section">

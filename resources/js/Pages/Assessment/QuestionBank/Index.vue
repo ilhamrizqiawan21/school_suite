@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
+import { requestConfirmation } from '@/composables/useActionConfirmation';
 import AppButton from '@/components/AppButton.vue';
 import MetricSummaryCard from '@/components/MetricSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
 
 type Pair = { left: string; right: string };
@@ -108,8 +110,8 @@ function closeForm() {
     form.clearErrors();
 }
 
-function submit() {
-    if (!editing.value && props.questions.data.some(q => q.prompt.trim().toLocaleLowerCase() === form.prompt.trim().toLocaleLowerCase() && q.type === form.type) && !window.confirm('Soal dengan teks dan jenis yang sama sudah ada. Tetap simpan sebagai butir baru?')) return;
+async function submit() {
+    if (!editing.value && props.questions.data.some(q => q.prompt.trim().toLocaleLowerCase() === form.prompt.trim().toLocaleLowerCase() && q.type === form.type) && !await requestConfirmation('Soal dengan teks dan jenis yang sama sudah ada. Tetap simpan sebagai butir baru?')) return;
     const payload = {
         ...form.data(),
         subject_id: form.subject_id || null,
@@ -146,12 +148,17 @@ function addPair() {
 function removePair(index: number) {
     if (form.matching_pairs.length > 1) form.matching_pairs.splice(index, 1);
 }
-function action(path: string, label: string) {
-    if (window.confirm(label)) router.post(path, {}, { preserveScroll: true });
+async function action(path: string, label: string) {
+    if (await requestConfirmation(label)) router.post(path, {}, { preserveScroll: true });
 }
 function typeLabel(type: string) {
     return ({ multiple_choice: 'Pilihan ganda', essay: 'Esai', true_false: 'Benar / salah', matching: 'Menjodohkan' } as Record<string, string>)[type] ?? type;
 }
+const requestFormClose = useConfirmedDialogClose(form, closeForm);
+
+const showQuestionImportEditor = ref(false);
+const requestQuestionImportEditorClose = useConfirmedDialogClose(importForm, () => { showQuestionImportEditor.value = false; importForm.reset(); importForm.clearErrors(); });
+watch(() => importForm.wasSuccessful, (success) => { if (success) importForm.defaults(); });
 </script>
 
 <template>
@@ -165,12 +172,15 @@ function typeLabel(type: string) {
                     <p>Susun butir soal terstruktur dan gunakan kembali pada ujian. Setiap perubahan tersimpan sebagai versi baru.</p>
                 </div>
                 <div class="hero-actions">
-                    <div class="hero-link-actions"><Link href="/ujian" class="secondary-button ui-button ui-button--secondary ui-button--md">Ujian & CBT</Link><Link href="/penilaian/bank-soal/template" class="secondary-button ui-button ui-button--secondary ui-button--md">Unduh template</Link><AppButton variant="secondary" as="a" :href="exportUrl" class="secondary-button">Ekspor XLSX</AppButton></div>
-                    <form class="import-control" aria-label="Impor soal" @submit.prevent="submitImport">
+                    <div class="hero-link-actions"><Link href="/ujian" class="secondary-button ui-button ui-button--secondary ui-button--md">Ujian & CBT</Link><Link href="/penilaian/bank-soal/template" class="secondary-button ui-button ui-button--secondary ui-button--md">Unduh template</Link><AppButton variant="secondary" as="a" icon="excel" :href="exportUrl" class="file-action-button file-action-button--excel">Ekspor XLSX</AppButton></div>
+                    <AppButton variant="primary" type="button" @click="showQuestionImportEditor = true">Impor soal dari berkas</AppButton>
+<Teleport to="body"><div v-if="showQuestionImportEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Impor soal dari berkas" @click.self="requestQuestionImportEditorClose" @keydown.esc.stop.prevent="requestQuestionImportEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Impor soal dari berkas</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup impor soal dari berkas" title="Tutup formulir" :disabled="importForm.processing" @click="requestQuestionImportEditorClose" /></header>
+<form class="import-control" aria-label="Impor soal" @submit.prevent="submitImport">
                         <label>Jenjang impor<select v-model="importForm.jenjang"><option>SD</option><option>SMP</option><option>SMA</option></select></label><label>Kurikulum impor<select v-model="importForm.curriculum"><option value="merdeka">Merdeka</option><option value="kbc">KBC</option><option value="both">Keduanya</option></select></label><label class="file-picker">Pilih XLSX / CSV<input type="file" accept=".xlsx,.csv" @change="importForm.file = ($event.target as HTMLInputElement).files?.[0] ?? null" /></label>
                         <AppButton variant="secondary" type="submit" class="secondary-button" :disabled="importForm.processing || !importForm.file">{{ importForm.processing ? 'Memeriksa…' : 'Preview impor' }}</AppButton>
                         <small v-if="importForm.errors.file" class="form-error">{{ importForm.errors.file }}</small>
                     </form>
+</div></div></Teleport>
                     <AppButton variant="primary" icon="plus" type="button" class="primary-button" @click="openCreate"> Tambah soal</AppButton>
                 </div>
             </header>
@@ -248,9 +258,9 @@ function typeLabel(type: string) {
             </section>
         </div>
 
-        <div v-if="showForm" class="modal-backdrop" @click.self="closeForm">
+        <div v-if="showForm" class="modal-backdrop" @click.self="requestFormClose" @keydown.esc.stop.prevent="requestFormClose">
             <form class="modal-card question-form" @submit.prevent="submit">
-                <div class="form-heading"><div><p class="eyebrow">{{ editing ? `Simpan sebagai versi ${Number(editingQuestion?.current_version ?? 0) + 1}` : 'Butir baru' }}</p><h2>{{ editing ? 'Ubah soal' : 'Tambah soal' }}</h2></div><AppButton variant="ghost" icon-only icon="close" type="button" class="close-button" aria-label="Tutup" @click="closeForm">×</AppButton></div>
+                <div class="form-heading"><div><p class="eyebrow">{{ editing ? `Simpan sebagai versi ${Number(editingQuestion?.current_version ?? 0) + 1}` : 'Butir baru' }}</p><h2>{{ editing ? 'Ubah soal' : 'Tambah soal' }}</h2></div><AppButton variant="ghost" icon-only icon="close" type="button" class="close-button" aria-label="Tutup" @click="requestFormClose">×</AppButton></div>
                 <div class="form-grid">
                     <label>Mata pelajaran<select v-model="form.subject_id"><option value="">Bank umum / belum ditentukan</option><option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.code }} · {{ s.name }}</option></select></label>
                     <label>Penugasan mengajar (opsional)<select v-model="form.teaching_assignment_id"><option value="">Tidak diikat ke kelas tertentu</option><option v-for="a in assignments" :key="a.id" :value="a.id">{{ a.subject_code }} · {{ a.subject_name }} — {{ a.class_name }}</option></select></label>
@@ -260,9 +270,9 @@ function typeLabel(type: string) {
                     <label>Level kognitif<select v-model="form.cognitive_level"><option value="">Belum diklasifikasikan</option><option v-for="(label, level) in {C1:'Mengingat',C2:'Memahami',C3:'Menerapkan',C4:'Menganalisis',C5:'Mengevaluasi',C6:'Mencipta'}" :key="level" :value="level">{{ level }} · {{ label }}</option><option value="L1">L1 · LOTS (C1–C2)</option><option value="L2">L2 · MOTS (C3–C4)</option><option value="L3">L3 · HOTS (C5–C6)</option></select></label>
                     <label class="span-all">Teks soal<textarea v-model="form.prompt" rows="4" required maxlength="10000" /></label>
                     <label class="span-all">Indikator soal<textarea v-model="form.indicator_text" rows="2" maxlength="5000" placeholder="Kompetensi atau indikator yang diukur" /></label>
-                    <label>Kelas / rombel<input v-model="form.class_label" maxlength="120" placeholder="Contoh: VII A" /></label><label>Sumber<input v-model="form.source" maxlength="500" placeholder="Buku atau referensi soal" /></label><label>KKO (kata kerja operasional)<input v-model="form.kko_text" list="question-kko-terms" maxlength="180" placeholder="Cari, misalnya: menganalisis" @change="selectKkoByText" /><datalist id="question-kko-terms"><option v-for="term in visibleKkoTerms" :key="term.id" :value="term.term">{{ term.cognitive_level }}</option></datalist></label>
-                    <label>Kategori (pisahkan dengan koma)<input v-model="form.category_names" maxlength="1000" placeholder="Contoh: Aljabar, Persamaan" /></label>
-                    <label>Tag (pisahkan dengan koma)<input v-model="form.tag_names" maxlength="1000" placeholder="Contoh: remedial, HOTS" /></label>
+                    <label>Kelas / rombel<input v-model="form.class_label" maxlength="120" placeholder="VII A" /></label><label>Sumber<input v-model="form.source" maxlength="500" placeholder="Buku atau referensi soal" /></label><label>KKO (kata kerja operasional)<input v-model="form.kko_text" list="question-kko-terms" maxlength="180" placeholder="Cari, misalnya: menganalisis" @change="selectKkoByText" /><datalist id="question-kko-terms"><option v-for="term in visibleKkoTerms" :key="term.id" :value="term.term">{{ term.cognitive_level }}</option></datalist></label>
+                    <label>Kategori (pisahkan dengan koma)<input v-model="form.category_names" maxlength="1000" placeholder="Aljabar, Persamaan" /></label>
+                    <label>Tag (pisahkan dengan koma)<input v-model="form.tag_names" maxlength="1000" placeholder="remedial, HOTS" /></label>
                     <label>Poin default<input v-model.number="form.points" type="number" min="0.1" max="100" step="0.1" required /></label>
 
                     <div v-if="hasTypeFields === 'multiple_choice'" class="span-all type-fields">
@@ -277,7 +287,7 @@ function typeLabel(type: string) {
                     <label class="span-all">Penjelasan jawaban<textarea v-model="form.explanation" rows="2" maxlength="5000" placeholder="Opsional" /></label>
                 </div>
                 <p v-if="form.hasErrors" class="form-error">{{ Object.values(form.errors)[0] }}</p>
-                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="closeForm">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan versi baru' : 'Simpan soal' }}</AppButton></div>
+                <div class="modal-actions"><AppButton variant="secondary" type="button" class="secondary-button" @click="requestFormClose">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan versi baru' : 'Simpan soal' }}</AppButton></div>
             </form>
         </div>
     </AppLayout>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
 import AppButton from './AppButton.vue';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 
 const props = withDefaults(defineProps<{
     open: boolean;
@@ -23,6 +24,8 @@ const emit = defineEmits<{
 }>();
 
 const dialogRef = ref<HTMLElement | null>(null);
+const dialogId = useId();
+const scrollOwner = Symbol('confirmation');
 const cancelButtonRef = ref<HTMLElement | null>(null);
 let previouslyFocused: HTMLElement | null = null;
 
@@ -33,9 +36,10 @@ const close = () => {
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
-    if (!props.open) return;
+    if (!props.open || event.defaultPrevented) return;
     if (event.key === 'Escape') {
         event.preventDefault();
+        event.stopPropagation();
         close();
         return;
     }
@@ -50,7 +54,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 const restoreFocus = () => {
-    document.body.style.removeProperty('overflow');
+    unlockBodyScroll(scrollOwner);
     previouslyFocused?.focus();
     previouslyFocused = null;
 };
@@ -58,18 +62,17 @@ const restoreFocus = () => {
 watch(() => props.open, async (isOpen) => {
     if (isOpen) {
         previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-        document.body.style.overflow = 'hidden';
+        lockBodyScroll(scrollOwner);
         await nextTick();
-        dialogRef.value?.querySelector<HTMLElement>('button:not([disabled])')?.focus();
+        dialogRef.value?.querySelector<HTMLElement>('[autofocus], button:not([disabled])')?.focus();
         return;
     }
 
     restoreFocus();
-});
+}, { immediate: true });
 
 onBeforeUnmount(() => {
-    document.body.style.removeProperty('overflow');
-    previouslyFocused = null;
+    restoreFocus();
 });
 </script>
 
@@ -84,13 +87,16 @@ onBeforeUnmount(() => {
             <div
                 ref="dialogRef"
                 class="ss-confirm-dialog"
+                :class="`ss-confirm-dialog--${variant}`"
+                :aria-busy="loading"
                 role="alertdialog"
                 aria-modal="true"
-                aria-labelledby="ss-confirm-title"
-                aria-describedby="ss-confirm-message"
+                :aria-labelledby="`${dialogId}-title`"
+                :aria-describedby="`${dialogId}-message`"
             >
-                <h2 id="ss-confirm-title" class="ss-confirm-dialog__title">{{ title }}</h2>
-                <p id="ss-confirm-message" class="ss-confirm-dialog__message">{{ message }}</p>
+                <h2 :id="`${dialogId}-title`" class="ss-confirm-dialog__title">{{ title }}</h2>
+                <p :id="`${dialogId}-message`" class="ss-confirm-dialog__message">{{ message }}</p>
+                <slot />
 
                 <div class="ss-confirm-dialog__actions">
                     <span ref="cancelButtonRef" tabindex="-1">
@@ -124,7 +130,9 @@ onBeforeUnmount(() => {
     padding: 1.5rem;
     background: var(--surface, #ffffff);
     border: 1px solid var(--line, #dee4ee);
-    border-radius: var(--radius-lg, 18px);
+    border-radius: var(--admin-radius, 8px);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
     box-shadow: var(--shadow-md);
 }
 
@@ -134,6 +142,9 @@ onBeforeUnmount(() => {
     font-size: var(--type-lg, 1.0625rem);
     font-weight: var(--weight-bold, 700);
 }
+
+.ss-confirm-dialog--danger .ss-confirm-dialog__title { color: var(--red); }
+.ss-confirm-dialog--warning .ss-confirm-dialog__title { color: var(--gold); }
 
 .ss-confirm-dialog__message {
     margin: 0 0 1.25rem;
@@ -149,6 +160,6 @@ onBeforeUnmount(() => {
 }
 
 .ss-confirm-dialog__actions :deep(.ui-button) {
-    min-height: var(--control-height-lg, 44px);
+    min-height: 36px;
 }
 </style>

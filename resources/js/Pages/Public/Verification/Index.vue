@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
@@ -66,6 +68,7 @@ const docTone = (status: string): 'success' | 'danger' | 'warning' | 'neutral' =
     if (status === 'expired') return 'warning';
     return 'neutral';
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -76,30 +79,30 @@ const docTone = (status: string): 'success' | 'danger' | 'warning' | 'neutral' =
 
         <main class="mx-auto max-w-4xl px-4 py-10 space-y-6">
             <header class="madrasah-profile-hero">
-                <p class="eyebrow">Verifikasi Resmi Madrasah</p>
-                <h1 class="text-2xl font-bold text-slate-900">Verifikasi Siswa &amp; Keabsahan Dokumen</h1>
+                <p class="eyebrow">{{ publicText("copy.vue_verification_index", "text_001", "Verifikasi Resmi Madrasah") }}</p>
+                <h1 class="text-2xl font-bold text-slate-900">{{ publicText("copy.vue_verification_index", "text_002", "Verifikasi Siswa & Keabsahan Dokumen") }}</h1>
                 <p class="mt-1 text-sm text-slate-600">
-                    Cek keabsahan kode/QR SKL, Ijazah Legalisir, Surat Kuasa, SPTJM, E-KTA Alumni, serta status keaktifan peserta didik tanpa menampilkan data pribadi sensitif.
+                    {{ publicText("copy.vue_verification_index", "text_003", "Cek keabsahan kode/QR SKL, Ijazah Legalisir, Surat Kuasa, SPTJM, E-KTA Alumni, serta status keaktifan peserta didik tanpa menampilkan data pribadi sensitif.") }}
                 </p>
             </header>
 
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <AppButton type="button" :variant="activeMode === 'document' ? 'primary' : 'secondary'" @click="activeMode = 'document'">
-                    Verifikasi Dokumen / QR
+                    {{ publicText("copy.vue_verification_index", "text_004", "Verifikasi Dokumen / QR") }}
                 </AppButton>
                 <AppButton type="button" :variant="activeMode === 'student' ? 'primary' : 'secondary'" @click="activeMode = 'student'">
-                    Cek Keaktifan Siswa / Alumni
+                    {{ publicText("copy.vue_verification_index", "text_005", "Cek Keaktifan Siswa / Alumni") }}
                 </AppButton>
             </div>
 
             <div v-if="activeMode === 'document'" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
                 <form @submit.prevent="submitDoc" class="space-y-4">
-                    <FormField id="verify-code" label="Kode Verifikasi / Nomor Dokumen" :error="docForm.errors.code" required>
+                    <FormField id="verify-code" :label="publicText('copy.vue_verification_index', 'label_10001', 'Kode Verifikasi / Nomor Dokumen')" :error="docForm.errors.code" required>
                         <input
                             id="verify-code"
                             v-model="docForm.code"
                             type="text"
-                            placeholder="Tempel kode verifikasi atau nomor SKL/Legalisir"
+                            :placeholder="publicText('copy.vue_verification_index', 'placeholder_011', 'Tempel kode verifikasi atau nomor SKL/Legalisir')"
                             class="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
                         />
                     </FormField>
@@ -122,22 +125,22 @@ const docTone = (status: string): 'success' | 'danger' | 'warning' | 'neutral' =
                         <StatusBadge :status="documentResult.status" :tone="docTone(documentResult.status)" size="sm" />
                     </div>
                     <div v-if="documentResult.document" class="grid gap-1 text-xs sm:grid-cols-2">
-                        <p>Jenis: <strong>{{ documentResult.document.document_kind_label }}</strong></p>
-                        <p>Nomor: <strong class="font-mono">{{ documentResult.document.document_number }}</strong></p>
-                        <p>Pemegang: <strong>{{ documentResult.document.holder_name }}</strong></p>
-                        <p v-if="documentResult.document.issued_at">Terbit: {{ documentResult.document.issued_at }}</p>
-                        <p v-if="documentResult.document.signatory_name">Pengesah: {{ documentResult.document.signatory_name }}</p>
-                        <p v-if="documentResult.document.revocation_reason">Alasan Cabut: {{ documentResult.document.revocation_reason }}</p>
+                        <p>{{ publicText("copy.vue_verification_index", "text_006", "Jenis:") }} <strong>{{ documentResult.document.document_kind_label }}</strong></p>
+                        <p>{{ publicText("copy.vue_verification_index", "text_007", "Nomor:") }} <strong class="font-mono">{{ documentResult.document.document_number }}</strong></p>
+                        <p>{{ publicText("copy.vue_verification_index", "text_008", "Pemegang:") }} <strong>{{ documentResult.document.holder_name }}</strong></p>
+                        <p v-if="documentResult.document.issued_at">{{ publicText("copy.vue_verification_index", "text_9001", "Terbit:") }} {{ documentResult.document.issued_at }}</p>
+                        <p v-if="documentResult.document.signatory_name">{{ publicText("copy.vue_verification_index", "text_9002", "Pengesah:") }} {{ documentResult.document.signatory_name }}</p>
+                        <p v-if="documentResult.document.revocation_reason">{{ publicText("copy.vue_verification_index", "text_9003", "Alasan Cabut:") }} {{ documentResult.document.revocation_reason }}</p>
                     </div>
                 </div>
             </div>
 
             <div v-else class="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
                 <form @submit.prevent="submitStudent" class="grid gap-3 md:grid-cols-2">
-                    <FormField id="verify-nisn" label="NISN Siswa" :error="studentForm.errors.nisn" required>
+                    <FormField id="verify-nisn" :label="publicText('copy.vue_verification_index', 'label_10002', 'NISN Siswa')" :error="studentForm.errors.nisn" required>
                         <input id="verify-nisn" v-model="studentForm.nisn" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
-                    <FormField id="verify-name" label="Nama Siswa (Minimal 3 Huruf)" :error="studentForm.errors.name" required>
+                    <FormField id="verify-name" :label="publicText('copy.vue_verification_index', 'label_10003', 'Nama Siswa (Minimal 3 Huruf)')" :error="studentForm.errors.name" required>
                         <input id="verify-name" v-model="studentForm.name" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
                     </FormField>
                     <div class="md:col-span-2">
@@ -154,9 +157,9 @@ const docTone = (status: string): 'success' | 'danger' | 'warning' | 'neutral' =
                 >
                     <p class="font-semibold">{{ studentResult.message }}</p>
                     <div v-if="studentResult.found" class="text-xs space-y-0.5">
-                        <p>Nama: <strong>{{ studentResult.student_name }}</strong></p>
-                        <p>Status: <strong>{{ studentResult.status_label }}</strong></p>
-                        <p>Kelas / Tingkat: {{ studentResult.class_or_level }} — {{ studentResult.academic_year }}</p>
+                        <p>{{ publicText("copy.vue_verification_index", "text_009", "Nama:") }} <strong>{{ studentResult.student_name }}</strong></p>
+                        <p>{{ publicText("copy.vue_verification_index", "text_010", "Status:") }} <strong>{{ studentResult.status_label }}</strong></p>
+                        <p>{{ publicText("copy.vue_verification_index", "text_9004", "Kelas / Tingkat:") }} {{ studentResult.class_or_level }} — {{ studentResult.academic_year }}</p>
                     </div>
                 </div>
             </div>

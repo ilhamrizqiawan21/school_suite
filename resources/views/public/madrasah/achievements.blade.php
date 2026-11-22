@@ -1,7 +1,7 @@
 @extends('public.layouts.madrasah')
 
 @php
-  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+  $schoolName = ($profile['name'] ?? null) ?: 'Sekolah';
   $q = trim((string) request()->query('q', ''));
   $selectedLevel = trim((string) request()->query('tingkat', ''));
   $selectedYear = trim((string) request()->query('tahun', ''));
@@ -57,10 +57,10 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
       <div class="max-w-3xl">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-accent-yellow text-xs font-bold uppercase tracking-wider mb-3 border border-amber-400/30">
-          <i class="fa-solid fa-trophy"></i> Hall of Fame Siswa
+          <i class="fa-solid fa-trophy"></i> {{ ($contentBlocks['copy.blade_achievements']['text_001'] ?? 'Hall of Fame Siswa') }}
         </div>
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-3">
-          Prestasi &amp; Tradisi Juara
+          {{ ($contentBlocks['copy.blade_achievements']['text_002'] ?? 'Prestasi & Tradisi Juara') }}
         </h1>
         <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
           Koleksi piala, medali, dan penghargaan yang diraih santri dan siswa {{ $schoolName }} dalam ajang riset sains, keagamaan, seni, dan olahraga.
@@ -72,16 +72,16 @@
           @endif
           <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="search" name="q" aria-label="Cari prestasi" value="{{ $q }}" placeholder="Cari nama lomba atau tim peraih..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <input type="search" name="q" aria-label="{{ ($contentBlocks['copy.blade_achievements']['aria_label_009'] ?? 'Cari prestasi') }}" value="{{ $q }}" placeholder="{{ ($contentBlocks['copy.blade_achievements']['placeholder_010'] ?? 'Cari nama lomba atau tim peraih...') }}" class="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400">
           </div>
-          <select name="tahun" aria-label="Filter tahun prestasi" class="py-3 px-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none">
-            <option value="">Semua Tahun</option>
+          <select name="tahun" aria-label="{{ ($contentBlocks['copy.blade_achievements']['aria_label_011'] ?? 'Filter tahun prestasi') }}" class="py-3 px-3 rounded-xl bg-white text-slate-900 text-sm shadow-lg focus:outline-none">
+            <option value="">{{ ($contentBlocks['copy.blade_achievements']['text_003'] ?? 'Semua Tahun') }}</option>
             @foreach ($years as $yr)
               <option value="{{ $yr }}" @selected($selectedYear === (string) $yr)>Tahun {{ $yr }}</option>
             @endforeach
           </select>
           <button type="submit" class="bg-accent-gold hover:bg-amber-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg transition text-sm flex items-center justify-center gap-2">
-            <span>Cari Prestasi</span>
+            <span>{{ ($contentBlocks['copy.blade_achievements']['text_004'] ?? 'Cari Prestasi') }}</span>
             <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
           </button>
         </form>
@@ -93,7 +93,7 @@
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
     <div class="flex items-center justify-between flex-wrap gap-4 mb-8 pb-4 border-b border-slate-200">
       <div class="madrasah-catalog-filters">
-        <a href="/prestasi" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedLevel === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+        <a href="{{ ($contentBlocks['copy.blade_achievements']['href_012'] ?? '/prestasi') }}" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition {{ $selectedLevel === '' ? 'bg-kemenag-700 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
           Semua Tingkat ({{ count($list) }})
         </a>
         @foreach ($levels as $lvl)
@@ -103,7 +103,7 @@
         @endforeach
       </div>
       <div class="text-xs text-slate-500">
-        Total <b>{{ count($list) }}</b> rekam jejak juara
+        {{ ($contentBlocks['copy.blade_achievements']['text_005'] ?? 'Total') }} <b>{{ count($list) }}</b> {{ ($contentBlocks['copy.blade_achievements']['text_006'] ?? 'rekam jejak juara') }}
       </div>
     </div>
 
@@ -137,14 +137,14 @@
               <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
             </div>
             <div class="overflow-hidden">
-              <span class="text-[10px] text-slate-400 block font-medium">Peraih Juara:</span>
+              <span class="text-[10px] text-slate-400 block font-medium">{{ ($contentBlocks['copy.blade_achievements']['text_007'] ?? 'Peraih Juara:') }}</span>
               <strong class="text-xs text-slate-800 font-bold truncate block">{{ $item['winner'] }}</strong>
             </div>
           </div>
         </div>
       @empty
         <div class="col-span-full rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-          Belum ada catatan prestasi pada filter yang dipilih.
+          {{ ($contentBlocks['copy.blade_achievements']['text_008'] ?? 'Belum ada catatan prestasi pada filter yang dipilih.') }}
         </div>
       @endforelse
     </div>

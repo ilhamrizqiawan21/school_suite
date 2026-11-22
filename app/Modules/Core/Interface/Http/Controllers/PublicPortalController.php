@@ -10,7 +10,6 @@ use App\Modules\Core\Application\Services\PublicPortalService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Infrastructure\Models\PublicDownload;
 use App\Modules\Core\Infrastructure\Models\School;
-use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use App\Shared\Files\PrivateStorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,30 +76,7 @@ class PublicPortalController extends Controller
     {
         $school = School::query()->orderBy('id')->firstOrFail();
 
-        $items = SchoolNews::query()
-            ->with('photos')
-            ->where('school_id', $school->id)
-            ->where('status', 'published')
-            ->where('is_archived', false)
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', now())
-            ->whereIn('category', ['prestasi', 'agenda'])
-            ->latest('published_at')
-            ->limit(24)
-            ->get(['id', 'title', 'slug', 'category', 'excerpt', 'published_at'])
-            ->map(static fn (SchoolNews $item): array => [
-                'id' => $item->id,
-                'title' => $item->title,
-                'slug' => $item->slug,
-                'category' => $item->category,
-                'excerpt' => $item->excerpt,
-                'published_at' => $item->published_at?->toIso8601String(),
-                'photo_url' => $item->photos->first()
-                    ? route('core.news.photo', [$item->slug, $item->photos->first()->id])
-                    : null,
-            ])
-            ->values()
-            ->all();
+        $items = $this->portalService->publishedAchievements((int) $school->id);
 
         if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
             if ($request->header('X-Inertia')) {
@@ -151,9 +127,14 @@ class PublicPortalController extends Controller
 
         $download->increment('download_count');
 
+        $filename = trim((string) $download->original_name);
+        if ($filename === '' || preg_match('/[\x00-\x1F\x7F\r\n]/', $filename) === 1) {
+            $filename = basename($download->file_path) ?: 'download';
+        }
+
         $response = response()->download(
             $this->storage->path($download->file_path),
-            $download->original_name,
+            $filename,
         );
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
@@ -179,7 +160,11 @@ class PublicPortalController extends Controller
             'respondent_name' => ['nullable', 'string', 'max:120'],
             'respondent_role' => ['required', 'in:siswa,wali,alumni,tamu,umum'],
             'service_name' => ['required', 'string', 'max:120'],
-            'rating' => ['required', 'integer', 'between:1,5'],
+            'rating' => ['required_without:answers', 'nullable', 'integer', 'between:1,5'],
+            'instrument_version' => ['nullable', 'string', 'size:64'],
+            'submission_key' => ['nullable', 'uuid'],
+            'answers' => ['nullable', 'array', 'min:1', 'max:20'],
+            'answers.*' => ['required', 'integer', 'between:1,5'],
             'comment' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -207,7 +192,7 @@ class PublicPortalController extends Controller
                 'name', 'legal_name', 'level', 'school_status', 'accreditation',
                 'address', 'phone', 'email', 'website', 'timezone',
             ]),
-            'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,
+            'logo_url' => $school->publicBrandingUrl('logo'),
             'theme' => $school->publicTheme(),
         ];
     }

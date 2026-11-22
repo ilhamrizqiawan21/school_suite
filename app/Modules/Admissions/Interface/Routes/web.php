@@ -12,7 +12,7 @@ Route::post('/ppdb/perbaiki/{applicant}', [AdmissionsController::class, 'candida
 Route::get('/ppdb/bukti/{applicant}/pdf', [AdmissionsController::class, 'candidateProofPdf'])->whereNumber('applicant')->name('public.admissions.proof');
 Route::post('/ppdb/daftar-ulang/{applicant}', [AdmissionsController::class, 'candidateReRegister'])->whereNumber('applicant')->middleware('throttle:sensitive')->name('public.admissions.re-register');
 
-Route::middleware(['auth', 'role:admin,operator,principal,teacher', 'throttle:sensitive'])
+Route::middleware(['auth', 'role:admin,operator,principal,teacher,committee', 'throttle:sensitive'])
     ->prefix('spmb')
     ->name('admissions.')
     ->group(function (): void {

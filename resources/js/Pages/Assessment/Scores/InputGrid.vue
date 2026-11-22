@@ -307,8 +307,8 @@ const printScores = () => window.print();
                 </div>
                 <div class="score-hero-actions">
                     <AppButton variant="secondary" as="a" href="/dashboard" class="secondary-button score-back">← Kembali</AppButton>
-                    <AppButton variant="secondary" type="button" class="secondary-button" @click="exportExcel">▣ Excel</AppButton>
-                    <AppButton variant="secondary" type="button" class="secondary-button" @click="printScores">▤ PDF</AppButton>
+                    <AppButton icon="excel" variant="secondary" type="button" class="secondary-button" @click="exportExcel">Excel</AppButton>
+                    <AppButton icon="pdf" variant="secondary" type="button" class="secondary-button" @click="printScores">PDF</AppButton>
                 </div>
             </div>
 
@@ -496,7 +496,7 @@ const printScores = () => window.print();
                                     />
                                     <small v-if="scoreCell(row, component.id).remedial_score !== null && scoreCell(row, component.id).remedial_score !== ''" class="score-remedial">Remedial → <strong class="is-passed">{{ componentFinal(row, component) }}</strong></small>
                                 </td>
-                                <td v-if="components.length === 0" class="text-center text-slate-600">—</td>
+                                <td v-if="components.length === 0" class="text-center text-[var(--ink-soft)]">—</td>
                                 <td class="score-final-cell">
                                     <span v-if="calculateAverage(row) !== null" class="score-avg-badge" :class="calculateAverage(row)! >= passingGrade ? 'is-passed' : 'is-below'">{{ calculateAverage(row) }}</span>
                                     <span v-else class="score-avg-empty">—</span>
@@ -513,7 +513,7 @@ const printScores = () => window.print();
                                 </td>
                             </tr>
                             <tr v-if="filteredRows.length === 0">
-                                <td :colspan="Math.max(components.length, 1) + 5" class="text-center py-10 text-slate-600 text-sm">
+                                <td :colspan="Math.max(components.length, 1) + 5" class="text-center py-10 text-[var(--ink-soft)] text-sm">
                                     {{ studentSearch ? 'Siswa tidak ditemukan.' : 'Tidak ada data siswa untuk kelas dan komponen ini.' }}
                                 </td>
                             </tr>

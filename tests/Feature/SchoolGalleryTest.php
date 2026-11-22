@@ -41,6 +41,27 @@ class SchoolGalleryTest extends TestCase
         $this->teacher = $this->makeUser($teacherRole, 'teacher');
     }
 
+    public function test_media_orphan_scan_is_read_only_and_excludes_referenced_and_other_school_files(): void
+    {
+        Storage::fake('local');
+        $disk = Storage::disk('local');
+        $orphan = 'branding/'.$this->school->id.'/unused.png';
+        $referenced = 'branding/'.$this->school->id.'/logo.png';
+        $otherSchool = 'branding/'.($this->school->id + 1).'/other.png';
+        foreach ([$orphan, $referenced, $otherSchool] as $path) {
+            $disk->put($path, 'image');
+            touch($disk->path($path), now()->subDays(2)->timestamp);
+        }
+        $this->school->update(['logo_path' => $referenced]);
+
+        $this->artisan('school:media-orphans', ['school' => $this->school->id])
+            ->expectsOutput($orphan)
+            ->doesntExpectOutput($referenced)
+            ->doesntExpectOutput($otherSchool)
+            ->assertSuccessful();
+        $disk->assertExists([$orphan, $referenced, $otherSchool]);
+    }
+
     public function test_operator_can_upload_one_gallery_group_with_four_photos(): void
     {
         Storage::fake('local');
@@ -134,6 +155,49 @@ class SchoolGalleryTest extends TestCase
             'title' => 'Tidak boleh lintas sekolah',
             'is_published' => true,
         ])->assertNotFound();
+    }
+
+    public function test_media_used_by_published_content_cannot_be_withdrawn_or_deleted(): void
+    {
+        Storage::fake('local');
+        $album = $this->createAlbum('Foto kegiatan literasi', true);
+        $photo = $album->photos->first();
+        $this->school->update(['settings' => ['public_content' => ['published' => [
+            'home.hero' => ['image_url' => route('core.gallery.photo', $photo->id)],
+        ]]]]);
+        $this->actingAs($this->admin)->put('/pengaturan/galeri/'.$album->id, [
+            'title' => $album->title, 'is_published' => false,
+        ])->assertSessionHasErrors('photos');
+        $this->actingAs($this->admin)->delete('/pengaturan/galeri/'.$album->id)->assertSessionHasErrors('photos');
+        $this->assertTrue($album->fresh()->is_published);
+        Storage::disk('local')->assertExists($photo->path);
+    }
+
+    public function test_media_kept_only_in_publication_history_is_preserved_for_restore(): void
+    {
+        Storage::fake('local');
+        $album = $this->createAlbum('Arsip dokumentasi literasi', true);
+        $photo = $album->photos->first();
+        $this->school->update(['settings' => ['public_content' => ['revisions' => [[
+            'version' => 1, 'blocks' => ['home.hero' => ['image_url' => route('core.gallery.photo', $photo->id)]],
+        ]]]]]);
+        $this->actingAs($this->admin)->delete('/pengaturan/galeri/'.$album->id)->assertSessionHasErrors('photos');
+        $this->assertNotNull($album->fresh());
+        Storage::disk('local')->assertExists($photo->path);
+    }
+
+    public function test_unrelated_school_content_cannot_block_media_management(): void
+    {
+        Storage::fake('local');
+        $album = $this->createAlbum('Dokumentasi lokal', true);
+        School::create(['name' => 'Madrasah Sekolah Lain', 'npsn' => '88990022', 'level' => 'MA',
+            'settings' => ['public_content' => ['published' => [
+                'home.hero' => ['image_url' => route('core.gallery.photo', $album->photos->first()->id)],
+            ]]]]);
+        $this->actingAs($this->admin)->put('/pengaturan/galeri/'.$album->id, [
+            'title' => $album->title, 'is_published' => false,
+        ])->assertSessionHasNoErrors();
+        $this->assertFalse($album->fresh()->is_published);
     }
 
     private function createAlbum(string $title, bool $isPublished, int $photoCount = 1): SchoolGalleryAlbum

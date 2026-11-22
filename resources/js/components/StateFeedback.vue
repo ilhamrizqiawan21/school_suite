@@ -2,7 +2,7 @@
 import AppButton from './AppButton.vue';
 
 const props = withDefaults(defineProps<{
-    state: 'loading' | 'empty' | 'error';
+    state: 'loading' | 'empty' | 'error' | 'permission' | 'offline';
     title?: string;
     description?: string;
     retryLabel?: string;
@@ -23,6 +23,7 @@ const emit = defineEmits<{
         :class="`ss-state-feedback--${state}`"
         :role="state === 'error' ? 'alert' : 'status'"
         aria-live="polite"
+        :aria-busy="state === 'loading'"
     >
         <template v-if="state === 'loading'">
             <div class="ss-state-feedback__skeleton" aria-hidden="true">
@@ -46,6 +47,11 @@ const emit = defineEmits<{
             </div>
         </template>
 
+        <template v-else-if="state === 'permission' || state === 'offline'">
+            <h3 class="ss-state-feedback__title">{{ title || (state === 'permission' ? 'Akses terbatas' : 'Koneksi terputus') }}</h3>
+            <p class="ss-state-feedback__desc">{{ description || (state === 'permission' ? 'Anda tidak memiliki izin untuk membuka bagian ini. Hubungi administrator sekolah.' : 'Periksa koneksi internet Anda, lalu coba kembali.') }}</p>
+            <div v-if="$slots.actions" class="ss-state-feedback__actions"><slot name="actions" /></div>
+        </template>
         <template v-else>
             <div class="ss-state-feedback__icon ss-state-feedback__icon--error" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -72,8 +78,8 @@ const emit = defineEmits<{
     padding: 2rem 1.25rem;
     text-align: center;
     background: var(--surface, #ffffff);
-    border: 1px dashed var(--line-strong, #c8d1df);
-    border-radius: var(--radius-md, 12px);
+    border: 1px solid var(--line, #c8d1df);
+    border-radius: var(--admin-radius, 8px);
 }
 
 .ss-state-feedback--error {
@@ -81,6 +87,11 @@ const emit = defineEmits<{
     border-style: solid;
     border-color: var(--delete-line, #f4c6cd);
 }
+.ss-state-feedback--offline { border-color: var(--gold); background: var(--gold-soft); }
+.ss-state-feedback--error .ss-state-feedback__title { color: var(--red); }
+.ss-state-feedback--loading .ss-skeleton-line { animation: state-pulse 1.4s ease-in-out infinite alternate; }
+@keyframes state-pulse { to { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .ss-state-feedback--loading .ss-skeleton-line { animation: none; } }
 
 .ss-state-feedback__icon {
     display: grid;

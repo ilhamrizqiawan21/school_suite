@@ -180,7 +180,7 @@ const pdfPreviewUrl = computed(() => exportQuery.value ? `/penilaian/ledger/pdf?
                     <Link :href="reportsHref" class="secondary-button ui-button ui-button--secondary ui-button--md">
                         Kembali ke Rapor
                     </Link>
-                    <AppButton
+                    <AppButton icon="excel"
                         v-if="excelUrl"
                         variant="secondary"
                         as="a"

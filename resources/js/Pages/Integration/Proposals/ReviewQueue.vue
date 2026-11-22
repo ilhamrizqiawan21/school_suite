@@ -81,8 +81,8 @@ const decide = (proposalId: number, decision: string) => {
         <div class="space-y-6">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Antrean Telaah Proposal & LPJ</h1>
-                    <p class="mt-1 text-sm text-slate-600">
+                    <h1 class="text-xl font-bold text-[var(--ink)]">Antrean Telaah Proposal & LPJ</h1>
+                    <p class="mt-1 text-sm text-[var(--ink-soft)]">
                         Evaluasi usulan penugasan guru maupun kegiatan mandiri organisasi/siswa beserta penutupan LPJ pasca-kegiatan.
                     </p>
                 </div>
@@ -135,17 +135,17 @@ const decide = (proposalId: number, decision: string) => {
                         <div
                             v-for="item in proposals"
                             :key="item.id"
-                            class="rounded-xl border border-slate-200 bg-white p-4 space-y-3"
+                            class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 space-y-3"
                         >
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-mono text-xs font-semibold text-slate-500">{{ item.proposal_code }}</span>
+                                        <span class="font-mono text-xs font-semibold text-[var(--ink-faint)]">{{ item.proposal_code }}</span>
                                         <StatusBadge :status="item.proposal_mode" :label="item.proposal_mode_label" :tone="item.proposal_mode === 'teacher_work' ? 'info' : 'neutral'" />
                                         <StatusBadge :status="item.status" :label="`${item.status_label} (v${item.revision_number})`" :tone="toneForStatus(item.status)" />
                                     </div>
-                                    <h3 class="mt-1 text-base font-semibold text-slate-900">{{ item.title }}</h3>
-                                    <p class="text-xs text-slate-600">
+                                    <h3 class="mt-1 text-base font-semibold text-[var(--ink)]">{{ item.title }}</h3>
+                                    <p class="text-xs text-[var(--ink-soft)]">
                                         {{ item.activity_type_label }} · {{ item.organizer_name }} · {{ item.start_date }} · RAB: <strong>{{ formatCurrency(item.total_requested_amount) }}</strong>
                                     </p>
                                 </div>
@@ -153,7 +153,7 @@ const decide = (proposalId: number, decision: string) => {
                                     <a
                                         v-if="item.attachment_document_id"
                                         :href="`/proposal/${item.id}/dokumen/${item.attachment_document_id}`"
-                                        class="rounded-md border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                                        class="rounded-md border border-[var(--line)] bg-[var(--surface-subtle)] px-2.5 py-1.5 text-xs font-medium text-[var(--ink-soft)] hover:bg-[var(--surface-strong)]"
                                     >
                                         Lampiran Proposal
                                     </a>
@@ -168,7 +168,7 @@ const decide = (proposalId: number, decision: string) => {
                                 </div>
                             </div>
 
-                            <p class="text-sm text-slate-700">{{ item.purpose }}</p>
+                            <p class="text-sm text-[var(--ink-soft)]">{{ item.purpose }}</p>
 
                             <div v-if="item.lpj_realization_amount !== null && item.lpj_realization_amount !== undefined" class="rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 text-xs text-emerald-950">
                                 <strong>Realisasi LPJ:</strong> {{ formatCurrency(item.lpj_realization_amount) }} — {{ item.lpj_summary }}
@@ -176,13 +176,13 @@ const decide = (proposalId: number, decision: string) => {
 
                             <div
                                 v-if="['submitted', 'in_review', 'needs_revision', 'lpj_submitted'].includes(item.status)"
-                                class="border-t border-slate-100 pt-3 space-y-3"
+                                class="border-t border-[var(--line)] pt-3 space-y-3"
                             >
                                 <input
                                     v-model="notes[item.id]"
                                     type="text"
                                     placeholder="Catatan keputusan / alasan revisi atau penolakan..."
-                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                    class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                                 >
                                 <div class="flex flex-wrap justify-end gap-2">
                                     <AppButton v-if="item.status === 'submitted'" variant="secondary" size="sm" @click="decide(item.id, 'in_review')">

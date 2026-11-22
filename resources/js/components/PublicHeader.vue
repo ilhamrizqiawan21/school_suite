@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePublicContentText } from '@/composables/usePublicContentText';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { filterServiceCategories } from '@/composables/usePublicServicesCatalog';
@@ -98,6 +99,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     document.removeEventListener('pointerdown', handleDocumentPointerdown);
 });
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -109,7 +111,7 @@ onBeforeUnmount(() => {
         @keydown.esc.stop="closeMenu(true)"
     >
         <div class="public-site-header-top">
-            <Link href="/" class="brand" aria-label="Beranda sekolah">
+            <Link href="/" class="brand" :aria-label="publicText('copy.vue_publicheader', 'aria_label_10001', 'Beranda sekolah')">
                 <span class="brand-mark">
                     <img v-if="brand.logo_url" :src="brand.logo_url" alt="" />
                     <span v-else>{{ initial }}</span>
@@ -119,14 +121,14 @@ onBeforeUnmount(() => {
                 </span>
             </Link>
 
-            <div class="public-site-header-actions" aria-label="Aksi sekolah">
+            <div class="public-site-header-actions" :aria-label="publicText('copy.vue_publicheader', 'aria_label_008', 'Aksi sekolah')">
                 <Link :href="portalHref" class="portal-link">{{ portalLabel }}</Link>
                 <Link
                     href="/ppdb"
                     class="admissions-action ui-button ui-button--primary ui-button--md"
                     :aria-current="props.active === 'admissions' ? 'page' : undefined"
                 >
-                    SPMB
+                    {{ publicText("copy.vue_publicheader", "text_001", "SPMB") }}
                 </Link>
                 <button
                     ref="navToggleRef"
@@ -143,7 +145,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="public-site-header-nav-row">
-            <nav id="public-navigation" class="public-nav" :class="{ 'is-open': menuOpen }" aria-label="Navigasi publik">
+            <nav id="public-navigation" class="public-nav" :class="{ 'is-open': menuOpen }" :aria-label="publicText('copy.vue_publicheader', 'aria_label_009', 'Navigasi publik')">
                 <Link
                     :href="menus[0].href"
                     :aria-current="isCurrent('/') ? 'page' : undefined"
@@ -162,12 +164,12 @@ onBeforeUnmount(() => {
                         :aria-current="profileActive ? 'page' : undefined"
                         @click.stop="toggleProfileMenu"
                     >
-                        Profil
+                        {{ publicText("copy.vue_publicheader", "text_002", "Profil") }}
                         <span class="nav-chevron" aria-hidden="true"></span>
                     </button>
                     <div v-if="profileMenuOpen" id="profile-navigation" class="profile-dropdown">
-                        <Link href="/profil-sekolah" :aria-current="active === 'profile' ? 'page' : undefined" @click="closeMenu(false)">Profil sekolah</Link>
-                        <Link href="/struktur-organisasi" :aria-current="active === 'organization' ? 'page' : undefined" @click="closeMenu(false)">Struktur organisasi</Link>
+                        <Link href="/profil-sekolah" :aria-current="active === 'profile' ? 'page' : undefined" @click="closeMenu(false)">{{ publicText("copy.vue_publicheader", "text_003", "Profil sekolah") }}</Link>
+                        <Link href="/struktur-organisasi" :aria-current="active === 'organization' ? 'page' : undefined" @click="closeMenu(false)">{{ publicText("copy.vue_publicheader", "text_004", "Struktur organisasi") }}</Link>
                     </div>
                 </div>
 
@@ -180,7 +182,7 @@ onBeforeUnmount(() => {
                         aria-controls="services-navigation"
                         @click.stop="toggleServicesMenu"
                     >
-                        E-Layanan
+                        {{ publicText("copy.vue_publicheader", "text_005", "E-Layanan") }}
                         <span class="nav-chevron" aria-hidden="true"></span>
                     </button>
 
@@ -189,18 +191,18 @@ onBeforeUnmount(() => {
                         id="services-navigation"
                         class="services-panel"
                         role="region"
-                        aria-label="Panel E-Layanan"
+                        :aria-label="publicText('copy.vue_publicheader', 'aria_label_010', 'Panel E-Layanan')"
                     >
                         <div class="services-panel__header">
                             <div class="services-panel__search">
-                                <label class="sr-only" for="public-services-search">Cari E-Layanan</label>
+                                <label class="sr-only" for="public-services-search">{{ publicText("copy.vue_publicheader", "text_006", "Cari E-Layanan") }}</label>
                                 <input
                                     id="public-services-search"
                                     ref="servicesSearchRef"
                                     v-model="serviceQuery"
                                     type="search"
                                     class="services-panel__input"
-                                    placeholder="Cari layanan (mis. PTSP, izin, alumni, aduan, pustaka)..."
+                                    :placeholder="publicText('copy.vue_publicheader', 'placeholder_011', 'Cari layanan (mis. PTSP, izin, alumni, aduan, pustaka)...')"
                                 />
                             </div>
                             <Link :href="portalHref" class="services-panel__portal-cta" @click="closeMenu(false)">
@@ -241,9 +243,9 @@ onBeforeUnmount(() => {
                         </div>
 
                         <div v-else class="services-panel__empty" role="status">
-                            <p>Layanan tidak ditemukan untuk "{{ serviceQuery }}".</p>
+                            <p>{{ publicText("copy.vue_publicheader", "text_9001", "Layanan tidak ditemukan untuk \"") }}{{ serviceQuery }}".</p>
                             <button type="button" class="services-panel__reset" @click="serviceQuery = ''">
-                                Tampilkan semua layanan
+                                {{ publicText("copy.vue_publicheader", "text_007", "Tampilkan semua layanan") }}
                             </button>
                         </div>
                     </div>
@@ -265,9 +267,11 @@ onBeforeUnmount(() => {
             </nav>
         </div>
     </header>
+    <div v-if="page.props.errors?.service" class="portal-container" role="alert"><p class="public-service-unavailable">{{ page.props.errors.service }}</p></div>
 </template>
 
 <style scoped>
+.public-service-unavailable { margin-block: 1rem; padding: 1rem; border: 1px solid var(--public-primary, #3157a4); border-radius: 8px; background: #fff8e6; color: #664500; }
 .public-site-header {
     position: sticky;
     top: 0;

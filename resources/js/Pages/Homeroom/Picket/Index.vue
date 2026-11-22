@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmedDialogClose } from '@/composables/useUnsavedDialog';
 import AppButton from '@/components/AppButton.vue';
 import OperationsScanner from '@/components/OperationsScanner.vue';
 import FormField from '@/components/FormField.vue';
@@ -6,7 +7,7 @@ import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import OperationsLayout from '@/layouts/OperationsLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 interface GatePassItem {
     id: number;
@@ -132,6 +133,10 @@ const exitTypeLabel = (type: string): string => {
     if (type === 'school_duty') return 'Tugas Sekolah';
     return 'Keluar Sementara';
 };
+
+const showPicketPassEditor = ref(false);
+const requestPicketPassEditorClose = useConfirmedDialogClose(issueForm, () => { showPicketPassEditor.value = false; issueForm.reset(); issueForm.clearErrors(); });
+watch(() => issueForm.wasSuccessful, (success) => { if (success) issueForm.defaults(); });
 </script>
 
 <template>
@@ -156,14 +161,16 @@ const exitTypeLabel = (type: string): string => {
                 </div>
                 <a
                     href="/pos-jaga"
-                    class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    class="inline-flex items-center rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[var(--surface-subtle)]"
                 >
                     Buka Layar Pos Jaga
                 </a>
             </header>
 
-            <form @submit.prevent="submitIssue" class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
-                <h2 class="text-base font-semibold text-slate-900">Terbitkan Pass Izin Keluar</h2>
+            <AppButton variant="primary" type="button" @click="showPicketPassEditor = true">Terbitkan izin keluar</AppButton>
+<Teleport to="body"><div v-if="showPicketPassEditor" class="admin-form-overlay" role="dialog" aria-modal="true" aria-label="Terbitkan izin keluar" @click.self="requestPicketPassEditorClose" @keydown.esc.stop.prevent="requestPicketPassEditorClose"><div class="admin-form-dialog"><header class="admin-form-header"><h2>Terbitkan izin keluar</h2><AppButton type="button" icon="close" icon-only aria-label="Tutup terbitkan izin keluar" title="Tutup formulir" :disabled="issueForm.processing" @click="requestPicketPassEditorClose" /></header>
+<form @submit.prevent="submitIssue" class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
+
 
                 <div class="grid gap-3 md:grid-cols-3">
                     <div class="operations-scan-panel md:col-span-2">
@@ -175,7 +182,7 @@ const exitTypeLabel = (type: string): string => {
                                     v-model="searchQuery"
                                     type="text"
                                     placeholder="Ketik nama/NIS atau tempel token kartu"
-                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                    class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                                     @keydown.enter.prevent="lookupStudent"
                                 />
                                 <AppButton type="button" variant="secondary" :disabled="searchLoading" @click="lookupStudent">
@@ -185,7 +192,7 @@ const exitTypeLabel = (type: string): string => {
                         </FormField>
                     </div>
                     <FormField id="picket-student-id" label="Pilih Siswa" :error="issueForm.errors.student_id" required>
-                        <select id="picket-student-id" v-model="issueForm.student_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="picket-student-id" v-model="issueForm.student_id" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option v-for="student in searchResults" :key="student.student_id" :value="student.student_id">
                                 {{ student.name }} ({{ student.nis }}){{ student.class_group_name ? ` — ${student.class_group_name}` : '' }}
                             </option>
@@ -195,17 +202,17 @@ const exitTypeLabel = (type: string): string => {
 
                 <div class="grid gap-3 md:grid-cols-3">
                     <FormField id="picket-exit-type" label="Jenis Izin Keluar" :error="issueForm.errors.exit_type" required>
-                        <select id="picket-exit-type" v-model="issueForm.exit_type" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                        <select id="picket-exit-type" v-model="issueForm.exit_type" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm">
                             <option value="temporary_out">Keluar Sementara</option>
                             <option value="early_home">Pulang Lebih Awal</option>
                             <option value="school_duty">Tugas Sekolah</option>
                         </select>
                     </FormField>
                     <FormField id="picket-valid-from" label="Mulai Berlaku" :error="issueForm.errors.valid_from" required>
-                        <input id="picket-valid-from" v-model="issueForm.valid_from" type="datetime-local" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="picket-valid-from" v-model="issueForm.valid_from" type="datetime-local" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                     <FormField id="picket-valid-until" label="Berlaku Sampai" :error="issueForm.errors.valid_until" required>
-                        <input id="picket-valid-until" v-model="issueForm.valid_until" type="datetime-local" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                        <input id="picket-valid-until" v-model="issueForm.valid_until" type="datetime-local" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                     </FormField>
                 </div>
 
@@ -216,7 +223,7 @@ const exitTypeLabel = (type: string): string => {
                             v-model="issueForm.destination"
                             type="text"
                             placeholder="Misal: Puskesmas / Rumah Sakit / Kantor Dinas"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                         />
                     </FormField>
                     <FormField id="picket-reason" label="Alasan Izin Keluar" :error="issueForm.errors.reason" required>
@@ -225,7 +232,7 @@ const exitTypeLabel = (type: string): string => {
                             v-model="issueForm.reason"
                             type="text"
                             placeholder="Jelaskan keperluan keluar lingkungan madrasah"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm"
                         />
                     </FormField>
                 </div>
@@ -236,12 +243,13 @@ const exitTypeLabel = (type: string): string => {
                     </AppButton>
                 </div>
             </form>
+</div></div></Teleport>
 
-            <div class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+            <div class="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h2 class="text-base font-semibold text-slate-900">Daftar Pass Izin Keluar</h2>
+                    <h2 class="text-base font-semibold text-[var(--ink)]">Daftar Pass Izin Keluar</h2>
                     <div class="flex items-center gap-2">
-                        <select v-model="statusFilter" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" @change="applyFilter">
+                        <select v-model="statusFilter" class="rounded-lg border border-[var(--line)] px-3 py-2 text-sm" @change="applyFilter">
                             <option value="">Semua Status</option>
                             <option value="active">Aktif / Diterbitkan</option>
                             <option value="out">Di Luar Sekolah</option>
@@ -261,7 +269,7 @@ const exitTypeLabel = (type: string): string => {
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-[var(--surface-subtle)] text-center text-xs font-semibold uppercase text-[var(--ink-faint)]">
                             <tr>
                                 <th class="px-3 py-2.5">Kode Pass</th>
                                 <th class="px-3 py-2.5">Siswa</th>
@@ -273,19 +281,19 @@ const exitTypeLabel = (type: string): string => {
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="pass in passes" :key="pass.id" class="hover:bg-slate-50/70">
-                                <td class="px-3 py-3 font-mono text-xs font-bold text-slate-900">{{ pass.pass_code }}</td>
+                                <td class="px-3 py-3 font-mono text-xs font-bold text-[var(--ink)]">{{ pass.pass_code }}</td>
                                 <td class="px-3 py-3">
-                                    <p class="font-medium text-slate-900">{{ pass.student_name }}</p>
-                                    <p class="text-xs text-slate-500">{{ pass.student_nis }} • {{ pass.class_name }}</p>
+                                    <p class="font-medium text-[var(--ink)]">{{ pass.student_name }}</p>
+                                    <p class="text-xs text-[var(--ink-faint)]">{{ pass.student_nis }} • {{ pass.class_name }}</p>
                                 </td>
                                 <td class="px-3 py-3">
-                                    <p class="font-medium text-slate-800">{{ exitTypeLabel(pass.exit_type) }}</p>
-                                    <p class="text-xs text-slate-600">{{ pass.reason }}</p>
-                                    <p v-if="pass.destination" class="text-xs text-slate-500">Tujuan: {{ pass.destination }}</p>
+                                    <p class="font-medium text-[var(--ink)]">{{ exitTypeLabel(pass.exit_type) }}</p>
+                                    <p class="text-xs text-[var(--ink-soft)]">{{ pass.reason }}</p>
+                                    <p v-if="pass.destination" class="text-xs text-[var(--ink-faint)]">Tujuan: {{ pass.destination }}</p>
                                 </td>
-                                <td class="px-3 py-3 text-xs text-slate-600">
+                                <td class="px-3 py-3 text-xs text-[var(--ink-soft)]">
                                     <p>{{ pass.valid_from }} — {{ pass.valid_until }}</p>
-                                    <p v-if="pass.exit_recorded_at" class="text-slate-500">Keluar: {{ pass.exit_recorded_at }}</p>
+                                    <p v-if="pass.exit_recorded_at" class="text-[var(--ink-faint)]">Keluar: {{ pass.exit_recorded_at }}</p>
                                     <p v-if="pass.return_recorded_at" class="text-emerald-700">Kembali: {{ pass.return_recorded_at }}</p>
                                 </td>
                                 <td class="px-3 py-3">
@@ -301,7 +309,7 @@ const exitTypeLabel = (type: string): string => {
                                     >
                                         Batalkan
                                     </button>
-                                    <span v-else class="text-xs text-slate-400">-</span>
+                                    <span v-else class="text-xs text-[var(--ink-faint)]">-</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -311,11 +319,11 @@ const exitTypeLabel = (type: string): string => {
         </div>
 
         <div v-if="cancellingPass" role="dialog" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" @click.self="cancellingPass = null" @keydown.esc="cancellingPass = null">
-            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
-                <h3 class="text-base font-semibold text-slate-900">Batalkan Pass {{ cancellingPass.pass_code }}</h3>
-                <p class="text-sm text-slate-600">{{ cancellingPass.student_name }} — {{ cancellingPass.reason }}</p>
+            <div class="w-full max-w-md rounded-xl bg-[var(--surface)] p-5 shadow-xl space-y-4">
+                <h3 class="text-base font-semibold text-[var(--ink)]">Batalkan Pass {{ cancellingPass.pass_code }}</h3>
+                <p class="text-sm text-[var(--ink-soft)]">{{ cancellingPass.student_name }} — {{ cancellingPass.reason }}</p>
                 <FormField id="picket-cancel-reason" label="Alasan Pembatalan" :error="cancelForm.errors.reason" required>
-                    <textarea id="picket-cancel-reason" v-model="cancelForm.reason" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <textarea id="picket-cancel-reason" v-model="cancelForm.reason" rows="3" class="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-sm" />
                 </FormField>
                 <div class="flex justify-end gap-2">
                     <AppButton type="button" variant="secondary" @click="cancellingPass = null">Tutup</AppButton>

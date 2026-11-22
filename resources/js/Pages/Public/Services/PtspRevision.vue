@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { usePublicContentText } from '@/composables/usePublicContentText';
+import { Link, useForm } from '@inertiajs/vue3';
+import Head from '@/components/PublicHead.vue';
 import { computed, ref } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
@@ -48,6 +50,7 @@ const submitRevision = () => {
             forceFormData: true,
         });
 };
+const publicText = usePublicContentText();
 </script>
 
 <template>
@@ -59,7 +62,7 @@ const submitRevision = () => {
             <section class="portal-card">
                 <header class="rev-head">
                     <div>
-                        <p class="eyebrow">Perbaikan Permohonan PTSP</p>
+                        <p class="eyebrow">{{ publicText("copy.vue_services_ptsprevision", "text_001", "Perbaikan Permohonan PTSP") }}</p>
                         <h1>{{ ptspRequest.ticket_code }}</h1>
                         <p class="muted">{{ ptspRequest.service_snapshot.name }}</p>
                     </div>
@@ -67,21 +70,21 @@ const submitRevision = () => {
                 </header>
 
                 <div v-if="ptspRequest.revision_note" class="revision-box">
-                    <strong>Catatan dari Petugas TU:</strong>
+                    <strong>{{ publicText("copy.vue_services_ptsprevision", "text_002", "Catatan dari Petugas TU:") }}</strong>
                     <p>{{ ptspRequest.revision_note }}</p>
                 </div>
 
                 <form class="form-stack" @submit.prevent="submitRevision">
-                    <FormField id="rev-purpose" label="Keperluan Permohonan" required :error="form.errors.purpose" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="rev-purpose" :label="publicText('copy.vue_services_ptsprevision', 'label_10001', 'Keperluan Permohonan')" required :error="form.errors.purpose" v-slot="{ inputId, describedBy, invalid }">
                         <input :id="inputId" v-model="form.purpose" type="text" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
-                    <FormField id="rev-notes" label="Catatan Permohonan" :error="form.errors.notes" v-slot="{ inputId, describedBy, invalid }">
+                    <FormField id="rev-notes" :label="publicText('copy.vue_services_ptsprevision', 'label_10002', 'Catatan Permohonan')" :error="form.errors.notes" v-slot="{ inputId, describedBy, invalid }">
                         <textarea :id="inputId" v-model="form.notes" rows="3" :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
-                    <FormField id="rev-reply" label="Keterangan Perbaikan untuk Petugas" :error="form.errors.revision_reply" v-slot="{ inputId, describedBy, invalid }">
-                        <textarea :id="inputId" v-model="form.revision_reply" rows="2" placeholder="Jelaskan berkas atau data yang telah diperbaiki..." :aria-describedby="describedBy" :aria-invalid="invalid" />
+                    <FormField id="rev-reply" :label="publicText('copy.vue_services_ptsprevision', 'label_10003', 'Keterangan Perbaikan untuk Petugas')" :error="form.errors.revision_reply" v-slot="{ inputId, describedBy, invalid }">
+                        <textarea :id="inputId" v-model="form.revision_reply" rows="2" :placeholder="publicText('copy.vue_services_ptsprevision', 'placeholder_005', 'Jelaskan berkas atau data yang telah diperbaiki...')" :aria-describedby="describedBy" :aria-invalid="invalid" />
                     </FormField>
 
                     <div v-if="ptspRequest.service_snapshot.required_documents?.length" class="docs-grid">
@@ -98,10 +101,10 @@ const submitRevision = () => {
 
                     <div class="action-row">
                         <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="form.processing">
-                            Kirim Ulang Perbaikan
+                            {{ publicText("copy.vue_services_ptsprevision", "text_003", "Kirim Ulang Perbaikan") }}
                         </button>
                         <Link :href="`/layanan/ptsp/resi/${ptspRequest.ticket_code}`" class="ui-button ui-button--secondary ui-button--md">
-                            Batal
+                            {{ publicText("copy.vue_services_ptsprevision", "text_004", "Batal") }}
                         </Link>
                     </div>
                 </form>

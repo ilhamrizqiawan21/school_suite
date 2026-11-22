@@ -44,7 +44,7 @@ class GuestbookController extends Controller
         return Inertia::render('Public/Services/Guestbook', [
             'school' => [
                 'name' => $school['name'],
-                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'logo_url' => $school['logo_url'] ?? null,
                 'service_hours' => $school['service_hours'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],

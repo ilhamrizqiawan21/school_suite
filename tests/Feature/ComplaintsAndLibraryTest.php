@@ -178,6 +178,30 @@ class ComplaintsAndLibraryTest extends TestCase
         );
     }
 
+    public function test_reassigned_complaint_revokes_the_previous_handler_access_immediately(): void
+    {
+        $this->post('/layanan/lapor', [
+            'category' => 'perundungan', 'is_anonymous' => true,
+            'title' => 'Aduan penanganan terbatas', 'description' => 'Laporan yang hanya boleh ditangani petugas terpilih.',
+            'idempotency_key' => 'scope-assignment-001',
+            'evidence_files' => [UploadedFile::fake()->create('bukti.pdf', 16, 'application/pdf')],
+        ])->assertRedirect();
+        $report = ComplaintReport::query()->firstOrFail();
+        $documentId = $report->evidence_document_ids[0];
+        $other = $this->makeUser($this->schoolA, $this->taskForceUser->role_id, 'satgas.other@example.test', 'satgas_other');
+        $report->update(['assigned_to_user_id' => $this->taskForceUser->id]);
+        $this->actingAs($this->taskForceUser)->get('/satgas/aduan')->assertInertia(fn (Assert $page) => $page->has('reports', 1));
+        $this->get('/satgas/aduan/'.$report->id.'/eviden/'.$documentId)->assertOk();
+        $report->update(['assigned_to_user_id' => $other->id]);
+        $this->get('/satgas/aduan')->assertInertia(fn (Assert $page) => $page->has('reports', 0));
+        $this->get('/satgas/aduan/'.$report->id.'/eviden/'.$documentId)->assertForbidden();
+        $this->post('/satgas/aduan/'.$report->id.'/tangani', [
+            'status' => 'completed', 'resolution_summary' => 'Perubahan yang tidak diizinkan.',
+        ])->assertForbidden();
+        $this->assertSame('submitted', $report->fresh()->status);
+        $this->actingAs($other)->get('/satgas/aduan/'.$report->id.'/eviden/'.$documentId)->assertOk();
+    }
+
     public function test_library_catalog_access_visits_procurement_loans_and_clearance_flow(): void
     {
         // Teacher & student cannot access librarian workspace
