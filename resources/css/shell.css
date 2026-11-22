@@ -377,8 +377,11 @@ button[aria-busy='true'] { cursor: wait; }
 .table-scroll, .overflow-x-auto { min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .table-scroll:focus-visible, .overflow-x-auto:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: -3px; }
 .app-table { width: 100%; border-collapse: collapse; font-size: var(--type-sm); }
-.app-table th { height: 43px; padding: 8px 12px; color: var(--ink-faint); background: var(--surface-subtle); border-bottom: 1px solid var(--line); text-align: left; font-size: var(--type-xs); font-weight: var(--weight-bold); letter-spacing: .015em; line-height: var(--leading-tight); vertical-align: middle; white-space: nowrap; }
-.app-table td { height: 62px; padding: 9px 12px; border-bottom: 1px solid var(--line); color: var(--ink-soft); white-space: normal; font-size: var(--type-sm); line-height: var(--leading-normal); font-variant-numeric: tabular-nums; vertical-align: middle; }
+.app-table th { height: 43px; padding: 8px 12px; color: var(--ink-faint); background: var(--surface-subtle); border-bottom: 1px solid var(--line); text-align: center; font-size: var(--type-xs); font-weight: var(--weight-bold); letter-spacing: .015em; line-height: var(--leading-tight); vertical-align: middle; white-space: nowrap; }
+.app-table td { height: 62px; padding: 9px 12px; border-bottom: 1px solid var(--line); color: var(--ink-soft); text-align: left; white-space: normal; font-size: var(--type-sm); line-height: var(--leading-normal); font-variant-numeric: tabular-nums; vertical-align: middle; }
+.app-table td.is-numeric, .app-table th.is-numeric { text-align: right; font-variant-numeric: tabular-nums; }
+.app-table td.is-status, .app-table td.is-actions, .app-table th.is-status, .app-table th.is-actions { text-align: center; }
+.app-table td.is-actions .row-actions-group { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .app-table tbody tr { transition: background .14s; }
 .app-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 42%, transparent); }
 .app-table tbody tr:focus-within { background: color-mix(in srgb, var(--primary-soft) 58%, transparent); }

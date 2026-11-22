@@ -322,7 +322,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                     <div v-else class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                            <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                                 <tr>
                                     <th class="px-3 py-2.5">Kode Pass</th>
                                     <th class="px-3 py-2.5">Siswa</th>

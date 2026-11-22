@@ -24,12 +24,48 @@ interface LegalRow {
 }
 
 const props = defineProps<{
+    canProcess: boolean;
+    canPublish: boolean;
     requests: LegalRow[];
     filters: { status: string };
 }>();
 
 const statusFilter = ref(props.filters.status || '');
 const actionForm = useForm({ note: '', action: 'reject', reason: '', picked_up_by_name: '', relation: 'Pemohon Langsung' });
+const activeModal = ref<{ type: 'pickup' | 'decide'; row: LegalRow } | null>(null);
+
+const openPickupModal = (row: LegalRow) => {
+    const defaultName = row.delivery_method === 'pickup_proxy' ? (row.proxy_name || row.applicant_name) : row.applicant_name;
+    actionForm.picked_up_by_name = defaultName;
+    actionForm.relation = row.delivery_method === 'pickup_proxy' ? 'Penerima Kuasa' : 'Pemohon Langsung';
+    activeModal.value = { type: 'pickup', row };
+};
+
+const openDecideModal = (row: LegalRow) => {
+    actionForm.action = 'revision';
+    actionForm.reason = '';
+    activeModal.value = { type: 'decide', row };
+};
+
+const submitPickup = () => {
+    if (!activeModal.value || activeModal.value.type !== 'pickup') return;
+    actionForm.post(`/administrasi/legalisir/${activeModal.value.row.id}/ambil`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            activeModal.value = null;
+        },
+    });
+};
+
+const submitDecision = () => {
+    if (!activeModal.value || activeModal.value.type !== 'decide') return;
+    actionForm.post(`/administrasi/legalisir/${activeModal.value.row.id}/keputusan`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            activeModal.value = null;
+        },
+    });
+};
 
 const applyFilter = () => {
     router.get('/administrasi/legalisir', { status: statusFilter.value || undefined }, { preserveState: true, replace: true });
@@ -42,13 +78,6 @@ const verifyOriginal = (id: number) => {
 
 const approve = (id: number) => {
     router.post(`/administrasi/legalisir/${id}/sahkan`, {}, { preserveScroll: true });
-};
-
-const recordPickup = (row: LegalRow) => {
-    const defaultName = row.delivery_method === 'pickup_proxy' ? (row.proxy_name || row.applicant_name) : row.applicant_name;
-    actionForm.picked_up_by_name = window.prompt('Nama pengambil dokumen:', defaultName) || defaultName;
-    actionForm.relation = row.delivery_method === 'pickup_proxy' ? 'Penerima Kuasa' : 'Pemohon Langsung';
-    actionForm.post(`/administrasi/legalisir/${row.id}/ambil`, { preserveScroll: true });
 };
 
 const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' | 'danger' => {
@@ -89,13 +118,13 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
-                                <th class="px-3 py-2.5">Kode &amp; Alumni</th>
-                                <th class="px-3 py-2.5">Dokumen</th>
-                                <th class="px-3 py-2.5">Pengambilan</th>
-                                <th class="px-3 py-2.5">Status</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
+                                <th class="px-3 py-2.5 text-center">Kode &amp; Alumni</th>
+                                <th class="px-3 py-2.5 text-center">Dokumen</th>
+                                <th class="px-3 py-2.5 text-center">Pengambilan</th>
+                                <th class="px-3 py-2.5 text-center">Status</th>
+                                <th class="px-3 py-2.5 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -116,20 +145,93 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                     <StatusBadge :status="r.status" :tone="statusTone(r.status)" size="sm" />
                                 </td>
                                 <td class="px-3 py-3 text-right space-x-2">
-                                    <AppButton v-if="!r.original_verified_at && r.status !== 'rejected'" type="button" variant="secondary" @click="verifyOriginal(r.id)">
+                                    <AppButton v-if="canProcess && !r.original_verified_at && r.status !== 'rejected'" type="button" variant="secondary" @click="verifyOriginal(r.id)">
                                         Cek Asli
                                     </AppButton>
-                                    <AppButton v-if="r.status === 'verified_original'" type="button" @click="approve(r.id)">
+                                    <AppButton v-if="canPublish && r.status === 'verified_original'" type="button" @click="approve(r.id)">
                                         Sahkan
                                     </AppButton>
-                                    <AppButton v-if="r.status === 'approved'" type="button" @click="recordPickup(r)">
+                                    <AppButton v-if="canProcess && r.status === 'approved'" type="button" @click="openPickupModal(r)">
                                         Catat Ambil
+                                    </AppButton>
+                                    <AppButton v-if="canProcess && ['submitted', 'verified_original'].includes(r.status)" type="button" variant="secondary" @click="openDecideModal(r)">
+                                        Revisi / Tolak
                                     </AppButton>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div
+            v-if="activeModal"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+            @click.self="activeModal = null"
+            @keydown.esc="activeModal = null"
+        >
+            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-base font-bold text-slate-900">
+                        {{ activeModal.type === 'pickup' ? 'Catat Pengambilan Dokumen' : 'Revisi / Tolak Permohonan' }}
+                    </h3>
+                    <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="activeModal = null">Tutup</button>
+                </div>
+
+                <form v-if="activeModal.type === 'pickup'" class="space-y-3" @submit.prevent="submitPickup">
+                    <div>
+                        <label for="legal-pickup-name" class="block text-xs font-semibold text-slate-700">Nama Pengambil Dokumen</label>
+                        <input
+                            id="legal-pickup-name"
+                            v-model="actionForm.picked_up_by_name"
+                            type="text"
+                            required
+                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                    </div>
+                    <div>
+                        <label for="legal-pickup-relation" class="block text-xs font-semibold text-slate-700">Status Pengambil</label>
+                        <input
+                            id="legal-pickup-relation"
+                            v-model="actionForm.relation"
+                            type="text"
+                            required
+                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <AppButton type="button" variant="secondary" @click="activeModal = null">Batal</AppButton>
+                        <AppButton type="submit" :disabled="actionForm.processing">Simpan Pengambilan</AppButton>
+                    </div>
+                </form>
+
+                <form v-else class="space-y-3" @submit.prevent="submitDecision">
+                    <div>
+                        <label for="legal-decide-action" class="block text-xs font-semibold text-slate-700">Tindakan</label>
+                        <select id="legal-decide-action" v-model="actionForm.action" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                            <option value="revision">Minta Revisi Berkas</option>
+                            <option value="reject">Tolak Permohonan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="legal-decide-reason" class="block text-xs font-semibold text-slate-700">Catatan / Alasan</label>
+                        <textarea
+                            id="legal-decide-reason"
+                            v-model="actionForm.reason"
+                            rows="3"
+                            required
+                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <AppButton type="button" variant="secondary" @click="activeModal = null">Batal</AppButton>
+                        <AppButton type="submit" :disabled="actionForm.processing">Kirim Keputusan</AppButton>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>

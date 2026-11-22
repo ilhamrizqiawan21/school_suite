@@ -23,6 +23,7 @@ use App\Modules\Admissions\Infrastructure\Models\AdmissionTrack;
 use App\Modules\Core\Application\Services\RolePermissionRegistryService;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\School;
+use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use App\Modules\Core\Infrastructure\Models\ServiceDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -33,7 +34,90 @@ use Tests\TestCase;
 
 class StudentLifecycleAndAlumniTest extends TestCase
 {
+    public function test_ika_home_and_academic_tracer_have_separate_pages_and_private_profile_boundaries(): void
+    {
+        $this->get('/alumni')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Alumni/Home')->has('summary')->missing('profile')
+            ->missing('accountEmail')->missing('authenticatedAlumni'));
+        $this->get('/layanan/tracer-alumni')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Public/Alumni/Portal')
+                ->where('authenticatedAlumni', false)->where('profile', null)->missing('summary'));
+        $this->post('/layanan/tracer-alumni', [
+            'full_name' => 'Unauthorized', 'graduation_year' => 2024, 'current_status' => 'studying',
+        ])->assertForbidden();
+    }
+
     use RefreshDatabase;
+
+    public function test_ika_directory_paginates_filters_and_respects_publication_consent(): void
+    {
+        for ($i = 1; $i <= 26; $i++) {
+            AlumniProfile::query()->create([
+                'school_id' => $this->schoolA->id, 'full_name' => sprintf('Alumni %02d', $i),
+                'graduation_year' => 2026, 'major_or_class' => 'IPA', 'current_status' => 'studying',
+                'moderation_status' => 'approved', 'opt_in_directory' => true, 'opt_in_career' => false,
+                'institution_or_company' => 'Private Campus', 'email' => 'private@example.test',
+                'diploma_serial' => 'PRIVATE-DIPLOMA',
+            ]);
+        }
+        AlumniProfile::query()->create([
+            'school_id' => $this->schoolA->id, 'full_name' => 'Pending Alumni', 'graduation_year' => 2025,
+            'current_status' => 'working', 'moderation_status' => 'pending', 'opt_in_directory' => true,
+        ]);
+        AlumniProfile::query()->create([
+            'school_id' => $this->schoolA->id, 'full_name' => 'Opted Out Alumni', 'graduation_year' => 2025,
+            'current_status' => 'working', 'moderation_status' => 'approved', 'opt_in_directory' => false,
+        ]);
+        $this->get('/alumni')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('directory.total', 26)->has('directory.data', 24)->has('spotlight', 4)
+            ->where('statistics.statuses.0.total', 26)->has('statistics.campuses', 0)
+            ->where('directory.years.0.total', 26)->where('directory.majors.0', 'IPA')
+            ->where('directory.data.0.institution_or_company', null)->where('directory.data.0.contact_email', null)
+            ->missing('directory.data.0.diploma_serial')->missing('directory.data.0.photo_document_id'));
+        $this->get('/alumni?page=2')->assertInertia(fn (Assert $page) => $page
+            ->has('directory.data', 2)->where('directory.current_page', 2));
+        $this->get('/alumni?per_page=all')->assertInertia(fn (Assert $page) => $page
+            ->has('directory.data', 26)->where('directory.last_page', 1)->where('directory.per_page', 'all'));
+        $this->get('/alumni?search=Private%20Campus')->assertInertia(fn (Assert $page) => $page->where('directory.total', 0));
+        $this->get('/alumni?search=Alumni%2001&graduation_year=2026&major_or_class=IPA&current_status=studying')
+            ->assertInertia(fn (Assert $page) => $page->where('directory.total', 1)->where('directory.data.0.full_name', 'Alumni 01'));
+        $this->get('/alumni?major_or_class=IPS')->assertInertia(fn (Assert $page) => $page->where('directory.total', 0));
+    }
+
+    public function test_ika_opportunities_only_show_current_published_school_news(): void
+    {
+        foreach (['career', 'scholarship', 'draft', 'future', 'archived', 'other-school'] as $kind) {
+            $schoolId = $kind === 'other-school' ? School::query()->create(['name' => 'Other School', 'npsn' => '88881234'])->id : $this->schoolA->id;
+            SchoolNews::query()->create([
+                'school_id' => $schoolId, 'author_id' => $this->adminA->id, 'title' => $kind,
+                'slug' => 'alumni-'.$kind, 'body' => 'School publication', 'excerpt' => 'Opportunity details',
+                'category' => $kind === 'scholarship' ? 'beasiswa-alumni' : 'karir-alumni',
+                'status' => $kind === 'draft' ? 'draft' : 'published', 'is_archived' => $kind === 'archived',
+                'published_at' => $kind === 'future' ? now()->addDay() : now()->subDay(),
+            ]);
+        }
+        $this->get('/alumni?section=careers')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('section', 'careers')->has('opportunities.careers', 1)->has('opportunities.scholarships', 1)
+            ->where('opportunities.careers.0.title', 'career')->where('opportunities.scholarships.0.title', 'scholarship'));
+    }
+
+    public function test_alumni_account_flow_returns_to_tracer_and_rejects_external_return_targets(): void
+    {
+        $account = [
+            'applicant_type' => 'alumni', 'full_name' => 'Alumni Tracer',
+            'email' => 'tracer-flow@example.test', 'phone' => '081234567890',
+            'password' => 'tracer-secret-123', 'password_confirmation' => 'tracer-secret-123',
+        ];
+        $this->get('/layanan/ptsp/akun?return_to=/layanan/tracer-alumni')->assertInertia(fn (Assert $page) => $page->where('returnToTracer', true));
+        $this->post('/layanan/ptsp/akun/daftar', $account)->assertRedirect('/layanan/tracer-alumni');
+        $this->get('/layanan/tracer-alumni')->assertInertia(fn (Assert $page) => $page->where('authenticatedAlumni', true));
+        $this->post('/layanan/ptsp/akun/keluar')->assertRedirect();
+        $this->get('/layanan/ptsp/akun?return_to=https://example.test')->assertInertia(fn (Assert $page) => $page->where('returnToTracer', false));
+        $this->post('/layanan/ptsp/akun/masuk', ['email' => $account['email'], 'password' => $account['password']])->assertRedirect('/layanan/ptsp');
+        $this->post('/layanan/ptsp/akun/keluar')->assertRedirect();
+        $this->get('/layanan/ptsp/akun?return_to=/layanan/tracer-alumni')->assertOk();
+        $this->post('/layanan/ptsp/akun/masuk', ['email' => $account['email'], 'password' => $account['password']])->assertRedirect('/layanan/tracer-alumni');
+    }
 
     private School $schoolA;
 
@@ -354,8 +438,9 @@ class StudentLifecycleAndAlumniTest extends TestCase
 
         $outgoing = StudentMutation::query()->where('student_id', $this->studentA1->id)->firstOrFail();
 
-        // Operator approves outgoing mutation -> active enrollment becomes transferred, prior term promoted enrollment remains untouched
-        $this->actingAs($this->operatorA)
+        // Final approval transfers the active enrollment while preserving the prior term history.
+        $this->actingAs($this->operatorA)->post("/akademik/mutasi/{$outgoing->id}/putuskan", ['decision' => 'approve'])->assertForbidden();
+        $this->actingAs($this->adminA)
             ->post("/akademik/mutasi/{$outgoing->id}/putuskan", [
                 'decision' => 'approve',
                 'decision_note' => 'Disetujui kepala sekolah',
@@ -386,7 +471,8 @@ class StudentLifecycleAndAlumniTest extends TestCase
         $letterDoc = ServiceDocument::query()->findOrFail($outgoing->official_letter_document_id);
 
         // Revoking outgoing mutation restores student & marks verification token revoked
-        $this->actingAs($this->operatorA)
+        $this->actingAs($this->operatorA)->post("/akademik/mutasi/{$outgoing->id}/cabut", ['reason' => 'Kontrol akses'])->assertForbidden();
+        $this->actingAs($this->adminA)
             ->post("/akademik/mutasi/{$outgoing->id}/cabut", ['reason' => 'Batal pindah'])
             ->assertRedirect();
 
@@ -407,7 +493,8 @@ class StudentLifecycleAndAlumniTest extends TestCase
         ])->assertRedirect('/layanan/mutasi');
 
         $incoming = StudentMutation::query()->where('direction', 'incoming')->firstOrFail();
-        $this->actingAs($this->operatorA)
+        $this->actingAs($this->operatorA)->post("/akademik/mutasi/{$incoming->id}/putuskan", ['decision' => 'approve'])->assertForbidden();
+        $this->actingAs($this->adminA)
             ->post("/akademik/mutasi/{$incoming->id}/putuskan", [
                 'decision' => 'approve',
                 'nis' => '261099',
@@ -443,7 +530,10 @@ class StudentLifecycleAndAlumniTest extends TestCase
         $record = GraduationRecord::query()->firstOrFail();
 
         // Publish batch for future release date -> before release_at, portal MUST hide verdict & forbid SKL download
-        $this->actingAs($this->operatorA)
+        $this->actingAs($this->operatorA)->post("/akademik/kelulusan/batch/{$batch->id}/terbitkan", [
+            'signatory_name' => 'Pejabat', 'signatory_title' => 'Kepala Sekolah',
+        ])->assertForbidden();
+        $this->actingAs($this->adminA)
             ->post("/akademik/kelulusan/batch/{$batch->id}/terbitkan", [
                 'signatory_name' => 'Drs. H. Ahmad, M.Pd',
                 'signatory_title' => 'Kepala Madrasah',
@@ -515,7 +605,8 @@ class StudentLifecycleAndAlumniTest extends TestCase
             );
 
         // Reissue SKL revokes old SKL & creates new valid token
-        $this->actingAs($this->operatorA)
+        $this->actingAs($this->operatorA)->post("/akademik/kelulusan/skl/{$record->id}/terbitkan-ulang", ['reason' => 'Kontrol akses'])->assertForbidden();
+        $this->actingAs($this->adminA)
             ->post("/akademik/kelulusan/skl/{$record->id}/terbitkan-ulang", ['reason' => 'Perbaikan nilai transkrip'])
             ->assertRedirect();
 
@@ -585,11 +676,12 @@ class StudentLifecycleAndAlumniTest extends TestCase
         // Teacher forbidden from TU legalization admin
         $this->actingAs($this->teacherUser)->get('/administrasi/legalisir')->assertForbidden();
 
-        // Operator verifies original, approves stamp, and records pickup
+        // Verification, official approval, and pickup use separate authority.
         $this->actingAs($this->operatorA)
             ->post("/administrasi/legalisir/{$legalization->id}/verifikasi-asli", ['note' => 'Ijazah asli sesuai'])
             ->assertRedirect();
-        $this->actingAs($this->operatorA)
+        $this->actingAs($this->operatorA)->post("/administrasi/legalisir/{$legalization->id}/sahkan", [])->assertForbidden();
+        $this->actingAs($this->adminA)
             ->post("/administrasi/legalisir/{$legalization->id}/sahkan")
             ->assertRedirect();
         $this->actingAs($this->operatorA)
@@ -615,13 +707,19 @@ class StudentLifecycleAndAlumniTest extends TestCase
         ])->assertRedirect('/layanan/ptsp');
 
         // Alumni updates tracer with opt_in_directory = true, opt_in_career = true, opt_in_contact = false
-        $this->post('/alumni', [
+        $this->post('/layanan/tracer-alumni', [
             'full_name' => 'Alumni Teladan',
             'graduation_year' => 2024,
             'major_or_class' => 'XII IPA 1',
             'current_status' => 'studying',
             'institution_or_company' => 'Universitas Lambung Mangkurat',
             'position_or_program' => 'Kedokteran',
+            'diploma_serial' => 'DN-01/MA/2024/001234',
+            'activity_location' => 'Banjarbaru',
+            'residence_city' => 'Martapura',
+            'linkedin_url' => 'https://www.linkedin.com/in/alumni-teladan',
+            'instagram_handle' => '@alumni_teladan',
+            'photo_file' => UploadedFile::fake()->image('alumni.png', 40, 40),
             'scholarship_info' => 'Beasiswa KIP-K',
             'phone' => '081299990001',
             'email' => 'alumni.teladan@example.test',
@@ -632,6 +730,13 @@ class StudentLifecycleAndAlumniTest extends TestCase
         ])->assertRedirect();
 
         $alumniProfile = AlumniProfile::query()->firstOrFail();
+        $this->assertNotNull($alumniProfile->photo_document_id);
+        $this->get('/layanan/tracer-alumni')->assertInertia(fn (Assert $page) => $page
+            ->where('profile.diploma_serial', 'DN-01/MA/2024/001234')
+            ->where('profile.activity_location', 'Banjarbaru')
+            ->where('profile.residence_city', 'Martapura')
+            ->where('profile.linkedin_url', 'https://www.linkedin.com/in/alumni-teladan')
+            ->where('profile.instagram_handle', '@alumni_teladan'));
 
         // Before moderation approval, alumni MUST NOT appear in public directory
         $this->get('/alumni/direktori')
@@ -651,6 +756,11 @@ class StudentLifecycleAndAlumniTest extends TestCase
 
         $alumniProfile->refresh();
         $this->assertNotNull($alumniProfile->ekta_document_id);
+        $this->get('/alumni')->assertInertia(fn (Assert $page) => $page
+            ->where('summary.total', 1)->where('summary.studying', 1));
+        $alumniProfile->update(['opt_in_directory' => false]);
+        $this->get('/alumni')->assertInertia(fn (Assert $page) => $page->where('summary.total', 0));
+        $alumniProfile->update(['opt_in_directory' => true]);
 
         // Public directory shows opted-in career fields but hides contact email/phone
         $this->get('/alumni/direktori')
@@ -660,6 +770,8 @@ class StudentLifecycleAndAlumniTest extends TestCase
                 ->where('alumni.0.full_name', 'Alumni Teladan')
                 ->where('alumni.0.institution_or_company', 'Universitas Lambung Mangkurat')
                 ->where('alumni.0.contact_email', null)
+                ->missing('alumni.0.diploma_serial')
+                ->missing('alumni.0.photo_document_id')
             );
     }
 

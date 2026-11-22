@@ -26,7 +26,7 @@ class CorrespondenceController extends Controller
     public function index(Request $request): Response
     {
         $user = $this->authorizeViewer($request->user());
-        $canManage = $user->hasRole(['admin', 'operator']);
+        $canManage = $user->hasRole(['admin', 'operator', 'ptsp']);
         $filter = $request->string('filter', 'all')->toString();
         abort_unless(in_array($filter, ['all', 'incoming', 'outgoing', 'archived'], true), 404);
 
@@ -462,14 +462,14 @@ class CorrespondenceController extends Controller
 
     private function authorizeManager(?User $user): User
     {
-        abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole(['admin', 'operator']), 403);
+        abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole(['admin', 'operator', 'ptsp']), 403);
 
         return $user;
     }
 
     private function authorizeViewer(?User $user): User
     {
-        abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole(['admin', 'operator', 'principal']), 403);
+        abort_unless($user && $user->is_active && $user->school_id !== null && $user->hasRole(['admin', 'operator', 'ptsp', 'principal']), 403);
 
         return $user;
     }

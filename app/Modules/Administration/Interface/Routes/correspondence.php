@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Modules\Administration\Interface\Http\Controllers\CorrespondenceController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'role:admin,operator,principal', 'throttle:sensitive'])
+Route::middleware(['auth', 'role:admin,operator,ptsp,principal', 'throttle:sensitive'])
     ->prefix('administrasi/persuratan')
     ->name('administration.correspondence.')
     ->group(function (): void {

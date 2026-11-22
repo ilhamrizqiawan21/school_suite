@@ -9,15 +9,31 @@ import { filterServiceCategories } from '@/composables/usePublicServicesCatalog'
 const props = withDefaults(defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
     initialQuery?: string;
+    serviceOverrides?: Record<string, { available: boolean; badge: string; maintenance_message?: string | null }>;
 }>(), {
     initialQuery: '',
+    serviceOverrides: () => ({}),
 });
 
 const query = ref(props.initialQuery);
 const selectedCategory = ref<string>('all');
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const categories = computed(() => {
-    const filtered = filterServiceCategories(query.value);
+    const filtered = filterServiceCategories(query.value).map((category) => ({
+        ...category,
+        items: category.items.map((item) => {
+            const override = props.serviceOverrides?.[item.id];
+            if (!override) return item;
+            return {
+                ...item,
+                available: override.available,
+                badge: override.badge || (override.available ? 'Aktif' : 'Pemeliharaan'),
+                description: override.maintenance_message
+                    ? `${item.description} (${override.maintenance_message})`
+                    : item.description,
+            };
+        }),
+    }));
     if (selectedCategory.value === 'all') return filtered;
     return filtered.filter((category) => category.key === selectedCategory.value);
 });

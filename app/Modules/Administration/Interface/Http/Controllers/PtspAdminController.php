@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Administration\Application\Services\PtspWorkflowService;
 use App\Modules\Administration\Infrastructure\Models\PtspRequest;
 use App\Modules\Administration\Infrastructure\Models\PtspService;
+use App\Modules\Core\Application\Services\AccessScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
 use App\Modules\Core\Domain\ServiceWorkflowMap;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ class PtspAdminController extends Controller
     public function __construct(
         private readonly PtspWorkflowService $ptsp,
         private readonly ServiceDocumentService $documentService,
+        private readonly AccessScopeService $accessScope,
     ) {}
 
     public function index(Request $request): Response
@@ -39,6 +41,8 @@ class PtspAdminController extends Controller
         $catalog = $this->ptsp->listCatalogForStaff($schoolId);
 
         return Inertia::render('Administration/Ptsp/Index', [
+            'canProcess' => $this->accessScope->canVerifyQueue($request->user(), $schoolId),
+            'canPublish' => $this->accessScope->canApproveFinalDecision($request->user(), $schoolId) && $this->accessScope->canSignOfficialDocument($request->user(), $schoolId),
             'requests' => $queue['requests'],
             'pagination' => $queue['pagination'],
             'summary' => $queue['summary'],
@@ -250,6 +254,23 @@ class PtspAdminController extends Controller
         );
 
         return back()->with('message', 'Pengambilan dokumen fisik berhasil dicatat.');
+    }
+
+    public function cancel(Request $request, PtspRequest $ptspRequest): RedirectResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:1500'],
+            'expected_version' => ['nullable', 'integer'],
+        ]);
+
+        $this->ptsp->cancelByStaff(
+            $request->user(),
+            $ptspRequest,
+            $validated['reason'],
+            isset($validated['expected_version']) ? (int) $validated['expected_version'] : null,
+        );
+
+        return back()->with('message', 'Permohonan dibatalkan dan dokumen terkait (bila ada) telah dicabut.');
     }
 
     public function downloadDocument(Request $request, PtspRequest $ptspRequest, int $documentId): BinaryFileResponse

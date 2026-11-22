@@ -664,6 +664,8 @@ class ServiceDocumentService
             'signatory_title' => $doc->signatory_title,
             'verification_token' => $doc->verification_token,
             'issued_at' => $doc->issued_at?->toIso8601String(),
+            'revoked_at' => $doc->revoked_at?->toIso8601String(),
+            'revocation_reason' => $doc->revocation_reason,
         ];
     }
 }

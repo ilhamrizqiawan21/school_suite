@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { watchPostEffect, onUnmounted } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,22 +23,41 @@ const help = computed(() => ({ ips: 'Periksa alamat dan masa berlaku sebelum mem
 const dt = (value: string) => new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 const expired = (item: Block) => Boolean(item.expires_at && new Date(item.expires_at).getTime() <= Date.now());
 const active = (item: Block) => item.is_active && !expired(item);
+const confirmAction = ref<{ title: string; message: string; confirmLabel: string; variant: 'primary' | 'danger' | 'warning'; run: () => void } | null>(null);
 function openBlock() { form.reset(); form.clearErrors(); show.value = true; }
 function block() {
-    if (form.processing || !window.confirm(`Blokir alamat IP ${form.ip_address}? Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.`)) return;
-    form.post('/pengaturan/keamanan/ip', { preserveScroll: true, onSuccess: () => { form.reset(); show.value = false; } });
+    if (form.processing) return;
+    confirmAction.value = {
+        title: 'Blokir alamat IP?',
+        message: `Blokir alamat IP ${form.ip_address}? Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.`,
+        confirmLabel: 'Ya, blokir IP',
+        variant: 'danger',
+        run: () => {
+            confirmAction.value = null;
+            form.post('/pengaturan/keamanan/ip', { preserveScroll: true, onSuccess: () => { form.reset(); show.value = false; } });
+        },
+    };
 }
 function act(url: string, method: 'post' | 'delete', confirmation: string) {
-    if (pending.value || !window.confirm(confirmation)) return;
-    pending.value = true;
-    actionError.value = '';
-    const options = {
-        preserveScroll: true,
-        onError: (errors: Record<string, string>) => { actionError.value = Object.values(errors)[0] ?? 'Tindakan gagal disimpan.'; },
-        onFinish: () => { pending.value = false; },
+    if (pending.value) return;
+    confirmAction.value = {
+        title: method === 'delete' ? 'Buka blokir IP?' : 'Tandai catatan error selesai?',
+        message: confirmation,
+        confirmLabel: 'Ya, lanjutkan',
+        variant: method === 'delete' ? 'warning' : 'primary',
+        run: () => {
+            confirmAction.value = null;
+            pending.value = true;
+            actionError.value = '';
+            const options = {
+                preserveScroll: true,
+                onError: (errors: Record<string, string>) => { actionError.value = Object.values(errors)[0] ?? 'Tindakan gagal disimpan.'; },
+                onFinish: () => { pending.value = false; },
+            };
+            if (method === 'post') router.post(url, {}, options);
+            else router.delete(url, options);
+        },
     };
-    if (method === 'post') router.post(url, {}, options);
-    else router.delete(url, options);
 }
 function go(url: string | null) { if (url) router.get(url, {}, { preserveState: true, preserveScroll: true }); }
 
@@ -91,6 +111,16 @@ onUnmounted(() => document.removeEventListener('keydown', trapDialogFocus));
             </section>
         </main>
         <div v-if="show && can_manage" class="modal-backdrop" @click.self="!form.processing && (show = false)" @keydown.esc="!form.processing && (show = false)"><form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="block-title" @submit.prevent="block"><h2 id="block-title">Blokir alamat IP</h2><p>Pastikan alamat yang dimasukkan benar. Pengguna pada jaringan tersebut akan kehilangan akses selama blokir berlaku.</p><label>Alamat IP<input v-model="form.ip_address" required maxlength="45" placeholder="Contoh: 203.0.113.10" /><small v-if="form.errors.ip_address">{{ form.errors.ip_address }}</small></label><label>Alasan<textarea v-model="form.reason" required maxlength="500" rows="3" /><small v-if="form.errors.reason">{{ form.errors.reason }}</small></label><label>Berlaku sampai (opsional)<input v-model="form.expires_at" type="datetime-local" /><small v-if="form.errors.expires_at">{{ form.errors.expires_at }}</small></label><p>Kosongkan masa berlaku untuk blokir tanpa batas waktu.</p><div class="actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="show = false">Batal</AppButton><AppButton variant="primary" :loading="form.processing" type="submit" class="primary-button" :disabled="form.processing">{{ form.processing ? 'Menyimpan…' : 'Simpan blokir' }}</AppButton></div></form></div>
+        <ConfirmDialog
+            :open="confirmAction !== null"
+            :title="confirmAction?.title ?? ''"
+            :message="confirmAction?.message ?? ''"
+            :confirm-label="confirmAction?.confirmLabel"
+            :variant="confirmAction?.variant ?? 'danger'"
+            :loading="pending || form.processing"
+            @confirm="confirmAction?.run()"
+            @cancel="confirmAction = null"
+        />
     </AppLayout>
 </template>
 

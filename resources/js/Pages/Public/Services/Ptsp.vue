@@ -55,6 +55,7 @@ interface PtspRequestItem {
 
 const props = defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
+    contentBlocks?: Record<string, Record<string, any>>;
     catalog: PtspCatalogItem[];
     categories: { value: string; label: string }[];
     applicant: {
@@ -214,10 +215,10 @@ const removeDraftAttachment = (requestId: number, documentId: number) => {
         <section class="portal-container">
             <header class="portal-hero madrasah-service-hero parity-ptsp-hero">
                 <div>
-                    <p class="madrasah-service-label"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Pelayanan Terpadu Satu Pintu (PTSP)</p>
+                    <p class="madrasah-service-label"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> {{ contentBlocks?.['ptsp.hero']?.label || 'Pelayanan Terpadu Satu Pintu (PTSP)' }}</p>
                     <img class="parity-ptsp-logo" :src="school.logo_url || '/madrasah-theme/images/logo-kemenag.png'" alt="" />
                     <h1>Layanan Online Terintegrasi<br />{{ school.name }}<br /><span>(PTSP Online)</span></h1>
-                    <p>Layanan Permohonan, Informasi, Konsultasi, Pengaduan dan Legalisir.</p>
+                    <p>{{ contentBlocks?.['ptsp.hero']?.subtitle || 'Layanan Permohonan, Informasi, Konsultasi, Pengaduan dan Legalisir.' }}</p>
                 </div>
                 <div class="hero-actions">
                     <a :href="selectedService ? '#form-ptsp' : '#katalog-ptsp'" class="btn-ajukan-hero parity-ptsp-btn-apply" @click="showCatalog = true">

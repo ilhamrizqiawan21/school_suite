@@ -20,6 +20,10 @@
         .summary-box { border: 1px solid #9ca3af; padding: 10px 12px; margin: 12px 0 22px; background: #fafafa; }
         .signature { margin-top: 28px; width: 240px; margin-left: auto; text-align: left; }
         .signature-space { height: 54px; }
+        .qr-verify { margin-top: 24px; border-top: 1px dashed #cbd5e1; padding-top: 12px; display: table; width: 100%; font-family: "DejaVu Sans", sans-serif; }
+        .qr-verify-cell { display: table-cell; width: 105px; vertical-align: top; }
+        .qr-verify-cell img { width: 92px; height: 92px; }
+        .qr-verify-note { display: table-cell; vertical-align: top; font-size: 8.5pt; color: #374151; }
     </style>
 </head>
 <body>
@@ -37,7 +41,7 @@
     </div>
 
     <h2 class="doc-title">Surat Keterangan Penyelesaian Layanan PTSP</h2>
-    <p class="doc-sub">Nomor Tiket: {{ $ticket['ticket_code'] }}</p>
+    <p class="doc-sub">Nomor Tiket: {{ $ticket['ticket_code'] }}@if(!empty($verification_token)) · Kode Verifikasi Dokumen: {{ $verification_token }}@endif</p>
 
     <p>Yang bertanda tangan di bawah ini menerangkan bahwa permohonan Pelayanan Terpadu Satu Pintu (PTSP) berikut telah selesai diproses:</p>
 
@@ -59,5 +63,16 @@
         <div class="signature-space"></div>
         <div style="font-weight:700;text-decoration:underline;">{{ $signatory_name }}</div>
     </div>
+
+    @if(!empty($qr_verify) && !empty($verify_url))
+        <div class="qr-verify">
+            <div class="qr-verify-cell"><img src="data:image/svg+xml;base64,{{ $qr_verify }}" alt="QR Verifikasi"></div>
+            <div class="qr-verify-note">
+                <p style="margin:0 0 4px;"><strong>Verifikasi Keaslian Dokumen Resmi</strong></p>
+                <p style="margin:0 0 4px;">Pindai QR atau buka portal verifikasi dokumen dengan kode <strong>{{ $verification_token }}</strong>:</p>
+                <p style="margin:0;">{{ $verify_url }}</p>
+            </div>
+        </div>
+    @endif
 </body>
 </html>

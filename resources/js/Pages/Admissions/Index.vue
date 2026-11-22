@@ -421,19 +421,25 @@ function submitEditApplicant() {
         },
     });
 }
+const confirmDialog = ref<{ title: string; message: string; onConfirm: () => void } | null>(null);
 const canDeleteApplicant = (applicant: Applicant) => applicant.status !== 're_registered' && applicant.re_registration?.status !== 'confirmed';
 function deleteApplicant(applicant: Applicant) {
     if (!canDeleteApplicant(applicant)) return;
-    if (window.confirm(`Hapus data pendaftar ${applicant.name} (${applicant.registration_no}) beserta berkasnya?`)) {
-        router.delete(`/spmb/pendaftar/${applicant.id}`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                if (selectedApplicantId.value === applicant.id) {
-                    selectedApplicantId.value = null;
-                }
-            },
-        });
-    }
+    confirmDialog.value = {
+        title: 'Hapus Data Pendaftar',
+        message: `Hapus data pendaftar ${applicant.name} (${applicant.registration_no}) beserta berkasnya?`,
+        onConfirm: () => {
+            router.delete(`/spmb/pendaftar/${applicant.id}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    if (selectedApplicantId.value === applicant.id) {
+                        selectedApplicantId.value = null;
+                    }
+                    confirmDialog.value = null;
+                },
+            });
+        },
+    };
 }
 const committeeForm = useForm({ user_id: '' });
 const documentForms: Record<number, ReturnType<typeof useForm>> = {};
@@ -479,7 +485,20 @@ function saveScore(applicant: Applicant, criterion: Criterion) { scoreForm(appli
 function finalizeApplicant(applicant: Applicant) { decisionForm(applicant).put(`/spmb/pendaftar/${applicant.id}/keputusan`, { preserveScroll: true }); }
 function confirmReRegistration(applicant: Applicant) { reRegistrationForm(applicant).post(`/spmb/pendaftar/${applicant.id}/daftar-ulang`, { preserveScroll: true }); }
 function updateApplicant(applicant: Applicant, event: Event) { const data = new FormData(event.target as HTMLFormElement); router.put(`/spmb/pendaftar/${applicant.id}`, { status: String(data.get('status')), notes: String(data.get('notes') ?? '') }, { preserveScroll: true }); }
-function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penugasan ${member.name} dari panitia SPMB?`)) router.delete(`/spmb/panitia/${member.id}`, { preserveScroll: true }); }
+function removeMember(member: CommitteeMember) {
+    confirmDialog.value = {
+        title: 'Cabut Penugasan Panitia',
+        message: `Cabut penugasan ${member.name} dari panitia SPMB?`,
+        onConfirm: () => {
+            router.delete(`/spmb/panitia/${member.id}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    confirmDialog.value = null;
+                },
+            });
+        },
+    };
+}
 </script>
 
 <template>
@@ -1494,6 +1513,27 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
                 </section>
             </div>
         </div>
+        <div
+            v-if="confirmDialog"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+            @click.self="confirmDialog = null"
+            @keydown.esc="confirmDialog = null"
+        >
+            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-base font-bold text-slate-900">{{ confirmDialog.title }}</h3>
+                    <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="confirmDialog = null">Tutup</button>
+                </div>
+                <p class="text-sm text-slate-700">{{ confirmDialog.message }}</p>
+                <div class="flex justify-end gap-2 pt-2">
+                    <AppButton variant="secondary" type="button" class="secondary-button" @click="confirmDialog = null">Batal</AppButton>
+                    <AppButton variant="primary" type="button" class="primary-button" @click="confirmDialog.onConfirm">Ya, Lanjutkan</AppButton>
+                </div>
+            </div>
+        </div>
     </AppLayout>
     <div v-if="Object.keys(validationPage.props.errors || {}).length" role="alert" class="fixed bottom-4 right-4 z-[100] max-w-sm rounded-lg border border-red-300 bg-white p-4 text-red-800">
         <strong>Periksa data yang diisi</strong>
@@ -1873,7 +1913,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .report-table th, .report-table td { padding: .7rem .55rem; border-bottom: 1px solid var(--line); }
 .report-table th { color: var(--ink); font-weight: var(--weight-bold); }
 .report-table td { color: var(--ink-soft); }
-.report-table thead th { color: var(--ink-soft); font-size: var(--type-xs); font-weight: var(--weight-semibold); }
+.report-table thead th { color: var(--ink-soft); font-size: var(--type-xs); font-weight: var(--weight-semibold); text-align: center; }
 .report-table tfoot th, .report-table tfoot td { border-bottom: 0; color: var(--ink); font-weight: var(--weight-bold); }
 .report-empty { padding: 1.2rem .55rem !important; text-align: center; }
 .status-report-list { border-top: 1px solid var(--line); }
@@ -1911,7 +1951,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .decision-stat-pill.is-rose { border-color: color-mix(in srgb, #e11d48 35%, var(--line)); background: color-mix(in srgb, #e11d48 10%, var(--surface)); }
 
 .admissions-compact-table { width: 100%; border-collapse: collapse; font-size: var(--type-sm); }
-.admissions-compact-table th { padding: .6rem .75rem; border-bottom: 1px solid var(--line-strong); color: var(--ink-soft); font-size: var(--type-xs); font-weight: var(--weight-bold); text-align: left; white-space: nowrap; background: var(--surface-subtle); }
+.admissions-compact-table th { padding: .6rem .75rem; border-bottom: 1px solid var(--line-strong); color: var(--ink-soft); font-size: var(--type-xs); font-weight: var(--weight-bold); text-align: center; white-space: nowrap; background: var(--surface-subtle); }
 .admissions-compact-table td { padding: .6rem .75rem; border-bottom: 1px solid var(--line); color: var(--ink); vertical-align: middle; }
 .admissions-compact-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 35%, transparent); }
 .admissions-compact-table .col-actions { text-align: right; white-space: nowrap; }
@@ -2001,7 +2041,7 @@ function removeMember(member: CommitteeMember) { if (window.confirm(`Cabut penug
 .intake-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: .85rem; background: var(--surface); }
 .intake-table { width: 100%; border-collapse: collapse; font-size: var(--type-sm); text-align: left; }
 .intake-table th, .intake-table td { padding: .75rem .9rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.intake-table thead th { background: var(--surface-subtle); color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); white-space: nowrap; }
+.intake-table thead th { background: var(--surface-subtle); color: var(--ink-soft); font-size: var(--type-meta); font-weight: var(--weight-bold); white-space: nowrap; text-align: center; }
 .intake-table tbody tr:last-child td { border-bottom: 0; }
 .intake-table tbody tr:hover { background: color-mix(in srgb, var(--primary-soft) 25%, var(--surface)); }
 .intake-table .col-no { width: 3.2rem; color: var(--ink-soft); font-weight: var(--weight-bold); text-align: center; font-variant-numeric: tabular-nums; }

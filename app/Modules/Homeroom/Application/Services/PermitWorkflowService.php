@@ -19,6 +19,10 @@ use App\Modules\Homeroom\Domain\Enums\DispensationTypeEnum;
 use App\Modules\Homeroom\Infrastructure\Models\AttendanceDispensation;
 use App\Modules\Homeroom\Infrastructure\Models\StudentPermitToken;
 use App\Shared\Audit\AuditLogger;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
@@ -105,6 +109,7 @@ class PermitWorkflowService
         array $data,
         ?UploadedFile $attachment = null,
         ?User $actor = null,
+        bool $publicSubmission = false,
     ): array {
         $studentId = (int) $data['student_id'];
         $student = $this->academicQuery->getStudentIdentitySnapshot($schoolId, $studentId);
@@ -119,7 +124,7 @@ class PermitWorkflowService
 
         $oneTimeToken = isset($data['one_time_token']) ? strtoupper(trim((string) $data['one_time_token'])) : '';
 
-        if ($oneTimeToken === '') {
+        if ($oneTimeToken === '' && ! $publicSubmission) {
             if ($actor === null || ! $this->accessScope->canAccessStudentScope($actor, $schoolId, $studentId)) {
                 throw ValidationException::withMessages([
                     $actor !== null ? 'student_id' : 'one_time_token' => $actor !== null
@@ -151,9 +156,9 @@ class PermitWorkflowService
             }
         }
 
-        $this->validateDatesAndCutoff($schoolId, $studentId, (string) $data['start_date'], (string) $data['end_date']);
+        $this->validateDatesAndCutoff($schoolId, $studentId, (string) $data['start_date'], (string) $data['end_date'], publicSubmission: $publicSubmission, hasToken: $oneTimeToken !== '');
 
-        return DB::transaction(function () use ($schoolId, $studentId, $student, $data, $attachment, $actor, $oneTimeToken, $idempotencyKey): array {
+        return DB::transaction(function () use ($schoolId, $studentId, $student, $data, $attachment, $actor, $oneTimeToken, $idempotencyKey, $publicSubmission): array {
             $this->schoolScope->lockSchool($schoolId);
 
             if ($idempotencyKey !== null) {
@@ -175,6 +180,9 @@ class PermitWorkflowService
             }
 
             $tokenRecord = null;
+            if ($publicSubmission) {
+                $this->validateDatesAndCutoff($schoolId, $studentId, (string) $data['start_date'], (string) $data['end_date'], publicSubmission: true, hasToken: $oneTimeToken !== '');
+            }
             if ($oneTimeToken !== '') {
                 $tokenRecord = $this->lockAndValidateToken($schoolId, $studentId, $oneTimeToken);
             }
@@ -226,6 +234,7 @@ class PermitWorkflowService
                 'contact_name' => isset($data['contact_name']) ? trim((string) $data['contact_name']) ?: null : ($actor?->name),
                 'contact_phone' => isset($data['contact_phone']) ? trim((string) $data['contact_phone']) ?: null : ($actor?->phone),
                 'signature_data' => trim((string) $data['signature_data']),
+                'contact_relationship' => $data['contact_relationship'] ?? null,
                 'attachment_document_id' => $attachmentDocId,
                 'status' => DispensationStatusEnum::PENDING,
                 'idempotency_key' => $idempotencyKey,
@@ -513,6 +522,8 @@ class PermitWorkflowService
                 'decided_at' => now(),
             ])->save();
 
+            $this->syncTicketCorrection($schoolId, $locked, $targetEnum, $cleanReason, $actor);
+
             $this->audit->log(
                 eventType: 'homeroom.dispensation.corrected',
                 targetType: 'attendance_dispensation',
@@ -586,11 +597,18 @@ class PermitWorkflowService
             ? $this->ticketService->getTicketSnapshotById($schoolId, (int) $dispensation->service_ticket_id)
             : null;
 
+        $ticketCode = (string) ($ticket['ticket_code'] ?? ('IZN-'.$dispensation->id));
+        $trackUrl = rtrim((string) config('app.url'), '/').'/lacak?code='.urlencode($ticketCode).'&category=izin';
+        $writer = new Writer(new ImageRenderer(new RendererStyle(160, 2), new SvgImageBackEnd));
+        $qr = base64_encode($writer->writeString($trackUrl));
+
         $pdf = Pdf::loadView('homeroom.permit-proof', [
             'school' => $schoolSnapshot,
             'dispensation' => $dispensation,
             'student' => $student,
             'ticket' => $ticket,
+            'qr' => $qr,
+            'track_url' => $trackUrl,
         ])->setPaper('a4');
 
         return $pdf->output();
@@ -638,12 +656,45 @@ class PermitWorkflowService
         })->values()->all();
     }
 
+    /** @return list<array<string, mixed>> */
+    public function publicPermitStatuses(int $schoolId, ?int $studentId, ?string $ticketCode = null): array
+    {
+        if ($studentId === null && trim((string) $ticketCode) === '') {
+            return [];
+        }
+
+        return AttendanceDispensation::query()
+            ->leftJoin('service_tickets', 'service_tickets.id', '=', 'attendance_dispensations.service_ticket_id')
+            ->where('attendance_dispensations.school_id', $schoolId)
+            ->when($studentId !== null, fn ($query) => $query->where('attendance_dispensations.student_id', $studentId),
+                fn ($query) => $query->where('service_tickets.ticket_code', trim((string) $ticketCode)))
+            ->select('attendance_dispensations.*', 'service_tickets.ticket_code')
+            ->orderByDesc('attendance_dispensations.id')
+            ->limit(20)
+            ->get()
+            ->map(static fn (AttendanceDispensation $permit): array => [
+                'ticket_code' => $permit->ticket_code,
+                'type_label' => $permit->type->label(),
+                'start_date' => $permit->start_date->toDateString(),
+                'end_date' => $permit->end_date->toDateString(),
+                'status' => $permit->status->value,
+                'status_label' => $permit->status->label(),
+            ])->all();
+    }
+
+    public function checkPublicPermitToken(int $schoolId, int $studentId, string $token): void
+    {
+        DB::transaction(fn () => $this->lockAndValidateToken($schoolId, $studentId, strtoupper(trim($token))));
+    }
+
     private function validateDatesAndCutoff(
         int $schoolId,
         int $studentId,
         string $startDateStr,
         string $endDateStr,
         ?int $excludeDispensationId = null,
+        bool $publicSubmission = false,
+        bool $hasToken = false,
     ): void {
         $tz = $this->schoolScope->getTimezone($schoolId);
         $localNow = $this->schoolScope->localNow($schoolId);
@@ -674,7 +725,10 @@ class PermitWorkflowService
 
         if ($start->equalTo($todayLocal)) {
             $cutoff = $ops['permit_same_day_cutoff'];
-            if ($localNow->format('H:i') > $cutoff) {
+            if ($publicSubmission && $localNow->format('H:i') >= '08:00' && $localNow->format('H:i') < '22:00' && ! $hasToken) {
+                throw ValidationException::withMessages(['one_time_token' => 'Pengajuan pukul 08:00 s/d 22:00 memerlukan token dispensasi wali kelas.']);
+            }
+            if (! $publicSubmission && $localNow->format('H:i') > $cutoff) {
                 throw ValidationException::withMessages([
                     'start_date' => sprintf('Batas jam pengajuan izin hari yang sama (%s %s) telah terlewati.', $cutoff, $tz),
                 ]);
@@ -806,6 +860,62 @@ class PermitWorkflowService
             publicSummary: $decision === 'request_revision'
                 ? 'Permohonan izin dikembalikan untuk perbaikan data/lampiran.'
                 : 'Permohonan izin ditolak. Periksa catatan petugas.',
+        );
+    }
+
+    private function syncTicketCorrection(
+        int $schoolId,
+        AttendanceDispensation $dispensation,
+        DispensationStatusEnum $targetEnum,
+        string $reason,
+        User $actor,
+    ): void {
+        if ($dispensation->service_ticket_id === null) {
+            return;
+        }
+
+        $ticket = $this->ticketService->getTicketSnapshotById($schoolId, (int) $dispensation->service_ticket_id);
+        if ($ticket === null) {
+            return;
+        }
+
+        $targetPublicStatus = match ($targetEnum) {
+            DispensationStatusEnum::APPROVED => ServiceWorkflowMap::STATUS_COMPLETED,
+            DispensationStatusEnum::REJECTED => ServiceWorkflowMap::STATUS_REJECTED,
+            DispensationStatusEnum::CANCELLED => ServiceWorkflowMap::STATUS_CANCELLED,
+            default => $ticket['public_status'],
+        };
+
+        if ($ticket['public_status'] === $targetPublicStatus) {
+            return;
+        }
+
+        $version = (int) $ticket['version'];
+        if (
+            in_array($ticket['public_status'], [ServiceWorkflowMap::STATUS_REJECTED, ServiceWorkflowMap::STATUS_SUBMITTED], true)
+            && $targetPublicStatus === ServiceWorkflowMap::STATUS_COMPLETED
+        ) {
+            $mid = $this->ticketService->transition(
+                ticketId: (int) $dispensation->service_ticket_id,
+                schoolId: $schoolId,
+                toPublicStatus: ServiceWorkflowMap::STATUS_IN_REVIEW,
+                toInternalStatus: 'correction_review',
+                reason: $reason,
+                actor: $actor,
+                expectedVersion: $version,
+            );
+            $version = (int) $mid->version;
+        }
+
+        $this->ticketService->transition(
+            ticketId: (int) $dispensation->service_ticket_id,
+            schoolId: $schoolId,
+            toPublicStatus: $targetPublicStatus,
+            toInternalStatus: 'corrected_'.$targetEnum->value,
+            reason: $reason,
+            actor: $actor,
+            expectedVersion: $version,
+            publicSummary: sprintf('Keputusan izin dikoreksi oleh petugas menjadi %s.', $targetEnum->label()),
         );
     }
 }

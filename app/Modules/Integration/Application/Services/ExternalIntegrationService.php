@@ -610,7 +610,9 @@ class ExternalIntegrationService
         foreach ($rows as $row) {
             $ordered = [];
             foreach ($headers as $header) {
-                $ordered[] = (string) ($row[$header] ?? '');
+                $val = (string) ($row[$header] ?? '');
+                $trimmed = ltrim($val);
+                $ordered[] = ($trimmed !== '' && in_array($trimmed[0], ['=', '+', '-', '@', "\t", "\r"], true)) ? "'".$val : $val;
             }
             fputcsv($stream, $ordered);
         }

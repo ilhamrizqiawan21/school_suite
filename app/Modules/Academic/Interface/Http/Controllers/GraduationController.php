@@ -10,6 +10,7 @@ use App\Modules\Academic\Application\Services\GraduationService;
 use App\Modules\Academic\Infrastructure\Models\AcademicYear;
 use App\Modules\Academic\Infrastructure\Models\GraduationBatch;
 use App\Modules\Academic\Infrastructure\Models\GraduationRecord;
+use App\Modules\Core\Application\Services\AccessScopeService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,7 @@ class GraduationController extends Controller
         private readonly AcademicQueryService $academicQuery,
         private readonly SchoolScopeService $schoolScope,
         private readonly ServiceDocumentService $documentService,
+        private readonly AccessScopeService $accessScope,
     ) {}
 
     public function publicIndex(Request $request): Response
@@ -32,6 +34,7 @@ class GraduationController extends Controller
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
 
         $batch = GraduationBatch::query()
+            ->with('academicYear:id,name')
             ->where('school_id', $school['id'])
             ->where('is_published', true)
             ->latest('id')
@@ -43,11 +46,14 @@ class GraduationController extends Controller
                 'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
                 'theme' => $school['theme'] ?? [],
             ],
+            'contentBlocks' => $school['content_blocks'] ?? [],
             'result' => $request->session()->get('graduation_lookup_result'),
             'schedule' => [
                 'released' => $batch?->isReleased() ?? false,
                 'release_at' => $batch?->release_at?->toIso8601String(),
                 'title' => $batch?->title,
+                'academic_year' => $batch?->academicYear?->name,
+                'timezone' => $this->schoolScope->getTimezone((int) $school['id']),
             ],
         ]);
     }
@@ -140,6 +146,9 @@ class GraduationController extends Controller
         })->values()->all();
 
         return Inertia::render('Academic/Graduation/Index', [
+            'canManageRecords' => $request->user()->hasRole(['admin', 'operator', 'principal']),
+            'canProcess' => $this->accessScope->canVerifyQueue($request->user(), $schoolId),
+            'canPublish' => $this->accessScope->canApproveFinalDecision($request->user(), $schoolId) && $this->accessScope->canSignOfficialDocument($request->user(), $schoolId),
             'years' => $years,
             'batches' => $serializedBatches,
             'students' => $this->academicQuery->searchActiveStudentsForStaff($schoolId, '', 60),

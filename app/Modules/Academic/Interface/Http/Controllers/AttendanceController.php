@@ -277,7 +277,13 @@ class AttendanceController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['NIS', 'Nama', 'Hadir', 'Sakit', 'Izin', 'Alpa', 'Total', 'Persentase Hadir']);
             foreach ($rows as $row) {
-                fputcsv($out, [$row->nis, $row->name, $row->present, $row->sick, $row->permitted, $row->absent, $row->total, $row->attendance_rate.'%']);
+                $safe = static function (mixed $value): mixed {
+                    $str = (string) $value;
+                    $trimmed = ltrim($str);
+
+                    return ($trimmed !== '' && in_array($trimmed[0], ['=', '+', '-', '@', "\t", "\r"], true)) ? "'".$str : $str;
+                };
+                fputcsv($out, [$safe($row->nis), $safe($row->name), $row->present, $row->sick, $row->permitted, $row->absent, $row->total, $row->attendance_rate.'%']);
             }
             fclose($out);
         }, 'rekap-presensi-'.str($class->name)->slug().'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

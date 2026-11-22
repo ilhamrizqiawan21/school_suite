@@ -70,6 +70,27 @@ function populateDialog(trigger) {
 }
 
 document.addEventListener('click', (event) => {
+    const ikaTheme = event.target.closest('[data-ika-theme]');
+    if (ikaTheme) {
+        document.body.dataset.ikaTheme = ikaTheme.dataset.ikaTheme;
+        try { localStorage.setItem('alumni_theme_preference', ikaTheme.dataset.ikaTheme); } catch (_) {}
+        document.querySelectorAll('[data-ika-theme]').forEach((button) => button.setAttribute('aria-pressed', String(button === ikaTheme)));
+        return;
+    }
+    const ikaTabLink = event.target.closest('[data-ika-tab]');
+    if (ikaTabLink && window.location.pathname === '/alumni') {
+        event.preventDefault();
+        if (activeDialog === mobileMenu) closeDialog(false);
+        window.dispatchEvent(new CustomEvent('ika:select-tab', { detail: { tab: ikaTabLink.dataset.ikaTab } }));
+        return;
+    }
+    const ikaModalLink = event.target.closest('[data-ika-modal]');
+    if (ikaModalLink && window.location.pathname === '/alumni') {
+        event.preventDefault();
+        if (activeDialog === mobileMenu) closeDialog(false);
+        window.dispatchEvent(new CustomEvent('ika:open-modal', { detail: { modal: ikaModalLink.dataset.ikaModal } }));
+        return;
+    }
     const menuButton = event.target.closest('[data-portal-menu]');
     if (menuButton) {
         const wasOpen = menuButton === openMenu;
@@ -85,6 +106,12 @@ document.addEventListener('click', (event) => {
 
     const trigger = event.target.closest('[data-open-dialog], [data-close-dialog], [data-toggle-mobile], [data-scroll-top]');
     if (trigger?.hasAttribute('data-toggle-mobile')) {
+        if (document.body.dataset.portalPath === 'layanan/izin-siswa') {
+            const expanded = trigger.getAttribute('aria-expanded') !== 'true';
+            trigger.setAttribute('aria-expanded', String(expanded));
+            document.querySelector('.db-navbar').classList.toggle('permit-menu-open', expanded);
+            return;
+        }
         if (activeDialog === mobileMenu) closeDialog();
         else openDialog(mobileMenu, trigger);
         return;
@@ -121,6 +148,11 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && document.body.dataset.portalPath === 'layanan/izin-siswa' && mobileToggle?.getAttribute('aria-expanded') === 'true') {
+        mobileToggle.click();
+        mobileToggle.focus();
+        return;
+    }
     if (event.key === 'Escape' && activeDialog) {
         closeDialog();
         return;
@@ -162,6 +194,7 @@ searchInput.addEventListener('input', () => {
 
 const scrollTopButton = byId('backToTopBtn');
 function updateScrollTop() {
+    if (!scrollTopButton) return;
     const visible = window.scrollY > 400;
     scrollTopButton.classList.toggle('opacity-0', !visible);
     scrollTopButton.classList.toggle('pointer-events-none', !visible);

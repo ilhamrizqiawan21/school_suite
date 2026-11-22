@@ -168,4 +168,101 @@ class BrandingProfileTest extends TestCase
         $this->assertDatabaseMissing('sessions', ['id' => 'other-device-session']);
         $this->assertDatabaseHas('audit_events', ['event_type' => 'core.password.changed', 'actor_id' => $this->admin->id]);
     }
+
+    public function test_admin_can_configure_global_service_hours_social_channels_reset_theme_and_manage_public_content_blocks(): void
+    {
+        // 1. Save draft content blocks + global channels + custom theme color
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => 'MA',
+            'timezone' => 'Asia/Makassar',
+            'service_hours' => 'Senin – Jumat, 07.30 – 16.00 WITA',
+            'holiday_notice' => 'Tutup pada hari libur nasional',
+            'emergency_contact' => '0811-2233-4455',
+            'map_url' => 'https://maps.example.test/lokasi',
+            'whatsapp_url' => 'https://wa.me/6281122334455',
+            'social_facebook' => 'https://facebook.com/madrasah.contoh',
+            'social_instagram' => 'https://instagram.com/madrasah.contoh',
+            'theme_primary' => '#277450',
+            'public_theme_preset' => 'institutional',
+            'public_content_mode' => 'draft',
+            'public_content_expected_revision' => 0,
+            'public_content_blocks' => [
+                'home.hero' => [
+                    'badge_primary' => 'Draf Badge Baru <script>alert(1)</script>',
+                    'headline_highlight' => 'Draf Riset Unggulan',
+                ],
+            ],
+        ])->assertRedirect('/pengaturan/sekolah')->assertSessionHasNoErrors();
+
+        $this->school->refresh();
+        $this->assertSame('Asia/Makassar', $this->school->timezone);
+        $this->assertSame('Senin – Jumat, 07.30 – 16.00 WITA', data_get($this->school->settings, 'service_hours'));
+        $this->assertSame('https://facebook.com/madrasah.contoh', data_get($this->school->settings, 'social_links.facebook'));
+
+        $registryAfterDraft = $this->school->publicContentRegistry();
+        // Script tag is stripped; draft is updated while published remains unchanged
+        $this->assertSame('Draf Badge Baru alert(1)', $registryAfterDraft['draft']['home.hero']['badge_primary']);
+        $this->assertSame('Madrasah Aliyah Negeri Riset & Adiwiyata Mandiri', $registryAfterDraft['published']['home.hero']['badge_primary']);
+        $this->assertCount(0, $registryAfterDraft['revisions']);
+
+        // 2. Publish content blocks -> creates revision v1 and updates published
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => 'MA',
+            'public_content_mode' => 'publish',
+            'public_content_expected_revision' => 1,
+            'public_content_blocks' => [
+                'home.hero' => [
+                    'badge_primary' => 'Madrasah Riset Terpublikasi v1',
+                    'headline_highlight' => 'Sains & Tahfidz v1',
+                ],
+            ],
+        ])->assertRedirect('/pengaturan/sekolah');
+
+        $this->school->refresh();
+        $registryAfterPublish1 = $this->school->publicContentRegistry();
+        $this->assertSame('Madrasah Riset Terpublikasi v1', $registryAfterPublish1['published']['home.hero']['badge_primary']);
+        $this->assertCount(1, $registryAfterPublish1['revisions']);
+
+        // 3. Publish v2 then restore v1
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => 'MA',
+            'public_content_mode' => 'publish',
+            'public_content_expected_revision' => 2,
+            'public_content_blocks' => [
+                'home.hero' => [
+                    'badge_primary' => 'Madrasah Riset Terpublikasi v2',
+                ],
+            ],
+        ])->assertRedirect('/pengaturan/sekolah');
+
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => 'MA',
+            'public_content_mode' => 'restore',
+            'public_content_expected_revision' => 3,
+            'public_content_restore_version' => 1,
+        ])->assertRedirect('/pengaturan/sekolah');
+
+        $this->school->refresh();
+        $this->assertSame('Madrasah Riset Terpublikasi v1', $this->school->publicContentRegistry()['published']['home.hero']['badge_primary']);
+
+        // 4. Reset theme defaults returns primary color to #3157a4 and preset to editorial
+        $this->actingAs($this->admin)->post('/pengaturan/sekolah', [
+            'name' => $this->school->name,
+            'npsn' => $this->school->npsn,
+            'level' => 'MA',
+            'reset_theme_defaults' => true,
+        ])->assertRedirect('/pengaturan/sekolah');
+
+        $this->school->refresh();
+        $this->assertSame('#3157a4', data_get($this->school->settings, 'theme_primary'));
+        $this->assertSame('editorial', data_get($this->school->settings, 'public_theme.preset'));
+    }
 }

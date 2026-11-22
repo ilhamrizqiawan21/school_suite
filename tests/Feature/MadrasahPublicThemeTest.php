@@ -130,6 +130,19 @@ class MadrasahPublicThemeTest extends TestCase
         $this->get('/data-siswa')
             ->assertOk()
             ->assertSee('APLIKASI DATABASE SISWA')
-            ->assertSee('Aplikasi Database &amp; Informasi Data Siswa', false);
+            ->assertSee('Aplikasi Database Sistem Informasi Akademik &amp; Kesiswaan Terpadu', false)
+            ->assertDontSee('id="backToTopBtn"', false)
+            ->assertDontSee('class="portal-help"', false);
+
+        foreach (['/data-siswa', '/alumni', '/layanan/tracer-alumni', '/layanan/legalisir', '/layanan/izin-siswa', '/layanan/mutasi', '/lacak', '/layanan/lapor', '/layanan/kelulusan'] as $uri) {
+            $response = $this->get($uri)
+                ->assertOk()
+                ->assertSee('Tutup menu')
+                ->assertSee($uri === '/alumni' ? 'IKATAN KELUARGA ALUMNI (IKA)' : 'Lacak Terpadu');
+            $this->assertMatchesRegularExpression(
+                '~href="'.preg_quote($uri, '~').'"\s+aria-current="page"~',
+                $response->getContent(),
+            );
+        }
     }
 }

@@ -241,6 +241,61 @@ Route::get('/dashboard', function (PrincipalDashboardService $principalDashboard
                 'author_name' => $announcement->author?->name,
                 'published_at' => $announcement->published_at?->toIso8601String(),
             ])->values()->all();
+    } else {
+        $roleMetrics = [];
+        if ($user->hasRole('ptsp')) {
+            $roleMetrics['ptsp_open'] = DB::table('service_tickets')
+                ->where('school_id', $schoolId)
+                ->where('service_type', 'ptsp')
+                ->whereIn('public_status', ['submitted', 'in_review', 'needs_revision'])
+                ->count();
+            $roleMetrics['external_letters_open'] = DB::table('service_tickets')
+                ->where('school_id', $schoolId)
+                ->where('service_type', 'surat_eksternal')
+                ->whereIn('public_status', ['submitted', 'in_review'])
+                ->count();
+        }
+        if ($user->hasRole('receptionist')) {
+            $roleMetrics['active_guests'] = DB::table('guestbook_visits')
+                ->where('school_id', $schoolId)
+                ->where('status', 'checked_in')
+                ->count();
+        }
+        if ($user->hasRole(['picket', 'security_guard'])) {
+            $roleMetrics['approved_permits_today'] = DB::table('attendance_dispensations')
+                ->where('school_id', $schoolId)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', now()->toDateString())
+                ->whereDate('end_date', '>=', now()->toDateString())
+                ->count();
+        }
+        if ($user->hasRole('bk')) {
+            $roleMetrics['open_bk_cases'] = DB::table('bk_discipline_cases')
+                ->where('school_id', $schoolId)
+                ->whereIn('status', ['reported', 'investigating'])
+                ->count();
+        }
+        if ($user->hasRole('librarian')) {
+            $roleMetrics['library_collections'] = DB::table('library_collections')
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->count();
+            $roleMetrics['active_loans'] = DB::table('library_loans')
+                ->where('school_id', $schoolId)
+                ->where('status', 'borrowed')
+                ->count();
+            $roleMetrics['pending_procurements'] = DB::table('library_procurement_requests')
+                ->where('school_id', $schoolId)
+                ->where('status', 'submitted')
+                ->count();
+        }
+        if ($user->hasRole(['parent', 'alumni'])) {
+            $roleMetrics['my_tickets'] = DB::table('service_tickets')
+                ->where('school_id', $schoolId)
+                ->where('applicant_user_id', $user->id)
+                ->count();
+        }
+        $stats['role_metrics'] = $roleMetrics;
     }
 
     return Inertia::render('Dashboard', [

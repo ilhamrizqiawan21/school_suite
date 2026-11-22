@@ -6,7 +6,8 @@ import PublicHeader from '@/components/PublicHeader.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
 
 const props = defineProps<{
-    school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
+    school: { name: string; logo_url?: string | null; service_hours?: string | null; theme?: { primary?: string | null } };
+    contentBlocks?: Record<string, Record<string, any>>;
     categories: { value: string; label: string }[];
     hosts: { id: number; name: string }[];
     confirmationSlip?: {
@@ -160,16 +161,16 @@ const submit = () => {
 
         <section class="portal-container guestbook-layout">
             <header class="portal-hero madrasah-service-hero guestbook-welcome">
-                <p class="madrasah-service-label"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Resepsionis &amp; Penerimaan Tamu</p>
-                <h2 class="parity-guest-greeting">Selamat datang</h2>
+                <p class="madrasah-service-label"><i class="fa-solid fa-book-open" aria-hidden="true"></i> {{ contentBlocks?.['guestbook.hero']?.label || 'Resepsionis & Penerimaan Tamu' }}</p>
+                <h2 class="parity-guest-greeting">{{ contentBlocks?.['guestbook.hero']?.greeting || 'Selamat datang' }}</h2>
                 <h1>BUKU TAMU</h1>
                 <h3 class="guestbook-school"><b>{{ school.name.toUpperCase() }}</b></h3>
                 <div class="parity-guest-emblem" aria-hidden="true">
                     <img src="/madrasah-theme/images/guestbook/LOGO2.png" alt="Electronic Guestbook" />
                 </div>
-                <p>Silakan isi data kunjungan Anda untuk dicatat oleh resepsionis. Data pengunjung bersifat privat dan hanya dapat dilihat oleh petugas berwenang.</p>
+                <p>{{ contentBlocks?.['guestbook.hero']?.description || 'Silakan isi data kunjungan Anda untuk dicatat oleh resepsionis. Data pengunjung bersifat privat dan hanya dapat dilihat oleh petugas berwenang.' }}</p>
                 <ul class="guestbook-highlights">
-                    <li><i class="fa-solid fa-clock" aria-hidden="true"></i> Jam Resepsionis: Senin–Jumat, 07.30–15.00</li>
+                    <li><i class="fa-solid fa-clock" aria-hidden="true"></i> Jam Resepsionis: {{ contentBlocks?.['guestbook.hero']?.reception_hours || school.service_hours || 'Senin–Jumat, 07.30–15.00' }}</li>
                     <li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Data kunjungan terjaga kerahasiaannya</li>
                     <li><i class="fa-solid fa-ticket" aria-hidden="true"></i> Dapatkan bukti registrasi kunjungan instan</li>
                 </ul>

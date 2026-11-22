@@ -629,6 +629,40 @@ class AcademicQueryService
         return $map;
     }
 
+    public function resolveActivePermitStudentId(int $schoolId, string $query): ?int
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return null;
+        }
+
+        $ids = Student::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'active')
+            ->where(fn ($builder) => $builder
+                ->where('nisn', $query)
+                ->orWhereRaw('LOWER(name) = ?', [mb_strtolower($query)]))
+            ->limit(2)
+            ->pluck('id');
+
+        return $ids->count() === 1 ? (int) $ids->first() : null;
+    }
+
+    /** @return array{name: string, whatsapp_url: ?string} */
+    public function permitHomeroomContact(int $schoolId, int $studentId): array
+    {
+        $term = $this->getActiveTerm($schoolId);
+        $enrollment = $term ? Enrollment::query()->where('student_id', $studentId)->where('term_id', $term->id)
+            ->with('classGroup.homeroomTeacher')->first() : null;
+        $teacher = $enrollment?->classGroup?->homeroomTeacher;
+        $phone = preg_replace('/\D/', '', (string) $teacher?->phone);
+        if (str_starts_with($phone, '0')) {
+            $phone = '62'.substr($phone, 1);
+        }
+
+        return ['name' => (string) ($teacher?->name ?? ''), 'whatsapp_url' => strlen($phone) >= 10 ? 'https://wa.me/'.$phone : null];
+    }
+
     /**
      * Search active students by name, NIS, NISN, or active card/QR token for staff workflows.
      *
@@ -771,6 +805,8 @@ class AcademicQueryService
      *     academic_year: string,
      *     term_name: string,
      *     active_students_count: int,
+     *     male_students_count: int,
+     *     female_students_count: int,
      *     active_classes_count: int,
      *     grade_levels: list<array{grade_level: int, students_count: int, classes: list<array{id: int, name: string, students_count: int}>}>
      * }
@@ -783,10 +819,12 @@ class AcademicQueryService
             ->where('is_active', true)
             ->first();
 
-        $activeStudentsCount = Student::query()
+        $activeStudentsByGender = Student::query()
             ->where('school_id', $schoolId)
             ->where('status', 'active')
-            ->count();
+            ->selectRaw('gender, COUNT(*) as total')
+            ->groupBy('gender')
+            ->pluck('total', 'gender');
 
         $classGroups = ClassGroup::query()
             ->where('school_id', $schoolId)
@@ -825,7 +863,9 @@ class AcademicQueryService
         return [
             'academic_year' => (string) ($activeTerm?->academicYear?->name ?? '2026/2027'),
             'term_name' => (string) ($activeTerm?->name ?? 'Semester Aktif'),
-            'active_students_count' => $activeStudentsCount,
+            'active_students_count' => (int) $activeStudentsByGender->sum(),
+            'male_students_count' => (int) $activeStudentsByGender->get('L', 0),
+            'female_students_count' => (int) $activeStudentsByGender->get('P', 0),
             'active_classes_count' => $classGroups->count(),
             'grade_levels' => $gradeLevels,
         ];

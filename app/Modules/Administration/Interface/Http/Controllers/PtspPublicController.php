@@ -58,6 +58,7 @@ class PtspPublicController extends Controller
 
         return Inertia::render('Public/Services/Ptsp', [
             'school' => $this->schoolPayload($school),
+            'contentBlocks' => $school['content_blocks'] ?? [],
             'catalog' => $this->ptsp->listCatalogForPublic($schoolId),
             'categories' => collect(PtspWorkflowService::CATEGORIES)
                 ->map(static fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
@@ -235,6 +236,7 @@ class PtspPublicController extends Controller
             'ptspRequest' => $found['serialized'],
             'issuedSecret' => $request->session()->get('ptsp_issued_secret'),
             'canRevise' => ($found['serialized']['status'] ?? '') === ServiceWorkflowMap::STATUS_NEEDS_REVISION,
+            'canCancel' => in_array($found['serialized']['status'] ?? '', [ServiceWorkflowMap::STATUS_SUBMITTED, ServiceWorkflowMap::STATUS_NEEDS_REVISION], true),
         ]);
     }
 
@@ -309,6 +311,41 @@ class PtspPublicController extends Controller
 
         return redirect()->route('administration.ptsp.public.receipt', $ticketCode)
             ->with('message', 'Perbaikan permohonan berhasil dikirim ulang ke petugas TU.');
+    }
+
+    public function cancel(Request $request, string $ticketCode): RedirectResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $schoolId = (int) $school['id'];
+        $applicant = $this->applicantAuth->currentFromSession($request, $schoolId);
+        $found = $this->ptsp->findByTicketCode($schoolId, $ticketCode);
+
+        abort_if($found === null, 404);
+
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:1000'],
+            'verification_secret' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        $secret = trim((string) ($validated['verification_secret'] ?? ''));
+        if ($secret === '' && $request->session()->get("ptsp_verified_secret.{$ticketCode}")) {
+            $secret = (string) $request->session()->get("ptsp_verified_secret.{$ticketCode}");
+        }
+
+        $this->ptsp->cancelByApplicant(
+            schoolId: $schoolId,
+            ptspRequest: $found['model'],
+            reason: (string) ($validated['reason'] ?? ''),
+            user: $request->user(),
+            externalApplicantId: $applicant ? (int) $applicant['id'] : null,
+            verificationSecret: $secret !== '' ? $secret : null,
+            hasSessionReceiptAccess: $request->session()->get("ptsp_receipt_access.{$ticketCode}") === true,
+        );
+
+        $request->session()->put("ptsp_receipt_access.{$ticketCode}", true);
+
+        return redirect()->route('administration.ptsp.public.receipt', $ticketCode)
+            ->with('message', 'Permohonan PTSP berhasil dibatalkan oleh pemohon.');
     }
 
     public function downloadDocument(Request $request, string $ticketCode, int $documentId): BinaryFileResponse

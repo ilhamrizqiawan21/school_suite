@@ -10,6 +10,7 @@ use App\Modules\Core\Application\Services\RolePermissionRegistryService;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\PublicDownload;
 use App\Modules\Core\Infrastructure\Models\PublicIkmSurvey;
+use App\Modules\Core\Infrastructure\Models\Role;
 use App\Modules\Core\Infrastructure\Models\School;
 use App\Modules\Core\Infrastructure\Models\SchoolNews;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -296,6 +297,126 @@ class PublicPortalTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Public/School/Contact')
                 ->where('serviceHours', 'Senin–Jumat 07.30–15.00 WITA')
+            );
+    }
+
+    public function test_admin_can_manage_downloads_integrity_zone_video_gallery_prayer_and_service_catalog(): void
+    {
+        config(['public_portal.theme' => 'madrasah']);
+
+        $teacherRole = Role::query()->where('name', RoleEnum::TEACHER->value)->firstOrFail();
+        $teacher = User::query()->create([
+            'school_id' => $this->school->id,
+            'role_id' => $teacherRole->id,
+            'name' => 'Guru Biasa',
+            'username' => 'guru_biasa',
+            'email' => 'guru.biasa@example.test',
+            'password' => 'password123456',
+            'is_active' => true,
+        ]);
+
+        // Unauthorized role cannot access admin publication settings
+        $this->actingAs($teacher)->get('/pengaturan/pusat-unduh')->assertForbidden();
+        $this->actingAs($teacher)->get('/pengaturan/zona-integritas')->assertForbidden();
+        $this->actingAs($teacher)->post('/pengaturan/galeri/video', [])->assertForbidden();
+
+        // Admin can open Downloads & Integrity Zone management pages
+        $this->actingAs($this->admin)
+            ->get('/pengaturan/pusat-unduh')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Core/Downloads/Index'));
+
+        $this->actingAs($this->admin)
+            ->get('/pengaturan/zona-integritas')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Core/Integrity/Index'));
+
+        // Admin updates Integrity Zone content
+        $this->actingAs($this->admin)
+            ->put('/pengaturan/zona-integritas/konten', [
+                'declaration' => 'Maklumat Pelayanan Terpadu Bebas Gratifikasi 2026.',
+                'sop_category' => 'sop',
+                'areas' => ['Manajemen Perubahan', 'Penataan Tatalaksana', 'Penguatan Pengawasan'],
+                'service_options' => ['PTSP Digital', 'Legalisir Online'],
+            ])
+            ->assertRedirect();
+
+        $this->get('/zona-integritas')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Integrity/Index')
+                ->where('integrityConfig.declaration', 'Maklumat Pelayanan Terpadu Bebas Gratifikasi 2026.')
+                ->has('integrityConfig.areas', 3)
+            );
+
+        // Admin manages Video Gallery CRUD
+        $this->actingAs($this->admin)
+            ->post('/pengaturan/galeri/video', [
+                'title' => 'Liputan Robotik Nasional 2026',
+                'category' => 'Prestasi',
+                'date' => '22 Nov 2026',
+                'description' => 'Dokumentasi tim robotik madrasah.',
+                'poster' => '/madrasah-theme/images/videos/karya-siswa.webp',
+                'src' => '/madrasah-theme/images/videos/karya-siswa.webm',
+                'is_featured' => true,
+                'is_published' => true,
+            ])
+            ->assertRedirect(route('core.gallery.index'));
+
+        $this->get('/galeri/video')
+            ->assertOk()
+            ->assertSee('Liputan Robotik Nasional 2026');
+
+        // Reject unsafe external javascript/traversal video URLs
+        $this->actingAs($this->admin)
+            ->post('/pengaturan/galeri/video', [
+                'title' => 'Video Tidak Valid',
+                'category' => 'Profil',
+                'poster' => 'javascript:alert(1)',
+                'src' => '../secret.webm',
+                'is_published' => true,
+            ])
+            ->assertSessionHasErrors(['poster', 'src']);
+
+        // Admin updates prayer schedule & E-Layanan catalog status
+        $this->actingAs($this->admin)
+            ->post('/pengaturan/sekolah', [
+                'name' => $this->school->name,
+                'npsn' => $this->school->npsn,
+                'level' => $this->school->level,
+                'prayer_city' => 'Kabupaten Banjar',
+                'prayer_times' => [
+                    ['name' => 'Subuh', 'time' => '04:50'],
+                    ['name' => 'Dzuhur', 'time' => '12:20'],
+                    ['name' => 'Ashar', 'time' => '15:35'],
+                    ['name' => 'Maghrib', 'time' => '18:25'],
+                    ['name' => 'Isya', 'time' => '19:35'],
+                ],
+                'service_catalog' => [
+                    'legalisir' => [
+                        'available' => false,
+                        'badge' => 'Pemeliharaan',
+                        'maintenance_message' => 'Buka kembali pukul 13.00 WITA',
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('core.school.edit'));
+
+        $this->get('/jadwal-salat')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Prayer/Index')
+                ->where('prayerSchedule.location', 'Kabupaten Banjar')
+                ->where('prayerSchedule.is_fallback', false)
+                ->where('prayerSchedule.times.0.time', '04:50')
+            );
+
+        $this->get('/e-layanan')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Services/Index')
+                ->where('serviceOverrides.legalisir.available', false)
+                ->where('serviceOverrides.legalisir.badge', 'Pemeliharaan')
             );
     }
 }

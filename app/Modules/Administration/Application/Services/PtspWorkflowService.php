@@ -7,6 +7,7 @@ namespace App\Modules\Administration\Application\Services;
 use App\Models\User;
 use App\Modules\Administration\Infrastructure\Models\PtspRequest;
 use App\Modules\Administration\Infrastructure\Models\PtspService;
+use App\Modules\Core\Application\Services\AccessScopeService;
 use App\Modules\Core\Application\Services\NotificationOutboxService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
@@ -36,6 +37,7 @@ class PtspWorkflowService
         private readonly ServiceTicketService $ticketService,
         private readonly ServiceDocumentService $documentService,
         private readonly SchoolScopeService $schoolScope,
+        private readonly AccessScopeService $accessScope,
         private readonly NotificationOutboxService $outbox,
         private readonly AuditLogger $audit,
     ) {}
@@ -723,6 +725,9 @@ class PtspWorkflowService
 
     public function startReview(User $actor, PtspRequest $ptspRequest, ?int $expectedVersion = null): PtspRequest
     {
+        abort_unless((int) $ptspRequest->school_id === (int) $actor->school_id, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, (int) $ptspRequest->school_id), 403);
+
         return $this->applyOfficerTransition(
             actor: $actor,
             ptspRequest: $ptspRequest,
@@ -774,6 +779,7 @@ class PtspWorkflowService
     ): PtspRequest {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $ptspRequest->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, $schoolId), 403);
 
         return DB::transaction(function () use ($actor, $ptspRequest, $schoolId, $dispositionTo, $dispositionNote, $expectedVersion): PtspRequest {
             /** @var PtspRequest $locked */
@@ -835,6 +841,7 @@ class PtspWorkflowService
     ): PtspRequest {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $ptspRequest->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canApproveFinalDecision($actor, $schoolId) && $this->accessScope->canSignOfficialDocument($actor, $schoolId), 403);
 
         return DB::transaction(function () use ($actor, $ptspRequest, $schoolId, $data, $resultFile, $expectedVersion): PtspRequest {
             /** @var PtspRequest $locked */
@@ -850,6 +857,15 @@ class PtspWorkflowService
 
             $deliveryMode = (string) ($data['delivery_mode'] ?? 'digital');
             $markCompleted = (bool) ($data['mark_completed'] ?? ($deliveryMode !== 'physical'));
+
+            if ($locked->result_document_id !== null) {
+                $this->documentService->revokeDocument(
+                    documentId: (int) $locked->result_document_id,
+                    schoolId: $schoolId,
+                    reason: 'Digantikan oleh penerbitan ulang dokumen hasil layanan PTSP.',
+                    actor: $actor,
+                );
+            }
 
             if ($resultFile !== null) {
                 $uploaded = $this->documentService->storePrivateAttachment(
@@ -881,6 +897,11 @@ class PtspWorkflowService
                     $schoolSnapshot['logo_data_uri'] = $logo;
                 }
 
+                $verificationToken = Str::random(40);
+                $verifyUrl = rtrim((string) config('app.url'), '/').'/verifikasi?code='.urlencode($verificationToken);
+                $writer = new Writer(new ImageRenderer(new RendererStyle(180, 2), new SvgImageBackEnd));
+                $qrVerify = base64_encode($writer->writeString($verifyUrl));
+
                 $pdf = Pdf::loadView('administration.ptsp-result', [
                     'school' => $schoolSnapshot,
                     'request' => $locked,
@@ -889,12 +910,16 @@ class PtspWorkflowService
                     'signatory_name' => trim((string) ($data['signatory_name'] ?? $actor->name)),
                     'signatory_title' => trim((string) ($data['signatory_title'] ?? 'Kepala Tata Usaha / Petugas PTSP')),
                     'issued_date' => $this->schoolScope->localNow($schoolId)->locale('id')->translatedFormat('d F Y'),
+                    'verification_token' => $verificationToken,
+                    'verify_url' => $verifyUrl,
+                    'qr_verify' => $qrVerify,
                 ])->setPaper('a4');
 
                 $doc = $this->documentService->issueGeneratedDocument($schoolId, $pdf->output(), [
                     'document_kind' => 'letter',
                     'number_prefix' => 'PTSP',
                     'template_key' => 'ptsp_standard_result',
+                    'verification_token' => $verificationToken,
                     'original_name' => sprintf('hasil-%s.pdf', strtolower((string) $ticket['ticket_code'])),
                     'signatory_name' => trim((string) ($data['signatory_name'] ?? $actor->name)),
                     'signatory_title' => trim((string) ($data['signatory_title'] ?? 'Kepala Tata Usaha / Petugas PTSP')),
@@ -921,23 +946,31 @@ class PtspWorkflowService
                     expectedVersion: $currentVersion,
                 );
                 $currentVersion = (int) $intermediate->version;
+            } elseif (
+                in_array($ticket['public_status'], [ServiceWorkflowMap::STATUS_APPROVED, ServiceWorkflowMap::STATUS_COMPLETED], true)
+                && $ticket['public_status'] === $targetStatus
+            ) {
+                // Re-issuing a document while already in the same public status: skip redundant state transition
+                $currentVersion = null;
             }
 
-            $this->ticketService->transition(
-                ticketId: (int) $locked->service_ticket_id,
-                schoolId: $schoolId,
-                toPublicStatus: $targetStatus,
-                toInternalStatus: $markCompleted ? 'issued_completed' : 'ready_for_pickup',
-                reason: null,
-                actor: $actor,
-                expectedVersion: $currentVersion,
-                publicSummary: $publicSummary,
-                metadata: [
-                    'document_id' => (int) $doc->id,
-                    'document_number' => $doc->document_number,
-                    'delivery_mode' => $deliveryMode,
-                ],
-            );
+            if ($ticket['public_status'] !== $targetStatus) {
+                $this->ticketService->transition(
+                    ticketId: (int) $locked->service_ticket_id,
+                    schoolId: $schoolId,
+                    toPublicStatus: $targetStatus,
+                    toInternalStatus: $markCompleted ? 'issued_completed' : 'ready_for_pickup',
+                    reason: null,
+                    actor: $actor,
+                    expectedVersion: $currentVersion,
+                    publicSummary: $publicSummary,
+                    metadata: [
+                        'document_id' => (int) $doc->id,
+                        'document_number' => $doc->document_number,
+                        'delivery_mode' => $deliveryMode,
+                    ],
+                );
+            }
 
             $locked->forceFill([
                 'status' => $targetStatus,
@@ -985,6 +1018,7 @@ class PtspWorkflowService
     ): PtspRequest {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $ptspRequest->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, $schoolId), 403);
 
         return DB::transaction(function () use ($actor, $ptspRequest, $schoolId, $data, $expectedVersion): PtspRequest {
             /** @var PtspRequest $locked */
@@ -996,6 +1030,12 @@ class PtspWorkflowService
             $ticket = $this->ticketService->getTicketSnapshotById($schoolId, (int) $locked->service_ticket_id);
             if ($ticket === null) {
                 abort(404);
+            }
+
+            if ($locked->physical_pickup_at !== null) {
+                throw ValidationException::withMessages([
+                    'physical_pickup_name' => 'Dokumen fisik untuk permohonan ini sudah pernah tercatat diambil.',
+                ]);
             }
 
             $pickupName = trim((string) $data['physical_pickup_name']);
@@ -1044,6 +1084,172 @@ class PtspWorkflowService
                 targetId: (string) $locked->id,
                 newValues: ['pickup_name' => $pickupName],
                 actor: $actor,
+                schoolId: $schoolId,
+            );
+
+            return $locked->refresh();
+        });
+    }
+
+    /**
+     * Cancel a PTSP request and revoke any issued official result document (AP-10.03, AP-10.09, AP-11.06).
+     */
+    public function cancelByStaff(
+        User $actor,
+        PtspRequest $ptspRequest,
+        string $reason,
+        ?int $expectedVersion = null,
+    ): PtspRequest {
+        $schoolId = (int) $actor->school_id;
+        abort_unless((int) $ptspRequest->school_id === $schoolId, 404);
+        $canVerifyQueue = $this->accessScope->canVerifyQueue($actor, $schoolId);
+        $canApproveAndSign = $this->accessScope->canApproveFinalDecision($actor, $schoolId)
+            && $this->accessScope->canSignOfficialDocument($actor, $schoolId);
+        abort_unless($canVerifyQueue || $canApproveAndSign, 403);
+
+        return DB::transaction(function () use ($actor, $ptspRequest, $schoolId, $reason, $expectedVersion, $canApproveAndSign): PtspRequest {
+            /** @var PtspRequest $locked */
+            $locked = PtspRequest::query()->where('school_id', $schoolId)->whereKey($ptspRequest->id)->lockForUpdate()->firstOrFail();
+            if ($locked->service_ticket_id === null) {
+                throw ValidationException::withMessages(['ticket' => 'Tiket permohonan tidak ditemukan.']);
+            }
+
+            $ticket = $this->ticketService->getTicketSnapshotById($schoolId, (int) $locked->service_ticket_id);
+            if ($ticket === null) {
+                abort(404);
+            }
+
+            if (
+                $locked->result_document_id !== null
+                || in_array($ticket['public_status'], [ServiceWorkflowMap::STATUS_APPROVED, ServiceWorkflowMap::STATUS_COMPLETED], true)
+            ) {
+                abort_unless($canApproveAndSign, 403);
+            }
+
+            $cleanReason = trim($reason);
+            if ($cleanReason === '') {
+                throw ValidationException::withMessages(['reason' => 'Alasan pembatalan atau pencabutan wajib diisi.']);
+            }
+
+            if ($locked->result_document_id !== null) {
+                $this->documentService->revokeDocument(
+                    documentId: (int) $locked->result_document_id,
+                    schoolId: $schoolId,
+                    reason: $cleanReason,
+                    actor: $actor,
+                );
+            }
+
+            $updatedTicket = $this->ticketService->transition(
+                ticketId: (int) $locked->service_ticket_id,
+                schoolId: $schoolId,
+                toPublicStatus: ServiceWorkflowMap::STATUS_CANCELLED,
+                toInternalStatus: 'cancelled_by_staff',
+                reason: $cleanReason,
+                actor: $actor,
+                expectedVersion: $expectedVersion,
+                publicSummary: 'Permohonan dibatalkan atau dokumen hasil dicabut oleh pihak sekolah.',
+                metadata: ['cancelled_by' => 'staff', 'document_revoked' => $locked->result_document_id !== null],
+            );
+
+            $locked->forceFill([
+                'status' => ServiceWorkflowMap::STATUS_CANCELLED,
+                'rejection_reason' => $cleanReason,
+            ])->save();
+
+            $this->audit->log(
+                eventType: 'administration.ptsp.cancelled',
+                targetType: 'PtspRequest',
+                targetId: (string) $locked->id,
+                newValues: ['ticket_code' => $updatedTicket->ticket_code, 'reason' => $cleanReason],
+                actor: $actor,
+                schoolId: $schoolId,
+            );
+
+            $this->enqueueApplicantNotification(
+                schoolId: $schoolId,
+                ptspRequest: $locked,
+                ticketCode: $updatedTicket->ticket_code,
+                eventKey: 'ptsp.cancelled',
+                templateKey: 'ptsp_cancelled',
+                status: ServiceWorkflowMap::STATUS_CANCELLED,
+            );
+
+            return $locked->refresh();
+        });
+    }
+
+    /**
+     * Allow an authenticated/verified applicant to cancel their own PTSP request while still submitted or needs_revision (AP-11.06).
+     */
+    public function cancelByApplicant(
+        int $schoolId,
+        PtspRequest $ptspRequest,
+        string $reason,
+        ?User $user = null,
+        ?int $externalApplicantId = null,
+        ?string $verificationSecret = null,
+        bool $hasSessionReceiptAccess = false,
+    ): PtspRequest {
+        return DB::transaction(function () use (
+            $schoolId,
+            $ptspRequest,
+            $reason,
+            $user,
+            $externalApplicantId,
+            $verificationSecret,
+            $hasSessionReceiptAccess,
+        ): PtspRequest {
+            /** @var PtspRequest $locked */
+            $locked = PtspRequest::query()->where('school_id', $schoolId)->whereKey($ptspRequest->id)->lockForUpdate()->firstOrFail();
+            if ($locked->service_ticket_id === null) {
+                throw ValidationException::withMessages(['ticket' => 'Permohonan belum memiliki tiket.']);
+            }
+
+            $ticket = $this->ticketService->getTicketSnapshotById($schoolId, (int) $locked->service_ticket_id);
+            if ($ticket === null) {
+                abort(404);
+            }
+
+            $authorizedOwner = $this->isRequestOwner($locked, $user, $externalApplicantId, null);
+            $authorizedSecret = $verificationSecret !== null
+                && $this->ticketService->verifyTicketSecret($schoolId, (string) $ticket['ticket_code'], $verificationSecret);
+
+            if (! $authorizedOwner && ! $authorizedSecret && ! $hasSessionReceiptAccess) {
+                abort(403, 'Verifikasi identitas pemohon diperlukan untuk membatalkan permohonan.');
+            }
+
+            if (! in_array($ticket['public_status'], [ServiceWorkflowMap::STATUS_SUBMITTED, ServiceWorkflowMap::STATUS_NEEDS_REVISION], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Permohonan yang sudah diproses atau diterbitkan tidak dapat dibatalkan sendiri oleh pemohon.',
+                ]);
+            }
+
+            $cleanReason = trim($reason) !== '' ? trim($reason) : 'Dibatalkan atas permintaan pemohon.';
+
+            $updatedTicket = $this->ticketService->transition(
+                ticketId: (int) $locked->service_ticket_id,
+                schoolId: $schoolId,
+                toPublicStatus: ServiceWorkflowMap::STATUS_CANCELLED,
+                toInternalStatus: 'cancelled_by_applicant',
+                reason: $cleanReason,
+                actor: $user,
+                expectedVersion: (int) $ticket['version'],
+                publicSummary: 'Permohonan dibatalkan oleh pemohon.',
+                metadata: ['cancelled_by' => 'applicant'],
+            );
+
+            $locked->forceFill([
+                'status' => ServiceWorkflowMap::STATUS_CANCELLED,
+                'rejection_reason' => $cleanReason,
+            ])->save();
+
+            $this->audit->log(
+                eventType: 'administration.ptsp.cancelled_by_applicant',
+                targetType: 'PtspRequest',
+                targetId: (string) $locked->id,
+                newValues: ['ticket_code' => $updatedTicket->ticket_code, 'reason' => $cleanReason],
+                actor: $user,
                 schoolId: $schoolId,
             );
 
@@ -1111,6 +1317,7 @@ class PtspWorkflowService
     ): PtspRequest {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $ptspRequest->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, $schoolId), 403);
 
         return DB::transaction(function () use (
             $actor,

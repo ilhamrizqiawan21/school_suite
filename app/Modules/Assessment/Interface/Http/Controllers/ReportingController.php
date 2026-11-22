@@ -347,7 +347,14 @@ class ReportingController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, $headers);
             foreach ($rows as $row) {
-                fputcsv($out, $row);
+                fputcsv($out, array_map(static function (mixed $cell): mixed {
+                    if (! is_string($cell)) {
+                        return $cell;
+                    }
+                    $trimmed = ltrim($cell);
+
+                    return ($trimmed !== '' && in_array($trimmed[0], ['=', '+', '-', '@', "\t", "\r"], true)) ? "'".$cell : $cell;
+                }, (array) $row));
             }fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }

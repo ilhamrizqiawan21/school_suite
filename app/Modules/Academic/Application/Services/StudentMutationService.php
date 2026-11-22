@@ -21,6 +21,10 @@ use App\Modules\Core\Application\Services\ServiceTicketService;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Domain\ServiceWorkflowMap;
 use App\Shared\Audit\AuditLogger;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -111,6 +115,32 @@ class StudentMutationService
             if (! $isPrivilegedStaff && ($actor === null || ! $this->accessScope->canAccessStudentScope($actor, $schoolId, (int) $student->id))) {
                 throw ValidationException::withMessages([
                     'student_id' => 'Anda hanya berhak mengajukan mutasi keluar untuk siswa perwalian/anak Anda.',
+                ]);
+            }
+
+            $activeDuplicate = StudentMutation::query()
+                ->where('school_id', $schoolId)
+                ->where('direction', 'outgoing')
+                ->where('student_id', $student->id)
+                ->whereIn('status', ['submitted', 'in_review', 'needs_revision'])
+                ->exists();
+
+            if ($activeDuplicate) {
+                throw ValidationException::withMessages([
+                    'student_id' => 'Siswa ini sudah memiliki permohonan mutasi keluar yang sedang diproses.',
+                ]);
+            }
+        } elseif (! empty($data['nisn'])) {
+            $incomingDuplicate = StudentMutation::query()
+                ->where('school_id', $schoolId)
+                ->where('direction', 'incoming')
+                ->where('nisn', trim((string) $data['nisn']))
+                ->whereIn('status', ['submitted', 'in_review', 'needs_revision'])
+                ->exists();
+
+            if ($incomingDuplicate) {
+                throw ValidationException::withMessages([
+                    'nisn' => 'Permohonan mutasi masuk dengan NISN tersebut sedang dalam proses verifikasi.',
                 ]);
             }
         }
@@ -304,6 +334,9 @@ class StudentMutationService
     ): StudentMutation {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $mutation->school_id === $schoolId, 404);
+        abort_unless($decision === 'approve'
+            ? $this->accessScope->canApproveFinalDecision($actor, $schoolId) && $this->accessScope->canSignOfficialDocument($actor, $schoolId)
+            : $this->accessScope->canVerifyQueue($actor, $schoolId) || $this->accessScope->canApproveFinalDecision($actor, $schoolId), 403);
 
         if (! in_array($decision, ['approve', 'request_revision', 'reject'], true)) {
             throw ValidationException::withMessages(['decision' => 'Keputusan mutasi tidak valid.']);
@@ -405,6 +438,23 @@ class StudentMutationService
                     /** @var ClassGroup|null $classGroup */
                     $classGroup = ClassGroup::query()->where('school_id', $schoolId)->find($targetClassGroupId);
                     if ($classGroup !== null) {
+                        $activeCount = Enrollment::query()
+                            ->where('class_group_id', $classGroup->id)
+                            ->where('term_id', $locked->term_id)
+                            ->where('status', EnrollmentStatusEnum::ACTIVE->value)
+                            ->count();
+
+                        if ((int) $classGroup->capacity > 0 && $activeCount >= (int) $classGroup->capacity) {
+                            throw ValidationException::withMessages([
+                                'target_class_group_id' => sprintf(
+                                    'Daya tampung kelas %s sudah penuh (%d/%d siswa).',
+                                    $classGroup->name,
+                                    $activeCount,
+                                    (int) $classGroup->capacity,
+                                ),
+                            ]);
+                        }
+
                         $targetEnrollment = $this->enrollmentService->enrollStudent(
                             termId: (int) $locked->term_id,
                             classGroupId: (int) $classGroup->id,
@@ -442,6 +492,9 @@ class StudentMutationService
             $signatoryName = (string) ($options['signatory_name'] ?? $actor->name);
             $signatoryTitle = (string) ($options['signatory_title'] ?? 'Kepala Sekolah / Tata Usaha');
             $verificationToken = Str::random(40);
+            $verifyUrl = rtrim((string) config('app.url'), '/').'/verifikasi?code='.urlencode($verificationToken);
+            $writer = new Writer(new ImageRenderer(new RendererStyle(160, 2), new SvgImageBackEnd));
+            $qrVerify = base64_encode($writer->writeString($verifyUrl));
 
             $provisionalPdf = Pdf::loadView('academic.mutation-letter', [
                 'school' => $school,
@@ -450,6 +503,8 @@ class StudentMutationService
                 'signatoryName' => $signatoryName,
                 'signatoryTitle' => $signatoryTitle,
                 'verificationToken' => $verificationToken,
+                'verifyUrl' => $verifyUrl,
+                'qrVerify' => $qrVerify,
             ])->setPaper('a4')->output();
 
             $doc = $this->documentService->issueGeneratedDocument(
@@ -508,6 +563,7 @@ class StudentMutationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $mutation->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canApproveFinalDecision($actor, $schoolId), 403);
 
         $cleanReason = trim($reason);
         if ($cleanReason === '') {
@@ -545,6 +601,22 @@ class StudentMutationService
                 'revocation_reason' => $cleanReason,
                 'revoked_at' => now(),
             ])->save();
+
+            if ($locked->service_ticket_id !== null) {
+                $ticket = $this->ticketService->getTicketSnapshotById($schoolId, (int) $locked->service_ticket_id);
+                if ($ticket !== null && $ticket['public_status'] !== ServiceWorkflowMap::STATUS_CANCELLED) {
+                    $this->ticketService->transition(
+                        ticketId: (int) $locked->service_ticket_id,
+                        schoolId: $schoolId,
+                        toPublicStatus: ServiceWorkflowMap::STATUS_CANCELLED,
+                        toInternalStatus: 'revoked',
+                        reason: $cleanReason,
+                        actor: $actor,
+                        expectedVersion: (int) $ticket['version'],
+                        publicSummary: 'Surat persetujuan mutasi dicabut oleh sekolah.',
+                    );
+                }
+            }
 
             $this->audit->log(
                 eventType: 'academic.mutation.revoked',

@@ -4,6 +4,7 @@ import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 interface AlumniRow {
     id: number;
@@ -22,14 +23,36 @@ const props = defineProps<{
     filters: { status: string };
 }>();
 
+const rejectingProfile = ref<AlumniRow | null>(null);
+const rejectionNote = ref('');
+
 const moderate = (id: number, decision: 'approved' | 'rejected') => {
-    const note = decision === 'rejected' ? window.prompt('Alasan penolakan moderasi alumni:') : null;
-    if (decision === 'rejected' && !note) return;
+    if (decision === 'rejected') {
+        const target = props.profiles.find((p) => p.id === id) ?? null;
+        rejectingProfile.value = target;
+        rejectionNote.value = '';
+        return;
+    }
     router.post(`/akademik/alumni/${id}/moderasi`, {
         moderation_status: decision,
-        moderation_note: note,
-        issue_ekta: decision === 'approved',
+        moderation_note: null,
+        issue_ekta: true,
     }, { preserveScroll: true });
+};
+
+const submitReject = () => {
+    if (!rejectingProfile.value || !rejectionNote.value.trim()) return;
+    router.post(`/akademik/alumni/${rejectingProfile.value.id}/moderasi`, {
+        moderation_status: 'rejected',
+        moderation_note: rejectionNote.value.trim(),
+        issue_ekta: false,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            rejectingProfile.value = null;
+            rejectionNote.value = '';
+        },
+    });
 };
 </script>
 
@@ -53,13 +76,13 @@ const moderate = (id: number, decision: 'approved' | 'rejected') => {
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
-                                <th class="px-3 py-2.5">Alumni</th>
-                                <th class="px-3 py-2.5">Status &amp; Instansi</th>
-                                <th class="px-3 py-2.5">Direktori</th>
-                                <th class="px-3 py-2.5">Moderasi</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
+                                <th class="px-3 py-2.5 text-center">Alumni</th>
+                                <th class="px-3 py-2.5 text-center">Status &amp; Instansi</th>
+                                <th class="px-3 py-2.5 text-center">Direktori</th>
+                                <th class="px-3 py-2.5 text-center">Moderasi</th>
+                                <th class="px-3 py-2.5 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -86,6 +109,40 @@ const moderate = (id: number, decision: 'approved' | 'rejected') => {
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div
+            v-if="rejectingProfile"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+            @click.self="rejectingProfile = null"
+            @keydown.esc="rejectingProfile = null"
+        >
+            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-base font-bold text-slate-900">Tolak Moderasi Alumni</h3>
+                    <button type="button" class="text-sm text-slate-500 hover:text-slate-700" @click="rejectingProfile = null">Tutup</button>
+                </div>
+                <form class="space-y-3" @submit.prevent="submitReject">
+                    <p class="text-xs text-slate-600">Alumni: <strong>{{ rejectingProfile.full_name }}</strong></p>
+                    <div>
+                        <label for="alumni-reject-note" class="block text-xs font-semibold text-slate-700">Alasan Penolakan</label>
+                        <textarea
+                            id="alumni-reject-note"
+                            v-model="rejectionNote"
+                            rows="3"
+                            required
+                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        />
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <AppButton type="button" variant="secondary" @click="rejectingProfile = null">Batal</AppButton>
+                        <AppButton type="submit">Simpan Penolakan</AppButton>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>

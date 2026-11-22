@@ -22,6 +22,7 @@ Route::prefix('layanan/ptsp')->name('administration.ptsp.public.')->group(functi
     Route::get('/resi/{ticketCode}/pdf', [PtspPublicController::class, 'receiptPdf'])->name('receipt.pdf');
     Route::get('/{ticketCode}/perbaiki', [PtspPublicController::class, 'showRevision'])->name('revision');
     Route::post('/{ticketCode}/perbaiki', [PtspPublicController::class, 'submitRevision'])->middleware('throttle:uploads')->name('revision.submit');
+    Route::post('/{ticketCode}/batalkan', [PtspPublicController::class, 'cancel'])->middleware('throttle:sensitive')->name('cancel');
     Route::get('/{ticketCode}/dokumen/{documentId}', [PtspPublicController::class, 'downloadDocument'])
         ->whereNumber('documentId')
         ->middleware('throttle:sensitive')
@@ -43,21 +44,22 @@ Route::prefix('layanan/buku-tamu')->name('administration.guestbook.public.')->gr
 });
 
 // Internal Staff TU / PTSP Workspace (M4-TU-01, M4-TU-03)
-Route::middleware(['auth', 'role:admin,operator,ptsp', 'throttle:sensitive'])
+Route::middleware(['auth', 'role:admin,operator,ptsp,principal,signatory', 'throttle:sensitive'])
     ->prefix('administrasi/ptsp')
     ->name('administration.ptsp.admin.')
     ->group(function (): void {
         Route::get('/', [PtspAdminController::class, 'index'])->name('index');
-        Route::post('/katalog', [PtspAdminController::class, 'storeService'])->name('services.store');
-        Route::put('/katalog/{service}', [PtspAdminController::class, 'updateService'])->whereNumber('service')->name('services.update');
-        Route::patch('/katalog/{service}/status', [PtspAdminController::class, 'toggleServiceStatus'])->whereNumber('service')->name('services.toggle');
+        Route::post('/katalog', [PtspAdminController::class, 'storeService'])->middleware('role:admin,operator,ptsp')->name('services.store');
+        Route::put('/katalog/{service}', [PtspAdminController::class, 'updateService'])->whereNumber('service')->middleware('role:admin,operator,ptsp')->name('services.update');
+        Route::patch('/katalog/{service}/status', [PtspAdminController::class, 'toggleServiceStatus'])->whereNumber('service')->middleware('role:admin,operator,ptsp')->name('services.toggle');
 
-        Route::post('/permohonan/{ptspRequest}/tinjau', [PtspAdminController::class, 'startReview'])->whereNumber('ptspRequest')->name('requests.review');
-        Route::post('/permohonan/{ptspRequest}/revisi', [PtspAdminController::class, 'requestRevision'])->whereNumber('ptspRequest')->name('requests.revision');
-        Route::post('/permohonan/{ptspRequest}/tolak', [PtspAdminController::class, 'reject'])->whereNumber('ptspRequest')->name('requests.reject');
-        Route::post('/permohonan/{ptspRequest}/disposisi', [PtspAdminController::class, 'disposition'])->whereNumber('ptspRequest')->name('requests.disposition');
-        Route::post('/permohonan/{ptspRequest}/terbitkan', [PtspAdminController::class, 'issueResult'])->whereNumber('ptspRequest')->name('requests.issue');
-        Route::post('/permohonan/{ptspRequest}/ambil-fisik', [PtspAdminController::class, 'recordPickup'])->whereNumber('ptspRequest')->name('requests.pickup');
+        Route::post('/permohonan/{ptspRequest}/tinjau', [PtspAdminController::class, 'startReview'])->whereNumber('ptspRequest')->middleware('role:admin,operator,ptsp')->name('requests.review');
+        Route::post('/permohonan/{ptspRequest}/revisi', [PtspAdminController::class, 'requestRevision'])->whereNumber('ptspRequest')->middleware('role:admin,operator,ptsp')->name('requests.revision');
+        Route::post('/permohonan/{ptspRequest}/tolak', [PtspAdminController::class, 'reject'])->whereNumber('ptspRequest')->middleware('role:admin,operator,ptsp')->name('requests.reject');
+        Route::post('/permohonan/{ptspRequest}/disposisi', [PtspAdminController::class, 'disposition'])->whereNumber('ptspRequest')->middleware('role:admin,operator,ptsp')->name('requests.disposition');
+        Route::post('/permohonan/{ptspRequest}/terbitkan', [PtspAdminController::class, 'issueResult'])->whereNumber('ptspRequest')->middleware('role:admin,principal,signatory')->name('requests.issue');
+        Route::post('/permohonan/{ptspRequest}/batalkan', [PtspAdminController::class, 'cancel'])->whereNumber('ptspRequest')->middleware('role:admin,operator,ptsp,principal,signatory')->name('requests.cancel');
+        Route::post('/permohonan/{ptspRequest}/ambil-fisik', [PtspAdminController::class, 'recordPickup'])->whereNumber('ptspRequest')->middleware('role:admin,operator,ptsp')->name('requests.pickup');
         Route::get('/permohonan/{ptspRequest}/dokumen/{documentId}', [PtspAdminController::class, 'downloadDocument'])->whereNumber(['ptspRequest', 'documentId'])->name('requests.document');
     });
 
@@ -86,13 +88,13 @@ Route::middleware(['auth', 'role:admin,operator,ptsp,receptionist', 'throttle:se
     });
 
 // Internal TU Legalization Registry (M4-LIF-05)
-Route::middleware(['auth', 'role:admin,operator,ptsp', 'throttle:sensitive'])
+Route::middleware(['auth', 'role:admin,operator,ptsp,principal,signatory', 'throttle:sensitive'])
     ->prefix('administrasi/legalisir')
     ->name('administration.legalization.admin.')
     ->group(function (): void {
         Route::get('/', [LegalizationController::class, 'adminIndex'])->name('index');
-        Route::post('/{legalizationRequest}/verifikasi-asli', [LegalizationController::class, 'verifyOriginal'])->whereNumber('legalizationRequest')->name('verify-original');
-        Route::post('/{legalizationRequest}/sahkan', [LegalizationController::class, 'approve'])->whereNumber('legalizationRequest')->name('approve');
-        Route::post('/{legalizationRequest}/keputusan', [LegalizationController::class, 'rejectOrRevision'])->whereNumber('legalizationRequest')->name('decide');
-        Route::post('/{legalizationRequest}/ambil', [LegalizationController::class, 'recordPickup'])->whereNumber('legalizationRequest')->name('pickup');
+        Route::post('/{legalizationRequest}/verifikasi-asli', [LegalizationController::class, 'verifyOriginal'])->whereNumber('legalizationRequest')->middleware('role:admin,operator,ptsp')->name('verify-original');
+        Route::post('/{legalizationRequest}/sahkan', [LegalizationController::class, 'approve'])->whereNumber('legalizationRequest')->middleware('role:admin,principal,signatory')->name('approve');
+        Route::post('/{legalizationRequest}/keputusan', [LegalizationController::class, 'rejectOrRevision'])->whereNumber('legalizationRequest')->middleware('role:admin,operator,ptsp')->name('decide');
+        Route::post('/{legalizationRequest}/ambil', [LegalizationController::class, 'recordPickup'])->whereNumber('legalizationRequest')->middleware('role:admin,operator,ptsp')->name('pickup');
     });

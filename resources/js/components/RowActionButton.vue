@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppButton from './AppButton.vue';
 withDefaults(defineProps<{
-    action: 'edit' | 'delete' | 'archive';
+    action: 'view' | 'edit' | 'delete' | 'archive';
     label: string;
     ariaLabel?: string;
     disabled?: boolean;

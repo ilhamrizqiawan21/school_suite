@@ -35,6 +35,7 @@ class PublicPortalController extends Controller
         return Inertia::render('Public/Services/Index', [
             'school' => $this->schoolPayload($school),
             'initialQuery' => (string) $request->query('q', ''),
+            'serviceOverrides' => $this->portalService->serviceCatalogOverrides($school),
         ]);
     }
 
@@ -45,19 +46,24 @@ class PublicPortalController extends Controller
         $position = trim((string) $request->query('mapel', ''));
         $allTeachers = $this->academicQuery->getPublicDirectoryTeachers((int) $school->id);
         $teachers = $this->academicQuery->getPublicDirectoryTeachers((int) $school->id, $search, $position);
+        $shell = $this->portalService->madrasahShellData($school);
+        $hideDemo = (bool) ($shell['hideDemoFallbacks'] ?? false);
 
         if ($this->schoolScope->usesMadrasahPublicTheme((string) $school->npsn)) {
             if ($request->header('X-Inertia')) {
                 return Inertia::location($request->fullUrl());
             }
 
-            return response()->view('public.madrasah.teachers', [
-                ...$this->portalService->madrasahShellData($school),
-                'teachers' => $teachers,
-                'availablePositions' => array_values(array_unique(array_column($allTeachers, 'position'))),
-                'usesDemoTeachers' => $allTeachers === [],
-                'filters' => ['q' => $search, 'mapel' => $position],
-            ]);
+            return $this->portalService->applyPreviewResponseHeaders(
+                response()->view('public.madrasah.teachers', [
+                    ...$shell,
+                    'teachers' => $teachers,
+                    'availablePositions' => array_values(array_unique(array_column($allTeachers, 'position'))),
+                    'usesDemoTeachers' => $allTeachers === [] && ! $hideDemo,
+                    'filters' => ['q' => $search, 'mapel' => $position],
+                ]),
+                (bool) ($shell['isDraftPreview'] ?? false),
+            );
         }
 
         return Inertia::render('Public/Directory/Teachers', [
@@ -72,8 +78,10 @@ class PublicPortalController extends Controller
         $school = School::query()->orderBy('id')->firstOrFail();
 
         $items = SchoolNews::query()
+            ->with('photos')
             ->where('school_id', $school->id)
             ->where('status', 'published')
+            ->where('is_archived', false)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->whereIn('category', ['prestasi', 'agenda'])
@@ -87,6 +95,9 @@ class PublicPortalController extends Controller
                 'category' => $item->category,
                 'excerpt' => $item->excerpt,
                 'published_at' => $item->published_at?->toIso8601String(),
+                'photo_url' => $item->photos->first()
+                    ? route('core.news.photo', [$item->slug, $item->photos->first()->id])
+                    : null,
             ])
             ->values()
             ->all();
@@ -96,10 +107,15 @@ class PublicPortalController extends Controller
                 return Inertia::location($request->fullUrl());
             }
 
-            return response()->view('public.madrasah.achievements', [
-                ...$this->portalService->madrasahShellData($school),
-                'items' => $items,
-            ]);
+            $shell = $this->portalService->madrasahShellData($school);
+
+            return $this->portalService->applyPreviewResponseHeaders(
+                response()->view('public.madrasah.achievements', [
+                    ...$shell,
+                    'items' => $items,
+                ]),
+                (bool) ($shell['isDraftPreview'] ?? false),
+            );
         }
 
         return Inertia::render('Public/School/Achievements', [
@@ -151,6 +167,7 @@ class PublicPortalController extends Controller
         return Inertia::render('Public/Integrity/Index', [
             'school' => $this->schoolPayload($school),
             'ikm' => $this->portalService->ikmSummary((int) $school->id),
+            'integrityConfig' => $this->portalService->integrityZoneConfig($school),
         ]);
     }
 

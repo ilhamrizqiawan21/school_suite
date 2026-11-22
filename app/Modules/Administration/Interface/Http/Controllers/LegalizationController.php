@@ -7,6 +7,7 @@ namespace App\Modules\Administration\Interface\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Administration\Application\Services\LegalizationService;
 use App\Modules\Administration\Infrastructure\Models\LegalizationRequest;
+use App\Modules\Core\Application\Services\AccessScopeService;
 use App\Modules\Core\Application\Services\ExternalApplicantAuthService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
@@ -26,6 +27,7 @@ class LegalizationController extends Controller
         private readonly ExternalApplicantAuthService $externalAuth,
         private readonly SchoolScopeService $schoolScope,
         private readonly ServiceDocumentService $documentService,
+        private readonly AccessScopeService $accessScope,
     ) {}
 
     public function publicIndex(Request $request): Response
@@ -60,6 +62,7 @@ class LegalizationController extends Controller
             ],
             'myRequests' => $myRequests,
             'issuedReceipt' => $request->session()->get('issued_legalization_receipt'),
+            'contentBlocks' => $school['content_blocks'] ?? [],
         ]);
     }
 
@@ -177,7 +180,7 @@ class LegalizationController extends Controller
         $schoolId = (int) $school['id'];
 
         $user = $request->user();
-        $isStaff = $user !== null && (int) $user->school_id === $schoolId && $user->hasRole([RoleEnum::ADMIN->value, RoleEnum::OPERATOR->value, RoleEnum::PTSP->value]);
+        $isStaff = $user !== null && (int) $user->school_id === $schoolId && $user->hasRole([RoleEnum::ADMIN->value, RoleEnum::OPERATOR->value, RoleEnum::PTSP->value, RoleEnum::PRINCIPAL->value, RoleEnum::SIGNATORY->value]);
         $hasSession = $request->session()->get("service_document_access.{$document}") === true;
 
         $resolution = $this->documentService->authorizeAndResolveGeneratedDownload(
@@ -217,6 +220,8 @@ class LegalizationController extends Controller
             ->all();
 
         return Inertia::render('Administration/Legalization/Index', [
+            'canProcess' => $this->accessScope->canVerifyQueue($request->user(), $schoolId),
+            'canPublish' => $this->accessScope->canApproveFinalDecision($request->user(), $schoolId) && $this->accessScope->canSignOfficialDocument($request->user(), $schoolId),
             'requests' => $requests,
             'filters' => ['status' => $status],
         ]);

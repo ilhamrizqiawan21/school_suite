@@ -19,7 +19,10 @@ const props = defineProps<{
         verification_secret: string;
         is_anonymous: boolean;
     } | null;
+    contentBlocks?: Record<string, Record<string, any>>;
 }>();
+
+const heroBlock = computed(() => props.contentBlocks?.['complaint.hero'] ?? {});
 
 const quickTab = ref<'write' | 'track'>('write');
 const quickType = ref<'pengaduan' | 'aspirasi' | 'info'>('pengaduan');
@@ -158,18 +161,19 @@ const submit = () => {
                     <div class="parity-lapor-hero-copy">
                         <div class="parity-lapor-trust-pill">
                             <span class="parity-lapor-pill-dot" aria-hidden="true"></span>
-                            <span>Whistleblowing &amp; Layanan Aspirasi Terpadu</span>
+                            <span>{{ heroBlock.pill_label || 'Whistleblowing & Layanan Aspirasi Terpadu' }}</span>
                             <span class="parity-lapor-pill-sep">|</span>
-                            <span class="parity-lapor-pill-accent">100% Bebas Intimidasi</span>
+                            <span class="parity-lapor-pill-accent">{{ heroBlock.pill_accent || '100% Bebas Intimidasi' }}</span>
                         </div>
 
                         <div>
                             <h1 class="parity-lapor-h1">
-                                Suara Anda Lindungi Madrasah.<br />
-                                <span class="parity-lapor-gradient-text">Laporkan Kendala &amp; Sampaikan Ide.</span>
+                                {{ heroBlock.headline || 'Suara Anda Lindungi Madrasah.' }}<br />
+                                <span class="parity-lapor-gradient-text">{{ heroBlock.headline_highlight || 'Laporkan Kendala & Sampaikan Ide.' }}</span>
                             </h1>
                             <p class="parity-lapor-lead">
-                                Saluran pengaduan resmi {{ school.name }}. Tangani perundungan, sarana belajar, ketertiban, dan layanan madrasah secara aman dengan opsi <strong>Kirim Sebagai Anonim</strong>.
+                                <template v-if="heroBlock.lead">{{ heroBlock.lead }}</template>
+                                <template v-else>Saluran pengaduan resmi {{ school.name }}. Tangani perundungan, sarana belajar, ketertiban, dan layanan madrasah secara aman dengan opsi <strong>Kirim Sebagai Anonim</strong>.</template>
                             </p>
                         </div>
 

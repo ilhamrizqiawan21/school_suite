@@ -49,6 +49,8 @@ interface PtspRequestRow {
 }
 
 const props = defineProps<{
+    canProcess: boolean;
+    canPublish: boolean;
     requests: PtspRequestRow[];
     pagination: { current: number; last: number; total: number; previous: string | null; next: string | null };
     summary: { submitted: number; in_review: number; needs_revision: number; approved: number; completed: number };
@@ -60,7 +62,7 @@ const props = defineProps<{
 
 const activeTab = ref<'queue' | 'catalog'>('queue');
 const selectedRequest = ref<PtspRequestRow | null>(null);
-const actionMode = ref<'none' | 'revision' | 'reject' | 'disposition' | 'issue' | 'pickup'>('none');
+const actionMode = ref<'none' | 'revision' | 'reject' | 'disposition' | 'issue' | 'pickup' | 'cancel'>('none');
 const showCatalogModal = ref(false);
 const editingServiceId = ref<number | null>(null);
 
@@ -133,6 +135,11 @@ const submitAction = () => {
         });
     } else if (actionMode.value === 'pickup') {
         actionForm.post(`/administrasi/ptsp/permohonan/${id}/ambil-fisik`, {
+            preserveScroll: true,
+            onSuccess: () => { selectedRequest.value = null; },
+        });
+    } else if (actionMode.value === 'cancel') {
+        actionForm.post(`/administrasi/ptsp/permohonan/${id}/batalkan`, {
             preserveScroll: true,
             onSuccess: () => { selectedRequest.value = null; },
         });
@@ -237,7 +244,7 @@ const catalogCounts = computed(() => ({
                     <AppButton variant="secondary" @click="activeTab = activeTab === 'queue' ? 'catalog' : 'queue'">
                         {{ activeTab === 'queue' ? `Kelola Katalog (${catalogCounts.total})` : 'Kembali ke Antrean' }}
                     </AppButton>
-                    <AppButton v-if="activeTab === 'catalog'" @click="openNewCatalog">Tambah Layanan PTSP</AppButton>
+                    <AppButton v-if="canProcess && activeTab === 'catalog'" @click="openNewCatalog">Tambah Layanan PTSP</AppButton>
                 </div>
             </header>
 
@@ -295,7 +302,7 @@ const catalogCounts = computed(() => ({
                                 <td><StatusBadge :status="row.status" size="sm" /></td>
                                 <td>
                                     <div class="row-actions">
-                                        <AppButton v-if="row.status === 'submitted'" size="sm" variant="secondary" @click="startReview(row)">Proses</AppButton>
+                                        <AppButton v-if="canProcess && row.status === 'submitted'" size="sm" variant="secondary" @click="startReview(row)">Proses</AppButton>
                                         <AppButton size="sm" variant="primary" @click="openRequestDetail(row)">Detail &amp; Aksi</AppButton>
                                     </div>
                                 </td>
@@ -340,8 +347,8 @@ const catalogCounts = computed(() => ({
                                 <td><StatusBadge :status="svc.is_active ? 'active' : 'inactive'" :label="svc.is_active ? 'Aktif' : 'Tutup'" size="sm" /></td>
                                 <td>
                                     <div class="row-actions">
-                                        <AppButton size="sm" variant="secondary" @click="openEditCatalog(svc)">Ubah</AppButton>
-                                        <AppButton size="sm" variant="secondary" @click="toggleServiceActive(svc)">
+                                        <AppButton size="sm" variant="secondary" v-if="canProcess" @click="openEditCatalog(svc)">Ubah</AppButton>
+                                        <AppButton size="sm" variant="secondary" v-if="canProcess" @click="toggleServiceActive(svc)">
                                             {{ svc.is_active ? 'Tutup' : 'Aktifkan' }}
                                         </AppButton>
                                     </div>
@@ -353,7 +360,7 @@ const catalogCounts = computed(() => ({
             </section>
 
             <!-- Detail & Action Modal -->
-            <div v-if="selectedRequest" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ptsp-detail-title">
+            <div v-if="selectedRequest" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ptsp-detail-title" @click.self="selectedRequest = null" @keydown.esc="selectedRequest = null">
                 <div class="modal-card">
                     <header class="modal-head">
                         <div>
@@ -382,11 +389,12 @@ const catalogCounts = computed(() => ({
                         </div>
 
                         <div class="action-switches">
-                            <AppButton size="sm" variant="secondary" @click="actionMode = 'disposition'">Disposisi</AppButton>
-                            <AppButton size="sm" variant="secondary" @click="actionMode = 'revision'">Minta Perbaikan</AppButton>
-                            <AppButton size="sm" variant="danger" @click="actionMode = 'reject'">Tolak</AppButton>
-                            <AppButton size="sm" variant="primary" @click="actionMode = 'issue'">Terbitkan Hasil</AppButton>
-                            <AppButton size="sm" variant="secondary" @click="actionMode = 'pickup'">Catat Ambil Fisik</AppButton>
+                            <AppButton size="sm" variant="secondary" v-if="canProcess" @click="actionMode = 'disposition'">Disposisi</AppButton>
+                            <AppButton size="sm" variant="secondary" v-if="canProcess" @click="actionMode = 'revision'">Minta Perbaikan</AppButton>
+                            <AppButton size="sm" variant="danger" v-if="canProcess" @click="actionMode = 'reject'">Tolak</AppButton>
+                            <AppButton size="sm" variant="primary" v-if="canPublish" @click="actionMode = 'issue'">Terbitkan Hasil</AppButton>
+                            <AppButton size="sm" variant="secondary" v-if="canProcess" @click="actionMode = 'pickup'">Catat Ambil Fisik</AppButton>
+                            <AppButton size="sm" variant="danger" v-if="(canProcess || canPublish) && selectedRequest.status !== 'cancelled'" @click="actionMode = 'cancel'">Batalkan / Cabut Dokumen</AppButton>
                         </div>
 
                         <form v-if="actionMode !== 'none'" class="action-form" @submit.prevent="submitAction">
@@ -399,6 +407,12 @@ const catalogCounts = computed(() => ({
                             <template v-else-if="actionMode === 'reject'">
                                 <FormField id="act-rej" label="Alasan Penolakan" required :error="actionForm.errors.reason" v-slot="{ inputId }">
                                     <textarea :id="inputId" v-model="actionForm.reason" rows="3" required />
+                                </FormField>
+                            </template>
+
+                            <template v-else-if="actionMode === 'cancel'">
+                                <FormField id="act-cancel" label="Alasan Pembatalan Permohonan / Pencabutan Dokumen Resmi" required :error="actionForm.errors.reason" v-slot="{ inputId }">
+                                    <textarea :id="inputId" v-model="actionForm.reason" rows="3" required placeholder="Jelaskan alasan pembatalan atau pencabutan dokumen resmi..." />
                                 </FormField>
                             </template>
 
@@ -460,7 +474,7 @@ const catalogCounts = computed(() => ({
             </div>
 
             <!-- Catalog Modal -->
-            <div v-if="showCatalogModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cat-modal-title">
+            <div v-if="showCatalogModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cat-modal-title" @click.self="showCatalogModal = false" @keydown.esc="showCatalogModal = false">
                 <div class="modal-card">
                     <header class="modal-head">
                         <h2 id="cat-modal-title">{{ editingServiceId ? 'Ubah Layanan PTSP' : 'Tambah Layanan PTSP' }}</h2>
@@ -535,6 +549,7 @@ const catalogCounts = computed(() => ({
 .table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .data-table th, .data-table td { padding: .7rem .65rem; border-bottom: 1px solid var(--line, #dee4ee); text-align: left; vertical-align: top; }
+.data-table th { text-align: center; }
 .sub-text { font-size: .78rem; color: var(--ink-soft, #536174); margin-top: .15rem; }
 .row-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
 .pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; font-size: .85rem; }

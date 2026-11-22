@@ -4,6 +4,7 @@
 <html lang="id" class="scroll-smooth"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  @endverbatim<meta name="csrf-token" content="{{ csrf_token() }}">@verbatim
   <title>E-Perpustakaan Digital | MADRASAH ALIYAH NEGERI 4 BANJAR - Khazanah Literasi Madrasah</title>
   
   <meta name="description" content="Katalog Buku Digital (OPAC), E-Book Reader Interaktif, dan Layanan Literasi Terpadu MADRASAH ALIYAH NEGERI 4 BANJAR">
@@ -3603,7 +3604,7 @@
 
     <!-- SCRIPTS -->
     <script src="/madrasah-theme/perpustakaan/jquery-3.3.1.min.js"></script>
-<script>$.ajaxPrefilter(function(o){if(String(o.url).indexOf('/perpustakaan/aksi')===0){o.type='GET';o.data='';}});</script>
+<script>$.ajaxSetup({headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')||''}});</script>
     <script src="/madrasah-theme/perpustakaan/popper.min.js"></script>
     <script src="/madrasah-theme/perpustakaan/bootstrap.min.js"></script>
     <script src="/madrasah-theme/perpustakaan/iziToast.min.js"></script>

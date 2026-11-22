@@ -8,7 +8,8 @@ import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
-    schedule?: { released: boolean; release_at?: string | null; title?: string | null };
+    contentBlocks?: Record<string, Record<string, any>>;
+    schedule?: { released: boolean; release_at?: string | null; title?: string | null; timezone?: string; academic_year?: string | null };
     result?: {
         found: boolean;
         released: boolean;
@@ -38,6 +39,9 @@ const form = useForm({
 
 const activeTab = ref<'check' | 'schedule' | 'help'>('check');
 const now = ref(Date.now());
+const releaseTime = computed(() => Date.parse(props.schedule?.release_at || ''));
+const portalOpen = computed(() => Boolean(props.schedule?.released) || (Number.isFinite(releaseTime.value) && now.value >= releaseTime.value));
+const releaseLabel = computed(() => Number.isFinite(releaseTime.value) ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'short', timeZone: props.schedule?.timezone || 'Asia/Makassar' }).format(new Date(releaseTime.value)) : null);
 let clock: ReturnType<typeof setInterval> | undefined;
 onMounted(() => { clock = setInterval(() => { now.value = Date.now(); }, 1000); });
 onBeforeUnmount(() => clearInterval(clock));
@@ -55,6 +59,7 @@ const remaining = computed(() => {
 const submit = () => {
     form.post('/layanan/kelulusan', { preserveScroll: true });
 };
+const countdownParts = computed(() => remaining.value ?? ['Hari', 'Jam', 'Menit', 'Detik'].map((label) => ({ label, value: null })));
 </script>
 
 <template>
@@ -65,11 +70,11 @@ const submit = () => {
 
         <main class="mx-auto max-w-3xl px-4 py-10 space-y-6">
             <div class="madrasah-service-hero">
-                <p class="madrasah-service-label"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Pengumuman Kelulusan Resmi</p>
+                <p class="madrasah-service-label"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> {{ contentBlocks?.['graduation.hero']?.badge || 'Pengumuman Kelulusan Resmi' }}</p>
                 <h1 class="text-2xl font-bold text-slate-900">{{ school.name }}</h1>
-                <p class="mt-1 text-sm font-semibold text-amber-200">Tahun Pelajaran 2026/2027</p>
+                <p class="graduation-year">Tahun Pelajaran {{ schedule?.academic_year || contentBlocks?.['graduation.hero']?.academic_year_label || '2026/2027' }}</p>
                 <p class="mt-1 text-sm text-slate-600">
-                    Layanan resmi pengecekan status kelulusan peserta didik dan pengunduhan Surat Keterangan Lulus (SKL) digital mandiri secara online.
+                    {{ contentBlocks?.['graduation.hero']?.description || 'Layanan resmi pengecekan status kelulusan peserta didik dan pengunduhan Surat Keterangan Lulus (SKL) digital mandiri secara online.' }}
                 </p>
             </div>
 
@@ -79,19 +84,21 @@ const submit = () => {
                 <button id="graduation-tab-help" role="tab" :aria-selected="activeTab === 'help'" aria-controls="petunjuk-skl" @click="activeTab = 'help'">Petunjuk &amp; Syarat SKL</button>
             </div>
 
-            <section v-if="activeTab === 'schedule' || (activeTab === 'check' && !schedule?.released)"
-                id="graduation-panel-schedule" role="tabpanel" aria-labelledby="graduation-tab-schedule" class="parity-graduation-state">
-                <span class="parity-graduation-orb" aria-hidden="true"></span>
-                <h2>{{ schedule?.released ? 'Portal Kelulusan Sudah Dibuka' : 'Portal Kelulusan Belum Dibuka' }}</h2>
-                <p>{{ schedule?.title || 'Pengumuman resmi kelulusan madrasah' }}</p>
-                <p v-if="schedule?.release_at">{{ new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'short' }).format(new Date(schedule.release_at)) }}</p>
-                <p v-else>Jadwal pengumuman akan ditampilkan setelah diterbitkan oleh sekolah.</p>
-                <div v-if="remaining" class="parity-countdown">
-                    <div v-for="part in remaining" :key="part.label"><strong>{{ String(part.value).padStart(2, '0') }}</strong><span>{{ part.label }}</span></div>
+            <section v-if="activeTab === 'schedule' || (activeTab === 'check' && !portalOpen)"
+                :id="activeTab === 'check' ? 'graduation-panel-check' : 'graduation-panel-schedule'" role="tabpanel" :aria-labelledby="activeTab === 'check' ? 'graduation-tab-check' : 'graduation-tab-schedule'" class="parity-graduation-state">
+                <span class="parity-graduation-orb" aria-hidden="true"><i :class="portalOpen ? 'fa-solid fa-lock-open' : 'fa-solid fa-lock'"></i></span>
+                <h2>{{ portalOpen ? 'Portal Kelulusan Sudah Dibuka' : 'Portal Kelulusan Belum Dibuka' }}</h2>
+                <p class="graduation-state-description">{{ portalOpen ? 'Pengumuman kelulusan sudah tersedia. Silakan periksa hasil melalui tab Cek Kelulusan Siswa.' : 'Akses pengecekan status kelulusan saat ini masih terkunci dan akan dibuka secara serentak pada jadwal resmi berikut:' }}</p>
+                <p class="graduation-release-date"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i>{{ releaseLabel || 'Jadwal pengumuman belum ditetapkan oleh sekolah' }}</p>
+                <div v-if="!portalOpen" class="graduation-countdown-panel" role="timer" aria-label="Hitung mundur pembukaan portal kelulusan">
+                    <p class="graduation-countdown-title"><span></span>Hitung Mundur Waktu Buka Akses</p>
+                    <div class="parity-countdown"><div v-for="part in countdownParts" :key="part.label"><strong>{{ part.value === null ? '—' : String(part.value).padStart(2, '0') }}</strong><span>{{ part.label }}</span></div></div>
+                    <p v-if="!releaseLabel" class="graduation-countdown-note">Hitung mundur akan aktif setelah jadwal resmi diterbitkan.</p>
                 </div>
+                <p v-if="releaseLabel && !portalOpen" class="graduation-state-note">Formulir pencarian kelulusan akan otomatis terbuka saat hitungan mundur mencapai <b>00:00:00</b> tanpa perlu me-refresh halaman.</p>
             </section>
 
-            <form v-if="activeTab === 'check' && (!schedule || schedule.released || result)" id="graduation-panel-check" role="tabpanel" aria-labelledby="graduation-tab-check" @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
+            <form v-if="activeTab === 'check' && portalOpen" id="graduation-panel-check" role="tabpanel" aria-labelledby="graduation-tab-check" @submit.prevent="submit" class="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
                 <h2 id="graduation-check-title" class="service-form-title">Cek Hasil Kelulusan</h2>
                 <div class="grid gap-3 md:grid-cols-2">
                     <FormField id="grad-nisn" label="NISN" :error="form.errors.nisn" required>
@@ -130,7 +137,7 @@ const submit = () => {
                 <div class="grid gap-3 md:grid-cols-3 text-xs text-slate-600">
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1">
                         <strong class="text-slate-900 block">1. Jadwal Rilis Resmi</strong>
-                        <p>Data kelulusan terkunci otomatis sampai waktu pengumuman resmi (`release_at`) yang ditetapkan sekolah.</p>
+                        <p>Data kelulusan terkunci sampai waktu pengumuman resmi yang ditetapkan sekolah.</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1">
                         <strong class="text-slate-900 block">2. Verifikasi NISN &amp; PIN</strong>
@@ -138,7 +145,7 @@ const submit = () => {
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1">
                         <strong class="text-slate-900 block">3. Unduh SKL Ber-QR</strong>
-                        <p>Surat Keterangan Lulus PDF dilengkapi kode verifikasi resmi yang dapat dicek pada halaman `/verifikasi`.</p>
+                        <p>Surat Keterangan Lulus PDF dilengkapi kode verifikasi resmi untuk memeriksa keabsahan dokumen.</p>
                     </div>
                 </div>
             </section>

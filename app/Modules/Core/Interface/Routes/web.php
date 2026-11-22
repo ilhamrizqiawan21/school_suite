@@ -95,12 +95,15 @@ Route::middleware('auth')->group(function (): void {
         Route::put('/struktur-organisasi/{member}', [SchoolOrganizationController::class, 'update'])->whereNumber('member')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('organization.update');
         Route::delete('/struktur-organisasi/{member}', [SchoolOrganizationController::class, 'destroy'])->whereNumber('member')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('organization.destroy');
 
-        // Public portfolio gallery management
+        // Public portfolio gallery & video management
         Route::get('/galeri', [SchoolGalleryController::class, 'index'])->middleware('role:admin,operator')->name('gallery.index');
         Route::get('/galeri/{photo}/file', [SchoolGalleryController::class, 'adminPhoto'])->whereNumber('photo')->middleware('role:admin,operator')->name('gallery.admin-photo');
         Route::post('/galeri', [SchoolGalleryController::class, 'store'])->middleware(['role:admin,operator', 'throttle:uploads'])->name('gallery.store');
         Route::put('/galeri/{album}', [SchoolGalleryController::class, 'update'])->whereNumber('album')->middleware(['role:admin,operator', 'throttle:uploads'])->name('gallery.update');
         Route::delete('/galeri/{album}', [SchoolGalleryController::class, 'destroy'])->whereNumber('album')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('gallery.destroy');
+        Route::post('/galeri/video', [SchoolGalleryController::class, 'storeVideo'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('gallery.video.store');
+        Route::put('/galeri/video/{videoId}', [SchoolGalleryController::class, 'updateVideo'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('gallery.video.update');
+        Route::delete('/galeri/video/{videoId}', [SchoolGalleryController::class, 'destroyVideo'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('gallery.video.destroy');
 
         // Public school news management
         Route::get('/berita', [SchoolNewsController::class, 'index'])->middleware('role:admin,operator')->name('news.index');
@@ -109,10 +112,18 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/berita/{news}', [SchoolNewsController::class, 'destroy'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('news.destroy');
         Route::delete('/berita/{news}/foto/{photo}', [SchoolNewsController::class, 'destroyPhoto'])->whereNumber(['news', 'photo'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('news.photo.destroy');
 
-        // Public downloads & IKM moderation
+        // Public downloads & Zona Integritas / IKM moderation
+        Route::get('/pusat-unduh', [PublicPortalAdminController::class, 'downloadsIndex'])->middleware('role:admin,operator')->name('downloads.index');
         Route::post('/pusat-unduh', [PublicPortalAdminController::class, 'storeDownload'])->middleware(['role:admin,operator', 'throttle:uploads'])->name('downloads.store');
+        Route::put('/pusat-unduh/{download}', [PublicPortalAdminController::class, 'updateDownload'])->whereNumber('download')->middleware(['role:admin,operator', 'throttle:uploads'])->name('downloads.update');
+        Route::post('/pusat-unduh/{download}', [PublicPortalAdminController::class, 'updateDownload'])->whereNumber('download')->middleware(['role:admin,operator', 'throttle:uploads']);
         Route::post('/pusat-unduh/{download}/publikasi', [PublicPortalAdminController::class, 'toggleDownloadPublish'])->whereNumber('download')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('downloads.toggle');
+        Route::delete('/pusat-unduh/{download}', [PublicPortalAdminController::class, 'destroyDownload'])->whereNumber('download')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('downloads.destroy');
+
+        Route::get('/zona-integritas', [PublicPortalAdminController::class, 'integrityIndex'])->middleware('role:admin,operator')->name('integrity.index');
+        Route::put('/zona-integritas/konten', [PublicPortalAdminController::class, 'updateIntegrityContent'])->middleware(['role:admin,operator', 'throttle:sensitive'])->name('integrity.content.update');
         Route::post('/zona-integritas/{survey}/moderasi', [PublicPortalAdminController::class, 'moderateIkm'])->whereNumber('survey')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('ikm.moderate');
+        Route::delete('/zona-integritas/{survey}', [PublicPortalAdminController::class, 'destroyIkm'])->whereNumber('survey')->middleware(['role:admin,operator', 'throttle:sensitive'])->name('ikm.destroy');
 
         Route::get('/keamanan', [SecurityOperationsController::class, 'index'])->name('security.index');
         Route::post('/keamanan/ip', [SecurityOperationsController::class, 'block'])->middleware('throttle:sensitive')->name('security.block');

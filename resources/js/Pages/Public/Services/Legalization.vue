@@ -24,7 +24,10 @@ const props = defineProps<{
     school: { name: string; address?: string | null; logo_url?: string | null; theme?: { primary?: string | null } };
     myRequests: LegalizationItem[];
     issuedReceipt?: { id: number; legalization_code: string; ticket_code?: string | null; verification_secret: string } | null;
+    contentBlocks?: Record<string, Record<string, any>>;
 }>();
+
+const heroBlock = computed(() => props.contentBlocks?.['legalization.hero'] ?? {});
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const activeTab = ref<'alur' | 'form'>(props.issuedReceipt ? 'form' : 'alur');
@@ -153,12 +156,12 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             <div class="legalisir-container legalisir-hero-inner">
                 <div class="legalisir-hero-pill">
                     <i class="fa-solid fa-certificate" aria-hidden="true"></i>
-                    <span>Layanan Legalisir Ijazah Online</span>
+                    <span>{{ heroBlock.badge || 'Layanan Legalisir Ijazah Online' }}</span>
                 </div>
                 <h1>{{ school.name.toUpperCase() }}</h1>
-                <h4>Tahun Pelajaran 2026/2027</h4>
+                <h4>{{ heroBlock.academic_year_label || 'Tahun Pelajaran 2026/2027' }}</h4>
                 <p>
-                    Formulir Permohonan Legalisir, Pembuatan Surat Kuasa &amp; SPTJM dengan Tanda Tangan Digital Langsung secara online.
+                    {{ heroBlock.description || 'Formulir Permohonan Legalisir, Pembuatan Surat Kuasa & SPTJM dengan Tanda Tangan Digital Langsung secara online.' }}
                 </p>
             </div>
         </section>

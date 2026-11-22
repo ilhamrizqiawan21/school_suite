@@ -108,6 +108,11 @@ const segmentLabels: Record<string, string> = {
     'wali-kelas': 'Ruang Wali Kelas',
     whatsapp: 'WhatsApp',
     keamanan: 'Keamanan',
+    berita: 'Berita Sekolah',
+    galeri: 'Galeri Sekolah',
+    'struktur-organisasi': 'Struktur Organisasi',
+    'pusat-unduh': 'Pusat Unduh',
+    'zona-integritas': 'Zona Integritas & IKM',
 };
 
 const rootLinks: Record<string, string> = {

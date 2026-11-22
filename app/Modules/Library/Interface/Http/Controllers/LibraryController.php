@@ -16,6 +16,7 @@ use App\Modules\Library\Infrastructure\Models\LibraryCollection;
 use App\Modules\Library\Infrastructure\Models\LibraryLoan;
 use App\Modules\Library\Infrastructure\Models\LibraryProcurementRequest;
 use App\Modules\Library\Infrastructure\Models\LibraryVisit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,23 +35,169 @@ class LibraryController extends Controller
     ) {}
 
     /**
-     * Salinan tampilan statis halaman Perpustakaan pada `/perpustakaan`.
-     * Fitur aktif (kunjungan, usulan, bebas pustaka, katalog) tersedia di `/perpustakaan/portal`.
+     * Halaman publik utama Perpustakaan (`/perpustakaan`) yang terhubung ke `LibraryService`.
      */
     public function replica(): \Illuminate\Http\Response
     {
-        return response()->view('public.madrasah.perpustakaan');
+        $school = $this->schoolScope->findPrimaryPublicSnapshot();
+        $stats = $school !== null
+            ? $this->libraryService->statistics((int) $school['id'])
+            : ['collections_count' => 0, 'visits_today' => 0, 'active_loans' => 0];
+
+        return response()->view('public.madrasah.perpustakaan', [
+            'school' => $school,
+            'stats' => $stats,
+        ]);
     }
 
     /**
-     * Stub aman untuk panggilan AJAX milik salinan tampilan: tidak membaca/menyimpan data apa pun.
+     * Endpoint aksi interaktif `/perpustakaan/aksi` yang terhubung ke `LibraryService` dengan kontrol otorisasi.
      */
-    public function replicaAction(): \Illuminate\Http\JsonResponse
+    public function replicaAction(Request $request): JsonResponse
     {
+        $school = $this->schoolScope->findPrimaryPublicSnapshot();
+        if ($school === null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data sekolah belum tersedia.',
+            ], 404);
+        }
+
+        $schoolId = (int) $school['id'];
+        $pg = trim((string) $request->query('pg', ''));
+        $user = $request->user();
+
+        if ($pg === 'katalog') {
+            $catalog = $this->libraryService->searchCatalog($schoolId, [
+                'search' => (string) $request->query('search', ''),
+                'category' => (string) $request->query('category', ''),
+                'format' => (string) $request->query('format', ''),
+            ], $user);
+
+            return response()->json(['status' => 'success', ...$catalog]);
+        }
+
+        if ($pg === 'detail_buku') {
+            $id = (int) $request->query('id', 0);
+            $collection = LibraryCollection::query()
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->whereKey($id)
+                ->first();
+
+            if ($collection === null) {
+                return response()->json(['status' => 'error', 'message' => 'Koleksi tidak ditemukan.'], 404);
+            }
+
+            $isMember = $user !== null && $user->is_active && (int) $user->school_id === $schoolId;
+            $isStaff = $isMember && (RoleEnum::tryFrom((string) $user->role?->name)?->isStaff() ?? false);
+            $allowed = match ($collection->access_level) {
+                'public' => true,
+                'members_only' => $isMember,
+                'staff_only' => $isStaff,
+                default => false,
+            };
+
+            if (! $allowed) {
+                return response()->json(['status' => 'error', 'message' => 'Anda tidak memiliki akses ke koleksi ini.'], 403);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'id' => (int) $collection->id,
+                    'judul' => $collection->title,
+                    'penulis' => $collection->author ?? '-',
+                    'penerbit' => $collection->publisher ?? '-',
+                    'isbn' => $collection->isbn ?? $collection->code,
+                    'kategori' => LibraryService::CATEGORIES[$collection->category] ?? $collection->category,
+                    'stok' => (int) $collection->total_copies,
+                    'tersedia' => (int) $collection->available_copies,
+                    'rak' => $collection->shelf_location ?? '-',
+                    'format' => $collection->format,
+                    'access_level' => $collection->access_level,
+                    'download_url' => $collection->ebook_document_id !== null ? route('library.collections.download', $collection->id) : null,
+                ],
+            ]);
+        }
+
+        if ($pg === 'statistik_kunjungan') {
+            return response()->json([
+                'status' => 'success',
+                'kpi' => $this->libraryService->statistics($schoolId),
+            ]);
+        }
+
+        if ($pg === 'traffic') {
+            $stats = $this->libraryService->statistics($schoolId);
+
+            return response()->json([
+                'status' => 'success',
+                'active_readers' => (int) ($stats['visits_today'] ?? 0),
+            ]);
+        }
+
+        if ($pg === 'buku_tamu') {
+            abort_unless($request->isMethod('post'), 405);
+            $validated = $request->validate([
+                'card_token' => ['nullable', 'string', 'max:80'],
+                'visitor_name' => ['nullable', 'string', 'max:150'],
+                'visitor_identifier' => ['nullable', 'string', 'max:60'],
+                'visitor_role' => ['nullable', Rule::in(['student', 'teacher', 'guest'])],
+                'purpose' => ['nullable', 'string', 'max:180'],
+            ]);
+            $visit = $this->libraryService->recordVisit($schoolId, $validated, $user);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Kunjungan perpustakaan tercatat ({$visit->visitor_name}).",
+            ]);
+        }
+
+        if ($pg === 'usulkan_buku') {
+            abort_unless($request->isMethod('post'), 405);
+            if ($user === null) {
+                return response()->json(['status' => 'error', 'message' => 'Silakan masuk terlebih dahulu untuk mengusulkan pengadaan buku.'], 401);
+            }
+            $validated = $request->validate([
+                'title' => ['required', 'string', 'max:200'],
+                'author' => ['nullable', 'string', 'max:150'],
+                'isbn' => ['nullable', 'string', 'max:40'],
+                'reason' => ['required', 'string', 'max:1500'],
+                'estimated_copies' => ['nullable', 'integer', 'min:1', 'max:100'],
+            ]);
+            $this->libraryService->submitProcurement($user, $validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Usulan pengadaan koleksi perpustakaan berhasil dikirim.',
+            ]);
+        }
+
+        if ($pg === 'cek_bebas_pustaka') {
+            if ($user === null || (int) $user->school_id !== $schoolId) {
+                return response()->json(['status' => 'error', 'message' => 'Silakan masuk ke akun anggota untuk memeriksa status bebas pustaka.'], 401);
+            }
+            $studentIds = array_column($this->academicQuery->getStudentsForUserScope($schoolId, $user), 'student_id');
+            $clearances = $studentIds === []
+                ? []
+                : LibraryClearanceCertificate::query()
+                    ->where('school_id', $schoolId)
+                    ->whereIn('student_id', $studentIds)
+                    ->latest('id')
+                    ->get()
+                    ->toArray();
+
+            return response()->json([
+                'status' => 'success',
+                'clearances' => $clearances,
+            ]);
+        }
+
         return response()->json([
             'status' => 'error',
-            'message' => 'Halaman ini hanya salinan tampilan. Gunakan portal /perpustakaan/portal untuk layanan aktif.',
-        ]);
+            'message' => 'Aksi tidak dikenali.',
+        ], 404);
     }
 
     public function publicIndex(Request $request): Response

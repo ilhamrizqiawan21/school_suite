@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import RowActionButton from '@/components/RowActionButton.vue';
@@ -160,16 +161,27 @@ const submitEdit = () => {
 };
 
 // Delete action
+const pendingDeleteUser = ref<UserItem | null>(null);
+const showCreatePassword = ref(false);
+const showEditPassword = ref(false);
+
 const deleteUser = (user: UserItem) => {
-    if (confirm(`Yakin ingin menghapus pengguna "${user.name}"?`)) {
-        actionError.value = '';
-        deletingId.value = user.id;
-        router.delete(`/pengaturan/pengguna/${user.id}`, {
-            preserveScroll: true,
-            onError: (errors) => { actionError.value = Object.values(errors).join(' '); },
-            onFinish: () => { deletingId.value = null; },
-        });
-    }
+    pendingDeleteUser.value = user;
+};
+
+const confirmDeleteUser = () => {
+    const user = pendingDeleteUser.value;
+    if (!user) return;
+    actionError.value = '';
+    deletingId.value = user.id;
+    router.delete(`/pengaturan/pengguna/${user.id}`, {
+        preserveScroll: true,
+        onError: (errors) => { actionError.value = Object.values(errors).join(' '); },
+        onFinish: () => {
+            deletingId.value = null;
+            pendingDeleteUser.value = null;
+        },
+    });
 };
 </script>
 
@@ -209,7 +221,13 @@ const deleteUser = (user: UserItem) => {
                     <label class="text-meta font-semibold text-slate-700">Email<input v-model="createForm.email" type="email" required :aria-invalid="!!createForm.errors.email" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.email" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.email }}</span></label>
                     <label class="text-meta font-semibold text-slate-700">Username<input v-model="createForm.username" :aria-invalid="!!createForm.errors.username" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.username" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.username }}</span></label>
                     <label class="text-meta font-semibold text-slate-700">Peran<select v-model="createForm.role_id" required :aria-invalid="!!createForm.errors.role_id" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm"><option disabled value="">Pilih peran</option><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.label }}</option></select><span v-if="createForm.errors.role_id" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.role_id }}</span></label>
-                    <label class="text-meta font-semibold text-slate-700">Kata sandi<input v-model="createForm.password" type="password" minlength="8" required :aria-invalid="!!createForm.errors.password" class="mt-1 w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 text-sm" /><span v-if="createForm.errors.password" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.password }}</span></label>
+                    <label class="text-meta font-semibold text-slate-700">Kata sandi
+                        <span class="relative mt-1 flex items-center">
+                            <input v-model="createForm.password" :type="showCreatePassword ? 'text' : 'password'" minlength="8" required :aria-invalid="!!createForm.errors.password" class="w-full rounded-lg border border-slate-300 bg-[var(--surface)] px-3 py-2 pr-16 text-sm" />
+                            <button type="button" class="absolute right-2 rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100" :aria-label="showCreatePassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'" :aria-pressed="showCreatePassword" @click="showCreatePassword = !showCreatePassword">{{ showCreatePassword ? 'Tutup' : 'Lihat' }}</button>
+                        </span>
+                        <span v-if="createForm.errors.password" class="mt-1 block text-meta font-normal text-rose-600">{{ createForm.errors.password }}</span>
+                    </label>
                     <p class="text-meta leading-5 text-slate-600 sm:col-span-full">Pengguna wajib mengganti kata sandi awal saat masuk. Akun guru dan siswa juga dapat dibuat melalui menu Data Guru atau Data Siswa.</p>
                     <div class="user-drawer-footer flex flex-wrap justify-end gap-2 sm:col-span-full"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="createForm.processing" @click="showCreate = false">Batal</AppButton><AppButton variant="primary" :loading="createForm.processing" type="submit" :disabled="createForm.processing" class="primary-button">{{ createForm.processing ? 'Menyimpan…' : 'Simpan pengguna' }}</AppButton></div>
                 </form>
@@ -313,7 +331,10 @@ const deleteUser = (user: UserItem) => {
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div v-if="editingUser?.id !== current_user_id">
                                 <label for="edit-user-password" class="block text-meta font-semibold text-slate-700 mb-1">Kata Sandi Baru (Kosongkan bila tidak diganti)</label>
-                                <input id="edit-user-password" v-model="editForm.password" type="password" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-meta" />
+                                <div class="relative flex items-center">
+                                    <input id="edit-user-password" v-model="editForm.password" :type="showEditPassword ? 'text' : 'password'" minlength="8" :aria-invalid="!!editForm.errors.password" class="w-full px-3 py-2 pr-16 rounded-lg border border-slate-300 text-meta" />
+                                    <button type="button" class="absolute right-2 rounded px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100" :aria-label="showEditPassword ? 'Sembunyikan kata sandi baru' : 'Tampilkan kata sandi baru'" :aria-pressed="showEditPassword" @click="showEditPassword = !showEditPassword">{{ showEditPassword ? 'Tutup' : 'Lihat' }}</button>
+                                </div>
                                 <p v-if="editForm.errors.password" class="text-meta text-rose-600 mt-0.5">{{ editForm.errors.password }}</p>
                             </div>
                             <p v-else class="text-meta leading-5 text-slate-600">Untuk mengganti kata sandi Anda, buka menu Ganti Kata Sandi.</p>
@@ -336,6 +357,17 @@ const deleteUser = (user: UserItem) => {
                     </form>
                 </div>
             </div>
+
+            <ConfirmDialog
+                :open="pendingDeleteUser !== null"
+                title="Hapus akun pengguna?"
+                :message="pendingDeleteUser ? `Akun pengguna &quot;${pendingDeleteUser.name}&quot; (${pendingDeleteUser.email}) akan dihapus permanen dari daftar akses sekolah.` : ''"
+                confirm-label="Ya, hapus pengguna"
+                variant="danger"
+                :loading="deletingId !== null"
+                @confirm="confirmDeleteUser"
+                @cancel="pendingDeleteUser = null"
+            />
         </div>
     </AppLayout>
 </template>

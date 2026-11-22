@@ -1,9 +1,9 @@
 :root {
-    --button-height: 40px;
+    --button-height: 36px;
     --button-height-sm: 32px;
-    --button-height-lg: 48px;
+    --button-height-lg: 40px;
     --button-touch-size: 44px;
-    --button-radius: 10px;
+    --button-radius: 8px;
     --button-icon-size: 18px;
     --button-gap: 8px;
 }
@@ -19,12 +19,12 @@
     min-width: var(--button-size);
     min-height: var(--button-size);
     height: auto;
-    padding: 8px 14px;
+    padding: 6px 14px;
     border: 1px solid var(--line-strong);
     border-radius: var(--button-radius);
     background: var(--surface);
     color: var(--ink);
-    font: var(--weight-semibold) var(--type-control)/var(--leading-snug) var(--font-ui);
+    font: var(--weight-semibold) 0.875rem/var(--leading-snug) var(--font-ui);
     text-align: center;
     text-decoration: none;
     white-space: normal;
@@ -33,8 +33,8 @@
     box-shadow: none;
     transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
-.ui-button--sm { --button-size: var(--button-height-sm); --button-icon-size: 16px; padding: 5px 10px; }
-.ui-button--lg { --button-size: var(--button-height-lg); padding: 12px 18px; }
+.ui-button--sm { --button-size: var(--button-height-sm); --button-icon-size: 16px; padding: 4px 10px; }
+.ui-button--lg { --button-size: var(--button-height-lg); padding: 8px 16px; }
 .ui-button--primary { color: #fff; background: var(--primary-action); border-color: var(--primary-action); }
 .ui-button--primary:hover:not(:disabled):not([aria-disabled='true']) { color: #fff; background: var(--primary-action-strong); border-color: var(--primary-action-strong); }
 .ui-button--secondary:hover:not(:disabled):not([aria-disabled='true']) { color: var(--primary-strong); background: var(--primary-soft); border-color: var(--primary-strong); }
@@ -48,6 +48,9 @@
 .file-action-button--excel,
 .ui-button--icon-pdf,
 .file-action-button--pdf,
+.ui-button--icon-word,
+.file-action-button--word,
+.ui-button--icon-view,
 .ui-button--icon-edit,
 .ui-button--icon-delete {
     color: var(--ink) !important;
@@ -59,6 +62,11 @@
 .ui-button--icon-edit svg {
     color: var(--green, #15803d) !important;
 }
+.ui-button--icon-word svg,
+.file-action-button--word svg,
+.ui-button--icon-view svg {
+    color: var(--blue, #2563eb) !important;
+}
 .ui-button--icon-pdf svg,
 .file-action-button--pdf svg,
 .ui-button--icon-delete svg {
@@ -69,6 +77,12 @@
 .ui-button--icon-edit:hover:not(:disabled):not([aria-disabled='true']) {
     background: var(--surface-soft, #f8fafc) !important;
     border-color: var(--green, #16a34a) !important;
+}
+.ui-button--icon-word:hover:not(:disabled):not([aria-disabled='true']),
+.file-action-button--word:hover:not(:disabled):not([aria-disabled='true']),
+.ui-button--icon-view:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--surface-soft, #f8fafc) !important;
+    border-color: var(--blue, #2563eb) !important;
 }
 .ui-button--icon-pdf:hover:not(:disabled):not([aria-disabled='true']),
 .file-action-button--pdf:hover:not(:disabled):not([aria-disabled='true']),

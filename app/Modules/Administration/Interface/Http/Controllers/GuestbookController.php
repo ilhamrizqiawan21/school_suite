@@ -45,8 +45,10 @@ class GuestbookController extends Controller
             'school' => [
                 'name' => $school['name'],
                 'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'service_hours' => $school['service_hours'] ?? null,
                 'theme' => $school['theme'] ?? [],
             ],
+            'contentBlocks' => $school['content_blocks'] ?? [],
             'categories' => collect(GuestbookService::CATEGORIES)
                 ->map(static fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
                 ->values()

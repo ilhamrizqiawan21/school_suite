@@ -1,10 +1,39 @@
 @extends('public.layouts.madrasah')
 
-@php($schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara')
+@php
+  $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+  $hideDemo = (bool) ($hideDemoFallbacks ?? false);
+  $heroBlock = $contentBlocks['home.hero'] ?? [];
+  $welcomeBlock = $contentBlocks['home.welcome'] ?? [];
+  $ziBlock = $contentBlocks['home.zi'] ?? [];
+  $servicesBlock = $contentBlocks['home.services'] ?? [];
+  $programsBlock = $contentBlocks['home.programs'] ?? [];
+  $facilitiesBlock = $contentBlocks['home.facilities'] ?? [];
+  $newsBlock = $contentBlocks['home.news'] ?? [];
+  $achievementsBlock = $contentBlocks['home.achievements'] ?? [];
+  $galleryBlock = $contentBlocks['home.gallery'] ?? [];
+  $ppdbBlock = $contentBlocks['home.ppdb'] ?? [];
+  $contactBlock = $contentBlocks['home.contact'] ?? [];
+  $badgePrimary = ($heroBlock['badge_primary'] ?? null) ?: 'Madrasah Aliyah Negeri Riset & Adiwiyata Mandiri';
+  $badgeSecondary = ($heroBlock['badge_secondary'] ?? null) ?: 'Zona Integritas (WBK)';
+  $headlinePrefix = ($heroBlock['headline_prefix'] ?? null) ?: 'Mencetak Generasi';
+  $headlineHighlight = ($heroBlock['headline_highlight'] ?? null) ?: 'Qur’ani, Unggul Riset';
+  $headlineSuffix = ($heroBlock['headline_suffix'] ?? null) ?: ', dan Berintegritas';
+  $heroPitch = ($heroBlock['description'] ?? null) ?: sprintf(
+      'Selamat datang di Portal Resmi %s. Lembaga pendidikan Islam modern terakreditasi "%s" yang menghadirkan integrasi kedalaman ilmu syar\'i, sains teknologi abad 21, serta layanan digital terpadu.',
+      $schoolName,
+      ($profile['accreditation'] ?? null) ?: 'A'
+  );
+  $ctaPpdbLabel = ($heroBlock['cta_ppdb_label'] ?? null) ?: 'Daftar PPDB';
+  $ctaPtspLabel = ($heroBlock['cta_ptsp_label'] ?? null) ?: 'PTSP Online';
+  $ctaLaporLabel = ($heroBlock['cta_lapor_label'] ?? null) ?: 'Siap Lapor';
+  $ctaLacakLabel = ($heroBlock['cta_lacak_label'] ?? null) ?: 'Lacak Berkas';
+@endphp
 
 @section('content')
   <main id="main-content">
   <!-- Hero -->
+  @if (($heroBlock['visible'] ?? true) !== false)
   <section class="relative bg-gradient-to-br from-kemenag-950 via-kemenag-900 to-slate-950 text-white py-12 lg:py-16 overflow-hidden border-b border-emerald-900/60">
     <!-- Ambient Radial Glows & Grid Pattern -->
     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#34d399_1px,transparent_1px)] [background-size:20px_20px]"></div>
@@ -24,44 +53,44 @@
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-yellow opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-accent-yellow"></span>
               </span>
-              <span>Madrasah Aliyah Negeri Riset &amp; Adiwiyata Mandiri</span>
+              <span>{{ $badgePrimary }}</span>
             </div>
             <a href="#zona-integritas" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-900/90 to-kemenag-950/90 hover:from-emerald-800 hover:to-kemenag-900 border border-emerald-400/40 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-200 shadow-md transition group">
               <i class="fa-solid fa-shield-heart text-amber-400 group-hover:scale-110 transition-transform"></i>
-              <span>Zona Integritas (WBK)</span>
+              <span>{{ $badgeSecondary }}</span>
             </a>
           </div>
 
           <!-- Main Headline -->
           <h1 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold font-sans leading-[1.15] tracking-tight text-white">
-            Mencetak Generasi <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-yellow via-yellow-200 to-emerald-300">Qur’ani, Unggul Riset</span>, dan Berintegritas
+            {{ $headlinePrefix }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-yellow via-yellow-200 to-emerald-300">{{ $headlineHighlight }}</span>{{ $headlineSuffix }}
           </h1>
 
           <!-- School Pitch -->
           <p class="text-xs sm:text-sm lg:text-base text-emerald-100/90 max-w-2xl leading-relaxed font-normal">
-            Selamat datang di Portal Resmi {{ $schoolName }}. Lembaga pendidikan Islam modern terakreditasi &quot;{{ ($profile['accreditation'] ?? null) ?: 'A' }}&quot; yang menghadirkan integrasi kedalaman ilmu syar&#39;i, sains teknologi abad 21, serta layanan digital terpadu.
+            {{ $heroPitch }}
           </p>
 
           <!-- 4 Direct Action Buttons -->
           <div class="pt-2 flex flex-wrap items-center gap-3">
             <a href="/ppdb" class="bg-gradient-to-r from-accent-gold via-amber-400 to-accent-gold hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm">
               <i class="fa-solid fa-graduation-cap"></i>
-              <span>Daftar PPDB</span>
+              <span>{{ $ctaPpdbLabel }}</span>
             </a>
 
             <a href="/layanan/ptsp" class="bg-gradient-to-r from-kemenag-700 to-emerald-700 hover:from-kemenag-600 hover:to-emerald-600 border border-emerald-400/40 text-white font-bold px-5 py-2.5 rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm shadow-md">
               <i class="fa-solid fa-stamp text-accent-yellow"></i>
-              <span>PTSP Online</span>
+              <span>{{ $ctaPtspLabel }}</span>
             </a>
 
             <a href="/layanan/lapor" class="bg-gradient-to-r from-rose-600 to-redbright-700 hover:from-rose-700 hover:to-redbright-800 border border-rose-400/40 text-white font-bold px-4 py-2.5 rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm shadow-md">
               <i class="fa-solid fa-shield-heart text-white"></i>
-              <span>Siap Lapor</span>
+              <span>{{ $ctaLaporLabel }}</span>
             </a>
 
             <a href="/lacak" class="bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white font-bold px-4 py-2.5 rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-xs sm:text-sm shadow-sm">
               <i class="fa-solid fa-magnifying-glass text-accent-yellow"></i>
-              <span>Lacak Berkas</span>
+              <span>{{ $ctaLacakLabel }}</span>
             </a>
           </div>
 
@@ -128,6 +157,7 @@
       </div>
     </div>
   </section>
+  @endif
 
   <!-- ================= 3. RUNNING CARDS: PINTASAN MODUL PENDUKUNG ================= -->
   <section class="relative bg-kemenag-950 py-3.5 overflow-hidden border-b border-emerald-800/40">
@@ -293,6 +323,7 @@
   </section>
 
   <!-- ================= SAMBUTAN KEPALA MADRASAH ================= -->
+  @if (($welcomeBlock['visible'] ?? true) !== false)
   <section id="sambutan" class="py-7 lg:py-8 bg-white border-b border-slate-200">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12">
       <div class="grid lg:grid-cols-12 gap-6 items-center">
@@ -307,15 +338,15 @@
 
         <div class="lg:col-span-8 space-y-4">
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-kemenag-800">
-            <i class="fa-solid fa-quote-left"></i> Sambutan Kepala Madrasah
+            <i class="fa-solid fa-quote-left"></i> {{ ($welcomeBlock['badge'] ?? null) ?: 'Sambutan Kepala Madrasah' }}
           </div>
           <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Meneguhkan Eksistensi Madrasah Unggul: Berakar pada Nilai Keislaman, Bertumbuh dalam Sains &amp; Teknologi, dan Mendunia dengan Karakter Mulia          </h2>
+            {{ ($welcomeBlock['title'] ?? null) ?: 'Meneguhkan Eksistensi Madrasah Unggul: Berakar pada Nilai Keislaman, Bertumbuh dalam Sains & Teknologi, dan Mendunia dengan Karakter Mulia' }}          </h2>
 
           <!-- Konten Teks Sambutan (2 Paragraf Awal + Sisanya Bisa Buka-Tutup) -->
           <div class="text-slate-600 text-sm sm:text-base leading-relaxed space-y-3 relative">
-            <p>Assalamu'alaikum Warahmatullahi Wabarakatuh.</p>
-              <p>Selamat datang di portal resmi madrasah.</p>          </div>
+            <p>{{ ($welcomeBlock['greeting'] ?? null) ?: 'Assalamu\'alaikum Warahmatullahi Wabarakatuh.' }}</p>
+              <p>{{ ($profile['principal_message'] ?? null) ?: (($welcomeBlock['lead'] ?? null) ?: 'Selamat datang di portal resmi madrasah.') }}</p>          </div>
 
           <!-- Tombol Aksi Buka/Tutup & Link Visi Misi -->
           <div class="pt-2 relative">
@@ -340,8 +371,10 @@
       </div>
     </div>
   </section>
+  @endif
 
   <!-- ================= ZONA INTEGRITAS & MAKLUMAT PELAYANAN ================= -->
+  @if (($ziBlock['visible'] ?? true) !== false)
     <section id="zona-integritas" class="py-10 lg:py-14 bg-gradient-to-b from-slate-50 via-white to-slate-50 border-b border-slate-200 relative overflow-hidden">
     <!-- Ambient Blur Glows -->
     <div class="absolute -top-24 -right-24 w-80 h-80 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none"></div>
@@ -683,8 +716,10 @@
 
     </div>
   </section>
+  @endif
 
   <!-- ================= PTSP & LAYANAN DIGITAL TERINTEGRASI ================= -->
+  @if (($servicesBlock['visible'] ?? true) !== false)
   <section id="layanan" class="py-7 lg:py-8 bg-gradient-to-br from-kemenag-800 via-kemenag-900 to-kemenag-950 text-white border-b border-kemenag-700/60">
     <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12">
 
@@ -913,6 +948,7 @@
 
     </div>
   </section>
+  @endif
 
   <!-- ================= PENDIDIK & TENAGA KEPENDIDIKAN (TEASER RINGKAS KE GURU.PHP) ================= -->
   <section class="py-7 lg:py-8 bg-slate-50 border-b border-slate-200">
@@ -1544,7 +1580,7 @@
               </div>
               <div>
                 <strong class="block text-slate-900 font-bold">Jam Layanan Kantor:</strong>
-                <span>Senin - Kamis: 07.30 - 16.00 WITA | Jum'at: 07.30 - 11.30 WITA</span>
+                <span>{{ ($profile['service_hours'] ?? null) ?: "Senin - Kamis: 07.30 - 16.00 WITA | Jum'at: 07.30 - 11.30 WITA" }}</span>
               </div>
             </div>
           </div>

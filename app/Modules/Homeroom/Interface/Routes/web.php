@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('layanan/izin-siswa')->name('homeroom.permits.public.')->group(function (): void {
     Route::get('/', [StudentPermitController::class, 'publicIndex'])->name('index');
     Route::post('/', [StudentPermitController::class, 'submit'])->middleware('throttle:uploads')->name('submit');
+    Route::post('/cari-siswa', [StudentPermitController::class, 'lookupStudent'])->middleware('throttle:sensitive')->name('lookup');
+    Route::post('/cek-status', [StudentPermitController::class, 'lookupStatus'])->middleware('throttle:sensitive')->name('status');
+    Route::post('/cek-token', [StudentPermitController::class, 'checkToken'])->middleware('throttle:sensitive')->name('check-token');
     Route::post('/{dispensation}/perbaiki', [StudentPermitController::class, 'resubmit'])->whereNumber('dispensation')->middleware('throttle:uploads')->name('resubmit');
     Route::get('/{dispensation}/pdf', [StudentPermitController::class, 'proofPdf'])->whereNumber('dispensation')->name('pdf');
     Route::get('/{dispensation}/lampiran', [StudentPermitController::class, 'downloadAttachment'])->whereNumber('dispensation')->name('attachment');

@@ -41,8 +41,10 @@ class UnifiedTrackingController extends Controller
             );
         }
 
+        $snapshot = $this->schoolScope->getPrimaryPublicSnapshot();
+
         return Inertia::render('Public/Tracking/Index', [
-            'school' => $this->schoolPayload($school),
+            'school' => $this->schoolPayload($school, $snapshot),
             'categories' => collect(UnifiedTrackingService::TRACKING_CATEGORIES)
                 ->map(static fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
                 ->values()
@@ -52,6 +54,7 @@ class UnifiedTrackingController extends Controller
                 'category' => array_key_exists($category, UnifiedTrackingService::TRACKING_CATEGORIES) ? $category : 'all',
             ],
             'result' => $result,
+            'contentBlocks' => $snapshot['content_blocks'] ?? [],
         ]);
     }
 
@@ -77,8 +80,10 @@ class UnifiedTrackingController extends Controller
             externalApplicantId: $applicant ? (int) $applicant['id'] : null,
         );
 
+        $snapshot = $this->schoolScope->getPrimaryPublicSnapshot();
+
         return Inertia::render('Public/Tracking/Index', [
-            'school' => $this->schoolPayload($school),
+            'school' => $this->schoolPayload($school, $snapshot),
             'categories' => collect(UnifiedTrackingService::TRACKING_CATEGORIES)
                 ->map(static fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
                 ->values()
@@ -88,16 +93,16 @@ class UnifiedTrackingController extends Controller
                 'category' => array_key_exists($category, UnifiedTrackingService::TRACKING_CATEGORIES) ? $category : 'all',
             ],
             'result' => $result,
+            'contentBlocks' => $snapshot['content_blocks'] ?? [],
         ]);
     }
 
     /**
+     * @param  array<string, mixed>  $snapshot
      * @return array<string, mixed>
      */
-    private function schoolPayload(School $school): array
+    private function schoolPayload(School $school, array $snapshot): array
     {
-        $snapshot = $this->schoolScope->getPrimaryPublicSnapshot();
-
         return [
             'name' => $school->name,
             'logo_url' => $school->logo_path ? route('branding.school', [$school, 'logo']) : null,

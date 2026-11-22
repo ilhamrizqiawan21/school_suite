@@ -34,6 +34,8 @@ class PtspAndTataUsahaTest extends TestCase
 
     private User $ptspOfficerA;
 
+    private User $principalA;
+
     private User $receptionistA;
 
     private User $teacherA;
@@ -66,6 +68,7 @@ class PtspAndTataUsahaTest extends TestCase
 
         $this->operatorA = $this->createUser($this->schoolA, $roles[RoleEnum::OPERATOR->value]->id, 'operator.a@test.sch.id', 'op_a');
         $this->ptspOfficerA = $this->createUser($this->schoolA, $roles[RoleEnum::PTSP->value]->id, 'ptsp.a@test.sch.id', 'ptsp_a');
+        $this->principalA = $this->createUser($this->schoolA, $roles[RoleEnum::PRINCIPAL->value]->id, 'principal.a@test.sch.id', 'principal_a');
         $this->receptionistA = $this->createUser($this->schoolA, $roles[RoleEnum::RECEPTIONIST->value]->id, 'resepsionis.a@test.sch.id', 'rec_a');
         $this->teacherA = $this->createUser($this->schoolA, $roles[RoleEnum::TEACHER->value]->id, 'guru.a@test.sch.id', 'guru_a');
         $this->operatorB = $this->createUser($this->schoolB, $roles[RoleEnum::OPERATOR->value]->id, 'operator.b@test.sch.id', 'op_b');
@@ -354,7 +357,14 @@ class PtspAndTataUsahaTest extends TestCase
                 'expected_version' => $ticket->fresh()->version,
             ])->assertRedirect();
 
-        $this->actingAs($this->ptspOfficerA)
+        $this->actingAs($this->ptspOfficerA)->post("/administrasi/ptsp/permohonan/{$draft->id}/terbitkan", [
+            'delivery_mode' => 'both',
+        ])->assertForbidden();
+        $this->assertNull($draft->fresh()->result_document_id);
+        $this->get('/administrasi/ptsp')->assertInertia(fn (Assert $page) => $page->where('canPublish', false)->where('canProcess', true));
+        $this->actingAs($this->principalA)->get('/administrasi/ptsp')->assertInertia(fn (Assert $page) => $page->where('canPublish', true)->where('canProcess', false));
+        $this->post('/administrasi/ptsp/katalog', [])->assertForbidden();
+        $this->actingAs($this->principalA)
             ->post("/administrasi/ptsp/permohonan/{$draft->id}/terbitkan", [
                 'delivery_mode' => 'both',
                 'mark_completed' => false,
@@ -759,6 +769,135 @@ class PtspAndTataUsahaTest extends TestCase
         ])->assertSessionHasErrors('photo');
 
         $this->assertDatabaseMissing('guestbook_visits', ['visitor_name' => 'Foto Tidak Valid']);
+    }
+
+    public function test_ptsp_duplicate_pickup_guard_reissue_revocation_cancellation_and_role_scope(): void
+    {
+        $service = PtspService::query()->create([
+            'school_id' => $this->schoolA->id,
+            'code' => 'SK-REKOM',
+            'name' => 'Surat Rekomendasi Siswa',
+            'category' => 'kesiswaan',
+            'required_documents' => [],
+            'estimated_duration' => '1 Hari Kerja',
+            'delivery_mode' => 'both',
+            'is_active' => true,
+            'is_published' => true,
+        ]);
+
+        // 1. Applicant submits request and then cancels it while still submitted
+        $this->post('/layanan/ptsp/ajukan', [
+            'ptsp_service_id' => $service->id,
+            'applicant_type' => 'student',
+            'applicant_name' => 'Rizky Pemohon Batal',
+            'purpose' => 'Rekomendasi lomba',
+            'verification_secret' => 'BATAL1',
+            'agreement_accepted' => true,
+        ])->assertRedirect();
+
+        /** @var PtspRequest $req1 */
+        $req1 = PtspRequest::query()->where('applicant_name', 'Rizky Pemohon Batal')->firstOrFail();
+        $ticket1 = ServiceTicket::query()->findOrFail($req1->service_ticket_id);
+
+        $this->post("/layanan/ptsp/{$ticket1->ticket_code}/batalkan", [
+            'reason' => 'Jadwal lomba ditunda oleh penyelenggara.',
+        ])->assertRedirect("/layanan/ptsp/resi/{$ticket1->ticket_code}");
+
+        $this->assertSame('cancelled', $req1->fresh()->status);
+        $this->assertSame('cancelled', $ticket1->fresh()->public_status);
+
+        // 2. Submit a second request for full issuance, duplicate pickup guard, reissue revocation, and staff cancellation
+        $this->post('/layanan/ptsp/ajukan', [
+            'ptsp_service_id' => $service->id,
+            'applicant_type' => 'student',
+            'applicant_name' => 'Nadia Pemohon Terbit',
+            'purpose' => 'Rekomendasi olimpiade sains',
+            'verification_secret' => 'NADIA2',
+            'agreement_accepted' => true,
+        ])->assertRedirect();
+
+        /** @var PtspRequest $req2 */
+        $req2 = PtspRequest::query()->where('applicant_name', 'Nadia Pemohon Terbit')->firstOrFail();
+        $ticket2 = ServiceTicket::query()->findOrFail($req2->service_ticket_id);
+
+        // Receptionist is isolated from PTSP document downloads and correspondence routes
+        $this->actingAs($this->receptionistA)
+            ->get('/administrasi/persuratan/surat-masuk')
+            ->assertForbidden();
+
+        // PTSP Officer CAN access incoming correspondence workspace
+        $this->actingAs($this->ptspOfficerA)
+            ->get('/administrasi/persuratan/surat-masuk')
+            ->assertOk();
+
+        // Principal issues first result document
+        $this->actingAs($this->principalA)
+            ->post("/administrasi/ptsp/permohonan/{$req2->id}/terbitkan", [
+                'delivery_mode' => 'both',
+                'mark_completed' => false,
+                'result_summary' => 'Rekomendasi versi pertama.',
+                'signatory_name' => 'Kepala Madrasah',
+                'signatory_title' => 'Kepala Madrasah',
+            ])->assertRedirect();
+
+        $firstDocId = (int) $req2->fresh()->result_document_id;
+        $this->assertGreaterThan(0, $firstDocId);
+
+        // Receptionist cannot download PTSP result document
+        $this->actingAs($this->receptionistA)
+            ->get("/administrasi/ptsp/permohonan/{$req2->id}/dokumen/{$firstDocId}")
+            ->assertForbidden();
+
+        // Principal re-issues result document -> first document is automatically revoked
+        $this->actingAs($this->principalA)
+            ->post("/administrasi/ptsp/permohonan/{$req2->id}/terbitkan", [
+                'delivery_mode' => 'both',
+                'mark_completed' => false,
+                'result_summary' => 'Rekomendasi versi kedua (revisi nama lomba).',
+                'signatory_name' => 'Kepala Madrasah',
+                'signatory_title' => 'Kepala Madrasah',
+            ])->assertRedirect();
+
+        $secondDocId = (int) $req2->fresh()->result_document_id;
+        $this->assertNotSame($firstDocId, $secondDocId);
+        $this->assertDatabaseHas('service_documents', [
+            'id' => $firstDocId,
+            'status' => 'revoked',
+        ]);
+        $this->assertDatabaseHas('service_documents', [
+            'id' => $secondDocId,
+            'status' => 'issued',
+        ]);
+
+        // Record physical pickup once -> succeeds; second attempt -> rejected with validation error
+        $this->actingAs($this->ptspOfficerA)
+            ->post("/administrasi/ptsp/permohonan/{$req2->id}/ambil-fisik", [
+                'physical_pickup_name' => 'Nadia Pemohon Terbit',
+            ])->assertRedirect();
+
+        $this->actingAs($this->ptspOfficerA)
+            ->post("/administrasi/ptsp/permohonan/{$req2->id}/ambil-fisik", [
+                'physical_pickup_name' => 'Pengambil Ganda',
+            ])->assertSessionHasErrors('physical_pickup_name');
+
+        // PTSP officer (without final approval authority) cannot cancel/revoke an already-issued request
+        $this->actingAs($this->ptspOfficerA)
+            ->post("/administrasi/ptsp/permohonan/{$req2->id}/batalkan", [
+                'reason' => 'Coba batalkan setelah terbit oleh petugas biasa.',
+            ])->assertForbidden();
+
+        // Principal can cancel and revoke the issued document with reason
+        $this->actingAs($this->principalA)
+            ->post("/administrasi/ptsp/permohonan/{$req2->id}/batalkan", [
+                'reason' => 'Dicabut karena ditemukan ketidaksesuaian data peserta.',
+            ])->assertRedirect();
+
+        $this->assertSame('cancelled', $req2->fresh()->status);
+        $this->assertDatabaseHas('service_documents', [
+            'id' => $secondDocId,
+            'status' => 'revoked',
+            'revocation_reason' => 'Dicabut karena ditemukan ketidaksesuaian data peserta.',
+        ]);
     }
 
     private function createUser(School $school, int $roleId, string $email, string $username): User

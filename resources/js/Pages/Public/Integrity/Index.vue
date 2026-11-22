@@ -20,17 +20,25 @@ const props = defineProps<{
             comment?: string | null;
         }[];
     };
+    integrityConfig?: {
+        declaration: string;
+        sop_category: string;
+        areas: string[];
+        service_options: string[];
+    };
 }>();
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
-const areas = [
+const declarationText = computed(() => props.integrityConfig?.declaration || 'Kami berkomitmen menyelenggarakan pelayanan pendidikan dan tata usaha yang cepat, transparan, akuntabel, bebas pungutan liar, dan berorientasi kepuasan masyarakat.');
+const sopCategory = computed(() => props.integrityConfig?.sop_category || 'sop');
+const areas = computed(() => props.integrityConfig?.areas?.length ? props.integrityConfig.areas : [
     'Manajemen Perubahan',
     'Penataan Tatalaksana',
     'Penataan Manajemen SDM',
     'Penguatan Akuntabilitas Kinerja',
     'Penguatan Pengawasan',
     'Peningkatan Kualitas Pelayanan Publik',
-];
+]);
 
 const form = useForm({
     respondent_name: '',
@@ -62,12 +70,12 @@ const submit = () => {
             <section class="zi-grid">
                 <article class="zi-card">
                     <h2>Maklumat Pelayanan</h2>
-                    <p>Kami berkomitmen menyelenggarakan pelayanan pendidikan dan tata usaha yang cepat, transparan, akuntabel, bebas pungutan liar, dan berorientasi kepuasan masyarakat.</p>
+                    <p>{{ declarationText }}</p>
                     <ul class="zi-areas">
                         <li v-for="area in areas" :key="area">{{ area }}</li>
                     </ul>
                     <div class="zi-links">
-                        <Link href="/pusat-unduh?category=sop" class="ui-button ui-button--secondary ui-button--md">Unduh SOP Layanan</Link>
+                        <Link :href="`/pusat-unduh?category=${sopCategory}`" class="ui-button ui-button--secondary ui-button--md">Unduh SOP Layanan</Link>
                         <Link href="/e-layanan?q=Aduan" class="ui-button ui-button--secondary ui-button--md">Kanal Pengaduan</Link>
                     </div>
                 </article>

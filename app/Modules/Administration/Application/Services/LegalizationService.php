@@ -6,12 +6,17 @@ namespace App\Modules\Administration\Application\Services;
 
 use App\Models\User;
 use App\Modules\Administration\Infrastructure\Models\LegalizationRequest;
+use App\Modules\Core\Application\Services\AccessScopeService;
 use App\Modules\Core\Application\Services\NotificationOutboxService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
 use App\Modules\Core\Application\Services\ServiceTicketService;
 use App\Modules\Core\Domain\ServiceWorkflowMap;
 use App\Shared\Audit\AuditLogger;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +31,7 @@ class LegalizationService
 {
     public function __construct(
         private readonly SchoolScopeService $schoolScope,
+        private readonly AccessScopeService $accessScope,
         private readonly ServiceTicketService $ticketService,
         private readonly ServiceDocumentService $documentService,
         private readonly NotificationOutboxService $outbox,
@@ -231,11 +237,14 @@ class LegalizationService
                 ? 'administration.power-of-attorney'
                 : 'administration.sptjm';
 
+            $qrDataUri = $this->buildQrDataUri(url('/verifikasi?code='.urlencode($docNumberHint)));
+
             $bytes = Pdf::loadView($view, [
                 'school' => $school,
                 'payload' => $payload,
                 'documentNumber' => $docNumberHint,
                 'verificationToken' => $verificationToken,
+                'qrDataUri' => $qrDataUri,
             ])->setPaper('a4')->output();
 
             $doc = $this->documentService->issueGeneratedDocument(
@@ -283,6 +292,7 @@ class LegalizationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $req->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, $schoolId), 403);
 
         return DB::transaction(function () use ($actor, $schoolId, $req, $note): LegalizationRequest {
             /** @var LegalizationRequest $locked */
@@ -328,6 +338,7 @@ class LegalizationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $req->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canApproveFinalDecision($actor, $schoolId) && $this->accessScope->canSignOfficialDocument($actor, $schoolId), 403);
 
         return DB::transaction(function () use ($actor, $schoolId, $req, $signatoryName, $signatoryTitle): LegalizationRequest {
             /** @var LegalizationRequest $locked */
@@ -342,6 +353,8 @@ class LegalizationService
             $sigName = trim((string) ($signatoryName ?: $actor->name));
             $sigTitle = trim((string) ($signatoryTitle ?: 'Kepala Tata Usaha / Pejabat Legalisir'));
 
+            $qrDataUri = $this->buildQrDataUri(url('/verifikasi?code='.urlencode($locked->legalization_code)));
+
             $bytes = Pdf::loadView('administration.legalization-proof', [
                 'school' => $school,
                 'legalization' => $locked,
@@ -349,6 +362,7 @@ class LegalizationService
                 'signatoryName' => $sigName,
                 'signatoryTitle' => $sigTitle,
                 'verificationToken' => $verificationToken,
+                'qrDataUri' => $qrDataUri,
             ])->setPaper('a4')->output();
 
             $doc = $this->documentService->issueGeneratedDocument(
@@ -421,6 +435,7 @@ class LegalizationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $req->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, $schoolId), 403);
 
         $cleanReason = trim($reason);
         if ($cleanReason === '') {
@@ -465,6 +480,7 @@ class LegalizationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $req->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canVerifyQueue($actor, $schoolId), 403);
 
         $cleanName = trim($pickedUpByName);
         if ($cleanName === '') {
@@ -514,5 +530,17 @@ class LegalizationService
 
             return $locked->refresh();
         });
+    }
+
+    private function buildQrDataUri(string $url): string
+    {
+        $writer = new Writer(
+            new ImageRenderer(
+                new RendererStyle(160, 2),
+                new SvgImageBackEnd,
+            ),
+        );
+
+        return 'data:image/svg+xml;base64,'.base64_encode($writer->writeString($url));
     }
 }

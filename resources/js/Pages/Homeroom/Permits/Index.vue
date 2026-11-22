@@ -168,7 +168,7 @@ const submitCorrection = () => {
                 <StateFeedback v-else state="empty" title="Belum ada permohonan izin" description="Permohonan izin yang diajukan wali atau siswa akan muncul di sini." />
             </section>
 
-            <div v-if="selectedPermit" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="perm-modal-title">
+            <div v-if="selectedPermit" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="perm-modal-title" @click.self="selectedPermit = null" @keydown.esc="selectedPermit = null">
                 <div class="modal-card">
                     <header class="modal-head">
                         <h2 id="perm-modal-title">{{ modalMode === 'decide' ? 'Putuskan Permohonan Izin' : 'Koreksi Keputusan Izin' }}</h2>
@@ -225,6 +225,7 @@ const submitCorrection = () => {
 .table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .data-table th, .data-table td { padding: .7rem .65rem; border-bottom: 1px solid var(--line, #dee4ee); text-align: left; vertical-align: top; }
+.data-table th { text-align: center; }
 .sub-text { font-size: .78rem; color: var(--ink-soft, #536174); margin-top: .15rem; }
 .row-actions { display: flex; gap: .4rem; }
 .modal-backdrop { position: fixed; inset: 0; background: rgb(15 23 42 / 55%); display: grid; place-items: center; padding: 1rem; z-index: 60; }

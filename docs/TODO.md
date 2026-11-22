@@ -1,5 +1,7 @@
 # Master Plan & Workflow Eksekusi: School Suite (End-to-End sampai Deploy)
 
+**Fokus aktif — 22 November 2026:** [TODO Panel Admin, Konten Publik, Role, dan Integrasi Backend](TODO_ADMIN_PUBLIC_INTEGRATION.md). Halaman publik yang telah disetujui menjadi acuan; admin/backend menyesuaikan, seluruh konten publik dikelola tanpa kode, dan UI admin mengikuti repo `standar-ui-project` yang ditunjuk pemilik produk. Status historis di bawah tidak otomatis menjadi bukti penerimaan pekerjaan baru ini.
+
 > **Dokumen ini adalah rencana kerja komprehensif** yang memetakan seluruh siklus pengembangan School Suite mulai dari Fondasi (S01), Operasi Akademik & Penilaian Pilot (S02–S07), Deployment Production & Hardening (S08), hingga Ekspansi Modul Pasca-Pilot (S09–S14).
 
 ```mermaid

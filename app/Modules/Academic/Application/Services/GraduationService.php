@@ -19,6 +19,10 @@ use App\Modules\Core\Application\Services\ServiceDocumentService;
 use App\Modules\Core\Application\Services\ServiceTicketService;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Shared\Audit\AuditLogger;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -144,6 +148,7 @@ class GraduationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $batch->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canApproveFinalDecision($actor, $schoolId) && $this->accessScope->canSignOfficialDocument($actor, $schoolId), 403);
 
         $tz = $this->schoolScope->getTimezone($schoolId);
         $appTz = (string) config('app.timezone', 'UTC');
@@ -195,6 +200,7 @@ class GraduationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $record->school_id === $schoolId, 404);
+        abort_unless($this->accessScope->canApproveFinalDecision($actor, $schoolId) && $this->accessScope->canSignOfficialDocument($actor, $schoolId), 403);
 
         $cleanReason = trim($reason);
         if ($cleanReason === '') {
@@ -233,6 +239,10 @@ class GraduationService
     {
         $schoolId = (int) $actor->school_id;
         abort_unless((int) $record->school_id === $schoolId, 404);
+
+        if ($record->original_collected_at !== null) {
+            throw ValidationException::withMessages(['collected_by' => 'Dokumen kelulusan asli untuk siswa ini sudah pernah tercatat diambil.']);
+        }
 
         $cleanName = trim($collectorName);
         if ($cleanName === '') {
@@ -330,7 +340,7 @@ class GraduationService
             return false;
         }
 
-        if ($user !== null && (int) $user->school_id === $schoolId && $user->hasRole([RoleEnum::ADMIN->value, RoleEnum::OPERATOR->value, RoleEnum::PRINCIPAL->value])) {
+        if ($user !== null && (int) $user->school_id === $schoolId && $user->hasRole([RoleEnum::ADMIN->value, RoleEnum::OPERATOR->value, RoleEnum::PRINCIPAL->value, RoleEnum::SIGNATORY->value])) {
             return true;
         }
 
@@ -438,6 +448,9 @@ class GraduationService
         ], $actor);
 
         $verificationToken = Str::random(40);
+        $verifyUrl = rtrim((string) config('app.url'), '/').'/verifikasi?code='.urlencode($verificationToken);
+        $writer = new Writer(new ImageRenderer(new RendererStyle(160, 2), new SvgImageBackEnd));
+        $qrVerify = base64_encode($writer->writeString($verifyUrl));
 
         $pdfBytes = Pdf::loadView('academic.graduation-skl', [
             'school' => $school,
@@ -446,6 +459,8 @@ class GraduationService
             'student' => $student,
             'documentNumber' => $record->skl_number,
             'verificationToken' => $verificationToken,
+            'verifyUrl' => $verifyUrl,
+            'qrVerify' => $qrVerify,
         ])->setPaper('a4')->output();
 
         $doc = $this->documentService->issueGeneratedDocument(

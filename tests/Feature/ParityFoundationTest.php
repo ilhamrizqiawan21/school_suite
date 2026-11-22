@@ -171,6 +171,27 @@ class ParityFoundationTest extends TestCase
         $this->assertTrue($scope->canAccessStudentScope($studentUserA, $this->schoolA->id, $studentA->id));
         $this->assertFalse($scope->canAccessStudentScope($studentUserA, $this->schoolA->id, $studentB->id));
         $this->assertFalse($scope->canAccessStudentScope($ptspOtherSchool, $this->schoolA->id, $studentA->id));
+
+        // D-03 Separation of duties: verifier vs final approver / signatory
+        $operatorA = $this->makeUser($this->schoolA, RoleEnum::OPERATOR, 'op.duties@a.test');
+        $principalA = $this->makeUser($this->schoolA, RoleEnum::PRINCIPAL, 'kepsek.duties@a.test');
+        $signatoryA = $this->makeUser($this->schoolA, RoleEnum::SIGNATORY, 'ttd.duties@a.test');
+
+        $this->assertTrue($scope->canVerifyQueue($operatorA, $this->schoolA->id));
+        $this->assertFalse($scope->canApproveFinalDecision($operatorA, $this->schoolA->id));
+        $this->assertFalse($scope->canSignOfficialDocument($operatorA, $this->schoolA->id));
+
+        $this->assertFalse($scope->canVerifyQueue($principalA, $this->schoolA->id));
+        $this->assertTrue($scope->canApproveFinalDecision($principalA, $this->schoolA->id));
+        $this->assertTrue($scope->canSignOfficialDocument($principalA, $this->schoolA->id));
+        $this->assertTrue($scope->canSignOfficialDocument($signatoryA, $this->schoolA->id));
+
+        // AP-01.11 Post-login return path allowlist (prevents open redirect)
+        $allowed = ['/layanan/ptsp', '/layanan/tracer-alumni'];
+        $this->assertSame('/layanan/tracer-alumni', $scope->sanitizeReturnPath('/layanan/tracer-alumni', $allowed, '/layanan/ptsp'));
+        $this->assertSame('/layanan/ptsp', $scope->sanitizeReturnPath('https://evil.example/phish', $allowed, '/layanan/ptsp'));
+        $this->assertSame('/layanan/ptsp', $scope->sanitizeReturnPath('//evil.example/phish', $allowed, '/layanan/ptsp'));
+        $this->assertSame('/layanan/ptsp', $scope->sanitizeReturnPath('/pengaturan/pengguna', $allowed, '/layanan/ptsp'));
     }
 
     public function test_external_applicant_timezone_and_ticket_concurrency_idempotency_and_lookup(): void
@@ -544,6 +565,51 @@ class ParityFoundationTest extends TestCase
             'school_id' => $this->schoolA->id,
             'event_type' => 'notification.retried',
         ]);
+    }
+
+    public function test_verification_supports_qr_code_query_and_dashboard_exposes_scoped_operational_metrics(): void
+    {
+        $admin = $this->makeUser($this->schoolA, RoleEnum::ADMIN, 'admin-qr@a.test');
+        $docService = app(ServiceDocumentService::class);
+        $doc = $docService->issueGeneratedDocument(
+            schoolId: $this->schoolA->id,
+            bytes: '%PDF-1.4 fake pdf content',
+            payload: [
+                'document_kind' => 'ptsp_letter',
+                'number_prefix' => 'PTSP',
+                'template_key' => 'ptsp_result',
+                'verification_token' => 'VERIF-QR-TEST-001',
+                'original_name' => 'ptsp-qr.pdf',
+                'signatory_name' => 'Kepala Madrasah',
+                'signatory_title' => 'Kepala',
+            ],
+            actor: $admin,
+        );
+
+        $this->get('/verifikasi?code='.$doc->verification_token)
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Public/Verification/Index')
+                ->where('documentResult.found', true)
+                ->where('documentResult.status', 'valid'));
+
+        $ptspUser = $this->makeUser($this->schoolA, RoleEnum::PTSP, 'ptsp-dash@a.test');
+        $this->actingAs($ptspUser)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->has('stats.role_metrics.ptsp_open')
+                ->has('stats.role_metrics.external_letters_open'));
+
+        $librarian = $this->makeUser($this->schoolA, RoleEnum::LIBRARIAN, 'lib-dash@a.test');
+        $this->actingAs($librarian)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->has('stats.role_metrics.library_collections')
+                ->has('stats.role_metrics.active_loans'));
     }
 
     private function makeUser(School $school, RoleEnum $role, string $email): User

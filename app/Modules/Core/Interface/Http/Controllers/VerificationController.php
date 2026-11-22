@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
+use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,7 +26,7 @@ class VerificationController extends Controller
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
         $schoolId = (int) $school['id'];
 
-        $token = trim((string) $request->query('kode', ''));
+        $token = trim((string) ($request->query('code') ?: $request->query('kode', '')));
         $docResult = $token !== '' ? $this->documentService->verifyPublicDocument($schoolId, $token) : null;
 
         return Inertia::render('Public/Verification/Index', [
@@ -81,6 +82,8 @@ class VerificationController extends Controller
     {
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
         $schoolId = (int) $school['id'];
+        $schoolModel = School::query()->find($schoolId);
+        $hideDemo = (bool) ($schoolModel?->publicContentRegistry()['published']['shell.options']['hide_demo_fallbacks'] ?? false);
 
         return Inertia::render('Public/Students/Index', [
             'school' => [
@@ -89,6 +92,7 @@ class VerificationController extends Controller
                 'theme' => $school['theme'] ?? [],
             ],
             'summary' => $this->academicQuery->publicStudentSummary($schoolId),
+            'showDemoDirectory' => app()->isLocal() && ! $hideDemo,
             'studentResult' => null,
         ]);
     }
@@ -97,6 +101,8 @@ class VerificationController extends Controller
     {
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
         $schoolId = (int) $school['id'];
+        $schoolModel = School::query()->find($schoolId);
+        $hideDemo = (bool) ($schoolModel?->publicContentRegistry()['published']['shell.options']['hide_demo_fallbacks'] ?? false);
 
         $validated = $request->validate([
             'nisn' => ['required', 'string', 'max:30'],
@@ -110,6 +116,7 @@ class VerificationController extends Controller
                 'theme' => $school['theme'] ?? [],
             ],
             'summary' => $this->academicQuery->publicStudentSummary($schoolId),
+            'showDemoDirectory' => app()->isLocal() && ! $hideDemo,
             'studentResult' => $this->academicQuery->verifyPublicStudentStatus($schoolId, $validated['nisn'], $validated['name']),
         ]);
     }

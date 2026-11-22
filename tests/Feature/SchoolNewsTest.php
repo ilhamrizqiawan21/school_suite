@@ -58,6 +58,17 @@ class SchoolNewsTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_publish_and_recategorize_alumni_opportunities(): void
+    {
+        $payload = ['title' => 'Peluang Karir Alumni', 'body' => 'Informasi karir dari sekolah.', 'status' => 'published', 'category' => 'karir-alumni'];
+        $this->actingAs($this->admin)->post('/pengaturan/berita', $payload)->assertSessionHasNoErrors();
+        $news = SchoolNews::query()->where('title', $payload['title'])->firstOrFail();
+        $this->assertSame('karir-alumni', $news->category);
+        $this->get('/alumni')->assertInertia(fn (Assert $page) => $page->has('opportunities.careers', 1));
+        $this->put('/pengaturan/berita/'.$news->id, [...$payload, 'category' => 'beasiswa-alumni'])->assertSessionHasNoErrors();
+        $this->get('/alumni')->assertInertia(fn (Assert $page) => $page->has('opportunities.careers', 0)->has('opportunities.scholarships', 1));
+    }
+
     public function test_operator_can_manage_news_but_teacher_cannot(): void
     {
         $this->actingAs($this->operator)->get('/pengaturan/berita')->assertOk()->assertInertia(fn (Assert $page) => $page

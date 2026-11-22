@@ -58,6 +58,7 @@ class SchoolNewsController extends Controller
 
         $photos = $validated['photos'] ?? [];
         $captions = $validated['photo_captions'] ?? [];
+        $isArchived = (bool) ($validated['is_archived'] ?? false);
         unset($validated['status'], $validated['photos'], $validated['photo_captions']);
         $news = SchoolNews::create([
             ...$validated,
@@ -65,6 +66,7 @@ class SchoolNewsController extends Controller
             'author_id' => $request->user()->id,
             'slug' => $this->uniqueSlug((string) $validated['title'], (int) $request->user()->school_id),
             'status' => $status,
+            'is_archived' => $isArchived,
             'published_at' => $status === 'published' ? ($validated['published_at'] ?? now()) : null,
         ]);
         $this->storePhotos($photos, $news, $captions);
@@ -89,6 +91,9 @@ class SchoolNewsController extends Controller
 
         $photos = $validated['photos'] ?? [];
         $captions = $validated['photo_captions'] ?? [];
+        $isArchived = array_key_exists('is_archived', $validated)
+            ? (bool) $validated['is_archived']
+            : (bool) $item->is_archived;
         unset($validated['status'], $validated['photos'], $validated['photo_captions']);
         if ($item->photos()->count() + count($photos) > 5) {
             throw ValidationException::withMessages(['photos' => 'Maksimal 5 foto per berita. Hapus foto lama terlebih dahulu.']);
@@ -96,6 +101,7 @@ class SchoolNewsController extends Controller
         $item->update([
             ...$validated,
             'status' => $status,
+            'is_archived' => $isArchived,
             'published_at' => $status === 'published' ? ($validated['published_at'] ?? $item->published_at ?? now()) : null,
         ]);
         $this->storePhotos($photos, $item, $captions);
@@ -152,10 +158,15 @@ class SchoolNewsController extends Controller
                 return Inertia::location($request->fullUrl());
             }
 
-            return response()->view('public.madrasah.news', [
-                ...$this->portalService->madrasahShellData($school),
-                'news' => $news->all(),
-            ]);
+            $shell = $this->portalService->madrasahShellData($school);
+
+            return $this->portalService->applyPreviewResponseHeaders(
+                response()->view('public.madrasah.news', [
+                    ...$shell,
+                    'news' => $news->all(),
+                ]),
+                (bool) ($shell['isDraftPreview'] ?? false),
+            );
         }
 
         return Inertia::render('Public/News/Index', [
@@ -198,9 +209,11 @@ class SchoolNewsController extends Controller
     {
         return $request->validate([
             'title' => ['required', 'string', 'max:180'],
+            'category' => ['sometimes', 'required', 'string', 'max:50'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'body' => ['required', 'string', 'max:20000'],
             'status' => ['required', Rule::in(['draft', 'published'])],
+            'is_archived' => ['sometimes', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'photos' => ['nullable', 'array', 'max:5'],
             'photos.*' => [File::image()->types(['jpg', 'jpeg', 'png', 'webp'])->max(2048)],
@@ -251,6 +264,7 @@ class SchoolNewsController extends Controller
         return SchoolNews::query()
             ->where('school_id', $school->id)
             ->where('status', 'published')
+            ->where('is_archived', false)
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->latest('published_at');
@@ -263,8 +277,10 @@ class SchoolNewsController extends Controller
             'id' => $item->id,
             'title' => $item->title,
             'slug' => $item->slug,
+            'category' => $item->category,
             'excerpt' => $item->excerpt,
             'status' => $item->status,
+            'is_archived' => (bool) $item->is_archived,
             'published_at' => $item->published_at?->toIso8601String(),
             'photos' => $item->relationLoaded('photos') ? $item->photos->map(fn (SchoolNewsPhoto $photo): array => [
                 'id' => $photo->id,

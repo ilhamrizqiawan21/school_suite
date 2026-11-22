@@ -68,7 +68,10 @@ final class ServiceWorkflowMap
         self::STATUS_REJECTED => [
             self::STATUS_IN_REVIEW, // Controlled correction/re-evaluation by authorized officer
         ],
-        self::STATUS_COMPLETED => [],
+        self::STATUS_COMPLETED => [
+            self::STATUS_REJECTED, // Controlled correction by authorized officer/homeroom
+            self::STATUS_CANCELLED, // Authorized revocation of an issued result document
+        ],
         self::STATUS_CANCELLED => [],
         self::STATUS_EXPIRED => [],
     ];

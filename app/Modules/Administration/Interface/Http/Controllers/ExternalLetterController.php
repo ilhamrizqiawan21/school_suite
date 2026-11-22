@@ -35,6 +35,7 @@ class ExternalLetterController extends Controller
                 'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
                 'theme' => $school['theme'] ?? [],
             ],
+            'contentBlocks' => $school['content_blocks'] ?? [],
             'urgencyOptions' => [
                 ['value' => 'ordinary', 'label' => 'Biasa'],
                 ['value' => 'important', 'label' => 'Penting'],

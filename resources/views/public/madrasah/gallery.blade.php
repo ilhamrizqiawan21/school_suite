@@ -15,6 +15,7 @@
       ['title' => 'Pekan Olahraga & Kebugaran Santri', 'caption' => 'Kompetisi olahraga antarkelas membangun sportivitas.', 'category' => 'Olahraga', 'url' => '/madrasah-theme/images/sports.webp'],
   ];
 
+  $hideDemo = (bool) ($hideDemoFallbacks ?? false);
   $items = count($albums ?? []) > 0
       ? collect($albums)->map(fn ($album) => [
           'title' => $album['title'],
@@ -22,7 +23,7 @@
           'category' => 'Dokumentasi',
           'url' => $album['photos'][0]['url'] ?? '/madrasah-theme/images/campus.webp',
       ])->all()
-      : $dummyGallery;
+      : ($hideDemo ? [] : $dummyGallery);
 
   $categories = array_values(array_unique(array_column($items, 'category')));
 

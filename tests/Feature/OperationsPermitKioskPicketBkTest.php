@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Modules\Academic\Application\Services\AcademicQueryService;
 use App\Modules\Academic\Infrastructure\Models\AcademicYear;
 use App\Modules\Academic\Infrastructure\Models\AttendanceRecord;
 use App\Modules\Academic\Infrastructure\Models\ClassGroup;
@@ -17,6 +18,7 @@ use App\Modules\Academic\Infrastructure\Models\Term;
 use App\Modules\Core\Application\Services\RolePermissionRegistryService;
 use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Core\Infrastructure\Models\School;
+use App\Modules\Homeroom\Application\Services\PermitWorkflowService;
 use App\Modules\Homeroom\Infrastructure\Models\AttendanceDispensation;
 use App\Modules\Homeroom\Infrastructure\Models\GatePass;
 use App\Modules\Homeroom\Infrastructure\Models\StudentIncident;
@@ -31,6 +33,79 @@ use Tests\TestCase;
 class OperationsPermitKioskPicketBkTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_public_permit_lookup_and_submission_use_a_school_bound_session_without_exposing_private_data(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 11, 20, 7, 0, 0, 'Asia/Makassar'));
+        Storage::fake('local');
+        try {
+            $this->postJson('/layanan/izin-siswa/cari-siswa', ['query' => $this->studentB1->name])->assertNotFound();
+            $this->postJson('/layanan/izin-siswa/cari-siswa', ['query' => $this->studentA1->name])
+                ->assertOk()->assertJsonPath('student.student_id', $this->studentA1->id)
+                ->assertJsonMissingPath('student.phone')->assertJsonMissingPath('student.address');
+            $payload = [
+                'student_query' => $this->studentA1->name, 'type' => 'sick',
+                'start_date' => '2026-11-20', 'end_date' => '2026-11-20',
+                'title' => 'Sakit', 'reason' => 'Demam', 'contact_name' => 'Wali Siswa',
+                'contact_phone' => '081234567890', 'contact_relationship' => 'father',
+                'signature_data' => 'data:image/png;base64,iVBORw0KGgo=',
+            ];
+            $this->post('/layanan/izin-siswa', $payload)->assertSessionHasNoErrors()->assertRedirect('/layanan/izin-siswa');
+            $permit = AttendanceDispensation::query()->where('student_id', $this->studentA1->id)->firstOrFail();
+            $this->postJson('/layanan/izin-siswa/cek-status', ['query' => $this->studentA1->name])
+                ->assertOk()->assertJsonCount(1, 'permits')->assertJsonPath('permits.0.status', 'pending')
+                ->assertJsonMissingPath('permits.0.reason')->assertJsonMissingPath('permits.0.contact_phone')
+                ->assertJsonMissingPath('permits.0.signature_data');
+            $this->post('/layanan/izin-siswa', $payload)->assertSessionHasErrors('start_date');
+            $this->assertSame(1, AttendanceDispensation::query()->where('student_id', $this->studentA1->id)->count());
+            $this->get('/layanan/izin-siswa/'.$permit->id.'/pdf')->assertOk();
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_public_permit_closed_hours_require_a_student_bound_token_and_medical_evidence(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 11, 20, 10, 0, 0, 'Asia/Makassar'));
+        try {
+            $this->postJson('/layanan/izin-siswa/cek-token', ['token' => 'invalid'])->assertForbidden();
+            $payload = [
+                'student_query' => $this->studentA1->name, 'type' => 'sick',
+                'start_date' => '2026-11-20', 'end_date' => '2026-11-20',
+                'title' => 'Sakit', 'reason' => 'Demam', 'contact_name' => 'Wali Siswa',
+                'contact_phone' => '081234567890', 'contact_relationship' => 'father',
+                'signature_data' => 'data:image/png;base64,iVBORw0KGgo=',
+            ];
+            $this->post('/layanan/izin-siswa', $payload)->assertSessionHasErrors('student_query');
+            $this->postJson('/layanan/izin-siswa/cari-siswa', ['query' => $this->studentA1->name])->assertOk();
+            $this->post('/layanan/izin-siswa', $payload)->assertSessionHasErrors('one_time_token');
+            $payload['end_date'] = '2026-11-22';
+            $this->post('/layanan/izin-siswa', $payload)->assertSessionHasErrors('attachment');
+            $this->assertDatabaseCount('attendance_dispensations', 0);
+            $payload['end_date'] = '2026-11-20';
+            $token = app(PermitWorkflowService::class)->issuePermitToken($this->adminA, $this->studentA1->id)['token'];
+            $this->postJson('/layanan/izin-siswa/cek-token', ['token' => $token])->assertOk()->assertJsonPath('valid', true);
+            $this->assertNull(StudentPermitToken::query()->firstOrFail()->used_at);
+            $payload['one_time_token'] = $token;
+            $this->post('/layanan/izin-siswa', $payload)->assertSessionHasNoErrors();
+            $this->assertNotNull(StudentPermitToken::query()->firstOrFail()->fresh()->used_at);
+            $this->postJson('/layanan/izin-siswa/cek-token', ['token' => $token])->assertUnprocessable();
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_permit_student_resolution_requires_an_exact_unique_active_match_in_the_school(): void
+    {
+        $query = app(AcademicQueryService::class);
+        $this->assertSame($this->studentA1->id, $query->resolveActivePermitStudentId($this->schoolA->id, mb_strtolower($this->studentA1->name)));
+        $this->assertNull($query->resolveActivePermitStudentId($this->schoolB->id, $this->studentA1->name));
+        $this->assertNull($query->resolveActivePermitStudentId($this->schoolA->id, ''));
+        $this->studentA2->update(['name' => $this->studentA1->name]);
+        $this->assertNull($query->resolveActivePermitStudentId($this->schoolA->id, $this->studentA1->name));
+        $this->studentA2->update(['status' => 'transferred']);
+        $this->assertSame($this->studentA1->id, $query->resolveActivePermitStudentId($this->schoolA->id, $this->studentA1->name));
+    }
 
     private School $schoolA;
 
@@ -515,6 +590,16 @@ class OperationsPermitKioskPicketBkTest extends TestCase
             'event_type' => 'homeroom.dispensation.corrected',
             'target_id' => (string) $dispensation->id,
         ]);
+        $this->assertDatabaseHas('service_tickets', [
+            'id' => $dispensation->service_ticket_id,
+            'public_status' => 'rejected',
+        ]);
+
+        // Security guard cannot download medical attachment of student permit
+        $this->flushSession();
+        $this->actingAs($this->guardUser)
+            ->get("/layanan/izin-siswa/{$dispensation->id}/lampiran")
+            ->assertForbidden();
     }
 
     public function test_kiosk_card_registry_atomic_dedup_offline_sync_and_revoked_rejection(): void

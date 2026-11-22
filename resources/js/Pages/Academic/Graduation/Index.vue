@@ -5,6 +5,7 @@ import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 interface GraduationRecordItem {
     id: number;
@@ -35,6 +36,9 @@ interface GraduationBatchItem {
 }
 
 const props = defineProps<{
+    canProcess: boolean;
+    canManageRecords: boolean;
+    canPublish: boolean;
     years: { id: number; name: string; is_active: boolean }[];
     batches: GraduationBatchItem[];
     students: { student_id: number; name: string; nis: string }[];
@@ -65,6 +69,7 @@ const publishForm = useForm({
 
 const reissueForm = useForm({ reason: '' });
 const collectedForm = useForm({ collected_by: '', relation: 'Siswa Bersangkutan' });
+const activeRecordModal = ref<{ id: number; student_name: string; mode: 'reissue' | 'collect' } | null>(null);
 
 const createBatch = () => {
     batchForm.post('/akademik/kelulusan/batch', { preserveScroll: true });
@@ -79,18 +84,28 @@ const publish = (batchId: number) => {
     publishForm.post(`/akademik/kelulusan/batch/${batchId}/terbitkan`, { preserveScroll: true });
 };
 
-const reissue = (recordId: number) => {
-    const reason = window.prompt('Masukkan alasan penerbitan ulang SKL:');
-    if (!reason) return;
-    reissueForm.reason = reason;
-    reissueForm.post(`/akademik/kelulusan/skl/${recordId}/terbitkan-ulang`, { preserveScroll: true });
+const openRecordModal = (rec: GraduationRecordItem, mode: 'reissue' | 'collect') => {
+    activeRecordModal.value = { id: rec.id, student_name: rec.student_name, mode };
+    reissueForm.reset();
+    reissueForm.clearErrors();
+    collectedForm.reset();
+    collectedForm.clearErrors();
 };
 
-const markCollected = (recordId: number) => {
-    const who = window.prompt('Nama pengambil dokumen kelulusan asli:');
-    if (!who) return;
-    collectedForm.collected_by = who;
-    collectedForm.post(`/akademik/kelulusan/skl/${recordId}/ambil-asli`, { preserveScroll: true });
+const submitReissue = () => {
+    if (!activeRecordModal.value) return;
+    reissueForm.post(`/akademik/kelulusan/skl/${activeRecordModal.value.id}/terbitkan-ulang`, {
+        preserveScroll: true,
+        onSuccess: () => { activeRecordModal.value = null; },
+    });
+};
+
+const submitCollected = () => {
+    if (!activeRecordModal.value) return;
+    collectedForm.post(`/akademik/kelulusan/skl/${activeRecordModal.value.id}/ambil-asli`, {
+        preserveScroll: true,
+        onSuccess: () => { activeRecordModal.value = null; },
+    });
 };
 </script>
 
@@ -109,7 +124,7 @@ const markCollected = (recordId: number) => {
             </div>
 
             <div class="grid gap-6 lg:grid-cols-2">
-                <form @submit.prevent="createBatch" class="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+                <form v-if="canManageRecords" @submit.prevent="createBatch" class="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
                     <h2 class="text-base font-semibold text-slate-900">Buat Batch Kelulusan</h2>
                     <FormField id="grad-year" label="Tahun Ajaran" required>
                         <select id="grad-year" v-model="batchForm.academic_year_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -125,7 +140,7 @@ const markCollected = (recordId: number) => {
                     <AppButton type="submit" :disabled="batchForm.processing">Simpan Batch</AppButton>
                 </form>
 
-                <form v-if="batches.length" @submit.prevent="addStudent" class="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+                <form v-if="canManageRecords && batches.length" @submit.prevent="addStudent" class="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
                     <h2 class="text-base font-semibold text-slate-900">Tambah / Perbarui Siswa di Batch</h2>
                     <FormField id="grad-rec-batch" label="Pilih Batch" required>
                         <select id="grad-rec-batch" v-model="studentForm.batch_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -162,7 +177,7 @@ const markCollected = (recordId: number) => {
                     </div>
                     <div class="flex items-center gap-2">
                         <StatusBadge :status="batch.is_released_now ? 'Rilis Publik' : (batch.is_published ? 'Terjadwal' : 'Draf')" :tone="batch.is_released_now ? 'success' : 'warning'" size="sm" />
-                        <form @submit.prevent="publish(batch.id)" class="flex items-center gap-2">
+                        <form v-if="canPublish" @submit.prevent="publish(batch.id)" class="flex items-center gap-2">
                             <input v-model="publishForm.signatory_name" type="text" placeholder="Nama Penandatangan" class="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs" required />
                             <AppButton type="submit" :disabled="publishForm.processing">Sahkan &amp; Terbitkan</AppButton>
                         </form>
@@ -171,13 +186,13 @@ const markCollected = (recordId: number) => {
 
                 <div v-if="batch.records.length" class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
                                 <th class="px-3 py-2">Siswa</th>
                                 <th class="px-3 py-2">No. SKL &amp; Token</th>
                                 <th class="px-3 py-2">Nilai</th>
                                 <th class="px-3 py-2">Pengambilan Asli</th>
-                                <th class="px-3 py-2 text-right">Aksi</th>
+                                <th class="px-3 py-2">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -190,20 +205,49 @@ const markCollected = (recordId: number) => {
                                     <p>{{ rec.skl_number }}</p>
                                     <p v-if="rec.skl_verification_token" class="text-slate-500">{{ rec.skl_verification_token }}</p>
                                 </td>
-                                <td class="px-3 py-2.5">{{ rec.average_score ?? '-' }}</td>
+                                <td class="px-3 py-2.5 text-right">{{ rec.average_score ?? '-' }}</td>
                                 <td class="px-3 py-2.5 text-xs">
                                     <span v-if="rec.original_collected_at">{{ rec.original_collected_by }} ({{ rec.original_collected_at }})</span>
                                     <span v-else class="text-slate-400">Belum diambil</span>
                                 </td>
-                                <td class="px-3 py-2.5 text-right space-x-2">
+                                <td class="px-3 py-2.5 text-center space-x-2">
                                     <a v-if="rec.skl_verification_token" :href="`/layanan/kelulusan/${rec.id}/skl.pdf`" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-700 underline">SKL PDF</a>
-                                    <button type="button" class="text-xs font-semibold text-amber-700" @click="reissue(rec.id)">Terbitkan Ulang</button>
-                                    <button v-if="!rec.original_collected_at" type="button" class="text-xs font-semibold text-emerald-700" @click="markCollected(rec.id)">Catat Ambil</button>
+                                    <button type="button" class="text-xs font-semibold text-amber-700" v-if="canPublish" @click="openRecordModal(rec, 'reissue')">Terbitkan Ulang</button>
+                                    <button v-if="canManageRecords && !rec.original_collected_at" type="button" class="text-xs font-semibold text-emerald-700" @click="openRecordModal(rec, 'collect')">Catat Ambil</button>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div v-if="activeRecordModal" role="dialog" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" @click.self="activeRecordModal = null" @keydown.esc="activeRecordModal = null">
+            <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
+                <h3 class="text-base font-semibold text-slate-900">
+                    {{ activeRecordModal.mode === 'reissue' ? `Terbitkan Ulang SKL — ${activeRecordModal.student_name}` : `Catat Pengambilan Asli — ${activeRecordModal.student_name}` }}
+                </h3>
+                <form v-if="activeRecordModal.mode === 'reissue'" class="space-y-3" @submit.prevent="submitReissue">
+                    <FormField id="grad-reissue-reason" label="Alasan Penerbitan Ulang SKL" :error="reissueForm.errors.reason" required>
+                        <textarea id="grad-reissue-reason" v-model="reissueForm.reason" rows="3" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    </FormField>
+                    <div class="flex justify-end gap-2">
+                        <AppButton type="button" variant="secondary" @click="activeRecordModal = null">Tutup</AppButton>
+                        <AppButton type="submit" :disabled="reissueForm.processing">Terbitkan Ulang</AppButton>
+                    </div>
+                </form>
+                <form v-else class="space-y-3" @submit.prevent="submitCollected">
+                    <FormField id="grad-collect-by" label="Nama Pengambil Dokumen Asli" :error="collectedForm.errors.collected_by" required>
+                        <input id="grad-collect-by" v-model="collectedForm.collected_by" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    </FormField>
+                    <FormField id="grad-collect-rel" label="Hubungan Pengambil" :error="collectedForm.errors.relation">
+                        <input id="grad-collect-rel" v-model="collectedForm.relation" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    </FormField>
+                    <div class="flex justify-end gap-2">
+                        <AppButton type="button" variant="secondary" @click="activeRecordModal = null">Tutup</AppButton>
+                        <AppButton type="submit" :disabled="collectedForm.processing">Simpan</AppButton>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>

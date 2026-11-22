@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
 
 interface Photo { id: number; name?: string | null; caption?: string | null; url: string }
-interface NewsItem { id: number; title: string; slug: string; excerpt?: string | null; body?: string; status: 'draft' | 'published'; published_at?: string | null; author_name?: string | null; photos: Photo[] }
+interface NewsItem { id: number; title: string; slug: string; category?: string; excerpt?: string | null; body?: string; status: 'draft' | 'published'; is_archived?: boolean; published_at?: string | null; author_name?: string | null; photos: Photo[] }
 
 const props = defineProps<{ news: NewsItem[]; can_manage: boolean }>();
 const page = usePage<{ flash?: { message?: string } }>();
@@ -16,7 +17,7 @@ const localPhotoError = ref('');
 const searchTerm = ref('');
 const statusFilter = ref<'all' | 'draft' | 'published'>('all');
 const photoPreviews = ref<string[]>([]);
-const form = useForm({ title: '', excerpt: '', body: '', status: 'draft' as 'draft' | 'published', published_at: '', photos: [] as File[], photo_captions: [] as string[] });
+const form = useForm({ title: '', category: 'berita', excerpt: '', body: '', status: 'draft' as 'draft' | 'published', is_archived: false, published_at: '', photos: [] as File[], photo_captions: [] as string[] });
 const editing = computed(() => editingId.value ? props.news.find((item) => item.id === editingId.value) : null);
 const filteredNews = computed(() => {
     const query = searchTerm.value.trim().toLowerCase();
@@ -64,9 +65,11 @@ const openCreate = () => {
 const edit = (item: NewsItem) => {
     editingId.value = item.id;
     form.title = item.title;
+    form.category = item.category || 'berita';
     form.excerpt = item.excerpt ?? '';
     form.body = item.body ?? '';
     form.status = item.status;
+    form.is_archived = Boolean(item.is_archived);
     form.published_at = item.published_at ? new Date(item.published_at).toISOString().slice(0, 16) : '';
     clearPhotoPreviews();
     form.photos = [];
@@ -109,12 +112,38 @@ const save = () => {
     form.transform((data) => ({ ...data, _method: editingId.value ? 'put' : undefined }))
         .post(url, { forceFormData: true, preserveScroll: true, onSuccess: reset });
 };
+const pendingDeleteNews = ref<NewsItem | null>(null);
+const pendingDeletePhoto = ref<Photo | null>(null);
+const deletingNews = ref(false);
+
 const remove = (item: NewsItem) => {
-    if (window.confirm(`Hapus berita “${item.title}”?`)) router.delete(`/pengaturan/berita/${item.id}`, { preserveScroll: true });
+    pendingDeleteNews.value = item;
+};
+const confirmRemoveNews = () => {
+    if (!pendingDeleteNews.value) return;
+    deletingNews.value = true;
+    router.delete(`/pengaturan/berita/${pendingDeleteNews.value.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingNews.value = false;
+            pendingDeleteNews.value = null;
+        },
+    });
 };
 const removePhoto = (photo: Photo) => {
-    if (!editingId.value || !window.confirm('Hapus foto ini dari berita?')) return;
-    router.delete(`/pengaturan/berita/${editingId.value}/foto/${photo.id}`, { preserveScroll: true });
+    if (!editingId.value) return;
+    pendingDeletePhoto.value = photo;
+};
+const confirmRemovePhoto = () => {
+    if (!editingId.value || !pendingDeletePhoto.value) return;
+    deletingNews.value = true;
+    router.delete(`/pengaturan/berita/${editingId.value}/foto/${pendingDeletePhoto.value.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingNews.value = false;
+            pendingDeletePhoto.value = null;
+        },
+    });
 };
 const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Belum terbit';
 </script>
@@ -135,12 +164,34 @@ const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('i
                 <div class="form-grid"><label>Status <select v-model="form.status"><option value="draft">Draf</option><option value="published">Terbitkan</option></select><em v-if="form.errors.status">{{ form.errors.status }}</em></label><label v-if="form.status === 'published'">Waktu terbit <input v-model="form.published_at" type="datetime-local" /><em v-if="form.errors.published_at">{{ form.errors.published_at }}</em></label></div>
                 <div class="photo-field"><span class="field-label">Foto berita</span><span class="photo-picker"><input id="news-photos" class="sr-only-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple @change="selectPhotos" /><label class="photo-picker-button" for="news-photos">Pilih foto</label><span class="photo-picker-name">{{ form.photos.length ? `${form.photos.length} foto dipilih` : 'Belum ada foto dipilih' }}</span></span><small>Pilih sampai {{ Math.max(0, 5 - (editing?.photos.length ?? 0)) }} foto baru; maksimal 5 foto total per berita dan 2 MB per foto.</small><em v-if="photoError" role="alert">{{ photoError }}</em><em v-if="form.errors.photo_captions" role="alert">{{ form.errors.photo_captions }}</em></div>
                 <div v-if="form.photos.length" class="selected-photos"><span class="field-label">Foto baru dan keterangannya</span><div class="photo-grid"><figure v-for="(photo, index) in form.photos" :key="`${photo.name}-${index}`"><img :src="photoPreviews[index]" :alt="photo.name" /><figcaption><strong>{{ photo.name }}</strong><input v-model="form.photo_captions[index]" maxlength="255" placeholder="Keterangan foto (opsional)" /><AppButton variant="danger" size="sm" type="button" class="text-button danger" @click="removeSelectedPhoto(index)">Batalkan</AppButton></figcaption></figure></div></div>
+                <label class="photo-field">Kategori publikasi<select v-model="form.category"><option value="berita">Berita Sekolah</option><option value="prestasi">Prestasi & Kejuaraan Siswa</option><option value="agenda">Agenda Madrasah</option><option value="karir-alumni">Bursa Karir Alumni</option><option value="beasiswa-alumni">Beasiswa Alumni</option><option v-if="!['berita', 'prestasi', 'agenda', 'karir-alumni', 'beasiswa-alumni'].includes(form.category)" :value="form.category">{{ form.category }}</option></select><small v-if="form.category === 'prestasi'">Untuk prestasi, isi Ringkasan dengan format: <code>Peringkat | Tingkat | Nama Peraih</code> (contoh: <code>Medali Emas | Nasional | Tim Riset</code>).</small><small v-if="form.errors.category">{{ form.errors.category }}</small></label>
+                <label class="flex items-center gap-2 text-xs font-semibold"><input v-model="form.is_archived" type="checkbox" /> Arsipkan publikasi (sembunyikan dari daftar publik tanpa menghapus)</label>
                 <div v-if="editing?.photos.length" class="existing-photos"><span class="field-label">Foto tersimpan</span><div class="photo-grid"><figure v-for="photo in editing.photos" :key="photo.id"><img :src="photo.url" :alt="photo.caption || photo.name || 'Foto berita'" /><figcaption><strong>{{ photo.name || 'Foto berita' }}</strong><small v-if="photo.caption">{{ photo.caption }}</small><AppButton variant="danger" size="sm" icon="delete" type="button" @click="removePhoto(photo)">Hapus</AppButton></figcaption></figure></div></div>
                 <div class="form-actions"><AppButton variant="secondary"  type="button" class="secondary-button" :disabled="form.processing" @click="reset">Batal</AppButton><AppButton variant="primary" type="submit" class="primary-button" :disabled="form.processing || !form.title || !form.body">{{ form.processing ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan berita' }}</AppButton></div>
                 </form>
             </div>
 
             <section class="panel news-list"><div class="section-heading"><div><h2>Daftar berita</h2><p>{{ filteredNews.length }} dari {{ news.length }} berita ditampilkan.</p></div><AppButton variant="secondary" as="a" class="secondary-button" href="/berita" target="_blank" rel="noreferrer">Lihat halaman publik</AppButton></div><div class="news-summary"><div><span>Terbit</span><strong>{{ publishedCount }}</strong></div><div><span>Draf</span><strong>{{ draftCount }}</strong></div><div><span>Total foto</span><strong>{{ news.reduce((total, item) => total + item.photos.length, 0) }}</strong></div></div><div class="news-toolbar"><label class="search-field search-control-shell"><span aria-hidden="true">⌕</span><input v-model="searchTerm" type="search" placeholder="Cari judul atau isi berita" /></label><select v-model="statusFilter" aria-label="Filter status berita"><option value="all">Semua status</option><option value="published">Terbit</option><option value="draft">Draf</option></select></div><article v-for="item in filteredNews" :key="item.id" class="news-row"><div class="news-thumb"><img v-if="item.photos[0]" :src="item.photos[0].url" :alt="item.title" /><span v-else>SS</span></div><div class="news-copy"><div class="news-meta"><span :class="['status-badge', item.status]">{{ item.status === 'published' ? 'Terbit' : 'Draf' }}</span><span>{{ formatDate(item.published_at) }}</span></div><h3>{{ item.title }}</h3><p>{{ item.excerpt || item.body }}</p><small>{{ item.author_name || 'Sekolah' }} · {{ item.photos.length }} foto</small></div><div class="row-actions"><AppButton variant="secondary" size="sm" icon-only icon="edit" type="button" class="secondary-button row-action-icon" aria-label="Edit berita" title="Edit berita" @click="edit(item)"></AppButton><AppButton variant="danger" size="sm" icon-only icon="delete" type="button" class="text-button danger row-action-icon row-action-delete" aria-label="Hapus berita" title="Hapus berita" @click="remove(item)"></AppButton></div></article><div v-if="!filteredNews.length" class="empty-state"><strong>{{ news.length ? 'Berita tidak ditemukan' : 'Belum ada berita' }}</strong><p>{{ news.length ? 'Coba ubah kata kunci atau filter status.' : 'Berita sekolah yang diterbitkan akan tampil di halaman publik.' }}</p></div></section>
+            <ConfirmDialog
+                :open="pendingDeleteNews !== null"
+                title="Hapus berita sekolah?"
+                :message="pendingDeleteNews ? `Hapus berita &quot;${pendingDeleteNews.title}&quot; secara permanen dari portal sekolah?` : ''"
+                confirm-label="Ya, hapus berita"
+                variant="danger"
+                :loading="deletingNews"
+                @confirm="confirmRemoveNews"
+                @cancel="pendingDeleteNews = null"
+            />
+            <ConfirmDialog
+                :open="pendingDeletePhoto !== null"
+                title="Hapus foto berita?"
+                message="Foto ini akan dihapus permanen dari berita yang sedang disunting."
+                confirm-label="Ya, hapus foto"
+                variant="danger"
+                :loading="deletingNews"
+                @confirm="confirmRemovePhoto"
+                @cancel="pendingDeletePhoto = null"
+            />
         </main>
     </AppLayout>
 </template>

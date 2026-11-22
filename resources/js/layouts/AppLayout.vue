@@ -28,9 +28,35 @@ const currentRole = computed(() => page.props.auth?.user?.role);
 const isTeacherWorkspace = computed(() => ['teacher', 'homeroom'].includes(currentRole.value ?? ''));
 const { theme, toggleTheme } = useTheme();
 const darkTheme = computed(() => theme.value === 'dark');
-const toastMessage = ref('');
-const toastKind = ref<'success' | 'error'>('success');
-let toastTimer: ReturnType<typeof setTimeout> | null = null;
+interface ToastItem {
+    id: number;
+    message: string;
+    kind: 'success' | 'error';
+}
+const toasts = ref<ToastItem[]>([]);
+let nextToastId = 1;
+const toastTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+const dismissToast = (id: number) => {
+    const timer = toastTimers.get(id);
+    if (timer) {
+        clearTimeout(timer);
+        toastTimers.delete(id);
+    }
+    toasts.value = toasts.value.filter((item) => item.id !== id);
+};
+
+const pushToast = (message: string, kind: 'success' | 'error') => {
+    const clean = message.trim();
+    if (!clean) return;
+    const existing = toasts.value.find((item) => item.message === clean && item.kind === kind);
+    if (existing) {
+        dismissToast(existing.id);
+    }
+    const id = nextToastId++;
+    toasts.value = [...toasts.value.slice(-3), { id, message: clean, kind }];
+    toastTimers.set(id, setTimeout(() => dismissToast(id), 5000));
+};
 const searchInput = ref<HTMLInputElement | null>(null);
 const searchRoot = ref<HTMLElement | null>(null);
 const searchQuery = ref('');
@@ -119,12 +145,8 @@ const applySchoolTheme = (primary?: string) => {
 
 const showFlashToast = () => {
     const flash = page.props.flash as { message?: string; error?: string } | undefined;
-    const message = flash?.error || flash?.message;
-    if (!message) return;
-    toastKind.value = flash?.error ? 'error' : 'success';
-    toastMessage.value = message;
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toastMessage.value = ''; }, 5000);
+    if (flash?.error) pushToast(flash.error, 'error');
+    if (flash?.message) pushToast(flash.message, 'success');
 };
 
 const closeSidebar = () => {
@@ -190,7 +212,8 @@ watch(() => page.props.school?.theme_primary, applySchoolTheme);
 watch(() => page.props.flash, showFlashToast, { deep: true });
 
 onBeforeUnmount(() => {
-    if (toastTimer) clearTimeout(toastTimer);
+    toastTimers.forEach((timer) => clearTimeout(timer));
+    toastTimers.clear();
     document.removeEventListener('keydown', closeOnEscape);
     document.removeEventListener('pointerdown', handleDocumentPointerdown);
     mobileMediaQuery?.removeEventListener('change', handleViewportMediaChange);
@@ -314,10 +337,12 @@ onBeforeUnmount(() => {
                 <slot />
             </main>
         </div>
-        <div v-if="toastMessage" class="app-toast" :class="`app-toast--${toastKind}`" role="status" aria-live="polite">
-            <span class="app-toast-mark" aria-hidden="true">{{ toastKind === 'success' ? '✓' : '!' }}</span>
-            <span>{{ toastMessage }}</span>
-            <AppButton variant="secondary" type="button" aria-label="Tutup notifikasi" @click="toastMessage = ''">×</AppButton>
+        <div v-if="toasts.length" class="app-toast-stack" role="region" aria-label="Notifikasi sistem" aria-live="polite">
+            <div v-for="item in toasts" :key="item.id" class="app-toast" :class="`app-toast--${item.kind}`" :role="item.kind === 'error' ? 'alert' : 'status'">
+                <span class="app-toast-mark" aria-hidden="true">{{ item.kind === 'success' ? '✓' : '!' }}</span>
+                <span>{{ item.message }}</span>
+                <AppButton variant="secondary" size="sm" icon-only type="button" aria-label="Tutup notifikasi" title="Tutup notifikasi" @click="dismissToast(item.id)">×</AppButton>
+            </div>
         </div>
     </div>
 </template>
@@ -328,6 +353,9 @@ onBeforeUnmount(() => {
 .brand-copy { min-width: 0; }
 .topbar-spacer { flex: 1; }
 .topbar-user { display: flex; flex: 0 0 auto; align-items: center; }
+.app-toast-stack { position: fixed; right: 20px; bottom: max(20px, env(safe-area-inset-bottom)); z-index: 130; display: grid; gap: 8px; width: min(380px, calc(100vw - 24px)); pointer-events: none; }
+.app-toast-stack .app-toast { pointer-events: auto; position: static; }
 @media (max-width: 960px) { .topbar-user :deep(.profile-copy) { display: none; } }
+@media (max-width: 720px) { .app-toast-stack { right: 12px; left: 12px; width: auto; } }
 </style>
 

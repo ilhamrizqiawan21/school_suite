@@ -5,7 +5,7 @@
   $q = trim((string) request()->query('q', ''));
   $selectedCategory = trim((string) request()->query('kategori', ''));
 
-  $allVideos = [
+  $defaultVideos = [
       [
           'id' => 'tur-kampus',
           'title' => 'Tur Kampus Madrasah & Lingkungan Belajar Terpadu',
@@ -68,6 +68,8 @@
       ],
   ];
 
+  $allVideos = isset($videos) && is_array($videos) ? $videos : $defaultVideos;
+
   $categoryPills = [
       'Profil' => '🏛️ Profil Madrasah',
       'Kegiatan' => '🎒 Kegiatan Santri & Siswa',
@@ -89,7 +91,8 @@
       ));
   }
 
-  $featured = $filteredVideos[0] ?? $allVideos[0];
+  $featuredCandidate = collect($filteredVideos)->firstWhere('is_featured', true);
+  $featured = $featuredCandidate ?? $filteredVideos[0] ?? $allVideos[0] ?? null;
 @endphp
 
 @section('title', 'Kanal Video & Dokumentasi Multimedia - ' . $schoolName)
@@ -164,6 +167,7 @@
   <main id="main-content" class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-10 flex-1 w-full">
 
     <!-- FEATURED VIDEO SPOTLIGHT -->
+    @if ($featured)
     <article class="mb-12 bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-700 text-white">
       <div class="grid lg:grid-cols-12 gap-0 items-center">
         <!-- Frame Video Player -->
@@ -216,6 +220,7 @@
         </div>
       </div>
     </article>
+    @endif
 
     <!-- JUDUL DAFTAR VIDEO -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">

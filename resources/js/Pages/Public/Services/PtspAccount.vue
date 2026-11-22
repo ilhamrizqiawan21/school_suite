@@ -20,6 +20,7 @@ const props = defineProps<{
     applicant: Applicant | null;
     applicantTypes: { value: string; label: string }[];
     recoveryStatus?: string | null;
+    returnToTracer?: boolean;
 }>();
 
 const page = usePage();
@@ -29,7 +30,7 @@ const activeTab = ref<'login' | 'register' | 'recovery'>('login');
 
 const loginForm = useForm({ email: '', password: '' });
 const registerForm = useForm({
-    applicant_type: 'general',
+    applicant_type: props.returnToTracer ? 'alumni' : 'general',
     full_name: '',
     email: '',
     phone: '',

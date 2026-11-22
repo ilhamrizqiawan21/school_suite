@@ -16,6 +16,10 @@
         table.meta { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
         table.meta td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
         table.meta td.label { width: 165px; font-weight: 700; color: #334155; }
+        .qr-box { margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 12px; display: table; width: 100%; }
+        .qr-cell { display: table-cell; width: 105px; vertical-align: top; }
+        .qr-cell img { width: 92px; height: 92px; }
+        .qr-note { display: table-cell; vertical-align: top; font-size: 8.5pt; color: #475569; }
     </style>
 </head>
 <body>
@@ -45,5 +49,16 @@
         <tr><td class="label">Kontak Pemohon</td><td>{{ $dispensation->contact_name ?: '-' }} ({{ $dispensation->contact_phone ?: '-' }})</td></tr>
         <tr><td class="label">Catatan Keputusan</td><td>{{ $dispensation->decision_note ?: '-' }}</td></tr>
     </table>
+
+    @if(!empty($qr) && !empty($track_url))
+        <div class="qr-box">
+            <div class="qr-cell"><img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR Lacak"></div>
+            <div class="qr-note">
+                <p style="margin:0 0 4px;"><strong>Pelacakan Status Izin Siswa</strong></p>
+                <p style="margin:0 0 4px;">Gunakan kode tiket <strong>{{ $ticket['ticket_code'] ?? ('IZN-'.$dispensation->id) }}</strong> pada portal pelacakan terpadu:</p>
+                <p style="margin:0;">{{ $track_url }}</p>
+            </div>
+        </div>
+    @endif
 </body>
 </html>

@@ -24,6 +24,7 @@ interface MutationItem {
 
 const props = defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
+    contentBlocks?: Record<string, Record<string, any>>;
     periodAvailable: boolean;
     activeTermName?: string | null;
     students: { student_id: number; name: string; nis: string; class_group_name?: string | null }[];
@@ -104,12 +105,12 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             <div class="mutasi-container mutasi-hero-inner">
                 <div class="mutasi-hero-pill">
                     <i class="fa-solid fa-right-left" aria-hidden="true"></i>
-                    <span>Layanan Mutasi Siswa Online</span>
+                    <span>{{ contentBlocks?.['mutation.hero']?.badge || 'Layanan Mutasi Siswa Online' }}</span>
                 </div>
                 <h1>{{ school.name.toUpperCase() }}</h1>
-                <h4>Tahun Pelajaran 2026/2027</h4>
+                <h4>{{ contentBlocks?.['mutation.hero']?.academic_year_label || 'Tahun Pelajaran 2026/2027' }}</h4>
                 <p>
-                    Informasi alur prosedur &amp; formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.
+                    {{ contentBlocks?.['mutation.hero']?.description || 'Informasi alur prosedur & formulir permohonan mutasi masuk dan mutasi keluar siswa secara online.' }}
                 </p>
                 <div class="mutasi-hero-badge-wrap">
                     <span class="mutasi-badge-status" :class="periodAvailable ? 'is-open' : 'is-closed'">

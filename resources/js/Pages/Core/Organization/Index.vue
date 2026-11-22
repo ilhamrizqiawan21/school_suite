@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../../layouts/AppLayout.vue';
 import { computed, onBeforeUnmount, ref } from 'vue';
@@ -78,9 +79,16 @@ const submit = () => {
         form.post('/pengaturan/struktur-organisasi', { ...options, forceFormData: true });
     }
 };
+const pendingDeleteMember = ref<OrganizationMember | null>(null);
 const remove = (member: OrganizationMember) => {
-    if (!window.confirm('Hapus ' + member.name + ' dari struktur organisasi?')) return;
-    form.delete('/pengaturan/struktur-organisasi/' + member.id, { preserveScroll: true });
+    pendingDeleteMember.value = member;
+};
+const confirmRemoveMember = () => {
+    if (!pendingDeleteMember.value) return;
+    form.delete('/pengaturan/struktur-organisasi/' + pendingDeleteMember.value.id, {
+        preserveScroll: true,
+        onFinish: () => { pendingDeleteMember.value = null; },
+    });
 };
 </script>
 
@@ -128,6 +136,16 @@ const remove = (member: OrganizationMember) => {
                 </div>
                 <div v-else class="empty-state"><strong>Struktur organisasi belum diisi.</strong><p>Tambahkan pimpinan utama untuk mulai membangun hierarki sekolah.</p></div>
             </section>
+            <ConfirmDialog
+                :open="pendingDeleteMember !== null"
+                title="Hapus anggota struktur organisasi?"
+                :message="pendingDeleteMember ? `Hapus ${pendingDeleteMember.name} (${pendingDeleteMember.position}) dari struktur organisasi sekolah?` : ''"
+                confirm-label="Ya, hapus anggota"
+                variant="danger"
+                :loading="form.processing"
+                @confirm="confirmRemoveMember"
+                @cancel="pendingDeleteMember = null"
+            />
         </main>
     </AppLayout>
 </template>

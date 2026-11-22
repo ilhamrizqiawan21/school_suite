@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/AppButton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, ref } from 'vue';
 import AppLayout from '../../../layouts/AppLayout.vue';
@@ -18,7 +19,22 @@ interface GalleryAlbum {
     photos: GalleryPhoto[];
 }
 
-const props = defineProps<{ albums: GalleryAlbum[]; can_manage: boolean }>();
+interface GalleryVideo {
+    id: string;
+    title: string;
+    category: 'Profil' | 'Kegiatan' | 'Prestasi' | 'Keagamaan';
+    category_label?: string;
+    date?: string;
+    description?: string;
+    poster: string;
+    src: string;
+    is_featured: boolean;
+    is_published: boolean;
+}
+
+const props = withDefaults(defineProps<{ albums: GalleryAlbum[]; videos?: GalleryVideo[]; can_manage: boolean }>(), {
+    videos: () => [],
+});
 const page = usePage<any>();
 const showForm = ref(false);
 const editing = ref<GalleryAlbum | null>(null);
@@ -81,9 +97,89 @@ const submit = () => {
     });
 };
 
+const pendingDeleteAlbum = ref<GalleryAlbum | null>(null);
+const deletingAlbum = ref(false);
 const remove = (album: GalleryAlbum) => {
-    if (!window.confirm(`Hapus grup foto “${album.title}” dari galeri?`)) return;
-    router.delete(`/pengaturan/galeri/${album.id}`, { preserveScroll: true });
+    pendingDeleteAlbum.value = album;
+};
+const confirmRemoveAlbum = () => {
+    if (!pendingDeleteAlbum.value) return;
+    deletingAlbum.value = true;
+    router.delete(`/pengaturan/galeri/${pendingDeleteAlbum.value.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingAlbum.value = false;
+            pendingDeleteAlbum.value = null;
+        },
+    });
+};
+
+const showVideoForm = ref(false);
+const editingVideo = ref<GalleryVideo | null>(null);
+const pendingDeleteVideo = ref<GalleryVideo | null>(null);
+const deletingVideo = ref(false);
+const videoForm = useForm({
+    title: '',
+    category: 'Kegiatan' as GalleryVideo['category'],
+    date: '',
+    description: '',
+    poster: '/madrasah-theme/images/videos/tur-kampus.webp',
+    src: '/madrasah-theme/images/videos/tur-kampus.webm',
+    is_featured: false,
+    is_published: true,
+});
+
+const resetVideoForm = () => {
+    showVideoForm.value = false;
+    editingVideo.value = null;
+    videoForm.reset();
+    videoForm.clearErrors();
+};
+
+const openCreateVideo = () => {
+    resetVideoForm();
+    showVideoForm.value = true;
+};
+
+const editVideo = (video: GalleryVideo) => {
+    editingVideo.value = video;
+    videoForm.title = video.title;
+    videoForm.category = video.category;
+    videoForm.date = video.date ?? '';
+    videoForm.description = video.description ?? '';
+    videoForm.poster = video.poster;
+    videoForm.src = video.src;
+    videoForm.is_featured = video.is_featured;
+    videoForm.is_published = video.is_published;
+    videoForm.clearErrors();
+    showVideoForm.value = true;
+};
+
+const submitVideo = () => {
+    if (editingVideo.value) {
+        videoForm.put(`/pengaturan/galeri/video/${editingVideo.value.id}`, {
+            preserveScroll: true,
+            onSuccess: resetVideoForm,
+        });
+        return;
+    }
+
+    videoForm.post('/pengaturan/galeri/video', {
+        preserveScroll: true,
+        onSuccess: resetVideoForm,
+    });
+};
+
+const confirmRemoveVideo = () => {
+    if (!pendingDeleteVideo.value) return;
+    deletingVideo.value = true;
+    router.delete(`/pengaturan/galeri/video/${pendingDeleteVideo.value.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingVideo.value = false;
+            pendingDeleteVideo.value = null;
+        },
+    });
 };
 </script>
 
@@ -133,6 +229,92 @@ const remove = (album: GalleryAlbum) => {
                 </div>
                 <div v-else class="empty-state"><strong>Belum ada grup foto</strong><p>Tambahkan satu momen dengan beberapa foto untuk mulai membangun portofolio sekolah.</p></div>
             </section>
+
+            <section class="panel gallery-list">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Kanal multimedia (`/galeri/video`)</p>
+                        <h2>Galeri video dokumentasi</h2>
+                        <p>{{ videos.length }} video terdaftar pada kanal video publik.</p>
+                    </div>
+                    <AppButton v-if="can_manage" variant="primary" size="sm" icon="plus" type="button" @click="openCreateVideo">Tambah video</AppButton>
+                </div>
+                <div v-if="videos.length" class="album-grid">
+                    <article v-for="video in videos" :key="video.id" class="album-card">
+                        <div class="album-cover">
+                            <img :src="video.poster" :alt="video.title" class="w-full h-full object-cover" />
+                            <span :class="['visibility-badge', video.is_published ? 'published' : 'hidden']">{{ video.is_published ? 'Tampil' : 'Draf' }}</span>
+                            <span class="photo-count">{{ video.category }}{{ video.is_featured ? ' · Unggulan' : '' }}</span>
+                        </div>
+                        <div class="album-body">
+                            <div>
+                                <h3>{{ video.title }}</h3>
+                                <p>{{ video.description || video.src }}</p>
+                            </div>
+                            <div class="album-actions">
+                                <AppButton variant="secondary" size="sm" icon="edit" type="button" @click="editVideo(video)">Ubah video</AppButton>
+                                <AppButton variant="danger" size="sm" icon="delete" type="button" @click="pendingDeleteVideo = video">Hapus</AppButton>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div v-else class="empty-state"><strong>Belum ada video dokumentasi</strong><p>Tambahkan video profil, kegiatan, prestasi, atau keagamaan untuk halaman `/galeri/video`.</p></div>
+            </section>
+
+            <div v-if="showVideoForm" role="dialog" aria-modal="true" aria-labelledby="video-modal-title" class="modal-backdrop" @click.self="resetVideoForm" @keydown.esc="resetVideoForm">
+                <form class="modal-card gallery-editor" @submit.prevent="submitVideo">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">{{ editingVideo ? 'Edit video' : 'Tambah video' }}</p>
+                            <h2 id="video-modal-title">{{ editingVideo ? 'Perbarui video galeri' : 'Tambahkan video dokumentasi' }}</h2>
+                        </div>
+                        <AppButton variant="ghost" type="button" class="modal-close" aria-label="Tutup formulir video" @click="resetVideoForm">×</AppButton>
+                    </div>
+                    <div class="gallery-fields">
+                        <label class="wide"><span>Judul video *</span><input v-model="videoForm.title" maxlength="160" required /><em v-if="videoForm.errors.title">{{ videoForm.errors.title }}</em></label>
+                        <label>
+                            <span>Kategori *</span>
+                            <select v-model="videoForm.category" required>
+                                <option value="Profil">Profil Madrasah</option>
+                                <option value="Kegiatan">Kegiatan Santri & Siswa</option>
+                                <option value="Prestasi">Prestasi & Riset Sains</option>
+                                <option value="Keagamaan">Halaqah & Keagamaan</option>
+                            </select>
+                            <em v-if="videoForm.errors.category">{{ videoForm.errors.category }}</em>
+                        </label>
+                        <label><span>Label tanggal rilis</span><input v-model="videoForm.date" maxlength="40" placeholder="Contoh: 11 Oct 2026" /><em v-if="videoForm.errors.date">{{ videoForm.errors.date }}</em></label>
+                        <label><span>Path / URL poster thumbnail *</span><input v-model="videoForm.poster" maxlength="500" required /><em v-if="videoForm.errors.poster">{{ videoForm.errors.poster }}</em></label>
+                        <label><span>Path / URL berkas video (.webm / .mp4) *</span><input v-model="videoForm.src" maxlength="500" required /><em v-if="videoForm.errors.src">{{ videoForm.errors.src }}</em></label>
+                        <label class="wide"><span>Deskripsi singkat</span><textarea v-model="videoForm.description" rows="2" maxlength="500"></textarea><em v-if="videoForm.errors.description">{{ videoForm.errors.description }}</em></label>
+                        <label class="publish-choice"><input v-model="videoForm.is_featured" type="checkbox" /><span><strong>Jadikan video sorotan utama (Spotlight)</strong><small>Ditampilkan pada pemutar utama di bagian atas halaman `/galeri/video`.</small></span></label>
+                        <label class="publish-choice"><input v-model="videoForm.is_published" type="checkbox" /><span><strong>Tampilkan di galeri video publik</strong><small>Video yang tidak dicentang hanya tersimpan sebagai draf di panel admin.</small></span></label>
+                    </div>
+                    <div class="form-actions">
+                        <AppButton variant="secondary" type="button" :disabled="videoForm.processing" @click="resetVideoForm">Batal</AppButton>
+                        <AppButton variant="primary" type="submit" :loading="videoForm.processing" :disabled="videoForm.processing">{{ editingVideo ? 'Simpan video' : 'Tambahkan video' }}</AppButton>
+                    </div>
+                </form>
+            </div>
+            <ConfirmDialog
+                :open="pendingDeleteAlbum !== null"
+                title="Hapus grup foto galeri?"
+                :message="pendingDeleteAlbum ? `Hapus grup foto &quot;${pendingDeleteAlbum.title}&quot; beserta seluruh foto di dalamnya dari galeri sekolah?` : ''"
+                confirm-label="Ya, hapus grup foto"
+                variant="danger"
+                :loading="deletingAlbum"
+                @confirm="confirmRemoveAlbum"
+                @cancel="pendingDeleteAlbum = null"
+            />
+            <ConfirmDialog
+                :open="pendingDeleteVideo !== null"
+                title="Hapus video dari galeri?"
+                :message="pendingDeleteVideo ? `Hapus video &quot;${pendingDeleteVideo.title}&quot; dari galeri video publik?` : ''"
+                confirm-label="Ya, hapus video"
+                variant="danger"
+                :loading="deletingVideo"
+                @confirm="confirmRemoveVideo"
+                @cancel="pendingDeleteVideo = null"
+            />
         </main>
     </AppLayout>
 </template>

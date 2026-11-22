@@ -23,10 +23,21 @@ class SchoolScopeService
         return $this->usesMadrasahPublicTheme($npsn) ? 'madrasah' : null;
     }
 
-    /** @return array{id:int, name:?string, level:?string, address:?string, phone:?string, email:?string, logo_path:?string, theme:array<string, mixed>} */
+    /** @return ?array{id:int, name:?string, level:?string, address:?string, phone:?string, email:?string, logo_path:?string, service_hours:?string, content_blocks:array<string, mixed>, theme:array<string, mixed>} */
+    public function findPrimaryPublicSnapshot(): ?array
+    {
+        if (! School::query()->exists()) {
+            return null;
+        }
+
+        return $this->getPrimaryPublicSnapshot();
+    }
+
+    /** @return array{id:int, name:?string, level:?string, address:?string, phone:?string, email:?string, logo_path:?string, service_hours:?string, content_blocks:array<string, mixed>, theme:array<string, mixed>} */
     public function getPrimaryPublicSnapshot(): array
     {
         $school = School::query()->orderBy('id')->firstOrFail();
+        $registry = $school->publicContentRegistry();
 
         return [
             'id' => (int) $school->id,
@@ -36,6 +47,8 @@ class SchoolScopeService
             'phone' => $school->phone,
             'email' => $school->email,
             'logo_path' => $school->logo_path,
+            'service_hours' => data_get($school->settings, 'service_hours'),
+            'content_blocks' => $registry['published'] ?? [],
             'theme' => $school->publicTheme(),
         ];
     }

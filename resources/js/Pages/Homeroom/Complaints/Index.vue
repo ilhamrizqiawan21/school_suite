@@ -126,13 +126,13 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
-                                <th class="px-3 py-2.5">Kode &amp; Pelapor</th>
-                                <th class="px-3 py-2.5">Laporan</th>
-                                <th class="px-3 py-2.5">Bukti</th>
-                                <th class="px-3 py-2.5">Status</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
+                                <th class="px-3 py-2.5 text-center">Kode &amp; Pelapor</th>
+                                <th class="px-3 py-2.5 text-center">Laporan</th>
+                                <th class="px-3 py-2.5 text-center">Bukti</th>
+                                <th class="px-3 py-2.5 text-center">Status</th>
+                                <th class="px-3 py-2.5 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -171,7 +171,15 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             </div>
         </div>
 
-        <div v-if="activeReport" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div
+            v-if="activeReport"
+            role="dialog"
+            aria-modal="true"
+            tabindex="-1"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+            @click.self="activeReport = null"
+            @keydown.esc="activeReport = null"
+        >
             <div class="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl space-y-3">
                 <h3 class="text-base font-bold">Tangani Aduan {{ activeReport.report_code }}</h3>
                 <div class="grid gap-3 grid-cols-2">

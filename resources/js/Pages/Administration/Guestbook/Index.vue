@@ -175,7 +175,7 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
                 </div>
             </section>
 
-            <div v-if="showCreateModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="gb-modal-title">
+            <div v-if="showCreateModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="gb-modal-title" @click.self="showCreateModal = false" @keydown.esc="showCreateModal = false">
                 <div class="modal-card">
                     <header class="modal-head">
                         <h2 id="gb-modal-title">Catat Kunjungan Tamu</h2>
@@ -234,6 +234,7 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
 .table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .data-table th, .data-table td { padding: .7rem .65rem; border-bottom: 1px solid var(--line, #dee4ee); text-align: left; vertical-align: top; }
+.data-table th { text-align: center; }
 .sub-text { font-size: .78rem; color: var(--ink-soft, #536174); margin-top: .15rem; }
 .pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; font-size: .85rem; }
 .pager-links { display: flex; gap: .5rem; }

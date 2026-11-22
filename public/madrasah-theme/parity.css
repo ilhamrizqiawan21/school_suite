@@ -1,13 +1,204 @@
 /* Reference geometry shared by Blade catalogues and the service forms. */
-body[data-portal-layout="catalogue"]:not([data-portal-path="profil-sekolah"]) section:first-of-type {
+body[data-portal-path="alumni"] {
+    --ika-theme-50: #f0f7ff;
+    --ika-theme-100: #e0effe;
+    --ika-theme-200: #bfdbfe;
+    --ika-theme-500: #1d4ed8;
+    --ika-theme-600: #1e40af;
+    --ika-theme-700: #1e3a8a;
+    --ika-theme-800: #172554;
+    --ika-theme-900: #0f172a;
+    --ika-theme-950: #060a17;
+    --ika-start: #0f172a;
+    --ika-mid: #1e3a8a;
+    --ika-end: #060a17;
+}
+body[data-ika-theme="red"] {
+    --ika-theme-50: #fef2f2;
+    --ika-theme-100: #fee2e2;
+    --ika-theme-200: #fecaca;
+    --ika-theme-500: #dc2626;
+    --ika-theme-600: #991b1b;
+    --ika-theme-700: #7f1d1d;
+    --ika-theme-800: #621111;
+    --ika-theme-900: #450a0a;
+    --ika-theme-950: #2a0404;
+    --ika-start: #450a0a;
+    --ika-mid: #7f1d1d;
+    --ika-end: #2a0404;
+}
+body[data-ika-theme="green"] {
+    --ika-theme-50: #ecfdf5;
+    --ika-theme-100: #d1fae5;
+    --ika-theme-200: #a7f3d0;
+    --ika-theme-500: #10b981;
+    --ika-theme-600: #047857;
+    --ika-theme-700: #065f46;
+    --ika-theme-800: #064e3b;
+    --ika-theme-900: #022c22;
+    --ika-theme-950: #011c16;
+    --ika-start: #022c22;
+    --ika-mid: #065f46;
+    --ika-end: #011c16;
+}
+.ika-topbar { background: var(--ika-theme-900, #0f172a); border-color: rgba(30, 58, 138, 0.6); }
+.ika-ticker { background: var(--ika-theme-950, #060a17); border-color: rgba(23, 37, 84, 0.6); }
+.ika-btn-theme { background: linear-gradient(90deg, var(--ika-theme-700, #1e3a8a), var(--ika-theme-800, #172554)); border: 1px solid rgba(255, 255, 255, 0.2); }
+body[data-portal-path="berita"] .news-reference-hero { background: linear-gradient(135deg,#064e3b,#065f46,#022c22); padding-block: 48px; }
+body[data-portal-path="berita"] .news-reference-hero form { height: 44px; }
+body[data-portal-path="berita"] .news-reference-hero form input { height: 44px; padding: 12px 16px 12px 44px; border: 0; border-radius: 12px; box-shadow: none; }
+body[data-portal-path="berita"] .news-reference-hero form .fa-magnifying-glass { z-index: 1; }
+body[data-portal-path="berita"] .news-reference-hero form button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; background: #f59e0b; border-radius: 12px; box-shadow: none; }
+body[data-portal-path="berita"] main .madrasah-catalog-filters { display: flex; align-items: center; gap: 8px; min-width: 0; padding-bottom: 4px; scrollbar-width: auto; }
+body[data-portal-path="berita"] .madrasah-catalog-filters::-webkit-scrollbar { height: 10px; background: white; }
+body[data-portal-path="berita"] .madrasah-catalog-filters::-webkit-scrollbar-thumb { border-radius: 6px; background: #8b8b8b; }
+body[data-portal-path="berita"] .news-reference-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+body[data-portal-path="berita"] .news-reference-grid article { border-radius: 24px; }
+body[data-portal-path="berita"] .news-reference-cover { height: 224px; background: #0d604b; }
+body[data-portal-path="berita"] .news-reference-cover img { object-position: top; }
+body[data-portal-path="berita"] .news-reference-placeholder { display: grid; place-items: center; width: 100%; height: 100%; color: white; font-size: 36px; font-weight: 600; }
+body[data-portal-path="berita"] .news-reference-category { top: auto; bottom: 12px; left: 12px; padding: 4px 12px; background: #065f46e6; letter-spacing: .4px; }
+body[data-portal-path="berita"] .portal-catalogue-login { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 16px; border-radius: 12px; background: #047857; color: white; font-size: 12px; font-weight: 700; box-shadow: 0 2px 4px #0002; }
+body[data-portal-path="berita"] .portal-catalogue-login i { color: #fbbf24; }
+body[data-portal-path="berita"] header[data-madrasah-navigation] { padding: 0; min-height: 81px; height: 81px; }
+body[data-portal-path="berita"] [data-madrasah-navigation] .portal-header-row { min-height: 80px; height: 80px; padding-block: 0; padding-inline: 32px; }
+@media(min-width:768px) { body[data-portal-path="berita"] .news-reference-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(min-width:1024px) { body[data-portal-path="berita"] .news-reference-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } body[data-portal-path="berita"] .news-reference-hero { padding-block: 64px; } }
+@media(max-width:639px) { body[data-portal-path="berita"] .news-reference-hero form { height: auto; } body[data-portal-path="berita"] [data-madrasah-navigation] .portal-header-row { padding-inline: 16px; } }
+body[data-portal-path="alumni"] > [data-portal-identity] + div { overflow: hidden; }
+body[data-portal-path="alumni"] > [data-portal-identity] + div > div { width: 100%; min-width: 0; }
+body[data-portal-path="alumni"] #ika-alumni-search { border: 0; border-radius: 0; background: transparent; color: white; box-shadow: none; scroll-margin-top: 164px; }
+body[data-portal-path="alumni"] > [data-portal-identity] { min-height: 40px; display: flex; align-items: center; }
+body[data-portal-path="alumni"] > [data-portal-identity] > div { width: 100%; }
+body[data-portal-path="alumni"] > [data-portal-identity] + div { min-height: 40px; display: flex; align-items: center; }
+.ika-theme-picker { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(2,6,23,0.75); border-radius: 30px; font-size: 11px; color: #fbbf24; font-weight: 700; }
+.ika-theme-picker button { width: 16px; height: 16px; border: 1px solid white; border-radius: 50%; background: #1e40af; transition: transform 0.15s ease; }
+.ika-theme-picker button[data-ika-theme="red"] { background: #991b1b; }
+.ika-theme-picker button[data-ika-theme="green"] { background: #047857; }
+.ika-theme-picker button[aria-pressed="true"] { outline: 2px solid #fbbf24; outline-offset: 2px; transform: scale(1.2); }
+body[data-portal-path="alumni"] [data-madrasah-navigation] { position: sticky; top: 0; z-index: 40; }
+.ika-footer { background: #0f172a; color: #94a3b8; padding: 64px 32px 28px; font-size: 12.5px; line-height: 1.7; border-top: 1px solid #1e293b; }
+.ika-footer-columns { max-width: 1600px; margin: auto; display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 44px; border-bottom: 1px solid #1e293b; }
+.ika-footer-brand { display: flex; align-items: center; gap: 12px; color: white; }
+.ika-footer-brand img { width: 40px; height: 40px; object-fit: contain; }
+.ika-footer-heading { color: white; font-weight: 800; margin-bottom: 16px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 10px; border-left: 2px solid var(--ika-theme-500, #1d4ed8); }
+.ika-footer-heading--gold { border-left-color: #f59e0b; }
+.ika-footer-heading--emerald { border-left-color: #10b981; }
+.ika-footer p { margin: 10px 0; }
+.ika-footer a { display: flex; align-items: center; margin-bottom: 10px; color: #94a3b8; transition: color 0.15s ease; }
+.ika-footer a:hover { color: #ffffff; }
+.ika-footer-bottom { max-width: 1600px; margin: 24px auto 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: #64748b; }
+@media(max-width:900px) { .ika-footer-columns { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:560px) { .ika-footer { padding: 40px 16px 24px; } .ika-footer-columns { grid-template-columns: 1fr; gap: 28px; } }
+body[data-portal-path="alumni"] [data-madrasah-navigation] nav a { white-space: nowrap; }
+body[data-portal-path="alumni"] [data-madrasah-navigation] nav a[aria-current] { color: var(--ika-theme-700, #1e3a8a); font-weight: 800; }
+body[data-portal-path="alumni"] .alumni-container { max-width: 1120px; }
+body[data-portal-path="layanan/kelulusan"] { font-family: 'Poppins','Plus Jakarta Sans',sans-serif; }
+body[data-portal-path="layanan/kelulusan"] .graduation-reference-footer { padding: 20px 16px; background: white; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+body[data-portal-path="layanan/kelulusan"] .db-topbar a { border-radius: 3px; }
+body[data-portal-path="layanan/kelulusan"] .db-nav-sub { color: #808080; }
+body[data-portal-path="layanan/kelulusan"] .db-nav-mobile-btn { background: white; border: 1px solid #ddd; border-radius: 4px; width: 46px; height: 34px; }
+body[data-portal-path="layanan/kelulusan"] .parity-graduation-tabs button::before { font-family: 'Font Awesome 6 Free'; font-weight: 900; content: '\f002'; }
+body[data-portal-path="layanan/kelulusan"] .parity-graduation-tabs button:nth-child(2)::before { content: '\f073'; }
+body[data-portal-path="layanan/kelulusan"] .parity-graduation-tabs button:nth-child(3)::before { content: '\f05a'; }
+@media (min-width:768px) and (max-width:991.98px) { body[data-portal-path="layanan/kelulusan"] .db-nav-container { max-width: 720px; } }
+@media (min-width:576px) and (max-width:767.98px) { body[data-portal-path="layanan/kelulusan"] .db-nav-container { max-width: 540px; } }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content [data-madrasah-service="graduation"] { background: #f1f5f9; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .madrasah-service-hero { padding: 55px 24px 52px; border-radius: 0 0 28px 28px; background: radial-gradient(circle at 90% 15%,#38bdf826,transparent 38%),linear-gradient(135deg,#0b1528,#11264c 45%,#1e40af); box-shadow: 0 15px 35px #0b15284d; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .madrasah-service-hero .madrasah-service-label { width: fit-content; padding: 6px 16px; margin-bottom: 15px; border: 1px solid #ffffff40; border-radius: 30px; background: #ffffff1f; color: #fde047; font-size: 12.5px; letter-spacing: .6px; text-transform: none; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .madrasah-service-hero h1 { max-width: 1000px; font-size: 28px; line-height: 1.25; letter-spacing: -.5px; margin: 0 auto 6px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .madrasah-service-hero .graduation-year { color: #93c5fd; font-size: 20px; font-weight: 500; margin: 0 auto 12px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .madrasah-service-hero > p:last-child { max-width: 680px; font-size: 14.5px; line-height: 1.6; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-tabs { width: min(690px,calc(100% - 32px)); margin: -24px auto 0; padding: 6px; border-radius: 50px; position: relative; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 4px; box-shadow: 0 10px 30px #0f172a12; background: white; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-tabs button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; font-size: 14px; font-weight: 600; color: #64748b; min-height: 44px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-tabs button[aria-selected="true"] { color: white; background: linear-gradient(135deg,#1e40af,#2563eb); }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-state { width: min(690px,calc(100% - 32px)); max-width: 690px; margin: 40px auto 0; padding: 40px; border-radius: 20px; box-shadow: 0 12px 32px #0f172a0a; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-orb { display: grid; place-items: center; width: 76px; height: 76px; font-size: 26px; color: #b45309; background: linear-gradient(135deg,#fef3c7,#fde68a); box-shadow: 0 10px 30px #d9770626; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-state h2 { margin: 16px 0 8px; font-size: 23px; line-height: 1.35; color: #343a40; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-state-description { max-width: 580px; margin: auto; line-height: 1.6; font-size: 15px; color: #6b7280; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-release-date { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 18px; margin: 16px auto; border: 1px solid #e2e8f0; background: #f8fafc; color: #007bff; font-size: 14px; font-weight: 700; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-release-date i { color: #f59e0b; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-countdown-panel { padding: 26px 20px; margin: 22px auto; max-width: 620px; background: linear-gradient(135deg,#090e1a,#111e38); border-radius: 18px; box-shadow: 0 15px 35px #00000026; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-countdown-title { color: #22d3ee; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-countdown-title > span { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-countdown { gap: 12px; margin-top: 16px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-countdown > div { padding: 0; background: transparent; min-width: 74px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-countdown strong { padding: 10px 14px; border: 1px solid #38bdf859; background: #ffffff0d; border-radius: 12px; font: 800 34px/1.4 'Courier New',monospace; color: #38bdf8; text-shadow: 0 0 12px #38bdf870; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-countdown span { margin-top: 6px; color: #94a3b8; text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-countdown-note { margin-top: 18px; color: #94a3b8; font-size: 12px; }
+body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .graduation-state-note { margin: 18px 0 0; color: #64748b; font-size: 12px; line-height: 1.6; }
+@media (max-width:575.98px) { body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-tabs { border-radius: 20px; flex-direction: column; } body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-graduation-state { padding: 28px 18px; } body.madrasah-inertia-shell[data-portal-path="layanan/kelulusan"] #main-content .parity-countdown { display: grid; grid-template-columns: repeat(2,1fr); } }
+body[data-portal-path="lacak"] .tracking-reference-footer { border-top: 1px solid #dee2e6; background: white; color: #64748b; padding: 16px 15px; text-align: center; font-size: 12px; }
+body[data-portal-path="lacak"] .tracking-search-label { color: #343a40; font-size: 14.5px; }
+body[data-portal-path="lacak"] .tracking-search-label i { color: #28a745; }
+body[data-portal-path="lacak"] #track-code { border: none !important; border-radius: 0; box-shadow: none; outline: 0; background: transparent; font-size: 15px; }
+body[data-portal-path="lacak"] #track-code::placeholder { color: #94a3b8; font-size: 14px; }
+body[data-portal-path="lacak"] .parity-tracking-card .parity-tracking-pill > i { color: #6c757d; font-size: 18px; }
+body[data-portal-path="lacak"] .guide-card .guide-card__head { padding: 13px 18px; gap: 6px; min-height: 61px; }
+body[data-portal-path="lacak"] .guide-card .guide-card__head strong { font-size: 14.5px; flex: 1; }
+body[data-portal-path="lacak"] .guide-card .guide-card__head span { padding: 1px 6px; border-radius: 20px; white-space: nowrap; font-size: 10px; color: #0369a1; }
+body[data-portal-path="lacak"] .guide-card--amber .guide-card__head span { color: #b45309; }
+body[data-portal-path="lacak"] .guide-card--emerald .guide-card__head span { color: #166534; }
+body[data-portal-path="lacak"] .guide-card--indigo .guide-card__head span { color: #4338ca; }
+body[data-portal-path="lacak"] .guide-card .guide-example { background: #f0f9ff; border-color: #bae6fd; color: #6c757d; }
+body[data-portal-path="lacak"] .guide-card--amber .guide-example { background: #fffbeb; border-color: #fcd34d; }
+body[data-portal-path="lacak"] .guide-card--emerald .guide-example { background: #f0fdf4; border-color: #bbf7d0; }
+body[data-portal-path="lacak"] .guide-card--indigo .guide-example { background: #eef2ff; border-color: #c7d2fe; }
+body[data-portal-path="lacak"] .guide-card .guide-example code { color: inherit; }
+body[data-portal-path="lacak"] .guide-card--amber .guide-example code { color: #d97706; }
+body[data-portal-path="lacak"] .guide-card--emerald .guide-example code { color: #15803d; }
+body[data-portal-path="lacak"] .guide-card--indigo .guide-example code { color: #4338ca; }
+body[data-portal-path="lacak"] .parity-guides-grid > .guide-card { display: flex; flex-direction: column; border-radius: 18px; box-shadow: 0 8px 24px #0000000a; }
+body[data-portal-path="lacak"] .parity-guides-grid > .guide-card p { flex: 1; font-size: 13px; line-height: 1.55; }
+body[data-portal-path="lacak"] .parity-tracking-card .chip-btn { padding: 6px 15px; font-size: 12.5px; font-weight: 600; }
+body[data-portal-path="lacak"] .chip-btn:nth-child(2) i { color: #06b6d4; }
+body[data-portal-path="lacak"] .chip-btn:nth-child(3) i { color: #fbbf24; }
+body[data-portal-path="lacak"] .chip-btn:nth-child(4) i { color: #16a34a; }
+body[data-portal-path="lacak"] .chip-btn:nth-child(5) i { color: #007bff; }
+body[data-portal-path="lacak"] .chip-btn.is-active i { color: white; }
+body[data-portal-path="lacak"] .db-topbar { min-height: 40px; background: #1e2e50; }
+body[data-portal-path="lacak"] .db-topbar a { border-radius: 3px; }
+body[data-portal-path="lacak"] .db-nav-title { color: #10b981; }
+body[data-portal-path="lacak"] .db-nav-sub { color: #808080; }
+body[data-portal-path="lacak"] .db-nav-mobile-btn { background: white; border: 1px solid #ddd; border-radius: 4px; width: 46px; height: 34px; color: #888; }
+@media (min-width:768px) and (max-width:991.98px) { body[data-portal-path="lacak"] .db-nav-container { max-width: 720px; } }
+@media (min-width:576px) and (max-width:767.98px) { body[data-portal-path="lacak"] .db-nav-container { max-width: 540px; } }
+body[data-portal-path="lacak"] [data-madrasah-service="tracking"] { padding: 0; background: #f8fafc; }
+body[data-portal-path="lacak"] [data-madrasah-service="tracking"] .madrasah-service-hero { position: relative; overflow: hidden; padding: 55px 24px 95px; background: radial-gradient(circle at 80% 20%,#ffffff1f,transparent 60%),linear-gradient(145deg,#004d30,#017a4d 60%,#005a38); }
+body[data-portal-path="lacak"] .madrasah-service-label { border-radius: 0; padding: 3px 12px; background: #ffffff2e; border: 1px solid #ffffff4d; font-size: 11.5px; color: #fef08a; width: fit-content; }
+body[data-portal-path="lacak"] .tracking-wave { position: absolute; bottom: -1px; inset-inline: 0; pointer-events: none; }
+body[data-portal-path="lacak"] .tracking-wave svg { width: 100%; height: 48px; }
+body[data-portal-path="lacak"] [data-madrasah-service="tracking"] .parity-tracking-card { width: min(920px,calc(100% - 30px)); margin-top: -45px; padding: 24px 28px; border-radius: 22px; gap: 8px; position: relative; z-index: 1; }
+body[data-portal-path="lacak"] .parity-tracking-pill { margin: 0; }
+body[data-portal-path="lacak"] .parity-tracking-pill input { border: 0; padding: 8px 10px; font-size: 15px; min-height: 0; }
+body[data-portal-path="lacak"] .parity-tracking-btn { background: linear-gradient(135deg,#004d30,#017a4d); font-size: 14px; padding: 10px 26px; }
+body[data-portal-path="lacak"] [data-madrasah-service="tracking"] .chip-row { border: 1px solid #e2e8f0; border-radius: 50px; background: #f8fafc; padding: 6px 10px; margin-top: 8px; gap: 6px; }
+body[data-portal-path="lacak"] .chip-btn { min-height: 32px; font-size: 12px; font-weight: 500; color: #64748b; background: transparent; }
+body[data-portal-path="lacak"] .chip-btn.is-active { background: #005b3b; color: white; }
+body[data-portal-path="lacak"] .parity-tracking-guides { width: min(920px,calc(100% - 30px)); margin-top: 10px; }
+body[data-portal-path="lacak"] .parity-guides-label { width: fit-content; margin: 0 auto; padding: 2px 14px; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 11px; }
+body[data-portal-path="lacak"] .parity-guides-grid { gap: 30px; }
+body[data-portal-path="lacak"] .guide-card { display: block; padding: 0; overflow: hidden; border-top-width: 1px; }
+body[data-portal-path="lacak"] .guide-card__head { padding: 14px 16px; background: #036fa5; color: white; }
+body[data-portal-path="lacak"] .guide-card__head strong { color: white; line-height: 1.2; }
+body[data-portal-path="lacak"] .guide-card--amber .guide-card__head { background: linear-gradient(135deg,#d97706,#b45309); }
+body[data-portal-path="lacak"] .guide-card--emerald .guide-card__head { background: linear-gradient(135deg,#15803d,#166534); }
+body[data-portal-path="lacak"] .guide-card--indigo .guide-card__head { background: linear-gradient(135deg,#4f46e5,#3730a3); }
+body[data-portal-path="lacak"] .guide-card p { padding: 18px 18px 12px; font-size: 12.5px; line-height: 1.6; }
+body[data-portal-path="lacak"] .guide-example { display: flex; justify-content: space-between; gap: 8px; margin: 0 18px 18px; padding: 8px; border: 1px dashed #cbd5e1; background: #f8fafc; font-size: 10.5px; text-align: left; }
+body[data-portal-path="lacak"] .guide-example code { font-size: 11px; font-weight: 700; color: #0369a1; }
+@media (min-width:768px) and (max-width:991.98px) { body[data-portal-path="lacak"] :is(.parity-tracking-card,.parity-tracking-guides) { max-width: 690px; } }
+@media (max-width:767.98px) { body[data-portal-path="lacak"] .parity-guides-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; } body[data-portal-path="lacak"] .parity-tracking-card { padding: 20px; } }
+@media (max-width:479px) { body[data-portal-path="lacak"] .parity-guides-grid { grid-template-columns: 1fr; } }
+body[data-portal-layout="catalogue"]:not([data-portal-path="profil-sekolah"]):not([data-portal-path="berita"]) section:first-of-type {
   background-color: #022c22;
   background-image: radial-gradient(circle, rgb(52 211 153 / .08) 1px, transparent 1px), linear-gradient(125deg,#064e3b,#020617);
   background-size: 16px 16px, auto;
 }
 body[data-portal-layout="catalogue"] section:first-of-type p { max-width: 760px; }
-body[data-portal-layout="catalogue"] section:first-of-type form input { min-height: 46px; padding-left: 20px; }
-body[data-portal-layout="catalogue"] section:first-of-type form .relative > i { display: none; }
-body[data-portal-layout="catalogue"] section:first-of-type form button { min-height: 46px; }
+body[data-portal-layout="catalogue"]:not([data-portal-path="berita"]) section:first-of-type form input { min-height: 46px; padding-left: 20px; }
+body[data-portal-layout="catalogue"]:not([data-portal-path="berita"]) section:first-of-type form .relative > i { display: none; }
+body[data-portal-layout="catalogue"]:not([data-portal-path="berita"]) section:first-of-type form button { min-height: 46px; }
 body[data-portal-layout="catalogue"] .madrasah-catalog-filters { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: .5rem; }
 body[data-portal-layout="catalogue"] .madrasah-catalog-filters a { flex-shrink: 0; white-space: nowrap; }
 body[data-portal-path="galeri"] main > .grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
@@ -1898,6 +2089,43 @@ body[data-portal-path="layanan/ptsp"] .portal-primary-navigation > a:first-child
 .db-topbar { background: #0b1528; }
 .db-navbar { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
 .db-nav-container { width: 100%; max-width: 1140px; margin-inline: auto; padding-inline: 15px; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-container { max-width: 1140px; }
+body[data-portal-path="layanan/izin-siswa"] { font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif; }
+body[data-portal-path="layanan/izin-siswa"] .permit-footer { padding: 24px 15px; background: #343a40; color: white; text-align: center; font-size: 13px; line-height: 1.5; }
+body[data-portal-path="layanan/izin-siswa"] .permit-footer p { margin-bottom: 4px; }
+body[data-portal-path="layanan/izin-siswa"] .permit-footer small { font-size: 11px; color: #6c757d; }
+body[data-portal-path="layanan/izin-siswa"] .db-topbar { background: #0b1528; padding-block: 7px; }
+@media (min-width: 576px) {
+  body[data-portal-path="layanan/izin-siswa"] .db-topbar { height: 40.5px; }
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-inner { min-height: 67.125px; }
+}
+body[data-portal-path="layanan/izin-siswa"] .db-topbar a { border-radius: 3px; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-logo { height: 52px; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-title { color: #0f172a; font-size: 14px; font-weight: 800; letter-spacing: -.2px; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-sub { color: #059669; font-weight: 700; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-mobile-btn { width: 46px; height: 34px; border: 1px solid #ddd; border-radius: 4px; background: white; color: #888; }
+body[data-portal-path="layanan/izin-siswa"] .db-navbar { position: static; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-inner > a { min-width: 0; flex-shrink: 1; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-inner > a > div { min-width: 0; }
+body[data-portal-path="layanan/izin-siswa"] :is(.db-nav-title, .db-nav-sub) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body[data-portal-path="layanan/izin-siswa"] .db-nav-desktop { flex-shrink: 0; }
+@media (max-width: 991.98px) {
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-inner { flex-wrap: wrap; column-gap: 0; row-gap: 0; }
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-inner > a { order: 1; margin-block: 3.5625px; }
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-mobile-btn { order: 2; margin-left: auto; }
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-desktop { order: 3; flex: 0 0 100%; align-items: start; gap: 0; padding-block: 6.5px; }
+  body[data-portal-path="layanan/izin-siswa"] .permit-menu-open .db-nav-desktop { display: flex; flex-direction: column; }
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-link { padding: 7px 13px; margin: 0 2px; }
+}
+@media (max-width: 1199.98px) {
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-container { max-width: 960px; }
+}
+@media (max-width: 991.98px) {
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-container { max-width: 720px; }
+}
+@media (max-width: 767.98px) {
+  body[data-portal-path="layanan/izin-siswa"] .db-nav-container { max-width: 540px; }
+}
 .db-nav-inner { min-height: 68px; }
 .db-nav-logo { height: 58px; width: auto; object-fit: contain; flex-shrink: 0; }
 .db-nav-title { font-size: 15px; }

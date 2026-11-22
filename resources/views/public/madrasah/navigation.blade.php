@@ -120,7 +120,7 @@
       </span>
     </div>
   </header>
-@elseif (request()->is('data-siswa', 'lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
+@elseif (request()->is('data-siswa', 'layanan/tracer-alumni', 'lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
   <!-- ================= TOP BAR APLIKASI DATABASE SISWA ================= -->
   <div data-portal-identity class="db-topbar text-slate-200 text-xs py-1.5 border-b border-white/10">
     <div class="db-nav-container flex items-center justify-between gap-4 flex-wrap">
@@ -150,19 +150,24 @@
         </div>
       </a>
 
-      <nav class="db-nav-desktop items-center gap-1" aria-label="Menu aplikasi database siswa">
+      <nav id="databaseNavigation" class="db-nav-desktop items-center gap-1" aria-label="Menu aplikasi database siswa">
         <a href="/" class="db-nav-link">Home</a>
         <a href="/data-siswa" class="db-nav-link {{ request()->is('data-siswa') ? 'is-active' : '' }}">Data Siswa</a>
-        <a href="/alumni" class="db-nav-link">Data Alumni</a>
+        <a href="/layanan/tracer-alumni" class="db-nav-link {{ request()->is('layanan/tracer-alumni') ? 'is-active' : '' }}">Data Alumni</a>
         <a href="/layanan/legalisir" class="db-nav-link {{ request()->is('layanan/legalisir') ? 'is-active' : '' }}">Legalisir</a>
         <a href="/layanan/izin-siswa" class="db-nav-link {{ request()->is('layanan/izin-siswa') ? 'is-active' : '' }}">Surat Izin</a>
         <a href="/layanan/mutasi" class="db-nav-link {{ request()->is('layanan/mutasi') ? 'is-active' : '' }}">Mutasi</a>
-        <a href="/lacak" class="db-nav-link {{ request()->is('lacak') ? 'is-active' : 'is-tracking' }}"><i class="fa-solid fa-magnifying-glass mr-1"></i>Lacak Terpadu</a>
+        @unless (request()->is('data-siswa', 'alumni'))
+          <a href="/lacak" class="db-nav-link {{ request()->is('lacak') ? 'is-active' : 'is-tracking' }}"><i class="fa-solid fa-magnifying-glass mr-1"></i>Lacak Terpadu</a>
+        @endunless
         <a href="/layanan/lapor" class="db-nav-link">Pengaduan</a>
+        @if (request()->is('alumni'))
+          <a href="/perpustakaan" class="db-nav-link">Perpustakaan</a>
+        @endif
         <a href="/layanan/kelulusan" class="db-nav-link {{ request()->is('layanan/kelulusan') ? 'is-active' : '' }}">Cek Kelulusan</a>
       </nav>
 
-      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="db-nav-mobile-btn w-9 h-9 rounded-lg bg-slate-100 text-slate-700 items-center justify-center">
+      <button data-toggle-mobile aria-controls="{{ request()->is('layanan/izin-siswa') ? 'databaseNavigation' : 'mobileMenu' }}" aria-expanded="false" aria-label="Menu navigasi" class="db-nav-mobile-btn w-9 h-9 rounded-lg bg-slate-100 text-slate-700 items-center justify-center">
         <i class="fa-solid fa-bars"></i>
       </button>
 
@@ -353,57 +358,131 @@
   </div>
 @elseif (request()->is('alumni*'))
   <!-- ================= HEADER PORTAL ALUMNI (IKA) ================= -->
-  <div data-portal-identity class="bg-slate-950 text-slate-200 text-xs py-2 border-b border-slate-800 hidden md:block">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-5">
-        <span><i class="fa-solid fa-id-card text-amber-400"></i> NPSN: {{ ($profile['npsn'] ?? null) ?: 'Belum tersedia' }}</span>
-        <span><i class="fa-solid fa-location-dot text-amber-400"></i> {{ $schoolAddress }}</span>
-        <span><i class="fa-solid fa-phone text-amber-400"></i> {{ $schoolPhone }}</span>
+  <div data-portal-identity class="ika-topbar text-white text-xs border-b hidden md:block transition-colors duration-300">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-6">
+        <span class="flex items-center gap-1.5 font-semibold text-theme-100">
+          <i class="fa-solid fa-graduation-cap text-accent-yellow"></i> NPSN: {{ ($profile['npsn'] ?? null) ?: 'Belum tersedia' }}
+        </span>
+        <span class="flex items-center gap-1.5 text-theme-100">
+          <i class="fa-solid fa-location-dot text-accent-yellow"></i> {{ $schoolAddress }}
+        </span>
+        <span class="flex items-center gap-1.5 text-theme-100">
+          <i class="fa-solid fa-phone text-accent-yellow"></i> {{ $schoolPhone }}
+        </span>
+        <span class="hidden lg:inline-flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-0.5 rounded-full border border-white/15 text-[11px] text-theme-100 font-semibold shadow-inner" title="Pengunjung online di portal saat ini">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+          </span>
+          <span>Online: <strong id="topbarLiveVisitors" class="text-accent-yellow font-bold">{{ number_format($visits['today'] ?? 1, 0, ',', '.') }}</strong> User</span>
+        </span>
       </div>
-      <div class="flex items-center gap-3">
-        <span class="bg-slate-800 px-2.5 py-0.5 rounded-full text-[11px]">Layanan IKA: <strong class="text-emerald-300">Aktif</strong></span>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center gap-1.5 text-theme-100 bg-white/10 px-3 py-1 rounded-full border border-white/15">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Layanan IKA: <strong class="text-emerald-300">Aktif</strong></span>
+        </div>
+        <span class="ika-theme-picker"><i class="fa-solid fa-palette"></i> TEMA: <button type="button" data-ika-theme="blue" aria-label="Tema biru" aria-pressed="true"></button><button type="button" data-ika-theme="red" aria-label="Tema merah" aria-pressed="false"></button><button type="button" data-ika-theme="green" aria-label="Tema hijau" aria-pressed="false"></button></span>
+        <div class="flex items-center space-x-3 text-slate-300">
+          <a href="/kontak" class="hover:text-accent-yellow transition" title="Instagram Alumni"><i class="fa-brands fa-instagram"></i></a>
+          <a href="/kontak" class="hover:text-accent-yellow transition" title="LinkedIn Alumni"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="/galeri/video" class="hover:text-accent-yellow transition" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
       </div>
     </div>
   </div>
-  <div class="bg-slate-900 text-white py-2 px-4 sm:px-8 lg:px-12 border-b border-slate-800 hidden md:block">
-    <div class="max-w-[1600px] mx-auto flex items-center gap-3 text-xs">
-      <span class="bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-[10px] shrink-0">AGENDA IKA</span>
-      <span class="text-slate-200 truncate">Selamat Datang di Portal Resmi Ikatan Keluarga Alumni (IKA) {{ strtoupper($schoolName) }} • Pengisian Tracer Study Mandiri Lulusan Terbuka Untuk Seluruh Angkatan</span>
+  <div class="ika-ticker text-white py-2 px-4 sm:px-8 lg:px-12 border-b text-xs overflow-hidden transition-colors duration-300">
+    <div class="max-w-[1600px] mx-auto flex items-center gap-3">
+      <span class="bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-extrabold px-3 py-1 rounded-lg uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-sm text-[11px]">
+        <i class="fa-solid fa-bullhorn animate-bounce"></i> AGENDA IKA
+      </span>
+      <div class="overflow-hidden w-full relative">
+        <div class="flex whitespace-nowrap animate-marquee-slow hover:pause-on-hover">
+          @for ($repeat = 0; $repeat < 2; $repeat++)
+            <div class="flex items-center space-x-8 shrink-0 pr-8" @if ($repeat === 1) aria-hidden="true" @endif>
+              <span class="inline-flex items-center text-slate-100 font-medium tracking-wide">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-2"></span>
+                Selamat Datang di Portal Resmi Ikatan Keluarga Alumni (IKA) {{ strtoupper($schoolName) }}
+              </span>
+              <span class="inline-flex items-center text-slate-100 font-medium tracking-wide">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-2"></span>
+                Pengisian Tracer Study Mandiri Lulusan Terbuka Untuk Seluruh Angkatan
+              </span>
+              <span class="inline-flex items-center text-slate-100 font-medium tracking-wide">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-2"></span>
+                Tersedia Info Lowongan Karir Aktif &amp; Peluang Beasiswa Terverifikasi
+              </span>
+              <span class="inline-flex items-center text-slate-100 font-medium tracking-wide">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-2"></span>
+                Layanan Pengajuan Legalisir Ijazah &amp; Transkrip Nilai Online Buka 24 Jam
+              </span>
+              <span class="inline-flex items-center text-slate-100 font-medium tracking-wide">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-2"></span>
+                Dapatkan E-KTA (Kartu Tanda Anggota) Digital Resmi Ber-QR Code Secara Mandiri
+              </span>
+            </div>
+          @endfor
+        </div>
+      </div>
     </div>
   </div>
-  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2.5 flex items-center justify-between gap-4">
-      <a href="/alumni" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
-        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain shrink-0">
+  <header data-madrasah-navigation class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
+      <a href="/alumni" class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial group">
+        <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 drop-shadow-sm">
         <div class="min-w-0">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="font-extrabold text-sm sm:text-base text-slate-900 truncate">IKATAN KELUARGA ALUMNI (IKA)</span>
-            <span class="hidden sm:inline-block shrink-0 bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2 py-0.5 rounded-md border border-amber-200">OFFICIAL HUB</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="font-black text-sm sm:text-base tracking-tight text-slate-900 truncate">IKATAN KELUARGA ALUMNI (IKA)</span>
+            <span class="hidden sm:inline-block shrink-0 bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">Official Hub</span>
           </div>
-          <span class="text-[10px] text-slate-500 block truncate">{{ strtoupper($schoolName) }} • Penelusuran Lulusan &amp; Jejaring Karir</span>
+          <span class="text-[11px] text-slate-500 font-semibold block truncate max-w-[260px] sm:max-w-md">{{ strtoupper($schoolName) }} • Penelusuran Lulusan &amp; Jejaring Karir</span>
         </div>
       </a>
-      <div class="hidden md:flex items-center gap-2">
-        <a href="#tracer-alumni" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-extrabold shadow-sm">Isi Tracer Study</a>
-        <a href="#tracer-alumni" class="px-3.5 py-2 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-extrabold shadow-sm">KTA Digital</a>
-        <a href="/layanan/legalisir" class="px-3.5 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold">Legalisir Ijazah ↗</a>
+      <div class="flex items-center space-x-2 sm:space-x-3 ml-auto">
+        <button type="button" data-open-dialog="searchModal" aria-haspopup="dialog" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700 flex items-center justify-center transition shadow-sm" aria-label="Cari alumni" title="Cari Alumni / Info">
+          <i class="fa-solid fa-magnifying-glass text-xs sm:text-sm"></i>
+        </button>
+        <a href="/layanan/tracer-alumni#tracer-form" data-ika-tab="tracer" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md transition-all border border-amber-300/30">
+          <i class="fa-solid fa-pen-to-square text-amber-100 text-xs"></i>
+          <span>Isi Tracer Study</span>
+        </a>
+        <a href="/layanan/tracer-alumni#alumni-kta" data-ika-tab="kta" class="hidden sm:inline-flex items-center gap-1.5 ika-btn-theme text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md transition-all">
+          <i class="fa-solid fa-id-card text-amber-300 text-xs"></i>
+          <span>KTA Digital</span>
+        </a>
+        <a href="/layanan/legalisir" class="hidden lg:inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl transition">
+          <i class="fa-solid fa-certificate text-rose-600"></i>
+          <span>Legalisir Ijazah ↗</span>
+        </a>
+        <a href="/" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center transition" aria-label="Website sekolah" title="Kembali ke Beranda Website Sekolah">
+          <i class="fa-solid fa-house text-xs sm:text-sm"></i>
+        </a>
+        <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="md:hidden shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center hover:bg-slate-200 transition">
+          <i class="fa-solid fa-bars text-sm sm:text-base"></i>
+        </button>
       </div>
-      <button data-toggle-mobile aria-controls="mobileMenu" aria-expanded="false" aria-label="Menu navigasi" class="md:hidden shrink-0 w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-        <i class="fa-solid fa-bars"></i>
-      </button>
     </div>
-    <div class="hidden md:block bg-slate-50 border-t border-slate-200">
-      <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-2 flex items-center justify-between text-xs font-semibold text-slate-700">
-        <nav class="flex flex-wrap items-center gap-5">
-          <a href="/" class="hover:text-blue-700">Beranda</a>
-          <a href="/alumni/direktori" class="hover:text-blue-700">Direktori Alumni</a>
-          <a href="#tracer-alumni" class="hover:text-blue-700">Tracer Study</a>
-          <a href="/alumni/direktori" class="hover:text-blue-700">Bursa Karir</a>
-          <a href="/alumni/direktori" class="hover:text-blue-700">Beasiswa</a>
-          <a href="#tracer-alumni" class="hover:text-blue-700">KTA Digital</a>
-          <a href="/layanan/legalisir" class="text-rose-600 font-bold">Legalisir Online ↗</a>
+    <div class="hidden md:block bg-slate-50/90 border-t border-slate-200/80">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-1.5 flex items-center justify-between text-[13px] font-semibold text-slate-700">
+        <nav class="flex flex-wrap items-center gap-x-6 gap-y-1">
+          <a href="/alumni" aria-current="page" class="text-blue-700 hover:text-blue-800 transition py-1 flex items-center gap-1.5 font-bold"><i class="fa-solid fa-house text-xs text-blue-600"></i> Beranda</a>
+          <a href="/alumni#direktori-alumni" data-ika-tab="directory" class="hover:text-blue-700 transition py-1 flex items-center gap-1"><i class="fa-solid fa-users text-xs text-blue-600"></i> Direktori Alumni</a>
+          <a href="/layanan/tracer-alumni#tracer-form" data-ika-tab="tracer" class="hover:text-blue-700 transition py-1 flex items-center gap-1"><i class="fa-solid fa-pen-nib text-xs text-amber-500"></i> Tracer Study</a>
+          <a href="/alumni?section=careers#ika-portal-tabs" data-ika-tab="careers" class="hover:text-blue-700 transition py-1 flex items-center gap-1"><i class="fa-solid fa-briefcase text-xs text-emerald-600"></i> Bursa Karir</a>
+          <a href="/alumni?section=scholarships#ika-portal-tabs" data-ika-tab="scholarships" class="hover:text-blue-700 transition py-1 flex items-center gap-1"><i class="fa-solid fa-graduation-cap text-xs text-purple-600"></i> Beasiswa</a>
+          <a href="/layanan/tracer-alumni#alumni-kta" data-ika-tab="kta" class="hover:text-blue-700 transition py-1 flex items-center gap-1"><i class="fa-solid fa-id-card text-xs text-amber-500"></i> KTA Digital</a>
+          <a href="/layanan/legalisir" class="hover:text-rose-600 text-rose-700 transition py-1 flex items-center gap-1 font-bold"><i class="fa-solid fa-certificate text-xs text-rose-500"></i> Legalisir Online ↗</a>
+          <a href="#program-ika" class="hover:text-blue-700 transition py-1">Program IKA</a>
+          <a href="/alumni#statistik-alumni" data-ika-modal="stats" class="hover:text-blue-700 transition py-1 flex items-center gap-1"><i class="fa-solid fa-chart-pie text-xs text-blue-500"></i> Statistik</a>
+          <a href="#faq-alumni" class="hover:text-blue-700 transition py-1">FAQ</a>
         </nav>
-        <span class="text-emerald-700 font-bold text-[11px]">Portal Resmi Alumni Terintegrasi</span>
+        <div class="hidden lg:flex items-center gap-3 text-xs text-slate-500 font-medium">
+          <span class="inline-flex items-center gap-1.5 text-emerald-700 font-bold">
+            <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+            <span>Portal Resmi Alumni Terintegrasi</span>
+          </span>
+        </div>
       </div>
     </div>
     <span class="sr-only">
@@ -661,7 +740,7 @@
           <i class="fa-solid fa-magnifying-glass text-xs sm:text-sm"></i>
         </button>
 
-        <a href="/login" class="portal-catalogue-login">Login Sistem</a>
+        <a href="/login" class="portal-catalogue-login"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> Login Sistem</a>
         <!-- Tombol Login Siswa (Nuansa Oranye-Emas Landing Page) -->
         <a href="/login?portal=siswa" class="portal-login-action inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-[13px] font-bold px-3.5 py-2 rounded-xl shadow-md hover:shadow-orange-500/30 transition-all border border-amber-300/30" title="Masuk Portal Siswa">
           <i class="fa-solid fa-user-graduate text-amber-100 text-xs"></i>
@@ -978,13 +1057,40 @@
   <!-- Mobile Drawer Menu -->
   <div id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu navigasi" tabindex="-1" class="fixed inset-0 bg-slate-900/60 z-50 hidden backdrop-blur-sm">
     <div class="fixed right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white p-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
-      @if (request()->is('lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa'))
+      @if (request()->is('data-siswa', 'layanan/tracer-alumni', 'alumni', 'alumni/*', 'layanan/legalisir', 'layanan/izin-siswa', 'layanan/mutasi', 'lacak', 'layanan/lapor', 'lapor/transparansi', 'layanan/kelulusan'))
+      @php
+        $databaseDrawerLinks = [
+            ['/', 'Home', 'house', ['/']],
+            ['/data-siswa', 'Data Siswa', 'users', ['data-siswa']],
+            ['/layanan/tracer-alumni', 'Data Alumni', 'user-graduate', ['layanan/tracer-alumni']],
+            ['/layanan/legalisir', 'Legalisir', 'certificate', ['layanan/legalisir']],
+            ['/layanan/izin-siswa', 'Surat Izin', 'file-signature', ['layanan/izin-siswa']],
+            ['/layanan/mutasi', 'Mutasi', 'people-arrows', ['layanan/mutasi']],
+            ['/lacak', 'Lacak Terpadu', 'magnifying-glass', ['lacak']],
+            ['/layanan/lapor', 'Pengaduan', 'bullhorn', ['layanan/lapor', 'lapor/transparansi']],
+            ['/layanan/kelulusan', 'Cek Kelulusan', 'award', ['layanan/kelulusan']],
+        ];
+        if (request()->is('alumni*')) {
+            $databaseDrawerLinks = [
+                ['/alumni', 'Beranda IKA', 'house', ['alumni']],
+                ['/alumni#direktori-alumni', 'Direktori Alumni', 'users', ['alumni/direktori']],
+                ['/layanan/tracer-alumni#tracer-form', 'Tracer Study', 'pen-to-square', []],
+                ['/alumni?section=careers#ika-portal-tabs', 'Bursa Karir', 'briefcase', []],
+                ['/alumni?section=scholarships#ika-portal-tabs', 'Beasiswa', 'graduation-cap', []],
+                ['/layanan/tracer-alumni#alumni-kta', 'KTA Digital', 'id-card', []],
+                ['/layanan/legalisir', 'Legalisir Online', 'certificate', []],
+                ['/alumni#program-ika', 'Program IKA', 'handshake', []],
+                ['/alumni#statistik-alumni', 'Statistik', 'chart-pie', []],
+                ['/alumni#faq-alumni', 'FAQ', 'circle-info', []],
+            ];
+        }
+      @endphp
       <div>
         <div class="flex items-center justify-between pb-4 border-b border-slate-100">
           <div class="flex items-center gap-2.5 min-w-0">
             <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}" class="w-9 h-9 object-contain shrink-0">
             <div class="min-w-0">
-              <span class="block font-extrabold text-sm text-emerald-700 leading-tight truncate">APLIKASI DATABASE SISWA</span>
+              <span class="block font-extrabold text-sm text-emerald-700 leading-tight truncate">{{ request()->is('alumni*') ? 'IKATAN KELUARGA ALUMNI (IKA)' : 'APLIKASI DATABASE SISWA' }}</span>
               <span class="block text-[10px] font-bold text-slate-500 uppercase truncate">{{ strtoupper($schoolName) }}</span>
             </div>
           </div>
@@ -994,33 +1100,19 @@
         </div>
 
         <nav class="mt-5 flex flex-col space-y-1.5 font-semibold text-slate-700 text-sm" aria-label="Menu aplikasi database siswa">
-          <a href="/" class="px-3.5 py-2.5 rounded-xl hover:bg-slate-100 hover:text-blue-600 transition flex items-center gap-2.5">
-            <i class="fa-solid fa-house w-4 text-slate-400"></i> Home
-          </a>
-          <a href="/data-siswa" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('data-siswa') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
-            <i class="fa-solid fa-users w-4 {{ request()->is('data-siswa') ? 'text-white' : 'text-slate-400' }}"></i> Data Siswa
-          </a>
-          <a href="/alumni" class="px-3.5 py-2.5 rounded-xl hover:bg-slate-100 hover:text-blue-600 transition flex items-center gap-2.5">
-            <i class="fa-solid fa-user-graduate w-4 text-slate-400"></i> Data Alumni
-          </a>
-          <a href="/layanan/legalisir" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/legalisir') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
-            <i class="fa-solid fa-certificate w-4 {{ request()->is('layanan/legalisir') ? 'text-white' : 'text-slate-400' }}"></i> Legalisir
-          </a>
-          <a href="/layanan/izin-siswa" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/izin-siswa') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
-            <i class="fa-solid fa-file-signature w-4 {{ request()->is('layanan/izin-siswa') ? 'text-white' : 'text-slate-400' }}"></i> Surat Izin
-          </a>
-          <a href="/layanan/mutasi" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/mutasi') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
-            <i class="fa-solid fa-people-arrows w-4 {{ request()->is('layanan/mutasi') ? 'text-white' : 'text-slate-400' }}"></i> Mutasi
-          </a>
-          <a href="/lacak" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('lacak') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'text-emerald-600 font-bold hover:bg-emerald-50' }}">
-            <i class="fa-solid fa-magnifying-glass w-4"></i> Lacak Terpadu
-          </a>
-          <a href="/layanan/lapor" class="px-3.5 py-2.5 rounded-xl hover:bg-slate-100 hover:text-blue-600 transition flex items-center gap-2.5">
-            <i class="fa-solid fa-bullhorn w-4 text-slate-400"></i> Pengaduan
-          </a>
-          <a href="/layanan/kelulusan" class="px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5 {{ request()->is('layanan/kelulusan') ? 'bg-blue-600 text-white font-bold shadow-sm' : 'hover:bg-slate-100 hover:text-blue-600' }}">
-            <i class="fa-solid fa-award w-4 {{ request()->is('layanan/kelulusan') ? 'text-white' : 'text-slate-400' }}"></i> Cek Kelulusan
-          </a>
+          @foreach ($databaseDrawerLinks as [$href, $label, $icon, $paths])
+            @php($active = request()->is(...$paths))
+            <a href="{{ $href }}" @if ($active) aria-current="page" @endif
+              @class([
+                'px-3.5 py-2.5 rounded-xl transition flex items-center gap-2.5',
+                'bg-blue-600 text-white font-bold shadow-sm' => $active,
+                'text-emerald-600 font-bold hover:bg-emerald-50' => ! $active && $href === '/lacak',
+                'hover:bg-slate-100 hover:text-blue-600' => ! $active && $href !== '/lacak',
+              ])>
+              <i aria-hidden="true" @class(['fa-solid fa-'.$icon, 'w-4', 'text-slate-400' => ! $active && $href !== '/lacak'])></i>
+              {{ $label }}
+            </a>
+          @endforeach
         </nav>
       </div>
 

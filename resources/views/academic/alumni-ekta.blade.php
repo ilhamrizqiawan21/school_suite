@@ -31,6 +31,11 @@
         </table>
         <div class="verify">
             Verifikasi Keabsahan (/verifikasi): <strong>{{ $verificationToken }}</strong>
+            @if(! empty($qrDataUri))
+                <div style="margin-top: 8px;">
+                    <img src="{{ $qrDataUri }}" alt="QR Verifikasi E-KTA" style="width: 68px; height: 68px;">
+                </div>
+            @endif
         </div>
     </div>
 </body>

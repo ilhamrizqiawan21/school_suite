@@ -133,7 +133,7 @@ export const PUBLIC_SERVICE_CATEGORIES: PublicServiceCategory[] = [
                 title: 'Tracer & Direktori Alumni',
                 description: 'Pembaruan data kuliah/karier alumni, direktori terverifikasi, dan kartu E-KTA.',
                 category: 'students',
-                href: '/alumni',
+                href: '/layanan/tracer-alumni',
                 synonyms: ['tracer', 'alumni', 'ekta', 'beasiswa', 'karier'],
                 available: true,
                 badge: 'Aktif',

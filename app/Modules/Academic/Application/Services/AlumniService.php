@@ -11,6 +11,10 @@ use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
 use App\Modules\Core\Application\Services\ServiceTicketService;
 use App\Shared\Audit\AuditLogger;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +30,11 @@ class AlumniService
     public const STATUS_LABELS = [
         'studying' => 'Kuliah / Studi Lanjut',
         'working' => 'Bekerja',
+        'civil_servant' => 'ASN / PNS / TNI / Polri',
+        'freelance' => 'Profesional / Freelance',
+        'homemaker' => 'Ibu Rumah Tangga',
+        'retired' => 'Purnatugas / Pensiun',
+        'training' => 'Kursus / Pelatihan',
         'entrepreneur' => 'Wirausaha',
         'job_seeking' => 'Mencari Pekerjaan',
         'other' => 'Aktivitas Lainnya',
@@ -49,12 +58,13 @@ class AlumniService
         ?User $user = null,
         ?int $externalApplicantId = null,
         ?UploadedFile $proofFile = null,
+        ?UploadedFile $photoFile = null,
     ): AlumniProfile {
         if ($user === null && $externalApplicantId === null) {
             abort(403, 'Silakan masuk sebagai akun alumni atau pengguna alumni terlebih dahulu.');
         }
 
-        return DB::transaction(function () use ($schoolId, $data, $user, $externalApplicantId, $proofFile): AlumniProfile {
+        return DB::transaction(function () use ($schoolId, $data, $user, $externalApplicantId, $proofFile, $photoFile): AlumniProfile {
             $existing = $this->findOwnedProfile($schoolId, $user, $externalApplicantId);
 
             $nisn = isset($data['nisn']) && trim((string) $data['nisn']) !== '' ? trim((string) $data['nisn']) : null;
@@ -88,6 +98,17 @@ class AlumniService
                 $proofDocId = (int) $doc->id;
             }
 
+            $photoDocumentId = $existing?->photo_document_id;
+            if ($photoFile !== null) {
+                $photoDocumentId = (int) $this->documentService->storePrivateAttachment(
+                    schoolId: $schoolId,
+                    file: $photoFile,
+                    documentKind: 'attachment',
+                    ticket: null,
+                    uploader: $user,
+                )->id;
+            }
+
             $payload = [
                 'school_id' => $schoolId,
                 'student_id' => $studentId,
@@ -107,6 +128,7 @@ class AlumniService
                 'phone' => isset($data['phone']) ? trim((string) $data['phone']) ?: null : null,
                 'email' => isset($data['email']) ? trim((string) $data['email']) ?: null : null,
                 'proof_document_id' => $proofDocId,
+                'photo_document_id' => $photoDocumentId,
                 'opt_in_directory' => (bool) ($data['opt_in_directory'] ?? false),
                 'opt_in_contact' => (bool) ($data['opt_in_contact'] ?? false),
                 'opt_in_career' => (bool) ($data['opt_in_career'] ?? false),
@@ -116,6 +138,12 @@ class AlumniService
                     ? 'pending'
                     : ($existing?->moderation_status ?? 'pending'),
             ];
+
+            foreach (['diploma_serial', 'activity_location', 'residence_city', 'linkedin_url', 'instagram_handle'] as $field) {
+                if (array_key_exists($field, $data)) {
+                    $payload[$field] = trim((string) $data[$field]) ?: null;
+                }
+            }
 
             if ($existing !== null) {
                 $existing->forceFill($payload)->save();
@@ -178,8 +206,34 @@ class AlumniService
         });
     }
 
+    /** @return array{total: int, studying: int, working: int, entrepreneur: int} */
+    public function publicSummary(int $schoolId): array
+    {
+        $counts = AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')
+            ->where('opt_in_directory', true)->selectRaw('current_status, COUNT(*) as total')->groupBy('current_status')->pluck('total', 'current_status');
+
+        return ['total' => (int) $counts->sum(), 'studying' => (int) $counts->get('studying', 0),
+            'working' => (int) $counts->get('working', 0), 'entrepreneur' => (int) $counts->get('entrepreneur', 0)];
+    }
+
+    public function publicStatistics(int $schoolId): array
+    {
+        $base = AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')->where('opt_in_directory', true);
+        $statuses = (clone $base)->selectRaw('current_status, COUNT(*) as total')->groupBy('current_status')->orderBy('current_status')->get();
+        $campuses = (clone $base)->where('current_status', 'studying')->where('opt_in_career', true)
+            ->whereNotNull('institution_or_company')->where('institution_or_company', '!=', '')
+            ->selectRaw('institution_or_company, COUNT(*) as total')->groupBy('institution_or_company')
+            ->orderByDesc('total')->orderBy('institution_or_company')->limit(5)->get();
+
+        return [
+            'statuses' => $statuses->map(fn ($row) => ['status' => $row->current_status,
+                'label' => self::STATUS_LABELS[$row->current_status] ?? $row->current_status, 'total' => (int) $row->total])->all(),
+            'campuses' => $campuses->map(fn ($row) => ['name' => $row->institution_or_company, 'total' => (int) $row->total])->all(),
+        ];
+    }
+
     /**
-     * Public alumni directory: strictly excludes non-approved or non-opt-in records and strips unconsented fields.
+     * Public alumni directory excludes unapproved and non-opt-in profiles.
      *
      * @param  array<string, mixed>  $filters
      * @return list<array<string, mixed>>
@@ -194,17 +248,20 @@ class AlumniService
             ->where('school_id', $schoolId)
             ->where('moderation_status', 'approved')
             ->where('opt_in_directory', true)
+            ->when(array_key_exists('ids', $filters), fn ($q) => $q->whereIn('id', $filters['ids']))
             ->when($year !== null, fn ($q) => $q->where('graduation_year', $year))
             ->when($status !== '' && array_key_exists($status, self::STATUS_LABELS), fn ($q) => $q->where('current_status', $status))
             ->when($search !== '', function ($q) use ($search): void {
                 $q->where(fn ($sub) => $sub
                     ->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('institution_or_company', 'like', "%{$search}%")
-                    ->orWhere('scholarship_info', 'like', "%{$search}%"));
+                    ->orWhere(fn ($career) => $career->where('opt_in_career', true)->where(fn ($fields) => $fields
+                        ->where('institution_or_company', 'like', "%{$search}%")
+                        ->orWhere('position_or_program', 'like', "%{$search}%")
+                        ->orWhere('scholarship_info', 'like', "%{$search}%"))));
             })
             ->orderByDesc('graduation_year')
             ->orderBy('full_name')
-            ->limit(80)
+            ->limit(max(1, (int) ($filters['limit'] ?? 80)))
             ->get();
 
         return $rows->map(function (AlumniProfile $p): array {
@@ -223,6 +280,71 @@ class AlumniService
                 'contact_phone' => $p->opt_in_contact ? $p->phone : null,
             ];
         })->values()->all();
+    }
+
+    public function publicHomeDirectory(int $schoolId, array $filters): array
+    {
+        $base = AlumniProfile::query()->where('school_id', $schoolId)->where('moderation_status', 'approved')->where('opt_in_directory', true);
+        $years = (clone $base)->selectRaw('graduation_year, COUNT(*) as total')->groupBy('graduation_year')->orderByDesc('graduation_year')->get()->toArray();
+        $majors = (clone $base)->whereNotNull('major_or_class')->where('major_or_class', '!=', '')->distinct()->orderBy('major_or_class')->pluck('major_or_class')->all();
+        $query = clone $base;
+        foreach (['graduation_year', 'current_status', 'major_or_class'] as $key) {
+            if (filled($filters[$key] ?? null)) {
+                $query->where($key, $filters[$key]);
+            }
+        }
+        $search = trim((string) ($filters['search'] ?? ''));
+        if ($search !== '') {
+            $query->where(fn ($q) => $q->where('full_name', 'like', "%{$search}%")
+                ->orWhere(fn ($career) => $career->where('opt_in_career', true)->where(fn ($fields) => $fields
+                    ->where('institution_or_company', 'like', "%{$search}%")->orWhere('position_or_program', 'like', "%{$search}%"))));
+        }
+        $showAll = ($filters['per_page'] ?? null) === 'all';
+        $perPage = $showAll ? max(1, (clone $query)->count()) : (int) ($filters['per_page'] ?? 24);
+        $page = $query->orderByDesc('graduation_year')->orderBy('full_name')->paginate($perPage, ['id']);
+
+        return [
+            'data' => $this->publicDirectory($schoolId, ['ids' => $page->pluck('id')->all(), 'limit' => $perPage]),
+            'total' => $page->total(), 'current_page' => $page->currentPage(), 'last_page' => $page->lastPage(),
+            'per_page' => $showAll ? 'all' : $perPage, 'years' => $years, 'majors' => $majors,
+        ];
+    }
+
+    /**
+     * Search approved, directory-opted-in alumni across the full school scope for E-KTA status lookup.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function publicEktaLookup(int $schoolId, string $query): ?array
+    {
+        $clean = trim($query);
+        if (mb_strlen($clean) < 2) {
+            return null;
+        }
+
+        $match = AlumniProfile::query()
+            ->where('school_id', $schoolId)
+            ->where('moderation_status', 'approved')
+            ->where('opt_in_directory', true)
+            ->where(function ($q) use ($clean): void {
+                $q->where('full_name', 'like', "%{$clean}%")
+                    ->orWhere('ekta_number', $clean);
+            })
+            ->orderByDesc('graduation_year')
+            ->orderBy('full_name')
+            ->first();
+
+        if ($match === null) {
+            return null;
+        }
+
+        return [
+            'id' => (int) $match->id,
+            'full_name' => $match->full_name,
+            'graduation_year' => (int) $match->graduation_year,
+            'major_or_class' => $match->major_or_class,
+            'has_ekta' => $match->ekta_document_id !== null,
+        ];
     }
 
     public function findOwnedProfile(int $schoolId, ?User $user, ?int $externalApplicantId): ?AlumniProfile
@@ -264,12 +386,20 @@ class AlumniService
         ], $actor);
 
         $verificationToken = Str::random(40);
+        $writer = new Writer(
+            new ImageRenderer(
+                new RendererStyle(160, 2),
+                new SvgImageBackEnd,
+            ),
+        );
+        $qrDataUri = 'data:image/svg+xml;base64,'.base64_encode($writer->writeString(url('/verifikasi?code='.urlencode($ektaNumber))));
 
         $pdfBytes = Pdf::loadView('academic.alumni-ekta', [
             'school' => $school,
             'profile' => $profile->fill(['ekta_number' => $ektaNumber]),
             'documentNumber' => $ektaNumber,
             'verificationToken' => $verificationToken,
+            'qrDataUri' => $qrDataUri,
         ])->setPaper('a4')->output();
 
         $doc = $this->documentService->issueGeneratedDocument(

@@ -49,6 +49,11 @@
 
     <div class="verify">
         Kode Verifikasi Publik (/verifikasi): <strong>{{ $verificationToken }}</strong>
+        @if(! empty($qrDataUri))
+            <div style="margin-top: 8px;">
+                <img src="{{ $qrDataUri }}" alt="QR Verifikasi SPTJM" style="width: 72px; height: 72px;">
+            </div>
+        @endif
     </div>
 </body>
 </html>

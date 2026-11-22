@@ -8,9 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Modules\Academic\Application\Services\AlumniService;
 use App\Modules\Academic\Infrastructure\Models\AlumniProfile;
 use App\Modules\Core\Application\Services\ExternalApplicantAuthService;
+use App\Modules\Core\Application\Services\PublicPortalService;
 use App\Modules\Core\Application\Services\SchoolScopeService;
 use App\Modules\Core\Application\Services\ServiceDocumentService;
 use App\Modules\Core\Domain\RoleEnum;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,7 +27,49 @@ class AlumniController extends Controller
         private readonly ExternalApplicantAuthService $externalAuth,
         private readonly SchoolScopeService $schoolScope,
         private readonly ServiceDocumentService $documentService,
+        private readonly PublicPortalService $publicPortal,
     ) {}
+
+    public function homeIndex(Request $request): Response
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:150'], 'graduation_year' => ['nullable', 'integer', 'between:1970,2100'],
+            'current_status' => ['nullable', Rule::in(array_keys(AlumniService::STATUS_LABELS))],
+            'major_or_class' => ['nullable', 'string', 'max:100'], 'per_page' => ['nullable', Rule::in([24, 48, 100, 'all'])],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'section' => ['nullable', Rule::in(['directory', 'tracer', 'careers', 'scholarships', 'kta'])],
+        ]);
+
+        return Inertia::render('Public/Alumni/Home', [
+            'school' => [
+                'name' => $school['name'],
+                'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
+                'theme' => $school['theme'] ?? [],
+            ],
+            'summary' => $this->alumniService->publicSummary((int) $school['id']),
+            'statistics' => $this->alumniService->publicStatistics((int) $school['id']),
+            'directory' => $this->alumniService->publicHomeDirectory((int) $school['id'], $filters),
+            'spotlight' => $this->alumniService->publicDirectory((int) $school['id'], ['limit' => 4]),
+            'filters' => $filters,
+            'section' => $filters['section'] ?? 'directory',
+            'statusOptions' => collect(AlumniService::STATUS_LABELS)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values()->all(),
+            'opportunities' => $this->publicPortal->alumniOpportunities((int) $school['id']),
+            'contentBlocks' => $school['content_blocks'] ?? [],
+        ]);
+    }
+
+    public function publicEktaCheck(Request $request): JsonResponse
+    {
+        $school = $this->schoolScope->getPrimaryPublicSnapshot();
+        $validated = $request->validate([
+            'query' => ['required', 'string', 'min:2', 'max:150'],
+        ]);
+
+        return response()->json([
+            'matched' => $this->alumniService->publicEktaLookup((int) $school['id'], $validated['query']),
+        ]);
+    }
 
     public function portalIndex(Request $request): Response
     {
@@ -95,6 +139,12 @@ class AlumniController extends Controller
             'opt_in_career' => ['nullable', 'boolean'],
             'opt_in_testimonial' => ['nullable', 'boolean'],
             'proof_file' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            'diploma_serial' => ['nullable', 'string', 'max:100'],
+            'activity_location' => ['nullable', 'string', 'max:150'],
+            'residence_city' => ['nullable', 'string', 'max:150'],
+            'linkedin_url' => ['nullable', 'url:https', 'max:255'],
+            'instagram_handle' => ['nullable', 'string', 'max:50'],
+            'photo_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $this->alumniService->upsertSelfProfile(
@@ -103,9 +153,10 @@ class AlumniController extends Controller
             user: $isAlumniUser ? $user : null,
             externalApplicantId: $isExtAlumni ? (int) $ext['id'] : null,
             proofFile: $request->file('proof_file'),
+            photoFile: $request->file('photo_file'),
         );
 
-        return back()->with('message', 'Profil dan data tracer alumni berhasil diperbarui.');
+        return redirect()->route('academic.alumni.tracer.portal')->with('message', 'Profil dan data tracer alumni berhasil diperbarui.');
     }
 
     public function downloadEkta(Request $request, AlumniProfile $profile): BinaryFileResponse

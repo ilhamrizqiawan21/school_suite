@@ -3,6 +3,11 @@
 @php
   $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
   $accreditation = ($profile['accreditation'] ?? null) ?: 'A (Unggul)';
+  $valuesBlock = $contentBlocks['profile.values'] ?? [];
+  $pillarsBlock = $contentBlocks['profile.pillars'] ?? [];
+  $valuesTitle = ($valuesBlock['title'] ?? null) ?: '5 Nilai Budaya Kerja Kementerian Agama';
+  $valuesSubtitle = ($valuesBlock['subtitle'] ?? null) ?: ('Pondasi karakter dan integritas seluruh aparatur, pendidik, dan tenaga kependidikan ' . $schoolName . '.');
+  $pillarsTitle = ($pillarsBlock['title'] ?? null) ?: ('4 Pilar Keunggulan ' . $schoolName);
   $visionText = ($profile['vision'] ?? null) ?: 'Terwujudnya Generasi yang Berakhlak Mulia, Unggul dalam Prestasi Akademik & Riset, Berwawasan Lingkungan, serta Mandiri Berlandaskan Iman dan Taqwa.';
   $rawMission = trim((string) ($profile['mission'] ?? ''));
   $missionItems = $rawMission !== ''
@@ -102,16 +107,17 @@
     </div>
 
     <!-- Bagian 2: 5 Nilai Budaya Kerja Kemenag -->
+    @if (($valuesBlock['visible'] ?? true) !== false)
     <div class="bg-gradient-to-b from-emerald-50/50 to-white p-8 sm:p-10 rounded-3xl border border-emerald-200/90 shadow-sm">
       <div class="text-center max-w-2xl mx-auto mb-8">
         <span class="text-xs font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-200 inline-block mb-2">
           Etika Kerja ASN Kemenag
         </span>
         <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900">
-          5 Nilai Budaya Kerja Kementerian Agama
+          {{ $valuesTitle }}
         </h3>
         <p class="text-xs sm:text-sm text-slate-600 mt-1">
-          Pondasi karakter dan integritas seluruh aparatur, pendidik, dan tenaga kependidikan {{ $schoolName }}.
+          {{ $valuesSubtitle }}
         </p>
       </div>
 
@@ -167,13 +173,15 @@
         </div>
       </div>
     </div>
+    @endif
 
     <!-- Bagian 3: 4 Pilar Keunggulan Madrasah -->
+    @if (($pillarsBlock['visible'] ?? true) !== false)
     <div>
       <div class="text-center max-w-2xl mx-auto mb-8">
         <span class="text-xs font-bold text-kemenag-700 uppercase tracking-widest">Karakter Khas</span>
         <h3 class="text-2xl font-extrabold text-slate-900 mt-1">
-          4 Pilar Keunggulan {{ $schoolName }}
+          {{ $pillarsTitle }}
         </h3>
       </div>
 
@@ -211,6 +219,7 @@
         </div>
       </div>
     </div>
+    @endif
 
   </main>
 @endsection

@@ -160,13 +160,13 @@ const decideProcurement = (id: number, status: 'approved' | 'rejected' | 'acquir
                 <StateFeedback v-if="loans.length === 0" state="empty" title="Belum ada peminjaman" description="Transaksi peminjaman koleksi perpustakaan akan muncul di sini." />
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
-                                <th class="px-3 py-2">Kode &amp; Koleksi</th>
-                                <th class="px-3 py-2">Peminjam</th>
-                                <th class="px-3 py-2">Jatuh Tempo</th>
-                                <th class="px-3 py-2">Status</th>
-                                <th class="px-3 py-2 text-right">Aksi</th>
+                                <th class="px-3 py-2 text-center">Kode &amp; Koleksi</th>
+                                <th class="px-3 py-2 text-center">Peminjam</th>
+                                <th class="px-3 py-2 text-center">Jatuh Tempo</th>
+                                <th class="px-3 py-2 text-center">Status</th>
+                                <th class="px-3 py-2 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">

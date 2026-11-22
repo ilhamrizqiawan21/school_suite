@@ -75,6 +75,7 @@ class StudentMutationController extends Controller
                 'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
                 'theme' => $school['theme'] ?? [],
             ],
+            'contentBlocks' => $school['content_blocks'] ?? [],
             'periodAvailable' => $activeTerm !== null,
             'activeTermName' => $activeTerm?->name,
             'students' => $students,
@@ -205,6 +206,7 @@ class StudentMutationController extends Controller
             ->get(['id', 'name', 'grade_level']);
 
         return Inertia::render('Academic/Mutations/Index', [
+            'canPublish' => $this->accessScope->canApproveFinalDecision($request->user(), $schoolId) && $this->accessScope->canSignOfficialDocument($request->user(), $schoolId),
             'mutations' => $mutations,
             'classes' => $classes,
             'filters' => ['direction' => $direction, 'status' => $status],
@@ -247,7 +249,7 @@ class StudentMutationController extends Controller
     {
         $user = $request->user();
         if ($user !== null && (int) $user->school_id === $schoolId) {
-            if ($user->hasRole([RoleEnum::ADMIN->value, RoleEnum::OPERATOR->value, RoleEnum::PTSP->value, RoleEnum::PRINCIPAL->value])) {
+            if ($user->hasRole([RoleEnum::ADMIN->value, RoleEnum::OPERATOR->value, RoleEnum::PTSP->value, RoleEnum::PRINCIPAL->value, RoleEnum::SIGNATORY->value])) {
                 return;
             }
             if ($mutation->submitted_by_user_id !== null && (int) $mutation->submitted_by_user_id === (int) $user->id) {

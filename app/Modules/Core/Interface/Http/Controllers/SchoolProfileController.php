@@ -33,10 +33,22 @@ class SchoolProfileController extends Controller
                 return Inertia::location($request->fullUrl());
             }
 
-            return response()->view('public.madrasah.profile', $this->portalService->madrasahShellData($school));
+            $shell = $this->portalService->madrasahShellData($school);
+
+            return $this->portalService->applyPreviewResponseHeaders(
+                response()->view('public.madrasah.profile', $shell),
+                (bool) ($shell['isDraftPreview'] ?? false),
+            );
         }
 
-        return Inertia::render('Public/School/Profile', $this->publicData($school));
+        $isDraftPreview = $this->portalService->isDraftPreviewRequested($request, $school);
+        $registry = $school->publicContentRegistry();
+
+        return Inertia::render('Public/School/Profile', [
+            ...$this->publicData($school),
+            'contentBlocks' => $isDraftPreview ? $registry['draft'] : $registry['published'],
+            'isDraftPreview' => $isDraftPreview,
+        ]);
     }
 
     public function home(Request $request): Response|HttpResponse
@@ -51,24 +63,29 @@ class SchoolProfileController extends Controller
             }
 
             $data = config('public_portal.theme') === 'madrasah' ? $this->publicData($school) : [];
+            $shell = $this->portalService->madrasahShellData($school, true);
 
-            return response()->view('public.madrasah.home', [
-                'profile' => $data['school'] ?? [],
-                'news' => $data['news'] ?? [],
-                'gallery' => $data['gallery'] ?? [],
-                'visits' => $this->portalService->recordAnonymousVisit((int) $school->id),
-                'prayer' => $this->portalService->prayerTimesForSchool($school),
-                'downloads' => $this->portalService->publishedDownloads((int) $school->id),
-                'ikm' => $this->portalService->ikmSummary((int) $school->id),
-            ]);
+            return $this->portalService->applyPreviewResponseHeaders(
+                response()->view('public.madrasah.home', [
+                    ...$shell,
+                    'profile' => $data['school'] ?? $shell['profile'],
+                    'news' => $data['news'] ?? [],
+                    'gallery' => $data['gallery'] ?? [],
+                ]),
+                (bool) ($shell['isDraftPreview'] ?? false),
+            );
         }
 
         $data = $this->publicData($school);
+        $isDraftPreview = $this->portalService->isDraftPreviewRequested($request, $school);
+        $registry = $school->publicContentRegistry();
 
         return Inertia::render('Public/School/Home', [
             'school' => $data['school'],
             'news' => $data['news'],
             'gallery' => $data['gallery'],
+            'contentBlocks' => $isDraftPreview ? $registry['draft'] : $registry['published'],
+            'isDraftPreview' => $isDraftPreview,
             'visitStats' => $this->portalService->recordAnonymousVisit((int) $school->id),
             'prayerSchedule' => $this->portalService->prayerTimesForSchool($school),
             'shortcuts' => [
@@ -122,6 +139,8 @@ class SchoolProfileController extends Controller
             ->with('photos')
             ->where('school_id', $school->id)
             ->where('status', 'published')
+            ->where('is_archived', false)
+            ->whereNotIn('category', ['karir-alumni', 'beasiswa-alumni'])
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->latest('published_at')

@@ -13,10 +13,13 @@ use App\Modules\Core\Domain\RoleEnum;
 use App\Modules\Homeroom\Application\Services\PermitWorkflowService;
 use App\Modules\Homeroom\Domain\Enums\DispensationTypeEnum;
 use App\Modules\Homeroom\Infrastructure\Models\AttendanceDispensation;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -51,6 +54,7 @@ class StudentPermitController extends Controller
                 'logo_url' => ! empty($school['logo_path']) ? route('branding.school', [$school['id'], 'logo']) : null,
                 'theme' => $school['theme'] ?? [],
             ],
+            'contentBlocks' => $school['content_blocks'] ?? [],
             'students' => $students,
             'myPermits' => $myPermits,
             'types' => collect(DispensationTypeEnum::cases())
@@ -59,6 +63,8 @@ class StudentPermitController extends Controller
                 ->all(),
             'operations' => $this->schoolScope->getOperationsSettings($schoolId),
             'timezone' => $this->schoolScope->getTimezone($schoolId),
+            'today' => $this->schoolScope->localNow($schoolId)->toDateString(),
+            'localHour' => $this->schoolScope->localNow($schoolId)->format('H:i'),
             'issuedReceipt' => $request->session()->get('issued_permit_receipt'),
         ]);
     }
@@ -67,6 +73,13 @@ class StudentPermitController extends Controller
     {
         $school = $this->schoolScope->getPrimaryPublicSnapshot();
         $schoolId = (int) $school['id'];
+
+        $request->validate(['student_query' => ['nullable', 'string', 'max:200']]);
+        if ($request->filled('student_query')) {
+            $request->merge([
+                'student_id' => $this->academicQuery->resolveActivePermitStudentId($schoolId, (string) $request->input('student_query')),
+            ]);
+        }
 
         $validated = $request->validate([
             'student_id' => ['required', 'integer'],
@@ -78,16 +91,37 @@ class StudentPermitController extends Controller
             'reason' => ['required', 'string', 'max:3000'],
             'contact_name' => ['nullable', 'string', 'max:150'],
             'contact_phone' => ['nullable', 'string', 'max:30'],
+            'contact_relationship' => ['nullable', Rule::in(['father', 'mother', 'guardian', 'parent', 'family'])],
             'signature_data' => ['required', 'string', 'max:50000'],
             'attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
             'idempotency_key' => ['nullable', 'string', 'max:80'],
         ]);
+
+        $publicSubmission = $request->filled('student_query')
+            && (int) $request->session()->get('permit_lookup.student_id') === (int) $validated['student_id']
+            && (int) $request->session()->get('permit_lookup.school_id') === $schoolId
+            && (int) $request->session()->get('permit_lookup.expires_at') > now()->timestamp;
+
+        if ($request->filled('student_query') && ! $publicSubmission) {
+            throw ValidationException::withMessages(['student_query' => 'Silakan klik Cek Siswa terlebih dahulu.']);
+        }
+
+        if ($publicSubmission) {
+            $days = CarbonImmutable::parse($validated['start_date'])->diffInDays(CarbonImmutable::parse($validated['end_date'])) + 1;
+            $request->validate([
+                'contact_name' => ['required', 'string', 'max:150'],
+                'contact_phone' => ['required', 'string', 'max:30'],
+                'contact_relationship' => ['required', Rule::in(['father', 'mother', 'guardian', 'parent', 'family'])],
+                'attachment' => [$validated['type'] === 'sick' && $days >= 3 ? 'required' : 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            ]);
+        }
 
         $result = $this->permitService->submitPermit(
             schoolId: $schoolId,
             data: $validated,
             attachment: $request->file('attachment'),
             actor: $request->user(),
+            publicSubmission: $publicSubmission,
         );
 
         $dispId = (int) $result['dispensation']->id;
@@ -100,6 +134,43 @@ class StudentPermitController extends Controller
                 'ticket_code' => $result['ticket']['ticket_code'] ?? null,
                 'verification_secret' => $result['plain_verification_secret'],
             ]);
+    }
+
+    public function lookupStudent(Request $request): JsonResponse
+    {
+        $data = $request->validate(['query' => ['required', 'string', 'min:3', 'max:200']]);
+        $schoolId = (int) $this->schoolScope->getPrimaryPublicSnapshot()['id'];
+        $request->session()->forget('permit_lookup');
+        $id = $this->academicQuery->resolveActivePermitStudentId($schoolId, $data['query']);
+        abort_if($id === null, 404, 'Siswa tidak ditemukan atau nama tidak unik. Gunakan 10 digit NISN.');
+        $student = $this->academicQuery->getStudentIdentitySnapshot($schoolId, $id);
+        $request->session()->put('permit_lookup', ['student_id' => $id, 'school_id' => $schoolId, 'expires_at' => now()->addMinutes(30)->timestamp]);
+
+        return response()->json([
+            'student' => ['student_id' => $id, 'name' => $student['name'], 'nisn' => $student['nisn'], 'class_group_name' => $student['class_group_name']],
+            'permits' => $this->permitService->publicPermitStatuses($schoolId, $id),
+            'homeroom_contact' => $this->academicQuery->permitHomeroomContact($schoolId, $id),
+        ]);
+    }
+
+    public function lookupStatus(Request $request): JsonResponse
+    {
+        $data = $request->validate(['query' => ['required', 'string', 'min:3', 'max:200']]);
+        $schoolId = (int) $this->schoolScope->getPrimaryPublicSnapshot()['id'];
+        $id = $this->academicQuery->resolveActivePermitStudentId($schoolId, $data['query']);
+
+        return response()->json(['permits' => $this->permitService->publicPermitStatuses($schoolId, $id, $data['query'])]);
+    }
+
+    public function checkToken(Request $request): JsonResponse
+    {
+        $data = $request->validate(['token' => ['required', 'string', 'max:60']]);
+        $schoolId = (int) $this->schoolScope->getPrimaryPublicSnapshot()['id'];
+        abort_unless((int) $request->session()->get('permit_lookup.school_id') === $schoolId
+            && (int) $request->session()->get('permit_lookup.expires_at') > now()->timestamp, 403);
+        $this->permitService->checkPublicPermitToken($schoolId, (int) $request->session()->get('permit_lookup.student_id'), $data['token']);
+
+        return response()->json(['valid' => true]);
     }
 
     public function resubmit(Request $request, AttendanceDispensation $dispensation): RedirectResponse

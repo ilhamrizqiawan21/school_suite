@@ -32,7 +32,25 @@ const close = () => {
     }
 };
 
+const handleKeydown = (event: KeyboardEvent) => {
+    if (!props.open) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        close();
+        return;
+    }
+    if (event.key !== 'Tab' || !dialogRef.value) return;
+    const focusable = Array.from(dialogRef.value.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (first && last && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+    }
+};
+
 const restoreFocus = () => {
+    document.body.style.removeProperty('overflow');
     previouslyFocused?.focus();
     previouslyFocused = null;
 };
@@ -40,8 +58,9 @@ const restoreFocus = () => {
 watch(() => props.open, async (isOpen) => {
     if (isOpen) {
         previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        document.body.style.overflow = 'hidden';
         await nextTick();
-        cancelButtonRef.value?.focus();
+        dialogRef.value?.querySelector<HTMLElement>('button:not([disabled])')?.focus();
         return;
     }
 
@@ -49,6 +68,7 @@ watch(() => props.open, async (isOpen) => {
 });
 
 onBeforeUnmount(() => {
+    document.body.style.removeProperty('overflow');
     previouslyFocused = null;
 });
 </script>
@@ -59,7 +79,7 @@ onBeforeUnmount(() => {
             v-if="open"
             class="ss-confirm-overlay"
             @click.self="close"
-            @keydown.esc.prevent="close"
+            @keydown="handleKeydown"
         >
             <div
                 ref="dialogRef"

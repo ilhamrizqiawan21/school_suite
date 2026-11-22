@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<{
 const attrs = useAttrs();
 const slots = useSlots();
 const isSemanticIconOnly = computed(() =>
-    props.icon === 'excel' || props.icon === 'pdf' || props.icon === 'edit' || props.icon === 'delete',
+    props.icon === 'excel' || props.icon === 'pdf' || props.icon === 'word' || props.icon === 'view' || props.icon === 'edit' || props.icon === 'delete',
 );
 const effectiveIconOnly = computed(() => props.iconOnly || (isSemanticIconOnly.value && !props.keepLabel));
 const slotText = computed(() => {

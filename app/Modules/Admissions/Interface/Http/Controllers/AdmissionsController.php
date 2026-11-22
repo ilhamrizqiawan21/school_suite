@@ -120,6 +120,7 @@ class AdmissionsController extends Controller
             'candidateApplications' => $candidateApplications,
             'issuedReceipt' => $request->session()->get('issued_ppdb_receipt'),
             'lookupResult' => $request->session()->get('ppdb_lookup_result'),
+            'contentBlocks' => $school['content_blocks'] ?? [],
         ]);
     }
 

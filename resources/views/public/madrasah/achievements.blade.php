@@ -14,16 +14,25 @@
       ['rank' => 'Juara 2', 'year' => '2026', 'title' => 'Turnamen Futsal Pelajar Antar Madrasah', 'level' => 'Provinsi', 'winner' => 'Tim Olahraga Madrasah', 'image' => '/madrasah-theme/images/sports.webp'],
   ];
 
+  $hideDemo = (bool) ($hideDemoFallbacks ?? false);
   $list = count($items ?? []) > 0
-      ? collect($items)->map(fn ($item) => [
-          'rank' => strtoupper((string) ($item['category'] ?? 'Prestasi')),
-          'year' => \Illuminate\Support\Carbon::parse($item['published_at'] ?? now())->format('Y'),
-          'title' => $item['title'],
-          'level' => 'Prestasi Madrasah',
-          'winner' => $item['excerpt'] ?: 'Siswa Berprestasi',
-          'image' => '/madrasah-theme/images/award.webp',
-      ])->all()
-      : $dummyAchievements;
+      ? collect($items)->map(function ($item): array {
+          $excerpt = trim((string) ($item['excerpt'] ?? ''));
+          $parts = array_values(array_filter(array_map('trim', explode('|', $excerpt))));
+          $rank = count($parts) >= 2 ? $parts[0] : strtoupper((string) ($item['category'] ?? 'Prestasi'));
+          $level = count($parts) >= 2 ? $parts[1] : 'Prestasi Madrasah';
+          $winner = count($parts) >= 3 ? $parts[2] : ($excerpt ?: 'Siswa Berprestasi');
+
+          return [
+              'rank' => $rank,
+              'year' => \Illuminate\Support\Carbon::parse($item['published_at'] ?? now())->format('Y'),
+              'title' => $item['title'],
+              'level' => $level,
+              'winner' => $winner,
+              'image' => ($item['photo_url'] ?? null) ?: '/madrasah-theme/images/award.webp',
+          ];
+      })->all()
+      : ($hideDemo ? [] : $dummyAchievements);
 
   $levels = array_values(array_unique(array_column($list, 'level')));
   $years = array_values(array_unique(array_column($list, 'year')));

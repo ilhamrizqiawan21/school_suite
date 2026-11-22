@@ -60,10 +60,75 @@
       <p>© 2026 <strong class="text-white">{{ $schoolName }}</strong> • Pelayanan Terpadu Satu Pintu (PTSP) Digital Terpadu.</p>
     </div>
   </footer>
-@elseif (request()->is('data-siswa', 'lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa', 'layanan/surat-kuasa'))
+@elseif (request()->is('layanan/izin-siswa'))
+  <footer class="permit-footer">
+    <p>© {{ now()->year }} {{ strtoupper($schoolName) }}. Seluruh Hak Cipta Dilindungi.</p>
+    <small>Sistem Administrasi dan Layanan Akademik Sekolah</small>
+  </footer>
+@elseif (request()->is('layanan/kelulusan'))
+  <footer class="graduation-reference-footer">© {{ now()->year }} <strong>{{ strtoupper($schoolName) }}</strong> • Portal Pengumuman Kelulusan &amp; SKL</footer>
+@elseif (request()->is('lacak'))
+  <footer class="tracking-reference-footer">© {{ now()->year }} <strong>{{ strtoupper($schoolName) }}</strong> • Pusat Lacak Status Layanan Terpadu</footer>
+@elseif (request()->is('alumni*'))
+  <footer class="ika-footer">
+    <div class="ika-footer-columns">
+      <div class="space-y-3">
+        <div class="ika-footer-brand">
+          <img src="{{ $schoolLogo }}" alt="Logo {{ $schoolName }}">
+          <div>
+            <strong class="block text-base text-white">IKATAN KELUARGA ALUMNI (IKA)</strong>
+            <span class="text-xs text-slate-400">{{ strtoupper($schoolName) }}</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">Wadah pemersatu seluruh alumni lintas angkatan, mendukung kemajuan almamater, karir profesional lulusan, dan kontribusi nyata bagi masyarakat serta bangsa.</p>
+        <div class="flex items-center space-x-2.5 text-slate-400 pt-1">
+          <a href="/kontak" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-blue-700 hover:text-white flex items-center justify-center transition !mb-0" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="/kontak" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-blue-700 hover:text-white flex items-center justify-center transition !mb-0" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="/galeri/video" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-blue-700 hover:text-white flex items-center justify-center transition !mb-0" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+      <div>
+        <h2 class="ika-footer-heading ika-footer-heading--blue">MENU PORTAL</h2>
+        <a href="/alumni#ika-home-title"><i class="fa-solid fa-angle-right text-blue-500 mr-1.5"></i> Beranda Alumni</a>
+        <a href="/alumni#direktori-alumni" data-ika-tab="directory"><i class="fa-solid fa-angle-right text-blue-500 mr-1.5"></i> Direktori Temu Alumni</a>
+        <a href="/layanan/tracer-alumni" data-ika-tab="tracer"><i class="fa-solid fa-angle-right text-blue-500 mr-1.5"></i> Form Tracer Study Mandiri</a>
+        <a href="/alumni?section=careers#ika-portal-tabs" data-ika-tab="careers"><i class="fa-solid fa-angle-right text-blue-500 mr-1.5"></i> Bursa Karir &amp; Magang</a>
+        <a href="/alumni?section=scholarships#ika-portal-tabs" data-ika-tab="scholarships"><i class="fa-solid fa-angle-right text-blue-500 mr-1.5"></i> Info Beasiswa Aktif</a>
+        <a href="/layanan/tracer-alumni#alumni-kta" data-ika-tab="kta"><i class="fa-solid fa-angle-right text-blue-500 mr-1.5"></i> Cetak KTA Digital Ber-QR</a>
+      </div>
+      <div>
+        <h2 class="ika-footer-heading ika-footer-heading--gold">LAYANAN AKADEMIK</h2>
+        <a href="/layanan/legalisir"><i class="fa-solid fa-angle-right text-amber-400 mr-1.5"></i> Legalisir Ijazah Online ↗</a>
+        <a href="/layanan/ptsp"><i class="fa-solid fa-angle-right text-amber-400 mr-1.5"></i> PTSP Terpadu Online</a>
+        <a href="/lacak"><i class="fa-solid fa-angle-right text-amber-400 mr-1.5"></i> Lacak Status Berkas</a>
+        <a href="/layanan/kelulusan"><i class="fa-solid fa-angle-right text-amber-400 mr-1.5"></i> Cek SKL &amp; Kelulusan</a>
+        <a href="/"><i class="fa-solid fa-angle-right text-amber-400 mr-1.5"></i> Website Resmi Sekolah</a>
+      </div>
+      <div>
+        <h2 class="ika-footer-heading ika-footer-heading--emerald">SEKRETARIAT IKA</h2>
+        <p class="flex items-start gap-2.5 text-xs"><i class="fa-solid fa-location-dot text-rose-500 mt-1"></i> <span>{{ $schoolAddress }}</span></p>
+        @if ($schoolPhone)<p class="flex items-center gap-2.5 text-xs"><i class="fa-solid fa-phone text-emerald-500"></i> <span>{{ $schoolPhone }}</span></p>@endif
+        @if ($schoolEmail)<p class="flex items-center gap-2.5 text-xs"><i class="fa-solid fa-envelope text-blue-400"></i> <span>{{ $schoolEmail }}</span></p>@endif
+        <p class="flex items-center gap-2.5 text-xs pt-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> <strong class="text-white">Layanan IKA: Aktif</strong></p>
+      </div>
+    </div>
+    <div class="ika-footer-bottom">
+      <span>© {{ now()->year }} Ikatan Keluarga Alumni (IKA) {{ strtoupper($schoolName) }}. All Rights Reserved.</span>
+      <div class="flex items-center gap-3">
+        <span>Portal Resmi Alumni Terintegrasi</span>
+        <span>•</span>
+        <a href="#ika-home-title" class="!inline !mb-0 text-slate-300 hover:text-amber-400">Kembali ke Atas ↑</a>
+      </div>
+    </div>
+  </footer>
+@elseif (request()->is('data-siswa', 'layanan/tracer-alumni'))
+  <footer class="bg-slate-900 px-4 py-5 text-center text-xs leading-6 text-slate-400">
+    <p>© {{ now()->year }} {{ strtoupper($schoolName) }}. All Rights Reserved.</p>
+    <p class="text-[11px] text-slate-400">Aplikasi Database Sistem Informasi Akademik &amp; Kesiswaan Terpadu</p>
+  </footer>
+@elseif (request()->is('lacak', 'layanan/legalisir', 'layanan/mutasi', 'layanan/kelulusan', 'layanan/izin-siswa', 'layanan/surat-kuasa'))
   @php
     $akademikFooterTitle = match (true) {
-        request()->is('data-siswa*') => 'Aplikasi Database & Informasi Data Siswa',
         request()->is('layanan/mutasi*') => 'Aplikasi Database & Administrasi Mutasi Siswa',
         request()->is('layanan/legalisir*') => 'Aplikasi Database & Administrasi Legalisir Ijazah',
         request()->is('layanan/izin-siswa*') => 'Aplikasi Database & Administrasi Surat Izin Siswa',
@@ -85,6 +150,11 @@
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-8 border-b border-kemenag-800/80">
 
         <!-- Info Brand -->
+        @php
+          $footerBlock = $contentBlocks['shell.footer'] ?? [];
+          $footerTagline = ($footerBlock['tagline'] ?? null) ?: 'Madrasah Aliyah Negeri unggulan yang mengedepankan pendidikan berbasis adiwiyata, karakter islami, dan riset sains teknologi modern.';
+          $socialLinks = $profile['social_links'] ?? [];
+        @endphp
         <div class="space-y-3">
           <div class="flex items-center gap-2">
             <div class="w-10 h-10 rounded-xl bg-kemenag-800 flex items-center justify-center text-accent-yellow text-xl border border-emerald-500/40 shadow-sm">
@@ -93,13 +163,13 @@
             <span class="font-extrabold text-lg text-white font-sans">{{ $schoolName }}</span>
           </div>
           <p class="text-xs text-emerald-200 leading-relaxed">
-            Madrasah Aliyah Negeri unggulan yang mengedepankan pendidikan berbasis adiwiyata, karakter islami, dan riset sains teknologi modern.
+            {{ $footerTagline }}
           </p>
           <div class="flex items-center space-x-3 text-emerald-300 pt-1">
-            <a href="/kontak" class="hover:text-accent-yellow transition"><i class="fa-brands fa-facebook"></i></a>
-            <a href="/kontak" class="hover:text-accent-yellow transition"><i class="fa-brands fa-instagram"></i></a>
-            <a href="/galeri/video" class="hover:text-accent-yellow transition" aria-label="Galeri video"><i class="fa-brands fa-youtube"></i></a>
-            <a href="/kontak" class="hover:text-accent-yellow transition"><i class="fa-brands fa-tiktok"></i></a>
+            <a href="{{ $socialLinks['facebook'] ?? '/kontak' }}" class="hover:text-accent-yellow transition"><i class="fa-brands fa-facebook"></i></a>
+            <a href="{{ $socialLinks['instagram'] ?? '/kontak' }}" class="hover:text-accent-yellow transition"><i class="fa-brands fa-instagram"></i></a>
+            <a href="{{ $socialLinks['youtube'] ?? '/galeri/video' }}" class="hover:text-accent-yellow transition" aria-label="Galeri video"><i class="fa-brands fa-youtube"></i></a>
+            <a href="{{ $socialLinks['tiktok'] ?? '/kontak' }}" class="hover:text-accent-yellow transition"><i class="fa-brands fa-tiktok"></i></a>
           </div>
         </div>
 
@@ -111,7 +181,7 @@
             <li><a href="/direktori-gtk" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Direktori Dewan Guru &amp; GTK</a></li>
             <li><a href="/login" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Login Guru / Siswa / Admin</a></li>
             <li><a href="/perpustakaan" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Perpustakaan Digital SLiMS</a></li>
-            <li><a href="/alumni" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Portal Tracer Study Alumni</a></li>
+            <li><a href="/layanan/tracer-alumni" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Portal Tracer Study Alumni</a></li>
             <li><a href="/layanan/kelulusan" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Pengumuman Kelulusan SKL</a></li>
             <li><a href="/layanan/lapor" class="hover:text-accent-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-angle-right text-[10px] text-accent-yellow"></i> Pusat Pengaduan (Lapor)</a></li>
           </ul>
@@ -198,6 +268,7 @@
   </footer>
 @endif
 
+@unless (request()->is('data-siswa', 'alumni', 'layanan/izin-siswa'))
   <!-- ================= FLOATING ACTION BUTTONS ================= -->
   <div class="fixed z-40 flex flex-col items-end space-y-3" style="bottom: 104px; right: 43px;">
     <!-- Back to Top Button -->
@@ -205,6 +276,7 @@
       <i class="fa-solid fa-arrow-up"></i>
     </button>
   </div>
+@endunless
 
   <!-- ================= MODAL WINDOWS ================= -->
 
@@ -496,9 +568,11 @@
       </div>
     </div>
   </div>
+@unless (request()->is('data-siswa', 'alumni', 'layanan/izin-siswa'))
   <a class="portal-help" href="/kontak" aria-label="Hubungi layanan madrasah" title="Live Chat &amp; Bantuan">
     <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z"/>
       <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>
     </svg>
   </a>
+@endunless

@@ -196,6 +196,8 @@ const sections: NavSection[] = [
                 children: [
                     { name: 'Berita Sekolah', href: '/pengaturan/berita', key: 'news', activePrefix: '/pengaturan/berita', icon: 'M4 5h16M4 9h16M4 13h10M4 17h8M3 3h18v18H3z' },
                     { name: 'Galeri Sekolah', href: '/pengaturan/galeri', key: 'gallery', activePrefix: '/pengaturan/galeri', icon: 'M4 5h16v14H4zM4 16l4-4 3 3 3-4 6 5M8 9h.01' },
+                    { name: 'Pusat Unduh', href: '/pengaturan/pusat-unduh', key: 'downloads', activePrefix: '/pengaturan/pusat-unduh', icon: 'M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3' },
+                    { name: 'Zona Integritas & IKM', href: '/pengaturan/zona-integritas', key: 'integrity-zone', activePrefix: '/pengaturan/zona-integritas', icon: 'M12 3l8 3v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3zm-3 9 2 2 4-4' },
                 ],
             },
             { name: 'Integrasi & Kanal', href: '/pengaturan/integrasi', key: 'integration-settings', activePrefix: '/pengaturan/integrasi', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' },

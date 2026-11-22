@@ -16,6 +16,15 @@ use Inertia\Response;
 
 class ExternalApplicantAuthController extends Controller
 {
+    private const ALLOWED_RETURN_PATHS = [
+        '/layanan/ptsp',
+        '/layanan/tracer-alumni',
+        '/alumni',
+        '/layanan/legalisir',
+        '/layanan/mutasi',
+        '/ppdb',
+    ];
+
     public function __construct(
         private readonly ExternalApplicantAuthService $applicantAuth,
         private readonly SchoolScopeService $schoolScope,
@@ -24,6 +33,11 @@ class ExternalApplicantAuthController extends Controller
     public function show(Request $request): Response
     {
         $school = School::query()->firstOrFail();
+        $requestedReturn = trim((string) $request->query('return_to', ''));
+        $safeReturnPath = in_array($requestedReturn, self::ALLOWED_RETURN_PATHS, true) ? $requestedReturn : null;
+        $returnToTracer = $safeReturnPath === '/layanan/tracer-alumni';
+        $request->session()->put('tracer_alumni_return', $returnToTracer);
+        $request->session()->put('external_applicant_return_to', $safeReturnPath);
 
         return Inertia::render('Public/Services/PtspAccount', [
             'school' => $this->schoolPayload($school),
@@ -36,6 +50,7 @@ class ExternalApplicantAuthController extends Controller
                 ['value' => 'external_agency', 'label' => 'Instansi / Mitra'],
             ],
             'recoveryStatus' => session('recovery_status'),
+            'returnToTracer' => $returnToTracer,
         ]);
     }
 
@@ -56,8 +71,7 @@ class ExternalApplicantAuthController extends Controller
         $applicant = $this->applicantAuth->register((int) $school->id, $validated);
         $this->applicantAuth->bindSession($request, (int) $school->id, (int) $applicant['id']);
 
-        return redirect()->route('administration.ptsp.public.index')
-            ->with('message', 'Akun pemohon PTSP berhasil dibuat dan Anda telah masuk.');
+        return $this->redirectAfterApplicantAuth($request, $applicant, 'Akun pemohon PTSP berhasil dibuat dan Anda telah masuk.');
     }
 
     public function login(Request $request): RedirectResponse
@@ -83,8 +97,7 @@ class ExternalApplicantAuthController extends Controller
 
         $this->applicantAuth->bindSession($request, (int) $school->id, (int) $applicant['id']);
 
-        return redirect()->route('administration.ptsp.public.index')
-            ->with('message', 'Berhasil masuk ke akun pemohon PTSP.');
+        return $this->redirectAfterApplicantAuth($request, $applicant, 'Berhasil masuk ke akun pemohon PTSP.');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -162,6 +175,25 @@ class ExternalApplicantAuthController extends Controller
 
         return redirect()->route('core.ptsp.account.show')
             ->with('message', 'Kata sandi akun pemohon berhasil diperbarui. Silakan masuk.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $applicant
+     */
+    private function redirectAfterApplicantAuth(Request $request, array $applicant, string $message): RedirectResponse
+    {
+        $returnToTracer = $request->session()->pull('tracer_alumni_return', false) && ($applicant['applicant_type'] ?? null) === 'alumni';
+        $safeReturnPath = $request->session()->pull('external_applicant_return_to');
+
+        if ($returnToTracer) {
+            return redirect()->route('academic.alumni.tracer.portal')->with('message', $message);
+        }
+
+        if (is_string($safeReturnPath) && in_array($safeReturnPath, self::ALLOWED_RETURN_PATHS, true)) {
+            return redirect()->to($safeReturnPath)->with('message', $message);
+        }
+
+        return redirect()->route('administration.ptsp.public.index')->with('message', $message);
     }
 
     /**

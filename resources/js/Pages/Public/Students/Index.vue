@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import AppButton from '@/components/AppButton.vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
-import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 interface ClassSummary {
     id: number;
@@ -20,11 +18,14 @@ interface GradeLevelSummary {
 }
 
 const props = defineProps<{
+    showDemoDirectory?: boolean;
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
     summary: {
         academic_year: string;
         term_name: string;
         active_students_count: number;
+        male_students_count: number;
+        female_students_count: number;
         active_classes_count: number;
         grade_levels: GradeLevelSummary[];
     };
@@ -40,23 +41,38 @@ const props = defineProps<{
 }>();
 
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
-
-const form = useForm({
-    nisn: '',
-    name: '',
+const selectedGrade = ref<number | null>(null);
+const classQuery = ref('');
+const demoClass = ref('');
+const demoStudents = [
+    { name: 'Aruna Pradipta', gender: 'Laki-laki', initials: 'AP', className: 'X-A' },
+    { name: 'Binar Kinasih', gender: 'Perempuan', initials: 'BK', className: 'X-B' },
+    { name: 'Cakra Wisesa', gender: 'Laki-laki', initials: 'CW', className: 'XI-A' },
+    { name: 'Dara Paramesti', gender: 'Perempuan', initials: 'DP', className: 'XI-A' },
+    { name: 'Embun Anindita', gender: 'Perempuan', initials: 'EA', className: 'XII-A' },
+    { name: 'Fajar Samudra', gender: 'Laki-laki', initials: 'FS', className: 'XII-A' },
+];
+const demoClasses = [...new Set(demoStudents.map((student) => student.className))];
+const visibleDemoStudents = computed(() => demoStudents.filter((student) =>
+    (!demoClass.value || student.className === demoClass.value)
+    && student.name.toLocaleLowerCase('id').includes(classQuery.value.trim().toLocaleLowerCase('id')),
+));
+const demoHeaders = ['No', 'Profil', 'Nama Lengkap Siswa', 'Jenis Kelamin', 'Tempat Lahir & Umur', 'NIS', 'NISN', 'Kelas'];
+const pageSize = ref(25);
+const directoryPage = ref(1);
+const pageCount = computed(() => Math.max(1, Math.ceil(visibleDemoStudents.value.length / pageSize.value)));
+const pageOffset = computed(() => (directoryPage.value - 1) * pageSize.value);
+const pageStudents = computed(() => visibleDemoStudents.value.slice(pageOffset.value, pageOffset.value + pageSize.value));
+watch([demoClass, classQuery, pageSize], () => { directoryPage.value = 1; });
+const printDirectory = () => window.print();
+const visibleClasses = computed(() => {
+    const query = classQuery.value.trim().toLocaleLowerCase('id');
+    return props.summary.grade_levels
+        .filter((level) => selectedGrade.value === null || level.grade_level === selectedGrade.value)
+        .flatMap((level) => level.classes.map((classGroup) => ({ ...classGroup, grade: level.grade_level })))
+        .filter((classGroup) => classGroup.name.toLocaleLowerCase('id').includes(query));
 });
 
-const submit = () => {
-    form.post('/data-siswa/cek', { preserveScroll: true });
-};
-
-const statusTone = (statusCode?: string): 'success' | 'info' | 'warning' | 'danger' | 'neutral' => {
-    if (statusCode === 'active') return 'success';
-    if (statusCode === 'graduated') return 'info';
-    if (statusCode === 'transferred') return 'warning';
-    if (statusCode === 'dropped_out') return 'danger';
-    return 'neutral';
-};
 </script>
 
 <template>
@@ -68,224 +84,141 @@ const statusTone = (statusCode?: string): 'success' | 'info' | 'warning' | 'dang
         <section class="students-hero-banner">
             <div class="students-container students-hero-inner">
                 <div class="students-hero-pill">
-                    <i class="fa-solid fa-users" aria-hidden="true"></i>
-                    <span>Aplikasi Database Siswa</span>
+                    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                    <span>Direktori Resmi Sekolah</span>
                 </div>
-                <h1>{{ school.name.toUpperCase() }}</h1>
-                <h4>Tahun Pelajaran {{ summary.academic_year }}</h4>
+                <h1>Database Siswa Aktif</h1>
                 <p>
-                    Informasi agregat peserta didik, rekapitulasi rombongan belajar aktif, serta layanan verifikasi keaktifan siswa berbasis NISN.
+                    Rekapitulasi peserta didik aktif Tahun Ajaran {{ summary.academic_year }} — {{ school.name }}
                 </p>
             </div>
         </section>
 
         <main class="students-container students-main">
             <section class="students-stats-grid" aria-label="Ringkasan statistik peserta didik">
-                <article class="card-custom stat-card">
-                    <div class="stat-icon stat-icon-blue">
-                        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
-                    </div>
-                    <div>
-                        <p class="stat-label">Total Siswa Aktif</p>
-                        <p class="stat-value">{{ summary.active_students_count }}</p>
-                    </div>
-                </article>
-                <article class="card-custom stat-card">
-                    <div class="stat-icon stat-icon-emerald">
-                        <i class="fa-solid fa-chalkboard" aria-hidden="true"></i>
-                    </div>
-                    <div>
-                        <p class="stat-label">Rombel / Kelas Aktif</p>
-                        <p class="stat-value">{{ summary.active_classes_count }}</p>
-                    </div>
-                </article>
-                <article class="card-custom stat-card">
-                    <div class="stat-icon stat-icon-amber">
-                        <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
-                    </div>
-                    <div>
-                        <p class="stat-label">Periode Berjalan</p>
-                        <p class="stat-value stat-value-sm">{{ summary.term_name }}</p>
-                    </div>
-                </article>
+                <div><strong>{{ summary.active_students_count }}</strong><span>Total Siswa Aktif</span></div>
+                <div><strong>{{ summary.male_students_count }}</strong><span>Laki-laki</span></div>
+                <div><strong>{{ summary.female_students_count }}</strong><span>Perempuan</span></div>
+                <div><strong>{{ summary.active_classes_count }}</strong><span>Rombel / Kelas</span></div>
             </section>
 
-            <div class="students-content-grid">
-                <div class="students-primary-col">
-                    <section class="card-custom students-card" aria-labelledby="cek-keaktifan-heading">
-                        <div class="form-section-header" id="cek-keaktifan-heading">
-                            <i class="fa-solid fa-magnifying-glass mr-2" aria-hidden="true"></i>Cek Keaktifan &amp; Status Siswa
-                        </div>
-                        <p class="text-sm text-slate-600 mb-4">
-                            Masukkan <strong>NISN</strong> dan <strong>Nama Siswa</strong> untuk mengonfirmasi status keaktifan peserta didik, kelulusan, atau mutasi secara aman.
-                        </p>
-
-                        <form id="form-cek-siswa" @submit.prevent="submit" class="grid gap-4 md:grid-cols-2">
-                            <FormField id="student-check-nisn" label="NISN Siswa" :error="form.errors.nisn" required>
-                                <input
-                                    id="student-check-nisn"
-                                    v-model="form.nisn"
-                                    type="text"
-                                    placeholder="Contoh: 0081234567"
-                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                                />
-                            </FormField>
-                            <FormField id="student-check-name" label="Nama Siswa (Min. 3 Huruf)" :error="form.errors.name" required>
-                                <input
-                                    id="student-check-name"
-                                    v-model="form.name"
-                                    type="text"
-                                    placeholder="Masukkan nama lengkap siswa"
-                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                                />
-                            </FormField>
-                            <div class="md:col-span-2">
-                                <AppButton type="submit" :disabled="form.processing">
-                                    {{ form.processing ? 'Memeriksa...' : 'Cek Status Siswa' }}
-                                </AppButton>
-                            </div>
-                        </form>
-
-                        <div
-                            v-if="studentResult"
-                            class="mt-5 rounded-xl border p-4 text-sm space-y-2"
-                            :class="
-                                studentResult.found
-                                    ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
-                                    : 'border-rose-200 bg-rose-50 text-rose-950'
-                            "
-                            role="status"
-                        >
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="font-semibold">{{ studentResult.message }}</p>
-                                <StatusBadge
-                                    v-if="studentResult.found && studentResult.status_label"
-                                    :status="studentResult.status_label"
-                                    :tone="statusTone(studentResult.status_code)"
-                                    size="sm"
-                                />
-                            </div>
-                            <div v-if="studentResult.found" class="grid gap-1 text-xs sm:grid-cols-2 pt-1">
-                                <p>Nama Siswa: <strong>{{ studentResult.student_name }}</strong></p>
-                                <p>Status: <strong>{{ studentResult.status_label }}</strong></p>
-                                <p>Kelas / Tingkat: <strong>{{ studentResult.class_or_level }}</strong></p>
-                                <p>Tahun Pelajaran: <strong>{{ studentResult.academic_year }}</strong></p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="card-custom students-card" aria-labelledby="rekap-rombel-heading">
-                        <div class="form-section-header" id="rekap-rombel-heading">
-                            <i class="fa-solid fa-layer-group mr-2" aria-hidden="true"></i>Rekapitulasi Rombel per Tingkat
-                        </div>
-
-                        <div v-if="summary.grade_levels.length" class="space-y-4">
-                            <div
-                                v-for="level in summary.grade_levels"
-                                :key="level.grade_level"
-                                class="rounded-xl border border-slate-200 p-4"
-                            >
-                                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                                    <h2 class="text-sm font-bold text-slate-900">
-                                        Tingkat {{ level.grade_level }}
-                                    </h2>
-                                    <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200">
-                                        {{ level.students_count }} Siswa
-                                    </span>
-                                </div>
-                                <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-                                    <div
-                                        v-for="cg in level.classes"
-                                        :key="cg.id"
-                                        class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs border border-slate-200"
-                                    >
-                                        <span class="font-semibold text-slate-800">{{ cg.name }}</span>
-                                        <span class="font-bold text-slate-600">{{ cg.students_count }} siswa</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <p v-else class="text-sm text-slate-500">
-                            Data rombongan belajar aktif belum tersedia untuk periode ini.
-                        </p>
-                    </section>
+            <section class="card-custom students-card mb-6" aria-labelledby="rekap-rombel-heading">
+                <div class="students-filters">
+                    <FormField v-if="showDemoDirectory" id="student-class-filter" label="Filter Berdasarkan Kelas / Rombel">
+                        <select id="student-class-filter" v-model="demoClass" class="w-full rounded-xl border border-slate-300 px-3 py-3">
+                            <option value="">Tampilkan Semua Kelas</option>
+                            <option v-for="className in demoClasses" :key="className">{{ className }}</option>
+                        </select>
+                    </FormField>
+                    <FormField v-else id="student-grade-filter" label="Filter Berdasarkan Tingkat">
+                        <select id="student-grade-filter" v-model="selectedGrade" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                            <option :value="null">Semua tingkat</option>
+                            <option v-for="level in summary.grade_levels" :key="level.grade_level" :value="level.grade_level">
+                                Tingkat {{ level.grade_level }}
+                            </option>
+                        </select>
+                    </FormField>
+                    <FormField id="student-class-search" :label="showDemoDirectory ? 'Cari Nama / Data Cepat' : 'Cari Kelas / Rombel'">
+                        <input id="student-class-search" v-model="classQuery" type="search" :placeholder="showDemoDirectory ? 'Ketik nama siswa…' : 'Ketik nama kelas…'" class="w-full rounded-xl border border-slate-300 px-3 py-3" />
+                    </FormField>
+                    <div class="students-filter-actions">
+                        <button type="button" @click="selectedGrade = null; demoClass = ''; classQuery = ''">Reset</button>
+                        <Link href="/login?portal=siswa">Login Siswa</Link>
+                    </div>
                 </div>
+            </section>
 
-                <aside class="students-sidebar">
-                    <div class="card-custom">
-                        <div class="sidebar-card-header">
-                            <i class="fa-solid fa-compass text-primary" aria-hidden="true"></i>
-                            <span>Layanan Terkait</span>
-                        </div>
-                        <div class="sidebar-card-body space-y-2">
-                            <Link href="/alumni" class="sidebar-action-link">
-                                <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
-                                <span>Data Alumni &amp; Tracer</span>
-                            </Link>
-                            <Link href="/layanan/legalisir" class="sidebar-action-link">
-                                <i class="fa-solid fa-certificate" aria-hidden="true"></i>
-                                <span>Legalisir Ijazah Online</span>
-                            </Link>
-                            <Link href="/layanan/mutasi" class="sidebar-action-link">
-                                <i class="fa-solid fa-people-arrows" aria-hidden="true"></i>
-                                <span>Mutasi Siswa Online</span>
-                            </Link>
-                            <Link href="/layanan/kelulusan" class="sidebar-action-link">
-                                <i class="fa-solid fa-award" aria-hidden="true"></i>
-                                <span>Cek Kelulusan &amp; SKL</span>
-                            </Link>
-                            <Link href="/verifikasi" class="sidebar-action-link">
-                                <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
-                                <span>Verifikasi Dokumen / QR</span>
-                            </Link>
-                            <a href="/login?portal=siswa" class="sidebar-action-link is-highlight">
-                                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
-                                <span>Login Portal Siswa / Wali</span>
-                            </a>
-                        </div>
-                    </div>
+            <section v-if="showDemoDirectory" class="card-custom students-card mb-6" aria-labelledby="demo-directory-heading">
+                <h2 id="demo-directory-heading" class="students-table-title"><i class="fa-solid fa-address-book text-blue-600 mr-2" aria-hidden="true"></i>Daftar Seluruh Siswa Aktif</h2>
+                <p class="mb-3 text-xs text-slate-600">Pratinjau lokal dengan data siswa sintetis.</p>
+                <div class="mb-7 flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" class="rounded-full border border-blue-500 px-4 py-2 text-xs font-bold text-blue-700" @click="printDirectory">Cetak</button>
+                    <label class="text-xs">Tampil
+                        <select v-model.number="pageSize" class="rounded border border-slate-300 px-1 py-0.5">
+                            <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+                        </select>
+                        data
+                    </label>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="demo-student-table">
+                        <thead><tr><th v-for="heading in demoHeaders" :key="heading" scope="col">{{ heading }}</th></tr></thead>
+                        <tbody>
+                            <tr v-for="(student, index) in pageStudents" :key="student.name">
+                                <td>{{ pageOffset + index + 1 }}</td>
+                                <td><span class="demo-student-avatar">{{ student.initials }}</span></td>
+                                <th scope="row">{{ student.name }}</th>
+                                <td><span class="demo-student-gender">{{ student.gender }}</span></td>
+                                <td>Martapura · 16 thn</td>
+                                <td>DEMO***</td>
+                                <td>DEMO****</td>
+                                <td><span class="demo-student-class">{{ student.className }}</span></td>
+                            </tr>
+                            <tr v-if="!visibleDemoStudents.length"><td colspan="8">Tidak ada siswa demo yang cocok.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
+                    <p>Menampilkan {{ pageStudents.length ? pageOffset + 1 : 0 }} s/d {{ pageOffset + pageStudents.length }} dari {{ visibleDemoStudents.length }} siswa</p>
+                    <nav class="flex" aria-label="Halaman daftar siswa">
+                        <button type="button" class="border border-slate-200 px-3 py-2 disabled:opacity-50" :disabled="directoryPage === 1" aria-label="Halaman sebelumnya" @click="directoryPage--">‹</button>
+                        <button v-for="number in pageCount" :key="number" type="button" class="border border-slate-200 px-3 py-2" :class="{ 'bg-blue-600 text-white': directoryPage === number }" :aria-current="directoryPage === number ? 'page' : undefined" @click="directoryPage = number">{{ number }}</button>
+                        <button type="button" class="border border-slate-200 px-3 py-2 disabled:opacity-50" :disabled="directoryPage === pageCount" aria-label="Halaman berikutnya" @click="directoryPage++">›</button>
+                    </nav>
+                </div>
+            </section>
 
-                    <div class="card-custom">
-                        <div class="sidebar-card-header">
-                            <i class="fa-solid fa-shield-halved text-emerald-600" aria-hidden="true"></i>
-                            <span>Perlindungan Data</span>
-                        </div>
-                        <div class="sidebar-card-body text-xs text-slate-600 leading-relaxed space-y-2">
-                            <p>
-                                Halaman publik ini hanya menampilkan statistik agregat peserta didik dan konfirmasi status berbasis kecocokan <strong>NISN + Nama</strong>.
-                            </p>
-                            <p>
-                                Data pribadi lengkap (NIK, alamat, kontak wali, nilai, dan presensi) hanya dapat diakses melalui <strong>Portal Siswa / Wali</strong> atau akun petugas resmi setelah login.
-                            </p>
-                        </div>
-                    </div>
-                </aside>
-            </div>
+            <section v-else class="card-custom students-card mb-6" aria-labelledby="rekap-rombel-heading">
+                <h2 id="rekap-rombel-heading" class="students-table-title">Daftar Rombongan Belajar Aktif</h2>
+                <p class="mb-5 text-xs text-slate-600">Rekap jumlah siswa aktif per rombongan belajar.</p>
+                <div class="overflow-x-auto">
+                    <table v-if="visibleClasses.length" class="w-full border-collapse text-sm">
+                        <thead class="bg-slate-100 text-slate-700">
+                            <tr>
+                                <th scope="col" class="px-3 py-3 text-left">No.</th>
+                                <th scope="col" class="px-3 py-3 text-left">Kelas</th>
+                                <th scope="col" class="px-3 py-3 text-left">Tingkat</th>
+                                <th scope="col" class="px-3 py-3 text-right">Siswa Aktif</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(classGroup, index) in visibleClasses" :key="classGroup.id" class="border-b border-slate-200 even:bg-slate-50">
+                                <td class="px-3 py-3">{{ index + 1 }}</td>
+                                <th scope="row" class="px-3 py-3 text-left">{{ classGroup.name }}</th>
+                                <td class="px-3 py-3">{{ classGroup.grade }}</td>
+                                <td class="px-3 py-3 text-right">{{ classGroup.students_count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p v-else class="py-4 text-sm text-slate-600" role="status">
+                        {{ summary.grade_levels.length ? 'Tidak ada kelas yang cocok dengan filter.' : 'Data rombongan belajar aktif belum tersedia untuk periode ini.' }}
+                    </p>
+                </div>
+            </section>
+
         </main>
     </div>
 </template>
 
 <style scoped>
 .students-page {
-    min-height: 100vh;
     background-color: #f8fafc;
     color: #1e293b;
 }
 
 .students-container {
     width: 100%;
-    max-width: 1140px;
+    max-width: 1230px;
     margin: 0 auto;
     padding-inline: 15px;
 }
 
 .students-hero-banner {
-    background: linear-gradient(135deg, #0f4c81 0%, #1b85df 100%);
+    background: radial-gradient(ellipse at right, #233d7a, transparent 46%), linear-gradient(120deg, #121720, #151e34);
     color: #ffffff;
-    padding: 40px 0;
-    margin-bottom: 28px;
-    border-radius: 0 0 20px 20px;
-    box-shadow: 0 10px 25px rgba(15, 76, 129, 0.14);
+    padding: 45px 0 41px;
+    border-radius: 0 0 32px 32px;
+    box-shadow: 0 16px 32px #121a3040;
     text-align: center;
 }
 
@@ -294,10 +227,10 @@ const statusTone = (statusCode?: string): 'success' | 'info' | 'warning' | 'dang
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
-    padding: 4px 12px;
+    padding: 7px 18px;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: #a26b262e;
+    border: 1px solid #a26b2699;
     font-size: 12px;
     font-weight: 700;
     color: #fef08a;
@@ -327,83 +260,60 @@ const statusTone = (statusCode?: string): 'success' | 'info' | 'warning' | 'dang
 .students-hero-banner p {
     font-size: 14.5px;
     opacity: 0.9;
-    max-width: 680px;
+    max-width: 920px;
     margin: 0 auto;
     line-height: 1.6;
-    color: #ffffff;
+    color: #93c5fd;
 }
 
 .students-main {
+    position: relative;
+    margin-top: -28px;
+    width: min(100%, calc(90% + 30px));
     padding-bottom: 48px;
 }
 
 .students-stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 20px;
+    padding: 20px 10px;
+    background: white;
+    border: 1px solid #dce5f0;
+    border-radius: 22px;
+    box-shadow: 0 10px 28px #1729440f;
+    text-align: center;
 }
 
 .card-custom {
     background: #ffffff;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #dce5f0;
+    border-radius: 22px;
+    box-shadow: 0 10px 28px #1729440f;
 }
 
-.stat-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 20px;
-}
-
-.stat-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-}
-
-.stat-icon-blue {
-    background: #eff6ff;
-    color: #1d4ed8;
-}
-
-.stat-icon-emerald {
-    background: #ecfdf5;
-    color: #059669;
-}
-
-.stat-icon-amber {
-    background: #fffbeb;
-    color: #d97706;
-}
-
-.stat-label {
-    margin: 0;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-}
-
-.stat-value {
-    margin: 2px 0 0;
-    font-size: 24px;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.2;
-}
-
-.stat-value-sm {
-    font-size: 17px;
-}
+.students-stats-grid > div { padding: 6px 8px 10px; }
+.students-stats-grid > div + div { border-left: 1px solid #edf2f7; }
+.students-stats-grid strong { display: block; color: #007bff; font-size: 25px; font-weight: 900; }
+.students-stats-grid > div:nth-child(2) strong { color: #159eb3; }
+.students-stats-grid > div:nth-child(3) strong { color: #dc3545; }
+.students-stats-grid > div:nth-child(4) strong { color: #28a745; }
+.students-stats-grid span { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.students-filters { display: grid; grid-template-columns: 1.25fr 1fr auto; gap: 24px; align-items: end; }
+.students-filter-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.students-filter-actions :is(button, a) { border: 1px solid #007bff; border-radius: 4px; padding: 8px 12px; color: #007bff; font-size: 13px; font-weight: 700; }
+.students-filter-actions a { background: #007bff; color: white; }
+.students-table-title { font-size: 20px; font-weight: 700; }
+.demo-student-table { width: 100%; min-width: 770px; border-collapse: separate; border-spacing: 0 6px; font-size: 13px; }
+.demo-student-table :is(th, td) { padding: 16px 12px; text-align: left; }
+.demo-student-table thead th { background: #eef3f8; color: #475569; text-transform: uppercase; }
+.demo-student-table tbody :is(th, td) { border-block: 1px solid #edf2f7; }
+.demo-student-table tr > :first-child { border-radius: 12px 0 0 12px; }
+.demo-student-table tr > :last-child { border-radius: 0 12px 12px 0; }
+.demo-student-avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #e0ebff; color: #164dab; font-weight: 800; }
+.demo-student-gender, .demo-student-class { display: inline-block; border-radius: 999px; padding: 6px 10px; font-weight: 700; }
+.demo-student-gender { background: #e0f2fe; color: #0369a1; }
+.demo-student-class { background: #2656cb; color: white; white-space: nowrap; }
 
 .students-content-grid {
     display: grid;
@@ -495,8 +405,7 @@ const statusTone = (statusCode?: string): 'success' | 'info' | 'warning' | 'dang
 
 @media (max-width: 767.98px) {
     .students-hero-banner {
-        padding: 32px 16px;
-        margin-bottom: 20px;
+        padding: 32px 16px 48px;
     }
 
     .students-hero-banner h1 {
@@ -504,7 +413,12 @@ const statusTone = (statusCode?: string): 'success' | 'info' | 'warning' | 'dang
     }
 
     .students-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .students-filters {
         grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
     }
 
     .students-card {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -9,6 +9,7 @@ import { publicThemeStyle } from '@/composables/publicTheme';
 interface StudentOption {
     student_id: number;
     nis: string;
+    nisn?: string | null;
     name: string;
     class_group_name?: string | null;
 }
@@ -31,11 +32,14 @@ interface PermitRow {
 
 const props = defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
+    contentBlocks?: Record<string, Record<string, any>>;
     students: StudentOption[];
     myPermits: PermitRow[];
     types: { value: string; label: string }[];
     operations: { permit_same_day_cutoff: string; permit_max_advance_days: number };
     timezone: string;
+    today: string;
+    localHour: string;
     issuedReceipt?: { id: number; ticket_code?: string | null; verification_secret: string } | null;
 }>();
 
@@ -43,21 +47,178 @@ const page = usePage();
 const flashMessage = computed(() => (page.props.flash as { message?: string } | undefined)?.message);
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const revisingPermit = ref<PermitRow | null>(null);
+const activeTab = ref<'form' | 'status' | 'rules'>(props.issuedReceipt ? 'status' : 'form');
+watch(() => props.issuedReceipt, (receipt) => {
+    if (receipt) activeTab.value = 'status';
+});
+const studentQuery = ref('');
+const studentLookupMessage = ref('');
+type PublicPermit = Pick<PermitRow, 'ticket_code' | 'type_label' | 'start_date' | 'end_date' | 'status' | 'status_label'>;
+const selectedStudent = ref<StudentOption | null>(null);
+const activePermits = ref<PublicPermit[]>([]);
+const lookupBusy = ref(false);
+const statusQuery = ref('');
+const statusBusy = ref(false);
+const statusMessage = ref('');
+const statusResults = ref<PublicPermit[]>([]);
+const tokenVerified = ref(false);
+const tokenMessage = ref('');
+const tokenBusy = ref(false);
+const homeroomContact = ref<{ name: string; whatsapp_url: string | null } | null>(null);
+const permitKind = ref('sick');
+const otherKind = ref('');
+const permitKinds = [
+    { value: 'sick', type: 'sick', label: 'Sakit (Disarankan melampirkan Surat Dokter / Keterangan Faskes)' },
+    { value: 'personal', type: 'personal', label: 'Izin Kepentingan Keluarga / Urusan Penting' },
+    { value: 'bereavement', type: 'personal', label: 'Kedukaan / Musibah Keluarga' },
+    { value: 'medical', type: 'sick', label: 'Pemeriksaan Medis / Rawat Jalan / Kontrol Dokter' },
+    { value: 'event', type: 'event', label: 'Dispensasi (Tugas Sekolah / Lomba / Kegiatan Organisasi)' },
+    { value: 'religious', type: 'event', label: 'Kegiatn Keagamaan' },
+    { value: 'special', type: 'other', label: 'Keperluan Khusus (Tes Masuk PTN / Administrasi Resmi)' },
+    { value: 'other', type: 'other', label: 'Lainnya (Isi Keterangan)' },
+];
+async function permitRequest(path: string, payload: Record<string, string>) {
+    const response = await fetch(`/layanan/izin-siswa/${path}`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' },
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(Object.values(data.errors ?? {}).flat()[0] as string || data.message || 'Permintaan gagal. Silakan coba kembali.');
+    return data;
+}
+const selectStudent = async () => {
+    if (lookupBusy.value) return;
+    lookupBusy.value = true;
+    studentLookupMessage.value = '';
+    const query = studentQuery.value.trim();
+    try {
+        const data = await permitRequest('cari-siswa', { query });
+        if (query !== studentQuery.value.trim()) return;
+        selectedStudent.value = data.student;
+        homeroomContact.value = data.homeroom_contact;
+        form.student_id = data.student.student_id;
+        activePermits.value = data.permits.filter((permit: PublicPermit) => ['pending', 'needs_revision', 'approved'].includes(permit.status));
+    } catch (error) { studentLookupMessage.value = error instanceof Error ? error.message : 'Gagal memuat data siswa.'; }
+    finally { lookupBusy.value = false; }
+};
+const lookupStatus = async () => {
+    if (statusBusy.value) return;
+    statusBusy.value = true;
+    statusMessage.value = '';
+    statusResults.value = [];
+    try {
+        const data = await permitRequest('cek-status', { query: statusQuery.value.trim() });
+        statusResults.value = data.permits;
+        if (!data.permits.length) statusMessage.value = 'Data permohonan izin tidak ditemukan.';
+    } catch (error) { statusMessage.value = error instanceof Error ? error.message : 'Gagal memuat status pengajuan.'; }
+    finally { statusBusy.value = false; }
+};
+const verifyToken = async () => {
+    tokenBusy.value = true;
+    tokenMessage.value = '';
+    try {
+        await permitRequest('cek-token', { token: form.one_time_token });
+        tokenVerified.value = true;
+        tokenMessage.value = 'Token valid. Formulir berhasil dibuka.';
+    } catch (error) { tokenMessage.value = error instanceof Error ? error.message : 'Token tidak valid.'; }
+    finally { tokenBusy.value = false; }
+};
+
+const contactHomeroom = () => {
+    if (homeroomContact.value?.whatsapp_url) window.open(homeroomContact.value.whatsapp_url, '_blank', 'noopener,noreferrer');
+    else tokenMessage.value = selectedStudent.value ? 'Nomor WhatsApp wali kelas belum tersedia. Silakan hubungi Guru Piket.' : 'Klik tombol Cek Siswa terlebih dahulu.';
+};
 
 const form = useForm({
-    student_id: props.students[0]?.student_id ?? ('' as string | number),
+    student_query: '',
+    student_id: (props.students[0]?.student_id ?? '') as string | number,
     one_time_token: '',
     type: 'sick',
-    start_date: '',
-    end_date: '',
+    start_date: props.today,
+    end_date: props.today,
     title: '',
     reason: '',
     contact_name: '',
     contact_phone: '',
+    contact_relationship: 'father',
     signature_data: '',
     attachment: null as File | null,
     idempotency_key: `izin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
 });
+const durationDays = computed(() => Math.max(0, Math.round((Date.parse(form.end_date) - Date.parse(form.start_date)) / 86400000) + 1));
+const requiresToken = computed(() => form.start_date <= props.today && props.localHour >= '08:00' && props.localHour < '22:00');
+const requiresEvidence = computed(() => ['sick', 'medical'].includes(permitKind.value) && durationDays.value >= 3);
+const datesConflict = computed(() => activePermits.value.some((permit) => permit.start_date <= form.end_date && permit.end_date >= form.start_date));
+watch(studentQuery, () => { selectedStudent.value = null; form.student_id = ''; activePermits.value = []; tokenVerified.value = false; studentLookupMessage.value = ''; });
+watch(() => form.one_time_token, () => { tokenVerified.value = false; tokenMessage.value = ''; });
+const attachmentPreview = ref('');
+const attachmentInput = ref<HTMLInputElement | null>(null);
+const clearAttachment = () => {
+    if (attachmentPreview.value) URL.revokeObjectURL(attachmentPreview.value);
+    attachmentPreview.value = '';
+    form.attachment = null;
+    if (attachmentInput.value) attachmentInput.value.value = '';
+};
+const pickAttachment = async (event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    clearAttachment();
+    if (!file) return;
+    form.clearErrors('attachment');
+    if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) { form.setError('attachment', 'Format yang didukung: JPG, PNG, JPEG, PDF.'); return; }
+    let upload = file;
+    if (file.type.startsWith('image/')) {
+        try {
+            const bitmap = await createImageBitmap(file);
+            const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(bitmap.width * scale); canvas.height = Math.round(bitmap.height * scale);
+            canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            bitmap.close();
+            const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', .85));
+            if (blob && blob.size < file.size) upload = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+        } catch { /* Preserve the original file when browser image decoding is unavailable. */ }
+    }
+    if (upload.size > 5 * 1024 * 1024) { form.setError('attachment', 'Ukuran file maksimal 5 MB.'); return; }
+    form.attachment = upload;
+    if (upload.type.startsWith('image/')) attachmentPreview.value = URL.createObjectURL(upload);
+};
+onBeforeUnmount(() => { if (attachmentPreview.value) URL.revokeObjectURL(attachmentPreview.value); });
+
+const signatureCanvas = ref<HTMLCanvasElement | null>(null);
+let drawingSignature = false;
+const signaturePoint = (event: PointerEvent) => {
+    const rect = signatureCanvas.value!.getBoundingClientRect();
+    return [(event.clientX - rect.left) * 600 / rect.width, (event.clientY - rect.top) * 180 / rect.height] as const;
+};
+const startSignature = (event: PointerEvent) => {
+    const canvas = signatureCanvas.value;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+    canvas.setPointerCapture(event.pointerId);
+    context.lineWidth = 2;
+    context.lineCap = 'round';
+    context.strokeStyle = '#172e48';
+    context.beginPath();
+    context.moveTo(...signaturePoint(event));
+    drawingSignature = true;
+};
+const moveSignature = (event: PointerEvent) => {
+    if (!drawingSignature) return;
+    const context = signatureCanvas.value?.getContext('2d');
+    context?.lineTo(...signaturePoint(event));
+    context?.stroke();
+};
+const finishSignature = () => {
+    if (!drawingSignature) return;
+    drawingSignature = false;
+    form.signature_data = signatureCanvas.value?.toDataURL('image/png') ?? '';
+};
+const clearSignature = () => {
+    drawingSignature = false;
+    signatureCanvas.value?.getContext('2d')?.clearRect(0, 0, 600, 180);
+    form.signature_data = '';
+};
 
 const revisionForm = useForm({
     start_date: '',
@@ -76,9 +237,26 @@ const openRevision = (row: PermitRow) => {
 };
 
 const submitPermit = () => {
+    form.student_query = studentQuery.value.trim();
+    const kind = permitKinds.find((kind) => kind.value === permitKind.value)!;
+    form.type = kind.type;
+    form.title = permitKind.value === 'other' ? otherKind.value.trim() : kind.label;
+    if (!selectedStudent.value) { form.setError('student_query', 'Silakan klik Cek Siswa terlebih dahulu.'); return; }
+    if (!form.signature_data) {
+        form.setError('signature_data', 'Silakan bubuhkan tanda tangan.');
+        return;
+    }
     form.post('/layanan/izin-siswa', {
         forceFormData: true,
         preserveScroll: true,
+        onSuccess: () => {
+            form.one_time_token = '';
+            form.idempotency_key = `izin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            tokenVerified.value = false;
+            activeTab.value = 'status';
+            statusQuery.value = studentQuery.value;
+            void lookupStatus();
+        },
     });
 };
 
@@ -95,26 +273,37 @@ const submitRevision = () => {
 </script>
 
 <template>
-    <Head :title="`Izin & Dispensasi Siswa — ${school.name}`" />
-    <main class="public-site public-portal-page" :style="themeStyle">
+    <Head :title="`SURAT IZIN SISWA | ${school.name.toUpperCase()}`" />
+    <main class="public-portal-page" :style="themeStyle">
         <PublicHeader :school="school" />
 
-        <section class="portal-container">
-            <header class="portal-hero">
+        <header class="portal-hero">
+            <div class="permit-hero-inner">
                 <div>
-                    <p class="eyebrow">Layanan Perizinan Siswa</p>
-                    <h1>Pengajuan Surat Izin &amp; Dispensasi</h1>
-                    <p>
-                        Batas jam izin hari yang sama: <strong>{{ operations.permit_same_day_cutoff }} ({{ timezone }})</strong> ·
-                        Izin terencana maksimal <strong>{{ operations.permit_max_advance_days }} hari</strong> ke depan.
-                    </p>
+                    <p class="permit-badge">{{ contentBlocks?.['student_permit.hero']?.badge || 'Layanan Resmi Perizinan Siswa' }}</p>
+                    <h1>{{ contentBlocks?.['student_permit.hero']?.title || 'Surat Izin Siswa Online' }}</h1>
+                    <div class="permit-school-row"><strong class="permit-school">{{ school.name }}</strong><span class="permit-year">{{ contentBlocks?.['student_permit.hero']?.academic_year_label || 'TA 2026/2027' }}</span></div>
+                    <p>{{ contentBlocks?.['student_permit.hero']?.description || 'Layanan permohonan izin tidak masuk sekolah (Sakit / Kepentingan Keluarga) resmi yang diajukan oleh Orang Tua / Wali Siswa secara online, cepat, dan disertai tanda tangan digital sah.' }}</p>
+                    <div class="permit-hero-tags"><span>1 Menit Selesai</span><span>TTD Digital Sah</span><span>Terkirim ke Wali Kelas</span><span>Ber-QR Code</span></div>
                 </div>
-                <div class="hero-actions">
-                    <Link v-if="!students.length" href="/login" class="ui-button ui-button--secondary ui-button--md">Masuk Akun Wali / Siswa</Link>
-                    <Link href="/lacak?category=izin" class="ui-button ui-button--secondary ui-button--md">Lacak Tiket Izin</Link>
-                </div>
-            </header>
+                <aside class="permit-steps">
+                    <div class="permit-steps-heading"><strong>Alur 3 Langkah Singkat:</strong><span>24 Jam Aktif</span></div>
+                    <ol>
+                        <li><b>1</b><span><strong>Cek Siswa:</strong> Ketik 10 digit NISN atau Nama Siswa</span></li>
+                        <li><b>2</b><span><strong>Pilih Izin:</strong> Sakit, Izin Keluarga, atau Dispensasi</span></li>
+                        <li><b>3</b><span><strong>Goreskan TTD:</strong> Tanda tangan di layar HP &amp; Kirim</span></li>
+                    </ol>
+                    <p class="permit-steps-footer">Otomatis terhubung ke Wali Kelas &amp; Guru Piket.</p>
+                </aside>
+            </div>
+        </header>
 
+        <section class="portal-container">
+            <nav class="permit-tabs" aria-label="Bagian surat izin siswa">
+                <button type="button" :aria-pressed="activeTab === 'form'" @click="activeTab = 'form'"><span class="tab-desktop">Formulir Pengajuan</span><span class="tab-mobile">Formulir</span></button>
+                <button type="button" :aria-pressed="activeTab === 'status'" @click="activeTab = 'status'"><span class="tab-desktop">Cek Status Pengajuan</span><span class="tab-mobile">Cek Status</span></button>
+                <button type="button" :aria-pressed="activeTab === 'rules'" @click="activeTab = 'rules'"><span class="tab-desktop">Alur &amp; Ketentuan</span><span class="tab-mobile">Ketentuan</span></button>
+            </nav>
             <div v-if="flashMessage" class="alert-banner alert-banner--success" role="status">{{ flashMessage }}</div>
 
             <div v-if="issuedReceipt" class="alert-banner alert-banner--pin" role="status">
@@ -123,77 +312,147 @@ const submitRevision = () => {
                 <a :href="`/layanan/izin-siswa/${issuedReceipt.id}/pdf`" target="_blank" rel="noopener" class="ui-button ui-button--secondary ui-button--sm">Cetak Bukti PDF</a>
             </div>
 
-            <section class="portal-card">
-                <h2>Formulir Pengajuan Izin</h2>
+            <section v-show="activeTab === 'form'" class="portal-card permit-application" aria-label="Formulir Pengajuan Izin">
+                <aside class="permit-notice">
+                    <strong>Ketentuan Pengajuan Izin Siswa Online:</strong>
+                    <ul>
+                        <li>Pengajuan izin cukup dikirim <b>1 (satu) kali</b> untuk setiap periode izin yang diajukan.</li>
+                        <li>Setelah berhasil mengirim, pantau status persetujuan di menu <b>Cek Status Pengajuan</b>. Anda tidak perlu mengirim ulang.</li>
+                        <li>Jika ada koreksi tanggal atau alasan mendesak, silakan konfirmasi langsung ke Wali Kelas.</li>
+                    </ul>
+                </aside>
                 <form class="form-grid" @submit.prevent="submitPermit">
-                    <FormField v-if="students.length" id="izin-student" label="Pilih Siswa" required :error="form.errors.student_id" v-slot="{ inputId, describedBy, invalid }">
-                        <select :id="inputId" v-model="form.student_id" required :aria-describedby="describedBy" :aria-invalid="invalid">
-                            <option v-for="s in students" :key="s.student_id" :value="s.student_id">
-                                {{ s.name }} ({{ s.nis }}) — {{ s.class_group_name || '-' }}
-                            </option>
-                        </select>
-                    </FormField>
-
-                    <template v-else>
-                        <FormField id="izin-student-id" label="ID Siswa" required :error="form.errors.student_id" v-slot="{ inputId, describedBy, invalid }">
-                            <input :id="inputId" v-model="form.student_id" type="number" required :aria-describedby="describedBy" :aria-invalid="invalid" />
-                        </FormField>
-                        <FormField id="izin-token" label="Token Izin Sekali Pakai" required hint="Token diterbitkan oleh wali kelas atau petugas piket." :error="form.errors.one_time_token" v-slot="{ inputId, describedBy, invalid }">
-                            <input :id="inputId" v-model="form.one_time_token" type="text" required placeholder="IZT-XXXXXXXXXX" :aria-describedby="describedBy" :aria-invalid="invalid" />
-                        </FormField>
-                    </template>
-
-                    <FormField id="izin-type" label="Kategori Izin" required :error="form.errors.type" v-slot="{ inputId, describedBy, invalid }">
-                        <select :id="inputId" v-model="form.type" :aria-describedby="describedBy" :aria-invalid="invalid">
-                            <option v-for="t in types" :key="t.value" :value="t.value">{{ t.label }}</option>
-                        </select>
-                    </FormField>
-
-                    <FormField id="izin-start" label="Tanggal Mulai" required :error="form.errors.start_date" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.start_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" />
-                    </FormField>
-
-                    <FormField id="izin-end" label="Tanggal Selesai" required :error="form.errors.end_date" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.end_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" />
-                    </FormField>
-
-                    <FormField id="izin-contact-name" label="Nama Wali / Kontak" :error="form.errors.contact_name" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.contact_name" type="text" :aria-describedby="describedBy" :aria-invalid="invalid" />
-                    </FormField>
-
-                    <FormField id="izin-contact-phone" label="Nomor HP / WhatsApp Aktif" :error="form.errors.contact_phone" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.contact_phone" type="text" :aria-describedby="describedBy" :aria-invalid="invalid" />
-                    </FormField>
-
-                    <div class="full-span">
-                        <FormField id="izin-title" label="Judul / Perihal Izin" required :error="form.errors.title" v-slot="{ inputId, describedBy, invalid }">
-                            <input :id="inputId" v-model="form.title" type="text" required placeholder="Contoh: Izin Sakit Demam / Dispensasi Lomba Sains" :aria-describedby="describedBy" :aria-invalid="invalid" />
-                        </FormField>
+                    <h2 class="permit-section-title full-span">1. Identifikasi &amp; Data Siswa</h2>
+                    <div class="permit-lookup full-span">
+                        <label for="izin-student-query">Cari Siswa <span class="text-red-600">*</span></label>
+                        <div>
+                            <div class="permit-lookup-controls">
+                                <input id="izin-student-query" v-model="studentQuery" type="search" required placeholder="Masukkan 10 digit NISN atau Nama Lengkap Siswa..." @keydown.enter.prevent="selectStudent" />
+                                <button type="button" :disabled="lookupBusy" @click="selectStudent">{{ lookupBusy ? 'Mencari...' : 'Cek Siswa' }}</button>
+                            </div>
+                            <small>Ketikkan <b>10 digit NISN</b> atau <b>Nama Lengkap Siswa</b> (huruf besar/kecil bebas) lalu klik <b>Cek Siswa</b>.</small>
+                            <p v-if="studentLookupMessage" role="status" class="muted">{{ studentLookupMessage }}</p>
+                            <p v-if="form.errors.student_id || form.errors.student_query" role="alert" class="text-red-600">{{ form.errors.student_id || form.errors.student_query }}</p>
+                        </div>
                     </div>
 
+                    <div v-if="selectedStudent" class="permit-student-info full-span" role="status">
+                        <strong>{{ selectedStudent.name }}</strong>
+                        <div>NISN: {{ selectedStudent.nisn || '-' }} <span>Kelas: {{ selectedStudent.class_group_name || '-' }}</span></div>
+                        <aside v-if="activePermits.length" class="permit-active-warning">
+                            <strong>Perhatian: Siswa Memiliki Permohonan Izin Terdaftar</strong>
+                            <p>Ananda sudah memiliki permohonan izin dalam proses / disetujui. Mohon tidak mengirim formulir ulang untuk tanggal yang sama:</p>
+                            <div class="permit-table-scroll"><table><thead><tr><th>No. Registrasi</th><th>Kategori</th><th>Periode</th><th>Status</th></tr></thead><tbody><tr v-for="permit in activePermits" :key="permit.ticket_code || permit.start_date"><td>{{ permit.ticket_code }}</td><td>{{ permit.type_label }}</td><td>{{ permit.start_date }} s.d. {{ permit.end_date }}</td><td>{{ permit.status_label }}</td></tr></tbody></table></div>
+                            <small>Untuk perubahan izin, silakan konfirmasi langsung ke Wali Kelas.</small>
+                            <button type="button" @click="activeTab = 'status'; statusQuery = studentQuery; lookupStatus()">Buka Menu Lacak Status</button>
+                        </aside>
+                    </div>
+
+                    <h2 class="permit-section-title full-span">2. Rincian Permohonan Izin</h2>
+                    <FormField class="full-span" id="izin-type" label="Jenis Izin" required :error="form.errors.type" v-slot="{ inputId, describedBy, invalid }">
+                        <select :id="inputId" v-model="permitKind" :aria-describedby="describedBy" :aria-invalid="invalid">
+                            <option v-for="kind in permitKinds" :key="kind.value" :value="kind.value">{{ kind.label }}</option>
+                        </select>
+                    </FormField>
+                    <FormField v-if="permitKind === 'other'" id="izin-other-kind" class="full-span" label="Jenis Izin Lainnya" required hint="Mohon tuliskan jenis izin secara singkat, lalu lengkapi alasan detailnya pada kotak Alasan di bawah." :error="form.errors.title">
+                        <input id="izin-other-kind" v-model="otherKind" required placeholder="Sebutkan jenis izin / keperluan Anda (misal: Mengurus Paspor, Khitanan, dll)" />
+                    </FormField>
+
+                    <div class="permit-date-row full-span"><label>Rentang Tanggal <span class="text-red-600">*</span></label><div class="permit-dates">
+                    <FormField id="izin-start" label="Mulai Tanggal (Tgl-Bln-Thn):" :error="form.errors.start_date" v-slot="{ inputId, describedBy, invalid }">
+                        <div class="permit-date-input"><span aria-hidden="true">{{ form.start_date.split('-').reverse().join('-') }}</span><input :id="inputId" v-model="form.start_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" @click="($event.target as HTMLInputElement).showPicker?.()" /></div>
+                    </FormField>
+
+                    <FormField id="izin-end" label="Sampai Tanggal (Tgl-Bln-Thn):" :error="form.errors.end_date" v-slot="{ inputId, describedBy, invalid }">
+                        <div class="permit-date-input"><span aria-hidden="true">{{ form.end_date.split('-').reverse().join('-') }}</span><input :id="inputId" v-model="form.end_date" type="date" required :aria-describedby="describedBy" :aria-invalid="invalid" @click="($event.target as HTMLInputElement).showPicker?.()" /></div>
+                    </FormField>
+                    <span class="permit-duration">{{ durationDays > 0 ? `${durationDays} Hari` : 'Tanggal Salah' }}</span>
+                    </div></div>
+
+                    <p v-if="datesConflict" class="permit-conflict full-span" role="alert"><b>Tanggal Sudah Memiliki Izin:</b> Tanggal yang Anda pilih bentrok dengan pengajuan izin yang sudah terdaftar untuk siswa ini. Tombol kirim dinonaktifkan untuk mencegah duplikasi.</p>
+                    <div v-if="requiresToken" class="permit-date-row full-span"><label class="text-red-600">Izin Lewat Batas Waktu</label><div class="permit-token-box">
+                        <h3>Batas Pengajuan Mandiri Ditutup (Pukul 08:00 s/d 22:00 WITA)</h3>
+                        <strong class="permit-token-badge">Perlu Token Wali Kelas (Sekali Pakai)</strong>
+                        <p>Sesuai tata tertib madrasah, pengajuan izin hari ini ditutup pukul <b>08:00 WITA</b> dan akan dibuka kembali pukul <b>22:00 WITA</b>. Jika perlu mengirimkan surat izin pada jam aktif sekolah ini, orang tua wajib konfirmasi ke <b>Wali Kelas / Guru Piket</b> untuk mendapatkan <b>Kode Token Dispensasi (Sekali Pakai)</b>. Kode token otomatis hangus setelah dikirimkan dan tidak dapat digunakan untuk siswa lain.</p>
+                        <button type="button" class="permit-contact-teacher" @click="contactHomeroom">Hubungi Wali Kelas via WhatsApp untuk Minta Token</button>
+                        <small>Klik tombol "Cek Siswa" di atas agar terhubung langsung ke nomor WhatsApp Wali Kelas siswa.</small>
+                        <FormField id="izin-token" label="Masukkan Kode Token Dispensasi:" required :error="form.errors.one_time_token">
+                            <div class="permit-lookup-controls"><input id="izin-token" v-model="form.one_time_token" type="text" placeholder="Contoh: 6 Digit Kode Token" /><button type="button" :disabled="tokenBusy || !selectedStudent" @click="verifyToken">Buka Kunci</button></div>
+                        </FormField>
+                        <small role="status">{{ tokenMessage || 'Token bersifat Sekali Pakai dan otomatis hangus setelah permohonan berhasil dikirimkan.' }}</small>
+                    </div></div>
+
+
                     <div class="full-span">
-                        <FormField id="izin-reason" label="Alasan Rinci" required :error="form.errors.reason" v-slot="{ inputId, describedBy, invalid }">
+                        <FormField id="izin-reason" class="full-span" label="Alasan / Keterangan" required :error="form.errors.reason" v-slot="{ inputId, describedBy, invalid }">
                             <textarea :id="inputId" v-model="form.reason" rows="3" required :aria-describedby="describedBy" :aria-invalid="invalid" />
                         </FormField>
                     </div>
 
-                    <FormField id="izin-attachment" label="Lampiran Bukti (Surat Dokter / Undangan, PDF/JPG/PNG)" :error="form.errors.attachment" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" :aria-describedby="describedBy" :aria-invalid="invalid" @change="form.attachment = ($event.target as HTMLInputElement).files?.[0] ?? null" />
+                    <h2 class="permit-section-title full-span">3. Data Orang Tua / Pemohon Izin</h2>
+                    <FormField class="full-span" id="izin-contact-name" label="Nama Orang Tua / Wali" required :error="form.errors.contact_name">
+                        <input id="izin-contact-name" v-model="form.contact_name" type="text" required placeholder="Nama lengkap orang tua / wali yang bertanggung jawab" />
+                    </FormField>
+                    <FormField class="full-span" id="izin-relationship" label="Hubungan dengan Siswa" required :error="form.errors.contact_relationship">
+                        <select id="izin-relationship" v-model="form.contact_relationship">
+                            <option value="father">Ayah (Orang Tua)</option>
+                            <option value="mother">Ibu (Orang Tua)</option>
+                            <option value="guardian">Wali Siswa</option>
+                            <option value="parent">Orang Tua</option>
+                            <option value="family">Keluarga Dekat</option>
+                        </select>
+                    </FormField>
+                    <FormField class="full-span" id="izin-contact-phone" label="Nomor WhatsApp Aktif" required :error="form.errors.contact_phone" hint="Notifikasi verifikasi atau konfirmasi dari pihak sekolah akan dikirimkan ke nomor ini.">
+                        <input id="izin-contact-phone" v-model="form.contact_phone" type="tel" required placeholder="Contoh: 081234567890" />
                     </FormField>
 
-                    <FormField id="izin-signature" label="Tanda Tangan Pemohon (Ketik Nama Lengkap)" required :error="form.errors.signature_data" v-slot="{ inputId, describedBy, invalid }">
-                        <input :id="inputId" v-model="form.signature_data" type="text" required placeholder="Nama penandatangan izin" :aria-describedby="describedBy" :aria-invalid="invalid" />
+                    <h2 class="permit-section-title full-span">4. Unggah Bukti (Surat Dokter / Surat Keterangan)</h2>
+                    <FormField class="full-span" id="izin-attachment" :label="requiresEvidence ? 'Foto / File Bukti — Wajib Surat Dokter (≥ 3 Hari)' : 'Foto / File Bukti (Opsional jika < 3 hari)'" :required="requiresEvidence" hint="Format yang didukung: JPG, PNG, JPEG, PDF. Foto dari kamera HP akan otomatis dikompres agar cepat diunggah." :error="form.errors.attachment" v-slot="{ inputId, describedBy, invalid }">
+                        <div v-if="requiresEvidence" class="permit-evidence-warning"><strong>Wajib Melampirkan Surat Keterangan Dokter!</strong><p>Pengajuan izin sakit selama {{ durationDays }} hari atau lebih wajib melampirkan foto/file Surat Keterangan Sakit resmi dari Dokter / Puskesmas / Faskes.</p></div>
+                        <input :id="inputId" ref="attachmentInput" type="file" accept=".pdf,.jpg,.jpeg,.png" :aria-describedby="describedBy" :aria-invalid="invalid" @change="pickAttachment" />
+                        <div v-if="form.attachment" class="permit-preview"><img v-if="attachmentPreview" :src="attachmentPreview" alt="Pratinjau bukti izin" /><p v-else>{{ form.attachment.name }}</p><button type="button" @click="clearAttachment">Batalkan / Ganti Foto</button></div>
                     </FormField>
 
-                    <div class="full-span">
-                        <button type="submit" class="ui-button ui-button--primary ui-button--md" :disabled="form.processing">
+                    <h2 class="permit-section-title full-span">5. Tanda Tangan Digital Orang Tua / Wali Siswa</h2>
+                    <FormField class="full-span" id="izin-signature" label="Tanda Tangan" required :error="form.errors.signature_data">
+                        <p class="signature-instruction">Goreskan tanda tangan Anda pada kotak di bawah ini menggunakan jari (layar sentuh HP) atau kursor mouse.</p>
+                        <div class="signature-pad">
+                            <canvas id="izin-signature" ref="signatureCanvas" width="600" height="180" aria-label="Kanvas tanda tangan orang tua atau wali" @pointerdown="startSignature" @pointermove="moveSignature" @pointerup="finishSignature" @pointercancel="finishSignature" />
+                            <span v-if="!form.signature_data" aria-hidden="true">Goreskan tanda tangan digital di sini</span>
+                        </div>
+                        <div class="signature-toolbar"><small>Tanda tangan ini sah sebagai bukti persetujuan resmi orang tua/wali siswa</small><button type="button" class="signature-clear" @click="clearSignature">Hapus / Ulangi TTD</button></div>
+                    </FormField>
+
+                    <div class="full-span permit-submit">
+                        <button type="submit" :disabled="form.processing || datesConflict || (requiresToken && !tokenVerified)">
                             Kirim Permohonan Izin
                         </button>
                     </div>
                 </form>
             </section>
 
-            <section v-if="revisingPermit" class="portal-card">
+            <section v-if="activeTab === 'rules'" class="portal-card permit-secondary-card permit-rules">
+                <h2>Alur &amp; Tata Cara Pengajuan Izin</h2>
+                <article class="permit-rule-step"><span>1</span><div><h3>1. Masukkan NISN Siswa</h3><p>Orang tua memasukkan NISN siswa pada formulir untuk memuat nama, kelas, dan identitas siswa secara valid.</p></div></article>
+                <article class="permit-rule-step"><span>2</span><div><h3>2. Lengkapi Data &amp; Unggah Bukti</h3><p>Pilih jenis izin (Sakit/Izin), tentukan tanggal tidak masuk, tuliskan alasan, dan unggah foto surat keterangan dokter (jika sakit) atau surat izin.</p></div></article>
+                <article class="permit-rule-step"><span>3</span><div><h3>3. Pengajuan Diterima Sekolah</h3><p>Setelah formulir dikirim, sistem akan menerbitkan <b>Nomor Registrasi Pengajuan</b> resmi.</p></div></article>
+                <article class="permit-rule-step"><span>4</span><div><h3>4. Verifikasi Guru / Wali Kelas</h3><p>Wali kelas atau pihak sekolah akan memeriksa permohonan. Orang tua dapat mengecek status secara berkala di tab Cek Status serta mencetak Bukti Izin Digital.</p></div></article>
+                <aside class="permit-cutoff-rules"><h3>Ketentuan Batas Jam Pengajuan Izin (Cut-Off Time):</h3><ul>
+                    <li><b>Waktu Bebas Mandiri:</b> Pengajuan izin mandiri dibuka bebas mulai pukul <b>22:00 Malam s/d 08:00 Pagi WITA</b> tanpa memerlukan kode token apa pun.</li>
+                    <li><b>Waktu Terkunci Jam Sekolah (Pukul 08:00 s/d 22:00 WITA):</b> Formulir izin terkunci selama jam sekolah untuk mencegah manipulasi kehadiran. Pengajuan di jam ini wajib konfirmasi ke Wali Kelas / Guru Piket untuk mendapatkan <b>Kode Token Dispensasi (Sekali Pakai)</b>. Begitu surat izin terkirim, token otomatis hangus dan tidak dapat dipakai untuk siswa lain.</li>
+                    <li><b>Izin Hari Esok / Terencana:</b> Bebas diajukan kapan saja 24 jam tanpa memerlukan kode token, asalkan tanggal mulai izin adalah hari esok atau mendatang.</li>
+                </ul></aside>
+            </section>
+
+            <section v-if="activeTab === 'status'" class="portal-card permit-secondary-card permit-status">
+                <div class="permit-status-heading"><span aria-hidden="true">⌕</span><div><h2>Cek Status Permohonan Izin</h2><p>Lacak progres dan status verifikasi permohonan izin siswa oleh wali kelas/guru secara realtime.</p></div></div>
+                <hr />
+                <form @submit.prevent="lookupStatus"><label for="permit-status-query">Masukkan NISN Siswa, No. Pengajuan, atau Nama Siswa:</label><div class="permit-status-controls"><input id="permit-status-query" v-model="statusQuery" required placeholder="Contoh: 0071234567 atau IZN-20260820-0001" /><button type="submit" :disabled="statusBusy">{{ statusBusy ? 'Mencari...' : 'Cari Data' }}</button></div><small>Masukkan <b>10 digit NISN</b>, <b>Nomor Registrasi</b> (misal: <code>IZN-20260820-0001</code>), atau <b>Nama Lengkap Siswa</b>.</small></form>
+                <p v-if="statusMessage" role="status">{{ statusMessage }}</p>
+                <div v-if="statusResults.length" class="permit-table-scroll"><table><thead><tr><th>No. Registrasi</th><th>Kategori</th><th>Periode</th><th>Status</th></tr></thead><tbody><tr v-for="permit in statusResults" :key="permit.ticket_code || permit.start_date"><td>{{ permit.ticket_code }}</td><td>{{ permit.type_label }}</td><td>{{ permit.start_date }} s.d. {{ permit.end_date }}</td><td>{{ permit.status_label }}</td></tr></tbody></table></div>
+            </section>
+
+            <section v-if="activeTab === 'status' && revisingPermit" class="portal-card">
                 <h2>Perbaiki Permohonan Izin — {{ revisingPermit.title }}</h2>
                 <p v-if="revisingPermit.decision_note" class="warning-callout">Catatan Wali Kelas: {{ revisingPermit.decision_note }}</p>
                 <form class="form-grid" @submit.prevent="submitRevision">
@@ -225,7 +484,7 @@ const submitRevision = () => {
                 </form>
             </section>
 
-            <section v-if="myPermits.length" class="portal-card">
+            <section v-if="activeTab === 'status' && myPermits.length" class="portal-card">
                 <h2>Riwayat Permohonan Izin</h2>
                 <div class="permit-list">
                     <article v-for="row in myPermits" :key="row.id" class="permit-item">
@@ -249,14 +508,56 @@ const submitRevision = () => {
 </template>
 
 <style scoped>
-.public-portal-page { min-height: 100vh; background: var(--public-surface, #f5f8fb); color: var(--public-ink, #173044); }
-.portal-container { width: min(1040px, calc(100% - 2rem)); margin-inline: auto; padding: 2.25rem 0 4rem; display: grid; gap: 1.5rem; }
-.portal-hero { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; }
-.portal-hero h1 { margin: .35rem 0 .45rem; font-size: clamp(1.75rem, 3.5vw, 2.4rem); line-height: 1.15; }
-.portal-hero p { margin: 0; color: var(--public-muted, #526673); }
-.hero-actions, .action-row { display: flex; flex-wrap: wrap; gap: .6rem; }
+.public-portal-page { background: #f8fafc; color: #343a40; padding: 0; font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif; }
+.portal-container { width: min(1140px, 100%); margin-inline: auto; padding: 25px 15px 39px; display: grid; gap: 19.5px; }
+.portal-hero { padding: 38.75px 0 34px; border-radius: 0 0 24px 24px; color: #fff; background: linear-gradient(135deg, #0f2b48 0%, #1e3c72 50%, #2a5298 100%); box-shadow: 0 10px 25px #0f2b4826; }
+.permit-hero-inner { width: min(1140px, 100%); padding-inline: 15px; margin-inline: auto; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: center; gap: 30px; }
+.portal-hero h1 { margin: 8px 0 4px; color: white; font-size: 32px; font-weight: 800; line-height: 1.25; letter-spacing: -.3px; }
+.portal-hero p { margin: 8px 0 14px; color: #ffffffe6; font-size: 13px; line-height: 1.55; max-width: 600px; }
+.portal-hero .permit-badge { display: inline-flex; margin: 0; padding: 4px 12px; border: 1px solid #ffffff40; border-radius: 999px; background: #ffffff26; color: #fef08a; font-size: 11px; line-height: 16.5px; letter-spacing: .5px; font-weight: 700; text-transform: uppercase; }
+.permit-school { font-size: 13.5px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; }
+.permit-school-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; line-height: 20.25px; }
+.permit-hero-inner > div > p:not(.permit-badge) { margin-top: 6.5px; }
+.permit-year { background: #ffc107; color: #212529; border-radius: 6px; padding: 3.25px 6.5px; font-size: 11px; line-height: 11px; font-weight: 700; }
+.permit-hero-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.permit-hero-tags span { padding: 4px 12px; border: 1px solid #ffffff29; border-radius: 999px; background: #0003; font-size: 11.5px; font-weight: 600; }
+.permit-steps { padding: 16px 18px; border: 1px solid #ffffff30; border-radius: 16px; background: #111d343d; font-size: 13px; }
+.permit-steps > strong { display: block; padding: 0 0 8px; border-bottom: 1px solid #ffffff28; }
+.permit-steps-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 18px 6.5px; border-bottom: 1px solid #ffffff26; }
+.permit-steps-heading > span { border-radius: 20px; padding: 1px 18px; color: #343a40; background: #f8f9fa; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.portal-hero .permit-steps-footer { margin: 6.5px 0 0; padding: 6.5px 14px 0; border-top: 1px solid #ffffff1f; color: #ffffff80; font-size: 11px; line-height: 16.5px; max-width: none; }
+.permit-steps li { font-size: 12px; }
+.permit-steps ol { display: grid; gap: 6.5px; margin: 6.5px 0 0; padding: 0; list-style: none; }
+.permit-steps li { display: flex; gap: 9px; align-items: center; }
+.permit-steps b { display: grid; flex: 0 0 22px; height: 22px; place-items: center; border-radius: 50%; background: #f59e0b; color: white; font-size: 11px; }
+.permit-tabs { justify-self: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 5px; border: 1px solid #dce5f0; border-radius: 24px; background: white; box-shadow: 0 5px 14px #1729440f; }
+.permit-tabs button { padding: 9px clamp(10px, 2.6vw, 26px); border-radius: 20px; color: #64748b; font-size: 13px; font-weight: 700; }
+.permit-tabs button[aria-pressed="true"] { background: #223d6c; color: white; box-shadow: 0 3px 8px #223d6c44; }
+.action-row { display: flex; flex-wrap: wrap; gap: .6rem; }
 .portal-card { background: #fff; border: 1px solid var(--public-panel-border, #d8e2ee); border-radius: 16px; padding: 1.5rem; display: grid; gap: 1rem; }
 .portal-card h2 { margin: 0; font-size: 1.2rem; }
+.permit-application { width: calc(83.333333% - 5px); justify-self: center; padding: 19.5px; border: 0; border-radius: 12px; box-shadow: 0 5px 20px #00000014; gap: 19.5px; }
+.permit-notice { padding: 12px 18px 14px 39px; border: 1px solid #d6dfe8; border-left: 4px solid #317efb; border-radius: 8px; background: #f8fbff; font-size: 13.5px; line-height: 1.5; }
+.permit-notice ul { margin: 3.25px 0 0; padding-left: 1rem; color: #6c757d; list-style: disc; }
+.permit-application .permit-section-title { background: #eaf1fa; padding: 11px 18px 11px 24px; border-left: 4px solid #223d6c; border-radius: 4px; color: #223d6c; font-size: 13px; font-weight: 800; }
+.permit-lookup { display: grid; grid-template-columns: 1fr 3fr; gap: 12px; align-items: start; font-size: 13px; font-weight: 700; }
+.permit-lookup label { padding-top: 8px; }
+.permit-lookup-controls { display: flex; }
+.permit-lookup-controls input { flex: 1; min-width: 0; padding: 6px 9px; border: 1px solid #c4d0de; border-radius: 4px 0 0 4px; background: white; }
+.permit-lookup-controls button { padding: 6px 18px; background: #007bff; color: white; border-radius: 0 4px 4px 0; }
+.permit-lookup small { display: block; margin-top: 4px; color: #6c757d; font-size: 11px; font-weight: 400; }
+.permit-application .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.permit-application :deep(.ss-form-field.full-span) { display: grid; grid-template-columns: 172px minmax(0, 1fr); gap: 0 18px; align-items: start; }
+.permit-application :deep(.ss-form-field.full-span > label) { padding-top: 7px; font-size: 13px; font-weight: 700; }
+.permit-application :deep(.ss-form-field.full-span > :is(.ss-form-field__hint, .ss-form-field__error)) { grid-column: 2; }
+.permit-application :deep(input:not([type="file"]), select, textarea) { width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 3px; background: white; padding: 6px 10px; font-size: 13px; }
+.signature-instruction { margin-bottom: 8px; font-size: 11px; color: #6b7280; line-height: 1.5; }
+.signature-pad { position: relative; height: 164px; border: 2px dashed #397dff; border-radius: 10px; background: #f8f9fa; }
+.signature-pad canvas { display: block; width: 100%; height: 160px; touch-action: none; }
+.signature-pad span { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: #8da2c2; font-size: 14px; }
+.signature-clear { margin-top: 10px; padding: 3px 20px; border: 1px solid #718096; border-radius: 2px; color: #64748b; font-size: 11px; }
+.permit-submit { display: flex; justify-content: center; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+.permit-submit button { border-radius: 999px; padding: 11px 50px; background: #007bff; color: white; font-size: 14px; font-weight: 700; box-shadow: 0 4px 10px #007bff40; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
 .full-span { grid-column: 1 / -1; }
 .alert-banner { padding: .9rem 1rem; border-radius: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; justify-content: space-between; }
@@ -267,4 +568,89 @@ const submitRevision = () => {
 .permit-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding: .95rem; border: 1px solid var(--public-panel-border, #d8e2ee); border-radius: 12px; }
 .permit-head { display: flex; align-items: center; gap: .5rem; }
 .muted { margin: .25rem 0 0; color: var(--public-muted, #526673); font-size: .88rem; }
+.tab-mobile { display: none; }
+.permit-date-row { display: grid; grid-template-columns: 25% minmax(0, 1fr); font-size: 13px; font-weight: 700; }
+.permit-date-row > label { padding-top: 7px; padding-right: 20px; }
+.permit-dates { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 20px; }
+.permit-dates :deep(label) { color: #6c757d; font-size: 11px; }
+.permit-date-input { position: relative; min-height: 34px; border: 1px solid #ced4da; border-radius: 4px; padding: 6px 12px; background: white; font-size: 13px; font-weight: 400; }
+.permit-date-input::after { content: '▦'; position: absolute; right: 12px; color: #007bff; }
+.permit-date-input:focus-within { outline: 2px solid #80bdff; outline-offset: 1px; }
+.permit-date-input :deep(input) { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.permit-duration { background: #17a2b8; color: white; padding: 8px; border-radius: 4px; white-space: nowrap; font-size: 13px; }
+.permit-application :deep(.ss-form-field.full-span) { grid-template-columns: calc(25% - 14px) minmax(0, 1fr); }
+.permit-application :deep(input:not([type="file"]), select, textarea) { min-height: 34px; padding: 6px 12px; border-radius: 4px; font-family: inherit; font-size: 13px; }
+.permit-application :deep(.ss-form-field__hint) { font-size: 11px; color: #6c757d; }
+.permit-application :deep(.ss-form-field__label) { color: #343a40; line-height: 1.5; }
+.permit-token-box { background: #fffbeb; padding: 16px; border: 1px solid #f59e0b; border-radius: 12px; font-weight: 400; }
+.permit-token-box h3 { font-size: 14.5px; font-weight: 700; }
+.permit-token-box p { font-size: 11px; line-height: 1.5; color: #6c757d; margin: 8px 0; }
+.permit-token-box small { display: block; margin: 6px 0 12px; font-size: 11px; color: #6c757d; }
+.permit-token-badge { display: inline-block; background: #ffc107; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+.permit-contact-teacher { background: #28a745; color: white; padding: 4px 12px; font-size: 11px; border-radius: 6px; }
+.permit-token-box .permit-lookup-controls button { background: #ffc107; color: #212529; }
+.permit-student-info { background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 12px 20px; font-size: 13px; }
+.permit-student-info span { margin-left: 12px; }
+.permit-active-warning { background: #fff9db; border: 1px solid #ffe066; padding: 16px; border-radius: 4px; margin-top: 16px; }
+.permit-active-warning p { margin: 4px 0 10px; }
+.permit-active-warning button { padding: 4px 10px; border: 1px solid #007bff; border-radius: 4px; color: #007bff; margin-top: 8px; }
+.permit-conflict, .permit-evidence-warning { padding: 12px; background: #fff8f8; color: #721c24; border-left: 4px solid #dc3545; font-size: 12px; }
+.permit-preview { padding: 15px; border: 2px dashed #b8c7db; border-radius: 8px; text-align: center; margin-top: 10px; }
+.permit-preview img { max-height: 250px; max-width: 100%; margin: auto; border-radius: 6px; }
+.permit-preview button { border: 1px solid #dc3545; color: #dc3545; padding: 4px 8px; border-radius: 4px; margin-top: 8px; }
+.signature-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.signature-toolbar small { font-size: 10px; color: #6c757d; }
+.signature-toolbar button { margin-top: 0; }
+.permit-submit button:disabled { opacity: .65; cursor: not-allowed; }
+.permit-secondary-card { justify-self: center; width: calc(75% - 7.5px); padding: 20px; box-shadow: 0 5px 20px #00000014; border: 0; border-radius: 12px; }
+.permit-secondary-card h2 { font-size: 22px; color: #007bff; font-weight: 700; line-height: 1.2; }
+.permit-rules > h2 { text-align: center; margin-bottom: 8px; }
+.permit-rule-step { display: flex; align-items: start; gap: 15px; padding: 15px; border-left: 4px solid #1e3c72; border-radius: 10px; box-shadow: 0 2px 8px #0000000a; }
+.permit-rule-step > span { display: grid; place-items: center; flex: 0 0 44px; height: 44px; border-radius: 50%; background: #eef4fc; color: #1e3c72; font-size: 18px; }
+.permit-rule-step h3 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+.permit-rule-step p { font-size: 13px; color: #6c757d; margin: 0; }
+.permit-cutoff-rules { background: #fff3cd; border: 1px solid #f59e0b; border-radius: 10px; padding: 16px; margin-top: 8px; }
+.permit-cutoff-rules h3 { font-size: 14px; font-weight: 700; }
+.permit-cutoff-rules ul { list-style: disc; padding-left: 16px; color: #6c757d; font-size: 11px; line-height: 1.6; }
+.permit-status-heading { display: flex; align-items: center; gap: 16px; }
+.permit-status-heading > span { display: grid; place-items: center; flex: 0 0 48px; height: 48px; border-radius: 50%; background: #007bff; color: white; font-size: 26px; box-shadow: 0 4px 14px #007bff4d; }
+.permit-status-heading p { font-size: 11px; color: #6c757d; margin: 4px 0 0; }
+.permit-status hr { border: 0; border-top: 1px solid #0000001a; }
+.permit-status label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.permit-status-controls { display: flex; overflow: hidden; border: 1.5px solid #cbd5e1; border-radius: 10px; box-shadow: 0 2px 4px #00000013; }
+.permit-status-controls input { width: 0; flex: 1; min-width: 0; padding: 12px 16px; font-size: 15px; border: 0; }
+.permit-status-controls button { padding: 12px 24px; background: #007bff; color: white; font-weight: 700; font-size: 15px; white-space: nowrap; }
+.permit-status small { display: block; color: #6c757d; margin-top: 8px; font-size: 11px; }
+.permit-table-scroll { overflow-x: auto; }
+.permit-table-scroll table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.permit-table-scroll th, .permit-table-scroll td { padding: 8px; border: 1px solid #dee2e6; text-align: left; }
+@media (max-width: 1199.98px) {
+    .permit-hero-inner, .portal-container { max-width: 960px; }
+}
+@media (max-width: 991.98px) {
+    .permit-hero-inner, .portal-container { max-width: 720px; }
+    .permit-hero-inner { grid-template-columns: minmax(0, 1fr); gap: 19.5px; }
+    .permit-application { width: 100%; }
+    .permit-secondary-card { width: 100%; }
+}
+@media (max-width: 767.98px) {
+    .permit-hero-inner, .portal-container { max-width: 540px; }
+    .portal-hero h1 { font-size: 28px; }
+    .permit-tabs { width: 100%; border-radius: 14px; flex-wrap: nowrap; }
+    .permit-tabs button { flex: 1; min-width: 0; padding: 9px 4px; font-size: 11.5px; border-radius: 10px; }
+    .tab-desktop { display: none; }
+    .tab-mobile { display: inline; }
+    .permit-lookup { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+@media (max-width: 490px) {
+    .form-grid, .permit-application .form-grid { grid-template-columns: minmax(0, 1fr); }
+    .permit-application :deep(.ss-form-field.full-span) { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .permit-application :deep(.ss-form-field.full-span > :is(.ss-form-field__hint, .ss-form-field__error)) { grid-column: 1; }
+}
+@media (max-width: 575.98px) {
+    .permit-date-row, .permit-application :deep(.ss-form-field.full-span) { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .permit-dates { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .permit-duration { justify-self: start; }
+    .permit-application :deep(.ss-form-field.full-span > :is(.ss-form-field__hint, .ss-form-field__error)) { grid-column: 1; }
+}
 </style>

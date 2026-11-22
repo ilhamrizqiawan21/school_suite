@@ -62,7 +62,10 @@ const props = defineProps<{
     periods: Period[];
     issuedReceipt?: { id: number; registration_no: string; ticket_code?: string | null; verification_secret: string } | null;
     lookupResult?: { authorized: boolean; message?: string; applicant?: CandidateView } | null;
+    contentBlocks?: Record<string, Record<string, any>>;
 }>();
+
+const heroBlock = computed(() => props.contentBlocks?.['admissions.hero'] ?? {});
 
 const openPeriod = computed(() => props.periods.find((p) => p.status === 'registration_open') ?? props.periods[0] ?? null);
 const activePortalTab = ref<'register' | 'lookup'>(props.lookupResult ? 'lookup' : 'register');
@@ -180,10 +183,10 @@ const themeStyle = computed(() => publicThemeStyle(props.school.theme));
         <section class="admissions-status" aria-labelledby="admissions-title">
             <div class="status-copy">
                 <span class="status-badge" :class="{ 'is-open': registrationOpen }">
-                    {{ registrationOpen ? 'Pendaftaran dibuka' : 'Pendaftaran belum dibuka' }}
+                    {{ registrationOpen ? (heroBlock.open_badge || 'Pendaftaran dibuka') : (heroBlock.closed_badge || 'Pendaftaran belum dibuka') }}
                 </span>
                 <h1 id="admissions-title">
-                    {{ registrationOpen ? 'Penerimaan siswa baru sedang dibuka.' : 'Penerimaan siswa baru belum dibuka.' }}
+                    {{ registrationOpen ? (heroBlock.open_title || 'Penerimaan siswa baru sedang dibuka.') : (heroBlock.closed_title || 'Penerimaan siswa baru belum dibuka.') }}
                 </h1>
                 <p>{{ statusAnnouncement }}</p>
                 <div v-if="currentPeriod" class="status-meta">

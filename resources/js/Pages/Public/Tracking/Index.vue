@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import FormField from '@/components/FormField.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
@@ -28,9 +27,16 @@ const props = defineProps<{
             timeline?: { public_status: string; created_at?: string | null }[];
         };
     } | null;
+    contentBlocks?: Record<string, Record<string, any>>;
 }>();
 
+const heroBlock = computed(() => props.contentBlocks?.['tracking.hero'] ?? {});
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
+const referenceCategories = computed(() => props.categories.length > 0 ? props.categories : [
+    { value: 'all', label: 'Semua Layanan' }, { value: 'izin', label: 'Surat Izin' },
+    { value: 'legalisir', label: 'Legalisir Ijazah' }, { value: 'mutasi', label: 'Mutasi Siswa' },
+    { value: 'ptsp', label: 'Layanan PTSP' },
+]);
 
 const form = useForm({
     code: props.filters.code || '',
@@ -69,29 +75,30 @@ const categoryIcon = (value: string): string => {
 
         <section class="portal-container">
             <header class="portal-hero madrasah-service-hero text-center">
-                <p class="madrasah-service-label mx-auto"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> PUSAT LAYANAN INFORMASI &amp; PELACAKAN RESMI</p>
-                <h1>Pusat Lacak Status Layanan Terpadu</h1>
+                <p class="madrasah-service-label mx-auto"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> {{ heroBlock.label || 'PUSAT LAYANAN INFORMASI & PELACAKAN RESMI' }}</p>
+                <h1>{{ heroBlock.title || 'Pusat Lacak Status Layanan Terpadu' }}</h1>
                 <p class="font-bold tracking-wider uppercase text-emerald-100">{{ school.name }}</p>
-                <p class="mx-auto">Lacak progres seluruh permohonan online Anda secara transparan dan realtime cukup dengan memasukkan Nomor Tiket, NISN, atau PIN verifikasi.</p>
+                <p class="mx-auto">{{ heroBlock.subtitle || 'Lacak progres seluruh permohonan online Anda secara transparan dan realtime dengan memasukkan Nomor Tiket atau Kode Registrasi Pengajuan beserta PIN Verifikasi.' }}</p>
+                <div class="tracking-wave" aria-hidden="true"><svg viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0,45 C320,110 440,15 720,65 C1000,115 1140,25 1440,55 L1440,120 L0,120 Z" fill="#f8fafc" /></svg></div>
             </header>
 
             <section class="portal-card parity-tracking-card">
                 <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <strong class="text-slate-800">Masukkan Kata Kunci Pencarian:</strong>
-                    <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-500">Tiket • NISN • PIN Verifikasi</span>
+                    <strong class="tracking-search-label"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Masukkan Kata Kunci Pencarian:</strong>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-500">{{ heroBlock.keywords_hint || 'No. Tiket • Kode Resi • PIN Verifikasi' }}</span>
                 </div>
                 <form class="parity-tracking-pill" @submit.prevent="submitLookup">
-                    <input id="track-code" v-model="form.code" type="text" required placeholder="Contoh: PTSP-2026-XXXXXXXX, IZN-2026-..., atau SRT-2026-..." aria-label="Nomor Tiket atau Referensi" />
-                    <input id="track-secret" v-model="form.verification_secret" type="password" autocomplete="off" placeholder="PIN (Opsional jika login)" aria-label="Kode Verifikasi atau PIN Pemohon" class="parity-pin-input" />
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input id="track-code" v-model="form.code" type="text" required :placeholder="heroBlock.placeholder || 'Contoh: PTSP-2026..., IZN-2026..., MUT-2026..., LEG-2026..., ADU-2026...'" aria-label="Nomor Tiket atau Kode Resi" />
                     <button type="submit" class="parity-tracking-btn" :disabled="form.processing">
-                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                         <span>Lacak Status</span>
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                     </button>
                 </form>
 
                 <div class="chip-row" role="group" aria-label="Filter kategori layanan pelacakan">
                     <button
-                        v-for="cat in categories"
+                        v-for="cat in referenceCategories"
                         :key="cat.value"
                         type="button"
                         class="chip-btn"
@@ -109,25 +116,30 @@ const categoryIcon = (value: string): string => {
                 <p class="parity-guides-label">PANDUAN KATA KUNCI BERDASARKAN LAYANAN</p>
                 <div class="parity-guides-grid">
                     <article class="guide-card guide-card--blue">
-                        <div class="guide-card__head"><strong>Surat Izin</strong><span>BK &amp; Piket</span></div>
-                        <p>Gunakan <strong>Kode Tiket IZN-2026-...</strong> dan PIN untuk memantau verifikasi wali kelas.</p>
+                        <div class="guide-card__head"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i><strong>Surat Izin</strong><span>BK &amp; Piket</span></div>
+                        <p>Gunakan <strong>NISN Siswa</strong> atau <strong>No. Pengajuan Izin</strong> untuk melihat persetujuan wali kelas &amp; piket.</p>
+                        <button class="guide-example" @click="form.code = 'IZN-2026'; selectCategory('izin')">Contoh Format: <code>IZN-2026...</code></button>
                     </article>
                     <article class="guide-card guide-card--amber">
-                        <div class="guide-card__head"><strong>Legalisir Ijazah</strong><span>Alumni</span></div>
-                        <p>Gunakan <strong>Kode Tiket LEG-2026-...</strong> untuk melihat status verifikasi berkas &amp; pengesahan.</p>
+                        <div class="guide-card__head"><i class="fa-solid fa-certificate" aria-hidden="true"></i><strong>Legalisir Ijazah</strong><span>Alumni</span></div>
+                        <p>Gunakan <strong>NISN</strong> saat sekolah atau <strong>Nomor Registrasi</strong> untuk memantau tanda tangan berkas.</p>
+                        <button class="guide-example" @click="selectCategory('legalisir')">Format Input: <code>NISN / No. Reg</code></button>
                     </article>
                     <article class="guide-card guide-card--emerald">
-                        <div class="guide-card__head"><strong>Mutasi Siswa</strong><span>Kesiswaan</span></div>
-                        <p>Gunakan <strong>Kode Tiket MTS-2026-...</strong> untuk memantau proses mutasi masuk atau keluar.</p>
+                        <div class="guide-card__head"><i class="fa-solid fa-right-left" aria-hidden="true"></i><strong>Mutasi Siswa</strong><span>Kesiswaan</span></div>
+                        <p>Gunakan <strong>NISN</strong> atau <strong>Kode Mutasi</strong> untuk memantau status persetujuan mutasi madrasah.</p>
+                        <button class="guide-example" @click="form.code = 'MUT-2026'; selectCategory('mutasi')">Contoh Format: <code>MUT-2026...</code></button>
                     </article>
                     <article class="guide-card guide-card--indigo">
-                        <div class="guide-card__head"><strong>Layanan PTSP</strong><span>Pelayanan</span></div>
-                        <p>Gunakan <strong>Kode Tiket PTSP-2026-...</strong> atau <strong>SRT-2026-...</strong> dari resi pengajuan.</p>
+                        <div class="guide-card__head"><i class="fa-regular fa-building" aria-hidden="true"></i><strong>Layanan PTSP</strong><span>Pelayanan</span></div>
+                        <p>Gunakan <strong>Kode Tiket PTSP</strong> atau <strong>NIK KTP</strong> pemohon untuk memantau progress dokumen Anda.</p>
+                        <button class="guide-example" @click="form.code = 'PTSP-2026'; selectCategory('ptsp')">Contoh Format: <code>PTSP-2026... / NIK</code></button>
                     </article>
                 </div>
             </section>
 
             <section v-if="result" class="portal-card">
+                <form v-if="result.found && !result.authorized" class="parity-tracking-pill" @submit.prevent="submitLookup"><input id="track-secret" v-model="form.verification_secret" type="password" autocomplete="off" placeholder="PIN verifikasi pemohon" aria-label="PIN verifikasi pemohon" required /><button type="submit" class="parity-tracking-btn">Verifikasi</button></form>
                 <StateFeedback
                     v-if="!result.found"
                     state="empty"

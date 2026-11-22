@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Modules\Core\Infrastructure\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,11 +27,34 @@ class LibraryReplicaTest extends TestCase
             ->assertRedirect('/perpustakaan');
     }
 
-    public function test_replica_ajax_stub_never_returns_data(): void
+    public function test_replica_endpoints_use_live_library_service_without_pii_leak(): void
     {
+        School::query()->create([
+            'name' => 'MAN 4 Banjar',
+            'npsn' => '30315219',
+            'level' => 'MA',
+        ]);
+
         $this->getJson('/perpustakaan/aksi?pg=statistik_kunjungan')
             ->assertOk()
-            ->assertJsonPath('status', 'error')
-            ->assertJsonMissingPath('kpi');
+            ->assertJsonPath('status', 'success')
+            ->assertJsonStructure(['status', 'kpi' => ['collections_count', 'visits_today', 'active_loans']])
+            ->assertJsonMissingPath('visitors');
+
+        $this->postJson('/perpustakaan/aksi?pg=buku_tamu', [
+            'visitor_name' => 'Tamu Publik',
+            'visitor_role' => 'guest',
+            'purpose' => 'Membaca',
+        ])->assertOk()->assertJsonPath('status', 'success');
+
+        $this->assertDatabaseHas('library_visits', [
+            'visitor_name' => 'Tamu Publik',
+            'visitor_role' => 'guest',
+        ]);
+
+        $this->postJson('/perpustakaan/aksi?pg=usulkan_buku', [
+            'title' => 'Buku Baru',
+            'reason' => 'Referensi',
+        ])->assertStatus(401);
     }
 }

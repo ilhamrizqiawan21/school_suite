@@ -105,20 +105,20 @@ Route::middleware(['auth'])->prefix('akademik')->name('academic.')->group(functi
     });
 
     // Mutasi Siswa Masuk & Keluar (M4-LIF-02)
-    Route::middleware(['role:admin,operator,ptsp,principal', 'throttle:sensitive'])->prefix('mutasi')->name('mutations.')->group(function (): void {
+    Route::middleware(['role:admin,operator,ptsp,principal,signatory', 'throttle:sensitive'])->prefix('mutasi')->name('mutations.')->group(function (): void {
         Route::get('/', [StudentMutationController::class, 'adminIndex'])->name('index');
         Route::post('/{mutation}/putuskan', [StudentMutationController::class, 'decide'])->whereNumber('mutation')->name('decide');
         Route::post('/{mutation}/cabut', [StudentMutationController::class, 'revoke'])->whereNumber('mutation')->name('revoke');
     });
 
     // Kelulusan & SKL (M4-LIF-03)
-    Route::middleware(['role:admin,operator,principal', 'throttle:sensitive'])->prefix('kelulusan')->name('graduation.')->group(function (): void {
+    Route::middleware(['role:admin,operator,principal,signatory', 'throttle:sensitive'])->prefix('kelulusan')->name('graduation.')->group(function (): void {
         Route::get('/', [GraduationController::class, 'adminIndex'])->name('index');
-        Route::post('/batch', [GraduationController::class, 'storeBatch'])->name('batch.store');
-        Route::post('/batch/{batch}/siswa', [GraduationController::class, 'upsertRecord'])->whereNumber('batch')->name('record.upsert');
-        Route::post('/batch/{batch}/terbitkan', [GraduationController::class, 'publishBatch'])->whereNumber('batch')->name('batch.publish');
-        Route::post('/skl/{record}/terbitkan-ulang', [GraduationController::class, 'reissueSkl'])->whereNumber('record')->name('skl.reissue');
-        Route::post('/skl/{record}/ambil-asli', [GraduationController::class, 'markCollected'])->whereNumber('record')->name('skl.collected');
+        Route::post('/batch', [GraduationController::class, 'storeBatch'])->middleware('role:admin,operator,principal')->name('batch.store');
+        Route::post('/batch/{batch}/siswa', [GraduationController::class, 'upsertRecord'])->whereNumber('batch')->middleware('role:admin,operator,principal')->name('record.upsert');
+        Route::post('/batch/{batch}/terbitkan', [GraduationController::class, 'publishBatch'])->whereNumber('batch')->middleware('role:admin,principal,signatory')->name('batch.publish');
+        Route::post('/skl/{record}/terbitkan-ulang', [GraduationController::class, 'reissueSkl'])->whereNumber('record')->middleware('role:admin,principal,signatory')->name('skl.reissue');
+        Route::post('/skl/{record}/ambil-asli', [GraduationController::class, 'markCollected'])->whereNumber('record')->middleware('role:admin,operator,principal')->name('skl.collected');
     });
 
     // Moderasi Alumni & Tracer (M4-LIF-07)
@@ -143,10 +143,16 @@ Route::prefix('layanan/kelulusan')->name('academic.graduation.public.')->group(f
 });
 
 Route::prefix('alumni')->name('academic.alumni.public.')->group(function (): void {
-    Route::get('/', [AlumniController::class, 'portalIndex'])->name('portal');
+    Route::get('/', [AlumniController::class, 'homeIndex'])->name('portal');
     Route::post('/', [AlumniController::class, 'saveSelfProfile'])->middleware('throttle:uploads')->name('save');
+    Route::post('/cek-ekta', [AlumniController::class, 'publicEktaCheck'])->middleware('throttle:sensitive')->name('ekta.check');
     Route::get('/direktori', [AlumniController::class, 'directoryIndex'])->name('directory');
     Route::get('/{profile}/ekta.pdf', [AlumniController::class, 'downloadEkta'])->whereNumber('profile')->name('ekta');
+});
+
+Route::prefix('layanan/tracer-alumni')->name('academic.alumni.tracer.')->group(function (): void {
+    Route::get('/', [AlumniController::class, 'portalIndex'])->name('portal');
+    Route::post('/', [AlumniController::class, 'saveSelfProfile'])->middleware('throttle:uploads')->name('save');
 });
 
 // Kios Presensi RFID & QR (M4-OPS-03)

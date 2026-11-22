@@ -3,7 +3,7 @@ import AppButton from '@/components/AppButton.vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StateFeedback from '@/components/StateFeedback.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 interface DirectoryEntry {
@@ -53,9 +53,9 @@ const applyFilter = () => {
                     <h1 class="text-2xl font-bold text-slate-900">Direktori Temu Alumni &amp; Jejaring Almamater</h1>
                     <p class="mt-1 text-sm text-slate-600">Hanya menampilkan alumni yang telah dimoderasi dan menyetujui publikasi atribut profil.</p>
                 </div>
-                <Link href="/alumni" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">
+                <a href="/layanan/tracer-alumni" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white">
                     Perbarui Data Tracer / E-KTA
-                </Link>
+                </a>
             </div>
 
             <div class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-4">

@@ -49,8 +49,19 @@
     </div>
 
     @if(! empty($verificationToken))
-    <div class="verify">
-        Token Verifikasi Publik (/verifikasi): <strong>{{ $verificationToken }}</strong>
+    <div class="verify" style="display:table;width:100%;">
+        @if(! empty($qrVerify))
+            <div style="display:table-cell;width:96px;vertical-align:top;">
+                <img src="data:image/svg+xml;base64,{{ $qrVerify }}" alt="QR Verifikasi" style="width:84px;height:84px;">
+            </div>
+        @endif
+        <div style="display:table-cell;vertical-align:top;">
+            <div><strong>Verifikasi Keaslian Surat Mutasi</strong></div>
+            <div>Token Verifikasi Publik (/verifikasi): <strong>{{ $verificationToken }}</strong></div>
+            @if(! empty($verifyUrl))
+                <div>{{ $verifyUrl }}</div>
+            @endif
+        </div>
     </div>
     @endif
 </body>

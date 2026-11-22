@@ -23,6 +23,7 @@ interface MutationRow {
 }
 
 const props = defineProps<{
+    canPublish: boolean;
     mutations: MutationRow[];
     classes: { id: number; name: string; grade_level: number }[];
     filters: { direction: string; status: string };
@@ -34,7 +35,7 @@ const selected = ref<MutationRow | null>(null);
 const modalMode = ref<'decide' | 'revoke'>('decide');
 
 const decideForm = useForm({
-    decision: 'approve',
+    decision: props.canPublish ? 'approve' : 'request_revision',
     decision_note: '',
     nis: '',
     target_class_group_id: '' as string | number,
@@ -121,13 +122,13 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
                                 <th class="px-3 py-2.5">Kode &amp; Jenis</th>
                                 <th class="px-3 py-2.5">Siswa</th>
                                 <th class="px-3 py-2.5">Sekolah Asal/Tujuan</th>
                                 <th class="px-3 py-2.5">Status</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
+                                <th class="px-3 py-2.5">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -166,7 +167,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                                         Proses
                                     </button>
                                     <button
-                                        v-if="m.status === 'approved'"
+                                        v-if="canPublish && m.status === 'approved'"
                                         type="button"
                                         class="rounded-md border border-rose-300 px-2.5 py-1 text-xs font-semibold text-rose-700"
                                         @click="openModal(m, 'revoke')"
@@ -181,7 +182,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
             </div>
         </div>
 
-        <div v-if="selected" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div v-if="selected" role="dialog" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" @click.self="selected = null" @keydown.esc="selected = null">
             <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
                 <h3 class="text-base font-semibold">
                     {{ modalMode === 'decide' ? `Putuskan Mutasi ${selected.mutation_code}` : `Cabut Mutasi ${selected.mutation_code}` }}
@@ -189,7 +190,7 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
                 <div v-if="modalMode === 'decide'" class="space-y-3">
                     <FormField id="mut-decision" label="Keputusan" required>
                         <select id="mut-decision" v-model="decideForm.decision" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                            <option value="approve">Setujui &amp; Terbitkan Surat</option>
+                            <option v-if="canPublish" value="approve">Setujui &amp; Terbitkan Surat</option>
                             <option value="request_revision">Minta Perbaikan Berkas</option>
                             <option value="reject">Tolak Permohonan</option>
                         </select>

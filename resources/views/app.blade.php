@@ -7,6 +7,9 @@
         $shellData = app(\App\Modules\Core\Application\Services\PublicPortalService::class)->madrasahShellData($portalSchool);
         $profile = $shellData['profile'];
         $schoolName = ($profile['name'] ?? null) ?: 'Madrasah Contoh Nusantara';
+        if (request()->is('layanan/izin-siswa', 'layanan/kelulusan')) {
+            $schoolName = $page['props']['school']['name'] ?? $schoolName;
+        }
         $schoolAddress = ($profile['address'] ?? null) ?: 'Alamat belum tersedia';
         $schoolPhone = ($profile['phone'] ?? null) ?: 'Telepon belum tersedia';
         $schoolEmail = ($profile['email'] ?? null) ?: 'humas@madrasah.example';

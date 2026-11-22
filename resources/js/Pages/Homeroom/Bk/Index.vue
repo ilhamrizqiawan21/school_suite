@@ -327,14 +327,14 @@ const statusTone = (status: string): 'neutral' | 'info' | 'warning' | 'success' 
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
-                                <th class="px-3 py-2.5">Siswa</th>
-                                <th class="px-3 py-2.5">Kategori & Kasus</th>
-                                <th class="px-3 py-2.5">Waktu & Lokasi</th>
-                                <th class="px-3 py-2.5">Eviden & Poin</th>
-                                <th class="px-3 py-2.5">Status</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
+                                <th class="px-3 py-2.5 text-center">Siswa</th>
+                                <th class="px-3 py-2.5 text-center">Kategori & Kasus</th>
+                                <th class="px-3 py-2.5 text-center">Waktu & Lokasi</th>
+                                <th class="px-3 py-2.5 text-center">Eviden & Poin</th>
+                                <th class="px-3 py-2.5 text-center">Status</th>
+                                <th class="px-3 py-2.5 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">

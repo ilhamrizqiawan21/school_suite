@@ -7,6 +7,7 @@ import { publicThemeStyle } from '@/composables/publicTheme';
 
 const props = defineProps<{
     school: { name: string; logo_url?: string | null; theme?: { primary?: string | null } };
+    contentBlocks?: Record<string, Record<string, any>>;
     urgencyOptions: { value: string; label: string }[];
 }>();
 
@@ -78,11 +79,11 @@ const submitQuickTrack = () => {
                         <span class="label-sub">Persuratan Eksternal</span>
                     </p>
                     <h1>
-                        Penerimaan &amp; Agenda Digital
-                        <span class="hero-title-highlight">Surat Kedinasan Eksternal</span>
+                        {{ contentBlocks?.['external_letter.hero']?.title || 'Penerimaan & Agenda Digital' }}
+                        <span class="hero-title-highlight">{{ contentBlocks?.['external_letter.hero']?.highlight || 'Surat Kedinasan Eksternal' }}</span>
                     </h1>
                     <p class="hero-lead">
-                        Fasilitas resmi bagi instansi pemerintah, lembaga pendidikan, dan organisasi mitra untuk mengirimkan surat dinas secara langsung ke meja Tata Usaha {{ school.name }}. Teragendakan otomatis, aman, dan dapat dilacak secara real-time.
+                        {{ contentBlocks?.['external_letter.hero']?.lead || `Fasilitas resmi bagi instansi pemerintah, lembaga pendidikan, dan organisasi mitra untuk mengirimkan surat dinas secara langsung ke meja Tata Usaha ${school.name}. Teragendakan otomatis, aman, dan dapat dilacak secara real-time.` }}
                     </p>
 
                     <div class="workflow-steps" aria-label="Alur layanan surat dinas">

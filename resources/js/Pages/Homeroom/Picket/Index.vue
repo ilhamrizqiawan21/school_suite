@@ -261,14 +261,14 @@ const exitTypeLabel = (type: string): string => {
 
                 <div v-else class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                        <thead class="bg-slate-50 text-center text-xs font-semibold uppercase text-slate-500">
                             <tr>
                                 <th class="px-3 py-2.5">Kode Pass</th>
                                 <th class="px-3 py-2.5">Siswa</th>
                                 <th class="px-3 py-2.5">Jenis & Alasan</th>
                                 <th class="px-3 py-2.5">Masa Berlaku</th>
                                 <th class="px-3 py-2.5">Status</th>
-                                <th class="px-3 py-2.5 text-right">Aksi</th>
+                                <th class="px-3 py-2.5">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -310,7 +310,7 @@ const exitTypeLabel = (type: string): string => {
             </div>
         </div>
 
-        <div v-if="cancellingPass" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div v-if="cancellingPass" role="dialog" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" @click.self="cancellingPass = null" @keydown.esc="cancellingPass = null">
             <div class="w-full max-w-md rounded-xl bg-white p-5 shadow-xl space-y-4">
                 <h3 class="text-base font-semibold text-slate-900">Batalkan Pass {{ cancellingPass.pass_code }}</h3>
                 <p class="text-sm text-slate-600">{{ cancellingPass.student_name }} — {{ cancellingPass.reason }}</p>

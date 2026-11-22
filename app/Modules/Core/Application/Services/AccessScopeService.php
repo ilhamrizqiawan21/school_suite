@@ -86,4 +86,60 @@ class AccessScopeService
 
         return false;
     }
+
+    /**
+     * Separation of duties (D-03): operators/PTSP verify and process queues,
+     * while principal/signatory/admin hold final decision or signing authority.
+     */
+    public function canVerifyQueue(?User $user, int $schoolId): bool
+    {
+        return $this->hasSchoolRole($user, $schoolId, [
+            RoleEnum::ADMIN->value,
+            RoleEnum::OPERATOR->value,
+            RoleEnum::PTSP->value,
+        ]);
+    }
+
+    public function canApproveFinalDecision(?User $user, int $schoolId): bool
+    {
+        return $this->hasSchoolRole($user, $schoolId, [
+            RoleEnum::ADMIN->value,
+            RoleEnum::PRINCIPAL->value,
+            RoleEnum::SIGNATORY->value,
+        ]);
+    }
+
+    public function canSignOfficialDocument(?User $user, int $schoolId): bool
+    {
+        return $this->belongsToSchool($user, $schoolId)
+            && ($user->hasRole([
+                RoleEnum::ADMIN->value,
+                RoleEnum::PRINCIPAL->value,
+                RoleEnum::SIGNATORY->value,
+            ]) || $user->hasPermission('core.document.sign'));
+    }
+
+    /**
+     * Validate and normalize a post-login return path against an explicit allowlist
+     * to prevent open redirects and cross-portal privilege escalation (AP-01.11).
+     *
+     * @param  list<string>  $allowedPaths
+     */
+    public function sanitizeReturnPath(?string $candidate, array $allowedPaths, string $default = '/'): string
+    {
+        $clean = trim((string) $candidate);
+        if (
+            $clean === ''
+            || ! str_starts_with($clean, '/')
+            || str_starts_with($clean, '//')
+            || str_contains($clean, '\\')
+            || preg_match('/^[a-z][a-z0-9+.-]*:/i', $clean) === 1
+        ) {
+            return $default;
+        }
+
+        $pathOnly = strtok($clean, '?#') ?: '/';
+
+        return in_array($pathOnly, $allowedPaths, true) ? $clean : $default;
+    }
 }

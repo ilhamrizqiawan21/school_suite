@@ -30,6 +30,7 @@ class AttendanceDispensation extends Model
         'reason',
         'contact_name',
         'contact_phone',
+        'contact_relationship',
         'signature_data',
         'attachment_path',
         'attachment_document_id',

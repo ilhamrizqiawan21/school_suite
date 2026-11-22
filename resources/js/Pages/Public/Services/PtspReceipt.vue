@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import PublicHeader from '@/components/PublicHeader.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { publicThemeStyle } from '@/composables/publicTheme';
@@ -29,12 +29,27 @@ const props = defineProps<{
     };
     issuedSecret?: string | null;
     canRevise: boolean;
+    canCancel?: boolean;
 }>();
 
 const page = usePage();
 const flashMessage = computed(() => (page.props.flash as { message?: string } | undefined)?.message);
 const themeStyle = computed(() => publicThemeStyle(props.school.theme));
 const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso)) : '-';
+
+const showCancelForm = ref(false);
+const cancelForm = useForm({
+    reason: '',
+});
+
+const submitCancel = () => {
+    cancelForm.post(`/layanan/ptsp/${props.ptspRequest.ticket_code}/batalkan`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showCancelForm.value = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -88,8 +103,21 @@ const formatDate = (iso?: string | null) => iso ? new Intl.DateTimeFormat('id-ID
                     <Link v-if="canRevise" :href="`/layanan/ptsp/${ptspRequest.ticket_code}/perbaiki`" class="ui-button ui-button--secondary ui-button--md">
                         Perbaiki Berkas Sekarang
                     </Link>
+                    <button v-if="canCancel" type="button" class="ui-button ui-button--secondary ui-button--md" @click="showCancelForm = !showCancelForm">
+                        {{ showCancelForm ? 'Tutup Pembatalan' : 'Batalkan Permohonan' }}
+                    </button>
                     <Link href="/layanan/ptsp" class="ui-button ui-button--secondary ui-button--md">Kembali ke PTSP</Link>
                 </div>
+
+                <form v-if="canCancel && showCancelForm" class="cancel-form" @submit.prevent="submitCancel">
+                    <label for="cancel-reason" class="cancel-label">Alasan Pembatalan Permohonan</label>
+                    <textarea id="cancel-reason" v-model="cancelForm.reason" rows="2" placeholder="Tuliskan alasan pembatalan (opsional)..." />
+                    <div class="action-row">
+                        <button type="submit" class="ui-button ui-button--danger ui-button--sm" :disabled="cancelForm.processing">
+                            Konfirmasi Batalkan Permohonan
+                        </button>
+                    </div>
+                </form>
             </section>
 
             <section v-if="ptspRequest.documents.length" class="portal-card">
